@@ -341,3 +341,14 @@ model AttemptAction {
   @@unique([attemptId, idempotencyKey])
   @@unique([attemptId, seq])
 }
+
+/// Searches without results, by normalized text (DATA_QUALITY.md §5). Editorial only, kept 30 days.
+model SearchMiss {
+  normalized String   @id
+  count      Int      @default(1)
+  lastAt     DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([lastAt])
+}

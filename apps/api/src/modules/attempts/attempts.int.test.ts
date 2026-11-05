@@ -535,3 +535,23 @@ describe('retire and replace', () => {
     );
   });
 });
+
+describe('editorial reports', () => {
+  it('records searches without results and lists them', async () => {
+    await guest().req('GET', '/players/search?q=Zezinho%20Inexistente');
+    await guest().req('GET', '/players/search?q=zezinho inexistente');
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/admin/reports/rejections',
+      headers: admin,
+    });
+    expect(res.json().searchMisses).toContainEqual({
+      text: 'zezinho inexistente',
+      count: 2,
+      lastAt: expect.any(String),
+    });
+    expect(res.json().gridWrongGuesses).toEqual([
+      expect.objectContaining({ cellIndex: 4, playerId: ids.ze, n: 1 }),
+    ]);
+  });
+});

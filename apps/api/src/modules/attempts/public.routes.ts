@@ -7,6 +7,7 @@ import {
   SubmitActionRequest,
 } from '@decabeca/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { normalizeName } from '@decabeca/engine';
 import { z } from 'zod';
 import { civilDate } from '../challenges/civil-date';
 import { todaysChallenge } from '../challenges/challenges.service';
@@ -50,9 +51,15 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { querystring: PlayerSearchQuery, response: { 200: PlayerSearchResponse } } },
     async (req) => {
       const players = await searchPlayers(prisma, req.query.q, req.query.limit);
-      // Editorial signal for missing aliases (DATA_QUALITY.md §5); the text stays in server logs only.
-      if (!players.length && req.query.q.length >= 3)
-        req.log.info({ searchNoResult: req.query.q }, 'search_no_result');
+      // Editorial signal for missing aliases (DATA_QUALITY.md §5); the text never goes to analytics.
+      if (!players.length && req.query.q.length >= 3) {
+        const normalized = normalizeName(req.query.q);
+        await prisma.searchMiss.upsert({
+          where: { normalized },
+          create: { normalized, lastAt: now() },
+          update: { count: { increment: 1 }, lastAt: now() },
+        });
+      }
       return { players };
     },
   );

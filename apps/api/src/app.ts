@@ -14,6 +14,7 @@ import { adminAuth } from './modules/admin/auth';
 import { importRoutes } from './modules/data-import/import.routes';
 import { knowledgeRoutes } from './modules/knowledge/knowledge.routes';
 import { challengeRoutes } from './modules/challenges/challenges.routes';
+import { reportRoutes } from './modules/admin/reports.routes';
 import { publicRoutes } from './modules/attempts/public.routes';
 import { fetchEntities, type EntityFetcher } from './modules/data-import/wikidata-client';
 
@@ -90,6 +91,7 @@ export function buildApp(
       await admin.register(importRoutes);
       await admin.register(knowledgeRoutes);
       await admin.register(challengeRoutes);
+      await admin.register(reportRoutes);
     },
     { prefix: '/v1/admin' },
   );
