@@ -22,6 +22,8 @@ const prisma = createPrisma(process.env.DATABASE_URL!);
 const CURATOR = 'ai-curator';
 const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > 0 ? Number(process.argv[limitArg + 1]) : 360;
+/** --recheck: rebuild every career the curator verified with the current rules; failures go back to imported. */
+const RECHECK = process.argv.includes('--recheck');
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // ── 1. Candidates: most-linked Brazilian footballers + global stars who matter to Brazilian fans.
@@ -65,6 +67,28 @@ const STOP = new Set([
   'cf',
   'sc',
   'ac',
+  // generic words shared by unrelated clubs (Real Madrid / Real Betis, Atlético-MG / Atlético de Madrid)
+  'real',
+  'atletico',
+  'athletic',
+  'sporting',
+  'united',
+  'city',
+  'deportivo',
+  'racing',
+  'olympique',
+  'union',
+  'calcio',
+  'fk',
+  'sk',
+  'cd',
+  'ud',
+  'ca',
+  'ec',
+  'ssc',
+  'as',
+  'us',
+  'rcd',
 ]);
 const tokens = (s: string) =>
   normalizeName(s)
@@ -99,6 +123,8 @@ const initials = (club: { name: string }) =>
 
 /** Exact token or initials match ("Inter" -> no; "São Paulo" -> São Paulo Futebol Clube). */
 function exactClub(club: { name: string; shortName: string }, wp: string): boolean {
+  const w = normalizeName(wp);
+  if (w && (w === normalizeName(club.shortName) || w === normalizeName(club.name))) return true;
   const a = clubTokens(club);
   return tokens(wp).some((t) => a.includes(t) || t === initials(club));
 }
@@ -117,6 +143,8 @@ function fuzzyClub(club: { name: string; shortName: string }, wp: string): boole
         (t.length >= 5 && x.length >= 4 && distance(x, t) <= (t.length >= 8 ? 2 : 1)) ||
         (Math.min(x.length, t.length) >= 4 &&
           prefix(x, t) >= 4 &&
+          x !== 'inter' &&
+          t !== 'inter' &&
           prefix(x, t) >= 0.65 * Math.min(x.length, t.length)),
     ),
   );
@@ -153,13 +181,22 @@ async function crossCheck(
     where: { id: playerId },
     include: { aliases: true, spells: { include: { club: true } } },
   });
-  if (p.verificationStatus === 'verified') return { qid, name: p.canonicalName, result: 'already' };
+  if (p.verificationStatus === 'verified' && !(RECHECK && p.verifiedBy === CURATOR))
+    return { qid, name: p.canonicalName, result: 'already' };
+  const fail = async (o: Outcome): Promise<Outcome> => {
+    if (p.verificationStatus === 'verified')
+      await prisma.player.update({
+        where: { id: p.id },
+        data: { verificationStatus: 'imported', verifiedAt: null, verifiedBy: null },
+      });
+    return o;
+  };
   const text = page ? await fetchWikitext(page.lang, page.title) : null;
   const wp = text ? parseInfoboxCareer(text)?.filter((e) => e.club) : null;
-  if (!text || !wp?.length) return { qid, name: p.canonicalName, result: 'no-infobox' };
+  if (!text || !wp?.length) return fail({ qid, name: p.canonicalName, result: 'no-infobox' });
 
   const position = p.primaryPositionGroup ?? positionFromInfobox(text);
-  if (!position) return { qid, name: p.canonicalName, result: 'no-position' };
+  if (!position) return fail({ qid, name: p.canonicalName, result: 'no-position' });
 
   // Agreement rule (ADR-006): the career sequence comes from pt.wikipedia and every club in it
   // must also be one of the player's clubs on Wikidata. Years must be present (DQ-01).
@@ -171,16 +208,21 @@ async function crossCheck(
     // Exact matches first, so Santa Cruz never falls on Santos for a player who had both.
     const club =
       wdClubs.find((c) => exactClub(c, entry.club)) ??
-      wdClubs.find((c) => fuzzyClub(c, entry.club));
+      wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club));
     if (!club)
-      return {
+      return fail({
         qid,
         name: p.canonicalName,
         result: 'mismatch',
         detail: `${entry.club} não está no Wikidata`,
-      };
+      });
     if (entry.fromYear === null)
-      return { qid, name: p.canonicalName, result: 'mismatch', detail: `${entry.club} sem ano` };
+      return fail({
+        qid,
+        name: p.canonicalName,
+        result: 'mismatch',
+        detail: `${entry.club} sem ano`,
+      });
     const prev = matched.at(-1);
     // The same club twice in a row with overlapping years is one passage, not two.
     if (prev && prev.club.id === club.id && (prev.entry.toYear ?? 9999) >= entry.fromYear) {
@@ -196,7 +238,12 @@ async function crossCheck(
     matched.push({ club, entry });
   }
   if (matched.length === 0)
-    return { qid, name: p.canonicalName, result: 'mismatch', detail: 'nenhum clube principal' };
+    return fail({
+      qid,
+      name: p.canonicalName,
+      result: 'mismatch',
+      detail: 'nenhum clube principal',
+    });
 
   const now = new Date();
   const wpUrl = `https://${page!.lang}.wikipedia.org/wiki/${encodeURIComponent(page!.title.replace(/ /g, '_'))}`;
@@ -267,12 +314,12 @@ async function crossCheck(
     (v) => v.severity === 'block',
   );
   if (blockers.length)
-    return {
+    return fail({
       qid,
       name: p.canonicalName,
       result: 'dq',
       detail: blockers.map((b) => b.rule).join(','),
-    };
+    });
   await prisma.player.update({
     where: { id: p.id },
     data: { verificationStatus: 'verified', verifiedAt: now, verifiedBy: CURATOR },
@@ -311,6 +358,14 @@ async function mergeOverlappingRepeats() {
 await mergeOverlappingRepeats();
 
 const list = await candidates();
+if (RECHECK) {
+  const known = new Set(list.map((c) => c.qid));
+  for (const p of await prisma.player.findMany({
+    where: { verifiedBy: CURATOR, wikidataId: { not: null } },
+    select: { wikidataId: true },
+  }))
+    if (!known.has(p.wikidataId!)) list.push({ qid: p.wikidataId!, links: 0 });
+}
 log(`${list.length} candidates`);
 const outcomes: Outcome[] = [];
 for (let i = 0; i < list.length; i += 50) {
@@ -334,7 +389,14 @@ for (let i = 0; i < list.length; i += 50) {
         ? { lang: 'en' as const, title: sl.enwiki.title }
         : undefined;
     try {
-      outcomes.push(await crossCheck(playerId, c.qid, c.links, page));
+      outcomes.push(
+        await crossCheck(
+          playerId,
+          c.qid,
+          c.links || Object.keys(ents[c.qid]?.sitelinks ?? {}).length,
+          page,
+        ),
+      );
     } catch (e) {
       outcomes.push({
         qid: c.qid,
