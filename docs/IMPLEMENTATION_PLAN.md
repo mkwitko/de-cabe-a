@@ -68,6 +68,7 @@ Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && p
 - **Dependências:** 1.
 - **Aceite:** todos os casos de `TEST_STRATEGY.md` §1 para CP passam; `toPublicView` nunca contém `answerPlayerId` (teste de propriedade com todos os estados alcançáveis).
 - **Riscos:** regra de "retorno após empréstimo" ambígua → testar os dois cenários do §4 explicitamente.
+- **Feito (2026-11-05):** `careerPathV1`, `buildTrajectory`, `checkCareerPathEligibility` em `packages/engine/src/career-path/`; contrato em `src/contract.ts`. Teste de vazamento percorre todos os estados alcançáveis. Decisões em `GAME_ENGINE_CONTRACT.md` §3.
 
 ## Slice 4 — Import Wikidata + spot-check
 - **Escopo:** `scripts/research/wikidata-spotcheck.ts` (as 5 consultas de `DATA_SOURCES.md` §4; grava resultado em `docs/DATA_QUALITY.md` §Baseline manualmente); `modules/data-import/wikidata.ts`: dado lista de QIDs, busca entidade (API `wbgetentities`), mapeia P54/P580/P582/P1642/P413/P27/P569/labels → `Player`, `Club`, `CareerSpell`, `PlayerAlias` com status `imported`; `ImportDiff` quando entidade já existe; rota `POST /v1/admin/import/wikidata` (token).
