@@ -273,6 +273,8 @@ async function crossCheck(
   qid: string,
   links: number,
   page: { lang: 'pt' | 'en'; title: string } | undefined,
+  /** The other-language article, used to confirm clubs Wikidata does not link to the player. */
+  alt: { lang: 'pt' | 'en'; title: string } | undefined,
 ): Promise<Outcome> {
   const p = await prisma.player.findUniqueOrThrow({
     where: { id: playerId },
@@ -298,15 +300,18 @@ async function crossCheck(
   // Agreement rule (ADR-006): the career sequence comes from pt.wikipedia and every club in it
   // must also be one of the player's clubs on Wikidata. Years must be present (DQ-01).
   const wdClubs = [...new Map(p.spells.map((s) => [s.clubId, s.club])).values()];
+  // Clubs only the first article links to the player: they must also appear in the other-language one.
+  const needsSecondSource: { id: string; name: string; shortName: string }[] = [];
   const matched: { club: (typeof wdClubs)[number]; entry: InfoboxEntry }[] = [];
   for (const entry of wp) {
     // Reserve and B teams are not senior career entries (they matched the first team before).
     if (RESERVE.test(entry.club)) continue;
     // Exact matches first, so Santa Cruz never falls on Santos for a player who had both.
-    const club =
+    const fromWikidata =
       wdClubs.find((c) => exactClub(c, entry.club)) ??
-      wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club)) ??
-      (await resolveClub(entry, page!.lang));
+      wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club));
+    const club = fromWikidata ?? (await resolveClub(entry, page!.lang));
+    if (club && !fromWikidata) needsSecondSource.push(club);
     if (!club)
       return fail({
         qid,
@@ -342,6 +347,21 @@ async function crossCheck(
       result: 'mismatch',
       detail: 'nenhum clube principal',
     });
+
+  if (needsSecondSource.length) {
+    const altText = alt ? await fetchWikitext(alt.lang, alt.title) : null;
+    const altClubs = (altText ? parseInfoboxCareer(altText) : null) ?? [];
+    const missing = needsSecondSource.find(
+      (c) => !altClubs.some((e) => exactClub(c, e.club) || fuzzyClub(c, e.club)),
+    );
+    if (missing)
+      return fail({
+        qid,
+        name: p.canonicalName,
+        result: 'mismatch',
+        detail: `${missing.shortName} só em uma fonte`,
+      });
+  }
 
   const now = new Date();
   const wpUrl = `https://${page!.lang}.wikipedia.org/wiki/${encodeURIComponent(page!.title.replace(/ /g, '_'))}`;
@@ -495,6 +515,11 @@ for (let i = 0; i < list.length; i += 50) {
           c.qid,
           c.links || Object.keys(ents[c.qid]?.sitelinks ?? {}).length,
           page,
+          page?.lang === 'pt' && sl?.enwiki?.title
+            ? { lang: 'en', title: sl.enwiki.title }
+            : page?.lang === 'en' && sl?.ptwiki?.title
+              ? { lang: 'pt', title: sl.ptwiki.title }
+              : undefined,
         ),
       );
     } catch (e) {
