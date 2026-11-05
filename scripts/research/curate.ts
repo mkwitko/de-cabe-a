@@ -86,23 +86,40 @@ function distance(a: string, b: string): number {
   return row[b.length]!;
 }
 
-function sameClub(club: { name: string; shortName: string }, wp: string): boolean {
-  const a = [...tokens(club.name), ...tokens(club.shortName)];
-  if (
-    tokens(wp).some((t) =>
-      a.some(
-        (x) =>
-          x === t || (t.length >= 5 && x.length >= 4 && distance(x, t) <= (t.length >= 8 ? 2 : 1)),
-      ),
-    )
-  )
-    return true;
-  const initials = club.name
+const clubTokens = (club: { name: string; shortName: string }) => [
+  ...tokens(club.name),
+  ...tokens(club.shortName),
+];
+const initials = (club: { name: string }) =>
+  club.name
     .split(/\s+/)
     .map((w) => w[0])
     .join('')
     .toLowerCase();
-  return tokens(wp).includes(initials);
+
+/** Exact token or initials match ("Inter" -> no; "São Paulo" -> São Paulo Futebol Clube). */
+function exactClub(club: { name: string; shortName: string }, wp: string): boolean {
+  const a = clubTokens(club);
+  return tokens(wp).some((t) => a.includes(t) || t === initials(club));
+}
+
+/** Transliterations and adjectives: Olympiakos/Olympiacos, Lyon/Lyonnais, Rennes/Rennais. */
+function fuzzyClub(club: { name: string; shortName: string }, wp: string): boolean {
+  const a = clubTokens(club);
+  const prefix = (x: string, y: string) => {
+    let k = 0;
+    while (k < x.length && k < y.length && x[k] === y[k]) k++;
+    return k;
+  };
+  return tokens(wp).some((t) =>
+    a.some(
+      (x) =>
+        (t.length >= 5 && x.length >= 4 && distance(x, t) <= (t.length >= 8 ? 2 : 1)) ||
+        (Math.min(x.length, t.length) >= 4 &&
+          prefix(x, t) >= 4 &&
+          prefix(x, t) >= 0.65 * Math.min(x.length, t.length)),
+    ),
+  );
 }
 
 /** Position from the pt.wikipedia infobox, when Wikidata had none we could map. */
@@ -148,7 +165,10 @@ async function crossCheck(
   const wdClubs = [...new Map(p.spells.map((s) => [s.clubId, s.club])).values()];
   const matched: { club: (typeof wdClubs)[number]; entry: InfoboxEntry }[] = [];
   for (const entry of wp) {
-    const club = wdClubs.find((c) => sameClub(c, entry.club));
+    // Exact matches first, so Santa Cruz never falls on Santos for a player who had both.
+    const club =
+      wdClubs.find((c) => exactClub(c, entry.club)) ??
+      wdClubs.find((c) => fuzzyClub(c, entry.club));
     if (!club)
       return {
         qid,
