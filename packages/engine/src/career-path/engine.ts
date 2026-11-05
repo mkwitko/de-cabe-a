@@ -63,6 +63,7 @@ export const careerPathV1: GameEngine<
   version: 1,
 
   validateConfig: (config) => CareerPathConfig.parse(config),
+  parseInput: (input) => CareerPathInput.parse(input),
 
   createInitialState: () => ({
     status: 'IN_PROGRESS',

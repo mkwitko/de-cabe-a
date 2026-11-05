@@ -12,6 +12,8 @@ export interface GameEngine<TConfig, TState, TInput, TEvent> {
   readonly version: number;
   /** Parses a challenge snapshot; throws ZodError when invalid. */
   validateConfig(config: unknown): TConfig;
+  /** Parses a player action; throws ZodError when invalid. */
+  parseInput(input: unknown): TInput;
   createInitialState(config: TConfig): TState;
   /** Returns a new state; never mutates the given one. Throws EngineRuleError on rule violations. */
   submit(state: TState, input: TInput, config: TConfig): SubmitOutcome<TState, TEvent>;

@@ -6,3 +6,4 @@ export * from './contract';
 export * from './career-path/engine';
 export * from './career-path/trajectory';
 export * from './career-path/eligibility';
+export * from './football-grid/engine';
