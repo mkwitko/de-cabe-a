@@ -11,16 +11,16 @@ Cada slice: objetivo, escopo, dependências, módulos, critérios de aceite (ver
 - **Riscos:** versões (Node 24, Tailwind v4, Prisma); fixar versões exatas no lockfile.
 - **Não fazer:** nenhuma tabela, nenhuma rota de jogo.
 
-### Slice 1 — plano de execução (2026-11-05, aguardando aprovação)
+### Slice 1 — plano de execução (aprovado 2026-11-05)
 
 Branch `feat/slice-1-foundation` → PR para `main`. `git init` já feito (repo existe com remote). Prisma fica para o slice 2.
 
-Ajustes propostos ao escopo (pendentes de aprovação):
+Ajustes ao escopo (aprovados):
 - A1. Fronteiras via regra nativa `no-restricted-imports` do ESLint (override em `apps/web/**`) em vez de `eslint-plugin-import/no-restricted-paths`: mesmo efeito, zero dependência.
 - A2. `packages/engine` e `packages/contracts` exportam o fonte TS (`exports: ./src/index.ts`); "build" = `tsc --noEmit`. Vite e `tsx` consomem TS direto. Build de produção da API decide-se no deploy.
 - A3. Unit do web com `react-dom/server` (`renderToString`) em ambiente node: sem jsdom nem Testing Library por ora.
 - A4. CI: lint + typecheck + unit em Node 22 e 24 (REPO_DIAGNOSIS §5); e2e Playwright também no CI, 1 job, Chromium.
-- A5. Página inicial com identidade visual mínima (tokens de cor/tipografia, tema claro/escuro por `prefers-color-scheme`), feita com a skill de design `impeccable`. Sem componentes de jogo.
+- A5. Página inicial com identidade visual mínima (tokens de cor/tipografia, tema claro/escuro por `prefers-color-scheme`), feita com a skill de design `impeccable`. Direção escolhida: "álbum de figurinhas" (`apps/web/DESIGN.md`, `PRODUCT.md`). Sem componentes de jogo.
 
 Passos (commits):
 1. `chore: scaffold pnpm workspace` — raiz, tsconfig base, Prettier, ESLint, `.nvmrc`.
@@ -50,6 +50,8 @@ Dependências (todas da stack do handoff §3, exceto marcadas):
 - api: `fastify`, `fastify-type-provider-zod`, `zod`; dev `tsx` (**fora da stack**: roda a API em TS com watch, sem passo de build).
 - web: `react`, `react-dom`, `react-router`, `@tanstack/react-query`, `tailwindcss`, `@tailwindcss/vite`, `vite`, `@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `@playwright/test`.
 - contracts: `zod`.
+- web: `@fontsource-variable/archivo` (**fora da stack**: fonte self-hosted da direção visual, sem CDN externo).
+- TypeScript fixado em 5.9 (typescript-eslint 8 não suporta TS 6+).
 
 Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && pnpm -r test`; `pnpm -r lint`; `pnpm dev` + `curl localhost:3000/v1/health`; arquivo temporário importando `@decabeca/engine` em `apps/web` → `pnpm -r lint` falha; `pnpm test:e2e`; CI verde no PR.
 
