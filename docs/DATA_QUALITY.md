@@ -9,7 +9,7 @@ imported ──(editor revisa)──▶ verified
 draft (criado manualmente) ──▶ verified | rejected
 ```
 
-Transições só via API admin, com `verifiedBy` e `verifiedAt`. Reimport nunca rebaixa `verified`; cria registro de divergência (`ImportDiff`, tabela simples: entidade, campo, valor atual, valor importado, status) para o editor decidir.
+Transições só via API admin (ou pelo agente de curadoria, ADR-006, com `verifiedBy = "ai-curator"`), com `verifiedBy` e `verifiedAt`. `verified → imported` reabre um registro para edição. Reimport nunca rebaixa `verified`; cria registro de divergência (`ImportDiff`, tabela simples: entidade, campo, valor atual, valor importado, status) para o editor decidir.
 
 ## 2. Regras de qualidade (checagens automáticas)
 

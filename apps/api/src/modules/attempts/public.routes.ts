@@ -6,6 +6,7 @@ import {
   StartAttemptRequest,
   SubmitActionRequest,
 } from '@decabeca/contracts';
+import rateLimit from '@fastify/rate-limit';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { normalizeName } from '@decabeca/engine';
 import { z } from 'zod';
@@ -24,8 +25,18 @@ const GAMES = [
 
 /** Public game routes; every request runs with a guest session (created on first visit). */
 export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
-  const { prisma, now, random, secureCookie } = app.deps;
-  app.addHook('onRequest', guestSession(prisma, { secureCookie, now }));
+  const { prisma, now, random, secureCookie, limits } = app.deps;
+  app.addHook(
+    'onRequest',
+    guestSession(prisma, { secureCookie, now, sessionsPerIp: limits.sessionsPerIp }),
+  );
+  // After the session hook, so limits are per guest session (the IP only limits session creation).
+  await app.register(rateLimit, {
+    hook: 'preHandler',
+    max: limits.perSession,
+    timeWindow: '1 minute',
+    keyGenerator: (req) => req.sessionId,
+  });
   await app.register(progressionRoutes);
   await app.register(analyticsRoutes);
 
@@ -50,7 +61,10 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.get(
     '/players/search',
-    { schema: { querystring: PlayerSearchQuery, response: { 200: PlayerSearchResponse } } },
+    {
+      config: { rateLimit: { max: limits.search, timeWindow: '1 minute' } },
+      schema: { querystring: PlayerSearchQuery, response: { 200: PlayerSearchResponse } },
+    },
     async (req) => {
       const players = await searchPlayers(prisma, req.query.q, req.query.limit);
       // Editorial signal for missing aliases (DATA_QUALITY.md §5); the text never goes to analytics.
@@ -96,6 +110,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/attempts/:id/actions',
     {
+      config: { rateLimit: { max: limits.actions, timeWindow: '1 minute' } },
       schema: {
         params: z.object({ id: z.string() }),
         body: SubmitActionRequest,

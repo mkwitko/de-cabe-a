@@ -48,6 +48,15 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
     ]);
   });
 
+  it('reads years wrapped in templates and open spells', () => {
+    const text =
+      '{{Info/Futebol\n|ano1 = {{0}}2004–2021\n|clube1 = {{Futebol Barcelona}}\n|ano2 = 2023–\n|clube2 = {{Futebol Inter Miami}}\n}}';
+    expect(parseInfoboxCareer(text)?.map((e) => [e.fromYear, e.toYear])).toEqual([
+      [2004, 2021],
+      [2023, null],
+    ]);
+  });
+
   it('returns null when there is no football infobox', () => {
     expect(parseInfoboxCareer('Sem infobox')).toBeNull();
   });

@@ -608,3 +608,42 @@ describe('analytics', () => {
     expect(bad.statusCode).toBe(400);
   });
 });
+
+describe('rate limits', () => {
+  it('limits searches per session and new sessions per IP with 429 RATE_LIMITED', async () => {
+    const limited = testApp({
+      prisma,
+      limits: { sessionsPerIp: 2, perSession: 1000, search: 3, actions: 1000 },
+    }).app;
+    const first = await limited.inject({
+      method: 'GET',
+      url: '/v1/players/search?q=ro',
+      remoteAddress: '10.0.0.1',
+    });
+    const cookie = String(first.headers['set-cookie']).split(';')[0]!;
+    const codes = [];
+    for (let i = 0; i < 3; i++)
+      codes.push(
+        (
+          await limited.inject({
+            method: 'GET',
+            url: '/v1/players/search?q=ro',
+            headers: { cookie },
+            remoteAddress: '10.0.0.1',
+          })
+        ).statusCode,
+      );
+    expect(codes).toEqual([200, 200, 429]);
+
+    await limited.inject({ method: 'GET', url: '/v1/games', remoteAddress: '10.0.0.2' });
+    await limited.inject({ method: 'GET', url: '/v1/games', remoteAddress: '10.0.0.2' });
+    const third = await limited.inject({
+      method: 'GET',
+      url: '/v1/games',
+      remoteAddress: '10.0.0.2',
+    });
+    expect(third.statusCode).toBe(429);
+    expect(third.json().error.code).toBe('RATE_LIMITED');
+    await limited.close();
+  });
+});

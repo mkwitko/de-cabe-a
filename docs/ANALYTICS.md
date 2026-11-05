@@ -17,7 +17,7 @@ Sem ferramenta externa no MVP: eventos vão para `POST /v1/events` → tabela `E
 | `daily_challenge_completed` | = game_completed com kind=daily (derivar) | — |
 | `search_no_result` | Autocomplete sem resultados para q ≥ 3 chars | qLength, mode (texto **não** enviado; só comprimento; editorial vê o texto via log de busca server-side com retenção 30 dias) |
 
-Server-side também registra: `attempt_created`, `action_rejected` (code), `rate_limited`.
+Implementação (2026-11-05): `game_started`, `answer_submitted`, `hint_revealed`, `game_completed` (com `durationSec` calculado no servidor) e `action_rejected` são gravados pela API no momento da ação. O cliente envia só `game_viewed`, `result_shared`, `game_abandoned` (`sendBeacon`) e `search_no_result`. Consultas em `docs/analytics-queries.sql`.
 
 Sem IP, sem user agent completo (só `isMobile` boolean), sem texto de busca em eventos.
 

@@ -64,7 +64,7 @@ model Player {
   nationalityCountryId String
   nationality          Country @relation("primaryNationality", fields: [nationalityCountryId], references: [id])
   secondaryNationalityCountryId String?
-  primaryPositionGroup PositionGroup
+  primaryPositionGroup PositionGroup?    // opcional até a verificação (DQ-04)
   positionDetail       String?           // "centroavante"
   notabilityTier       NotabilityTier @default(T3)
   wikidataId           String? @unique
@@ -159,7 +159,8 @@ model Challenge {
   publishedAt   DateTime?
   usages        ChallengePlayerUsage[]
   attempts      Attempt[]
-  @@unique([gameMode, kind, scheduledFor])   // um daily por jogo por dia
+  // unique parcial: (gameMode, kind, scheduledFor) WHERE status <> 'retired' — um daily vivo por jogo por dia;
+  // o retirado libera a data para o substituto (supersedesId)
   @@unique([gameMode, publicNumber])
   @@index([gameMode, kind, status])
 }
@@ -252,6 +253,16 @@ model AttemptAction {
 ```
 
 Nota sobre practice **[APROVADO 2026-11-05]**: practice pode ser rejogado. A unicidade (sessionId, challengeId) vale só para `kind=daily`, via índice único parcial em migration SQL (Prisma não declara índice parcial). Practice permite várias partidas por desafio; o seletor exclui os 20 últimos desafios jogados pela sessão e, se não sobrar nenhum, sorteia entre todos. `PRACTICE_POOL_EXHAUSTED` só ocorre se o modo não tiver nenhum practice publicado.
+
+### 2.4 Editorial
+
+```prisma
+model SearchMiss {            // buscas sem resultado (DATA_QUALITY.md §5); só texto normalizado, retenção 30 dias
+  normalized String @id
+  count      Int @default(1)
+  lastAt     DateTime
+}
+```
 
 ## 3. Streak e estatísticas (derivadas)
 

@@ -24,14 +24,16 @@ function clean(raw: string): string {
     .trim();
 }
 
-const year = (s: string | undefined) => (s && /^\d{4}$/.test(s) ? Number(s) : null);
-
 function entry(index: number, years: string, raw: string): InfoboxEntry {
-  const [from, to] = years.split(/[–—-]/).map((s) => s.trim());
+  // "1993–1994", "2004–", "{{0}}2013", "2013": first year, second year, open or single.
+  const found = [...years.replace(/\{\{[^}]*\}\}/g, '').matchAll(/\d{4}/g)].map((m) =>
+    Number(m[0]),
+  );
+  const open = /\d{4}\s*[–—-]\s*$/.test(years.trim());
   return {
     index,
-    fromYear: year(from),
-    toYear: to === undefined ? year(from) : year(to),
+    fromYear: found[0] ?? null,
+    toYear: found[1] ?? (open ? null : (found[0] ?? null)),
     club: clean(raw),
     isLoan: /\(emp(?:réstimo|\.)?\)|→/i.test(raw),
   };

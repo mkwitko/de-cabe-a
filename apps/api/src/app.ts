@@ -28,6 +28,8 @@ export interface AppDeps {
   random: () => number;
   /** Secure flag on the session cookie; off only for plain-http local development. */
   secureCookie: boolean;
+  /** Per-minute limits (ARCHITECTURE.md §8, API_SPEC.md). */
+  limits: { sessionsPerIp: number; perSession: number; search: number; actions: number };
 }
 
 declare module 'fastify' {
@@ -56,6 +58,7 @@ export function buildApp(
     now: () => new Date(),
     random: Math.random,
     secureCookie: process.env.NODE_ENV === 'production',
+    limits: { sessionsPerIp: 20, perSession: 300, search: 60, actions: 120 },
     ...deps,
   });
 

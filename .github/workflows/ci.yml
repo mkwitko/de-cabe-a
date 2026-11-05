@@ -44,6 +44,18 @@ jobs:
   e2e:
     name: e2e (Playwright, Chromium)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: decabeca
+          POSTGRES_PASSWORD: decabeca
+          POSTGRES_DB: decabeca_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U decabeca" --health-interval 2s --health-timeout 3s --health-retries 15
+    env:
+      E2E_DATABASE_URL: postgresql://decabeca:decabeca@localhost:5432/decabeca_e2e
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

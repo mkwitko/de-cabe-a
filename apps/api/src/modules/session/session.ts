@@ -5,6 +5,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { PrismaClient } from '../../generated/prisma/client';
+import { AppError } from '../../errors';
 
 export const COOKIE = 'dc_session';
 const MAX_AGE_S = 400 * 24 * 3600;
@@ -30,10 +31,27 @@ function readCookie(req: FastifyRequest, name: string): string | undefined {
 }
 
 /** onRequest hook for public routes: loads the guest session or creates one. */
+// ponytail: in-memory per-IP window, fine for one API process; use a shared store if the API scales out.
+function creationLimiter(perMinute: number, now: () => Date) {
+  const hits = new Map<string, { start: number; n: number }>();
+  return (ip: string) => {
+    const t = now().getTime();
+    const h = hits.get(ip);
+    if (!h || t - h.start >= 60_000) {
+      if (hits.size > 10_000) hits.clear();
+      hits.set(ip, { start: t, n: 1 });
+      return true;
+    }
+    h.n++;
+    return h.n <= perMinute;
+  };
+}
+
 export function guestSession(
   prisma: PrismaClient,
-  opts: { secureCookie: boolean; now: () => Date },
+  opts: { secureCookie: boolean; now: () => Date; sessionsPerIp: number },
 ) {
+  const allowCreation = creationLimiter(opts.sessionsPerIp, opts.now);
   return async (req: FastifyRequest, reply: FastifyReply) => {
     const token = readCookie(req, COOKIE);
     if (token) {
@@ -48,6 +66,8 @@ export function guestSession(
         return;
       }
     }
+    if (!allowCreation(req.ip))
+      throw new AppError(429, 'RATE_LIMITED', 'Muitas sessões novas. Tente de novo em um minuto.');
     const fresh = randomBytes(32).toString('base64url');
     const s = await prisma.guestSession.create({
       data: { tokenHash: hashToken(fresh), lastSeenAt: opts.now() },

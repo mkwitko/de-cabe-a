@@ -134,3 +134,17 @@ Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && p
 
 ## Slice 15 — Cadastro opcional (pós-piloto, bloqueado por RF-10)
 Não planejar em detalhe até decisão.
+
+## Estado em 2026-11-05 (slices 4–14)
+
+Implementados na branch `feat/mvp-slices-4-14`, um commit por slice (Conventional Commits). Desvios do plano:
+
+- **Slice 4:** o spot-check usa a API da Wikipédia PT para comparar a carreira (resultado em `DATA_QUALITY.md` §6). `Player.primaryPositionGroup` virou opcional até a verificação (DQ-04 pressupunha isso).
+- **Slice 5:** `verified → imported` reabre registros; `verifiedBy` vem do header `X-Editor`.
+- **Slices 6 e 9:** cookie de sessão sem assinatura (token de 256 bits + hash no banco); `SESSION_SECRET` removido. Treino pode ser rejogado e é retomado se estiver em andamento. Daily retirado libera a data (índice parcial). Practice não recebe `publicNumber`; share do treino diz "(treino)".
+- **Slice 8** foi feito antes do 6 terminar, porque o registro de engines da API precisa das duas.
+- **Slice 11:** streak conta dia com daily concluído (ganho ou perdido); dia sem jogar zera.
+- **Slice 13:** eventos de jogo gravados pela API; o cliente só envia o que o servidor não vê.
+- **Slice 14:** rate limits com `@fastify/rate-limit` (por sessão) e janela em memória por IP para criar sessão; e2e completo no CI com Postgres próprio; checklist em `docs/DEPLOY.md`.
+- **Conteúdo do piloto:** feito pela IA (ADR-006) com `scripts/research/curate.ts` (import + conferência Wikidata × Wikipédia PT) e `scripts/research/publish-pilot.ts` (30 dias de daily por jogo + treino).
+- **Slice 15** continua bloqueado (RF-10).

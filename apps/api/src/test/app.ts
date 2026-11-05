@@ -29,7 +29,13 @@ export function testApp(deps: Partial<AppDeps> = {}) {
   const prisma = deps.prisma ?? testPrisma();
   const app = buildApp(
     { logger: false },
-    { prisma, adminToken: ADMIN_TOKEN, fetchEntities: fixtureFetcher(), ...deps },
+    {
+      prisma,
+      adminToken: ADMIN_TOKEN,
+      fetchEntities: fixtureFetcher(),
+      limits: { sessionsPerIp: 10_000, perSession: 10_000, search: 10_000, actions: 10_000 },
+      ...deps,
+    },
   );
   return { app, prisma };
 }

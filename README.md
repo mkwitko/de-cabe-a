@@ -35,6 +35,19 @@ pnpm dev                      # api em :3000, web em :5173
 
 `pnpm test` inclui os testes de integração da API, que precisam do Postgres (`docker compose up -d`); eles rodam num schema `test` separado. Nova migration: `pnpm --filter @decabeca/api db:migrate:dev --name <nome>`.
 
+## Painel editorial e conteúdo
+
+- Painel: `http://localhost:5173/admin` (token = `ADMIN_TOKEN` do `.env`). Jogadores, desafios (agenda semanal), relatórios.
+- Conteúdo do piloto pela IA (ADR-006), contra o banco do `.env`:
+
+```bash
+pnpm --filter @decabeca/api exec tsx ../../scripts/research/curate.ts          # importa e verifica jogadores
+pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-pilot.ts   # publica 30 dias de desafios
+pnpm --filter @decabeca/api exec tsx ../../scripts/research/validate-pool.ts   # DQ-01..09 no banco todo
+```
+
+O e2e (`pnpm test:e2e`) usa o banco `decabeca_e2e` (crie com `docker compose exec postgres createdb -U decabeca decabeca_e2e`) e as portas 3001/5174.
+
 ## Estrutura
 
 ```text
