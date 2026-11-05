@@ -1,10 +1,16 @@
 /** Stars 0–3 per finished level, from the engine score (ADR-007). */
-export function starsFor(engine: 'career-path' | 'football-grid', score: number): 0 | 1 | 2 | 3 {
+export function starsFor(
+  engine: 'career-path' | 'football-grid',
+  score: number,
+  opts: { hintsUsed?: number } = {},
+): 0 | 1 | 2 | 3 {
   if (engine === 'career-path') {
     // score = (7 - attempts) * 10: 1–2 attempts -> 3, 3–4 -> 2, 5–6 -> 1, lost -> 0
     return score >= 50 ? 3 : score >= 30 ? 2 : score >= 10 ? 1 : 0;
   }
-  return score === 9 ? 3 : score >= 6 ? 2 : score >= 3 ? 1 : 0;
+  const stars = score === 9 ? 3 : score >= 6 ? 2 : score >= 3 ? 1 : 0;
+  // A grid solved with hints is worth at most 2 stars.
+  return opts.hintsUsed ? (Math.min(stars, 2) as 0 | 1 | 2) : stars;
 }
 
 const TITLES = [

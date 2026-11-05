@@ -158,7 +158,12 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
   });
 
   it('keeps the linked page of the club cell', () => {
-    expect(parseInfoboxCareer(WIKITEXT)?.map((e) => e.link)).toEqual([null, 'PSV Eindhoven', null, 'São Paulo Futebol Clube']);
+    expect(parseInfoboxCareer(WIKITEXT)?.map((e) => e.link)).toEqual([
+      null,
+      'PSV Eindhoven',
+      null,
+      'São Paulo Futebol Clube',
+    ]);
   });
 
   it('returns null when there is no football infobox', () => {

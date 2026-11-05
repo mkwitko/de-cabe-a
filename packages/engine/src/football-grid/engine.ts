@@ -34,8 +34,10 @@ const Axis = z.tuple([Criterion, Criterion, Criterion]);
 
 export const FootballGridConfig = z.object({
   engine: z.literal('football-grid'),
-  engineVersion: z.literal(1),
+  engineVersion: z.literal(2),
   maxAttempts: z.literal(9),
+  /** Hints per grid (football-grid@2, ADR-007). */
+  maxHints: z.literal(3),
   rows: Axis,
   cols: Axis,
   cells: z
@@ -44,6 +46,11 @@ export const FootballGridConfig = z.object({
         index: CellIndex,
         eligiblePlayerIds: z.array(z.string()).min(1),
         exampleAnswerPlayerId: z.string(),
+        /** What a hint reveals about the example answer: first letter and letters per word. */
+        hint: z.object({
+          initial: z.string().length(1),
+          pattern: z.array(z.number().int().positive()).min(1),
+        }),
       }),
     )
     .length(9)
@@ -59,6 +66,7 @@ export type FootballGridConfig = z.infer<typeof FootballGridConfig>;
 export const FootballGridInput = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('guess'), cellIndex: CellIndex, playerId: z.string().min(1) }),
   z.object({ kind: z.literal('finish') }),
+  z.object({ kind: z.literal('hint'), cellIndex: CellIndex }),
 ]);
 export type FootballGridInput = z.infer<typeof FootballGridInput>;
 
@@ -68,11 +76,14 @@ export interface FootballGridState {
   cells: Array<{ index: number; playerId: string | null }>;
   usedPlayerIds: string[];
   actions: Array<{ cellIndex: number; playerId: string; correct: boolean }>;
+  /** Cells where a hint was used, in order. */
+  hints: number[];
 }
 
 export type FootballGridEvent =
   | { type: 'correct'; cellIndex: number }
   | { type: 'wrong'; cellIndex: number }
+  | { type: 'hint'; cellIndex: number }
   | { type: 'completed' };
 
 const filled = (s: FootballGridState) => s.cells.filter((c) => c.playerId !== null).length;
@@ -84,14 +95,14 @@ const publicCriterion = (c: Criterion) => ({
   code: c.type === 'position' ? c.positionGroup : c.type === 'club' ? null : c.flagCode,
 });
 
-export const footballGridV1: GameEngine<
+export const footballGrid: GameEngine<
   FootballGridConfig,
   FootballGridState,
   FootballGridInput,
   FootballGridEvent
 > = {
   id: 'football-grid',
-  version: 1,
+  version: 2,
 
   validateConfig: (config) => FootballGridConfig.parse(config),
   parseInput: (input) => FootballGridInput.parse(input),
@@ -102,6 +113,7 @@ export const footballGridV1: GameEngine<
     cells: Array.from({ length: 9 }, (_, index) => ({ index, playerId: null })),
     usedPlayerIds: [],
     actions: [],
+    hints: [],
   }),
 
   submit(state, input, config) {
@@ -113,6 +125,14 @@ export const footballGridV1: GameEngine<
       };
     if (state.cells[input.cellIndex]!.playerId !== null)
       throw new EngineRuleError('CELL_ALREADY_FILLED');
+    if (input.kind === 'hint') {
+      if (state.hints.includes(input.cellIndex)) throw new EngineRuleError('HINT_ALREADY_USED');
+      if (state.hints.length >= config.maxHints) throw new EngineRuleError('NO_HINTS_LEFT');
+      return {
+        state: { ...state, hints: [...state.hints, input.cellIndex] },
+        event: { type: 'hint', cellIndex: input.cellIndex },
+      };
+    }
     if (state.usedPlayerIds.includes(input.playerId))
       throw new EngineRuleError('PLAYER_ALREADY_USED');
 
@@ -151,6 +171,13 @@ export const footballGridV1: GameEngine<
     wrongGuesses: state.actions
       .filter((a) => !a.correct)
       .map(({ cellIndex, playerId }) => ({ cellIndex, playerId })),
+    hintsLeft: config.maxHints - state.hints.length,
+    hints: state.hints.map((cellIndex) => ({
+      cellIndex,
+      initial: config.cells[cellIndex]!.hint.initial,
+      pattern: config.cells[cellIndex]!.hint.pattern,
+      validAnswers: config.cells[cellIndex]!.eligiblePlayerIds.length,
+    })),
   }),
 
   toRevealView: (_state, config) => ({
@@ -165,7 +192,9 @@ export const footballGridV1: GameEngine<
     const rows = [0, 1, 2].map((r) =>
       [0, 1, 2].map((c) => (state.cells[r * 3 + c]!.playerId ? '🟩' : '⬛')).join(''),
     );
-    return `De Cabeça · ${meta.label} · ${filled(state)}/${config.maxAttempts}\n${rows.join('\n')}\n${meta.url}`;
+    const n = state.hints.length;
+    const hints = n ? ` · ${n} ${n === 1 ? 'dica' : 'dicas'}` : '';
+    return `De Cabeça · ${meta.label} · ${filled(state)}/${config.maxAttempts}${hints}\n${rows.join('\n')}\n${meta.url}`;
   },
 };
 

@@ -26,6 +26,14 @@ describe('starsFor (ADR-007)', () => {
   );
 });
 
+describe('starsFor with hints', () => {
+  it('using a grid hint caps the level at 2 stars', () => {
+    expect(starsFor('football-grid', 9, { hintsUsed: 1 })).toBe(2);
+    expect(starsFor('football-grid', 4, { hintsUsed: 3 })).toBe(1);
+    expect(starsFor('football-grid', 9, { hintsUsed: 0 })).toBe(3);
+  });
+});
+
 describe('titleFor', () => {
   it.each([
     [0, 'Reserva'],

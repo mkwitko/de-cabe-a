@@ -32,6 +32,12 @@ const POSITION_LABEL = {
 } as const;
 const TIER_ORDER = { T1: 0, T2: 1, T3: 2, T4: 3 } as const;
 
+/** A hint about the example answer: first letter and letters per word ("Zé Roberto" -> Z, [2, 7]). */
+export function hintFor(name: string): { initial: string; pattern: number[] } {
+  const words = name.trim().split(/\s+/);
+  return { initial: name.trim()[0]!.toUpperCase(), pattern: words.map((w) => w.length) };
+}
+
 /** §8: average pool size ≥ 40 -> 1; 15-39 -> 2; below -> 3. */
 export function gridDifficulty(counts: number[]): 1 | 2 | 3 {
   const avg = counts.reduce((a, b) => a + b, 0) / (counts.length || 1);
@@ -156,12 +162,15 @@ export async function buildGridSnapshot(
     const chosen = params.examples?.[String(i)];
     if (chosen && !pool.some((p) => p.id === chosen))
       reasons.push(`CELL_${i}_EXAMPLE_NOT_ELIGIBLE`);
-    if (pool.length)
+    if (pool.length) {
+      const example = pool.find((p) => p.id === chosen) ?? pool[0]!;
       cells.push({
         index: i,
         eligiblePlayerIds: pool.map((p) => p.id),
-        exampleAnswerPlayerId: chosen ?? pool[0]!.id,
+        exampleAnswerPlayerId: example.id,
+        hint: hintFor(example.canonicalName),
       });
+    }
   }
 
   const unique = [...new Set(reasons)];
@@ -169,7 +178,8 @@ export async function buildGridSnapshot(
   const config: Omit<FootballGridConfig, 'difficultyTier'> | null = eligible
     ? {
         engine: 'football-grid',
-        engineVersion: 1,
+        engineVersion: 2,
+        maxHints: 3,
         maxAttempts: 9,
         rows,
         cols,

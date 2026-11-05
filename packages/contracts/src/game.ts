@@ -80,6 +80,16 @@ export const FootballGridView = z.strictObject({
   cols: z.array(GridCriterion),
   cells: z.array(z.strictObject({ index: z.number(), player: PlayerRef.nullable() })),
   wrongGuesses: z.array(z.strictObject({ cellIndex: z.number(), player: PlayerRef })),
+  /** football-grid@2: up to 3 hints; a hint shows a valid answer's initial, letters per word and the pool size. */
+  hintsLeft: z.number(),
+  hints: z.array(
+    z.strictObject({
+      cellIndex: z.number(),
+      initial: z.string(),
+      pattern: z.array(z.number()),
+      validAnswers: z.number(),
+    }),
+  ),
 });
 export type FootballGridView = z.infer<typeof FootballGridView>;
 export const FootballGridReveal = z.strictObject({
@@ -107,6 +117,7 @@ const GameEvent = z.union([
     cellIndex: z.number().optional(),
   }),
   z.strictObject({ type: z.literal('lost') }),
+  z.strictObject({ type: z.literal('hint'), cellIndex: z.number() }),
   z.strictObject({ type: z.literal('completed') }),
 ]);
 
@@ -131,6 +142,7 @@ export const SubmitActionRequest = z.object({
     }),
     z.object({ kind: z.literal('skip') }),
     z.object({ kind: z.literal('finish') }),
+    z.object({ kind: z.literal('hint'), cellIndex: z.number().int() }),
   ]),
 });
 

@@ -423,6 +423,48 @@ describe('Football Grid', () => {
     );
   });
 
+  it('hints: pattern and pool size, 3 per grid, a perfect grid with a hint is worth 2 stars', async () => {
+    const g = guest();
+    const start = (await g.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 })).json();
+    const snapshot = (
+      await prisma.challenge.findUniqueOrThrow({ where: { id: start.attempt.challengeId } })
+    ).snapshot as {
+      cells: { eligiblePlayerIds: string[]; hint: { initial: string; pattern: number[] } }[];
+    };
+    expect(start.view.hintsLeft).toBe(3);
+    const hint = await g.act(start.attempt.id, { kind: 'hint', cellIndex: 4 });
+    expect(hint.json().event).toEqual({ type: 'hint', cellIndex: 4 });
+    expect(hint.json().view).toMatchObject({
+      attemptsUsed: 0,
+      hintsLeft: 2,
+      hints: [
+        {
+          cellIndex: 4,
+          initial: 'G',
+          pattern: [4, expect.any(Number)],
+          validAnswers: snapshot.cells[4]!.eligiblePlayerIds.length,
+        },
+      ],
+    });
+    expect((await g.act(start.attempt.id, { kind: 'hint', cellIndex: 4 })).json().error.code).toBe(
+      'HINT_ALREADY_USED',
+    );
+    await g.act(start.attempt.id, { kind: 'hint', cellIndex: 5 });
+    await g.act(start.attempt.id, { kind: 'hint', cellIndex: 6 });
+    expect((await g.act(start.attempt.id, { kind: 'hint', cellIndex: 7 })).json().error.code).toBe(
+      'NO_HINTS_LEFT',
+    );
+    let last;
+    for (let i = 0; i < 9; i++)
+      last = await g.act(start.attempt.id, {
+        kind: 'guess',
+        cellIndex: i,
+        playerId: snapshot.cells[i]!.eligiblePlayerIds[0],
+      });
+    expect(last!.json().attempt).toMatchObject({ status: 'COMPLETED', score: 9, stars: 2 });
+    expect(last!.json().share.text).toContain('9/9 · 3 dicas');
+  });
+
   it('a grid level needs 8 answers per cell', async () => {
     const thin = {
       rows: gridParams.rows,

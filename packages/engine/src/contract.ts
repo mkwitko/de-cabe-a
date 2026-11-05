@@ -27,7 +27,12 @@ export interface GameEngine<TConfig, TState, TInput, TEvent> {
 }
 
 export type EngineRuleCode =
-  'GAME_ALREADY_COMPLETED' | 'DUPLICATE_GUESS' | 'CELL_ALREADY_FILLED' | 'PLAYER_ALREADY_USED';
+  | 'GAME_ALREADY_COMPLETED'
+  | 'DUPLICATE_GUESS'
+  | 'CELL_ALREADY_FILLED'
+  | 'PLAYER_ALREADY_USED'
+  | 'HINT_ALREADY_USED'
+  | 'NO_HINTS_LEFT';
 
 /** A rule violation; the API maps it to 409 with the same code. */
 export class EngineRuleError extends Error {

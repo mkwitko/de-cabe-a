@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkGridCombination,
-  footballGridV1,
+  footballGrid,
   type Criterion,
   type FootballGridConfig,
   type FootballGridInput,
@@ -21,16 +21,18 @@ const cols: [Criterion, Criterion, Criterion] = [
 ];
 
 const config = (): FootballGridConfig =>
-  footballGridV1.validateConfig({
+  footballGrid.validateConfig({
     engine: 'football-grid',
-    engineVersion: 1,
+    engineVersion: 2,
     maxAttempts: 9,
+    maxHints: 3,
     rows,
     cols,
     cells: Array.from({ length: 9 }, (_, i) => ({
       index: i,
       eligiblePlayerIds: [`p${i}a`, `p${i}b`, 'shared'],
       exampleAnswerPlayerId: `p${i}a`,
+      hint: { initial: 'R', pattern: [7, 8] },
     })),
     difficultyTier: 2,
   });
@@ -43,19 +45,19 @@ const guess = (cellIndex: number, playerId: string): FootballGridInput => ({
 
 function play(inputs: FootballGridInput[]) {
   const cfg = config();
-  let state = footballGridV1.createInitialState(cfg);
+  let state = footballGrid.createInitialState(cfg);
   const events = [];
   for (const i of inputs) {
-    const out = footballGridV1.submit(state, i, cfg);
+    const out = footballGrid.submit(state, i, cfg);
     state = out.state;
     events.push(out.event);
   }
   return { state, events, cfg };
 }
 
-describe('footballGridV1 (FOOTBALL_GRID.md §1, §5, §7)', () => {
+describe('footballGrid (FOOTBALL_GRID.md §1, §5, §7)', () => {
   it('starts empty and in progress', () => {
-    const s = footballGridV1.createInitialState(config());
+    const s = footballGrid.createInitialState(config());
     expect(s.status).toBe('IN_PROGRESS');
     expect(s.attemptsUsed).toBe(0);
     expect(s.cells.every((c) => c.playerId === null)).toBe(true);
@@ -70,19 +72,19 @@ describe('footballGridV1 (FOOTBALL_GRID.md §1, §5, §7)', () => {
     expect(state.cells[0]!.playerId).toBe('p0a');
     expect(state.cells[1]!.playerId).toBeNull();
     expect(state.attemptsUsed).toBe(2);
-    expect(footballGridV1.score(state, config())).toBe(1);
+    expect(footballGrid.score(state, config())).toBe(1);
   });
 
   it('a filled cell cannot be guessed again', () => {
     const { state, cfg } = play([guess(0, 'p0a')]);
-    expect(() => footballGridV1.submit(state, guess(0, 'p0b'), cfg)).toThrow(
+    expect(() => footballGrid.submit(state, guess(0, 'p0b'), cfg)).toThrow(
       expect.objectContaining({ code: 'CELL_ALREADY_FILLED' }),
     );
   });
 
   it('a player can be used once per game, even if eligible elsewhere', () => {
     const { state, cfg } = play([guess(0, 'shared')]);
-    expect(() => footballGridV1.submit(state, guess(1, 'shared'), cfg)).toThrow(
+    expect(() => footballGrid.submit(state, guess(1, 'shared'), cfg)).toThrow(
       expect.objectContaining({ code: 'PLAYER_ALREADY_USED' }),
     );
   });
@@ -96,37 +98,35 @@ describe('footballGridV1 (FOOTBALL_GRID.md §1, §5, §7)', () => {
     const { state, events } = play([guess(0, 'p0a'), { kind: 'finish' }]);
     expect(events.at(-1)).toEqual({ type: 'completed' });
     expect(state).toMatchObject({ status: 'COMPLETED', attemptsUsed: 9 });
-    expect(footballGridV1.score(state, config())).toBe(1);
+    expect(footballGrid.score(state, config())).toBe(1);
   });
 
   it('filling all 9 completes with score 9', () => {
     const { state } = play(Array.from({ length: 9 }, (_, i) => guess(i, `p${i}a`)));
     expect(state.status).toBe('COMPLETED');
-    expect(footballGridV1.score(state, config())).toBe(9);
+    expect(footballGrid.score(state, config())).toBe(9);
   });
 
   it('nine attempts complete the game even with empty cells', () => {
     const { state, cfg } = play(Array.from({ length: 9 }, (_, i) => guess(i, `x${i}`)));
     expect(state).toMatchObject({ status: 'COMPLETED', attemptsUsed: 9 });
-    expect(() => footballGridV1.submit(state, guess(0, 'p0a'), cfg)).toThrow(
+    expect(() => footballGrid.submit(state, guess(0, 'p0a'), cfg)).toThrow(
       expect.objectContaining({ code: 'GAME_ALREADY_COMPLETED' }),
     );
   });
 
   it('rejects a cell index outside 0-8 in the input schema', () => {
-    expect(() =>
-      footballGridV1.parseInput({ kind: 'guess', cellIndex: 9, playerId: 'a' }),
-    ).toThrow();
+    expect(() => footballGrid.parseInput({ kind: 'guess', cellIndex: 9, playerId: 'a' })).toThrow();
   });
 
   it('public view never contains the pools or the example answers, in any state', () => {
     const cfg = config();
-    const secret = (s: FootballGridState) => JSON.stringify(footballGridV1.toPublicView(s, cfg));
-    let state = footballGridV1.createInitialState(cfg);
+    const secret = (s: FootballGridState) => JSON.stringify(footballGrid.toPublicView(s, cfg));
+    let state = footballGrid.createInitialState(cfg);
     const leaks = (txt: string) => /p\da|p\db|shared/.test(txt.replace(/"playerId":"[^"]+"/g, ''));
     expect(leaks(secret(state))).toBe(false);
     for (const i of [0, 1, 2]) {
-      state = footballGridV1.submit(state, guess(i, i === 1 ? 'zzz' : `p${i}a`), cfg).state;
+      state = footballGrid.submit(state, guess(i, i === 1 ? 'zzz' : `p${i}a`), cfg).state;
       expect(leaks(secret(state))).toBe(false);
       expect(secret(state)).not.toContain('eligiblePlayerIds');
       expect(secret(state)).not.toContain('exampleAnswerPlayerId');
@@ -135,7 +135,7 @@ describe('footballGridV1 (FOOTBALL_GRID.md §1, §5, §7)', () => {
 
   it('reveal view gives one example and the size of each pool', () => {
     const { state } = play([{ kind: 'finish' }]);
-    expect(footballGridV1.toRevealView(state, config())).toEqual({
+    expect(footballGrid.toRevealView(state, config())).toEqual({
       cells: Array.from({ length: 9 }, (_, i) => ({
         index: i,
         exampleAnswerPlayerId: `p${i}a`,
@@ -156,7 +156,7 @@ describe('footballGridV1 (FOOTBALL_GRID.md §1, §5, §7)', () => {
       { kind: 'finish' },
     ]);
     expect(
-      footballGridV1.buildShareText(state, config(), {
+      footballGrid.buildShareText(state, config(), {
         label: 'Grid #45',
         url: 'decabeca.app/g/45',
       }),
@@ -203,5 +203,46 @@ describe('checkGridCombination (§3)', () => {
     expect(checkGridCombination(rows, c, clubCountry)).toEqual(
       expect.arrayContaining(['NATIONALITY_IN_OWN_COUNTRY']),
     );
+  });
+});
+
+describe('hints (football-grid@2)', () => {
+  it('a hint shows initial, letter pattern and pool size of a cell, without using an attempt', () => {
+    const { state, events, cfg } = play([{ kind: 'hint', cellIndex: 4 }]);
+    expect(events).toEqual([{ type: 'hint', cellIndex: 4 }]);
+    expect(state.attemptsUsed).toBe(0);
+    expect(footballGrid.toPublicView(state, cfg)).toMatchObject({
+      hintsLeft: 2,
+      hints: [{ cellIndex: 4, initial: 'R', pattern: [7, 8], validAnswers: 3 }],
+    });
+  });
+
+  it('allows three hints, one per cell, never on a filled cell', () => {
+    const { state, cfg } = play([guess(0, 'p0a'), { kind: 'hint', cellIndex: 1 }]);
+    expect(() => footballGrid.submit(state, { kind: 'hint', cellIndex: 1 }, cfg)).toThrow(
+      expect.objectContaining({ code: 'HINT_ALREADY_USED' }),
+    );
+    expect(() => footballGrid.submit(state, { kind: 'hint', cellIndex: 0 }, cfg)).toThrow(
+      expect.objectContaining({ code: 'CELL_ALREADY_FILLED' }),
+    );
+    const three = play([
+      { kind: 'hint', cellIndex: 1 },
+      { kind: 'hint', cellIndex: 2 },
+      { kind: 'hint', cellIndex: 3 },
+    ]);
+    expect(() =>
+      footballGrid.submit(three.state, { kind: 'hint', cellIndex: 4 }, three.cfg),
+    ).toThrow(expect.objectContaining({ code: 'NO_HINTS_LEFT' }));
+  });
+
+  it('the share text says how many hints were used', () => {
+    const { state, cfg } = play([
+      { kind: 'hint', cellIndex: 0 },
+      guess(0, 'p0a'),
+      { kind: 'finish' },
+    ]);
+    expect(
+      footballGrid.buildShareText(state, cfg, { label: 'Grid · Fase 1', url: 'decabeca.app' }),
+    ).toBe('De Cabeça · Grid · Fase 1 · 1/9 · 1 dica\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛\ndecabeca.app');
   });
 });

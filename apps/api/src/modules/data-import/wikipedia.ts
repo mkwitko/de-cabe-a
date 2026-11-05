@@ -57,7 +57,8 @@ function entry(
     isLoan: /\(emp(?:réstimo|\.)?\)|\(loan\)|→|\{\{\s*(?:emp|seta) fut/i.test(raw),
     appearances: count(apps),
     goals: count(goals),
-    link: /\[\[([^\]|#]+)/.exec(raw.replace(/<ref[\s\S]*?(?:\/>|<\/ref>)/g, ''))?.[1]?.trim() ?? null,
+    link:
+      /\[\[([^\]|#]+)/.exec(raw.replace(/<ref[\s\S]*?(?:\/>|<\/ref>)/g, ''))?.[1]?.trim() ?? null,
   };
 }
 

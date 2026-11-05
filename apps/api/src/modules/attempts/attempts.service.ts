@@ -97,6 +97,8 @@ export async function present(
       cols: { type: 'club'; label: string; code: string | null }[];
       cells: { index: number; playerId: string | null }[];
       wrongGuesses: { cellIndex: number; playerId: string }[];
+      hintsLeft: number;
+      hints: { cellIndex: number; initial: string; pattern: number[]; validAnswers: number }[];
     };
     const ids = [
       ...s.actions.map((a) => a.playerId),
@@ -117,6 +119,8 @@ export async function present(
         cellIndex: w.cellIndex,
         player: ref(refs, w.playerId),
       })),
+      hintsLeft: pv.hintsLeft,
+      hints: pv.hints,
     };
     if (done) {
       const r = engine.toRevealView(state, config) as {
@@ -288,7 +292,11 @@ export async function submitAction(
         state: out.state as Prisma.InputJsonValue,
         status,
         score,
-        stars: done ? starsFor(engine.id as 'career-path' | 'football-grid', score) : 0,
+        stars: done
+          ? starsFor(engine.id as 'career-path' | 'football-grid', score, {
+              hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
+            })
+          : 0,
         ...(done ? { completedAt: now } : {}),
       },
     });
