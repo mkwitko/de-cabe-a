@@ -16,9 +16,19 @@ interface Props {
   disabled?: boolean;
   autoFocus?: boolean;
   selected?: PlayerRef | null;
+  /** Open the suggestions above the input (docked at the bottom of the screen). */
+  dropUp?: boolean;
 }
 
-export function PlayerSearch({ label, onSelect, exclude, disabled, autoFocus, selected }: Props) {
+export function PlayerSearch({
+  label,
+  onSelect,
+  exclude,
+  disabled,
+  autoFocus,
+  selected,
+  dropUp,
+}: Props) {
   const id = useId();
   const listId = `${id}-list`;
   const [q, setQ] = useState(selected?.name ?? '');
@@ -126,7 +136,7 @@ export function PlayerSearch({ label, onSelect, exclude, disabled, autoFocus, se
         role="listbox"
         aria-label="Jogadores"
         hidden={!showList}
-        className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]"
+        className={`absolute inset-x-0 z-30 max-h-72 ${dropUp ? 'bottom-full mb-1 lg:top-full lg:bottom-auto lg:mt-1 lg:mb-0' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
       >
         {results.map((p, i) => (
           <li

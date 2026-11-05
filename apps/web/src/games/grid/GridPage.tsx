@@ -110,110 +110,144 @@ export function GridPage({ level }: { level: number }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <GameHeader
-        title={title}
-        aside={
-          done ? undefined : (
-            <span
-              className="font-condensed tabular text-xl font-black"
-              aria-label={`${left} tentativas restantes`}
-            >
-              {left} <span className="text-base text-chalk-soft">tentativas</span>
-            </span>
-          )
-        }
-      />
+      <GameHeader title={title} />
       <p className="sr-only" aria-live="polite">
         {announce}
       </p>
 
-      {done && (
-        <div className="rounded-xl bg-cover p-5 text-ink shadow-[0_18px_40px_-14px_rgb(0_0_0/0.55)]">
-          <h2 className="font-condensed text-4xl leading-none font-black uppercase">
-            {data.attempt.score === 9
-              ? 'Álbum completo!'
-              : data.attempt.score >= 6
-                ? `Bonito! ${data.attempt.score}/9`
-                : `${data.attempt.score}/9 desta vez`}
-          </h2>
-          <p className="mt-2 font-semibold">As células vazias mostram uma resposta possível.</p>
-        </div>
-      )}
-
-      <div
-        className="grid w-full max-w-xl grid-cols-[minmax(4rem,0.7fr)_repeat(3,minmax(0,1fr))] gap-1.5 self-center"
-        role="grid"
-        aria-label="Grade 3 por 3"
-      >
-        <div />
-        {view.cols.map((c, i) => (
-          <CriterionHead key={i} c={c} />
-        ))}
-        {[0, 1, 2].map((r) => (
-          <div key={r} className="contents" role="row">
-            <CriterionHead c={view.rows[r]!} />
-            {[0, 1, 2].map((col) => {
-              const i = r * 3 + col;
-              const filled = view.cells[i]!.player;
-              const example = !filled && reveal ? reveal.cells[i] : null;
-              return (
-                <button
-                  key={i}
-                  role="gridcell"
-                  type="button"
-                  disabled={done || !!filled || !online || action.isPending}
-                  onClick={() => setCell(i)}
-                  aria-label={
-                    filled
-                      ? `${cellLabel(view, i)}: ${filled.name}`
-                      : `${cellLabel(view, i)}: vazia${example ? `, exemplo ${example.example.name}` : ''}`
-                  }
-                  className={`relative grid aspect-square min-h-11 place-items-center rounded-lg p-1 text-center transition-colors ${
-                    filled
-                      ? 'bg-paper text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)] motion-safe:animate-[paste_420ms_var(--ease-out-expo)]'
-                      : example
-                        ? 'border-2 border-dashed border-chalk-soft/40 text-chalk-soft'
-                        : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-cover hover:bg-chalk/[0.06]'
-                  } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-cover' : ''}`}
-                >
-                  {filled ? (
-                    <span className="font-condensed line-clamp-3 text-sm leading-tight font-black uppercase sm:text-base">
-                      {filled.name}
-                    </span>
-                  ) : example ? (
-                    <span className="flex flex-col text-xs leading-tight">
-                      <span className="opacity-70">ex.:</span>
-                      <span className="font-semibold">{example.example.name}</span>
-                    </span>
-                  ) : (
-                    <span className="font-condensed text-2xl font-black" aria-hidden="true">
-                      +
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,1fr)] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <div
+            className="grid w-full grid-cols-[minmax(4rem,0.6fr)_repeat(3,minmax(0,1fr))] gap-1.5 sm:gap-2.5"
+            role="grid"
+            aria-label="Grade 3 por 3"
+          >
+            <div />
+            {view.cols.map((c, i) => (
+              <CriterionHead key={i} c={c} />
+            ))}
+            {[0, 1, 2].map((r) => (
+              <div key={r} className="contents" role="row">
+                <CriterionHead c={view.rows[r]!} />
+                {[0, 1, 2].map((col) => {
+                  const i = r * 3 + col;
+                  const filled = view.cells[i]!.player;
+                  const example = !filled && reveal ? reveal.cells[i] : null;
+                  return (
+                    <button
+                      key={i}
+                      role="gridcell"
+                      type="button"
+                      disabled={done || !!filled || !online || action.isPending}
+                      onClick={() => setCell(i)}
+                      aria-label={
+                        filled
+                          ? `${cellLabel(view, i)}: ${filled.name}`
+                          : `${cellLabel(view, i)}: vazia${example ? `, exemplo ${example.example.name}` : ''}`
+                      }
+                      className={`relative grid aspect-square min-h-11 place-items-center rounded-lg p-1 text-center transition-colors ${
+                        filled
+                          ? 'bg-paper text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)] motion-safe:animate-[paste_420ms_var(--ease-out-expo)]'
+                          : example
+                            ? 'border-2 border-dashed border-chalk-soft/40 text-chalk-soft'
+                            : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-cover hover:bg-chalk/[0.06]'
+                      } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-cover' : ''}`}
+                    >
+                      {filled ? (
+                        <span className="font-condensed line-clamp-3 text-sm leading-tight font-black uppercase sm:text-lg lg:text-xl">
+                          {filled.name}
+                        </span>
+                      ) : example ? (
+                        <span className="flex flex-col text-xs leading-tight sm:text-sm">
+                          <span className="opacity-70">ex.:</span>
+                          <span className="font-semibold">{example.example.name}</span>
+                        </span>
+                      ) : (
+                        <span
+                          className="font-condensed text-2xl font-black sm:text-4xl"
+                          aria-hidden="true"
+                        >
+                          +
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
-        ))}
+
+          {action.error && (
+            <p role="alert" className="text-cover">
+              {(action.error as ApiError).message}
+            </p>
+          )}
+        </div>
+
+        <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
+          {done ? (
+            <>
+              <div className="rounded-xl bg-cover p-5 text-ink shadow-[0_18px_40px_-14px_rgb(0_0_0/0.55)]">
+                <h2 className="font-condensed text-4xl leading-none font-black uppercase">
+                  {data.attempt.score === 9
+                    ? 'Álbum completo!'
+                    : data.attempt.score >= 6
+                      ? `Bonito! ${data.attempt.score}/9`
+                      : `${data.attempt.score}/9 desta vez`}
+                </h2>
+                <p className="mt-2 font-semibold">
+                  As células vazias mostram uma resposta possível.
+                </p>
+              </div>
+              <LevelEnd data={data} />
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 rounded-xl bg-chalk/[0.05] p-4">
+                <p
+                  className="font-condensed tabular text-5xl leading-none font-black"
+                  aria-label={`${left} tentativas restantes`}
+                >
+                  {left}
+                  <span className="ml-2 text-xl text-chalk-soft">de 9 tentativas</span>
+                </p>
+                <div className="flex gap-1" aria-hidden="true">
+                  {Array.from({ length: 9 }, (_, k) => (
+                    <span
+                      key={k}
+                      className={`h-2 flex-1 rounded-full ${k < view.attemptsUsed ? 'bg-chalk-soft/25' : 'bg-cover'}`}
+                    />
+                  ))}
+                </div>
+                <p className="mt-1 text-sm text-chalk-soft">
+                  Toque numa célula e escolha um jogador que cumpra a linha e a coluna. Errar gasta
+                  uma tentativa.
+                </p>
+              </div>
+              {view.wrongGuesses.length > 0 && (
+                <ul className="flex flex-col gap-1.5 text-sm" aria-label="Chutes errados">
+                  {view.wrongGuesses.map((w, k) => (
+                    <li key={k} className="flex items-center gap-2 text-chalk-soft">
+                      <Icon name="cross" className="size-3.5 shrink-0" />
+                      <span>
+                        <strong className="text-chalk">{w.player.name}</strong> não serve em{' '}
+                        {cellLabel(view, w.cellIndex)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button
+                className={`${btnSecondary} self-start`}
+                onClick={() => confirm.current?.showModal()}
+                disabled={!online || action.isPending}
+              >
+                Encerrar
+              </button>
+            </>
+          )}
+        </aside>
       </div>
-
-      {action.error && (
-        <p role="alert" className="text-cover">
-          {(action.error as ApiError).message}
-        </p>
-      )}
-
-      {done ? (
-        <LevelEnd data={data} />
-      ) : (
-        <button
-          className={`${btnSecondary} self-start`}
-          onClick={() => confirm.current?.showModal()}
-          disabled={!online || action.isPending}
-        >
-          Encerrar
-        </button>
-      )}
 
       <dialog
         ref={sheet}

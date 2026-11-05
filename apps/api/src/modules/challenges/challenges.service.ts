@@ -4,7 +4,7 @@
  */
 import {
   buildTrajectory,
-  careerPathV1,
+  careerPath,
   checkCareerPathEligibility,
   type CareerPathConfig,
   type TrajectorySpell,
@@ -16,7 +16,7 @@ import { snapshotHash } from './hash';
 import { buildGridSnapshot, gridDifficulty, type GridParams } from './grid-snapshot';
 
 const playerInclude = {
-  spells: { include: { club: { include: { country: true } } } },
+  spells: { include: { club: { include: { country: true } }, loanFromClub: true } },
   nationality: true,
 } satisfies Prisma.PlayerInclude;
 type SnapshotPlayer = Prisma.PlayerGetPayload<{ include: typeof playerInclude }>;
@@ -31,6 +31,9 @@ const toTrajectorySpells = (p: SnapshotPlayer): TrajectorySpell[] =>
     endDate: s.endDate,
     sortIndex: s.sortIndex,
     verificationStatus: s.verificationStatus,
+    appearances: s.appearances,
+    goals: s.goals,
+    loanFromName: s.loanFromClub?.shortName ?? null,
   }));
 
 /** CAREER_PATH.md §9 suggestion: T1 and ≤ 5 clubs -> 1; T3+ or ≥ 9 clubs -> 3; else 2. */
@@ -102,9 +105,9 @@ export function careerPathConfig(
   difficultyTier?: 1 | 2 | 3,
 ): CareerPathConfig {
   const p = report.player;
-  return careerPathV1.validateConfig({
+  return careerPath.validateConfig({
     engine: 'career-path',
-    engineVersion: 1,
+    engineVersion: 2,
     answerPlayerId: p.id,
     maxAttempts: 6,
     trajectory: report.trajectory,
@@ -175,7 +178,7 @@ export async function createChallenge(
   return prisma.challenge.create({
     data: {
       gameMode: input.mode,
-      engineVersion: 1,
+      engineVersion: (config as { engineVersion: number }).engineVersion,
       difficultyTier,
       snapshot: config as unknown as Prisma.InputJsonValue,
       snapshotHash: snapshotHash(config),

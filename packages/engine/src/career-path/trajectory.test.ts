@@ -28,6 +28,9 @@ describe('buildTrajectory (CAREER_PATH.md §4)', () => {
         fromYear: 1993,
         toYear: 1994,
         isLoan: false,
+        appearances: null,
+        goals: null,
+        loanFromName: null,
       },
       {
         clubId: 'psv',
@@ -36,6 +39,9 @@ describe('buildTrajectory (CAREER_PATH.md §4)', () => {
         fromYear: 1994,
         toYear: 1996,
         isLoan: false,
+        appearances: null,
+        goals: null,
+        loanFromName: null,
       },
     ]);
   });
@@ -53,6 +59,13 @@ describe('buildTrajectory (CAREER_PATH.md §4)', () => {
       sp({ clubId: 'pro', startDate: y(1992) }),
     ]);
     expect(clubs(t)).toEqual(['pro']);
+  });
+
+  it('carries games, goals and the lending club of a loan', () => {
+    const [entry] = buildTrajectory([
+      sp({ clubId: 'b', spellType: 'loan', appearances: 20, goals: 7, loanFromName: 'Milan' }),
+    ]);
+    expect(entry).toMatchObject({ isLoan: true, appearances: 20, goals: 7, loanFromName: 'Milan' });
   });
 
   it('marks loans as their own entry', () => {

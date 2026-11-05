@@ -198,14 +198,21 @@ const NAV = [
 
 function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
-  const home = useLocation().pathname === '/';
+  const { pathname } = useLocation();
+  const home = pathname === '/';
+  // Level screens use the full width for the board/path plus the side panel.
+  const wide = /^\/(career-path|grid)\/\d+/.test(pathname);
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-4 pt-4 pb-28 sm:px-8 sm:pb-12">
+    <div
+      className={`mx-auto flex min-h-dvh w-full flex-col px-4 pt-4 pb-28 sm:px-8 sm:pb-12 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}
+    >
       <nav
         aria-label="Principal"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:backdrop-blur-none"
       >
-        <ul className="mx-auto flex max-w-4xl justify-around sm:justify-end sm:gap-6">
+        <ul
+          className={`mx-auto flex justify-around sm:justify-end sm:gap-6 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}
+        >
           {!home && (
             <li className="mr-auto hidden sm:block">
               <Link to="/" className="font-condensed text-2xl font-black uppercase">

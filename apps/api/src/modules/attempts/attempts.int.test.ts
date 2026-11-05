@@ -227,8 +227,19 @@ describe('levels (ADR-007)', () => {
     expect(second.statusCode).toBe(200);
     expect(second.json().attempt.id).toBe(first.json().attempt.id);
     expect(first.json().view.revealed).toEqual([
-      { clubName: 'Cruzeiro', countryCode: 'BR', fromYear: 2000, toYear: 2002, isLoan: false },
+      {
+        clubName: 'Cruzeiro',
+        countryCode: 'BR',
+        fromYear: 2000,
+        toYear: 2002,
+        isLoan: false,
+        appearances: null,
+        goals: null,
+        loanFromName: null,
+      },
     ]);
+    // career-path@2: the position is a clue from the first attempt
+    expect(first.json().view.position).toBe('FW');
     expect(first.body).not.toContain(answerId);
   });
 

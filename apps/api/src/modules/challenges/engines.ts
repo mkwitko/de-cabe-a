@@ -1,10 +1,10 @@
-import { careerPathV1, footballGridV1, type GameEngine } from '@decabeca/engine';
+import { careerPath, footballGridV1, type GameEngine } from '@decabeca/engine';
 
 export type GameModeCode = 'CAREER_PATH' | 'FOOTBALL_GRID';
 
 /** Engine registry (ADR-005): one literal object, keyed by game mode. */
 export const ENGINES = {
-  CAREER_PATH: careerPathV1,
+  CAREER_PATH: careerPath,
   FOOTBALL_GRID: footballGridV1,
 } as const;
 

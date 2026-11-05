@@ -23,7 +23,9 @@ const CURATOR = 'ai-curator';
 const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > 0 ? Number(process.argv[limitArg + 1]) : 360;
 /** --recheck: rebuild every career the curator verified with the current rules; failures go back to imported. */
-const RECHECK = process.argv.includes('--recheck');
+const RECHECK = process.argv.includes('--recheck') || process.argv.includes('--only-verified');
+/** --only-verified: skip the candidate search and recheck only the curator-verified players. */
+const ONLY_VERIFIED = process.argv.includes('--only-verified');
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // ── 1. Candidates: most-linked Brazilian footballers + global stars who matter to Brazilian fans.
@@ -264,6 +266,8 @@ async function crossCheck(
           endDate: m.entry.toYear ? new Date(Date.UTC(m.entry.toYear, 0, 1)) : null,
           endPrecision: m.entry.toYear ? 'year' : 'unknown',
           sortIndex: i,
+          appearances: m.entry.appearances,
+          goals: m.entry.goals,
           sourceRef: wpUrl,
           verificationStatus: 'verified',
           verifiedAt: now,
@@ -357,7 +361,7 @@ async function mergeOverlappingRepeats() {
 }
 await mergeOverlappingRepeats();
 
-const list = await candidates();
+const list = ONLY_VERIFIED ? [] : await candidates();
 if (RECHECK) {
   const known = new Set(list.map((c) => c.qid));
   for (const p of await prisma.player.findMany({

@@ -6,6 +6,11 @@ export interface TrajectoryEntry {
   fromYear: number | null;
   toYear: number | null;
   isLoan: boolean;
+  /** League games and goals at the club, when known (career-path@2). */
+  appearances: number | null;
+  goals: number | null;
+  /** Lending club for a loan. */
+  loanFromName: string | null;
 }
 
 /** A career spell joined with its club, as the snapshot builder loads it. */
@@ -19,6 +24,9 @@ export interface TrajectorySpell {
   endDate: Date | null;
   sortIndex: number;
   verificationStatus: 'draft' | 'imported' | 'verified' | 'rejected';
+  appearances?: number | null;
+  goals?: number | null;
+  loanFromName?: string | null;
 }
 
 /** Spells that make up the trajectory: verified professional or loan (youth excluded). */
@@ -48,5 +56,8 @@ export function buildTrajectory(spells: TrajectorySpell[]): TrajectoryEntry[] {
       fromYear: s.startDate?.getUTCFullYear() ?? null,
       toYear: s.endDate?.getUTCFullYear() ?? null,
       isLoan: s.spellType === 'loan',
+      appearances: s.appearances ?? null,
+      goals: s.goals ?? null,
+      loanFromName: s.spellType === 'loan' ? (s.loanFromName ?? null) : null,
     }));
 }

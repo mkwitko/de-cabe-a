@@ -150,6 +150,8 @@ model CareerSpell {
   endDate            DateTime? /// null = still active
   endPrecision       DatePrecision      @default(unknown)
   sortIndex          Int                @default(0) /// manual tie-break
+  appearances        Int? /// league games at the club (infobox)
+  goals              Int? /// league goals at the club (infobox)
   loanFromClubId     String? /// when spellType = loan
   loanFromClub       Club?              @relation("spellLoanFrom", fields: [loanFromClubId], references: [id])
   verificationStatus VerificationStatus @default(imported)

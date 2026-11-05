@@ -8,6 +8,7 @@ const WIKITEXT = `{{Info/Futebol
 |ano1              = 1993–1994
 |clube1            = {{Futebol Cruzeiro}}
 |jogos1            = 47
+|gols1             = 44
 |ano2              = 1994–1996
 |clube2            = [[PSV Eindhoven|PSV]]<ref name="x"/>
 |ano10             = 2014
@@ -22,10 +23,42 @@ Texto do artigo.`;
 describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
   it('reads senior club entries in numeric order, ignoring youth and national teams', () => {
     expect(parseInfoboxCareer(WIKITEXT)).toEqual([
-      { index: 1, fromYear: 1993, toYear: 1994, club: 'Cruzeiro', isLoan: false },
-      { index: 2, fromYear: 1994, toYear: 1996, club: 'PSV', isLoan: false },
-      { index: 3, fromYear: 2009, toYear: null, club: 'Corinthians', isLoan: false },
-      { index: 10, fromYear: 2014, toYear: 2014, club: 'São Paulo', isLoan: true },
+      {
+        index: 1,
+        fromYear: 1993,
+        toYear: 1994,
+        club: 'Cruzeiro',
+        isLoan: false,
+        appearances: 47,
+        goals: 44,
+      },
+      {
+        index: 2,
+        fromYear: 1994,
+        toYear: 1996,
+        club: 'PSV',
+        isLoan: false,
+        appearances: null,
+        goals: null,
+      },
+      {
+        index: 3,
+        fromYear: 2009,
+        toYear: null,
+        club: 'Corinthians',
+        isLoan: false,
+        appearances: null,
+        goals: null,
+      },
+      {
+        index: 10,
+        fromYear: 2014,
+        toYear: 2014,
+        club: 'São Paulo',
+        isLoan: true,
+        appearances: null,
+        goals: null,
+      },
     ]);
   });
 
@@ -40,11 +73,35 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
 
   it('reads the Info/Futebolista list format (ano / clubes with <br>)', () => {
     const text =
-      '{{Info/Futebolista\n|jovemanos = 1991–1992\n|jovemclubes = {{Futebol Sport}}\n|ano = 1993–1995<br>1995–2001<br>2013\n|clubes = {{Futebol Sport}}<br>{{Futebol Vasco}}<br>→ {{Futebol New York Red Bulls}} (emp.)\n}}';
+      '{{Info/Futebolista\n|jovemanos = 1991–1992\n|jovemclubes = {{Futebol Sport}}\n|ano = 1993–1995<br>1995–2001<br>2013\n|clubes = {{Futebol Sport}}<br>{{Futebol Vasco}}<br>→ {{Futebol New York Red Bulls}} (emp.)\n|jogos = 61<br>182 (3)<br>\n|gols = 9<br>{{0}}37\n}}';
     expect(parseInfoboxCareer(text)).toEqual([
-      { index: 1, fromYear: 1993, toYear: 1995, club: 'Sport', isLoan: false },
-      { index: 2, fromYear: 1995, toYear: 2001, club: 'Vasco', isLoan: false },
-      { index: 3, fromYear: 2013, toYear: 2013, club: 'New York Red Bulls', isLoan: true },
+      {
+        index: 1,
+        fromYear: 1993,
+        toYear: 1995,
+        club: 'Sport',
+        isLoan: false,
+        appearances: 61,
+        goals: 9,
+      },
+      {
+        index: 2,
+        fromYear: 1995,
+        toYear: 2001,
+        club: 'Vasco',
+        isLoan: false,
+        appearances: 182,
+        goals: 37,
+      },
+      {
+        index: 3,
+        fromYear: 2013,
+        toYear: 2013,
+        club: 'New York Red Bulls',
+        isLoan: true,
+        appearances: null,
+        goals: null,
+      },
     ]);
   });
 
@@ -66,12 +123,37 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
     ]);
   });
 
+  it('reads the combined jogos(golos) list', () => {
+    const text =
+      '{{Info/Futebolista\n|ano = 1997–1999<br />1999–2001\n|clubes = [[Nacional Atlético Clube (São Paulo)|Nacional]]<br /> Türkgücü München\n|jogos(golos) = {{0|00}}36 {{0|000}}(19)<br />{{0|00}}31 {{0|0000}}(7)\n}}';
+    expect(parseInfoboxCareer(text)?.map((e) => [e.club, e.appearances, e.goals])).toEqual([
+      ['Nacional', 36, 19],
+      ['Türkgücü München', 31, 7],
+    ]);
+  });
+
   it('reads the English football biography infobox', () => {
     const text =
-      '{{Infobox football biography\n| years1 = 1993–1994 | clubs1 = [[Cruzeiro Esporte Clube|Cruzeiro]]\n| years2 = 2014\n| clubs2 = → [[São Paulo FC|São Paulo]] (loan)\n}}';
+      '{{Infobox football biography\n| years1 = 1993–1994 | clubs1 = [[Cruzeiro Esporte Clube|Cruzeiro]] | caps1 = 14 | goals1 = 12\n| years2 = 2014\n| clubs2 = → [[São Paulo FC|São Paulo]] (loan)\n}}';
     expect(parseInfoboxCareer(text)).toEqual([
-      { index: 1, fromYear: 1993, toYear: 1994, club: 'Cruzeiro', isLoan: false },
-      { index: 2, fromYear: 2014, toYear: 2014, club: 'São Paulo', isLoan: true },
+      {
+        index: 1,
+        fromYear: 1993,
+        toYear: 1994,
+        club: 'Cruzeiro',
+        isLoan: false,
+        appearances: 14,
+        goals: 12,
+      },
+      {
+        index: 2,
+        fromYear: 2014,
+        toYear: 2014,
+        club: 'São Paulo',
+        isLoan: true,
+        appearances: null,
+        goals: null,
+      },
     ]);
   });
 

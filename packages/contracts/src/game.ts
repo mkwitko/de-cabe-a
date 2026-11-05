@@ -27,11 +27,17 @@ const RevealedClub = z.strictObject({
   fromYear: z.number().nullable(),
   toYear: z.number().nullable(),
   isLoan: z.boolean(),
+  appearances: z.number().nullable(),
+  goals: z.number().nullable(),
+  loanFromName: z.string().nullable(),
 });
+export type RevealedClub = z.infer<typeof RevealedClub>;
 export const CareerPathView = z.strictObject({
   status: AttemptStatus,
   maxAttempts: z.number(),
   attemptsUsed: z.number(),
+  /** Shown from the first attempt (career-path@2). */
+  position: PositionGroup.nullable(),
   revealed: z.array(RevealedClub),
   extraHints: z.strictObject({
     position: PositionGroup.optional(),

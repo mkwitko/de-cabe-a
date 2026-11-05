@@ -18,12 +18,12 @@ function hue(name: string): number {
   return h;
 }
 
-export function ClubBadge({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
+export function ClubBadge({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' }) {
   const h = hue(name);
   return (
     <span
       aria-hidden="true"
-      className={`font-condensed grid shrink-0 place-items-center rounded-full border-2 border-paper font-black text-white shadow-[0_2px_4px_rgb(0_0_0/0.3)] ${size === 'sm' ? 'size-8 text-xs' : 'size-11 text-sm'}`}
+      className={`font-condensed grid shrink-0 place-items-center rounded-full border-2 border-paper font-black text-white shadow-[0_2px_4px_rgb(0_0_0/0.3)] ${size === 'sm' ? 'size-8 text-xs' : size === 'lg' ? 'size-14 text-base' : 'size-11 text-sm'}`}
       style={{ background: `oklch(0.5 0.15 ${h})` }}
     >
       {clubInitials(name)}

@@ -3,10 +3,13 @@ import { EngineRuleError, type GameEngine } from '../contract';
 
 const PositionGroup = z.enum(['GK', 'DF', 'MF', 'FW']);
 
-/** Challenge snapshot for career-path@1 (GAME_ENGINE_CONTRACT.md §3, DATA_MODEL.md §4). */
+/**
+ * Challenge snapshot for career-path@2 (GAME_ENGINE_CONTRACT.md §3, ADR-007): clubs carry games,
+ * goals and the lending club; the position is shown from the start, nationality is the extra hint.
+ */
 export const CareerPathConfig = z.object({
   engine: z.literal('career-path'),
-  engineVersion: z.literal(1),
+  engineVersion: z.literal(2),
   answerPlayerId: z.string().min(1),
   maxAttempts: z.literal(6),
   trajectory: z
@@ -18,6 +21,9 @@ export const CareerPathConfig = z.object({
         fromYear: z.number().int().nullable(),
         toYear: z.number().int().nullable(),
         isLoan: z.boolean(),
+        appearances: z.number().int().nullable(),
+        goals: z.number().int().nullable(),
+        loanFromName: z.string().nullable(),
       }),
     )
     .min(1),
@@ -40,7 +46,7 @@ export interface CareerPathState {
   attempts: Array<{ kind: 'guess'; playerId: string; correct: boolean } | { kind: 'skip' }>;
   /** 1..trajectory.length */
   revealedClubs: number;
-  /** 0..2: position first, then nationality, counting only hints present in the snapshot */
+  /** 0..1: the nationality hint, after every club is revealed (when present in the snapshot) */
   revealedExtraHints: number;
 }
 
@@ -49,18 +55,18 @@ export type CareerPathEvent =
   | { type: 'wrong'; revealed: 'club' | 'extraHint' | 'none' }
   | { type: 'lost' };
 
-/** Extra hints present in the snapshot, in reveal order (CAREER_PATH.md §3). */
+/** Extra hints revealed after the clubs (v2: only nationality; position is shown from the start). */
 const hintKeys = (c: CareerPathConfig) =>
-  (['position', 'nationalityCode'] as const).filter((k) => c.extraHints[k] !== undefined);
+  (['nationalityCode'] as const).filter((k) => c.extraHints[k] !== undefined);
 
-export const careerPathV1: GameEngine<
+export const careerPath: GameEngine<
   CareerPathConfig,
   CareerPathState,
   CareerPathInput,
   CareerPathEvent
 > = {
   id: 'career-path',
-  version: 1,
+  version: 2,
 
   validateConfig: (config) => CareerPathConfig.parse(config),
   parseInput: (input) => CareerPathInput.parse(input),
@@ -115,6 +121,7 @@ export const careerPathV1: GameEngine<
       status: state.status,
       maxAttempts: config.maxAttempts,
       attemptsUsed: state.attempts.length,
+      position: config.extraHints.position ?? null,
       revealed: config.trajectory
         .slice(0, state.revealedClubs)
         .map(({ clubId: _clubId, ...entry }) => entry),
