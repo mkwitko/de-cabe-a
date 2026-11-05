@@ -14,6 +14,7 @@ import { isNationalTeam } from '../../apps/api/src/modules/data-import/wikidata-
 import {
   fetchWikitext,
   parseInfoboxCareer,
+  positionFromInfobox,
   type InfoboxEntry,
   type WikiLang,
 } from '../../apps/api/src/modules/data-import/wikipedia';
@@ -287,17 +288,6 @@ function fuzzyClub(club: { name: string; shortName: string }, wp: string): boole
   );
 }
 
-/** Position from the pt.wikipedia infobox, when Wikidata had none we could map. */
-function positionFromInfobox(text: string): 'GK' | 'DF' | 'MF' | 'FW' | null {
-  const raw = normalizeName(/^\s*\|\s*(?:posi[cç][aã]o|position)\s*=(.*)$/im.exec(text)?.[1] ?? '');
-  if (/goleiro|guarda redes|goalkeeper/.test(raw)) return 'GK';
-  if (/zagueiro|lateral|defensor|libero|defesa|defender|full back|centre back/.test(raw))
-    return 'DF';
-  if (/atacante|ponta|centroavante|avancado|extremo|forward|striker|winger/.test(raw)) return 'FW';
-  if (/volante|meia|meio campo|medio|midfielder/.test(raw)) return 'MF';
-  return null;
-}
-
 const RESERVE = /\b(ii|b|sub[ -]?\d{2}|u[ -]?\d{2}|reservas?|juniores|amateure)\b|\bII\b/i;
 const NICK_NOISE = /<[^>]+>|\[\[|\]\]|\{\{[^}]*\}\}|'{2,3}/g;
 
@@ -346,7 +336,9 @@ async function crossCheck(
     return fail({ qid, name: p.canonicalName, result: 'no-infobox' });
   const alts = pages.filter((x) => x !== page);
 
-  const position = p.primaryPositionGroup ?? positionFromInfobox(text);
+  // The infobox names the main position ("Meia-atacante"); Wikidata often lists only one role
+  // ("winger" for Kaká), so the infobox wins and Wikidata is the fallback.
+  const position = positionFromInfobox(text) ?? p.primaryPositionGroup;
   if (!position) return fail({ qid, name: p.canonicalName, result: 'no-position' });
 
   // Agreement rule (ADR-006): the career sequence comes from pt.wikipedia and every club in it

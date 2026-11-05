@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInfoboxCareer } from './wikipedia';
+import { parseInfoboxCareer, positionFromInfobox } from './wikipedia';
 
 const WIKITEXT = `{{Info/Futebol
 |nome              = Ronaldo
@@ -235,5 +235,26 @@ describe('parseInfoboxCareer loan marks', () => {
     expect(parseInfoboxCareer(text)?.map((e) => [e.club, e.isLoan])).toEqual([
       ['Sigma Olomouc', true],
     ]);
+  });
+});
+
+describe('positionFromInfobox', () => {
+  it.each([
+    ['{{Info/Futebol\n|posição = [[Meio-campista|Meia-atacante]]\n}}', 'MF'],
+    [
+      '{{Infobox football biography\n| position = [[Midfielder#Attacking midfielder|Attacking midfielder]]\n}}',
+      'MF',
+    ],
+    ['{{Ficha de futbolista\n| posición = [[Delantero (fútbol)|Delantero]]\n}}', 'FW'],
+    ['{{Sportivo\n|Ruolo = [[Centrocampista]]\n}}', 'MF'],
+    [
+      '{{Infobox Fußballspieler\n| position = [[Flügelspieler|Flügel]], [[Stürmer (Fußball)|Sturm]]\n}}',
+      'FW',
+    ],
+    ['{{Infobox Footballeur\n | poste = [[Gardien de but (football)|Gardien de but]]\n}}', 'GK'],
+    ['{{Info/Futebol\n|posição = [[Zagueiro]]\n}}', 'DF'],
+    ['{{Info/Futebol\n|nome = X\n}}', null],
+  ])('%s', (text, group) => {
+    expect(positionFromInfobox(text)).toBe(group);
   });
 });

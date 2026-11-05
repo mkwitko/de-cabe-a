@@ -4,6 +4,7 @@
  * de ({{Infobox Fußballspieler}} + {{Team-Station}}) and fr ({{Infobox Footballeur}}).
  * Used as the second source when cross-checking Wikidata (ADR-006). Facts only, no text copied.
  */
+import { normalizeName } from '@decabeca/engine';
 import { USER_AGENT } from './wikidata-client';
 
 export interface InfoboxEntry {
@@ -194,6 +195,87 @@ function parseOtherInfobox(wikitext: string): InfoboxEntry[] | null {
       });
   } else return null;
   return out.filter((e) => e.club);
+}
+
+const POSITION_WORDS: [string, 'GK' | 'DF' | 'MF' | 'FW'][] = [
+  ...[
+    'goleiro',
+    'guarda redes',
+    'goalkeeper',
+    'portero',
+    'arquero',
+    'portiere',
+    'torwart',
+    'torhuter',
+    'gardien',
+  ].map((w) => [w, 'GK'] as [string, 'GK']),
+  ...[
+    'zagueiro',
+    'lateral',
+    'defensor',
+    'libero',
+    'defesa',
+    'defender',
+    'back',
+    'defensa',
+    'difensore',
+    'terzino',
+    'verteidiger',
+    'abwehr',
+    'innenverteidiger',
+    'defenseur',
+    'arriere',
+  ].map((w) => [w, 'DF'] as [string, 'DF']),
+  ...[
+    'meia',
+    'volante',
+    'meio campo',
+    'meio campista',
+    'medio',
+    'midfielder',
+    'centrocampista',
+    'mediocampista',
+    'mittelfeld',
+    'milieu',
+  ].map((w) => [w, 'MF'] as [string, 'MF']),
+  ...[
+    'atacante',
+    'ponta',
+    'centroavante',
+    'avancado',
+    'extremo',
+    'forward',
+    'striker',
+    'winger',
+    'delantero',
+    'attaccante',
+    'ala',
+    'punta',
+    'sturmer',
+    'sturm',
+    'flugel',
+    'flugelspieler',
+    'attaquant',
+    'ailier',
+    'avant centre',
+  ].map((w) => [w, 'FW'] as [string, 'FW']),
+];
+
+/**
+ * Main position from the infobox field (pt posição, en/de position, es posición, it Ruolo, fr poste).
+ * The first position word in the field wins: "Meia-atacante" is a midfielder, "Flügel, Sturm" a forward.
+ */
+export function positionFromInfobox(wikitext: string): 'GK' | 'DF' | 'MF' | 'FW' | null {
+  const raw =
+    /^\s*\|\s*(?:posi[cç][aã]o|position|posici[oó]n|ruolo|poste)\s*=(.*)$/im.exec(wikitext)?.[1] ??
+    '';
+  const text = ` ${normalizeName(raw.replace(/<ref[\s\S]*?(?:\/>|<\/ref>)/g, '').replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1'))} `;
+  let best: { at: number; group: 'GK' | 'DF' | 'MF' | 'FW' } | null = null;
+  for (const [word, group] of POSITION_WORDS) {
+    const at = text.indexOf(` ${word}`);
+    if (at >= 0 && (!best || at < best.at)) best = { at, group };
+  }
+  return best?.group ?? null;
 }
 
 let last = 0;
