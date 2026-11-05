@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     // Same origin in dev so the session cookie works (ADR-004).
-    proxy: { '/v1': 'http://127.0.0.1:3000' },
+    proxy: { '/v1': process.env.API_URL ?? 'http://127.0.0.1:3000' },
   },
   test: { include: ['src/**/*.test.{ts,tsx}'], environment: 'node' },
 });

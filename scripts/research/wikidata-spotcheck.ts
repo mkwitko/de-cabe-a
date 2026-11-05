@@ -9,7 +9,10 @@ import {
   sparql,
 } from '../../apps/api/src/modules/data-import/wikidata-client';
 import { isNationalTeam } from '../../apps/api/src/modules/data-import/wikidata-mapper';
-import { fetchPtWikitext, parseInfoboxCareer } from '../../apps/api/src/modules/data-import/wikipedia';
+import {
+  fetchPtWikitext,
+  parseInfoboxCareer,
+} from '../../apps/api/src/modules/data-import/wikipedia';
 
 const FOOTBALLER = 'Q937857';
 const SAMPLE = [

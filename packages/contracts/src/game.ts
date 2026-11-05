@@ -190,3 +190,5 @@ export const StatsResponse = z.strictObject({
   }),
 });
 export type StatsResponse = z.infer<typeof StatsResponse>;
+export type CareerPathReveal = z.infer<typeof CareerPathReveal>;
+export type FootballGridReveal = z.infer<typeof FootballGridReveal>;
