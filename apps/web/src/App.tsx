@@ -1,5 +1,7 @@
-import { useRef, type CSSProperties, type PointerEvent } from 'react';
+import { lazy, Suspense, useRef, type CSSProperties, type PointerEvent } from 'react';
 import { Route, Routes } from 'react-router';
+
+const AdminApp = lazy(() => import('./admin/AdminApp'));
 
 const GAMES = [
   {
@@ -105,6 +107,14 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route
+        path="/admin/*"
+        element={
+          <Suspense fallback={null}>
+            <AdminApp />
+          </Suspense>
+        }
+      />
     </Routes>
   );
 }

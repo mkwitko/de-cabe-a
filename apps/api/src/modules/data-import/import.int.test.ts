@@ -1,12 +1,16 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { seedReference } from '../../seed-reference';
+import { resetDb } from '../../test/db';
 import { ADMIN_TOKEN, fixtureFetcher, testApp } from '../../test/app';
 
 const { app, prisma } = testApp();
 const auth = { 'x-admin-token': ADMIN_TOKEN };
 const IDS = ['Q529207', 'Q531814', 'Q203451'];
 
-beforeAll(() => seedReference(prisma));
+beforeAll(async () => {
+  await resetDb(prisma);
+  await seedReference(prisma);
+});
 afterAll(async () => {
   await app.close();
   await prisma.$disconnect();

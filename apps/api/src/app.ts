@@ -11,6 +11,7 @@ import type { PrismaClient } from './generated/prisma/client';
 import { AppError } from './errors';
 import { adminAuth } from './modules/admin/auth';
 import { importRoutes } from './modules/data-import/import.routes';
+import { knowledgeRoutes } from './modules/knowledge/knowledge.routes';
 import { fetchEntities, type EntityFetcher } from './modules/data-import/wikidata-client';
 
 export interface AppDeps {
@@ -69,6 +70,7 @@ export function buildApp(
     async (admin) => {
       admin.addHook('preHandler', adminAuth(app.deps.adminToken));
       await admin.register(importRoutes);
+      await admin.register(knowledgeRoutes);
     },
     { prefix: '/v1/admin' },
   );
