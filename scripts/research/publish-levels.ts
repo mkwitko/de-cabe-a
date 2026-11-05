@@ -209,8 +209,8 @@ outer: for (let a = 0; a < n; a++)
               cols: cols.map((col) => criteria[col]!),
               min,
             });
-            if (found.length >= 20000) break outer;
-            if (++perRows >= 3) break colsLoop;
+            if (found.length >= 200000) break outer;
+            if (++perRows >= 1) break colsLoop;
           }
     }
 console.log(
