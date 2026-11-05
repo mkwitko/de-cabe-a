@@ -101,7 +101,7 @@ model Player {
   nationality                   Country            @relation("primaryNationality", fields: [nationalityCountryId], references: [id])
   secondaryNationalityCountryId String?
   secondaryNationality          Country?           @relation("secondaryNationality", fields: [secondaryNationalityCountryId], references: [id])
-  primaryPositionGroup          PositionGroup
+  primaryPositionGroup          PositionGroup? /// required before verification (DQ-04)
   positionDetail                String?
   notabilityTier                NotabilityTier     @default(T3)
   wikidataId                    String?            @unique

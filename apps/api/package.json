@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@decabeca/contracts": "workspace:*",
+    "@decabeca/engine": "workspace:*",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "fastify": "^5.12.8",
