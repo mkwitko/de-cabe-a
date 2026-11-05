@@ -13,8 +13,7 @@ export function useGameTracking(data: AttemptResponse | undefined) {
     viewed.current = data.attempt.id;
     track('game_viewed', {
       mode: data.attempt.mode,
-      kind: data.attempt.kind,
-      challengePublicNumber: data.attempt.publicNumber,
+      level: data.attempt.level,
     });
   }, [data]);
 
@@ -24,7 +23,7 @@ export function useGameTracking(data: AttemptResponse | undefined) {
       if (document.visibilityState === 'hidden' && d && d.attempt.status === 'IN_PROGRESS')
         beacon('game_abandoned', {
           mode: d.attempt.mode,
-          kind: d.attempt.kind,
+          level: d.attempt.level,
           attemptsUsed: d.view.attemptsUsed,
         });
     };

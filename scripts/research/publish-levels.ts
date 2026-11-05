@@ -1,10 +1,9 @@
-// Builds and publishes the pilot schedule (ADR-006): 30 days of dailies per game plus a practice
-// pool, through the same services and eligibility checks as the admin panel. Re-runnable: dates
-// that already have a live daily are skipped and players already used are not reused.
-// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-pilot.ts [--days 30]
+// Builds and publishes the level tracks (ADR-006, ADR-007): Career Path and Grid levels in
+// rising difficulty, through the same services and eligibility checks as the admin panel.
+// Re-runnable: published levels stay, new ones are appended up to the targets.
+// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-levels.ts [--cp 60] [--grid 30]
 import { checkGridCombination, type Criterion } from '../../packages/engine/src/index';
 import { createPrisma } from '../../apps/api/src/db';
-import { addDays, civilDate } from '../../apps/api/src/modules/challenges/civil-date';
 import {
   careerPathEligibility,
   createChallenge,
@@ -19,12 +18,13 @@ try {
   /* environment only */
 }
 const prisma = createPrisma(process.env.DATABASE_URL!);
-const daysArg = process.argv.indexOf('--days');
-const DAYS = daysArg > 0 ? Number(process.argv[daysArg + 1]) : 30;
-const CP_PRACTICE = 30;
-const GRID_PRACTICE = 15;
+const arg = (name: string, fallback: number) => {
+  const i = process.argv.indexOf(name);
+  return i > 0 ? Number(process.argv[i + 1]) : fallback;
+};
+const CP_TARGET = arg('--cp', 60);
+const GRID_TARGET = arg('--grid', 30);
 const by = 'ai-curator';
-const today = civilDate(new Date());
 
 /** Deterministic pseudo-random from a string, so re-runs pick the same order. */
 function seeded(seed: string) {
@@ -48,84 +48,40 @@ async function live(input: Parameters<typeof createChallenge>[1]) {
   return publishChallenge(prisma, c.id, new Date());
 }
 
-async function liveDaily(mode: 'CAREER_PATH' | 'FOOTBALL_GRID', date: string) {
-  return prisma.challenge.findFirst({
-    where: {
-      gameMode: mode,
-      kind: 'daily',
-      scheduledFor: new Date(`${date}T00:00:00Z`),
-      status: { not: 'retired' },
-    },
-  });
-}
-
-// ── Career Path
+// ── Career Path: every eligible verified player not yet used, easiest first.
 const players = await prisma.player.findMany({
   where: { verificationStatus: 'verified' },
-  select: { id: true, canonicalName: true },
+  select: { id: true, canonicalName: true, notabilityTier: true },
 });
-const used = new Set(
-  (
-    await prisma.challengePlayerUsage.findMany({
-      where: { role: 'answer', challenge: { status: { not: 'retired' } } },
-    })
-  ).map((u) => u.playerId),
-);
-const pool: { id: string; name: string; daily: boolean; tier: 1 | 2 | 3 }[] = [];
+const pool: { id: string; name: string; tier: number; notability: string }[] = [];
 for (const p of players) {
-  const daily = await careerPathEligibility(prisma, p.id, 'daily');
-  const practice = daily.eligible ? daily : await careerPathEligibility(prisma, p.id, 'practice');
-  if (practice.eligible)
+  const r = await careerPathEligibility(prisma, p.id);
+  if (r.eligible)
     pool.push({
       id: p.id,
       name: p.canonicalName,
-      daily: daily.eligible,
-      tier: daily.suggestedDifficulty,
+      tier: r.suggestedDifficulty,
+      notability: p.notabilityTier,
     });
 }
-console.log(
-  `Career Path: ${pool.length} eligible players (${pool.filter((p) => p.daily).length} for daily)`,
+console.log(`Career Path: ${pool.length} eligible players not used yet`);
+const rndCp = seeded('cp');
+const ordered = shuffle(pool, rndCp).sort(
+  (a, b) => a.tier - b.tier || a.notability.localeCompare(b.notability),
 );
-const free = shuffle(
-  pool.filter((p) => !used.has(p.id)),
-  seeded('cp'),
-);
-
-/** CAREER_PATH.md §9: Mon–Wed tier 1–2, Thu–Sat 2–3, Sun 1. */
-const wanted = (date: string): number[] => {
-  const dow = new Date(`${date}T12:00:00Z`).getUTCDay();
-  return dow === 0 ? [1] : dow <= 3 ? [1, 2] : [2, 3];
-};
-let cpDaily = 0;
-for (let d = 0; d < DAYS; d++) {
-  const date = addDays(today, d);
-  if (await liveDaily('CAREER_PATH', date)) continue;
-  const i = free.findIndex((p) => p.daily && wanted(date).includes(p.tier));
-  const j = i >= 0 ? i : free.findIndex((p) => p.daily);
-  if (j < 0) break;
-  const [pick] = free.splice(j, 1);
+const cpLive = await prisma.challenge.count({
+  where: { gameMode: 'CAREER_PATH', status: 'published' },
+});
+let cpNew = 0;
+for (const p of ordered.slice(0, Math.max(0, CP_TARGET - cpLive))) {
   try {
-    await live({
-      mode: 'CAREER_PATH',
-      kind: 'daily',
-      scheduledFor: date,
-      params: { playerId: pick!.id },
-      createdBy: by,
-    });
-    cpDaily++;
+    await live({ mode: 'CAREER_PATH', params: { playerId: p.id }, createdBy: by });
+    cpNew++;
   } catch (e) {
-    console.log(`  skip ${pick!.name} on ${date}: ${(e as Error).message}`);
+    console.log(`  skip ${p.name}: ${(e as Error).message}`);
   }
 }
-const practiceLive = await prisma.challenge.count({
-  where: { gameMode: 'CAREER_PATH', kind: 'practice', status: 'published' },
-});
-let cpPractice = 0;
-for (const p of free.slice(0, Math.max(0, CP_PRACTICE - practiceLive))) {
-  await live({ mode: 'CAREER_PATH', kind: 'practice', params: { playerId: p.id }, createdBy: by });
-  cpPractice++;
-}
-console.log(`Career Path: published ${cpDaily} dailies and ${cpPractice} practice challenges`);
+console.log(`Career Path: published ${cpNew} new levels (${cpLive + cpNew} in the track)`);
 
 // ── Football Grid: score random grids in memory, publish the varied ones that pass.
 const verified = await prisma.player.findMany({
@@ -209,7 +165,7 @@ const rnd = seeded('grid');
 const pick = <T>(xs: T[]) => xs[Math.floor(rnd() * xs.length)]!;
 const found: { rows: CriterionParam[]; cols: CriterionParam[]; min: number }[] = [];
 const seen = new Set<string>();
-for (let tries = 0; tries < 60_000 && found.length < DAYS + GRID_PRACTICE + 10; tries++) {
+for (let tries = 0; tries < 60_000 && found.length < GRID_TARGET * 3; tries++) {
   const club = () => ({ type: 'club' as const, clubId: pick(bigClubs).id });
   const third = () => (rnd() < 0.5 ? club() : pick(others));
   const rows = [club(), club(), third()];
@@ -234,7 +190,7 @@ console.log(
 
 // Prefer variety: greedy pick that penalises reusing the same criteria.
 const usage = new Map<string, number>();
-const ordered: typeof found = [];
+const ordered2: typeof found = [];
 const rest = [...found];
 while (rest.length) {
   rest.sort((a, b) => {
@@ -243,39 +199,26 @@ while (rest.length) {
     return cost(a) - cost(b) || b.min - a.min;
   });
   const g = rest.shift()!;
-  ordered.push(g);
+  ordered2.push(g);
   for (const c of [...g.rows, ...g.cols]) usage.set(key(c), (usage.get(key(c)) ?? 0) + 1);
 }
-let gridDaily = 0;
-let gridPractice = 0;
-for (let d = 0; d < DAYS && ordered.length; d++) {
-  const date = addDays(today, d);
-  if (await liveDaily('FOOTBALL_GRID', date)) continue;
-  const g = ordered.shift()!;
+// Easier grids (bigger pools) first.
+ordered2.sort((a, b) => b.min - a.min);
+const gridLive = await prisma.challenge.count({
+  where: { gameMode: 'FOOTBALL_GRID', status: 'published' },
+});
+let gridNew = 0;
+for (const g of ordered2.slice(0, Math.max(0, GRID_TARGET - gridLive))) {
   try {
     await live({
       mode: 'FOOTBALL_GRID',
-      kind: 'daily',
-      scheduledFor: date,
       params: { rows: g.rows as never, cols: g.cols as never },
       createdBy: by,
     });
-    gridDaily++;
+    gridNew++;
   } catch (e) {
-    console.log(`  grid skip on ${date}: ${(e as Error).message}`);
+    console.log(`  grid skip: ${(e as Error).message}`);
   }
 }
-const gridPracticeLive = await prisma.challenge.count({
-  where: { gameMode: 'FOOTBALL_GRID', kind: 'practice', status: 'published' },
-});
-for (const g of ordered.slice(0, Math.max(0, GRID_PRACTICE - gridPracticeLive))) {
-  await live({
-    mode: 'FOOTBALL_GRID',
-    kind: 'practice',
-    params: { rows: g.rows as never, cols: g.cols as never },
-    createdBy: by,
-  });
-  gridPractice++;
-}
-console.log(`Grid: published ${gridDaily} dailies and ${gridPractice} practice grids`);
+console.log(`Grid: published ${gridNew} new levels (${gridLive + gridNew} in the track)`);
 await prisma.$disconnect();

@@ -14,27 +14,42 @@ describe('Home', () => {
     expect(html).toMatch(/<h1[^>]*>.*De Cabeça.*<\/h1>/s);
   });
 
-  it('lists both MVP games with a practice link each', () => {
+  it('lists both games with a link to their levels', () => {
     expect(html).toContain('Career Path');
     expect(html).toContain('Football Grid');
-    expect(html).toContain('href="/career-path/practice"');
-    expect(html).toContain('href="/grid/practice"');
+    expect(html).toContain('href="/career-path"');
+    expect(html).toContain('href="/grid"');
   });
 
-  it('shows the no-challenge state when the API has no daily', () => {
-    const empty = renderToString(
+  it('shows track progress and the next level from the API', () => {
+    const page = renderToString(
       <MemoryRouter>
         <Home
           games={{
-            today: '2026-11-05',
             games: [
-              { mode: 'CAREER_PATH', name: 'Career Path', daily: null },
-              { mode: 'FOOTBALL_GRID', name: 'Grid', daily: null },
+              {
+                mode: 'CAREER_PATH',
+                name: 'Career Path',
+                levels: 30,
+                completed: 4,
+                stars: 9,
+                nextLevel: 5,
+              },
+              {
+                mode: 'FOOTBALL_GRID',
+                name: 'Grid',
+                levels: 0,
+                completed: 0,
+                stars: 0,
+                nextLevel: null,
+              },
             ],
           }}
         />
       </MemoryRouter>,
     );
-    expect(empty.match(/Sem desafio hoje/g)).toHaveLength(2);
+    expect(page).toContain('href="/career-path/5"');
+    expect(page).toContain('Jogar fase 5');
+    expect(page).toContain('Fases a caminho.');
   });
 });

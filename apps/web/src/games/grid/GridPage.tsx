@@ -4,31 +4,20 @@
  * "finish" confirmation use the native <dialog> (focus trap and Escape for free).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import type {
   AttemptResponse,
-  ChallengeKind,
   FootballGridReveal,
   FootballGridView,
   PlayerRef,
 } from '@decabeca/contracts';
 import { ApiError } from '../../lib/api';
-import { track } from '../../lib/analytics';
 import { useGameTracking } from '../../lib/useGameTracking';
-import { useAction, useAttempt, useNewPractice } from '../../lib/game';
+import { useAction, useAttempt } from '../../lib/game';
+import { LevelEnd, LevelError } from '../LevelParts';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
 import { PlayerSearch } from '../../components/PlayerSearch';
-import { ShareButton } from '../../components/ShareButton';
-import {
-  btnPrimary,
-  btnSecondary,
-  GameHeader,
-  Notice,
-  Skeleton,
-  useNextDaily,
-  useOnline,
-} from '../../components/ui';
+import { btnSecondary, GameHeader, Skeleton, useOnline } from '../../components/ui';
 
 type Crit = FootballGridView['rows'][number];
 
@@ -55,12 +44,10 @@ function CriterionHead({ c }: { c: Crit }) {
 const cellLabel = (v: FootballGridView, i: number) =>
   `${v.rows[Math.floor(i / 3)]!.label} e ${v.cols[i % 3]!.label}`;
 
-export function GridPage({ kind }: { kind: ChallengeKind }) {
-  const attempt = useAttempt('FOOTBALL_GRID', kind);
-  const action = useAction('FOOTBALL_GRID', kind);
+export function GridPage({ level }: { level: number }) {
+  const attempt = useAttempt('FOOTBALL_GRID', level);
+  const action = useAction('FOOTBALL_GRID', level);
   const online = useOnline();
-  const newPractice = useNewPractice('FOOTBALL_GRID');
-  const next = useNextDaily();
   const [cell, setCell] = useState<number | null>(null);
   const [miss, setMiss] = useState<number | null>(null);
   const [announce, setAnnounce] = useState('');
@@ -79,11 +66,7 @@ export function GridPage({ kind }: { kind: ChallengeKind }) {
     else if (!sheet.current?.open) sheet.current?.showModal();
   }, [cell]);
 
-  const title = data?.attempt.publicNumber
-    ? `Grid #${data.attempt.publicNumber}`
-    : kind === 'practice'
-      ? 'Grid · treino'
-      : 'Grid';
+  const title = `Grid · Fase ${level}`;
   if (attempt.isPending)
     return (
       <div className="flex flex-col gap-4">
@@ -96,31 +79,7 @@ export function GridPage({ kind }: { kind: ChallengeKind }) {
     return (
       <div className="flex flex-col gap-6">
         <GameHeader title={title} />
-        {e.code === 'NO_DAILY_CHALLENGE' ? (
-          <Notice
-            title="Sem grid hoje"
-            action={
-              <Link to="/grid/practice" className={btnPrimary}>
-                Jogar no treino
-              </Link>
-            }
-          >
-            O grid de hoje ainda não saiu. Aquece no modo treino.
-          </Notice>
-        ) : e.code === 'PRACTICE_POOL_EXHAUSTED' ? (
-          <Notice title="Treino vazio">Ainda não há grids de treino publicados.</Notice>
-        ) : (
-          <Notice
-            title="Deu ruim na conexão"
-            action={
-              <button className={btnPrimary} onClick={() => void attempt.refetch()}>
-                Tentar de novo
-              </button>
-            }
-          >
-            {e.message}
-          </Notice>
-        )}
+        <LevelError error={e} mode="FOOTBALL_GRID" retry={() => void attempt.refetch()} />
       </div>
     );
   }
@@ -245,31 +204,7 @@ export function GridPage({ kind }: { kind: ChallengeKind }) {
       )}
 
       {done ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {data.share && (
-            <ShareButton
-              text={data.share.text}
-              onShared={(method) =>
-                track('result_shared', { mode: data.attempt.mode, kind: data.attempt.kind, method })
-              }
-            />
-          )}
-          {kind === 'practice' ? (
-            <button className={btnSecondary} onClick={() => void newPractice()}>
-              Treinar de novo
-            </button>
-          ) : (
-            <Link to="/grid/practice" className={btnSecondary}>
-              Treinar
-            </Link>
-          )}
-          <Link to="/history" className={btnSecondary}>
-            Ver histórico
-          </Link>
-          {kind === 'daily' && (
-            <p className="self-center text-chalk-soft">Próximo grid em {next}.</p>
-          )}
-        </div>
+        <LevelEnd data={data} />
       ) : (
         <button
           className={`${btnSecondary} self-start`}

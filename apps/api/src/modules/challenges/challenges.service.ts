@@ -1,6 +1,6 @@
 /**
- * Challenge lifecycle (API_SPEC.md admin, ADR-002): snapshot generation, eligibility,
- * validate -> schedule -> publish -> retire, daily and practice selection.
+ * Challenge lifecycle (API_SPEC.md admin, ADR-002, ADR-007): snapshot generation, eligibility,
+ * validate -> publish (becomes the next level of its game's track) -> retire.
  */
 import {
   buildTrajectory,
@@ -11,13 +11,9 @@ import {
 } from '@decabeca/engine';
 import type { Challenge, Prisma, PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
-import { addDays, civilDate, dateColumn } from './civil-date';
 import { ENGINES, type GameModeCode } from './engines';
 import { snapshotHash } from './hash';
 import { buildGridSnapshot, gridDifficulty, type GridParams } from './grid-snapshot';
-
-type Kind = 'daily' | 'practice';
-const DAILY_REUSE_DAYS = 180;
 
 const playerInclude = {
   spells: { include: { club: { include: { country: true } } } },
@@ -55,8 +51,6 @@ export interface EligibilityReport {
 export async function careerPathEligibility(
   prisma: PrismaClient,
   playerId: string,
-  kind: Kind,
-  scheduledFor?: string | null,
   ignoreChallengeId?: string,
 ): Promise<EligibilityReport & { player: SnapshotPlayer }> {
   const player = await prisma.player.findUnique({
@@ -71,7 +65,7 @@ export async function careerPathEligibility(
       notabilityTier: player.notabilityTier,
       spells,
     },
-    kind,
+    'daily',
   ).reasons;
   const trajectory = buildTrajectory(spells);
   const trajectoryClubs = new Set(trajectory.map((t) => t.clubId));
@@ -81,26 +75,19 @@ export async function careerPathEligibility(
     )
   )
     reasons.push('UNVERIFIED_CLUB');
-  if (kind === 'daily') {
-    const around = scheduledFor ?? civilDate(new Date());
-    const recent = await prisma.challengePlayerUsage.count({
-      where: {
-        playerId,
-        role: 'answer',
-        challenge: {
-          gameMode: 'CAREER_PATH',
-          kind: 'daily',
-          status: { in: ['published', 'scheduled', 'validated'] },
-          scheduledFor: {
-            gte: dateColumn(addDays(around, -DAILY_REUSE_DAYS)),
-            lte: dateColumn(addDays(around, DAILY_REUSE_DAYS)),
-          },
-          ...(ignoreChallengeId ? { id: { not: ignoreChallengeId } } : {}),
-        },
+  // A player is the answer of at most one live Career Path level (ADR-007).
+  const reused = await prisma.challengePlayerUsage.count({
+    where: {
+      playerId,
+      role: 'answer',
+      challenge: {
+        gameMode: 'CAREER_PATH',
+        status: { in: ['draft', 'validated', 'published'] },
+        ...(ignoreChallengeId ? { id: { not: ignoreChallengeId } } : {}),
       },
-    });
-    if (recent) reasons.push('USED_IN_LAST_180_DAYS');
-  }
+    },
+  });
+  if (reused) reasons.push('ALREADY_A_LEVEL');
   return {
     eligible: reasons.length === 0,
     reasons,
@@ -131,8 +118,6 @@ export function careerPathConfig(
 
 export interface CreateChallengeInput {
   mode: GameModeCode;
-  kind: Kind;
-  scheduledFor?: string | undefined;
   difficultyTier?: 1 | 2 | 3 | undefined;
   params: { playerId: string } | GridParams;
   createdBy: string;
@@ -152,21 +137,11 @@ function usages(
   }));
 }
 
-async function buildSnapshot(
-  prisma: PrismaClient,
-  input: Omit<CreateChallengeInput, 'createdBy'>,
-  ignoreChallengeId?: string,
-) {
+async function buildSnapshot(prisma: PrismaClient, input: Omit<CreateChallengeInput, 'createdBy'>) {
   if (input.mode === 'CAREER_PATH') {
     if (!('playerId' in input.params))
       throw new AppError(400, 'VALIDATION_ERROR', 'params.playerId é obrigatório.');
-    const report = await careerPathEligibility(
-      prisma,
-      input.params.playerId,
-      input.kind,
-      input.scheduledFor,
-      ignoreChallengeId,
-    );
+    const report = await careerPathEligibility(prisma, input.params.playerId);
     if (!report.eligible)
       throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Jogador não elegível para o desafio.', {
         reasons: report.reasons,
@@ -176,7 +151,8 @@ async function buildSnapshot(
   }
   if (!('rows' in input.params))
     throw new AppError(400, 'VALIDATION_ERROR', 'params.rows e params.cols são obrigatórios.');
-  const grid = await buildGridSnapshot(prisma, input.params, input.kind);
+  // Levels use the daily minimum (8 answers per cell): a level is played once, like a daily.
+  const grid = await buildGridSnapshot(prisma, input.params, 'daily');
   if (!grid.eligible)
     throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Grid não elegível.', {
       reasons: grid.reasons,
@@ -190,47 +166,21 @@ async function buildSnapshot(
   return { config, difficultyTier: config.difficultyTier };
 }
 
-async function assertDateFree(
-  prisma: PrismaClient,
-  mode: GameModeCode,
-  date: string,
-  exceptId?: string,
-) {
-  const taken = await prisma.challenge.findFirst({
-    where: {
-      gameMode: mode,
-      kind: 'daily',
-      scheduledFor: dateColumn(date),
-      status: { not: 'retired' },
-      ...(exceptId ? { id: { not: exceptId } } : {}),
-    },
-  });
-  if (taken)
-    throw new AppError(409, 'DATE_TAKEN', `Já existe um desafio diário para ${date}.`, {
-      challengeId: taken.id,
-    });
-}
-
 export async function createChallenge(
   prisma: PrismaClient,
   input: CreateChallengeInput,
   supersedesId?: string,
 ) {
-  if (input.kind === 'practice' && input.scheduledFor)
-    throw new AppError(400, 'VALIDATION_ERROR', 'Desafio de treino não tem data.');
-  if (input.scheduledFor) await assertDateFree(prisma, input.mode, input.scheduledFor);
   const { config, difficultyTier } = await buildSnapshot(prisma, input);
   return prisma.challenge.create({
     data: {
       gameMode: input.mode,
-      kind: input.kind,
       engineVersion: 1,
       difficultyTier,
       snapshot: config as unknown as Prisma.InputJsonValue,
       snapshotHash: snapshotHash(config),
       createdBy: input.createdBy,
       supersedesId: supersedesId ?? null,
-      ...(input.scheduledFor ? { scheduledFor: dateColumn(input.scheduledFor) } : {}),
       usages: { create: usages(input.mode, config as unknown as Prisma.JsonObject) },
     },
   });
@@ -248,8 +198,6 @@ const invalid = (c: Challenge, to: string) =>
     to,
   });
 
-const civil = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
-
 /** draft -> validated: re-runs eligibility against current data and the engine schema. */
 export async function validateChallenge(prisma: PrismaClient, id: string) {
   const c = await getChallenge(prisma, id);
@@ -257,7 +205,7 @@ export async function validateChallenge(prisma: PrismaClient, id: string) {
   ENGINES[c.gameMode].validateConfig(c.snapshot);
   if (c.gameMode === 'CAREER_PATH') {
     const answer = String((c.snapshot as Prisma.JsonObject).answerPlayerId);
-    const report = await careerPathEligibility(prisma, answer, c.kind, civil(c.scheduledFor), c.id);
+    const report = await careerPathEligibility(prisma, answer, c.id);
     if (!report.eligible)
       throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Jogador deixou de ser elegível.', {
         reasons: report.reasons,
@@ -266,26 +214,12 @@ export async function validateChallenge(prisma: PrismaClient, id: string) {
   return prisma.challenge.update({ where: { id }, data: { status: 'validated' } });
 }
 
-export async function scheduleChallenge(prisma: PrismaClient, id: string, scheduledFor: string) {
-  const c = await getChallenge(prisma, id);
-  if (c.status !== 'validated' && c.status !== 'scheduled') throw invalid(c, 'scheduled');
-  if (c.kind !== 'daily')
-    throw new AppError(409, 'INVALID_TRANSITION', 'Só desafio diário é agendado.');
-  await assertDateFree(prisma, c.gameMode, scheduledFor, c.id);
-  return prisma.challenge.update({
-    where: { id },
-    data: { status: 'scheduled', scheduledFor: dateColumn(scheduledFor) },
-  });
-}
-
-/** validated|scheduled -> published; daily gets the next publicNumber of its game. */
+/** validated -> published; the challenge becomes the next level of its game's track. */
 export async function publishChallenge(prisma: PrismaClient, id: string, now: Date) {
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('challenge_publish'))`;
     const c = await tx.challenge.findUniqueOrThrow({ where: { id } });
-    if (c.status !== 'validated' && c.status !== 'scheduled') throw invalid(c, 'published');
-    if (c.kind === 'daily' && !c.scheduledFor)
-      throw new AppError(409, 'INVALID_TRANSITION', 'Desafio diário precisa de data.');
+    if (c.status !== 'validated') throw invalid(c, 'published');
     const last = await tx.challenge.aggregate({
       where: { gameMode: c.gameMode },
       _max: { publicNumber: true },
@@ -295,13 +229,13 @@ export async function publishChallenge(prisma: PrismaClient, id: string, now: Da
       data: {
         status: 'published',
         publishedAt: now,
-        ...(c.kind === 'daily' ? { publicNumber: (last._max.publicNumber ?? 0) + 1 } : {}),
+        publicNumber: (last._max.publicNumber ?? 0) + 1,
       },
     });
   });
 }
 
-/** published -> retired; attempts stay intact. Optional replacement draft for the same slot. */
+/** published -> retired; attempts stay intact. Optional replacement draft (published later as a new level). */
 export async function retireChallenge(
   prisma: PrismaClient,
   id: string,
@@ -321,8 +255,6 @@ export async function retireChallenge(
     prisma,
     {
       mode: c.gameMode,
-      kind: c.kind,
-      scheduledFor: civil(c.scheduledFor) ?? undefined,
       difficultyTier: replacement.difficultyTier,
       params: replacement.params,
       createdBy,
@@ -330,41 +262,4 @@ export async function retireChallenge(
     c.id,
   );
   return { retired, replacement: draft };
-}
-
-export async function todaysChallenge(prisma: PrismaClient, mode: GameModeCode, now: Date) {
-  return prisma.challenge.findFirst({
-    where: {
-      gameMode: mode,
-      kind: 'daily',
-      status: 'published',
-      scheduledFor: dateColumn(civilDate(now)),
-    },
-    orderBy: { publishedAt: 'desc' },
-  });
-}
-
-/** Random published practice challenge, avoiding the session's last 20 (any if all were played). */
-export async function pickPractice(
-  prisma: PrismaClient,
-  mode: GameModeCode,
-  sessionId: string,
-  random: () => number,
-) {
-  const pool = await prisma.challenge.findMany({
-    where: { gameMode: mode, kind: 'practice', status: 'published' },
-    select: { id: true },
-  });
-  if (!pool.length)
-    throw new AppError(404, 'PRACTICE_POOL_EXHAUSTED', 'Não há desafios de treino publicados.');
-  const recent = await prisma.attempt.findMany({
-    where: { sessionId, gameMode: mode, kind: 'practice' },
-    orderBy: { startedAt: 'desc' },
-    take: 20,
-    select: { challengeId: true },
-  });
-  const played = new Set(recent.map((a) => a.challengeId));
-  const fresh = pool.filter((c) => !played.has(c.id));
-  const candidates = fresh.length ? fresh : pool;
-  return candidates[Math.floor(random() * candidates.length)]!.id;
 }

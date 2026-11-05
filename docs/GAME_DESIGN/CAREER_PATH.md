@@ -1,5 +1,7 @@
 # Game Design — Career Path
 
+> **Revisão 2026-11-05 (ADR-007):** daily e treino foram substituídos pela trilha de fases. §11 (Daily vs Practice) e a regra dos 180 dias (§5) não valem mais: cada jogador é resposta de no máximo uma fase; uma tentativa por fase; estrelas 0–3 (acerto em 1–2 = 3, 3–4 = 2, 5–6 = 1). Share: `De Cabeça · Career Path · Fase N · 3/6` + quadrados + estrelas.
+
 Versão da engine: `career-path@1`. Toda regra aqui é **obrigatória** para a v1, salvo seção "Sugestões".
 
 ## 1. Regras

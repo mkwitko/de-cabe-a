@@ -19,7 +19,7 @@ function clean(raw: string): string {
     .replace(/\{\{\s*Futebol\s+([^}|]+)[^}]*\}\}/gi, '$1')
     .replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1')
     .replace(/\{\{[^}]*\}\}|<[^>]+>|'''?|→/g, '')
-    .replace(/\(emp(?:réstimo|\.)?\)/gi, '')
+    .replace(/\(emp(?:réstimo|\.)?\)|\(loan\)/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -35,20 +35,24 @@ function entry(index: number, years: string, raw: string): InfoboxEntry {
     fromYear: found[0] ?? null,
     toYear: found[1] ?? (open ? null : (found[0] ?? null)),
     club: clean(raw),
-    isLoan: /\(emp(?:réstimo|\.)?\)|→/i.test(raw),
+    isLoan: /\(emp(?:réstimo|\.)?\)|\(loan\)|→|\{\{\s*(?:emp|seta) fut/i.test(raw),
   };
 }
 
-/** Senior career from {{Info/Futebol}} (numbered anoN/clubeN) or {{Info/Futebolista}} (ano/clubes lists). */
+/**
+ * Senior career from {{Info/Futebol}} (numbered anoN/clubeN), {{Info/Futebolista}} (ano/clubes lists)
+ * or the English {{Infobox football biography}} (yearsN/clubsN).
+ */
 export function parseInfoboxCareer(wikitext: string): InfoboxEntry[] | null {
-  const start = wikitext.search(/\{\{\s*Info\/Futebol/i);
+  const start = wikitext.search(/\{\{\s*(?:Info\/Futebol|Infobox football biography)/i);
   if (start < 0) return null;
-  const box = wikitext.slice(start);
+  // One field per line: English infoboxes often chain `| years1 = … | clubs1 = …` on one line.
+  const box = wikitext.slice(start).replace(/[ \t]\|\s*([a-zç-]+\d*)\s*=/gi, '\n|$1 =');
   const numbered = (name: string) => new RegExp(`^\\s*\\|\\s*${name}(\\d+)\\s*=(.*)$`, 'gm');
   const years = new Map<number, string>();
-  for (const m of box.matchAll(numbered('ano'))) years.set(Number(m[1]), m[2]!.trim());
+  for (const m of box.matchAll(numbered('(?:ano|years)'))) years.set(Number(m[1]), m[2]!.trim());
   const out: InfoboxEntry[] = [];
-  for (const m of box.matchAll(numbered('clube')))
+  for (const m of box.matchAll(numbered('(?:clube|clubs)')))
     out.push(entry(Number(m[1]), years.get(Number(m[1])) ?? '', m[2]!));
   if (out.length) return out.sort((a, b) => a.index - b.index);
 
@@ -62,8 +66,8 @@ export function parseInfoboxCareer(wikitext: string): InfoboxEntry[] | null {
 }
 
 let last = 0;
-/** Wikitext of a pt.wikipedia page via the MediaWiki API (≤ 1 req/s). */
-export async function fetchPtWikitext(title: string): Promise<string | null> {
+/** Wikitext of a Wikipedia page via the MediaWiki API (≤ 1 req/s). */
+export async function fetchWikitext(lang: 'pt' | 'en', title: string): Promise<string | null> {
   const wait = last + 1100 - Date.now();
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   last = Date.now();
@@ -74,10 +78,12 @@ export async function fetchPtWikitext(title: string): Promise<string | null> {
     page: title,
     redirects: '1',
   });
-  const res = await fetch(`https://pt.wikipedia.org/w/api.php?${params}`, {
+  const res = await fetch(`https://${lang}.wikipedia.org/w/api.php?${params}`, {
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!res.ok) return null;
   const body = (await res.json()) as { parse?: { wikitext?: { '*': string } } };
   return body.parse?.wikitext?.['*'] ?? null;
 }
+
+export const fetchPtWikitext = (title: string) => fetchWikitext('pt', title);

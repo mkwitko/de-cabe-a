@@ -11,9 +11,9 @@ type Props = Record<string, string | number | boolean | null>;
 
 /** Allowed props per event; anything else is dropped. */
 const ALLOWED: Record<string, readonly string[]> = {
-  game_viewed: ['mode', 'kind', 'challengePublicNumber', 'isMobile'],
-  result_shared: ['mode', 'kind', 'method', 'isMobile'],
-  game_abandoned: ['mode', 'kind', 'attemptsUsed', 'isMobile'],
+  game_viewed: ['mode', 'level', 'isMobile'],
+  result_shared: ['mode', 'level', 'method', 'isMobile'],
+  game_abandoned: ['mode', 'level', 'attemptsUsed', 'isMobile'],
   search_no_result: ['qLength', 'mode', 'isMobile'],
 };
 

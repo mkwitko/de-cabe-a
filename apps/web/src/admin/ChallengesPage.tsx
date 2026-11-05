@@ -1,6 +1,6 @@
 /**
- * Editorial calendar (UX_SPEC.md §7): a week per game, create, validate, schedule, publish,
- * retire, preview. Grid criteria are entered as JSON with a live eligibility check.
+ * Editorial view of the level tracks (ADR-007): levels per game in order, drafts, create,
+ * validate, publish (appends the next level), retire, preview.
  */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,10 +9,8 @@ import { adminApi, ErrorNote } from './AdminApp';
 interface Row {
   id: string;
   gameMode: 'CAREER_PATH' | 'FOOTBALL_GRID';
-  kind: 'daily' | 'practice';
   status: string;
-  scheduledFor: string | null;
-  publicNumber: number | null;
+  level: number | null;
   difficultyTier: number;
   answer: string | null;
   attempts: number;
@@ -24,11 +22,6 @@ const input = 'rounded-md border border-ink/30 bg-paper px-2 py-1 text-sm';
 const btn =
   'rounded-md bg-ink px-3 py-1.5 text-sm font-semibold text-paper hover:bg-ink/85 disabled:opacity-40';
 const btnGhost = 'rounded-md border border-ink/30 px-2 py-1 text-xs font-semibold hover:bg-ink/5';
-
-const today = () =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
-const plusDays = (d: string, n: number) =>
-  new Date(Date.parse(`${d}T00:00:00Z`) + n * 86400_000).toISOString().slice(0, 10);
 
 const GRID_EXAMPLE = JSON.stringify(
   {
@@ -49,101 +42,40 @@ const GRID_EXAMPLE = JSON.stringify(
 
 export function ChallengesPage() {
   const qc = useQueryClient();
-  const [from, setFrom] = useState(today);
-  const to = plusDays(from, 6);
+  const [mode, setMode] = useState<Row['gameMode']>('CAREER_PATH');
   const list = useQuery({
-    queryKey: ['admin-challenges', from],
-    queryFn: () => adminApi<{ items: Row[] }>(`/challenges?from=${from}&to=${to}`),
-  });
-  const practice = useQuery({
-    queryKey: ['admin-challenges', 'practice'],
-    queryFn: () => adminApi<{ items: Row[] }>(`/challenges?kind=practice`),
+    queryKey: ['admin-challenges', mode],
+    queryFn: () => adminApi<{ items: Row[] }>(`/challenges?mode=${mode}`),
   });
   const act = useMutation({
     mutationFn: ({ path, json }: { path: string; json?: unknown }) =>
       adminApi(path, { method: 'POST', json: json ?? {} }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-challenges'] }),
   });
-
-  const days = Array.from({ length: 7 }, (_, i) => plusDays(from, i));
-  const byDay = (d: string, mode: Row['gameMode']) =>
-    list.data?.items.filter(
-      (c) => c.scheduledFor === d && c.gameMode === mode && c.status !== 'retired',
-    ) ?? [];
-
-  function Actions({ c }: { c: Row }) {
-    return (
-      <span className="flex flex-wrap gap-1">
-        {c.status === 'draft' && (
-          <button
-            className={btnGhost}
-            onClick={() => act.mutate({ path: `/challenges/${c.id}/validate` })}
-          >
-            Validar
-          </button>
-        )}
-        {(c.status === 'validated' || c.status === 'scheduled') && (
-          <button
-            className={btnGhost}
-            onClick={() => act.mutate({ path: `/challenges/${c.id}/publish` })}
-          >
-            Publicar
-          </button>
-        )}
-        {c.status === 'published' && (
-          <button
-            className={btnGhost}
-            onClick={() => {
-              const reason = prompt('Motivo da retirada?');
-              if (reason) act.mutate({ path: `/challenges/${c.id}/retire`, json: { reason } });
-            }}
-          >
-            Retirar
-          </button>
-        )}
-        <a
-          className={btnGhost}
-          href={`/v1/admin/challenges/${c.id}/preview`}
-          onClick={(e) => {
-            e.preventDefault();
-            void adminApi(`/challenges/${c.id}/preview`).then((s) =>
-              alert(JSON.stringify((s as { snapshot: unknown }).snapshot, null, 1)),
-            );
-          }}
-        >
-          Snapshot
-        </a>
-      </span>
-    );
-  }
-
-  const label = (c: Row) =>
-    `${c.publicNumber ? `#${c.publicNumber} · ` : ''}${c.answer ?? 'Grid'} · ${c.status} · T${c.difficultyTier}${c.attempts ? ` · ${c.attempts} partidas` : ''}`;
+  const items = list.data?.items ?? [];
+  const published = items.filter((c) => c.status === 'published').length;
 
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-condensed text-3xl font-extrabold uppercase">Desafios</h1>
-          <button className={btnGhost} onClick={() => setFrom(plusDays(from, -7))}>
-            ← semana
-          </button>
-          <input
-            type="date"
+          <h1 className="font-condensed text-3xl font-extrabold uppercase">Fases</h1>
+          <select
             className={input}
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            aria-label="Início da semana"
-          />
-          <button className={btnGhost} onClick={() => setFrom(plusDays(from, 7))}>
-            semana →
-          </button>
+            value={mode}
+            onChange={(e) => setMode(e.target.value as Row['gameMode'])}
+            aria-label="Jogo"
+          >
+            <option value="CAREER_PATH">Career Path</option>
+            <option value="FOOTBALL_GRID">Grid</option>
+          </select>
+          <span className="text-sm">{published} fases publicadas</span>
         </div>
         <ErrorNote error={act.error ?? list.error} />
         <table className="w-full text-sm">
           <thead>
             <tr>
-              {['Data', 'Career Path', 'Grid'].map((h) => (
+              {['Fase', 'Status', 'Resposta', 'Dificuldade', 'Partidas', ''].map((h) => (
                 <th key={h} className={`${cell} font-bold`}>
                   {h}
                 </th>
@@ -151,52 +83,74 @@ export function ChallengesPage() {
             </tr>
           </thead>
           <tbody>
-            {days.map((d) => (
-              <tr key={d} className={d === today() ? 'bg-cover/30' : ''}>
-                <td className={`${cell} whitespace-nowrap`}>{d}</td>
-                {(['CAREER_PATH', 'FOOTBALL_GRID'] as const).map((m) => (
-                  <td key={m} className={cell}>
-                    {byDay(d, m).length === 0 ? (
-                      <span className="text-red-800">vazio</span>
-                    ) : (
-                      byDay(d, m).map((c) => (
-                        <div key={c.id} className="flex flex-col gap-1">
-                          <span>{label(c)}</span>
-                          <Actions c={c} />
-                        </div>
-                      ))
+            {items.map((c) => (
+              <tr key={c.id} className={c.status === 'retired' ? 'opacity-50' : ''}>
+                <td className={cell}>{c.level ?? '—'}</td>
+                <td className={cell}>
+                  {c.status}
+                  {c.retiredReason ? ` (${c.retiredReason})` : ''}
+                </td>
+                <td className={cell}>
+                  {c.answer ?? (c.gameMode === 'FOOTBALL_GRID' ? 'Grid' : '—')}
+                </td>
+                <td className={cell}>T{c.difficultyTier}</td>
+                <td className={cell}>{c.attempts}</td>
+                <td className={cell}>
+                  <span className="flex flex-wrap gap-1">
+                    {c.status === 'draft' && (
+                      <button
+                        className={btnGhost}
+                        onClick={() => act.mutate({ path: `/challenges/${c.id}/validate` })}
+                      >
+                        Validar
+                      </button>
                     )}
-                  </td>
-                ))}
+                    {c.status === 'validated' && (
+                      <button
+                        className={btnGhost}
+                        onClick={() => act.mutate({ path: `/challenges/${c.id}/publish` })}
+                      >
+                        Publicar como fase {published + 1}
+                      </button>
+                    )}
+                    {c.status === 'published' && (
+                      <button
+                        className={btnGhost}
+                        onClick={() => {
+                          const reason = prompt('Motivo da retirada?');
+                          if (reason)
+                            act.mutate({ path: `/challenges/${c.id}/retire`, json: { reason } });
+                        }}
+                      >
+                        Retirar
+                      </button>
+                    )}
+                    <button
+                      className={btnGhost}
+                      onClick={() =>
+                        void adminApi(`/challenges/${c.id}/preview`).then((x) =>
+                          alert(JSON.stringify((x as { snapshot: unknown }).snapshot, null, 1)),
+                        )
+                      }
+                    >
+                      Snapshot
+                    </button>
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
-
-      <CreateForm onCreated={() => qc.invalidateQueries({ queryKey: ['admin-challenges'] })} />
-
-      <section className="flex flex-col gap-2">
-        <h2 className="font-condensed text-xl font-extrabold uppercase">Treino</h2>
-        <ul className="flex flex-col gap-1 text-sm">
-          {practice.data?.items.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-2">
-              <span>
-                {c.gameMode === 'CAREER_PATH' ? 'Career Path' : 'Grid'} · {label(c)}
-              </span>
-              <Actions c={c} />
-            </li>
-          ))}
-        </ul>
-      </section>
+      <CreateForm
+        mode={mode}
+        onCreated={() => qc.invalidateQueries({ queryKey: ['admin-challenges'] })}
+      />
     </div>
   );
 }
 
-function CreateForm({ onCreated }: { onCreated: () => void }) {
-  const [mode, setMode] = useState<'CAREER_PATH' | 'FOOTBALL_GRID'>('CAREER_PATH');
-  const [kind, setKind] = useState<'daily' | 'practice'>('daily');
-  const [date, setDate] = useState(today);
+function CreateForm({ mode, onCreated }: { mode: Row['gameMode']; onCreated: () => void }) {
   const [playerQ, setPlayerQ] = useState('');
   const [playerId, setPlayerId] = useState('');
   const [grid, setGrid] = useState(GRID_EXAMPLE);
@@ -213,57 +167,22 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
   const check = useMutation({
     mutationFn: () =>
       mode === 'CAREER_PATH'
-        ? adminApi('/eligibility/career-path', {
-            method: 'POST',
-            json: { playerId, kind, ...(kind === 'daily' ? { scheduledFor: date } : {}) },
-          })
-        : adminApi('/eligibility/grid', { method: 'POST', json: { ...params(), kind } }),
+        ? adminApi('/eligibility/career-path', { method: 'POST', json: { playerId } })
+        : adminApi('/eligibility/grid', { method: 'POST', json: params() }),
     onSuccess: setReport,
   });
   const create = useMutation({
-    mutationFn: () =>
-      adminApi('/challenges', {
-        method: 'POST',
-        json: { mode, kind, ...(kind === 'daily' ? { scheduledFor: date } : {}), params: params() },
-      }),
+    mutationFn: () => adminApi('/challenges', { method: 'POST', json: { mode, params: params() } }),
     onSuccess: (c) => {
       setReport(c);
       onCreated();
     },
   });
-
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-condensed text-xl font-extrabold uppercase">Criar desafio</h2>
-      <div className="flex flex-wrap gap-2 text-sm">
-        <select
-          className={input}
-          value={mode}
-          onChange={(e) => setMode(e.target.value as typeof mode)}
-          aria-label="Jogo"
-        >
-          <option value="CAREER_PATH">Career Path</option>
-          <option value="FOOTBALL_GRID">Grid</option>
-        </select>
-        <select
-          className={input}
-          value={kind}
-          onChange={(e) => setKind(e.target.value as typeof kind)}
-          aria-label="Tipo"
-        >
-          <option value="daily">Diário</option>
-          <option value="practice">Treino</option>
-        </select>
-        {kind === 'daily' && (
-          <input
-            type="date"
-            className={input}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            aria-label="Data"
-          />
-        )}
-      </div>
+      <h2 className="font-condensed text-xl font-extrabold uppercase">
+        Nova fase ({mode === 'CAREER_PATH' ? 'Career Path' : 'Grid'})
+      </h2>
       {mode === 'CAREER_PATH' ? (
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <input

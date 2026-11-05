@@ -7,7 +7,7 @@ import { createPrisma } from '../../apps/api/src/db';
 import { importWikidataPlayers } from '../../apps/api/src/modules/data-import/import.service';
 import { fetchEntities, sparql } from '../../apps/api/src/modules/data-import/wikidata-client';
 import {
-  fetchPtWikitext,
+  fetchWikitext,
   parseInfoboxCareer,
   type InfoboxEntry,
 } from '../../apps/api/src/modules/data-import/wikipedia';
@@ -28,7 +28,7 @@ const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 
 // Requiring a position and a team drops people whose occupation lists football as a pastime.
 async function candidates(): Promise<{ qid: string; links: number }[]> {
   const br = await sparql(`SELECT DISTINCT ?p ?links WHERE {
-    ?p wdt:P27 wd:Q155; wdt:P106 wd:Q937857; wdt:P413 ?pos; wikibase:sitelinks ?links. FILTER(?links >= 25)
+    ?p wdt:P27 wd:Q155; wdt:P106 wd:Q937857; wdt:P413 ?pos; wikibase:sitelinks ?links. FILTER(?links >= 15)
     FILTER EXISTS { ?p wdt:P54 ?team }
   } ORDER BY DESC(?links) LIMIT ${LIMIT}`);
   let world: typeof br = [];
@@ -107,11 +107,12 @@ function sameClub(club: { name: string; shortName: string }, wp: string): boolea
 
 /** Position from the pt.wikipedia infobox, when Wikidata had none we could map. */
 function positionFromInfobox(text: string): 'GK' | 'DF' | 'MF' | 'FW' | null {
-  const raw = normalizeName(/^\s*\|\s*posi[cç][aã]o\s*=(.*)$/im.exec(text)?.[1] ?? '');
-  if (/goleiro|guarda redes/.test(raw)) return 'GK';
-  if (/zagueiro|lateral|defensor|libero|defesa/.test(raw)) return 'DF';
-  if (/atacante|ponta|centroavante|avancado|extremo/.test(raw)) return 'FW';
-  if (/volante|meia|meio campo|medio/.test(raw)) return 'MF';
+  const raw = normalizeName(/^\s*\|\s*(?:posi[cç][aã]o|position)\s*=(.*)$/im.exec(text)?.[1] ?? '');
+  if (/goleiro|guarda redes|goalkeeper/.test(raw)) return 'GK';
+  if (/zagueiro|lateral|defensor|libero|defesa|defender|full back|centre back/.test(raw))
+    return 'DF';
+  if (/atacante|ponta|centroavante|avancado|extremo|forward|striker|winger/.test(raw)) return 'FW';
+  if (/volante|meia|meio campo|medio|midfielder/.test(raw)) return 'MF';
   return null;
 }
 
@@ -128,14 +129,14 @@ async function crossCheck(
   playerId: string,
   qid: string,
   links: number,
-  ptTitle: string | undefined,
+  page: { lang: 'pt' | 'en'; title: string } | undefined,
 ): Promise<Outcome> {
   const p = await prisma.player.findUniqueOrThrow({
     where: { id: playerId },
     include: { aliases: true, spells: { include: { club: true } } },
   });
   if (p.verificationStatus === 'verified') return { qid, name: p.canonicalName, result: 'already' };
-  const text = ptTitle ? await fetchPtWikitext(ptTitle) : null;
+  const text = page ? await fetchWikitext(page.lang, page.title) : null;
   const wp = text ? parseInfoboxCareer(text)?.filter((e) => e.club) : null;
   if (!text || !wp?.length) return { qid, name: p.canonicalName, result: 'no-infobox' };
 
@@ -161,7 +162,7 @@ async function crossCheck(
   }
 
   const now = new Date();
-  const wpUrl = `https://pt.wikipedia.org/wiki/${encodeURIComponent(ptTitle!.replace(/ /g, '_'))}`;
+  const wpUrl = `https://${page!.lang}.wikipedia.org/wiki/${encodeURIComponent(page!.title.replace(/ /g, '_'))}`;
   await prisma.$transaction(async (tx) => {
     // Senior spells are rebuilt from the agreed sequence; youth spells stay as imported.
     await tx.careerSpell.deleteMany({ where: { playerId: p.id, spellType: { not: 'youth' } } });
@@ -260,9 +261,14 @@ for (let i = 0; i < list.length; i += 50) {
   for (const c of batch) {
     const playerId = ids.get(c.qid);
     if (!playerId) continue;
-    const title = (ents[c.qid]?.sitelinks?.ptwiki as { title?: string } | undefined)?.title;
+    const sl = ents[c.qid]?.sitelinks as Record<string, { title?: string }> | undefined;
+    const page = sl?.ptwiki?.title
+      ? { lang: 'pt' as const, title: sl.ptwiki.title }
+      : sl?.enwiki?.title
+        ? { lang: 'en' as const, title: sl.enwiki.title }
+        : undefined;
     try {
-      outcomes.push(await crossCheck(playerId, c.qid, c.links, title));
+      outcomes.push(await crossCheck(playerId, c.qid, c.links, page));
     } catch (e) {
       outcomes.push({
         qid: c.qid,

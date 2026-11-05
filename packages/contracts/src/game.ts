@@ -2,8 +2,6 @@ import { z } from 'zod';
 
 export const GameMode = z.enum(['CAREER_PATH', 'FOOTBALL_GRID']);
 export type GameMode = z.infer<typeof GameMode>;
-export const ChallengeKind = z.enum(['daily', 'practice']);
-export type ChallengeKind = z.infer<typeof ChallengeKind>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
 export type AttemptStatus = z.infer<typeof AttemptStatus>;
 const PositionGroup = z.enum(['GK', 'DF', 'MF', 'FW']);
@@ -88,10 +86,10 @@ export const AttemptSummary = z.strictObject({
   id: z.string(),
   challengeId: z.string(),
   mode: GameMode,
-  kind: ChallengeKind,
-  publicNumber: z.number().nullable(),
+  level: z.number(),
   status: AttemptStatus,
   score: z.number(),
+  stars: z.number(),
 });
 export type AttemptSummary = z.infer<typeof AttemptSummary>;
 
@@ -116,7 +114,7 @@ export const AttemptResponse = z.strictObject({
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
 
-export const StartAttemptRequest = z.object({ mode: GameMode, kind: ChallengeKind });
+export const StartAttemptRequest = z.object({ mode: GameMode, level: z.number().int().min(1) });
 export const SubmitActionRequest = z.object({
   idempotencyKey: z.uuid(),
   input: z.union([
@@ -130,26 +128,37 @@ export const SubmitActionRequest = z.object({
   ]),
 });
 
-/** GET /v1/games */
+/** GET /v1/games: one track per game (ADR-007) */
 export const GamesResponse = z.strictObject({
-  today: z.string(),
   games: z.array(
     z.strictObject({
       mode: GameMode,
       name: z.string(),
-      daily: z
-        .strictObject({
-          challengeId: z.string(),
-          publicNumber: z.number().nullable(),
-          attempt: z
-            .strictObject({ id: z.string(), status: AttemptStatus, score: z.number() })
-            .nullable(),
-        })
-        .nullable(),
+      levels: z.number(),
+      completed: z.number(),
+      stars: z.number(),
+      nextLevel: z.number().nullable(),
     }),
   ),
 });
 export type GamesResponse = z.infer<typeof GamesResponse>;
+
+/** GET /v1/tracks/:mode */
+export const LevelState = z.enum(['locked', 'open', 'in_progress', 'done']);
+export type LevelState = z.infer<typeof LevelState>;
+export const TrackResponse = z.strictObject({
+  mode: GameMode,
+  levels: z.array(
+    z.strictObject({
+      level: z.number(),
+      state: LevelState,
+      stars: z.number(),
+      score: z.number(),
+      difficultyTier: z.number(),
+    }),
+  ),
+});
+export type TrackResponse = z.infer<typeof TrackResponse>;
 
 /** GET /v1/me/history */
 export const HistoryQuery = z.object({
@@ -162,10 +171,10 @@ export const HistoryResponse = z.strictObject({
     z.strictObject({
       attemptId: z.string(),
       mode: GameMode,
-      kind: ChallengeKind,
-      publicNumber: z.number().nullable(),
+      level: z.number(),
       status: AttemptStatus,
       score: z.number(),
+      stars: z.number(),
       completedAt: z.string(),
     }),
   ),
@@ -173,23 +182,92 @@ export const HistoryResponse = z.strictObject({
 });
 export type HistoryResponse = z.infer<typeof HistoryResponse>;
 
-const Streaks = { currentStreak: z.number(), maxStreak: z.number(), practicePlayed: z.number() };
-/** GET /v1/me/stats (daily only, except practicePlayed) */
+const Title = z.strictObject({
+  name: z.string(),
+  next: z.strictObject({ name: z.string(), missing: z.number() }).nullable(),
+});
+/** GET /v1/me/stats */
 export const StatsResponse = z.strictObject({
+  totalStars: z.number(),
+  title: Title,
+  rank: z.strictObject({ all: z.number().nullable(), week: z.number().nullable() }),
   CAREER_PATH: z.strictObject({
-    played: z.number(),
+    completed: z.number(),
     won: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
     distribution: z.record(z.string(), z.number()),
-    ...Streaks,
   }),
   FOOTBALL_GRID: z.strictObject({
-    played: z.number(),
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
     avgScore: z.number(),
     perfect: z.number(),
-    ...Streaks,
   }),
 });
 export type StatsResponse = z.infer<typeof StatsResponse>;
+
+/** GET /v1/ranking?scope=all|week */
+export const RankingQuery = z.object({ scope: z.enum(['all', 'week']).default('all') });
+const RankingEntry = z.strictObject({
+  position: z.number(),
+  nickname: z.string(),
+  stars: z.number(),
+  score: z.number(),
+  title: z.string(),
+  isMe: z.boolean(),
+});
+export const RankingResponse = z.strictObject({
+  scope: z.enum(['all', 'week']),
+  entries: z.array(RankingEntry),
+  me: z.strictObject({
+    position: z.number().nullable(),
+    stars: z.number(),
+    nickname: z.string().nullable(),
+  }),
+});
+export type RankingResponse = z.infer<typeof RankingResponse>;
+
+/** GET /v1/ranking/levels/:mode/:level: top 10 of one level */
+export const LevelRankingResponse = z.strictObject({
+  entries: z.array(
+    z.strictObject({
+      position: z.number(),
+      nickname: z.string(),
+      score: z.number(),
+      stars: z.number(),
+      durationSec: z.number(),
+      isMe: z.boolean(),
+    }),
+  ),
+});
+export type LevelRankingResponse = z.infer<typeof LevelRankingResponse>;
+
+/** GET/PATCH /v1/me, POST /v1/auth/* */
+export const Nickname = z
+  .string()
+  .trim()
+  .min(3)
+  .max(20)
+  .regex(/^[\p{L}\p{N} ._-]+$/u, 'Use letras, números, espaço, ponto, hífen ou _.');
+export const MeResponse = z.strictObject({
+  nickname: z.string().nullable(),
+  account: z.strictObject({ email: z.string() }).nullable(),
+  totalStars: z.number(),
+  title: Title,
+});
+export type MeResponse = z.infer<typeof MeResponse>;
+export const UpdateMeRequest = z.object({ nickname: Nickname });
+export const RegisterRequest = z.object({
+  email: z.email().max(200),
+  password: z.string().min(8).max(200),
+  nickname: Nickname,
+});
+export const LoginRequest = z.object({
+  email: z.email().max(200),
+  password: z.string().min(1).max(200),
+});
 export type CareerPathReveal = z.infer<typeof CareerPathReveal>;
 export type FootballGridReveal = z.infer<typeof FootballGridReveal>;
 

@@ -1,22 +1,23 @@
+import rateLimit from '@fastify/rate-limit';
 import {
   AttemptResponse,
+  GameMode,
   GamesResponse,
   PlayerSearchQuery,
   PlayerSearchResponse,
   StartAttemptRequest,
   SubmitActionRequest,
+  TrackResponse,
 } from '@decabeca/contracts';
-import rateLimit from '@fastify/rate-limit';
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { normalizeName } from '@decabeca/engine';
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { civilDate } from '../challenges/civil-date';
-import { todaysChallenge } from '../challenges/challenges.service';
 import { searchPlayers } from '../knowledge/search';
-import { guestSession } from '../session/session';
-import { getAttempt, startAttempt, submitAction } from './attempts.service';
+import { guestSession, playerAttempts } from '../session/session';
 import { progressionRoutes } from '../progression/progression.routes';
 import { analyticsRoutes } from '../analytics/analytics';
+import { accountRoutes } from '../account/account.routes';
+import { getAttempt, startAttempt, submitAction } from './attempts.service';
 
 const GAMES = [
   { mode: 'CAREER_PATH', name: 'Career Path' },
@@ -25,7 +26,7 @@ const GAMES = [
 
 /** Public game routes; every request runs with a guest session (created on first visit). */
 export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
-  const { prisma, now, random, secureCookie, limits } = app.deps;
+  const { prisma, now, secureCookie, limits } = app.deps;
   app.addHook(
     'onRequest',
     guestSession(prisma, { secureCookie, now, sessionsPerIp: limits.sessionsPerIp }),
@@ -39,25 +40,64 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   });
   await app.register(progressionRoutes);
   await app.register(analyticsRoutes);
+  await app.register(accountRoutes);
 
-  app.get('/games', { schema: { response: { 200: GamesResponse } } }, async (req) => {
-    const at = now();
-    const games = await Promise.all(
+  /** The player's track of one game: every published level with its state (ADR-007). */
+  async function track(req: { sessionId: string; userId: string | null }, mode: GameMode) {
+    const levels = await prisma.challenge.findMany({
+      where: { gameMode: mode, status: 'published' },
+      select: { id: true, publicNumber: true, difficultyTier: true },
+      orderBy: { publicNumber: 'asc' },
+    });
+    const attempts = await prisma.attempt.findMany({
+      where: { ...playerAttempts(req), challengeId: { in: levels.map((l) => l.id) } },
+      select: { challengeId: true, completedAt: true, stars: true, score: true },
+    });
+    const best = new Map<string, (typeof attempts)[number]>();
+    for (const a of attempts) {
+      const prev = best.get(a.challengeId);
+      if (!prev || (a.completedAt && !prev.completedAt) || a.stars > prev.stars)
+        best.set(a.challengeId, a);
+    }
+    let open = true;
+    return levels.map((l) => {
+      const a = best.get(l.id);
+      const state = a?.completedAt ? 'done' : a ? 'in_progress' : open ? 'open' : 'locked';
+      if (state !== 'done') open = false;
+      return {
+        level: l.publicNumber!,
+        state,
+        stars: a?.completedAt ? a.stars : 0,
+        score: a?.completedAt ? a.score : 0,
+        difficultyTier: l.difficultyTier,
+      } as const;
+    });
+  }
+
+  app.get('/games', { schema: { response: { 200: GamesResponse } } }, async (req) => ({
+    games: await Promise.all(
       GAMES.map(async (g) => {
-        const challenge = await todaysChallenge(prisma, g.mode, at);
-        if (!challenge) return { ...g, daily: null };
-        const attempt = await prisma.attempt.findFirst({
-          where: { sessionId: req.sessionId, challengeId: challenge.id, kind: 'daily' },
-          select: { id: true, status: true, score: true },
-        });
+        const levels = await track(req, g.mode);
         return {
           ...g,
-          daily: { challengeId: challenge.id, publicNumber: challenge.publicNumber, attempt },
+          levels: levels.length,
+          completed: levels.filter((l) => l.state === 'done').length,
+          stars: levels.reduce((s, l) => s + l.stars, 0),
+          nextLevel:
+            levels.find((l) => l.state === 'open' || l.state === 'in_progress')?.level ?? null,
         };
       }),
-    );
-    return { today: civilDate(at), games };
-  });
+    ),
+  }));
+
+  app.get(
+    '/tracks/:mode',
+    { schema: { params: z.object({ mode: GameMode }), response: { 200: TrackResponse } } },
+    async (req) => ({
+      mode: req.params.mode,
+      levels: await track(req, req.params.mode),
+    }),
+  );
 
   app.get(
     '/players/search',
@@ -91,11 +131,10 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const { created, response } = await startAttempt(
         prisma,
-        req.sessionId,
+        req,
         req.body.mode,
-        req.body.kind,
+        req.body.level,
         now(),
-        random,
       );
       return reply.code(created ? 201 : 200).send(response);
     },
@@ -104,7 +143,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/attempts/:id',
     { schema: { params: z.object({ id: z.string() }), response: { 200: AttemptResponse } } },
-    (req) => getAttempt(prisma, req.params.id, req.sessionId),
+    (req) => getAttempt(prisma, req.params.id, req),
   );
 
   app.post(
@@ -118,13 +157,6 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) =>
-      submitAction(
-        prisma,
-        req.params.id,
-        req.sessionId,
-        req.body.idempotencyKey,
-        req.body.input,
-        now(),
-      ),
+      submitAction(prisma, req.params.id, req, req.body.idempotencyKey, req.body.input, now()),
   );
 };

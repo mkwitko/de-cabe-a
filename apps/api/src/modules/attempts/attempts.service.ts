@@ -1,25 +1,30 @@
 /**
- * Attempts (ARCHITECTURE.md §4): start/resume, idempotent actions, views without answers.
+ * Attempts (ARCHITECTURE.md §4, ADR-007): one attempt per level per player, sequential unlock,
+ * idempotent actions, views without answers, stars at the end.
  * Every rule runs in the engine; this layer loads, locks, persists and presents.
  */
 import type { AttemptResponse, PlayerRef } from '@decabeca/contracts';
-import type {
-  CareerPathConfig,
-  CareerPathEvent,
-  CareerPathState,
-  FootballGridConfig,
-  FootballGridState,
+import {
+  starsFor,
+  type CareerPathConfig,
+  type CareerPathState,
+  type FootballGridConfig,
+  type FootballGridState,
 } from '@decabeca/engine';
 import type { Attempt, Challenge, Prisma, PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
-import { pickPractice, todaysChallenge } from '../challenges/challenges.service';
 import { engineFor, type GameModeCode } from '../challenges/engines';
 import { track } from '../analytics/analytics';
 
-type Kind = 'daily' | 'practice';
 const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid' } as const;
-const SHARE_PATH = { CAREER_PATH: 'c', FOOTBALL_GRID: 'g' } as const;
 export const SHARE_HOST = 'decabeca.app';
+
+export interface Player {
+  sessionId: string;
+  userId: string | null;
+}
+const scope = (p: Player): Prisma.AttemptWhereInput =>
+  p.userId ? { session: { userId: p.userId } } : { sessionId: p.sessionId };
 
 async function playerRefs(prisma: PrismaClient, ids: string[]): Promise<Map<string, PlayerRef>> {
   const unique = [...new Set(ids)];
@@ -128,13 +133,10 @@ export async function present(
   }
 
   const mode = challenge.gameMode as GameModeCode;
-  const daily = challenge.kind === 'daily' && challenge.publicNumber !== null;
+  const stars = '★'.repeat(attempt.stars) + '☆'.repeat(3 - attempt.stars);
   const share = done
     ? {
-        text: engine.buildShareText(state, config, {
-          label: daily ? `${NAMES[mode]} #${challenge.publicNumber}` : `${NAMES[mode]} (treino)`,
-          url: daily ? `${SHARE_HOST}/${SHARE_PATH[mode]}/${challenge.publicNumber}` : SHARE_HOST,
-        }),
+        text: `${engine.buildShareText(state, config, { label: `${NAMES[mode]} · Fase ${challenge.publicNumber}`, url: SHARE_HOST }).replace(`\n${SHARE_HOST}`, ` ${stars}\n${SHARE_HOST}`)}`,
       }
     : null;
 
@@ -143,106 +145,116 @@ export async function present(
       id: attempt.id,
       challengeId: challenge.id,
       mode,
-      kind: attempt.kind,
-      publicNumber: challenge.publicNumber,
+      level: challenge.publicNumber ?? 0,
       status: attempt.status,
       score: attempt.score,
+      stars: attempt.stars,
     },
-    ...(event !== undefined ? { event: presentEvent(event) } : {}),
+    ...(event !== undefined ? { event: event as NonNullable<AttemptResponse['event']> } : {}),
     view,
     reveal,
     share,
   };
 }
 
-/** Engine events map 1:1 to the HTTP event union. */
-const presentEvent = (event: unknown) => event as NonNullable<AttemptResponse['event']>;
+/** Level L is open when every published level before it was finished by this player. */
+async function assertUnlocked(
+  prisma: PrismaClient,
+  player: Player,
+  mode: GameModeCode,
+  level: number,
+) {
+  const before = await prisma.challenge.findMany({
+    where: { gameMode: mode, status: 'published', publicNumber: { lt: level } },
+    select: { id: true },
+  });
+  if (!before.length) return;
+  const done = await prisma.attempt.findMany({
+    where: {
+      ...scope(player),
+      challengeId: { in: before.map((c) => c.id) },
+      completedAt: { not: null },
+    },
+    select: { challengeId: true },
+    distinct: ['challengeId'],
+  });
+  if (done.length < before.length)
+    throw new AppError(403, 'LEVEL_LOCKED', 'Termine a fase anterior para liberar esta.');
+}
 
 export async function startAttempt(
   prisma: PrismaClient,
-  sessionId: string,
+  player: Player,
   mode: GameModeCode,
-  kind: Kind,
+  level: number,
   now: Date,
-  random: () => number,
 ): Promise<{ created: boolean; response: AttemptResponse }> {
-  let challenge: Challenge | null;
-  if (kind === 'daily') {
-    challenge = await todaysChallenge(prisma, mode, now);
-    if (!challenge)
-      throw new AppError(404, 'NO_DAILY_CHALLENGE', 'Ainda não há desafio para hoje.');
-    const existing = await prisma.attempt.findFirst({
-      where: { sessionId, challengeId: challenge.id, kind: 'daily' },
-    });
-    if (existing) return { created: false, response: await present(prisma, existing, challenge) };
-  } else {
-    const inProgress = await prisma.attempt.findFirst({
-      where: { sessionId, gameMode: mode, kind: 'practice', status: 'IN_PROGRESS' },
-      include: { challenge: true },
-      orderBy: { startedAt: 'desc' },
-    });
-    if (inProgress)
-      return { created: false, response: await present(prisma, inProgress, inProgress.challenge) };
-    challenge = await prisma.challenge.findUniqueOrThrow({
-      where: { id: await pickPractice(prisma, mode, sessionId, random) },
-    });
-  }
+  const challenge = await prisma.challenge.findFirst({
+    where: { gameMode: mode, publicNumber: level, status: { in: ['published', 'retired'] } },
+  });
+  if (!challenge) throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase não encontrada.');
+  // One attempt per level per player, across all sessions of an account (no replay).
+  const existing = await prisma.attempt.findFirst({
+    where: { ...scope(player), challengeId: challenge.id },
+    orderBy: { startedAt: 'asc' },
+  });
+  if (existing) return { created: false, response: await present(prisma, existing, challenge) };
+  if (challenge.status !== 'published')
+    throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase retirada.');
+  await assertUnlocked(prisma, player, mode, level);
 
   const engine = engineFor(mode);
   const state = engine.createInitialState(engine.validateConfig(challenge.snapshot));
   try {
     const attempt = await prisma.attempt.create({
       data: {
-        sessionId,
+        sessionId: player.sessionId,
         challengeId: challenge.id,
         gameMode: mode,
-        kind,
         engineVersion: challenge.engineVersion,
         state: state as Prisma.InputJsonValue,
         status: 'IN_PROGRESS',
         startedAt: now,
       },
     });
-    await track(prisma, sessionId, 'game_started', {
+    await track(prisma, player.sessionId, 'game_started', {
       mode,
-      kind,
-      challengePublicNumber: challenge.publicNumber,
+      level,
       difficultyTier: challenge.difficultyTier,
     });
     return { created: true, response: await present(prisma, attempt, challenge) };
   } catch (err) {
-    // Two concurrent daily starts: the partial unique index lets only one through.
     if ((err as { code?: string }).code !== 'P2002') throw err;
-    const existing = await prisma.attempt.findFirstOrThrow({
-      where: { sessionId, challengeId: challenge.id, kind: 'daily' },
+    const again = await prisma.attempt.findFirstOrThrow({
+      where: { sessionId: player.sessionId, challengeId: challenge.id },
     });
-    return { created: false, response: await present(prisma, existing, challenge) };
+    return { created: false, response: await present(prisma, again, challenge) };
   }
 }
 
 async function loadOwned(
   prisma: Prisma.TransactionClient | PrismaClient,
   id: string,
-  sessionId: string,
+  player: Player,
 ) {
   const attempt = await prisma.attempt.findFirst({
-    where: { id, sessionId },
+    where: { id, ...scope(player) },
     include: { challenge: true },
   });
-  // Another session's attempt is indistinguishable from a missing one.
+  // Another player's attempt is indistinguishable from a missing one.
   if (!attempt) throw new AppError(404, 'ATTEMPT_NOT_FOUND', 'Partida não encontrada.');
   return attempt;
 }
 
-export async function getAttempt(prisma: PrismaClient, id: string, sessionId: string) {
-  const a = await loadOwned(prisma, id, sessionId);
+export async function getAttempt(prisma: PrismaClient, id: string, player: Player) {
+  const a = await loadOwned(prisma, id, player);
   return present(prisma, a, a.challenge);
 }
 
 export async function submitAction(
   prisma: PrismaClient,
   id: string,
-  sessionId: string,
+  player: Player,
   idempotencyKey: string,
   rawInput: unknown,
   now: Date,
@@ -251,7 +263,7 @@ export async function submitAction(
   const { attempt, challenge, event } = await prisma.$transaction(async (tx) => {
     // Serialise actions on one attempt so seq and state stay consistent.
     await tx.$queryRaw`SELECT id FROM "Attempt" WHERE id = ${id} FOR UPDATE`;
-    const a = await loadOwned(tx, id, sessionId);
+    const a = await loadOwned(tx, id, player);
     const replay = await tx.attemptAction.findUnique({
       where: { attemptId_idempotencyKey: { attemptId: id, idempotencyKey } },
     });
@@ -269,12 +281,14 @@ export async function submitAction(
     const out = engine.submit(a.state, input, config);
     const done = engine.isCompleted(out.state);
     const status = (out.state as { status: Attempt['status'] }).status;
+    const score = engine.score(out.state, config);
     const updated = await tx.attempt.update({
       where: { id },
       data: {
         state: out.state as Prisma.InputJsonValue,
         status,
-        score: engine.score(out.state, config),
+        score,
+        stars: done ? starsFor(engine.id as 'career-path' | 'football-grid', score) : 0,
         ...(done ? { completedAt: now } : {}),
       },
     });
@@ -288,10 +302,15 @@ export async function submitAction(
         event: out.event as Prisma.InputJsonValue,
       },
     });
+
     const ev = out.event as { type: string; revealed?: string; cellIndex?: number };
-    const base = { mode: a.challenge.gameMode, kind: a.kind, challengeId: a.challengeId };
+    const base = {
+      mode: a.challenge.gameMode,
+      level: a.challenge.publicNumber ?? 0,
+      challengeId: a.challengeId,
+    };
     const attemptsUsed =
-      engine.isCompleted(out.state) && a.challenge.gameMode === 'FOOTBALL_GRID'
+      a.challenge.gameMode === 'FOOTBALL_GRID'
         ? (out.state as { attemptsUsed: number }).attemptsUsed
         : seq;
     if (input.kind === 'guess')
@@ -319,15 +338,14 @@ export async function submitAction(
         {
           ...base,
           status,
-          score: updated.score,
+          score,
+          stars: updated.stars,
           attemptsUsed,
           durationSec: Math.round((now.getTime() - a.startedAt.getTime()) / 1000),
         },
       ]);
     return { attempt: updated, challenge: a.challenge, event: out.event };
   });
-  for (const [name, props] of pending) await track(prisma, sessionId, name, props);
+  for (const [name, props] of pending) await track(prisma, player.sessionId, name, props);
   return present(prisma, attempt, challenge, event);
 }
-
-export type { CareerPathEvent };

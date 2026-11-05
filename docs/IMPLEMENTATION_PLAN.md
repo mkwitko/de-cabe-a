@@ -148,3 +148,7 @@ Implementados na branch `feat/mvp-slices-4-14`, um commit por slice (Conventiona
 - **Slice 14:** rate limits com `@fastify/rate-limit` (por sessão) e janela em memória por IP para criar sessão; e2e completo no CI com Postgres próprio; checklist em `docs/DEPLOY.md`.
 - **Conteúdo do piloto:** feito pela IA (ADR-006) com `scripts/research/curate.ts` (import + conferência Wikidata × Wikipédia PT) e `scripts/research/publish-pilot.ts` (30 dias de daily por jogo + treino).
 - **Slice 15** continua bloqueado (RF-10).
+
+## Revisão ADR-007 (2026-11-05)
+
+Pedido do autor do produto: sem daily nem treino; vários desafios pré-criados em trilha de fases; ranking da comunidade; estrelas, títulos e stats. Implementado na mesma branch: migration `levels_stars_accounts`, `starsFor`/`titleFor` na engine, rotas de trilha, ranking, apelido e cadastro opcional, telas de trilha/ranking/conta/stats, e2e reescrito. Conteúdo: `scripts/research/publish-levels.ts`.

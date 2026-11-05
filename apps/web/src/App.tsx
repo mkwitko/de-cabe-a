@@ -6,12 +6,15 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router';
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import type { GamesResponse } from '@decabeca/contracts';
 import { useGames } from './lib/game';
 import { CareerPathPage } from './games/career-path/CareerPathPage';
 import { GridPage } from './games/grid/GridPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { TrackPage } from './pages/TrackPage';
+import { RankingPage } from './pages/RankingPage';
+import { AccountPage } from './pages/AccountPage';
 import { StatsPage } from './pages/StatsPage';
 import { btnPrimary, Skeleton, useOnline } from './components/ui';
 
@@ -88,53 +91,40 @@ function BrandSticker() {
   );
 }
 
-type Daily = GamesResponse['games'][number]['daily'];
+type Track = GamesResponse['games'][number];
 
-function DailyState({
-  daily,
-  path,
-  mode,
-}: {
-  daily: Daily | undefined;
-  path: string;
-  mode: string;
-}) {
-  if (daily === undefined) return <Skeleton className="h-11 w-40" />;
-  if (daily === null)
-    return (
-      <p className="font-semibold text-chalk-soft">
-        Sem desafio hoje.{' '}
-        <Link to={`${path}/practice`} className="text-chalk underline underline-offset-4">
-          Jogue no treino.
-        </Link>
-      </p>
-    );
-  const a = daily.attempt;
-  if (a && a.status !== 'IN_PROGRESS') {
-    const result =
-      mode === 'FOOTBALL_GRID'
-        ? `${a.score}/9`
-        : a.status === 'WON'
-          ? `${7 - a.score / 10}/6`
-          : 'X/6';
-    return (
-      <Link
-        to={path}
-        className="flex items-center gap-3 self-start rounded-lg bg-paper px-3 py-2 text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]"
-      >
-        <span className="font-condensed tabular text-3xl font-black">{result}</span>
-        <span className="text-sm leading-tight font-semibold">
-          #{daily.publicNumber} colada
-          <br />
-          <span className="underline underline-offset-2">ver resultado</span>
-        </span>
-      </Link>
-    );
-  }
+function TrackState({ track, path }: { track: Track | undefined; path: string }) {
+  if (!track) return <Skeleton className="h-11 w-40" />;
+  if (track.levels === 0) return <p className="font-semibold text-chalk-soft">Fases a caminho.</p>;
+  const pct = (track.completed / track.levels) * 100;
   return (
-    <Link to={path} className={`${btnPrimary} self-start`}>
-      {a ? 'Continuar' : 'Jogar'} #{daily.publicNumber}
-    </Link>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3 text-sm font-semibold">
+        <span className="font-condensed tabular text-2xl font-black">
+          {track.completed}/{track.levels}
+        </span>
+        <span className="text-chalk-soft">fases</span>
+        <span
+          className="font-condensed tabular ml-auto text-xl font-black"
+          aria-label={`${track.stars} estrelas`}
+        >
+          ★ {track.stars}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-chalk/15" aria-hidden="true">
+        <div className="h-full rounded-full bg-cover" style={{ width: `${pct}%` }} />
+      </div>
+      <Link
+        to={track.nextLevel ? `${path}/${track.nextLevel}` : path}
+        className={`${btnPrimary} self-start`}
+      >
+        {track.nextLevel
+          ? track.completed
+            ? `Jogar fase ${track.nextLevel}`
+            : 'Começar'
+          : 'Ver fases'}
+      </Link>
+    </div>
   );
 }
 
@@ -150,11 +140,10 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
 
       <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
         <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
-          Desafios de hoje
+          Jogos
         </h2>
         <ul className="mt-5 grid gap-4 sm:grid-cols-2">
           {GAMES.map((g) => {
-            const daily = games?.games.find((x) => x.mode === g.mode)?.daily;
             return (
               <li
                 key={g.slot}
@@ -170,14 +159,10 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
                   {g.name}
                 </h3>
                 <p className="max-w-[32ch] text-chalk-soft">{g.rule}</p>
-                <DailyState
-                  daily={games ? (daily ?? null) : undefined}
-                  path={g.path}
-                  mode={g.mode}
-                />
+                <TrackState track={games?.games.find((x) => x.mode === g.mode)} path={g.path} />
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
-                  <Link to={`${g.path}/practice`} className="underline underline-offset-4">
-                    Treinar
+                  <Link to={g.path} className="underline underline-offset-4">
+                    Ver fases
                   </Link>
                   <details className="group">
                     <summary className="cursor-pointer list-none underline underline-offset-4">
@@ -206,8 +191,9 @@ function HomeRoute() {
 
 const NAV = [
   ['/', 'Jogos'],
-  ['/history', 'Histórico'],
+  ['/ranking', 'Ranking'],
   ['/stats', 'Stats'],
+  ['/conta', 'Conta'],
 ] as const;
 
 function Shell({ children }: { children: ReactNode }) {
@@ -273,20 +259,28 @@ function PublicRoutes() {
     <Shell>
       <Routes>
         <Route path="/" element={<HomeRoute />} />
-        <Route path="/career-path" element={<CareerPathPage key="daily" kind="daily" />} />
-        <Route
-          path="/career-path/practice"
-          element={<CareerPathPage key="practice" kind="practice" />}
-        />
-        <Route path="/grid" element={<GridPage key="daily" kind="daily" />} />
-        <Route path="/grid/practice" element={<GridPage key="practice" kind="practice" />} />
+        <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
+        <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
+        <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
+        <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
+        <Route path="/ranking" element={<RankingPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/stats" element={<StatsPage />} />
-        {/* share links: decabeca.app/c/123 and /g/45 land on today's game */}
-        <Route path="/c/:n" element={<Navigate to="/career-path" replace />} />
-        <Route path="/g/:n" element={<Navigate to="/grid" replace />} />
+        <Route path="/conta" element={<AccountPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
+  );
+}
+
+/** /career-path/:level and /grid/:level; the key remounts the game when the level changes. */
+function LevelRoute({ mode }: { mode: 'CAREER_PATH' | 'FOOTBALL_GRID' }) {
+  const level = Number(useParams().level);
+  if (!Number.isInteger(level) || level < 1)
+    return <Navigate to={mode === 'CAREER_PATH' ? '/career-path' : '/grid'} replace />;
+  return mode === 'CAREER_PATH' ? (
+    <CareerPathPage key={level} level={level} />
+  ) : (
+    <GridPage key={level} level={level} />
   );
 }

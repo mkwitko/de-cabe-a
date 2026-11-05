@@ -1,5 +1,7 @@
 # Analytics
 
+> **Revisão 2026-11-05 (ADR-007):** props `kind`/`challengePublicNumber` viraram `level`; `game_completed` inclui `stars`. DAU/retenção seguem iguais; "daily_challenge_completed" não existe mais.
+
 Sem ferramenta externa no MVP: eventos vão para `POST /v1/events` → tabela `Event (id, sessionHash, name, ts, props jsonb)`. Consultas SQL. Migrar para PostHog (há MCP disponível na máquina, mas conta/uso exigem aprovação) quando houver tráfego real.
 
 ## 1. Eventos

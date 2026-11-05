@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 import { useStats } from '../lib/game';
 import { Skeleton } from '../components/ui';
 
@@ -17,21 +18,63 @@ export function StatsPage() {
   const cp = data.CAREER_PATH;
   const grid = data.FOOTBALL_GRID;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
+  const next = data.title.next;
   return (
     <div className="flex flex-col gap-10">
-      <h1 className="font-condensed text-4xl font-black uppercase">Stats</h1>
+      <section className="rounded-xl bg-cover p-5 text-ink shadow-[0_18px_40px_-14px_rgb(0_0_0/0.55)]">
+        <p className="text-sm font-semibold uppercase">Seu título</p>
+        <h1 className="font-condensed text-6xl leading-none font-black uppercase">
+          {data.title.name}
+        </h1>
+        <p className="mt-2 text-lg font-semibold">★ {data.totalStars} estrelas</p>
+        {next && (
+          <div className="mt-3 flex flex-col gap-1">
+            <div
+              className="h-2.5 overflow-hidden rounded-full bg-ink/15"
+              role="progressbar"
+              aria-label={`Progresso até ${next.name}`}
+              aria-valuenow={data.totalStars}
+              aria-valuemin={0}
+              aria-valuemax={data.totalStars + next.missing}
+            >
+              <div
+                className="h-full rounded-full bg-ink"
+                style={{ width: `${(data.totalStars / (data.totalStars + next.missing)) * 100}%` }}
+              />
+            </div>
+            <p className="text-sm font-semibold">
+              Faltam {next.missing} estrelas para {next.name}
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section className="grid grid-cols-2 gap-6">
+        <Big value={data.rank.all ? `${data.rank.all}º` : '—'} label="no ranking geral" />
+        <Big value={data.rank.week ? `${data.rank.week}º` : '—'} label="no ranking da semana" />
+      </section>
+      {(!data.rank.all || !data.rank.week) && (
+        <p className="-mt-6 text-sm text-chalk-soft">
+          Sem posição?{' '}
+          <Link to="/conta" className="text-chalk underline underline-offset-4">
+            Escolha um apelido
+          </Link>{' '}
+          e termine uma fase.
+        </p>
+      )}
+
       <section aria-labelledby="cp-stats" className="flex flex-col gap-5">
         <h2 id="cp-stats" className="font-condensed text-2xl font-extrabold uppercase">
           Career Path
         </h2>
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          <Big value={cp.played} label="desafios jogados" />
+          <Big value={cp.completed} label="fases jogadas" />
           <Big
-            value={cp.played ? `${Math.round((cp.won / cp.played) * 100)}%` : '—'}
+            value={cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—'}
             label="de acerto"
           />
-          <Big value={cp.currentStreak} label="sequência atual" />
-          <Big value={cp.maxStreak} label="melhor sequência" />
+          <Big value={`★ ${cp.stars}`} label="estrelas" />
+          <Big value={cp.threeStars} label="fases com 3 estrelas" />
         </div>
         <div className="flex flex-col gap-1.5" aria-label="Acertos por tentativa">
           {Object.entries(cp.distribution).map(([n, count]) => (
@@ -46,29 +89,24 @@ export function StatsPage() {
             </div>
           ))}
         </div>
-        <p className="text-sm text-chalk-soft">Treinos jogados: {cp.practicePlayed}</p>
       </section>
       <section aria-labelledby="grid-stats" className="flex flex-col gap-5">
         <h2 id="grid-stats" className="font-condensed text-2xl font-extrabold uppercase">
           Grid
         </h2>
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          <Big value={grid.played} label="grids jogados" />
+          <Big value={grid.completed} label="fases jogadas" />
           <Big
-            value={grid.played ? grid.avgScore.toLocaleString('pt-BR') : '—'}
+            value={grid.completed ? grid.avgScore.toLocaleString('pt-BR') : '—'}
             label="células por grid"
           />
+          <Big value={`★ ${grid.stars}`} label="estrelas" />
           <Big value={grid.perfect} label="álbuns completos" />
-          <Big value={grid.currentStreak} label="sequência atual" />
         </div>
-        <p className="text-sm text-chalk-soft">
-          Treinos jogados: {grid.practicePlayed} · Melhor sequência: {grid.maxStreak}
-        </p>
       </section>
-      <p className="max-w-[60ch] text-sm text-chalk-soft">
-        Seu progresso fica neste navegador, sem cadastro. Se você limpar os cookies ou trocar de
-        aparelho, ele recomeça do zero.
-      </p>
+      <Link to="/history" className="font-semibold underline underline-offset-4">
+        Ver histórico de partidas
+      </Link>
     </div>
   );
 }

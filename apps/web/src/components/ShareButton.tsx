@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Icon } from './Icon';
-import { btnPrimary } from './ui';
+import { btnPrimary, btnSecondary } from './ui';
 
 /** Web Share when available, else clipboard, else a selectable textarea (UX_SPEC.md §5). */
 export function ShareButton({
   text,
   onShared,
+  secondary,
 }: {
   text: string;
   onShared?: (method: 'webshare' | 'clipboard') => void;
+  secondary?: boolean;
 }) {
   const [state, setState] = useState<'idle' | 'copied' | 'manual'>('idle');
   async function share() {
@@ -32,7 +34,7 @@ export function ShareButton({
   }
   return (
     <div className="flex flex-col gap-2">
-      <button type="button" className={btnPrimary} onClick={share}>
+      <button type="button" className={secondary ? btnSecondary : btnPrimary} onClick={share}>
         <Icon name={state === 'copied' ? 'check' : 'share'} />
         {state === 'copied' ? 'Copiado!' : 'Copiar resultado'}
       </button>

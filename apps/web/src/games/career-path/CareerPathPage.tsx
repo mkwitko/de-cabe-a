@@ -3,30 +3,25 @@
  * pasted in the next numbered slot; the rest of the album page stays dashed.
  */
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router';
 import type {
   AttemptResponse,
   CareerPathReveal,
   CareerPathView,
-  ChallengeKind,
   PlayerRef,
 } from '@decabeca/contracts';
 import { ApiError } from '../../lib/api';
-import { track } from '../../lib/analytics';
 import { useGameTracking } from '../../lib/useGameTracking';
-import { useAction, useAttempt, useNewPractice } from '../../lib/game';
+import { useAction, useAttempt } from '../../lib/game';
+import { LevelEnd, LevelError } from '../LevelParts';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
 import { PlayerSearch } from '../../components/PlayerSearch';
-import { ShareButton } from '../../components/ShareButton';
 import {
   AttemptDots,
   btnPrimary,
   btnSecondary,
   GameHeader,
-  Notice,
   Skeleton,
-  useNextDaily,
   useOnline,
 } from '../../components/ui';
 
@@ -79,12 +74,10 @@ function EmptySlot({ n }: { n: number }) {
   );
 }
 
-function Result({ data, kind }: { data: AttemptResponse; kind: ChallengeKind }) {
+function Result({ data }: { data: AttemptResponse }) {
   const reveal = data.reveal as CareerPathReveal;
   const won = data.attempt.status === 'WON';
   const view = data.view as CareerPathView;
-  const next = useNextDaily();
-  const newPractice = useNewPractice('CAREER_PATH');
   return (
     <section aria-labelledby="result" className="flex flex-col gap-5">
       <div className="rounded-xl bg-cover p-5 text-ink shadow-[0_18px_40px_-14px_rgb(0_0_0/0.55)]">
@@ -101,41 +94,19 @@ function Result({ data, kind }: { data: AttemptResponse; kind: ChallengeKind }) 
         </p>
         <p className="mt-1 font-semibold">Pontuação: {data.attempt.score}</p>
       </div>
+      <LevelEnd data={data} />
       <ol className="flex flex-col gap-2" aria-label="Trajetória completa">
         {reveal.trajectory.map((c, i) => (
           <ClubRow key={i} n={i + 1} club={c} fresh={false} />
         ))}
       </ol>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {data.share && (
-          <ShareButton
-            text={data.share.text}
-            onShared={(method) =>
-              track('result_shared', { mode: data.attempt.mode, kind: data.attempt.kind, method })
-            }
-          />
-        )}
-        {kind === 'practice' ? (
-          <button className={btnSecondary} onClick={() => void newPractice()}>
-            Treinar de novo
-          </button>
-        ) : (
-          <Link to="/career-path/practice" className={btnSecondary}>
-            Treinar
-          </Link>
-        )}
-        <Link to="/history" className={btnSecondary}>
-          Ver histórico
-        </Link>
-      </div>
-      {kind === 'daily' && <p className="text-chalk-soft">Próximo desafio em {next}.</p>}
     </section>
   );
 }
 
-export function CareerPathPage({ kind }: { kind: ChallengeKind }) {
-  const attempt = useAttempt('CAREER_PATH', kind);
-  const action = useAction('CAREER_PATH', kind);
+export function CareerPathPage({ level }: { level: number }) {
+  const attempt = useAttempt('CAREER_PATH', level);
+  const action = useAction('CAREER_PATH', level);
   const online = useOnline();
   const [selected, setSelected] = useState<PlayerRef | null>(null);
   const [announce, setAnnounce] = useState('');
@@ -146,11 +117,7 @@ export function CareerPathPage({ kind }: { kind: ChallengeKind }) {
     () => new Set(view?.history.flatMap((h) => (h.kind === 'guess' ? [h.playerId] : [])) ?? []),
     [view?.history],
   );
-  const title = data?.attempt.publicNumber
-    ? `Career Path #${data.attempt.publicNumber}`
-    : kind === 'practice'
-      ? 'Career Path · treino'
-      : 'Career Path';
+  const title = `Career Path · Fase ${level}`;
 
   if (attempt.isPending)
     return (
@@ -166,31 +133,7 @@ export function CareerPathPage({ kind }: { kind: ChallengeKind }) {
     return (
       <div className="flex flex-col gap-6">
         <GameHeader title={title} />
-        {e.code === 'NO_DAILY_CHALLENGE' ? (
-          <Notice
-            title="Sem desafio hoje"
-            action={
-              <Link to="/career-path/practice" className={btnPrimary}>
-                Jogar no treino
-              </Link>
-            }
-          >
-            O desafio de hoje ainda não saiu. Aquece no modo treino enquanto isso.
-          </Notice>
-        ) : e.code === 'PRACTICE_POOL_EXHAUSTED' ? (
-          <Notice title="Treino vazio">Ainda não há desafios de treino publicados.</Notice>
-        ) : (
-          <Notice
-            title="Deu ruim na conexão"
-            action={
-              <button className={btnPrimary} onClick={() => void attempt.refetch()}>
-                Tentar de novo
-              </button>
-            }
-          >
-            {e.message}
-          </Notice>
-        )}
+        <LevelError error={e} mode="CAREER_PATH" retry={() => void attempt.refetch()} />
       </div>
     );
   }
@@ -237,7 +180,7 @@ export function CareerPathPage({ kind }: { kind: ChallengeKind }) {
       </p>
 
       {done ? (
-        <Result data={data} kind={kind} />
+        <Result data={data} />
       ) : (
         <>
           <ol className="flex flex-col gap-2" aria-label="Clubes revelados">

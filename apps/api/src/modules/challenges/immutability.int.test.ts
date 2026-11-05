@@ -4,17 +4,15 @@ import { testPrisma } from '../../test/db';
 const prisma = testPrisma();
 afterAll(() => prisma.$disconnect());
 
-const draft = (scheduledFor?: string) =>
+const draft = () =>
   prisma.challenge.create({
     data: {
       gameMode: 'CAREER_PATH',
-      kind: scheduledFor ? 'daily' : 'practice',
       engineVersion: 1,
       difficultyTier: 1,
       snapshot: { engine: 'career-path', v: 1 },
       snapshotHash: 'h1',
       createdBy: 'test',
-      ...(scheduledFor ? { scheduledFor: new Date(scheduledFor) } : {}),
     },
   });
 
@@ -51,37 +49,24 @@ describe('Challenge snapshot immutability (ADR-002)', () => {
 });
 
 describe('Attempt uniqueness', () => {
-  async function sessionAndChallenge(daily: boolean) {
+  it('allows one attempt per session and level (no replay, ADR-007)', async () => {
     const session = await prisma.guestSession.create({
       data: { tokenHash: crypto.randomUUID(), lastSeenAt: new Date() },
     });
-    const challenge = await draft(daily ? `2030-01-0${Math.ceil(Math.random() * 9)}` : undefined);
-    return { session, challenge };
-  }
-
-  const attempt = (sessionId: string, challengeId: string, kind: 'daily' | 'practice') =>
-    prisma.attempt.create({
-      data: {
-        sessionId,
-        challengeId,
-        kind,
-        gameMode: 'CAREER_PATH',
-        engineVersion: 1,
-        state: {},
-        status: 'IN_PROGRESS',
-        startedAt: new Date(),
-      },
-    });
-
-  it('allows only one daily attempt per session and challenge', async () => {
-    const { session, challenge } = await sessionAndChallenge(true);
-    await attempt(session.id, challenge.id, 'daily');
-    await expect(attempt(session.id, challenge.id, 'daily')).rejects.toThrow();
-  });
-
-  it('allows replaying a practice challenge', async () => {
-    const { session, challenge } = await sessionAndChallenge(false);
-    await attempt(session.id, challenge.id, 'practice');
-    await expect(attempt(session.id, challenge.id, 'practice')).resolves.toBeDefined();
+    const challenge = await draft();
+    const attempt = () =>
+      prisma.attempt.create({
+        data: {
+          sessionId: session.id,
+          challengeId: challenge.id,
+          gameMode: 'CAREER_PATH',
+          engineVersion: 1,
+          state: {},
+          status: 'IN_PROGRESS',
+          startedAt: new Date(),
+        },
+      });
+    await attempt();
+    await expect(attempt()).rejects.toThrow();
   });
 });

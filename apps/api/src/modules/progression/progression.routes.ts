@@ -1,11 +1,23 @@
-import { HistoryQuery, HistoryResponse, StatsResponse } from '@decabeca/contracts';
+import {
+  GameMode,
+  HistoryQuery,
+  HistoryResponse,
+  LevelRankingResponse,
+  RankingQuery,
+  RankingResponse,
+  StatsResponse,
+} from '@decabeca/contracts';
+import { titleFor } from '@decabeca/engine';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { civilDate } from '../challenges/civil-date';
-import { streaks } from './streak';
+import { z } from 'zod';
+import { AppError } from '../../errors';
+import { playerAttempts } from '../session/session';
+import { ranking, rankRows, weekStart } from './ranking';
 
-/** RF-08: history and personal stats, derived from attempts (no materialised streak). */
+/** History, stats and ranking, derived from attempts (ADR-007). */
 export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now } = app.deps;
+  const me = (req: { sessionId: string; userId: string | null }) => req.userId ?? req.sessionId;
 
   app.get(
     '/me/history',
@@ -15,7 +27,7 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
       const [cAt, cId] = cursor ? cursor.split('_') : [];
       const rows = await prisma.attempt.findMany({
         where: {
-          sessionId: req.sessionId,
+          ...playerAttempts(req),
           completedAt: { not: null },
           ...(mode ? { gameMode: mode } : {}),
           ...(cAt && cId
@@ -37,10 +49,10 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
         items: page.map((a) => ({
           attemptId: a.id,
           mode: a.gameMode,
-          kind: a.kind,
-          publicNumber: a.kind === 'daily' ? a.challenge.publicNumber : null,
+          level: a.challenge.publicNumber ?? 0,
           status: a.status,
           score: a.score,
+          stars: a.stars,
           completedAt: a.completedAt!.toISOString(),
         })),
         nextCursor:
@@ -51,47 +63,84 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.get('/me/stats', { schema: { response: { 200: StatsResponse } } }, async (req) => {
     const done = await prisma.attempt.findMany({
-      where: { sessionId: req.sessionId, completedAt: { not: null } },
-      include: { challenge: { select: { scheduledFor: true } } },
+      where: { ...playerAttempts(req), completedAt: { not: null } },
     });
-    const today = civilDate(now());
-    const of = (mode: 'CAREER_PATH' | 'FOOTBALL_GRID') => {
-      const daily = done.filter((a) => a.gameMode === mode && a.kind === 'daily');
-      const s = streaks(
-        daily.map((a) => (a.challenge.scheduledFor ?? a.completedAt!).toISOString().slice(0, 10)),
-        today,
-      );
-      return {
-        daily,
-        common: {
-          currentStreak: s.current,
-          maxStreak: s.max,
-          practicePlayed: done.filter((a) => a.gameMode === mode && a.kind === 'practice').length,
-        },
-      };
-    };
+    const of = (mode: 'CAREER_PATH' | 'FOOTBALL_GRID') => done.filter((a) => a.gameMode === mode);
     const cp = of('CAREER_PATH');
     const grid = of('FOOTBALL_GRID');
+    const sum = (xs: typeof done) => xs.reduce((s, a) => s + a.stars, 0);
     const distribution: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0 };
-    for (const a of cp.daily.filter((x) => x.status === 'WON')) {
-      const used = 7 - a.score / 10;
-      distribution[String(used)] = (distribution[String(used)] ?? 0) + 1;
-    }
+    for (const a of cp.filter((x) => x.status === 'WON')) distribution[String(7 - a.score / 10)]!++;
+    const totalStars = sum(done);
+    const [all, week] = await Promise.all([
+      rankRows(prisma, null),
+      rankRows(prisma, weekStart(now())),
+    ]);
     return {
+      totalStars,
+      title: titleFor(totalStars),
+      rank: { all: ranking(all, me(req)).me.position, week: ranking(week, me(req)).me.position },
       CAREER_PATH: {
-        played: cp.daily.length,
-        won: cp.daily.filter((a) => a.status === 'WON').length,
+        completed: cp.length,
+        won: cp.filter((a) => a.status === 'WON').length,
+        stars: sum(cp),
+        threeStars: cp.filter((a) => a.stars === 3).length,
         distribution,
-        ...cp.common,
       },
       FOOTBALL_GRID: {
-        played: grid.daily.length,
-        avgScore: grid.daily.length
-          ? Math.round((grid.daily.reduce((s, a) => s + a.score, 0) / grid.daily.length) * 10) / 10
+        completed: grid.length,
+        stars: sum(grid),
+        threeStars: grid.filter((a) => a.stars === 3).length,
+        avgScore: grid.length
+          ? Math.round((grid.reduce((s, a) => s + a.score, 0) / grid.length) * 10) / 10
           : 0,
-        perfect: grid.daily.filter((a) => a.score === 9).length,
-        ...grid.common,
+        perfect: grid.filter((a) => a.score === 9).length,
       },
     };
   });
+
+  app.get(
+    '/ranking',
+    { schema: { querystring: RankingQuery, response: { 200: RankingResponse } } },
+    async (req) => {
+      const rows = await rankRows(prisma, req.query.scope === 'week' ? weekStart(now()) : null);
+      return { scope: req.query.scope, ...ranking(rows, me(req)) };
+    },
+  );
+
+  app.get(
+    '/ranking/levels/:mode/:level',
+    {
+      schema: {
+        params: z.object({ mode: GameMode, level: z.coerce.number().int().min(1) }),
+        response: { 200: LevelRankingResponse },
+      },
+    },
+    async (req) => {
+      const c = await prisma.challenge.findFirst({
+        where: { gameMode: req.params.mode, publicNumber: req.params.level },
+      });
+      if (!c) throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase não encontrada.');
+      const rows = await prisma.$queryRaw<
+        { pk: string; nickname: string; score: number; stars: number; duration: number }[]
+      >`
+        SELECT DISTINCT ON (COALESCE(s."userId", s.id)) COALESCE(s."userId", s.id) AS pk,
+               COALESCE(u.nickname, s.nickname) AS nickname, a.score, a.stars,
+               EXTRACT(EPOCH FROM (a."completedAt" - a."startedAt"))::int AS duration
+        FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId" LEFT JOIN "User" u ON u.id = s."userId"
+        WHERE a."challengeId" = ${c.id} AND a."completedAt" IS NOT NULL AND COALESCE(u.nickname, s.nickname) IS NOT NULL
+        ORDER BY COALESCE(s."userId", s.id), a.score DESC, a."completedAt" - a."startedAt"`;
+      rows.sort((a, b) => b.score - a.score || a.duration - b.duration);
+      return {
+        entries: rows.slice(0, 10).map((r, i) => ({
+          position: i + 1,
+          nickname: r.nickname,
+          score: r.score,
+          stars: r.stars,
+          durationSec: r.duration,
+          isMe: r.pk === me(req),
+        })),
+      };
+    },
+  );
 };

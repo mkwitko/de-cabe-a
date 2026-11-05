@@ -49,7 +49,7 @@ function Shell({ children }: { children: ReactNode }) {
         <strong className="font-condensed text-xl uppercase">De Cabeça · Editorial</strong>
         <nav className="flex gap-3 text-sm font-semibold">
           <Link to="/admin">Jogadores</Link>
-          <Link to="/admin/challenges">Desafios</Link>
+          <Link to="/admin/challenges">Fases</Link>
           <Link to="/admin/reports">Relatórios</Link>
         </nav>
         <button

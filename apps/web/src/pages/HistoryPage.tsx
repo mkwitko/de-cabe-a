@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import type { GameMode } from '@decabeca/contracts';
 import { fetchHistory } from '../lib/game';
 import { btnPrimary, btnSecondary, Notice, Skeleton } from '../components/ui';
+import { Stars } from '../components/Stars';
 
 const NAME = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid' } as const;
 const date = new Intl.DateTimeFormat('pt-BR', {
@@ -58,7 +59,7 @@ export function HistoryPage() {
             </Link>
           }
         >
-          Jogue o desafio de hoje e a figurinha aparece aqui.
+          Termine uma fase e a figurinha aparece aqui.
         </Notice>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -69,12 +70,14 @@ export function HistoryPage() {
             >
               <span className="flex flex-col">
                 <span className="font-bold">
-                  {NAME[it.mode]}{' '}
-                  {it.kind === 'daily' && it.publicNumber ? `#${it.publicNumber}` : '· treino'}
+                  {NAME[it.mode]} · Fase {it.level}
                 </span>
                 <span className="text-sm text-ink/65">{date.format(new Date(it.completedAt))}</span>
               </span>
-              <span className="font-condensed tabular ml-auto text-2xl font-black">
+              <span className="ml-auto">
+                <Stars n={it.stars} size="size-4" />
+              </span>
+              <span className="font-condensed tabular text-2xl font-black">
                 {result(it.mode, it.status, it.score)}
               </span>
             </li>

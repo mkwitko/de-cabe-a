@@ -1,4 +1,4 @@
-import { GameMode, ChallengeKind } from '@decabeca/contracts';
+import { GameMode } from '@decabeca/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError } from '../../errors';
@@ -7,15 +7,12 @@ import {
   createChallenge,
   publishChallenge,
   retireChallenge,
-  scheduleChallenge,
   validateChallenge,
 } from './challenges.service';
 import { buildGridSnapshot, GridParams } from './grid-snapshot';
-import { dateColumn } from './civil-date';
 
 const Id = z.object({ id: z.string() });
 const Tier = z.union([z.literal(1), z.literal(2), z.literal(3)]);
-const CivilDate = z.iso.date();
 const Params = z.union([z.object({ playerId: z.string() }), GridParams]);
 
 export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -26,13 +23,7 @@ export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
     '/challenges',
     {
       schema: {
-        body: z.object({
-          mode: GameMode,
-          kind: ChallengeKind,
-          scheduledFor: CivilDate.optional(),
-          difficultyTier: Tier.optional(),
-          params: Params,
-        }),
+        body: z.object({ mode: GameMode, difficultyTier: Tier.optional(), params: Params }),
       },
     },
     async (req, reply) =>
@@ -45,11 +36,6 @@ export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
   );
   app.post('/challenges/:id/validate', { schema: { params: Id } }, (req) =>
     validateChallenge(prisma, req.params.id),
-  );
-  app.post(
-    '/challenges/:id/schedule',
-    { schema: { params: Id, body: z.object({ scheduledFor: CivilDate }) } },
-    (req) => scheduleChallenge(prisma, req.params.id, req.body.scheduledFor),
   );
   app.post('/challenges/:id/publish', { schema: { params: Id } }, (req) =>
     publishChallenge(prisma, req.params.id, now()),
@@ -77,47 +63,43 @@ export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
         editor(req.headers['x-editor']),
       ),
   );
+
+  /** Levels of each track plus drafts (UX_SPEC.md §7). */
   app.get(
     '/challenges',
     {
       schema: {
         querystring: z.object({
           mode: GameMode.optional(),
-          status: z.enum(['draft', 'validated', 'scheduled', 'published', 'retired']).optional(),
-          kind: ChallengeKind.optional(),
-          from: CivilDate.optional(),
-          to: CivilDate.optional(),
+          status: z.enum(['draft', 'validated', 'published', 'retired']).optional(),
         }),
       },
     },
     async (req) => {
-      const { mode, status, kind, from, to } = req.query;
       const items = await prisma.challenge.findMany({
         where: {
-          ...(mode ? { gameMode: mode } : {}),
-          ...(status ? { status } : {}),
-          ...(kind ? { kind } : {}),
-          ...(from || to
-            ? {
-                scheduledFor: {
-                  ...(from ? { gte: dateColumn(from) } : {}),
-                  ...(to ? { lte: dateColumn(to) } : {}),
-                },
-              }
-            : {}),
+          ...(req.query.mode ? { gameMode: req.query.mode } : {}),
+          ...(req.query.status ? { status: req.query.status } : {}),
         },
         omit: { snapshot: true },
-        include: {
-          usages: { include: { challenge: false } },
-          _count: { select: { attempts: true } },
-        },
-        orderBy: [{ scheduledFor: 'asc' }, { createdAt: 'desc' }],
-        take: 500,
+        include: { usages: true, _count: { select: { attempts: true } } },
+        orderBy: [
+          { gameMode: 'asc' },
+          { publicNumber: { sort: 'asc', nulls: 'last' } },
+          { createdAt: 'desc' },
+        ],
+        take: 1000,
       });
       const names = new Map(
         (
           await prisma.player.findMany({
-            where: { id: { in: items.flatMap((c) => c.usages.map((u) => u.playerId)) } },
+            where: {
+              id: {
+                in: items.flatMap((c) =>
+                  c.usages.filter((u) => u.role === 'answer').map((u) => u.playerId),
+                ),
+              },
+            },
             select: { id: true, canonicalName: true },
           })
         ).map((p) => [p.id, p.canonicalName]),
@@ -125,10 +107,12 @@ export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         items: items.map(({ usages, _count, ...c }) => ({
           ...c,
-          scheduledFor: c.scheduledFor?.toISOString().slice(0, 10) ?? null,
+          level: c.publicNumber,
           attempts: _count.attempts,
           answer:
-            c.gameMode === 'CAREER_PATH' ? (names.get(usages[0]?.playerId ?? '') ?? null) : null,
+            c.gameMode === 'CAREER_PATH'
+              ? (names.get(usages.find((u) => u.role === 'answer')?.playerId ?? '') ?? null)
+              : null,
         })),
       };
     },
@@ -142,35 +126,14 @@ export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.post(
     '/eligibility/career-path',
-    {
-      schema: {
-        body: z.object({
-          playerId: z.string(),
-          kind: ChallengeKind.default('daily'),
-          scheduledFor: CivilDate.optional(),
-        }),
-      },
-    },
+    { schema: { body: z.object({ playerId: z.string() }) } },
     async (req) => {
-      const { player: _player, ...report } = await careerPathEligibility(
-        prisma,
-        req.body.playerId,
-        req.body.kind,
-        req.body.scheduledFor,
-      );
+      const { player: _player, ...report } = await careerPathEligibility(prisma, req.body.playerId);
       return report;
     },
   );
-  app.post(
-    '/eligibility/grid',
-    { schema: { body: GridParams.extend({ kind: ChallengeKind.default('daily') }) } },
-    async (req) => {
-      const { config: _config, ...report } = await buildGridSnapshot(
-        prisma,
-        req.body,
-        req.body.kind,
-      );
-      return report;
-    },
-  );
+  app.post('/eligibility/grid', { schema: { body: GridParams } }, async (req) => {
+    const { config: _config, ...report } = await buildGridSnapshot(prisma, req.body, 'daily');
+    return report;
+  });
 };

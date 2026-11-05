@@ -1,5 +1,15 @@
 # API Spec — v1
 
+> **Revisão 2026-11-05 (ADR-007).** Onde conflitar, vale isto:
+> - `GET /v1/games` → por jogo: `levels`, `completed`, `stars`, `nextLevel`.
+> - `GET /v1/tracks/:mode` → fases com `state` (`locked|open|in_progress|done`), `stars`, `score`, `difficultyTier`.
+> - `POST /v1/attempts { mode, level }` → 201 nova / 200 existente; 403 `LEVEL_LOCKED`, 404 `LEVEL_NOT_FOUND`. Uma tentativa por fase por jogador (conta ou convidado).
+> - `AttemptSummary` = `{ id, challengeId, mode, level, status, score, stars }`.
+> - `GET /v1/me/stats` → `totalStars`, `title`, `rank { all, week }` e números por jogo; `GET /v1/me/history` itens com `level` e `stars`.
+> - `GET /v1/ranking?scope=all|week`, `GET /v1/ranking/levels/:mode/:level` (top 10).
+> - `GET|PATCH /v1/me` (apelido), `POST /v1/auth/register|login|logout` (cadastro opcional; 409 `EMAIL_TAKEN`/`NICKNAME_TAKEN`, 401 `INVALID_CREDENTIALS`; 10/min por IP).
+> - Admin: sem `kind`, `scheduledFor` nem `/schedule`; `publish` anexa a próxima fase; `GET /v1/admin/challenges?mode=&status=`.
+
 Base: `/v1`. JSON. Cookie `dc_session` (HttpOnly) criado automaticamente na primeira resposta de qualquer rota pública. Erros no formato de `ARCHITECTURE.md` §6.
 
 Schemas em `packages/contracts`. Abaixo, TypeScript/Zod resumido.

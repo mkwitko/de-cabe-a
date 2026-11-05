@@ -1,6 +1,6 @@
 # De Cabeça
 
-Minijogos de conhecimento de futebol (PT-BR): **Career Path** e **Football Grid**, com desafio diário e modo treino. Especificação completa em [`docs/`](docs/SESSION_HANDOFF.md).
+Minijogos de conhecimento de futebol (PT-BR): **Career Path** e **Football Grid**, em trilhas de fases com estrelas, títulos e ranking da comunidade (ADR-007). Joga-se como convidado; cadastro é opcional. Especificação completa em [`docs/`](docs/SESSION_HANDOFF.md).
 
 ## Requisitos
 
@@ -42,7 +42,7 @@ pnpm dev                      # api em :3000, web em :5173
 
 ```bash
 pnpm --filter @decabeca/api exec tsx ../../scripts/research/curate.ts          # importa e verifica jogadores
-pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-pilot.ts   # publica 30 dias de desafios
+pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-levels.ts  # publica as trilhas de fases
 pnpm --filter @decabeca/api exec tsx ../../scripts/research/validate-pool.ts   # DQ-01..09 no banco todo
 ```
 

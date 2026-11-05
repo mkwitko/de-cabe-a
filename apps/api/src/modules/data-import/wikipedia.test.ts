@@ -57,6 +57,24 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
     ]);
   });
 
+  it('reads loans marked with {{seta fut}} / {{emp fut}}', () => {
+    const text =
+      '{{Info/Futebolista\n|ano = 2000<br />2000\n|clubes = [[Società Sportiva Calcio Napoli|Napoli]]<br />{{seta fut}} [[Associazione Calcio Bellinzona|Bellinzona]] {{emp fut}}\n}}';
+    expect(parseInfoboxCareer(text)?.map((e) => [e.club, e.isLoan])).toEqual([
+      ['Napoli', false],
+      ['Bellinzona', true],
+    ]);
+  });
+
+  it('reads the English football biography infobox', () => {
+    const text =
+      '{{Infobox football biography\n| years1 = 1993–1994 | clubs1 = [[Cruzeiro Esporte Clube|Cruzeiro]]\n| years2 = 2014\n| clubs2 = → [[São Paulo FC|São Paulo]] (loan)\n}}';
+    expect(parseInfoboxCareer(text)).toEqual([
+      { index: 1, fromYear: 1993, toYear: 1994, club: 'Cruzeiro', isLoan: false },
+      { index: 2, fromYear: 2014, toYear: 2014, club: 'São Paulo', isLoan: true },
+    ]);
+  });
+
   it('returns null when there is no football infobox', () => {
     expect(parseInfoboxCareer('Sem infobox')).toBeNull();
   });

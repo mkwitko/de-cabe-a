@@ -1,11 +1,10 @@
 /**
- * Deterministic data for the Playwright e2e (TEST_STRATEGY.md §3): one daily of each game for
- * today (São Paulo), one practice of each. Synthetic test data, not editorial content.
+ * Deterministic data for the Playwright e2e (TEST_STRATEGY.md §3): two levels per game track.
+ * Synthetic test data, not editorial content.
  * Run: DATABASE_URL=<e2e db> tsx src/test/e2e-seed.ts (after prisma migrate deploy).
  */
 import { createPrisma } from '../db';
 import { seedReference } from '../seed-reference';
-import { civilDate } from '../modules/challenges/civil-date';
 import {
   createChallenge,
   publishChallenge,
@@ -86,37 +85,23 @@ const grid = {
   ] as const,
 };
 
-const today = civilDate(new Date());
 async function live(input: Parameters<typeof createChallenge>[1]) {
   const ch = await createChallenge(prisma, input);
   await validateChallenge(prisma, ch.id);
   await publishChallenge(prisma, ch.id, new Date());
 }
-await live({
-  mode: 'CAREER_PATH',
-  kind: 'daily',
-  scheduledFor: today,
-  params: { playerId: ronaldo.id },
-  createdBy: 'e2e',
-});
-await live({
-  mode: 'CAREER_PATH',
-  kind: 'practice',
-  params: { playerId: kaka.id },
-  createdBy: 'e2e',
-});
+// Tracks: Career Path levels 1–2, Grid levels 1–2 (ADR-007).
+await live({ mode: 'CAREER_PATH', params: { playerId: ronaldo.id }, createdBy: 'e2e' });
+await live({ mode: 'CAREER_PATH', params: { playerId: kaka.id }, createdBy: 'e2e' });
 await live({
   mode: 'FOOTBALL_GRID',
-  kind: 'daily',
-  scheduledFor: today,
   params: { rows: [...grid.rows], cols: [...grid.cols] },
   createdBy: 'e2e',
 });
 await live({
   mode: 'FOOTBALL_GRID',
-  kind: 'practice',
   params: { rows: [...grid.rows], cols: [...grid.cols] },
   createdBy: 'e2e',
 });
-console.log(`e2e seed ready for ${today}`);
+console.log('e2e seed ready');
 await prisma.$disconnect();
