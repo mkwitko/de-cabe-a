@@ -234,7 +234,7 @@ model Attempt {
   startedAt     DateTime
   completedAt   DateTime?
   actions       AttemptAction[]
-  @@unique([sessionId, challengeId])  // 1 partida por sessão por desafio (ver nota sobre practice)
+  // unique parcial (migration SQL): (sessionId, challengeId) WHERE kind = 'daily' — ver nota sobre practice
   @@index([sessionId, completedAt])
 }
 
@@ -251,7 +251,7 @@ model AttemptAction {
 }
 ```
 
-Nota sobre practice: `@@unique([sessionId, challengeId])` impede rejogar o mesmo practice challenge. Aceito: o seletor de practice exclui os 20 últimos e o pool tem dezenas; se a sessão esgotar o pool, API retorna `PRACTICE_POOL_EXHAUSTED`. Simples e evita estado duplicado.
+Nota sobre practice **[APROVADO 2026-11-05]**: practice pode ser rejogado. A unicidade (sessionId, challengeId) vale só para `kind=daily`, via índice único parcial em migration SQL (Prisma não declara índice parcial). Practice permite várias partidas por desafio; o seletor exclui os 20 últimos desafios jogados pela sessão e, se não sobrar nenhum, sorteia entre todos. `PRACTICE_POOL_EXHAUSTED` só ocorre se o modo não tiver nenhum practice publicado.
 
 ## 3. Streak e estatísticas (derivadas)
 

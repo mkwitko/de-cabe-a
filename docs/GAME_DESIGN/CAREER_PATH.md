@@ -94,8 +94,8 @@ Não há ranking entre usuários no MVP; sem desempate necessário.
 
 | | Daily | Practice |
 |---|---|---|
-| Seleção | `Challenge` publicado para a data | Aleatório entre `Challenge` com `kind=practice` e status `published`; exclui os últimos 20 jogados pela sessão |
-| Tentativas por sessão | 1 | Ilimitadas (nova partida a cada vez) |
+| Seleção | `Challenge` publicado para a data | Aleatório entre `Challenge` com `kind=practice` e status `published`; exclui os últimos 20 jogados pela sessão (se não sobrar nenhum, sorteia entre todos; rejogar é permitido) |
+| Tentativas por sessão | 1 | Ilimitadas; partida `IN_PROGRESS` é retomada antes de sortear outra |
 | Streak | Sim | Não |
 | Share | "Career Path #123" | "Career Path (treino)" |
 

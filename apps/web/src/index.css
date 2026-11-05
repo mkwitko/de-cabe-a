@@ -1,0 +1,72 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/archivo/wdth.css';
+
+/* Album world: a printed sticker-album page. Pitch green owns the page; stickers are paper. */
+@theme {
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-pitch: oklch(0.46 0.12 152);
+  --color-pitch-deep: oklch(0.38 0.1 152);
+  --color-chalk: oklch(0.98 0.012 150);
+  --color-chalk-soft: oklch(0.9 0.035 150);
+  --color-paper: oklch(0.985 0.006 100);
+  --color-cover: oklch(0.88 0.165 95);
+  --color-ink: oklch(0.27 0.07 152);
+  --color-stamp: oklch(0.9 0.16 95);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-pitch: oklch(0.22 0.045 155);
+      --color-pitch-deep: oklch(0.17 0.035 155);
+      --color-chalk: oklch(0.95 0.015 150);
+      --color-chalk-soft: oklch(0.8 0.04 150);
+      --color-paper: oklch(0.93 0.008 100);
+      --color-cover: oklch(0.84 0.15 95);
+    }
+  }
+
+  html {
+    background: var(--color-pitch-deep);
+    scrollbar-color: var(--color-chalk-soft) var(--color-pitch-deep);
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    color: var(--color-chalk);
+    background-color: var(--color-pitch);
+    /* printed halftone of the album page */
+    background-image: radial-gradient(
+      color-mix(in oklch, var(--color-pitch-deep) 70%, transparent) 1px,
+      transparent 1.4px
+    );
+    background-size: 6px 6px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--color-cover);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-cover);
+    outline-offset: 3px;
+  }
+}
+
+@utility font-condensed {
+  font-stretch: 68%;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}

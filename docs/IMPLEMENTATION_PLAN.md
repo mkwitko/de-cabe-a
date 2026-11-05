@@ -11,6 +11,50 @@ Cada slice: objetivo, escopo, dependências, módulos, critérios de aceite (ver
 - **Riscos:** versões (Node 24, Tailwind v4, Prisma); fixar versões exatas no lockfile.
 - **Não fazer:** nenhuma tabela, nenhuma rota de jogo.
 
+### Slice 1 — plano de execução (aprovado 2026-11-05)
+
+Branch `feat/slice-1-foundation` → PR para `main`. `git init` já feito (repo existe com remote). Prisma fica para o slice 2.
+
+Ajustes ao escopo (aprovados):
+- A1. Fronteiras via regra nativa `no-restricted-imports` do ESLint (override em `apps/web/**`) em vez de `eslint-plugin-import/no-restricted-paths`: mesmo efeito, zero dependência.
+- A2. `packages/engine` e `packages/contracts` exportam o fonte TS (`exports: ./src/index.ts`); "build" = `tsc --noEmit`. Vite e `tsx` consomem TS direto. Build de produção da API decide-se no deploy.
+- A3. Unit do web com `react-dom/server` (`renderToString`) em ambiente node: sem jsdom nem Testing Library por ora.
+- A4. CI: lint + typecheck + unit em Node 22 e 24 (REPO_DIAGNOSIS §5); e2e Playwright também no CI, 1 job, Chromium.
+- A5. Página inicial com identidade visual mínima (tokens de cor/tipografia, tema claro/escuro por `prefers-color-scheme`), feita com a skill de design `impeccable`. Direção escolhida: "álbum de figurinhas" (`apps/web/DESIGN.md`, `PRODUCT.md`). Sem componentes de jogo.
+
+Passos (commits):
+1. `chore: scaffold pnpm workspace` — raiz, tsconfig base, Prettier, ESLint, `.nvmrc`.
+2. `feat(contracts): health response schema` — teste primeiro.
+3. `feat(engine): empty engine package` — `ENGINE_PACKAGE = 'engine'` + teste trivial.
+4. `feat(api): fastify app with GET /v1/health` — teste com `app.inject` primeiro.
+5. `feat(web): vite react app with home page` — teste de render + e2e Playwright.
+6. `chore: docker-compose postgres and env example`.
+7. `ci: lint, typecheck, unit and e2e workflow`.
+8. `docs: README with commands`.
+
+Arquivos:
+
+```text
+package.json  pnpm-workspace.yaml  tsconfig.base.json  eslint.config.js
+.prettierrc.json  .prettierignore  .nvmrc  docker-compose.yml  .env.example  README.md
+.github/workflows/ci.yml
+packages/contracts/{package.json,tsconfig.json,src/index.ts,src/health.ts,src/health.test.ts}
+packages/engine/{package.json,tsconfig.json,src/index.ts,src/index.test.ts}
+apps/api/{package.json,tsconfig.json,src/app.ts,src/server.ts,src/app.test.ts}
+apps/web/{package.json,tsconfig.json,vite.config.ts,playwright.config.ts,index.html,
+          src/main.tsx,src/App.tsx,src/index.css,src/App.test.tsx,e2e/home.spec.ts}
+```
+
+Dependências (todas da stack do handoff §3, exceto marcadas):
+- raiz: `typescript`, `eslint`, `@eslint/js`, `typescript-eslint`, `prettier`, `vitest`, `@types/node`.
+- api: `fastify`, `fastify-type-provider-zod`, `zod`; dev `tsx` (**fora da stack**: roda a API em TS com watch, sem passo de build).
+- web: `react`, `react-dom`, `react-router`, `@tanstack/react-query`, `tailwindcss`, `@tailwindcss/vite`, `vite`, `@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `@playwright/test`.
+- contracts: `zod`.
+- web: `@fontsource-variable/archivo` (**fora da stack**: fonte self-hosted da direção visual, sem CDN externo).
+- TypeScript fixado em 5.9 (typescript-eslint 8 não suporta TS 6+).
+
+Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && pnpm -r test`; `pnpm -r lint`; `pnpm dev` + `curl localhost:3000/v1/health`; arquivo temporário importando `@decabeca/engine` em `apps/web` → `pnpm -r lint` falha; `pnpm test:e2e`; CI verde no PR.
+
 ## Slice 2 — Modelo de dados histórico
 - **Escopo:** Prisma schema de `DATA_MODEL.md` §2.1 e §2.2 e §2.3 (todas as tabelas, inclusive `User` vazio e `Event`); migration inicial; migration SQL manual com trigger de imutabilidade de `Challenge.snapshot`; seed: países (ISO completo) + ~30 clubes brasileiros e ~20 estrangeiros com `wikidataId`; funções DQ-01..09 em `modules/knowledge/quality.ts`; `normalizeName` em `packages/engine/src/text`.
 - **Dependências:** 1.
