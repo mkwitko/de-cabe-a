@@ -188,3 +188,38 @@ export async function buildGridSnapshot(
     : null;
   return { eligible, reasons: unique, warnings, counts, config };
 }
+
+/**
+ * Whether a player meets both criteria of a grid cell with the knowledge base as it is now,
+ * verified or imported data (never rejected). Grid answers are not limited to the pool frozen
+ * in the snapshot: any player in the base who fits the row and the column is right.
+ */
+export async function meetsCell(
+  prisma: Pick<PrismaClient, 'player'>,
+  playerId: string,
+  criteria: Criterion[],
+): Promise<boolean> {
+  const p = await prisma.player.findUnique({
+    where: { id: playerId },
+    include: {
+      spells: {
+        where: {
+          verificationStatus: { not: 'rejected' },
+          spellType: { in: ['professional', 'loan'] },
+        },
+        include: { club: { select: { countryId: true } } },
+      },
+    },
+  });
+  if (!p || p.verificationStatus === 'rejected') return false;
+  return criteria.every((c) =>
+    c.type === 'club'
+      ? p.spells.some((s) => s.clubId === c.clubId)
+      : c.type === 'position'
+        ? p.primaryPositionGroup === c.positionGroup
+        : c.type === 'nationality'
+          ? p.nationalityCountryId === c.countryId ||
+            p.secondaryNationalityCountryId === c.countryId
+          : p.spells.some((s) => s.club.countryId === c.countryId),
+  );
+}

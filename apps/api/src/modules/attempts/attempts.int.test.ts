@@ -341,14 +341,25 @@ describe('levels (ADR-007)', () => {
 
 describe('player search', () => {
   const search = (q: string) => guest().req('GET', `/players/search?q=${encodeURIComponent(q)}`);
-  it('matches accents and any token prefix, verified players only', async () => {
+  it('matches accents and any token prefix; imported players too, never rejected ones', async () => {
     expect((await search('romar')).json().players.map((p: { name: string }) => p.name)).toEqual([
       'Romário',
     ]);
     expect((await search('feno')).json().players.map((p: { name: string }) => p.name)).toEqual([
       'Ronaldo',
     ]);
+    expect((await search('rog')).json().players.map((p: { name: string }) => p.name)).toEqual([
+      'Rogério Importado',
+    ]);
+    await prisma.player.updateMany({
+      where: { canonicalName: 'Rogério Importado' },
+      data: { verificationStatus: 'rejected' },
+    });
     expect((await search('rog')).json().players).toEqual([]);
+    await prisma.player.updateMany({
+      where: { canonicalName: 'Rogério Importado' },
+      data: { verificationStatus: 'imported' },
+    });
   });
   it('orders by notability and disambiguates homonyms', async () => {
     expect((await search('ze rob')).json().players).toEqual([
@@ -421,6 +432,50 @@ describe('Football Grid', () => {
     expect(end.json().share.text).toBe(
       'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆\ndecabeca.app',
     );
+  });
+
+  it('accepts any player in the base who meets both criteria, even one imported after publishing', async () => {
+    // Imported (Wikidata only) player at Flamengo and Milan, unknown when the level was published.
+    const late = await prisma.player.create({
+      data: {
+        canonicalName: 'Tardio da Silva',
+        nationalityCountryId: countries.BR!,
+        primaryPositionGroup: 'MF',
+        aliases: {
+          create: [
+            {
+              alias: 'Tardio da Silva',
+              normalized: 'tardio da silva',
+              kind: 'canonical',
+              isPrimary: true,
+            },
+          ],
+        },
+        spells: {
+          create: ['Flamengo', 'Milan'].map((n, i) => ({
+            clubId: clubs[n]!.id,
+            spellType: 'professional' as const,
+            startDate: new Date(Date.UTC(2010 + i, 0, 1)),
+          })),
+        },
+      },
+    });
+    const g = guest();
+    const start = (await g.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 })).json();
+    // Cell 0 = Flamengo x Milan; cell 1 = Flamengo x Real Madrid.
+    expect(
+      (await g.act(start.attempt.id, { kind: 'guess', cellIndex: 1, playerId: late.id })).json()
+        .event,
+    ).toEqual({ type: 'wrong', cellIndex: 1 });
+    expect(
+      (await g.act(start.attempt.id, { kind: 'guess', cellIndex: 0, playerId: late.id })).json()
+        .event,
+    ).toEqual({ type: 'correct', cellIndex: 0 });
+    // Out of the base again for the tests that follow.
+    await prisma.player.update({
+      where: { id: late.id },
+      data: { verificationStatus: 'rejected' },
+    });
   });
 
   it('hints: pattern and pool size, 3 per grid, a perfect grid with a hint is worth 2 stars', async () => {
@@ -603,9 +658,9 @@ describe('editorial reports and analytics', () => {
       count: 2,
       lastAt: expect.any(String),
     });
-    expect(res.json().gridWrongGuesses).toEqual([
+    expect(res.json().gridWrongGuesses).toContainEqual(
       expect.objectContaining({ cellIndex: 4, playerId: ids.ze, n: 1 }),
-    ]);
+    );
   });
 
   it('a finished game produces game_started -> answer_submitted -> game_completed', async () => {

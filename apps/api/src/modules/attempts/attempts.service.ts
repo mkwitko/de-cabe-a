@@ -15,6 +15,7 @@ import type { Attempt, Challenge, Prisma, PrismaClient } from '../../generated/p
 import { AppError } from '../../errors';
 import { engineFor, type GameModeCode } from '../challenges/engines';
 import { track } from '../analytics/analytics';
+import { meetsCell } from '../challenges/grid-snapshot';
 
 const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid' } as const;
 export const SHARE_HOST = 'decabeca.app';
@@ -274,13 +275,35 @@ export async function submitAction(
     if (replay) return { attempt: a, challenge: a.challenge, event: replay.event };
 
     const engine = engineFor(a.challenge.gameMode);
-    const config = engine.validateConfig(a.challenge.snapshot);
-    const input = engine.parseInput(rawInput) as { kind: string; playerId?: string };
+    let config = engine.validateConfig(a.challenge.snapshot);
+    const input = engine.parseInput(rawInput) as {
+      kind: string;
+      playerId?: string;
+      cellIndex?: number;
+    };
     if (input.kind === 'guess' && input.playerId) {
       const known = await tx.player.count({
-        where: { id: input.playerId, verificationStatus: 'verified' },
+        where: { id: input.playerId, verificationStatus: { in: ['verified', 'imported'] } },
       });
       if (!known) throw new AppError(400, 'UNKNOWN_PLAYER', 'Jogador desconhecido.');
+    }
+    // Grid: any player in the base who meets both criteria now is right, not only the pool frozen
+    // at publishing. The attempt state is stored, so widening this cell never changes past moves.
+    if (a.challenge.gameMode === 'FOOTBALL_GRID' && input.kind === 'guess' && input.playerId) {
+      const grid = config as FootballGridConfig;
+      const i = input.cellIndex ?? -1;
+      const cell = grid.cells[i];
+      if (
+        cell &&
+        !cell.eligiblePlayerIds.includes(input.playerId) &&
+        (await meetsCell(tx, input.playerId, [grid.rows[Math.floor(i / 3)]!, grid.cols[i % 3]!]))
+      )
+        config = {
+          ...grid,
+          cells: grid.cells.map((c, k) =>
+            k === i ? { ...c, eligiblePlayerIds: [...c.eligiblePlayerIds, input.playerId!] } : c,
+          ),
+        };
     }
     const out = engine.submit(a.state, input, config);
     const done = engine.isCompleted(out.state);

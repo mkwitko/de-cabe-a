@@ -1,6 +1,7 @@
 /**
  * Player autocomplete (CAREER_PATH.md §6, DATA_QUALITY.md §3): normalized prefix match on
- * any token of any alias, verified players only, ordered by notability then primary alias.
+ * any token of any alias, verified and imported players (never rejected), ordered by notability
+ * then primary alias. Grid answers may be any player in the base (FOOTBALL_GRID.md, revision 2026-11-05).
  */
 import type { PlayerRef } from '@decabeca/contracts';
 import { normalizeName } from '@decabeca/engine';
@@ -17,14 +18,17 @@ export async function searchPlayers(
   if (term.length < 2) return [];
   const aliases = await prisma.playerAlias.findMany({
     where: {
-      player: { verificationStatus: 'verified' },
+      player: { verificationStatus: { in: ['verified', 'imported'] } },
       OR: [{ normalized: { startsWith: term } }, { normalized: { contains: ` ${term}` } }],
     },
     include: {
       player: {
         include: {
           spells: {
-            where: { verificationStatus: 'verified', spellType: { in: ['professional', 'loan'] } },
+            where: {
+              verificationStatus: { not: 'rejected' },
+              spellType: { in: ['professional', 'loan'] },
+            },
             include: { club: true },
           },
         },
