@@ -1,0 +1,163 @@
+# API Spec — v1
+
+Base: `/v1`. JSON. Cookie `dc_session` (HttpOnly) criado automaticamente na primeira resposta de qualquer rota pública. Erros no formato de `ARCHITECTURE.md` §6.
+
+Schemas em `packages/contracts`. Abaixo, TypeScript/Zod resumido.
+
+## Tipos comuns
+
+```ts
+const GameMode = z.enum(['CAREER_PATH', 'FOOTBALL_GRID']);
+const ChallengeKind = z.enum(['daily', 'practice']);
+const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
+const PlayerRef = z.object({ id: z.string().uuid(), name: z.string(), disambiguation: z.string().nullable() });
+```
+
+---
+
+## GET /v1/games
+Catálogo + estado do daily da sessão. Público. Idempotente.
+
+Response 200:
+```json
+{
+  "today": "2026-11-04",
+  "games": [
+    { "mode": "CAREER_PATH", "name": "Career Path", "daily": { "challengeId": "…", "publicNumber": 123, "attempt": null } },
+    { "mode": "FOOTBALL_GRID", "name": "Grid", "daily": { "challengeId": "…", "publicNumber": 45, "attempt": { "id": "…", "status": "COMPLETED", "score": 7 } } }
+  ]
+}
+```
+`daily` é `null` se não houver desafio publicado para hoje.
+
+---
+
+## GET /v1/players/search?q=&limit=
+Autocomplete. Público. `q` 2–40 chars, `limit` ≤ 10 (default 10). Rate limit 60/min por sessão.
+
+Response 200: `{ "players": PlayerRef[] }`. Só players `verified`. Ordem: notabilityTier, isPrimary.
+
+Erros: 400 `VALIDATION_ERROR`.
+
+---
+
+## POST /v1/attempts
+Inicia partida. Público. **Idempotente por (sessão, challenge)**: se já existe, retorna a existente com 200 (não 201).
+
+Request:
+```json
+{ "mode": "CAREER_PATH", "kind": "daily" }
+```
+ou `{ "mode": "FOOTBALL_GRID", "kind": "practice" }`.
+
+Regras: daily → resolve challenge de hoje (America/Sao_Paulo). practice → sorteia challenge `published` do modo, excluindo os 20 últimos da sessão.
+
+Response 201/200:
+```json
+{
+  "attempt": { "id": "a1", "challengeId": "c1", "mode": "CAREER_PATH", "kind": "daily", "publicNumber": 123, "status": "IN_PROGRESS", "score": 0 },
+  "view": { /* engine.toPublicView */ },
+  "reveal": null
+}
+```
+
+Career Path `view` exemplo:
+```json
+{ "maxAttempts": 6, "attemptsUsed": 0, "revealed": [ { "clubName": "Cruzeiro", "countryCode": "BR", "fromYear": 1993, "toYear": 1994, "isLoan": false } ], "extraHints": {}, "history": [] }
+```
+
+Grid `view` exemplo:
+```json
+{ "maxAttempts": 9, "attemptsUsed": 0, "rows": [ { "type": "club", "label": "Palmeiras" }, … ], "cols": [ … ], "cells": [ { "index": 0, "player": null }, … ] }
+```
+
+Erros: 404 `NO_DAILY_CHALLENGE`, 404 `PRACTICE_POOL_EXHAUSTED`, 400.
+
+---
+
+## POST /v1/attempts/:id/actions
+Submete ação. Público, só a sessão dona. **Idempotente por `idempotencyKey`** (repetição retorna mesma resposta, 200).
+
+Request (Career Path):
+```json
+{ "idempotencyKey": "7c9e…", "input": { "kind": "guess", "playerId": "p1" } }
+```
+ou `{ "kind": "skip" }`. Grid: `{ "kind": "guess", "cellIndex": 4, "playerId": "p1" }` ou `{ "kind": "finish" }`.
+
+Response 200:
+```json
+{
+  "attempt": { "id": "a1", "status": "IN_PROGRESS", "score": 0 },
+  "event": { "type": "wrong", "revealed": "club" },
+  "view": { … },
+  "reveal": null
+}
+```
+Quando a partida termina, `reveal` = `engine.toRevealView` (resposta, trajetória completa / exemplos por célula) e `share` = `{ "text": "…" }`.
+
+Erros: 404 `ATTEMPT_NOT_FOUND` (inclui sessão diferente), 409 `GAME_ALREADY_COMPLETED`, 409 `DUPLICATE_GUESS`, 409 `CELL_ALREADY_FILLED`, 409 `PLAYER_ALREADY_USED`, 400 `UNKNOWN_PLAYER`, 400 `VALIDATION_ERROR`, 429.
+
+---
+
+## GET /v1/attempts/:id
+Estado atual (reload de página). Mesma forma da resposta de actions sem `event`. 404 se sessão diferente.
+
+---
+
+## GET /v1/me/history?mode=&cursor=&limit=
+Partidas concluídas da sessão, mais recentes primeiro. `limit` ≤ 50.
+
+Response: `{ "items": [ { "attemptId", "mode", "kind", "publicNumber", "status", "score", "completedAt" } ], "nextCursor": null }`.
+
+---
+
+## GET /v1/me/stats
+```json
+{
+  "CAREER_PATH": { "played": 12, "won": 9, "distribution": { "1": 0, "2": 2, "3": 4, "4": 2, "5": 1, "6": 0 }, "currentStreak": 3, "maxStreak": 5 },
+  "FOOTBALL_GRID": { "played": 8, "avgScore": 6.4, "perfect": 1, "currentStreak": 2, "maxStreak": 4 }
+}
+```
+Só `kind=daily` conta para streak; practice conta em `played`/`won` em campos separados (`practicePlayed`).
+
+---
+
+## POST /v1/events
+Analytics. Body: `{ "events": [ { "name": "game_started", "ts": "…", "props": { … } } ] }`, máx. 20 por request. Response 202. Nomes validados contra lista de `ANALYTICS.md`; props desconhecidas descartadas.
+
+---
+
+## Admin (`X-Admin-Token`)
+
+| Método | Path | Função |
+|---|---|---|
+| GET | /v1/admin/players?status=&q=&page= | Lista com status e contagem de spells por status |
+| GET | /v1/admin/players/:id | Player + aliases + spells + DQ warnings |
+| PATCH | /v1/admin/players/:id | Campos editáveis + `verificationStatus` (transição validada) |
+| POST/PATCH/DELETE | /v1/admin/players/:id/aliases[/:aliasId] | |
+| POST/PATCH/DELETE | /v1/admin/players/:id/spells[/:spellId] | DQ-01..03 aplicadas |
+| GET/POST/PATCH | /v1/admin/clubs | |
+| POST | /v1/admin/import/wikidata | Body `{ "wikidataIds": [...] }` ou `{ "query": "brazil-players" }`; cria/atualiza `imported`; responde resumo + diffs |
+| GET | /v1/admin/import/diffs?status=open | |
+| POST | /v1/admin/challenges | Body: `{ "mode", "kind", "scheduledFor"?, "params" }` onde params = `{ playerId }` (CP) ou `{ rows, cols }` (Grid). Gera snapshot, roda elegibilidade, salva `draft` + relatório de validação |
+| POST | /v1/admin/challenges/:id/validate | Reexecuta checagens; `draft → validated` |
+| POST | /v1/admin/challenges/:id/schedule | `validated → scheduled` com `scheduledFor` |
+| POST | /v1/admin/challenges/:id/publish | `validated|scheduled → published`; atribui `publicNumber`; snapshot vira imutável |
+| POST | /v1/admin/challenges/:id/retire | Body `{ reason }`; `published → retired`; opcional `replacementParams` cria novo draft com `supersedesId` |
+| GET | /v1/admin/challenges?mode=&status=&from=&to= | Calendário |
+| GET | /v1/admin/challenges/:id/preview | Snapshot completo (única rota que o expõe) |
+| GET | /v1/admin/reports/rejections | Relatórios de `DATA_QUALITY.md` §5 |
+| POST | /v1/admin/eligibility/career-path | Body `{ playerId }` → trajetória calculada + motivo de inelegibilidade |
+| POST | /v1/admin/eligibility/grid | Body `{ rows, cols }` → contagem por célula + avisos |
+
+Publicação de daily: cron **não** necessário. `scheduled` com `scheduledFor = hoje` é tratado como publicado pela query de daily? **Não**: para manter `publicNumber` sequencial e imutabilidade clara, publicação é ação explícita. Recomendação: editor publica a semana inteira com antecedência; rota `GET /v1/games` só considera `status=published AND scheduledFor=today`. Job de auto-publicação fica como sugestão pós-MVP.
+
+Erros admin: 401 `UNAUTHORIZED`; 409 `INVALID_TRANSITION`; 422 `DATA_QUALITY_VIOLATION` com `details.rules: ["DQ-01"]`; 422 `CHALLENGE_NOT_ELIGIBLE` com `details.reasons`.
+
+## Idempotência (resumo)
+
+| Rota | Chave |
+|---|---|
+| POST /attempts | (sessionId, challengeId) via unique |
+| POST /attempts/:id/actions | (attemptId, idempotencyKey) via unique; resposta recomputada do `AttemptAction.event` + estado atual |
+| Admin publish/retire | Transição de estado; repetição → 409 `INVALID_TRANSITION` |
