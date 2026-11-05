@@ -1,6 +1,7 @@
 /**
- * Reads the senior career from the pt.wikipedia football infobox ({{Info/Futebol}}):
- * `|anoN = 1993–1994` + `|clubeN = {{Futebol Cruzeiro}}` or `[[Club|Name]]`.
+ * Reads the senior career from a Wikipedia football infobox: pt ({{Info/Futebol}}, {{Info/Futebolista}}),
+ * en ({{Infobox football biography}}), es ({{Ficha de futbolista}}), it ({{Sportivo}} + {{Carriera sportivo}}),
+ * de ({{Infobox Fußballspieler}} + {{Team-Station}}) and fr ({{Infobox Footballeur}}).
  * Used as the second source when cross-checking Wikidata (ADR-006). Facts only, no text copied.
  */
 import { USER_AGENT } from './wikidata-client';
@@ -21,18 +22,22 @@ export interface InfoboxEntry {
 /** First integer of an infobox number cell ("47", "57 (3)", "{{0}}9", "<ref/>12"). */
 function count(raw: string | undefined): number | null {
   const m = /\d+/.exec(
-    (raw ?? '').replace(/<ref[\s\S]*?(?:\/>|<\/ref>)|\{\{[^}]*\}\}|\[\[[^\]]*\]\]/g, ' '),
+    (raw ?? '')
+      .replace(/\{\{\s*nobr\s*\|/gi, '')
+      .replace(/<ref[\s\S]*?(?:\/>|<\/ref>)|\{\{[^}]*\}\}|\[\[[^\]]*\]\]/g, ' '),
   );
   return m ? Number(m[0]) : null;
 }
 
+const LOAN_MARK = /\((?:emp(?:réstimo|\.)?|loan|cedido|prestito|leihe|prêt)\)/gi;
+
 function clean(raw: string): string {
   return raw
     .replace(/<ref[^>]*\/>|<ref[\s\S]*?<\/ref>/g, '')
-    .replace(/\{\{\s*Futebol\s+([^}|]+)[^}]*\}\}/gi, '$1')
+    .replace(/\{\{\s*(?:Futebol|Calcio)\s+([^}|]+)[^}]*\}\}/gi, '$1')
     .replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1')
-    .replace(/\{\{[^}]*\}\}|<[^>]+>|'''?|→/g, '')
-    .replace(/\(emp(?:réstimo|\.)?\)|\(loan\)/gi, '')
+    .replace(/\{\{[^}]*\}\}|<[^>]+>|'''?|→|\{\{|\}\}|&nbsp;/g, ' ')
+    .replace(LOAN_MARK, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -44,17 +49,19 @@ function entry(
   apps?: string,
   goals?: string,
 ): InfoboxEntry {
-  // "1993–1994", "2004–", "{{0}}2013", "2013": first year, second year, open or single.
-  const found = [...years.replace(/\{\{[^}]*\}\}/g, '').matchAll(/\d{4}/g)].map((m) =>
-    Number(m[0]),
-  );
-  const open = /\d{4}\s*[–—-]\s*$/.test(years.trim());
+  // "1993–1994", "2004–", "{{0}}2013", "2013", "2009-13", "2025-act.", "[[2009 en football|2009]]-…":
+  // first year, second year, open or single.
+  const y = years.replace(/\{\{[^}]*\}\}|\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1').trim();
+  const found = [...y.matchAll(/\d{4}/g)].map((m) => Number(m[0]));
+  const short = /(\d{2})\d{2}\s*[–—-]\s*(\d{2})(?!\d)/.exec(y);
+  if (found.length === 1 && short) found.push(Number(short[1]! + short[2]!));
+  const open = /\d{4}\s*[–—-]\s*(?:act\.?|presente|heute)?\s*$/i.test(y);
   return {
     index,
     fromYear: found[0] ?? null,
     toYear: found[1] ?? (open ? null : (found[0] ?? null)),
     club: clean(raw),
-    isLoan: /\(emp(?:réstimo|\.)?\)|\(loan\)|→|\{\{\s*(?:emp|seta) fut/i.test(raw),
+    isLoan: new RegExp(`${LOAN_MARK.source}|→|\\{\\{\\s*(?:emp|seta) fut`, 'i').test(raw),
     appearances: count(apps),
     goals: count(goals),
     link:
@@ -68,7 +75,7 @@ function entry(
  */
 export function parseInfoboxCareer(wikitext: string): InfoboxEntry[] | null {
   const start = wikitext.search(/\{\{\s*(?:Info\/Futebol|Infobox football biography)/i);
-  if (start < 0) return null;
+  if (start < 0) return parseOtherInfobox(wikitext);
   // One field per line: English infoboxes often chain `| years1 = … | clubs1 = …` on one line.
   const box = wikitext.slice(start).replace(/[ \t]\|\s*([a-zç-]+\d*)\s*=/gi, '\n|$1 =');
   const numbered = (name: string) => new RegExp(`^\\s*\\|\\s*${name}(\\d+)\\s*=(.*)$`, 'gm');
@@ -102,9 +109,97 @@ export function parseInfoboxCareer(wikitext: string): InfoboxEntry[] | null {
     .filter((e) => e.club);
 }
 
+/** Splits a template row on top-level pipes (not inside [[ ]] or {{ }}). */
+function cells(row: string): string[] {
+  const out: string[] = [];
+  let cur = '';
+  let depth = 0;
+  for (let i = 0; i < row.length; i++) {
+    const two = row.slice(i, i + 2);
+    if (two === '[[' || two === '{{' || two === ']]' || two === '}}') {
+      depth += two === '[[' || two === '{{' ? 1 : -1;
+      cur += two;
+      i++;
+    } else if (row[i] === '|' && depth === 0) {
+      out.push(cur);
+      cur = '';
+    } else cur += row[i];
+  }
+  return [...out, cur].map((c) => c.trim());
+}
+
+/** Body of the template that the pattern opens (the pattern ends with `{{`), up to its matching `}}`. */
+function templateBody(text: string, opener: RegExp): string | null {
+  const m = opener.exec(text);
+  if (!m) return null;
+  const from = m.index + m[0].length;
+  let depth = 1;
+  for (let i = from; i < text.length - 1; i++) {
+    const two = text.slice(i, i + 2);
+    if (two === '{{') depth++;
+    else if (two === '}}' && --depth === 0) return text.slice(from, i);
+    else continue;
+    i++;
+  }
+  return null;
+}
+
+/** Infobox field value: from `| name =` up to the next field line. */
+function fieldValue(text: string, name: RegExp): string | null {
+  const m = name.exec(text);
+  if (!m) return null;
+  const rest = text.slice(m.index + m[0].length);
+  const end = rest.search(/\n\s*\|/);
+  return end < 0 ? rest : rest.slice(0, end);
+}
+
+/** Rows `|years|club|apps (goals)` of {{Carriera sportivo}} / {{trois colonnes}}; parameter lines skipped. */
+function rowEntries(body: string): InfoboxEntry[] {
+  return body
+    .split('\n')
+    .filter((l) => /^\s*\|/.test(l))
+    .map((l) => cells(l.replace(/^\s*\|/, '')))
+    .filter((c) => !c[0]!.includes('=') && /\d{4}/.test(c[0]!) && c[1])
+    .map((c, i) => entry(i + 1, c[0]!, c[1]!, c[2], goalsOf(c[2])));
+}
+
+const goalsOf = (cell: string | undefined) =>
+  /\((\d+)\)/.exec((cell ?? '').replace(/<ref[\s\S]*?(?:\/>|<\/ref>)|\{\{\s*0[^}]*\}\}/g, ''))?.[1];
+
+function parseOtherInfobox(wikitext: string): InfoboxEntry[] | null {
+  let out: InfoboxEntry[];
+  if (/\{\{\s*Infobox Fußballspieler/i.test(wikitext)) {
+    // de: {{Team-Station|2009–2013|[[FC Santos]]|177 (107)}} rows of the senior table.
+    const table = fieldValue(wikitext, /^\s*\|\s*vereine_tabelle\s*=/m) ?? '';
+    out = [...table.matchAll(/\{\{\s*Team-Station\s*\|/g)].flatMap((m, i) => {
+      const c = cells(templateBody(table.slice(m.index), /\{\{/) ?? '').slice(1);
+      return c[0] && c[1] ? [entry(i + 1, c[0], c[1], c[2], goalsOf(c[2]))] : [];
+    });
+  } else if (/\{\{\s*Sportivo/i.test(wikitext)) {
+    // it: |Squadre = {{Carriera sportivo |2009-2013|Santos|179 (107) …}}
+    out = rowEntries(templateBody(wikitext, /\|\s*Squadre\s*=\s*\{\{/) ?? '');
+  } else if (/\{\{\s*Infobox Footballeur/i.test(wikitext)) {
+    // fr: | parcours senior = {{trois colonnes |[[2009 en football|2009]]-…|{{BRA-d}} [[Santos FC]]|{{nobr|230 (138)}} …}}
+    out = rowEntries(templateBody(wikitext, /\|\s*parcours senior\s*=\s*\{\{/) ?? '');
+  } else if (/\{\{\s*Ficha de futbolista/i.test(wikitext)) {
+    // es: | equipos = * [[Santos Futebol Clube|Santos F. C.]] (2009-13)
+    const list = fieldValue(wikitext, /\|\s*equipos\s*=/) ?? '';
+    out = list
+      .split('\n')
+      .map((l) => l.replace(/^\s*\*\s*/, '').trim())
+      .filter(Boolean)
+      .flatMap((l, i) => {
+        const years = /\(([^()]*\d{4}[^()]*)\)/.exec(l);
+        return years ? [entry(i + 1, years[1]!, l.replace(years[0], ''))] : [];
+      });
+  } else return null;
+  return out.filter((e) => e.club);
+}
+
 let last = 0;
 /** Wikitext of a Wikipedia page via the MediaWiki API (≤ 1 req/s). */
-export async function fetchWikitext(lang: 'pt' | 'en', title: string): Promise<string | null> {
+export type WikiLang = 'pt' | 'en' | 'es' | 'it' | 'de' | 'fr';
+export async function fetchWikitext(lang: WikiLang, title: string): Promise<string | null> {
   const wait = last + 1100 - Date.now();
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   last = Date.now();

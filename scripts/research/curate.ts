@@ -1,4 +1,4 @@
-// AI curation (ADR-006): candidates -> Wikidata import -> cross-check against pt.wikipedia ->
+// AI curation (ADR-006): candidates -> Wikidata import -> cross-check against Wikipedia infoboxes (pt/en/es/it/de/fr) ->
 // verify what both sources agree on. Re-runnable; verified players are left as they are.
 // Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/curate.ts [--limit N]
 import { writeFileSync } from 'node:fs';
@@ -15,6 +15,7 @@ import {
   fetchWikitext,
   parseInfoboxCareer,
   type InfoboxEntry,
+  type WikiLang,
 } from '../../apps/api/src/modules/data-import/wikipedia';
 import { checkPlayer } from '../../apps/api/src/modules/knowledge/quality';
 
@@ -31,6 +32,9 @@ const LIMIT = limitArg > 0 ? Number(process.argv[limitArg + 1]) : 360;
 const RECHECK = process.argv.includes('--recheck') || process.argv.includes('--only-verified');
 /** --only-verified: skip the candidate search and recheck only the curator-verified players. */
 const ONLY_VERIFIED = process.argv.includes('--only-verified');
+/** --fresh-since <ISO>: with --recheck, careers verified at or after this time are kept as they are. */
+const freshArg = process.argv.indexOf('--fresh-since');
+const FRESH_SINCE = freshArg > 0 ? new Date(process.argv[freshArg + 1]!) : null;
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // ── 1. Candidates: most-linked Brazilian footballers + global stars who matter to Brazilian fans.
@@ -99,9 +103,9 @@ const norm = (x: string) => normalizeName(x);
  * resolves to the exact Wikidata club (sitelink); without a link, only a unique exact name in our
  * club table is accepted.
  */
-async function resolveClub(entry: InfoboxEntry, lang: 'pt' | 'en') {
+async function resolveClub(entry: InfoboxEntry, lang: WikiLang) {
   if (entry.link) {
-    const e = await entityBySitelink(lang === 'pt' ? 'ptwiki' : 'enwiki', entry.link);
+    const e = await entityBySitelink(`${lang}wiki`, entry.link);
     if (!e || isNationalTeam(e)) return null;
     if (clubByQid.has(e.id)) return clubByQid.get(e.id) ?? null;
     let club = await prisma.club.findUnique({ where: { wikidataId: e.id } });
@@ -144,6 +148,42 @@ async function resolveClub(entry: InfoboxEntry, lang: 'pt' | 'en') {
     (c) => norm(c.shortName) === norm(entry.club) || norm(c.name) === norm(entry.club),
   );
   return exact.length === 1 ? exact[0]! : null;
+}
+
+const LANGS: WikiLang[] = ['pt', 'en', 'es', 'it', 'de', 'fr'];
+const qidByLink = new Map<string, string | null>();
+const clubSitelinks = new Map<string, Record<string, { title?: string }>>();
+
+/**
+ * Whether another-language infobox lists this club: by name, by the linked page's Wikidata entity,
+ * or by the club's own article title in that language ("AC Mailand", "Barcellona").
+ */
+async function listedIn(
+  club: { name: string; shortName: string; wikidataId: string | null },
+  entries: InfoboxEntry[],
+  lang: WikiLang,
+): Promise<boolean> {
+  if (entries.some((e) => exactClub(club, e.club) || fuzzyClub(club, e.club))) return true;
+  if (!club.wikidataId) return false;
+  for (const e of entries.filter((x) => x.link)) {
+    const k = `${lang}:${e.link}`;
+    if (!qidByLink.has(k))
+      qidByLink.set(k, (await entityBySitelink(`${lang}wiki`, e.link!))?.id ?? null);
+    if (qidByLink.get(k) === club.wikidataId) return true;
+  }
+  if (!clubSitelinks.has(club.wikidataId))
+    clubSitelinks.set(
+      club.wikidataId,
+      ((await fetchEntities([club.wikidataId]))[club.wikidataId]?.sitelinks ?? {}) as Record<
+        string,
+        { title?: string }
+      >,
+    );
+  const title = clubSitelinks
+    .get(club.wikidataId)
+    ?.[`${lang}wiki`]?.title?.replace(/\s*\(.*\)$/, '');
+  const local = title ? { name: title, shortName: title } : null;
+  return !!local && entries.some((e) => exactClub(local, e.club) || fuzzyClub(local, e.club));
 }
 
 /** T1 global icon ... T4 niche, from Wikipedia language coverage (editorial proxy, DATA_QUALITY §4). */
@@ -272,15 +312,16 @@ async function crossCheck(
   playerId: string,
   qid: string,
   links: number,
-  page: { lang: 'pt' | 'en'; title: string } | undefined,
-  /** The other-language article, used to confirm clubs Wikidata does not link to the player. */
-  alt: { lang: 'pt' | 'en'; title: string } | undefined,
+  /** Articles in preference order: the first with a football infobox gives the career sequence,
+   * the others confirm clubs Wikidata does not link to the player. */
+  pages: { lang: WikiLang; title: string }[],
 ): Promise<Outcome> {
   const p = await prisma.player.findUniqueOrThrow({
     where: { id: playerId },
     include: { aliases: true, spells: { include: { club: true } } },
   });
-  if (p.verificationStatus === 'verified' && !(RECHECK && p.verifiedBy === CURATOR))
+  const fresh = FRESH_SINCE && p.verifiedAt && p.verifiedAt >= FRESH_SINCE;
+  if (p.verificationStatus === 'verified' && !(RECHECK && p.verifiedBy === CURATOR && !fresh))
     return { qid, name: p.canonicalName, result: 'already' };
   const fail = async (o: Outcome): Promise<Outcome> => {
     if (p.verificationStatus === 'verified')
@@ -290,9 +331,20 @@ async function crossCheck(
       });
     return o;
   };
-  const text = page ? await fetchWikitext(page.lang, page.title) : null;
-  const wp = text ? parseInfoboxCareer(text)?.filter((e) => e.club) : null;
-  if (!text || !wp?.length) return fail({ qid, name: p.canonicalName, result: 'no-infobox' });
+  let page: (typeof pages)[number] | undefined;
+  let text: string | null = null;
+  let wp: InfoboxEntry[] | null | undefined = null;
+  for (const candidate of pages) {
+    text = await fetchWikitext(candidate.lang, candidate.title);
+    wp = text ? parseInfoboxCareer(text)?.filter((e) => e.club) : null;
+    if (text && wp?.length) {
+      page = candidate;
+      break;
+    }
+  }
+  if (!page || !text || !wp?.length)
+    return fail({ qid, name: p.canonicalName, result: 'no-infobox' });
+  const alts = pages.filter((x) => x !== page);
 
   const position = p.primaryPositionGroup ?? positionFromInfobox(text);
   if (!position) return fail({ qid, name: p.canonicalName, result: 'no-position' });
@@ -301,7 +353,12 @@ async function crossCheck(
   // must also be one of the player's clubs on Wikidata. Years must be present (DQ-01).
   const wdClubs = [...new Map(p.spells.map((s) => [s.clubId, s.club])).values()];
   // Clubs only the first article links to the player: they must also appear in the other-language one.
-  const needsSecondSource: { id: string; name: string; shortName: string }[] = [];
+  const needsSecondSource: {
+    id: string;
+    name: string;
+    shortName: string;
+    wikidataId: string | null;
+  }[] = [];
   const matched: { club: (typeof wdClubs)[number]; entry: InfoboxEntry }[] = [];
   for (const entry of wp) {
     // Reserve and B teams are not senior career entries (they matched the first team before).
@@ -310,7 +367,7 @@ async function crossCheck(
     const fromWikidata =
       wdClubs.find((c) => exactClub(c, entry.club)) ??
       wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club));
-    const club = fromWikidata ?? (await resolveClub(entry, page!.lang));
+    const club = fromWikidata ?? (await resolveClub(entry, page.lang));
     if (club && !fromWikidata) needsSecondSource.push(club);
     if (!club)
       return fail({
@@ -348,23 +405,26 @@ async function crossCheck(
       detail: 'nenhum clube principal',
     });
 
-  if (needsSecondSource.length) {
-    const altText = alt ? await fetchWikitext(alt.lang, alt.title) : null;
+  // Each such club must also be in another language's infobox (any of pt/en/es/it/de/fr).
+  let pending = needsSecondSource;
+  for (const alt of alts) {
+    if (!pending.length) break;
+    const altText = await fetchWikitext(alt.lang, alt.title);
     const altClubs = (altText ? parseInfoboxCareer(altText) : null) ?? [];
-    const missing = needsSecondSource.find(
-      (c) => !altClubs.some((e) => exactClub(c, e.club) || fuzzyClub(c, e.club)),
-    );
-    if (missing)
-      return fail({
-        qid,
-        name: p.canonicalName,
-        result: 'mismatch',
-        detail: `${missing.shortName} só em uma fonte`,
-      });
+    const still: typeof pending = [];
+    for (const c of pending) if (!(await listedIn(c, altClubs, alt.lang))) still.push(c);
+    pending = still;
   }
+  if (pending[0])
+    return fail({
+      qid,
+      name: p.canonicalName,
+      result: 'mismatch',
+      detail: `${pending[0].shortName} só em uma fonte`,
+    });
 
   const now = new Date();
-  const wpUrl = `https://${page!.lang}.wikipedia.org/wiki/${encodeURIComponent(page!.title.replace(/ /g, '_'))}`;
+  const wpUrl = `https://${page.lang}.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}`;
   await prisma.$transaction(async (tx) => {
     // Senior spells are rebuilt from the agreed sequence; youth spells stay as imported.
     await tx.careerSpell.deleteMany({ where: { playerId: p.id, spellType: { not: 'youth' } } });
@@ -503,23 +563,17 @@ for (let i = 0; i < list.length; i += 50) {
     const playerId = ids.get(c.qid);
     if (!playerId) continue;
     const sl = ents[c.qid]?.sitelinks as Record<string, { title?: string }> | undefined;
-    const page = sl?.ptwiki?.title
-      ? { lang: 'pt' as const, title: sl.ptwiki.title }
-      : sl?.enwiki?.title
-        ? { lang: 'en' as const, title: sl.enwiki.title }
-        : undefined;
+    const pages = LANGS.flatMap((lang) => {
+      const title = sl?.[`${lang}wiki`]?.title;
+      return title ? [{ lang, title }] : [];
+    });
     try {
       outcomes.push(
         await crossCheck(
           playerId,
           c.qid,
           c.links || Object.keys(ents[c.qid]?.sitelinks ?? {}).length,
-          page,
-          page?.lang === 'pt' && sl?.enwiki?.title
-            ? { lang: 'en', title: sl.enwiki.title }
-            : page?.lang === 'en' && sl?.ptwiki?.title
-              ? { lang: 'pt', title: sl.ptwiki.title }
-              : undefined,
+          pages,
         ),
       );
     } catch (e) {

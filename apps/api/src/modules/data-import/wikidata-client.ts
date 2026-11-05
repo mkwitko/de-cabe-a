@@ -70,7 +70,7 @@ export const fetchEntities: EntityFetcher = async (ids) => {
 
 /** Entity of a Wikipedia page (site link), e.g. ('ptwiki', 'Nacional Atlético Clube (São Paulo)'). */
 export async function entityBySitelink(
-  site: 'ptwiki' | 'enwiki',
+  site: `${'pt' | 'en' | 'es' | 'it' | 'de' | 'fr'}wiki`,
   title: string,
 ): Promise<WikidataEntity | null> {
   const params = new URLSearchParams({

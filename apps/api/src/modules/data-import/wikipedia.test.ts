@@ -170,3 +170,60 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
     expect(parseInfoboxCareer('Sem infobox')).toBeNull();
   });
 });
+
+describe('parseInfoboxCareer (es / it / de / fr infoboxes)', () => {
+  const rows = (text: string) =>
+    parseInfoboxCareer(text)?.map((e) => [
+      e.club,
+      e.fromYear,
+      e.toYear,
+      e.appearances,
+      e.goals,
+      e.isLoan,
+      e.link,
+    ]);
+
+  it('reads the Spanish Ficha de futbolista equipos list', () => {
+    const text =
+      '{{Ficha de futbolista\n| club = [[Santos Futebol Clube|Santos F. C.]]\n| equipos = * [[Santos Futebol Clube|Santos F. C.]] (2009-13)\n* [[Fútbol Club Barcelona|F. C. Barcelona]] (2013-17)\n* → [[Real Betis Balompié|Betis]] (2018) (cedido)\n* [[Santos Futebol Clube|Santos F. C.]] (2025-act.)\n| medallas = x\n}}';
+    expect(rows(text)).toEqual([
+      ['Santos F. C.', 2009, 2013, null, null, false, 'Santos Futebol Clube'],
+      ['F. C. Barcelona', 2013, 2017, null, null, false, 'Fútbol Club Barcelona'],
+      ['Betis', 2018, 2018, null, null, true, 'Real Betis Balompié'],
+      ['Santos F. C.', 2025, null, null, null, false, 'Santos Futebol Clube'],
+    ]);
+  });
+
+  it('reads the Italian Carriera sportivo rows, skipping national teams', () => {
+    const text =
+      '{{Sportivo\n|SquadreGiovanili = {{Carriera sportivo\n |2003-2008|Santos|\n}}\n|Squadre = {{Carriera sportivo\n|sport = calcio |pos = G\n |2009-2013|[[Santos Futebol Clube|Santos]]|179 (107)\n |2013-2017|{{Calcio Barcellona|G}}|123 (68)\n |2015-2016|→ [[Real Betis Balompié|Betis]]|3 (0)\n |2025-|Santos|33 (16)<ref>42 (19) se...</ref>\n}}\n|SquadreNazionali = {{Carriera sportivo\n |2010-2026|{{Naz|CA|BRA|M}}|130 (80)\n}}\n}}';
+    expect(rows(text)).toEqual([
+      ['Santos', 2009, 2013, 179, 107, false, 'Santos Futebol Clube'],
+      ['Barcellona', 2013, 2017, 123, 68, false, null],
+      ['Betis', 2015, 2016, 3, 0, true, 'Real Betis Balompié'],
+      ['Santos', 2025, null, 33, 16, false, null],
+    ]);
+  });
+
+  it('reads the German Team-Station rows of vereine_tabelle only', () => {
+    const text =
+      '{{Infobox Fußballspieler\n| jugendvereine_tabelle = \n{{Team-Station|2003–2008|[[FC Santos]]}}\n| vereine_tabelle = \n{{Team-Station|2009–2013|[[FC Santos]]|177 (107)}}\n{{Team-Station|2013–2014|AC Mailand|30 {{0}}(7)}}\n{{Team-Station|2014|→&nbsp;[[FC São Paulo]] (Leihe)|19 {{0}}(2)}}\n{{Team-Station|2025–    |[[FC Santos]]|37 {{0}}(17)}}\n| nationalmannschaft_tabelle = \n{{Team-Station|2010–2026|[[Brasilianische Fußballnationalmannschaft|Brasilien]]|130 (80)}}\n}}';
+    expect(rows(text)).toEqual([
+      ['FC Santos', 2009, 2013, 177, 107, false, 'FC Santos'],
+      ['AC Mailand', 2013, 2014, 30, 7, false, null],
+      ['FC São Paulo', 2014, 2014, 19, 2, true, 'FC São Paulo'],
+      ['FC Santos', 2025, null, 37, 17, false, 'FC Santos'],
+    ]);
+  });
+
+  it('reads the French parcours senior rows', () => {
+    const text =
+      '{{Infobox Footballeur\n | parcours junior     = {{deux colonnes\n |[[2003 en football|2003]]-[[2009 en football|2009]]|{{BRA-d}} [[Santos Futebol Clube (Santos)|Santos FC]]\n}}\n | parcours senior     = {{trois colonnes\n |[[2009 en football|2009]]-[[2013 en football|2013]]|{{BRA-d}} [[Santos Futebol Clube (Santos)|Santos FC]]|{{nobr|230 (138)}}\n |[[2017 en football|2017]]-[[2023 en football|2023]]|{{nobr|{{drapeau|France}} [[Paris Saint-Germain Football Club|Paris Saint-Germain]]}}|{{nobr|173 (118)}}\n |[[2023 en football|2023]]-[[2025 en football|2025]]|{{KSA-d}} [[Al-Hilal Football Club|Al-Hilal FC]]|{{nobr|{{0|00}}7 {{0|00}}(1)}}\n |[[2025 en football|2025]]-|{{BRA-d}} [[Santos Futebol Clube (Santos)|Santos FC]]|{{nobr|{{0}}55 {{0}}(21)}}\n}}\n | sélection nationale = {{trois colonnes\n |2010-|Brésil|130 (80)\n}}\n}}';
+    expect(rows(text)).toEqual([
+      ['Santos FC', 2009, 2013, 230, 138, false, 'Santos Futebol Clube (Santos)'],
+      ['Paris Saint-Germain', 2017, 2023, 173, 118, false, 'Paris Saint-Germain Football Club'],
+      ['Al-Hilal FC', 2023, 2025, 7, 1, false, 'Al-Hilal Football Club'],
+      ['Santos FC', 2025, null, 55, 21, false, 'Santos Futebol Clube (Santos)'],
+    ]);
+  });
+});
