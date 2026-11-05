@@ -227,3 +227,13 @@ describe('parseInfoboxCareer (es / it / de / fr infoboxes)', () => {
     ]);
   });
 });
+
+describe('parseInfoboxCareer loan marks', () => {
+  it('strips loan marks written with inner spaces', () => {
+    const text =
+      '{{Infobox football biography\n| years1 = 1996–2000 | clubs1 = [[SK Sigma Olomouc|Sigma Olomouc]] ( loan )\n}}';
+    expect(parseInfoboxCareer(text)?.map((e) => [e.club, e.isLoan])).toEqual([
+      ['Sigma Olomouc', true],
+    ]);
+  });
+});

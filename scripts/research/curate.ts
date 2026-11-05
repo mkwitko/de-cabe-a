@@ -388,6 +388,8 @@ async function crossCheck(
     if (prev && prev.club.id === club.id && (prev.entry.toYear ?? 9999) >= entry.fromYear) {
       prev.entry = {
         ...prev.entry,
+        // A loan followed by a permanent move to the same club is one permanent spell.
+        isLoan: prev.entry.isLoan && entry.isLoan,
         toYear:
           entry.toYear === null || prev.entry.toYear === null
             ? null

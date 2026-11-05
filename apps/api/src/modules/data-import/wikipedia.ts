@@ -29,7 +29,7 @@ function count(raw: string | undefined): number | null {
   return m ? Number(m[0]) : null;
 }
 
-const LOAN_MARK = /\((?:emp(?:réstimo|\.)?|loan|cedido|prestito|leihe|prêt)\)/gi;
+const LOAN_MARK = /\(\s*(?:emp(?:réstimo|\.)?|loan|cedido|prestito|leihe|prêt)\s*\)/gi;
 
 function clean(raw: string): string {
   return raw
