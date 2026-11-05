@@ -195,21 +195,17 @@ export function GridPage({ level }: { level: number }) {
 
         <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
           {done ? (
-            <>
-              <div className="rounded-xl bg-cover p-5 text-ink shadow-[0_18px_40px_-14px_rgb(0_0_0/0.55)]">
-                <h2 className="font-condensed text-4xl leading-none font-black uppercase">
-                  {data.attempt.score === 9
-                    ? 'Álbum completo!'
-                    : data.attempt.score >= 6
-                      ? `Bonito! ${data.attempt.score}/9`
-                      : `${data.attempt.score}/9 desta vez`}
-                </h2>
-                <p className="mt-2 font-semibold">
-                  As células vazias mostram uma resposta possível.
-                </p>
-              </div>
-              <LevelEnd data={data} />
-            </>
+            <LevelEnd
+              data={data}
+              headline={
+                data.attempt.score === 9
+                  ? 'Álbum completo!'
+                  : data.attempt.score >= 6
+                    ? `Bonito! ${data.attempt.score} de 9`
+                    : `${data.attempt.score} de 9 desta vez`
+              }
+              detail={<p>As células vazias mostram uma resposta possível.</p>}
+            />
           ) : (
             <>
               <div className="flex flex-col gap-2 rounded-xl bg-chalk/[0.05] p-4">

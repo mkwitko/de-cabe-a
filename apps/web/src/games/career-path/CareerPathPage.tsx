@@ -70,26 +70,24 @@ function Guesses({ view }: { view: CareerPathView }) {
   );
 }
 
-function ResultBanner({ data }: { data: AttemptResponse }) {
+/** Verdict and answer for the result sticker. */
+function resultCopy(data: AttemptResponse) {
   const reveal = data.reveal as CareerPathReveal;
   const view = data.view as CareerPathView;
   const won = data.attempt.status === 'WON';
-  return (
-    <div className="rounded-xl bg-cover p-5 text-ink shadow-[0_18px_40px_-14px_rgb(0_0_0/0.55)]">
-      <h2 className="font-condensed text-4xl leading-none font-black uppercase">
-        {won
-          ? view.attemptsUsed === 1
-            ? 'De placa! Na primeira.'
-            : `Acertou em ${view.attemptsUsed}/6!`
-          : 'Não foi dessa vez.'}
-      </h2>
-      <p className="mt-3 text-lg font-semibold">
+  return {
+    headline: won
+      ? view.attemptsUsed === 1
+        ? 'De placa! Na primeira.'
+        : `Acertou em ${view.attemptsUsed} de 6!`
+      : 'Não foi dessa vez.',
+    detail: (
+      <p>
         Era <strong className="font-black">{reveal.answer.name}</strong> ·{' '}
         {reveal.trajectory.length} clubes
       </p>
-      <p className="mt-1 font-semibold">Pontuação: {data.attempt.score}</p>
-    </div>
-  );
+    ),
+  };
 }
 
 export function CareerPathPage({ level }: { level: number }) {
@@ -181,10 +179,7 @@ export function CareerPathPage({ level }: { level: number }) {
         {/* Right: the dugout panel (docks to the bottom on phones while playing) */}
         <aside className="order-1 flex flex-col gap-5 lg:sticky lg:top-6 lg:order-2">
           {done ? (
-            <>
-              <ResultBanner data={data} />
-              <LevelEnd data={data} />
-            </>
+            <LevelEnd data={data} {...resultCopy(data)} />
           ) : (
             <>
               <Clues view={view} />

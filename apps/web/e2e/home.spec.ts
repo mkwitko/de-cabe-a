@@ -33,7 +33,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
-  await expect(page.getByRole('heading', { name: 'Acertou em 3/6!' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Acertou em 3 de 6!' })).toBeVisible();
   await expect(page.getByRole('img', { name: '2 de 3 estrelas' }).first()).toBeVisible();
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
@@ -77,7 +77,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await expect(page.getByLabel('7 tentativas restantes')).toBeVisible();
   await page.getByRole('button', { name: 'Encerrar' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click();
-  await expect(page.getByRole('heading', { name: '1/9 desta vez' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '1 de 9 desta vez' })).toBeVisible();
   await expect(
     page.getByRole('gridcell', { name: /Santos e Real Madrid: vazia, exemplo Craque L2C2/ }),
   ).toBeVisible();
@@ -85,7 +85,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   // 9. Stats: title and stars; history lists both levels
   await page.getByRole('link', { name: 'Stats', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Reserva' })).toBeVisible();
-  await expect(page.getByText('★ 2 estrelas')).toBeVisible();
+  await expect(page.getByText('2 estrelas', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ver histórico de partidas' }).click();
   await expect(page.locator('main li')).toHaveCount(2);
 

@@ -44,3 +44,11 @@ export const hintMask = (initial: string, pattern: number[]) =>
   pattern
     .map((n, i) => (i === 0 ? initial + '_'.repeat(Math.max(0, n - 1)) : '_'.repeat(n)))
     .join(' ');
+
+/** Title thresholds in total stars; mirrors titleFor in packages/engine/src/stars.ts (web may not import the engine). */
+export const TITLE_LADDER = [
+  { name: 'Reserva', min: 0 },
+  { name: 'Titular', min: 15 },
+  { name: 'Craque', min: 60 },
+  { name: 'Lenda', min: 150 },
+] as const;
