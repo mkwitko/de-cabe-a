@@ -9,6 +9,7 @@ import {
   sparql,
 } from '../../apps/api/src/modules/data-import/wikidata-client';
 import { isNationalTeam } from '../../apps/api/src/modules/data-import/wikidata-mapper';
+import { fetchPtWikitext, parseInfoboxCareer } from '../../apps/api/src/modules/data-import/wikipedia';
 
 const FOOTBALLER = 'Q937857';
 const SAMPLE = [
@@ -54,23 +55,9 @@ const allDated = await count(
   `SELECT (COUNT(DISTINCT ?p) AS ?n) WHERE { ?p wdt:P27 wd:Q155; wdt:P106 wd:${FOOTBALLER}; p:P54 ?s. FILTER NOT EXISTS { ?p p:P54 ?u. FILTER NOT EXISTS { ?u pq:P580 ?d } } }`,
 );
 
-/** Club count in the pt.wikipedia infobox ("clubes" field, one per line break). */
 async function wikipediaClubs(title: string): Promise<number | null> {
-  const params = new URLSearchParams({
-    action: 'parse',
-    format: 'json',
-    prop: 'wikitext',
-    page: title,
-    redirects: '1',
-  });
-  await new Promise((r) => setTimeout(r, 1100));
-  const res = await fetch(`https://pt.wikipedia.org/w/api.php?${params}`, {
-    headers: { 'User-Agent': USER_AGENT },
-  });
-  const text: string = (await res.json())?.parse?.wikitext?.['*'] ?? '';
-  const m = /\|\s*clubes\s*=([\s\S]*?)\n\s*\|/.exec(text);
-  if (!m) return null;
-  return m[1]!.split(/<br\s*\/?>/i).filter((s) => s.replace(/<[^>]+>|\s/g, '')).length;
+  const text = await fetchPtWikitext(title);
+  return text ? (parseInfoboxCareer(text)?.length ?? null) : null;
 }
 
 const sample = [];

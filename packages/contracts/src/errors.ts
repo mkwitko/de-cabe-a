@@ -18,6 +18,7 @@ export const ErrorCode = z.enum([
   'CELL_ALREADY_FILLED',
   'PLAYER_ALREADY_USED',
   'UNKNOWN_PLAYER',
+  'DATE_TAKEN',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

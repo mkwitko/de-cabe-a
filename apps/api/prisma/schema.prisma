@@ -223,7 +223,8 @@ model Challenge {
   usages   ChallengePlayerUsage[]
   attempts Attempt[]
 
-  @@unique([gameMode, kind, scheduledFor]) // one daily per game per day
+  // one live daily per game per day; a retired one frees its date for the replacement
+  @@unique([gameMode, kind, scheduledFor], where: raw("status <> 'retired'"), map: "Challenge_live_daily_key")
   @@unique([gameMode, publicNumber])
   @@index([gameMode, kind, status])
 }
