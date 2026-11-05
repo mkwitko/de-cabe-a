@@ -14,6 +14,8 @@ export interface InfoboxEntry {
   /** League appearances and goals at the club, when the infobox has them. */
   appearances: number | null;
   goals: number | null;
+  /** Wiki page the club cell links to ([[Target|Text]]), the precise club identity when present. */
+  link: string | null;
 }
 
 /** First integer of an infobox number cell ("47", "57 (3)", "{{0}}9", "<ref/>12"). */
@@ -55,6 +57,7 @@ function entry(
     isLoan: /\(emp(?:réstimo|\.)?\)|\(loan\)|→|\{\{\s*(?:emp|seta) fut/i.test(raw),
     appearances: count(apps),
     goals: count(goals),
+    link: /\[\[([^\]|#]+)/.exec(raw.replace(/<ref[\s\S]*?(?:\/>|<\/ref>)/g, ''))?.[1]?.trim() ?? null,
   };
 }
 

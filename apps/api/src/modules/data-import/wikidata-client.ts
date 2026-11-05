@@ -68,6 +68,22 @@ export const fetchEntities: EntityFetcher = async (ids) => {
   return out;
 };
 
+/** Entity of a Wikipedia page (site link), e.g. ('ptwiki', 'Nacional Atlético Clube (São Paulo)'). */
+export async function entityBySitelink(site: 'ptwiki' | 'enwiki', title: string): Promise<WikidataEntity | null> {
+  const params = new URLSearchParams({
+    action: 'wbgetentities',
+    format: 'json',
+    props: 'labels|claims|sitelinks',
+    languages: 'pt|en',
+    sites: site,
+    titles: title,
+    redirects: 'yes',
+  });
+  const body = (await throttledGet(`${API}?${params}`)) as { entities?: Record<string, WikidataEntity & { missing?: string }> };
+  const e = Object.values(body.entities ?? {})[0];
+  return e && !('missing' in e) && e.id.startsWith('Q') ? e : null;
+}
+
 export async function searchEntities(
   search: string,
 ): Promise<{ id: string; label?: string; description?: string }[]> {

@@ -22,7 +22,7 @@ Texto do artigo.`;
 
 describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
   it('reads senior club entries in numeric order, ignoring youth and national teams', () => {
-    expect(parseInfoboxCareer(WIKITEXT)).toEqual([
+    expect(parseInfoboxCareer(WIKITEXT)?.map(({ link: _l, ...e }) => e)).toEqual([
       {
         index: 1,
         fromYear: 1993,
@@ -74,7 +74,7 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
   it('reads the Info/Futebolista list format (ano / clubes with <br>)', () => {
     const text =
       '{{Info/Futebolista\n|jovemanos = 1991–1992\n|jovemclubes = {{Futebol Sport}}\n|ano = 1993–1995<br>1995–2001<br>2013\n|clubes = {{Futebol Sport}}<br>{{Futebol Vasco}}<br>→ {{Futebol New York Red Bulls}} (emp.)\n|jogos = 61<br>182 (3)<br>\n|gols = 9<br>{{0}}37\n}}';
-    expect(parseInfoboxCareer(text)).toEqual([
+    expect(parseInfoboxCareer(text)?.map(({ link: _l, ...e }) => e)).toEqual([
       {
         index: 1,
         fromYear: 1993,
@@ -135,7 +135,7 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
   it('reads the English football biography infobox', () => {
     const text =
       '{{Infobox football biography\n| years1 = 1993–1994 | clubs1 = [[Cruzeiro Esporte Clube|Cruzeiro]] | caps1 = 14 | goals1 = 12\n| years2 = 2014\n| clubs2 = → [[São Paulo FC|São Paulo]] (loan)\n}}';
-    expect(parseInfoboxCareer(text)).toEqual([
+    expect(parseInfoboxCareer(text)?.map(({ link: _l, ...e }) => e)).toEqual([
       {
         index: 1,
         fromYear: 1993,
@@ -155,6 +155,10 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
         goals: null,
       },
     ]);
+  });
+
+  it('keeps the linked page of the club cell', () => {
+    expect(parseInfoboxCareer(WIKITEXT)?.map((e) => e.link)).toEqual([null, 'PSV Eindhoven', null, 'São Paulo Futebol Clube']);
   });
 
   it('returns null when there is no football infobox', () => {

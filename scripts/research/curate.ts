@@ -5,7 +5,12 @@ import { writeFileSync } from 'node:fs';
 import { normalizeName } from '../../packages/engine/src/text/normalize';
 import { createPrisma } from '../../apps/api/src/db';
 import { importWikidataPlayers } from '../../apps/api/src/modules/data-import/import.service';
-import { fetchEntities, sparql } from '../../apps/api/src/modules/data-import/wikidata-client';
+import {
+  entityBySitelink,
+  fetchEntities,
+  sparql,
+} from '../../apps/api/src/modules/data-import/wikidata-client';
+import { isNationalTeam } from '../../apps/api/src/modules/data-import/wikidata-mapper';
 import {
   fetchWikitext,
   parseInfoboxCareer,
@@ -31,24 +36,114 @@ const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 
 // ── 1. Candidates: most-linked Brazilian footballers + global stars who matter to Brazilian fans.
 // Requiring a position and a team drops people whose occupation lists football as a pastime.
 async function candidates(): Promise<{ qid: string; links: number }[]> {
-  const br = await sparql(`SELECT DISTINCT ?p ?links WHERE {
-    ?p wdt:P27 wd:Q155; wdt:P106 wd:Q937857; wdt:P413 ?pos; wikibase:sitelinks ?links. FILTER(?links >= 15)
-    FILTER EXISTS { ?p wdt:P54 ?team }
-  } ORDER BY DESC(?links) LIMIT ${LIMIT}`);
-  let world: typeof br = [];
-  try {
-    world = await sparql(`SELECT DISTINCT ?p ?links WHERE {
-      ?p wdt:P106 wd:Q937857; wdt:P413 ?pos; wikibase:sitelinks ?links. FILTER(?links >= 140)
+  const queries: [string, string][] = [
+    // Brazilian footballers with some notability
+    [
+      'brazil',
+      `SELECT DISTINCT ?p ?links WHERE {
+      ?p wdt:P27 wd:Q155; wdt:P106 wd:Q937857; wdt:P413 ?pos; wikibase:sitelinks ?links. FILTER(?links >= 10)
       FILTER EXISTS { ?p wdt:P54 ?team }
+    } ORDER BY DESC(?links) LIMIT ${LIMIT}`,
+    ],
+    // foreigners who played for a Brazilian club
+    [
+      'in-brazil',
+      `SELECT DISTINCT ?p ?links WHERE {
+      ?c wdt:P17 wd:Q155; wdt:P31 wd:Q476028. ?p wdt:P54 ?c; wdt:P106 wd:Q937857; wikibase:sitelinks ?links. FILTER(?links >= 12)
       FILTER NOT EXISTS { ?p wdt:P27 wd:Q155 }
-    } ORDER BY DESC(?links) LIMIT 80`);
-  } catch (e) {
-    log('world query failed, Brazilian pool only:', (e as Error).message.slice(0, 60));
-  }
+    } ORDER BY DESC(?links) LIMIT 800`,
+    ],
+  ];
+  // relevant players of the big European leagues, one country at a time
+  for (const [name, q] of [
+    ['spain', 'Q29'],
+    ['italy', 'Q38'],
+    ['england', 'Q145'],
+    ['germany', 'Q183'],
+    ['france', 'Q142'],
+    ['portugal', 'Q45'],
+  ] as const)
+    queries.push([
+      name,
+      `SELECT DISTINCT ?p ?links WHERE {
+      ?c wdt:P17 wd:${q}; wdt:P31 wd:Q476028. ?p wdt:P54 ?c; wdt:P106 wd:Q937857; wdt:P413 ?pos; wikibase:sitelinks ?links. FILTER(?links >= 40)
+    } ORDER BY DESC(?links) LIMIT ${Math.round(LIMIT / 4)}`,
+    ]);
   const seen = new Set<string>();
-  return [...br, ...world]
-    .map((r) => ({ qid: r.p!.value.split('/').pop()!, links: Number(r.links!.value) }))
-    .filter((c) => !seen.has(c.qid) && seen.add(c.qid));
+  const out: { qid: string; links: number }[] = [];
+  for (const [name, q] of queries) {
+    try {
+      const rows = await sparql(q);
+      for (const r of rows) {
+        const qid = r.p!.value.split('/').pop()!;
+        if (!seen.has(qid)) {
+          seen.add(qid);
+          out.push({ qid, links: Number(r.links!.value) });
+        }
+      }
+      log(`candidates ${name}: ${rows.length}`);
+    } catch (e) {
+      log(`candidates ${name} failed:`, (e as Error).message.slice(0, 60));
+    }
+  }
+  return out;
+}
+
+// Clubs resolved outside the player's own Wikidata spells (cached per run).
+const clubByQid = new Map<string, Awaited<ReturnType<typeof prisma.club.findUnique>>>();
+const countryIsoByQid = new Map<string, string | null>();
+const norm = (x: string) => normalizeName(x);
+
+/**
+ * A club the infobox names but Wikidata does not link to this player: the infobox link's page
+ * resolves to the exact Wikidata club (sitelink); without a link, only a unique exact name in our
+ * club table is accepted.
+ */
+async function resolveClub(entry: InfoboxEntry, lang: 'pt' | 'en') {
+  if (entry.link) {
+    const e = await entityBySitelink(lang === 'pt' ? 'ptwiki' : 'enwiki', entry.link);
+    if (!e || isNationalTeam(e)) return null;
+    if (clubByQid.has(e.id)) return clubByQid.get(e.id) ?? null;
+    let club = await prisma.club.findUnique({ where: { wikidataId: e.id } });
+    if (!club) {
+      const countryQid = (
+        e.claims?.P17?.[0]?.mainsnak.datavalue?.value as { id?: string } | undefined
+      )?.id;
+      if (!countryQid) return null;
+      if (!countryIsoByQid.has(countryQid)) {
+        const c = (await fetchEntities([countryQid]))[countryQid];
+        const iso = c?.claims?.P297?.[0]?.mainsnak.datavalue?.value;
+        countryIsoByQid.set(countryQid, typeof iso === 'string' ? iso : null);
+      }
+      const iso = countryIsoByQid.get(countryQid);
+      const country = iso ? await prisma.country.findUnique({ where: { isoCode: iso } }) : null;
+      if (!country) return null;
+      const label = e.labels?.pt?.value ?? e.labels?.en?.value ?? entry.club;
+      club = await prisma.club.create({
+        data: {
+          wikidataId: e.id,
+          name: label,
+          shortName: entry.club.length <= 30 ? entry.club : label,
+          countryId: country.id,
+          sourceRef: `https://www.wikidata.org/wiki/${e.id}`,
+        },
+      });
+    }
+    clubByQid.set(e.id, club);
+    return club;
+  }
+  const same = await prisma.club.findMany({
+    where: {
+      OR: [
+        { shortName: { equals: entry.club, mode: 'insensitive' } },
+        { name: { equals: entry.club, mode: 'insensitive' } },
+      ],
+    },
+  });
+  const exact = same.filter(
+    (c) => norm(c.shortName) === norm(entry.club) || norm(c.name) === norm(entry.club),
+  );
+  return exact.length === 1 ? exact[0]! : null;
 }
 
 /** T1 global icon ... T4 niche, from Wikipedia language coverage (editorial proxy, DATA_QUALITY §4). */
@@ -210,7 +305,8 @@ async function crossCheck(
     // Exact matches first, so Santa Cruz never falls on Santos for a player who had both.
     const club =
       wdClubs.find((c) => exactClub(c, entry.club)) ??
-      wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club));
+      wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club)) ??
+      (await resolveClub(entry, page!.lang));
     if (!club)
       return fail({
         qid,
