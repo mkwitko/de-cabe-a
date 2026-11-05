@@ -1,5 +1,5 @@
 {
- "ranAt": "2026-11-05T14:05:16.684Z",
+ "ranAt": "2026-11-05T14:15:02.760Z",
  "totalBr": "10258",
  "allDated": "4885",
  "sample": [
@@ -8,7 +8,7 @@
    "qid": "Q47526",
    "wikidataClubSpells": 4,
    "withStartDate": 4,
-   "wikipediaPtClubs": 0
+   "wikipediaPtClubs": 4
   },
   {
    "name": "Sócrates",
@@ -43,7 +43,7 @@
    "qid": "Q178683",
    "wikidataClubSpells": 6,
    "withStartDate": 6,
-   "wikipediaPtClubs": 0
+   "wikipediaPtClubs": 6
   },
   {
    "name": "Roberto Carlos",
@@ -85,7 +85,7 @@
    "qid": "Q342489",
    "wikidataClubSpells": 8,
    "withStartDate": 8,
-   "wikipediaPtClubs": 0
+   "wikipediaPtClubs": 8
   },
   {
    "name": "Bebeto",
@@ -113,7 +113,7 @@
    "qid": "Q203451",
    "wikidataClubSpells": 7,
    "withStartDate": 7,
-   "wikipediaPtClubs": 0
+   "wikipediaPtClubs": 7
   },
   {
    "name": "Alex de Souza",
@@ -141,7 +141,7 @@
    "qid": "Q714354",
    "wikidataClubSpells": 39,
    "withStartDate": 39,
-   "wikipediaPtClubs": 0
+   "wikipediaPtClubs": 41
   }
  ]
 }
