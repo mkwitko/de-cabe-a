@@ -61,6 +61,7 @@ Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && p
 - **Aceite:** `pnpm db:migrate && pnpm db:seed` sem erro; teste de integração do trigger passa; testes de `normalizeName` passam; `quality.ts` detecta cada violação com fixture.
 - **Testes:** unit normalize + DQ; integration trigger.
 - **Riscos:** `uuid(7)` indisponível → usar `uuid()`.
+- **Feito (2026-11-05):** Prisma 7.10 com `@prisma/adapter-pg`; `uuid(7)` disponível. Unique de attempt daily via índice parcial (`partialIndexes` preview). Trigger em migration manual. DQ-08 é impossível de violar no banco hoje (`Club.countryId` é NOT NULL); a função existe para DTOs incompletos. Seed: 249 países ISO + 60 clubes (32 BR, 28 estrangeiros). Integração roda no schema `test` (`pnpm --filter @decabeca/api test:int`).
 
 ## Slice 3 — Engine Career Path
 - **Escopo:** `packages/engine/src/career-path/` conforme `GAME_ENGINE_CONTRACT.md` §3 e `CAREER_PATH.md` §1, §3, §7, §8, §12; `buildTrajectory(spells)` (função pura sobre DTOs) conforme `CAREER_PATH.md` §4; `isEligible(playerDto)` conforme §5 (sem a regra de 180 dias, que precisa de banco).

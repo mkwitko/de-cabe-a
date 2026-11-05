@@ -11,11 +11,23 @@ concurrency:
 
 jobs:
   check:
-    name: lint · typecheck · unit (Node ${{ matrix.node }})
+    name: lint · typecheck · unit · integration (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node: [22, 24]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: decabeca
+          POSTGRES_PASSWORD: decabeca
+          POSTGRES_DB: decabeca
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U decabeca" --health-interval 2s --health-timeout 3s --health-retries 15
+    env:
+      DATABASE_URL: postgresql://decabeca:decabeca@localhost:5432/decabeca
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

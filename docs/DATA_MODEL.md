@@ -289,3 +289,4 @@ Calculado no módulo `progression` a partir de `Attempt` (`kind=daily`, `status 
 
 - Nacionalidade dupla: campo único `secondaryNationalityCountryId` cobre o caso comum; mais de duas = ignorar na v1.
 - Clubes que mudaram de nome (ex.: fusões): um `Club` por entidade histórica; `Club.name` é o nome atual; alias de clube **fora da v1**.
+- Seleções do Reino Unido (Inglaterra, Escócia, País de Gales, Irlanda do Norte) não são países ISO 3166-1; o seed só cria `GB`. Definir no slice 4 (import) se `Country` ganha códigos `GB-ENG` etc. para nacionalidade esportiva.
