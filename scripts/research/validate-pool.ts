@@ -1,4 +1,5 @@
-// Runs DQ-01..09 over the whole knowledge base and prints the violations (TEST_STRATEGY.md §4).
+// Runs DQ-01..09 over verified players (or every non-rejected one with --all) and prints the
+// violations (TEST_STRATEGY.md §4).
 // Run before publishing a week of challenges:
 //   pnpm --filter @decabeca/api exec tsx ../../scripts/research/validate-pool.ts
 import { createPrisma } from '../../apps/api/src/db';
@@ -16,10 +17,10 @@ try {
 }
 const prisma = createPrisma(process.env.DATABASE_URL!);
 const players = await prisma.player.findMany({
-  where: { verificationStatus: { not: 'rejected' } },
+  where: { verificationStatus: process.argv.includes('--all') ? { not: 'rejected' } : 'verified' },
   include: { aliases: true, spells: true },
 });
-const clubs = await prisma.club.findMany();
+const clubs = await prisma.club.findMany({ where: { verificationStatus: 'verified' } });
 const clubStatus = new Map(clubs.map((c) => [c.id, c.verificationStatus]));
 const names = new Map([
   ...players.map((p) => [p.id, p.canonicalName] as const),

@@ -105,7 +105,7 @@ const facts = verified.map((p) => ({
 const clubCount = new Map<string, number>();
 for (const f of facts) for (const c of f.clubs) clubCount.set(c, (clubCount.get(c) ?? 0) + 1);
 const clubs = await prisma.club.findMany({ where: { verificationStatus: 'verified' } });
-const bigClubs = clubs.filter((c) => (clubCount.get(c.id) ?? 0) >= 10);
+const bigClubs = clubs.filter((c) => (clubCount.get(c.id) ?? 0) >= 8);
 const countries = await prisma.country.findMany({
   where: {
     isoCode: {
@@ -142,7 +142,7 @@ const others: CriterionParam[] = [
     .filter((c) => c.isoCode !== 'BR')
     .map((c) => ({ type: 'played_in_country' as const, countryId: c.id })),
   ...countries
-    .filter((c) => ['AR', 'UY', 'PT'].includes(c.isoCode))
+    .filter((c) => ['BR', 'AR', 'UY', 'PT'].includes(c.isoCode))
     .map((c) => ({ type: 'nationality' as const, countryId: c.id })),
 ];
 const asCriterion = (c: CriterionParam): Criterion =>
@@ -161,49 +161,94 @@ const matches = (c: CriterionParam, f: (typeof facts)[number]) =>
         : f.countries.has(c.countryId);
 const key = (c: CriterionParam) => JSON.stringify(c);
 
-const rnd = seeded('grid');
-const pick = <T>(xs: T[]) => xs[Math.floor(rnd() * xs.length)]!;
+// Systematic search: count every pair of criteria once, then for each row triple keep the
+// columns compatible with all three rows and build column triples from them.
+const MIN = 8;
+const criteria: CriterionParam[] = shuffle(
+  [...bigClubs.map((c) => ({ type: 'club' as const, clubId: c.id })), ...others],
+  seeded('criteria'),
+);
+const sets = criteria.map((c) => new Set(facts.filter((f) => matches(c, f)).map((f) => f.id)));
+const pair = (a: number, b: number) => {
+  let n = 0;
+  for (const id of sets[a]!) if (sets[b]!.has(id)) n++;
+  return n;
+};
+const counts = criteria.map((_, a) => criteria.map((__, b) => (a === b ? 0 : pair(a, b))));
+const isClub = (i: number) => criteria[i]!.type === 'club';
+const ok = (rows: number[], cols: number[]) =>
+  checkGridCombination(
+    rows.map((r) => asCriterion(criteria[r]!)),
+    cols.map((c) => asCriterion(criteria[c]!)),
+    clubCountry,
+  ).length === 0;
+
 const found: { rows: CriterionParam[]; cols: CriterionParam[]; min: number }[] = [];
 const seen = new Set<string>();
-for (let tries = 0; tries < 60_000 && found.length < GRID_TARGET * 3; tries++) {
-  const club = () => ({ type: 'club' as const, clubId: pick(bigClubs).id });
-  const third = () => (rnd() < 0.5 ? club() : pick(others));
-  const rows = [club(), club(), third()];
-  const cols = [club(), club(), third()];
-  const all = [...rows, ...cols];
-  if (new Set(all.map(key)).size !== 6) continue;
-  if (checkGridCombination(rows.map(asCriterion), cols.map(asCriterion), clubCountry).length)
-    continue;
-  const counts = rows.flatMap((r) =>
-    cols.map((c) => facts.filter((f) => matches(r, f) && matches(c, f)).length),
-  );
-  const min = Math.min(...counts);
-  if (min < 8) continue;
-  const sig = [...all.map(key)].sort().join('|');
-  if (seen.has(sig)) continue;
-  seen.add(sig);
-  found.push({ rows, cols, min });
-}
+const n = criteria.length;
+outer: for (let a = 0; a < n; a++)
+  for (let b = a + 1; b < n; b++)
+    for (let c = b + 1; c < n; c++) {
+      const rows = [a, b, c];
+      if (!rows.some(isClub)) continue;
+      const compatible = criteria
+        .map((_, x) => x)
+        .filter((x) => !rows.includes(x) && rows.every((r) => counts[r]![x]! >= MIN));
+      let perRows = 0;
+      colsLoop: for (let i = 0; i < compatible.length; i++)
+        for (let j = i + 1; j < compatible.length; j++)
+          for (let k = j + 1; k < compatible.length; k++) {
+            const cols = [compatible[i]!, compatible[j]!, compatible[k]!];
+            if (!cols.some(isClub) || !ok(rows, cols)) continue;
+            const sig = [...rows, ...cols].sort((x, y) => x - y).join(',');
+            if (seen.has(sig)) continue;
+            seen.add(sig);
+            const min = Math.min(...rows.flatMap((r) => cols.map((col) => counts[r]![col]!)));
+            found.push({
+              rows: rows.map((r) => criteria[r]!),
+              cols: cols.map((col) => criteria[col]!),
+              min,
+            });
+            if (found.length >= 20000) break outer;
+            if (++perRows >= 3) break colsLoop;
+          }
+    }
 console.log(
-  `Grid: ${found.length} candidate grids with ≥ 8 answers per cell (${bigClubs.length} clubs with ≥ 10 verified players)`,
+  `Grid: ${found.length} candidate grids with ≥ ${MIN} answers per cell (${criteria.length} criteria)`,
 );
 
-// Prefer variety: greedy pick that penalises reusing the same criteria.
+// Variety: a club appears in at most 7 grids, a broad criterion (position, country, nationality)
+// in at most 20; then easier grids (bigger pools) first.
+const maxUses = (k: string) => (k.includes('"club"') ? 7 : 20);
 const usage = new Map<string, number>();
 const ordered2: typeof found = [];
-const rest = [...found];
-while (rest.length) {
-  rest.sort((a, b) => {
-    const cost = (g: (typeof found)[number]) =>
-      [...g.rows, ...g.cols].reduce((s, c) => s + (usage.get(key(c)) ?? 0), 0);
-    return cost(a) - cost(b) || b.min - a.min;
-  });
-  const g = rest.shift()!;
-  ordered2.push(g);
-  for (const c of [...g.rows, ...g.cols]) usage.set(key(c), (usage.get(key(c)) ?? 0) + 1);
+// Grids already in the track count towards usage and are never published twice.
+const sigOf = (cs: CriterionParam[]) => cs.map(key).sort().join('|');
+const publishedSigs = new Set<string>();
+for (const c of await prisma.challenge.findMany({
+  where: { gameMode: 'FOOTBALL_GRID', status: { in: ['draft', 'validated', 'published'] } },
+})) {
+  const snap = c.snapshot as { rows: Criterion[]; cols: Criterion[] };
+  const params = [...snap.rows, ...snap.cols].map((x): CriterionParam =>
+    x.type === 'club'
+      ? { type: 'club', clubId: x.clubId }
+      : x.type === 'position'
+        ? { type: 'position', positionGroup: x.positionGroup }
+        : { type: x.type, countryId: x.countryId },
+  );
+  publishedSigs.add(sigOf(params));
+  for (const k of params.map(key)) usage.set(k, (usage.get(k) ?? 0) + 1);
 }
-// Easier grids (bigger pools) first.
+for (const g of shuffle(found, seeded('variety'))) {
+  const keys = [...g.rows, ...g.cols].map(key);
+  if (publishedSigs.has(sigOf([...g.rows, ...g.cols]))) continue;
+  publishedSigs.add(sigOf([...g.rows, ...g.cols]));
+  if (keys.some((k) => (usage.get(k) ?? 0) >= maxUses(k))) continue;
+  ordered2.push(g);
+  for (const k of keys) usage.set(k, (usage.get(k) ?? 0) + 1);
+}
 ordered2.sort((a, b) => b.min - a.min);
+console.log(`Grid: ${ordered2.length} varied grids selected`);
 const gridLive = await prisma.challenge.count({
   where: { gameMode: 'FOOTBALL_GRID', status: 'published' },
 });
