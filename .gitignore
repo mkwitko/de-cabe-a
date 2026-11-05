@@ -8,3 +8,6 @@ playwright-report/
 test-results/
 .remember/
 **/.impeccable/review/
+
+# Prisma generated client
+apps/api/src/generated/

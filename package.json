@@ -13,7 +13,10 @@
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @decabeca/web test:e2e",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @decabeca/api db:migrate",
+    "db:seed": "pnpm --filter @decabeca/api db:seed",
+    "test:unit": "pnpm -r test:unit"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -26,7 +29,9 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
     ]
   }
 }
