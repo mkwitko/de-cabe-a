@@ -152,3 +152,12 @@ Implementados na branch `feat/mvp-slices-4-14`, um commit por slice (Conventiona
 ## Revisão ADR-007 (2026-11-05)
 
 Pedido do autor do produto: sem daily nem treino; vários desafios pré-criados em trilha de fases; ranking da comunidade; estrelas, títulos e stats. Implementado na mesma branch: migration `levels_stars_accounts`, `starsFor`/`titleFor` na engine, rotas de trilha, ranking, apelido e cadastro opcional, telas de trilha/ranking/conta/stats, e2e reescrito. Conteúdo: `scripts/research/publish-levels.ts`.
+
+### Conteúdo gerado pela IA (2026-11-05, base local)
+
+- Candidatos: ~800 futebolistas (brasileiros com ≥ 15 sitelinks + estrelas internacionais com ≥ 140) do Wikidata.
+- **236 jogadores verificados** pela regra do ADR-006, 0 violações bloqueantes (`validate-pool.ts`), 55 avisos DQ-06 (empréstimos sem marca). Meta do piloto (300) não atingida: ~60% dos candidatos têm clube da infobox que o Wikidata não lista, ou não têm infobox. Próximo passo: ampliar candidatos ou revisar o relatório `scripts/research/curation-report.json`.
+- **Trilha Career Path: 60 fases** (de 124 jogadores elegíveis), dificuldade crescente.
+- **Trilha Grid: 20 fases** distintas (≥ 8 respostas por célula; clube em no máximo 7 grids). Mais fases pedem um pool maior.
+- QA por amostragem achou e corrigiu: time B casado com o principal (39 passagens fundidas) e "Inter" casado com "Internacional" (`--recheck`).
+- O conteúdo vive no banco local; para reproduzir: `curate.ts --limit 800` e depois `publish-levels.ts`.
