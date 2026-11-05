@@ -192,3 +192,26 @@ export const StatsResponse = z.strictObject({
 export type StatsResponse = z.infer<typeof StatsResponse>;
 export type CareerPathReveal = z.infer<typeof CareerPathReveal>;
 export type FootballGridReveal = z.infer<typeof FootballGridReveal>;
+
+/** Client analytics events (ANALYTICS.md §1). Game events are recorded by the server. */
+export const ClientEventName = z.enum([
+  'game_viewed',
+  'result_shared',
+  'game_abandoned',
+  'search_no_result',
+]);
+export const EventsRequest = z.object({
+  events: z
+    .array(
+      z.object({
+        name: ClientEventName,
+        ts: z.iso.datetime(),
+        props: z
+          .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+          .default({}),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+export type EventsRequest = z.infer<typeof EventsRequest>;

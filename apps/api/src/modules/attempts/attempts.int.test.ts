@@ -555,3 +555,56 @@ describe('editorial reports', () => {
     ]);
   });
 });
+
+describe('analytics', () => {
+  it('a game produces game_started -> answer_submitted... -> game_completed', async () => {
+    const g = guest();
+    const start = (
+      await g.req('POST', '/attempts', { mode: 'CAREER_PATH', kind: 'practice' })
+    ).json();
+    await g.req('POST', `/attempts/${start.attempt.id}/actions`, {
+      idempotencyKey: randomUUID(),
+      input: { kind: 'guess', playerId: ids.ze },
+    });
+    for (let i = 0; i < 5; i++)
+      await g.req('POST', `/attempts/${start.attempt.id}/actions`, {
+        idempotencyKey: randomUUID(),
+        input: { kind: 'skip' },
+      });
+    const session = await prisma.attempt.findUniqueOrThrow({ where: { id: start.attempt.id } });
+    const { sessionHash } = await import('../session/session');
+    const events = await prisma.event.findMany({
+      where: { sessionHash: sessionHash(session.sessionId) },
+      orderBy: { createdAt: 'asc' },
+    });
+    const names = events.map((e) => e.name).filter((n) => n !== 'hint_revealed');
+    expect(names).toEqual(['game_started', 'answer_submitted', 'game_completed']);
+    expect(events.at(-1)!.props).toMatchObject({
+      mode: 'CAREER_PATH',
+      kind: 'practice',
+      status: 'LOST',
+      score: 0,
+      attemptsUsed: 6,
+    });
+  });
+
+  it('accepts client events, drops unknown props and rejects unknown names', async () => {
+    const g = guest();
+    const ok = await g.req('POST', '/events', {
+      events: [
+        {
+          name: 'result_shared',
+          ts: new Date().toISOString(),
+          props: { mode: 'CAREER_PATH', kind: 'daily', method: 'clipboard', email: 'x@y.z' },
+        },
+      ],
+    });
+    expect(ok.statusCode).toBe(202);
+    const e = await prisma.event.findFirstOrThrow({ where: { name: 'result_shared' } });
+    expect(e.props).toEqual({ mode: 'CAREER_PATH', kind: 'daily', method: 'clipboard' });
+    const bad = await g.req('POST', '/events', {
+      events: [{ name: 'hacked', ts: new Date().toISOString() }],
+    });
+    expect(bad.statusCode).toBe(400);
+  });
+});

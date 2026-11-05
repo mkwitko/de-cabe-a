@@ -12,6 +12,8 @@ import type {
   PlayerRef,
 } from '@decabeca/contracts';
 import { ApiError } from '../../lib/api';
+import { track } from '../../lib/analytics';
+import { useGameTracking } from '../../lib/useGameTracking';
 import { useAction, useAttempt, useNewPractice } from '../../lib/game';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
@@ -105,7 +107,14 @@ function Result({ data, kind }: { data: AttemptResponse; kind: ChallengeKind }) 
         ))}
       </ol>
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {data.share && <ShareButton text={data.share.text} />}
+        {data.share && (
+          <ShareButton
+            text={data.share.text}
+            onShared={(method) =>
+              track('result_shared', { mode: data.attempt.mode, kind: data.attempt.kind, method })
+            }
+          />
+        )}
         {kind === 'practice' ? (
           <button className={btnSecondary} onClick={() => void newPractice()}>
             Treinar de novo
@@ -131,6 +140,7 @@ export function CareerPathPage({ kind }: { kind: ChallengeKind }) {
   const [selected, setSelected] = useState<PlayerRef | null>(null);
   const [announce, setAnnounce] = useState('');
   const data = attempt.data;
+  useGameTracking(data);
   const view = data?.view as CareerPathView | undefined;
   const guessed = useMemo(
     () => new Set(view?.history.flatMap((h) => (h.kind === 'guess' ? [h.playerId] : [])) ?? []),

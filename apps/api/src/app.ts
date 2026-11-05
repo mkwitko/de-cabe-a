@@ -10,6 +10,7 @@ import { EngineRuleError } from '@decabeca/engine';
 import { ZodError } from 'zod';
 import type { PrismaClient } from './generated/prisma/client';
 import { AppError } from './errors';
+import { track } from './modules/analytics/analytics';
 import { adminAuth } from './modules/admin/auth';
 import { importRoutes } from './modules/data-import/import.routes';
 import { knowledgeRoutes } from './modules/knowledge/knowledge.routes';
@@ -69,7 +70,11 @@ export function buildApp(
         .send(body('VALIDATION_ERROR', 'Requisição inválida.', { issues: err.issues }));
     if (err instanceof AppError)
       return reply.code(err.status).send(body(err.code, err.message, err.details));
-    if (err instanceof EngineRuleError) return reply.code(409).send(body(err.code, err.message));
+    if (err instanceof EngineRuleError) {
+      if (req.sessionId)
+        void track(app.deps.prisma, req.sessionId, 'action_rejected', { code: err.code });
+      return reply.code(409).send(body(err.code, err.message));
+    }
     if ((err as { statusCode?: number }).statusCode === 429)
       return reply
         .code(429)

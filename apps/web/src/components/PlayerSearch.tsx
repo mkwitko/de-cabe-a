@@ -5,6 +5,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { PlayerRef } from '@decabeca/contracts';
 import { searchPlayers } from '../lib/game';
+import { track } from '../lib/analytics';
 import { Icon } from './Icon';
 
 interface Props {
@@ -46,6 +47,8 @@ export function PlayerSearch({ label, onSelect, exclude, disabled, autoFocus, se
         setResults(players);
         setActive(players.length ? 0 : -1);
         setStatus(players.length ? 'idle' : 'empty');
+        if (!players.length && term.length >= 3)
+          track('search_no_result', { qLength: term.length });
         setOpen(true);
       } catch {
         if (!ctrl.signal.aborted) setStatus('error');

@@ -14,6 +14,7 @@ import type { Attempt, Challenge, Prisma, PrismaClient } from '../../generated/p
 import { AppError } from '../../errors';
 import { pickPractice, todaysChallenge } from '../challenges/challenges.service';
 import { engineFor, type GameModeCode } from '../challenges/engines';
+import { track } from '../analytics/analytics';
 
 type Kind = 'daily' | 'practice';
 const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid' } as const;
@@ -202,6 +203,12 @@ export async function startAttempt(
         startedAt: now,
       },
     });
+    await track(prisma, sessionId, 'game_started', {
+      mode,
+      kind,
+      challengePublicNumber: challenge.publicNumber,
+      difficultyTier: challenge.difficultyTier,
+    });
     return { created: true, response: await present(prisma, attempt, challenge) };
   } catch (err) {
     // Two concurrent daily starts: the partial unique index lets only one through.
@@ -240,6 +247,7 @@ export async function submitAction(
   rawInput: unknown,
   now: Date,
 ): Promise<AttemptResponse> {
+  const pending: [string, Record<string, string | number | boolean | null>][] = [];
   const { attempt, challenge, event } = await prisma.$transaction(async (tx) => {
     // Serialise actions on one attempt so seq and state stay consistent.
     await tx.$queryRaw`SELECT id FROM "Attempt" WHERE id = ${id} FOR UPDATE`;
@@ -280,8 +288,45 @@ export async function submitAction(
         event: out.event as Prisma.InputJsonValue,
       },
     });
+    const ev = out.event as { type: string; revealed?: string; cellIndex?: number };
+    const base = { mode: a.challenge.gameMode, kind: a.kind, challengeId: a.challengeId };
+    const attemptsUsed =
+      engine.isCompleted(out.state) && a.challenge.gameMode === 'FOOTBALL_GRID'
+        ? (out.state as { attemptsUsed: number }).attemptsUsed
+        : seq;
+    if (input.kind === 'guess')
+      pending.push([
+        'answer_submitted',
+        {
+          ...base,
+          attemptsUsed,
+          correct: ev.type === 'correct',
+          ...(ev.cellIndex !== undefined ? { cellIndex: ev.cellIndex } : {}),
+        },
+      ]);
+    if (ev.revealed === 'club' || ev.revealed === 'extraHint')
+      pending.push([
+        'hint_revealed',
+        {
+          mode: a.challenge.gameMode,
+          revealedCount: (out.state as { revealedClubs?: number }).revealedClubs ?? 0,
+          hintType: ev.revealed,
+        },
+      ]);
+    if (done)
+      pending.push([
+        'game_completed',
+        {
+          ...base,
+          status,
+          score: updated.score,
+          attemptsUsed,
+          durationSec: Math.round((now.getTime() - a.startedAt.getTime()) / 1000),
+        },
+      ]);
     return { attempt: updated, challenge: a.challenge, event: out.event };
   });
+  for (const [name, props] of pending) await track(prisma, sessionId, name, props);
   return present(prisma, attempt, challenge, event);
 }
 

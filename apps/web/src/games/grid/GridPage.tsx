@@ -13,6 +13,8 @@ import type {
   PlayerRef,
 } from '@decabeca/contracts';
 import { ApiError } from '../../lib/api';
+import { track } from '../../lib/analytics';
+import { useGameTracking } from '../../lib/useGameTracking';
 import { useAction, useAttempt, useNewPractice } from '../../lib/game';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
@@ -65,6 +67,7 @@ export function GridPage({ kind }: { kind: ChallengeKind }) {
   const sheet = useRef<HTMLDialogElement>(null);
   const confirm = useRef<HTMLDialogElement>(null);
   const data = attempt.data;
+  useGameTracking(data);
   const view = data?.view as FootballGridView | undefined;
   const used = useMemo(
     () => new Set(view?.cells.flatMap((c) => (c.player ? [c.player.id] : [])) ?? []),
@@ -243,7 +246,14 @@ export function GridPage({ kind }: { kind: ChallengeKind }) {
 
       {done ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {data.share && <ShareButton text={data.share.text} />}
+          {data.share && (
+            <ShareButton
+              text={data.share.text}
+              onShared={(method) =>
+                track('result_shared', { mode: data.attempt.mode, kind: data.attempt.kind, method })
+              }
+            />
+          )}
           {kind === 'practice' ? (
             <button className={btnSecondary} onClick={() => void newPractice()}>
               Treinar de novo
