@@ -27,7 +27,16 @@ const changes: { id: string; name: string; from: string | null; to: string }[] =
 for (const [i, p] of players.entries()) {
   const m = /https:\/\/(\w+)\.wikipedia\.org\/wiki\/(\S+)/.exec(p.notes ?? '');
   if (!m) continue;
-  const text = await fetchWikitext(m[1] as WikiLang, decodeURIComponent(m[2]!).replace(/_/g, ' '));
+  // Network hiccups (DNS, 5xx) are retried; a page that still fails is skipped, not fatal.
+  let text: string | null = null;
+  for (let tries = 0; tries < 4; tries++) {
+    try {
+      text = await fetchWikitext(m[1] as WikiLang, decodeURIComponent(m[2]!).replace(/_/g, ' '));
+      break;
+    } catch {
+      await new Promise((r) => setTimeout(r, 5000 * (tries + 1)));
+    }
+  }
   const position = text ? positionFromInfobox(text) : null;
   if (position && position !== p.primaryPositionGroup) {
     changes.push({ id: p.id, name: p.canonicalName, from: p.primaryPositionGroup, to: position });

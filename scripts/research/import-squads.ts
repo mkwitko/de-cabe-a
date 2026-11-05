@@ -57,12 +57,19 @@ const cachedFetch: typeof fetchEntities = async (ids) => {
 let created = 0;
 for (const [n, club] of clubs.entries()) {
   // Every human who was a member of the club's team (P54); association footballers only.
-  const rows = await sparql(`SELECT DISTINCT ?p WHERE {
-    ?p wdt:P54 wd:${club.wikidataId}; wdt:P31 wd:Q5; wdt:P106 wd:Q937857.
-  }`).catch((e: Error) => {
-    log(`  ${club.shortName}: ${e.message.slice(0, 80)}`);
-    return [];
-  });
+  // Network hiccups are retried; a club that still fails is picked up by the next run.
+  let rows: Awaited<ReturnType<typeof sparql>> = [];
+  for (let tries = 0; tries < 4; tries++) {
+    try {
+      rows = await sparql(`SELECT DISTINCT ?p WHERE {
+        ?p wdt:P54 wd:${club.wikidataId}; wdt:P31 wd:Q5; wdt:P106 wd:Q937857.
+      }`);
+      break;
+    } catch (e) {
+      log(`  ${club.shortName}: ${(e as Error).message.slice(0, 80)}`);
+      await new Promise((r) => setTimeout(r, 5000 * (tries + 1)));
+    }
+  }
   const fresh = rows.map((r) => r.p!.value.split('/').pop()!).filter((q) => !known.has(q));
   for (let i = 0; i < fresh.length; i += 50) {
     const batch = fresh.slice(i, i + 50);
