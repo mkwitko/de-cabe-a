@@ -233,12 +233,12 @@ export function CareerPathPage({ level }: { level: number }) {
                   </p>
                 )}
               </form>
-              {/* room for the docked form on phones */}
-              <div className="h-36 lg:hidden" aria-hidden="true" />
             </>
           )}
         </aside>
       </div>
+      {/* room for the guess form docked at the bottom on phones */}
+      {!done && <div className="h-32 lg:hidden" aria-hidden="true" />}
     </div>
   );
 }

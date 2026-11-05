@@ -1,4449 +1,1185 @@
 {
-  "ranAt": "2026-11-05T15:36:33.386Z",
-  "outcomes": [
-    {
-      "qid": "Q12897",
-      "name": "Pelé",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q142794",
-      "name": "Neymar",
-      "result": "verified"
-    },
-    {
-      "qid": "Q529207",
-      "name": "Ronaldo Nazário",
-      "result": "verified"
-    },
-    {
-      "qid": "Q39444",
-      "name": "Ronaldinho Gaúcho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q531814",
-      "name": "Kaká",
-      "result": "verified"
-    },
-    {
-      "qid": "Q172720",
-      "name": "Daniel Alves",
-      "result": "mismatch",
-      "detail": "Pumas não está no Wikidata"
-    },
-    {
-      "qid": "Q429039",
-      "name": "Roberto Carlos",
-      "result": "mismatch",
-      "detail": "Anzhi não está no Wikidata"
-    },
-    {
-      "qid": "Q28973866",
-      "name": "Vinícius Júnior",
-      "result": "verified"
-    },
-    {
-      "qid": "Q178649",
-      "name": "Romário",
-      "result": "mismatch",
-      "detail": "Miami FC não está no Wikidata"
-    },
-    {
-      "qid": "Q616664",
-      "name": "Casemiro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q38136",
-      "name": "Marcelo Vieira da Silva Júnior",
-      "result": "verified"
-    },
-    {
-      "qid": "Q180642",
-      "name": "Garrincha",
-      "result": "mismatch",
-      "detail": "Fortaleza não está no Wikidata"
-    },
-    {
-      "qid": "Q483577",
-      "name": "Rivaldo",
-      "result": "mismatch",
-      "detail": "Deportivo La Coruña não está no Wikidata"
-    },
-    {
-      "qid": "Q58441",
-      "name": "Robinho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q311872",
-      "name": "Philippe Coutinho",
-      "result": "mismatch",
-      "detail": "Al-Duhail não está no Wikidata"
-    },
-    {
-      "qid": "Q485697",
-      "name": "Pepe",
-      "result": "verified"
-    },
-    {
-      "qid": "Q47526",
-      "name": "Zico",
-      "result": "verified"
-    },
-    {
-      "qid": "Q210453",
-      "name": "Thiago Silva",
-      "result": "mismatch",
-      "detail": "RS Futebol não está no Wikidata"
-    },
-    {
-      "qid": "Q18237361",
-      "name": "Alisson Becker",
-      "result": "verified"
-    },
-    {
-      "qid": "Q193706",
-      "name": "David Luiz",
-      "result": "verified"
-    },
-    {
-      "qid": "Q459707",
-      "name": "Diego Costa",
-      "result": "mismatch",
-      "detail": "Atlético-MG não está no Wikidata"
-    },
-    {
-      "qid": "Q602525",
-      "name": "Roberto Firmino",
-      "result": "mismatch",
-      "detail": "Al-Ahli-SAU não está no Wikidata"
-    },
-    {
-      "qid": "Q659634",
-      "name": "Deco",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q215890",
-      "name": "Dunga",
-      "result": "verified"
-    },
-    {
-      "qid": "Q62786",
-      "name": "Hulk",
-      "result": "verified"
-    },
-    {
-      "qid": "Q204825",
-      "name": "Bebeto",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q178683",
-      "name": "Cafu",
-      "result": "verified"
-    },
-    {
-      "qid": "Q17493",
-      "name": "Thiago Alcântara",
-      "result": "verified"
-    },
-    {
-      "qid": "Q228616",
-      "name": "Marta Vieira da Silva",
-      "result": "mismatch",
-      "detail": "FC Rosengård não está no Wikidata"
-    },
-    {
-      "qid": "Q182459",
-      "name": "Júlio César Soares Espíndola",
-      "result": "verified"
-    },
-    {
-      "qid": "Q73480",
-      "name": "Willian Borges da Silva",
-      "result": "mismatch",
-      "detail": "Anzhi não está no Wikidata"
-    },
-    {
-      "qid": "Q311511",
-      "name": "Zagallo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q312772",
-      "name": "Fred",
-      "result": "verified"
-    },
-    {
-      "qid": "Q191634",
-      "name": "Felipão",
-      "result": "mismatch",
-      "detail": "Novo Hamburgo não está no Wikidata"
-    },
-    {
-      "qid": "Q459356",
-      "name": "Fernandinho",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q102331",
-      "name": "Sócrates",
-      "result": "verified"
-    },
-    {
-      "qid": "Q46741",
-      "name": "Leonardo Nascimento de Araújo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q19497",
-      "name": "Oscar dos Santos Emboaba Júnior",
-      "result": "verified"
-    },
-    {
-      "qid": "Q220283",
-      "name": "Roberto Rivellino",
-      "result": "mismatch",
-      "detail": "São Paulo não está no Wikidata"
-    },
-    {
-      "qid": "Q191885",
-      "name": "Thiago Motta",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q138075",
-      "name": "Alexandre Pato",
-      "result": "verified"
-    },
-    {
-      "qid": "Q42728914",
-      "name": "Rodrygo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q28861547",
-      "name": "Raphinha",
-      "result": "verified"
-    },
-    {
-      "qid": "Q57148",
-      "name": "Cacau",
-      "result": "verified"
-    },
-    {
-      "qid": "Q20806743",
-      "name": "Richarlison",
-      "result": "verified"
-    },
-    {
-      "qid": "Q310598",
-      "name": "Marcus Túlio Tanaka",
-      "result": "verified"
-    },
-    {
-      "qid": "Q177686",
-      "name": "Maicon Douglas Sisenando",
-      "result": "mismatch",
-      "detail": "ACD Sona Mazza não está no Wikidata"
-    },
-    {
-      "qid": "Q19708656",
-      "name": "Gabriel Jesus",
-      "result": "verified"
-    },
-    {
-      "qid": "Q391680",
-      "name": "Douglas Costa",
-      "result": "verified"
-    },
-    {
-      "qid": "Q170452",
-      "name": "Adriano Imperador",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q73082",
-      "name": "Paulinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q163750",
-      "name": "Jorge de Amorim Campos",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q342489",
-      "name": "Careca",
-      "result": "mismatch",
-      "detail": "Campinas não está no Wikidata"
-    },
-    {
-      "qid": "Q350547",
-      "name": "Filipe Luís",
-      "result": "mismatch",
-      "detail": "Rentistas não está no Wikidata"
-    },
-    {
-      "qid": "Q359738",
-      "name": "Alex Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q437329",
-      "name": "Danilo Luiz da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q39230",
-      "name": "Marquinhos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q188544",
-      "name": "Nelson de Jesus Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q156822",
-      "name": "Lúcio",
-      "result": "mismatch",
-      "detail": "Internazionale não está no Wikidata"
-    },
-    {
-      "qid": "Q641425",
-      "name": "Fabinho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q29950055",
-      "name": "Éder Militão",
-      "result": "verified"
-    },
-    {
-      "qid": "Q295262",
-      "name": "Carlos Alberto Torres",
-      "result": "verified"
-    },
-    {
-      "qid": "Q189184",
-      "name": "Rafael Pereira da Silva",
-      "result": "mismatch",
-      "detail": "Istanbul Basaksehir não está no Wikidata"
-    },
-    {
-      "qid": "Q190142",
-      "name": "Gilberto Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q313570",
-      "name": "Hernanes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q3810078",
-      "name": "Jorginho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2360065",
-      "name": "Wagner Lopes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q61460651",
-      "name": "Gabriel Teodoro Martinelli Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q17074511",
-      "name": "Ederson Moraes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q62657",
-      "name": "Neto",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q299693",
-      "name": "Djalma Santos",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q180444",
-      "name": "Eduardo da Silva",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q484772",
-      "name": "Anderson (futebolista)",
-      "result": "mismatch",
-      "detail": "Coritiba não está no Wikidata"
-    },
-    {
-      "qid": "Q192963",
-      "name": "Luís Fabiano",
-      "result": "verified"
-    },
-    {
-      "qid": "Q204555",
-      "name": "Zinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q210102",
-      "name": "Jairzinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q80761",
-      "name": "Dante",
-      "result": "verified"
-    },
-    {
-      "qid": "Q83329",
-      "name": "Nílton Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q312454",
-      "name": "Paulo Roberto Falcão",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q312486",
-      "name": "Didi",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q312886",
-      "name": "Lucas Moura",
-      "result": "verified"
-    },
-    {
-      "qid": "Q314099",
-      "name": "Jô",
-      "result": "mismatch",
-      "detail": "Inter não está no Wikidata"
-    },
-    {
-      "qid": "Q316436",
-      "name": "César Sampaio",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q381729",
-      "name": "Müller",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q329451",
-      "name": "Luiz Gustavo",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q39667548",
-      "name": "Arthur Henrique Ramos de Oliveira Melo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q35831063",
-      "name": "Matheus Cunha",
-      "result": "verified"
-    },
-    {
-      "qid": "Q204407",
-      "name": "Ramires",
-      "result": "verified"
-    },
-    {
-      "qid": "Q215952",
-      "name": "Emerson",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q445541",
-      "name": "Edmundo",
-      "result": "mismatch",
-      "detail": "Parma não está no Wikidata"
-    },
-    {
-      "qid": "Q152968",
-      "name": "Kevin Kurányi",
-      "result": "verified"
-    },
-    {
-      "qid": "Q311445",
-      "name": "Vavá",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q311739",
-      "name": "Leônidas da Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q350756",
-      "name": "Luizão",
-      "result": "mismatch",
-      "detail": "Rio Branco-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q551192",
-      "name": "Alex Sandro",
-      "result": "mismatch",
-      "detail": "Deportivo Maldonado não está no Wikidata"
-    },
-    {
-      "qid": "Q295891",
-      "name": "Taffarel",
-      "result": "verified"
-    },
-    {
-      "qid": "Q174926",
-      "name": "Rafinha",
-      "result": "mismatch",
-      "detail": "Olympiacos não está no Wikidata"
-    },
-    {
-      "qid": "Q357844",
-      "name": "Renato Augusto",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2444565",
-      "name": "Mário Fernandes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2417737",
-      "name": "Daishirō Yoshimura",
-      "result": "mismatch",
-      "detail": "Yanmar Diesel não está no Wikidata"
-    },
-    {
-      "qid": "Q58323172",
-      "name": "Bruno Guimarães",
-      "result": "verified"
-    },
-    {
-      "qid": "Q30089624",
-      "name": "Lucas Paquetá",
-      "result": "verified"
-    },
-    {
-      "qid": "Q220593",
-      "name": "Lucas Leiva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q296058",
-      "name": "Edmílson",
-      "result": "mismatch",
-      "detail": "XV de Jaú não está no Wikidata"
-    },
-    {
-      "qid": "Q467232",
-      "name": "Dudu Cearense",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2522090",
-      "name": "George Kobayashi",
-      "result": "mismatch",
-      "detail": "Yanmar Diesel não está no Wikidata"
-    },
-    {
-      "qid": "Q535429",
-      "name": "Edílson",
-      "result": "mismatch",
-      "detail": "Industrial EC não está no Wikidata"
-    },
-    {
-      "qid": "Q937157",
-      "name": "Valdo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1249859",
-      "name": "Rogério Ceni",
-      "result": "verified"
-    },
-    {
-      "qid": "Q59205608",
-      "name": "Antony",
-      "result": "verified"
-    },
-    {
-      "qid": "Q110644260",
-      "name": "Endrick",
-      "result": "verified"
-    },
-    {
-      "qid": "Q47489",
-      "name": "Djalminha",
-      "result": "verified"
-    },
-    {
-      "qid": "Q274872",
-      "name": "Emerson Leão",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q197565",
-      "name": "Roger Machado",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q216142",
-      "name": "Alex Rodrigo Dias da Costa",
-      "result": "verified"
-    },
-    {
-      "qid": "Q376394",
-      "name": "Rodrigo Moreno Machado",
-      "result": "verified"
-    },
-    {
-      "qid": "Q378101",
-      "name": "Marcelinho Carioca",
-      "result": "verified"
-    },
-    {
-      "qid": "Q455611",
-      "name": "Rafael Alcântara",
-      "result": "mismatch",
-      "detail": "Real Sociedad não está no Wikidata"
-    },
-    {
-      "qid": "Q94850",
-      "name": "Adriano Correia Claro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q125063",
-      "name": "Silas",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q318119",
-      "name": "Miranda",
-      "result": "verified"
-    },
-    {
-      "qid": "Q370014",
-      "name": "Thiago Neves",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q468656",
-      "name": "Fábio Simplício",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2015814",
-      "name": "Gilmar Luís Rinaldi",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2070423",
-      "name": "Antônio Carlos Zago",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q59870",
-      "name": "Emerson Sheik",
-      "result": "mismatch",
-      "detail": "Ponte Preta não está no Wikidata"
-    },
-    {
-      "qid": "Q62182",
-      "name": "Mazzola",
-      "result": "mismatch",
-      "detail": "XV de Piracicaba não está no Wikidata"
-    },
-    {
-      "qid": "Q237561",
-      "name": "Belletti",
-      "result": "verified"
-    },
-    {
-      "qid": "Q257606",
-      "name": "Gilmar",
-      "result": "verified"
-    },
-    {
-      "qid": "Q283706",
-      "name": "Dodô",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q297721",
-      "name": "Aldair Santos do Nascimento",
-      "result": "mismatch",
-      "detail": "Rio Branco não está no Wikidata"
-    },
-    {
-      "qid": "Q309731",
-      "name": "Amoroso",
-      "result": "verified"
-    },
-    {
-      "qid": "Q311407",
-      "name": "Tostão",
-      "result": "verified"
-    },
-    {
-      "qid": "Q194439",
-      "name": "Marcos Senna",
-      "result": "verified"
-    },
-    {
-      "qid": "Q202429",
-      "name": "Juan Silveira dos Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q210950",
-      "name": "Luisão",
-      "result": "verified"
-    },
-    {
-      "qid": "Q213401",
-      "name": "Fabio Pereira da Silva",
-      "result": "mismatch",
-      "detail": "Grêmio não está no Wikidata"
-    },
-    {
-      "qid": "Q455799",
-      "name": "Baltazar",
-      "result": "mismatch",
-      "detail": "Atlético-GO não está no Wikidata"
-    },
-    {
-      "qid": "Q467194",
-      "name": "Washington Stecanela Cerqueira",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q178774",
-      "name": "Bismarck Barreto Faria",
-      "result": "verified"
-    },
-    {
-      "qid": "Q180862",
-      "name": "Márcio Rodrigues",
-      "result": "mismatch",
-      "detail": "Cruzeiro não está no Wikidata"
-    },
-    {
-      "qid": "Q483457",
-      "name": "Magno Alves",
-      "result": "mismatch",
-      "detail": "Grêmio Novorizontino não está no Wikidata"
-    },
-    {
-      "qid": "Q1028081",
-      "name": "Moacir Rodrigues dos Santos",
-      "result": "mismatch",
-      "detail": "Atlético de Madrid não está no Wikidata"
-    },
-    {
-      "qid": "Q531080",
-      "name": "Tinga",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q552917",
-      "name": "Toninho Cerezo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q726192",
-      "name": "Fábio Júnior Pereira",
-      "result": "mismatch",
-      "detail": "Minas Boca não está no Wikidata"
-    },
-    {
-      "qid": "Q927507",
-      "name": "José Carlos Nepomuceno Mozer",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q929023",
-      "name": "Ronaldão",
-      "result": "verified"
-    },
-    {
-      "qid": "Q965448",
-      "name": "Frederico Rodrigues Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2316179",
-      "name": "Fábio Santos",
-      "result": "mismatch",
-      "detail": "Atlético-MG não está no Wikidata"
-    },
-    {
-      "qid": "Q16745198",
-      "name": "Malcom",
-      "result": "verified"
-    },
-    {
-      "qid": "Q197578",
-      "name": "Oséas",
-      "result": "mismatch",
-      "detail": "Maruinense não está no Wikidata"
-    },
-    {
-      "qid": "Q380411",
-      "name": "Adílson Batista",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q455557",
-      "name": "Humberlito Borges",
-      "result": "verified"
-    },
-    {
-      "qid": "Q180724",
-      "name": "Sérgio Luís Donizetti",
-      "result": "mismatch",
-      "detail": "Anapolina não está no Wikidata"
-    },
-    {
-      "qid": "Q180875",
-      "name": "João Carlos dos Santos",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181098",
-      "name": "Paulo Roberto Jamelli Júnior",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181126",
-      "name": "Alexandre Paes Lopes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181128",
-      "name": "Donizete Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q5370912",
-      "name": "Emerson Palmieri",
-      "result": "verified"
-    },
-    {
-      "qid": "Q694542",
-      "name": "Waldemar Aureliano de Oliveira Filho",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q785320",
-      "name": "Edivaldo Rojas Hermoza",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q1825767",
-      "name": "Edu Manga",
-      "result": "mismatch",
-      "detail": "Remo não está no Wikidata"
-    },
-    {
-      "qid": "Q25175970",
-      "name": "Gabriel dos Santos Magalhães",
-      "result": "verified"
-    },
-    {
-      "qid": "Q47760",
-      "name": "Edu Marangon",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q197574",
-      "name": "Robert da Silva Almeida",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q197583",
-      "name": "Alessandro Cambalhota",
-      "result": "mismatch",
-      "detail": "Al-Arabi não está no Wikidata"
-    },
-    {
-      "qid": "Q197729",
-      "name": "Marques Batista de Abreu",
-      "result": "verified"
-    },
-    {
-      "qid": "Q204450",
-      "name": "Felipe Melo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q207407",
-      "name": "Elano",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q215040",
-      "name": "Maxwell",
-      "result": "mismatch",
-      "detail": "Internazionale não está no Wikidata"
-    },
-    {
-      "qid": "Q454910",
-      "name": "Juan Jesus",
-      "result": "mismatch",
-      "detail": "Internazionale não está no Wikidata"
-    },
-    {
-      "qid": "Q72904",
-      "name": "Luiz Adriano",
-      "result": "verified"
-    },
-    {
-      "qid": "Q109428",
-      "name": "Diego Ribas da Cunha",
-      "result": "verified"
-    },
-    {
-      "qid": "Q180866",
-      "name": "Joubert Araújo Martins",
-      "result": "mismatch",
-      "detail": "Mixto não está no Wikidata"
-    },
-    {
-      "qid": "Q180889",
-      "name": "Ricardo Alexandre dos Santos",
-      "result": "mismatch",
-      "detail": "Kashima Antlers não está no Wikidata"
-    },
-    {
-      "qid": "Q181080",
-      "name": "Pita",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181092",
-      "name": "Márcio Miranda Freitas Rocha da Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181111",
-      "name": "Nélson Luís Kerchner",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181139",
-      "name": "Ramon Menezes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q516417",
-      "name": "Pedro Rocha",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2089098",
-      "name": "Christian Corrêa Dionísio",
-      "result": "mismatch",
-      "detail": "Estrela da Amadora não está no Wikidata"
-    },
-    {
-      "qid": "Q15214940",
-      "name": "Alex Telles",
-      "result": "verified"
-    },
-    {
-      "qid": "Q47660",
-      "name": "Francisco Ernandi Lima da Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q247497",
-      "name": "Zé Sérgio",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q280306",
-      "name": "Gérson de Oliveira Nunes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q295880",
-      "name": "Vágner Love",
-      "result": "mismatch",
-      "detail": "Atlético-GO não está no Wikidata"
-    },
-    {
-      "qid": "Q195426",
-      "name": "Evair Aparecido Paulino",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q197556",
-      "name": "Carlos Alberto Costa Dias",
-      "result": "mismatch",
-      "detail": "Madureira não está no Wikidata"
-    },
-    {
-      "qid": "Q197563",
-      "name": "Euller",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q204895",
-      "name": "Júlio Baptista",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q217974",
-      "name": "Almir de Souza Fraga",
-      "result": "mismatch",
-      "detail": "Reboceros de La Piedad não está no Wikidata"
-    },
-    {
-      "qid": "Q128276",
-      "name": "Antônio Benedito da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q137242",
-      "name": "Bernard",
-      "result": "verified"
-    },
-    {
-      "qid": "Q372092",
-      "name": "Zito",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2476736",
-      "name": "Bruno Cortês",
-      "result": "mismatch",
-      "detail": "Arturzinho não está no Wikidata"
-    },
-    {
-      "qid": "Q561613",
-      "name": "Roniéliton Pereira Santos",
-      "result": "mismatch",
-      "detail": "Total não está no Wikidata"
-    },
-    {
-      "qid": "Q712145",
-      "name": "França",
-      "result": "verified"
-    },
-    {
-      "qid": "Q714500",
-      "name": "José Oscar Bernardi",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q887992",
-      "name": "Axel Rodrigues de Arruda",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2277552",
-      "name": "Argélico Fuchs",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2349653",
-      "name": "Gilberto Ribeiro Gonçalves",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q47314",
-      "name": "Jorge Antônio Putinatti",
-      "result": "mismatch",
-      "detail": "XV de Piracicaba não está no Wikidata"
-    },
-    {
-      "qid": "Q47766",
-      "name": "Elivélton",
-      "result": "mismatch",
-      "detail": "Alfenense não está no Wikidata"
-    },
-    {
-      "qid": "Q57167",
-      "name": "Zé Roberto",
-      "result": "verified"
-    },
-    {
-      "qid": "Q311424",
-      "name": "Maestro Júnior",
-      "result": "verified"
-    },
-    {
-      "qid": "Q197553",
-      "name": "Sérgio Manoel",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q215322",
-      "name": "Denílson Pereira Neves",
-      "result": "mismatch",
-      "detail": "Cruzeiro não está no Wikidata"
-    },
-    {
-      "qid": "Q177885",
-      "name": "Gomes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q181096",
-      "name": "Valdir Benedito",
-      "result": "mismatch",
-      "detail": "Platinense não está no Wikidata"
-    },
-    {
-      "qid": "Q181108",
-      "name": "Nádson Rodrigues de Souza",
-      "result": "mismatch",
-      "detail": "Lagarto não está no Wikidata"
-    },
-    {
-      "qid": "Q311641",
-      "name": "Denílson de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q312002",
-      "name": "Sylvinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q332012",
-      "name": "Ademir Menezes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q653138",
-      "name": "Marcos Paulo Alves",
-      "result": "verified"
-    },
-    {
-      "qid": "Q745422",
-      "name": "Osmar Donizete Cândido",
-      "result": "mismatch",
-      "detail": "Americano não está no Wikidata"
-    },
-    {
-      "qid": "Q794628",
-      "name": "Felipe Anderson",
-      "result": "mismatch",
-      "detail": "Porto não está no Wikidata"
-    },
-    {
-      "qid": "Q28363823",
-      "name": "Douglas Luiz Soares de Paulo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q262826",
-      "name": "Bellini",
-      "result": "mismatch",
-      "detail": "Itapirense não está no Wikidata"
-    },
-    {
-      "qid": "Q181168",
-      "name": "Bernardo Fernandes da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q216910",
-      "name": "Fábio Aurélio",
-      "result": "verified"
-    },
-    {
-      "qid": "Q167698",
-      "name": "Éder Citadin Martins",
-      "result": "verified"
-    },
-    {
-      "qid": "Q312895",
-      "name": "Raí",
-      "result": "verified"
-    },
-    {
-      "qid": "Q888001",
-      "name": "Gilberto Carlos Nascimento",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q888627",
-      "name": "Carlos Alexandre Torres",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1353800",
-      "name": "Tita",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q3928977",
-      "name": "Rafael Tolói",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1825165",
-      "name": "Émerson Carvalho da Silva",
-      "result": "mismatch",
-      "detail": "XV de Jaú não está no Wikidata"
-    },
-    {
-      "qid": "Q13646572",
-      "name": "Gabigol",
-      "result": "verified"
-    },
-    {
-      "qid": "Q27801691",
-      "name": "David Neres",
-      "result": "verified"
-    },
-    {
-      "qid": "Q62733",
-      "name": "Leandro Damião",
-      "result": "mismatch",
-      "detail": "Kawasaki Frontale não está no Wikidata"
-    },
-    {
-      "qid": "Q221798",
-      "name": "Cicinho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q208687",
-      "name": "Nilmar",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2470512",
-      "name": "Allan Marques Loureiro",
-      "result": "mismatch",
-      "detail": "Al-Wahda não está no Wikidata"
-    },
-    {
-      "qid": "Q2548141",
-      "name": "Eduardo Antunes Coimbra",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2714065",
-      "name": "Edivaldo Martins da Fonseca",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1043195",
-      "name": "Renato Pé Murcho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q888006",
-      "name": "Daniel da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2093356",
-      "name": "Marco Antônio da Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q17619350",
-      "name": "Andreas Pereira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q64005114",
-      "name": "João Pedro Junqueira de Jesus",
-      "result": "verified"
-    },
-    {
-      "qid": "Q40652",
-      "name": "Tite",
-      "result": "verified"
-    },
-    {
-      "qid": "Q62198",
-      "name": "Amauri Carvalho de Oliveira",
-      "result": "mismatch",
-      "detail": "Fort Lauderdale Strikers não está no Wikidata"
-    },
-    {
-      "qid": "Q223229",
-      "name": "Doni",
-      "result": "verified"
-    },
-    {
-      "qid": "Q159059",
-      "name": "Grafite",
-      "result": "mismatch",
-      "detail": "Atlético Paranaense não está no Wikidata"
-    },
-    {
-      "qid": "Q313082",
-      "name": "Diego Alves",
-      "result": "verified"
-    },
-    {
-      "qid": "Q317863",
-      "name": "Jardel",
-      "result": "mismatch",
-      "detail": "Sporting-POR não está no Wikidata"
-    },
-    {
-      "qid": "Q3567581",
-      "name": "Leandro Moura",
-      "result": "mismatch",
-      "detail": "Kashima Antlers não está no Wikidata"
-    },
-    {
-      "qid": "Q14602686",
-      "name": "Gabriel Paulista",
-      "result": "verified"
-    },
-    {
-      "qid": "Q38693097",
-      "name": "Bremer",
-      "result": "mismatch",
-      "detail": "Desportivo Brasil não está no Wikidata"
-    },
-    {
-      "qid": "Q96211488",
-      "name": "Matheus Nunes",
-      "result": "mismatch",
-      "detail": "Sporting-POR não está no Wikidata"
-    },
-    {
-      "qid": "Q207085",
-      "name": "Zizinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q464419",
-      "name": "Clodoaldo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q315831",
-      "name": "Roque Júnior",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q342457",
-      "name": "Mauro Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q342474",
-      "name": "Marcos Roberto Silveira Reis",
-      "result": "verified"
-    },
-    {
-      "qid": "Q350761",
-      "name": "Iomar do Nascimento",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q514252",
-      "name": "Jefferson de Oliveira Galvão",
-      "result": "mismatch",
-      "detail": "América-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q1493831",
-      "name": "Thiago Rangel Cionek",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q55055451",
-      "name": "Renan Lodi",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q44815",
-      "name": "Giovane Élber",
-      "result": "verified"
-    },
-    {
-      "qid": "Q463460",
-      "name": "Mauro Ramos de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q126903",
-      "name": "Lucas Piazón",
-      "result": "mismatch",
-      "detail": "Chievo não está no Wikidata"
-    },
-    {
-      "qid": "Q312140",
-      "name": "Serginho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q313520",
-      "name": "Naldo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q313576",
-      "name": "Henrique Adriano Buss",
-      "result": "mismatch",
-      "detail": "Corinthians não está no Wikidata"
-    },
-    {
-      "qid": "Q351827",
-      "name": "Branco",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q509491",
-      "name": "Pepe",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q10333326",
-      "name": "Murilo Ribeiro de Almeida",
-      "result": "verified"
-    },
-    {
-      "qid": "Q14755604",
-      "name": "Robert Kenedy Nunes do Nascimento",
-      "result": "mismatch",
-      "detail": "Getafe não está no Wikidata"
-    },
-    {
-      "qid": "Q20047360",
-      "name": "Joelinton",
-      "result": "no-position"
-    },
-    {
-      "qid": "Q83639138",
-      "name": "Igor Thiago",
-      "result": "verified"
-    },
-    {
-      "qid": "Q266410",
-      "name": "Pedro Tonon Geromel",
-      "result": "verified"
-    },
-    {
-      "qid": "Q298172",
-      "name": "Roger Guerreiro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q310697",
-      "name": "Michel Bastos",
-      "result": "mismatch",
-      "detail": "Pelotas não está no Wikidata"
-    },
-    {
-      "qid": "Q311035",
-      "name": "Kléberson",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q213676",
-      "name": "Liedson",
-      "result": "mismatch",
-      "detail": "Sporting-POR não está no Wikidata"
-    },
-    {
-      "qid": "Q313835",
-      "name": "Paulo Henrique Ganso",
-      "result": "mismatch",
-      "detail": "Amiens não está no Wikidata"
-    },
-    {
-      "qid": "Q314281",
-      "name": "Vanderlei Luxemburgo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q366156",
-      "name": "Arthur Friedenreich",
-      "result": "mismatch",
-      "detail": "SC Germânia não está no Wikidata"
-    },
-    {
-      "qid": "Q563649",
-      "name": "Victor",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1988686",
-      "name": "Douglas Pereira dos Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q920039",
-      "name": "Cássio Ramos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q298320",
-      "name": "Rodrigo Taddei",
-      "result": "verified"
-    },
-    {
-      "qid": "Q303108",
-      "name": "Taison",
-      "result": "mismatch",
-      "detail": "PAOK não está no Wikidata"
-    },
-    {
-      "qid": "Q166506",
-      "name": "Jorge Samir Cruz Campos",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q180894",
-      "name": "Kléber Laube Pinheiro",
-      "result": "mismatch",
-      "detail": "JEF United não está no Wikidata"
-    },
-    {
-      "qid": "Q313861",
-      "name": "Sonny Anderson",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q973416",
-      "name": "Fernando Reges",
-      "result": "verified"
-    },
-    {
-      "qid": "Q550019",
-      "name": "Roberto Dinamite",
-      "result": "verified"
-    },
-    {
-      "qid": "Q4025436",
-      "name": "Everton Ribeiro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q111016177",
-      "name": "Vitor Roque",
-      "result": "verified"
-    },
-    {
-      "qid": "Q17385902",
-      "name": "Everton Sousa Soares",
-      "result": "mismatch",
-      "detail": "Grêmio não está no Wikidata"
-    },
-    {
-      "qid": "Q30123152",
-      "name": "Emerson Aparecido Leite de Souza Junior",
-      "result": "mismatch",
-      "detail": "Flamengo não está no Wikidata"
-    },
-    {
-      "qid": "Q242010",
-      "name": "Cristiane Rozeira de Souza Silva",
-      "result": "mismatch",
-      "detail": "Juventus-SP sem ano"
-    },
-    {
-      "qid": "Q309894",
-      "name": "Diego Cavalieri",
-      "result": "mismatch",
-      "detail": "Crystal Palace não está no Wikidata"
-    },
-    {
-      "qid": "Q122905",
-      "name": "Zózimo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q160363",
-      "name": "Aílton Gonçalves da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q318184",
-      "name": "Juninho Paulista",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q326476",
-      "name": "Jonas",
-      "result": "verified"
-    },
-    {
-      "qid": "Q372058",
-      "name": "Félix",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q705942",
-      "name": "Brito",
-      "result": "mismatch",
-      "detail": "Montreal Castors não está no Wikidata"
-    },
-    {
-      "qid": "Q932827",
-      "name": "Fagner",
-      "result": "verified"
-    },
-    {
-      "qid": "Q10268484",
-      "name": "Douglas Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q8040741",
-      "name": "Weverton",
-      "result": "mismatch",
-      "detail": "Palmeiras não está no Wikidata"
-    },
-    {
-      "qid": "Q18921427",
-      "name": "Fellipe Bertoldo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q311335",
-      "name": "Gilberto da Silva Melo",
-      "result": "mismatch",
-      "detail": "Araxá não está no Wikidata"
-    },
-    {
-      "qid": "Q438442",
-      "name": "Everaldo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q454934",
-      "name": "Amarildo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q455565",
-      "name": "Dirceu José Guimarães",
-      "result": "mismatch",
-      "detail": "Harvey Bologna (futsal) não está no Wikidata"
-    },
-    {
-      "qid": "Q313741",
-      "name": "Andrés D'Alessandro",
-      "result": "mismatch",
-      "detail": "Nacional-URU não está no Wikidata"
-    },
-    {
-      "qid": "Q315079",
-      "name": "Ricardo Oliveira",
-      "result": "mismatch",
-      "detail": "Athletic não está no Wikidata"
-    },
-    {
-      "qid": "Q359481",
-      "name": "Helton",
-      "result": "verified"
-    },
-    {
-      "qid": "Q361252",
-      "name": "Telê Santana",
-      "result": "verified"
-    },
-    {
-      "qid": "Q372451",
-      "name": "Sávio",
-      "result": "mismatch",
-      "detail": "Real Sociedad não está no Wikidata"
-    },
-    {
-      "qid": "Q9613708",
-      "name": "Anderson Souza Conceição",
-      "result": "mismatch",
-      "detail": "Besiktas | Guangzhou Evergrande |Guangzhou Evergrande|Al Nassr|Fenerbahçe|Al-Jazira}} sem ano"
-    },
-    {
-      "qid": "Q2151930",
-      "name": "Wellington Rocha dos Santos",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q3887042",
-      "name": "Otávio",
-      "result": "mismatch",
-      "detail": "Al-Nassr não está no Wikidata"
-    },
-    {
-      "qid": "Q15830968",
-      "name": "Diego Carlos Santos Silva",
-      "result": "mismatch",
-      "detail": "Madureira não está no Wikidata"
-    },
-    {
-      "qid": "Q18617137",
-      "name": "Gerson",
-      "result": "mismatch",
-      "detail": "Flamengo não está no Wikidata"
-    },
-    {
-      "qid": "Q115937989",
-      "name": "Rayan Vitor Simplício Rocha",
-      "result": "mismatch",
-      "detail": "Bournemouth não está no Wikidata"
-    },
-    {
-      "qid": "Q31760",
-      "name": "Jussiê",
-      "result": "verified"
-    },
-    {
-      "qid": "Q31986",
-      "name": "Cléo",
-      "result": "mismatch",
-      "detail": "Ferroviária não está no Wikidata"
-    },
-    {
-      "qid": "Q296814",
-      "name": "Mancini",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q299367",
-      "name": "Cristiano Marques Gomes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q310458",
-      "name": "André Santos",
-      "result": "mismatch",
-      "detail": "Boluspor não está no Wikidata"
-    },
-    {
-      "qid": "Q438035",
-      "name": "Túlio de Melo",
-      "result": "mismatch",
-      "detail": "Avispa Fukuoka não está no Wikidata"
-    },
-    {
-      "qid": "Q72886",
-      "name": "Ricardinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q161039",
-      "name": "Josué Anunciado de Oliveira",
-      "result": "mismatch",
-      "detail": "Total não está no Wikidata"
-    },
-    {
-      "qid": "Q313580",
-      "name": "Kerlon Moura Souza",
-      "result": "mismatch",
-      "detail": "Spartak Trnava não está no Wikidata"
-    },
-    {
-      "qid": "Q316229",
-      "name": "Paulo Sérgio Silvestre Nascimento",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q507815",
-      "name": "Alex de Souza",
-      "result": "verified"
-    },
-    {
-      "qid": "Q552799",
-      "name": "Sebastião Lazaroni",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q615668",
-      "name": "Rafael Cabral",
-      "result": "mismatch",
-      "detail": "Reading não está no Wikidata"
-    },
-    {
-      "qid": "Q1526974",
-      "name": "Márcio Roberto dos Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1573556",
-      "name": "Leandro Castán",
-      "result": "verified"
-    },
-    {
-      "qid": "Q99485542",
-      "name": "Sávio Moreira de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q99557093",
-      "name": "Danilo dos Santos de Oliveira",
-      "result": "mismatch",
-      "detail": "Cajazeiras não está no Wikidata"
-    },
-    {
-      "qid": "Q6696318",
-      "name": "Lucas Silva",
-      "result": "mismatch",
-      "detail": "Grêmio não está no Wikidata"
-    },
-    {
-      "qid": "Q112604843",
-      "name": "Beraldo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q55363875",
-      "name": "Roger Ibañez da Silva",
-      "result": "mismatch",
-      "detail": "PRS não está no Wikidata"
-    },
-    {
-      "qid": "Q438483",
-      "name": "Orlando Peçanha de Carvalho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q447646",
-      "name": "Eduardo Gonçalves de Oliveira",
-      "result": "mismatch",
-      "detail": "CRAC não está no Wikidata"
-    },
-    {
-      "qid": "Q84359",
-      "name": "Benny Feilhaber",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q312687",
-      "name": "Mineiro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q314750",
-      "name": "Edu Gaspar",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q316836",
-      "name": "Nenê",
-      "result": "mismatch",
-      "detail": "Fluminense não está no Wikidata"
-    },
-    {
-      "qid": "Q359160",
-      "name": "Jadson",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q514375",
-      "name": "Cléber Santana",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q519543",
-      "name": "Felipe Augusto Santana",
-      "result": "mismatch",
-      "detail": "Borussia Dortmund não está no Wikidata"
-    },
-    {
-      "qid": "Q2469796",
-      "name": "Willian José",
-      "result": "mismatch",
-      "detail": "Rio Preto não está no Wikidata"
-    },
-    {
-      "qid": "Q555391",
-      "name": "Danilo Gabriel de Andrade",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1982869",
-      "name": "Vampeta",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q687140",
-      "name": "Leonardo Bittencourt",
-      "result": "mismatch",
-      "detail": "Hoffenheim não está no Wikidata"
-    },
-    {
-      "qid": "Q704279",
-      "name": "Robert de Pinho de Souza",
-      "result": "mismatch",
-      "detail": "Paraná não está no Wikidata"
-    },
-    {
-      "qid": "Q720549",
-      "name": "Jair da Costa",
-      "result": "mismatch",
-      "detail": "Windsor Stars não está no Wikidata"
-    },
-    {
-      "qid": "Q1200065",
-      "name": "Lucas Severino",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q1754462",
-      "name": "Muriqui",
-      "result": "mismatch",
-      "detail": "Guangdong South China não está no Wikidata"
-    },
-    {
-      "qid": "Q1839524",
-      "name": "Felipe Augusto de Almeida Monteiro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q64606160",
-      "name": "Reinier",
-      "result": "verified"
-    },
-    {
-      "qid": "Q15131398",
-      "name": "Wendell Nascimento Borges",
-      "result": "mismatch",
-      "detail": "São Paulo não está no Wikidata"
-    },
-    {
-      "qid": "Q59150057",
-      "name": "Éderson José dos Santos Lourenço da Silva",
-      "result": "mismatch",
-      "detail": "Corinthians não está no Wikidata"
-    },
-    {
-      "qid": "Q219298",
-      "name": "Ai Kesen",
-      "result": "mismatch",
-      "detail": "Grêmio não está no Wikidata"
-    },
-    {
-      "qid": "Q181272",
-      "name": "Julio César Pinheiro",
-      "result": "mismatch",
-      "detail": "Pumas não está no Wikidata"
-    },
-    {
-      "qid": "Q204548",
-      "name": "Antônio Naelson Matias",
-      "result": "mismatch",
-      "detail": "Monterrey não está no Wikidata"
-    },
-    {
-      "qid": "Q210138",
-      "name": "Alcindo Sartori",
-      "result": "mismatch",
-      "detail": "CFZ não está no Wikidata"
-    },
-    {
-      "qid": "Q210284",
-      "name": "Marinaldo Cícero da Silva",
-      "result": "mismatch",
-      "detail": "Náutico não está no Wikidata"
-    },
-    {
-      "qid": "Q440945",
-      "name": "Júnior Baiano",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q455593",
-      "name": "Vicente Feola",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q180926",
-      "name": "Leandro Domingues",
-      "result": "mismatch",
-      "detail": "Portuguesa não está no Wikidata"
-    },
-    {
-      "qid": "Q180968",
-      "name": "Reinaldo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q316959",
-      "name": "Rodrigo Izecson dos Santos Leite",
-      "result": "verified"
-    },
-    {
-      "qid": "Q342237",
-      "name": "Afonso Alves",
-      "result": "verified"
-    },
-    {
-      "qid": "Q515938",
-      "name": "Alex Teixeira",
-      "result": "mismatch",
-      "detail": "Jiangsu Suning não está no Wikidata"
-    },
-    {
-      "qid": "Q2520707",
-      "name": "Maicon Oliveira",
-      "result": "mismatch",
-      "detail": "Atlético Mogi não está no Wikidata"
-    },
-    {
-      "qid": "Q2734933",
-      "name": "Milton Cruz",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q602311",
-      "name": "Lucas Michel Mendes",
-      "result": "mismatch",
-      "detail": "Al-Duhail não está no Wikidata"
-    },
-    {
-      "qid": "Q2001590",
-      "name": "Alex Mineiro",
-      "result": "mismatch",
-      "detail": "Ceará não está no Wikidata"
-    },
-    {
-      "qid": "Q719472",
-      "name": "Thiego",
-      "result": "verified"
-    },
-    {
-      "qid": "Q721804",
-      "name": "Marcelo Antônio Guedes Filho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q864670",
-      "name": "Robson Ponte",
-      "result": "verified"
-    },
-    {
-      "qid": "Q3438450",
-      "name": "Rodrigo Caio",
-      "result": "mismatch",
-      "detail": "Grêmio não está no Wikidata"
-    },
-    {
-      "qid": "Q961889",
-      "name": "Gabriel Vasconcellos Ferreira",
-      "result": "mismatch",
-      "detail": "Lecce não está no Wikidata"
-    },
-    {
-      "qid": "Q969901",
-      "name": "Guilherme Alvim Marinato",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1573490",
-      "name": "José Rodolfo Pires Ribeiro",
-      "result": "mismatch",
-      "detail": "Santos não está no Wikidata"
-    },
-    {
-      "qid": "Q15831045",
-      "name": "Jemerson",
-      "result": "mismatch",
-      "detail": "Corinthians não está no Wikidata"
-    },
-    {
-      "qid": "Q47491410",
-      "name": "Pedro Guilherme Abreu dos Santos",
-      "result": "mismatch",
-      "detail": "Fiorentina não está no Wikidata"
-    },
-    {
-      "qid": "Q16265104",
-      "name": "Caio Lucas Fernandes",
-      "result": "mismatch",
-      "detail": "Al Ain não está no Wikidata"
-    },
-    {
-      "qid": "Q28748046",
-      "name": "Rony",
-      "result": "mismatch",
-      "detail": "Remo não está no Wikidata"
-    },
-    {
-      "qid": "Q218101",
-      "name": "Carlos Adriano de Jesus Soares",
-      "result": "verified"
-    },
-    {
-      "qid": "Q274869",
-      "name": "Émerson Luiz Firmino",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181271",
-      "name": "Fernando Rech",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q197671",
-      "name": "Jader Volnei Spindler",
-      "result": "mismatch",
-      "detail": "Vejle Boldklub não está no Wikidata"
-    },
-    {
-      "qid": "Q210013",
-      "name": "Carlos Alberto Souza dos Santos",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q210066",
-      "name": "Uéslei",
-      "result": "mismatch",
-      "detail": "Cruzeiro não está no Wikidata"
-    },
-    {
-      "qid": "Q210114",
-      "name": "Jean Carlo Witte",
-      "result": "verified"
-    },
-    {
-      "qid": "Q440999",
-      "name": "Ricardo Gomes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q441135",
-      "name": "Formiga",
-      "result": "mismatch",
-      "detail": "Palmeiras não está no Wikidata"
-    },
-    {
-      "qid": "Q456600",
-      "name": "Preguinho",
-      "result": "mismatch",
-      "detail": "Olympico Club não está no Wikidata"
-    },
-    {
-      "qid": "Q128294",
-      "name": "Will Robson Emilio de Andrade",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q180721",
-      "name": "Leandro Euzébio",
-      "result": "mismatch",
-      "detail": "Rio das Ostras não está no Wikidata"
-    },
-    {
-      "qid": "Q180735",
-      "name": "Fabinho Soldado",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q180885",
-      "name": "Adriano Ferreira Martins",
-      "result": "mismatch",
-      "detail": "ADAP não está no Wikidata"
-    },
-    {
-      "qid": "Q180977",
-      "name": "Leandro Montera da Silva",
-      "result": "mismatch",
-      "detail": "Tokyo Verdy não está no Wikidata"
-    },
-    {
-      "qid": "Q181070",
-      "name": "Bruno Quadros",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q350493",
-      "name": "Rafael Sóbis",
-      "result": "mismatch",
-      "detail": "Ceará não está no Wikidata"
-    },
-    {
-      "qid": "Q361352",
-      "name": "Mehmet Aurélio",
-      "result": "verified"
-    },
-    {
-      "qid": "Q516898",
-      "name": "André Bahia",
-      "result": "verified"
-    },
-    {
-      "qid": "Q535520",
-      "name": "Wilson Piazza",
-      "result": "mismatch",
-      "detail": "Renascença não está no Wikidata"
-    },
-    {
-      "qid": "Q537739",
-      "name": "Cristiano da Silva",
-      "result": "mismatch",
-      "detail": "V-Varen Nagasaki não está no Wikidata"
-    },
-    {
-      "qid": "Q552929",
-      "name": "Joel Santana",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q601752",
-      "name": "Jorge Wagner",
-      "result": "mismatch",
-      "detail": "Fluminense de Feira não está no Wikidata"
-    },
-    {
-      "qid": "Q1990849",
-      "name": "Jenílson Ângelo de Souza",
-      "result": "verified"
-    },
-    {
-      "qid": "Q612073",
-      "name": "Coutinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q681938",
-      "name": "Marlos",
-      "result": "mismatch",
-      "detail": "Athletico-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q703920",
-      "name": "Barbosa",
-      "result": "mismatch",
-      "detail": "ADCI-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q721017",
-      "name": "Marcelo Mattos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q727531",
-      "name": "Mert Nobre",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q927066",
-      "name": "Rafael Bastos",
-      "result": "mismatch",
-      "detail": "Cruzeiro não está no Wikidata"
-    },
-    {
-      "qid": "Q935220",
-      "name": "David Cortes da Silva",
-      "result": "mismatch",
-      "detail": "América-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q7357324",
-      "name": "Rodrigo Ely",
-      "result": "mismatch",
-      "detail": "Alavés não está no Wikidata"
-    },
-    {
-      "qid": "Q2085459",
-      "name": "Caio Júnior",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1344142",
-      "name": "Carlos Alberto Carvalho dos Anjos Junior",
-      "result": "verified"
-    },
-    {
-      "qid": "Q3915221",
-      "name": "Everton Kempes dos Santos Gonçalves",
-      "result": "mismatch",
-      "detail": "Canto do Rio não está no Wikidata"
-    },
-    {
-      "qid": "Q4844829",
-      "name": "Carlos Kaiser",
-      "result": "mismatch",
-      "detail": "Botafogo sem ano"
-    },
-    {
-      "qid": "Q1824877",
-      "name": "Cléber Eduardo Arado",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q2314727",
-      "name": "Fabão",
-      "result": "mismatch",
-      "detail": "Goianésia não está no Wikidata"
-    },
-    {
-      "qid": "Q16919481",
-      "name": "Luan Vieira",
-      "result": "mismatch",
-      "detail": "Corinthians não está no Wikidata"
-    },
-    {
-      "qid": "Q15830959",
-      "name": "Débora Cristiane de Oliveira",
-      "result": "mismatch",
-      "detail": "Portuguesa não está no Wikidata"
-    },
-    {
-      "qid": "Q19559974",
-      "name": "Guilherme Arana",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q29097",
-      "name": "Renato Dirnei Florêncio",
-      "result": "verified"
-    },
-    {
-      "qid": "Q59255",
-      "name": "Sandro Ranieri Guimarães Cordeiro",
-      "result": "mismatch",
-      "detail": "Antalyaspor não está no Wikidata"
-    },
-    {
-      "qid": "Q252711",
-      "name": "Ânderson Polga",
-      "result": "verified"
-    },
-    {
-      "qid": "Q273766",
-      "name": "Éder Aleixo",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q197569",
-      "name": "Adriano Gerlin da Silva",
-      "result": "mismatch",
-      "detail": "Flamengo não está no Wikidata"
-    },
-    {
-      "qid": "Q197600",
-      "name": "Fellype Gabriel",
-      "result": "mismatch",
-      "detail": "Vasco da Gama não está no Wikidata"
-    },
-    {
-      "qid": "Q197603",
-      "name": "Rodrigo Lacerda Ramos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q197875",
-      "name": "Edi Andradina",
-      "result": "mismatch",
-      "detail": "Gama não está no Wikidata"
-    },
-    {
-      "qid": "Q210056",
-      "name": "Emerson Thome",
-      "result": "verified"
-    },
-    {
-      "qid": "Q210125",
-      "name": "Wellington Nogueira Lopes de Avellar",
-      "result": "mismatch",
-      "detail": "Metropolitano não está no Wikidata"
-    },
-    {
-      "qid": "Q210142",
-      "name": "Geílson de Carvalho Soares",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q210238",
-      "name": "Marcio Richardes de Andrade",
-      "result": "verified"
-    },
-    {
-      "qid": "Q218090",
-      "name": "Dedimar Souza Lima",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q375979",
-      "name": "Adriano Pimenta",
-      "result": "mismatch",
-      "detail": "Atlético-GO não está no Wikidata"
-    },
-    {
-      "qid": "Q428431",
-      "name": "Ricardo Roberto Barreto da Rocha",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q116560",
-      "name": "Carlos Gilberto Nascimento Silva",
-      "result": "mismatch",
-      "detail": "Jaguaré não está no Wikidata"
-    },
-    {
-      "qid": "Q180877",
-      "name": "Marcão",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q180906",
-      "name": "Leandro Lessa Azevedo",
-      "result": "mismatch",
-      "detail": "Catanduvense não está no Wikidata"
-    },
-    {
-      "qid": "Q180986",
-      "name": "Edmilson dos Santos Silva",
-      "result": "mismatch",
-      "detail": "Santo André não está no Wikidata"
-    },
-    {
-      "qid": "Q181000",
-      "name": "Magnum",
-      "result": "mismatch",
-      "detail": "Vila Nova não está no Wikidata"
-    },
-    {
-      "qid": "Q326387",
-      "name": "Léo Baptistão",
-      "result": "mismatch",
-      "detail": "Wuhan Zall não está no Wikidata"
-    },
-    {
-      "qid": "Q337639",
-      "name": "Felipe Mattioni Rohde",
-      "result": "mismatch",
-      "detail": "Boa Esporte não está no Wikidata"
-    },
-    {
-      "qid": "Q350536",
-      "name": "Flávio Conceição",
-      "result": "mismatch",
-      "detail": "Real Madrid não está no Wikidata"
-    },
-    {
-      "qid": "Q356566",
-      "name": "Adhemar Ferreira de Camargo Neto",
-      "result": "mismatch",
-      "detail": "Estrela não está no Wikidata"
-    },
-    {
-      "qid": "Q467587",
-      "name": "Raffael Caetano de Araújo",
-      "result": "mismatch",
-      "detail": "Pohronie não está no Wikidata"
-    },
-    {
-      "qid": "Q509812",
-      "name": "Viola",
-      "result": "mismatch",
-      "detail": "Flamengo não está no Wikidata"
-    },
-    {
-      "qid": "Q2756361",
-      "name": "Ademilson",
-      "result": "mismatch",
-      "detail": "Wuhan Three Towns não está no Wikidata"
-    },
-    {
-      "qid": "Q552922",
-      "name": "Paulo Cézar Lima",
-      "result": "mismatch",
-      "detail": "Grêmio sem ano"
-    },
-    {
-      "qid": "Q562705",
-      "name": "Capone",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2689047",
-      "name": "Jonatas Cristian de Jesus",
-      "result": "mismatch",
-      "detail": "Corinthians não está no Wikidata"
-    },
-    {
-      "qid": "Q667127",
-      "name": "Castilho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q717927",
-      "name": "Domingos Antônio da Guia",
-      "result": "verified"
-    },
-    {
-      "qid": "Q723198",
-      "name": "Roberto de Assis Moreira",
-      "result": "mismatch",
-      "detail": "Guadalajara não está no Wikidata"
-    },
-    {
-      "qid": "Q4798073",
-      "name": "Arthur Maia",
-      "result": "verified"
-    },
-    {
-      "qid": "Q3245931",
-      "name": "Musashi Mizushima",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1155027",
-      "name": "Oswaldo de Oliveira",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1203358",
-      "name": "Marquinhos Cambalhota",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1345763",
-      "name": "Renato Gaúcho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1362325",
-      "name": "Nelsinho Baptista",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1530829",
-      "name": "Hugo Leonardo Silva Serejo",
-      "result": "mismatch",
-      "detail": "Americana não está no Wikidata"
-    },
-    {
-      "qid": "Q2277516",
-      "name": "Clemerson de Araújo Soares",
-      "result": "mismatch",
-      "detail": "Cherno More não está no Wikidata"
-    },
-    {
-      "qid": "Q18199184",
-      "name": "Léo Pereira",
-      "result": "mismatch",
-      "detail": "Náutico não está no Wikidata"
-    },
-    {
-      "qid": "Q60452465",
-      "name": "Catarina Macario",
-      "result": "mismatch",
-      "detail": "Chelsea não está no Wikidata"
-    },
-    {
-      "qid": "Q101764291",
-      "name": "Luiz Henrique André Rosa da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q65718498",
-      "name": "Maurício",
-      "result": "mismatch",
-      "detail": "Desportivo Brasil não está no Wikidata"
-    },
-    {
-      "qid": "Q67222776",
-      "name": "Samuel Lino",
-      "result": "verified"
-    },
-    {
-      "qid": "Q75057147",
-      "name": "Yan Couto",
-      "result": "mismatch",
-      "detail": "Manchester City não está no Wikidata"
-    },
-    {
-      "qid": "Q44742",
-      "name": "Breno Vinícius Rodrigues Borges",
-      "result": "mismatch",
-      "detail": "Vasco não está no Wikidata"
-    },
-    {
-      "qid": "Q72219351",
-      "name": "Johnny Cardoso",
-      "result": "verified"
-    },
-    {
-      "qid": "Q218098",
-      "name": "André Cruz",
-      "result": "mismatch",
-      "detail": "Sporting-POR não está no Wikidata"
-    },
-    {
-      "qid": "Q181204",
-      "name": "Paulinho McLaren",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q181259",
-      "name": "Guga",
-      "result": "mismatch",
-      "detail": "Araçatuba não está no Wikidata"
-    },
-    {
-      "qid": "Q196897",
-      "name": "Zetti",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q197586",
-      "name": "Fábio Alves Félix",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q210072",
-      "name": "Raphael Botti",
-      "result": "verified"
-    },
-    {
-      "qid": "Q210103",
-      "name": "Ânderson Lima",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q210135",
-      "name": "José Carlos Ferreira Filho",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q217868",
-      "name": "Vitor Júnior",
-      "result": "mismatch",
-      "detail": "Atlético-GO não está no Wikidata"
-    },
-    {
-      "qid": "Q375703",
-      "name": "Guilherme Madalena Siqueira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q431320",
-      "name": "Francileudo Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q180952",
-      "name": "Éverton Leandro dos Santos Pinto",
-      "result": "mismatch",
-      "detail": "Santa Cruz não está no Wikidata"
-    },
-    {
-      "qid": "Q356840",
-      "name": "Adi Rocha Sobrinho",
-      "result": "mismatch",
-      "detail": "Steaua București não está no Wikidata"
-    },
-    {
-      "qid": "Q366108",
-      "name": "Bordon",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q484682",
-      "name": "Caboré",
-      "result": "mismatch",
-      "detail": "Bragantino não está no Wikidata"
-    },
-    {
-      "qid": "Q2468436",
-      "name": "Rômulo Souza Orestes Caldeira",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q529865",
-      "name": "Anfilogino Guarisi",
-      "result": "mismatch",
-      "detail": "Palestra Italia não está no Wikidata"
-    },
-    {
-      "qid": "Q579215",
-      "name": "Fábio Camilo de Brito",
-      "result": "mismatch",
-      "detail": "Sporting-POR não está no Wikidata"
-    },
-    {
-      "qid": "Q1982099",
-      "name": "Gláucio de Jesus Carvalho",
-      "result": "mismatch",
-      "detail": "Al Qadissiyyah não está no Wikidata"
-    },
-    {
-      "qid": "Q2013500",
-      "name": "Bruno César Correa",
-      "result": "mismatch",
-      "detail": "Bragantino não está no Wikidata"
-    },
-    {
-      "qid": "Q615292",
-      "name": "Ricardo Rogério de Brito",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q642934",
-      "name": "Rubens Fernando Moedim",
-      "result": "mismatch",
-      "detail": "Como não está no Wikidata"
-    },
-    {
-      "qid": "Q664053",
-      "name": "Fernandão",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q720548",
-      "name": "Friaça",
-      "result": "verified"
-    },
-    {
-      "qid": "Q720593",
-      "name": "José Roberto de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q731260",
-      "name": "Serginho Chulapa",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q5318423",
-      "name": "Dyanfres Douglas Chagas Matos",
-      "result": "mismatch",
-      "detail": "Alanyaspor não está no Wikidata"
-    },
-    {
-      "qid": "Q794217",
-      "name": "Aymoré Moreira",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q905206",
-      "name": "Diego Tardelli",
-      "result": "mismatch",
-      "detail": "Grêmio não está no Wikidata"
-    },
-    {
-      "qid": "Q1825489",
-      "name": "Daniel Rossi",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2255896",
-      "name": "Luiz Carlos Pereira",
-      "result": "mismatch",
-      "detail": "Ituano não está no Wikidata"
-    },
-    {
-      "qid": "Q2292579",
-      "name": "Wilson Rodrigues Fonseca",
-      "result": "mismatch",
-      "detail": "Ventforet Kofu não está no Wikidata"
-    },
-    {
-      "qid": "Q2346451",
-      "name": "Valdir Espinosa",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2398473",
-      "name": "Levir Culpi",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q10393735",
-      "name": "William de Oliveira Pottker",
-      "result": "mismatch",
-      "detail": "Cruzeiro não está no Wikidata"
-    },
-    {
-      "qid": "Q50622134",
-      "name": "Arthur Mendonça Cabral",
-      "result": "mismatch",
-      "detail": "Ceará não está no Wikidata"
-    },
-    {
-      "qid": "Q17318574",
-      "name": "Marlon Santos da Silva Barbosa",
-      "result": "mismatch",
-      "detail": "Nice não está no Wikidata"
-    },
-    {
-      "qid": "Q19956526",
-      "name": "Bruno Henrique",
-      "result": "mismatch",
-      "detail": "Santos não está no Wikidata"
-    },
-    {
-      "qid": "Q17403521",
-      "name": "Walace",
-      "result": "mismatch",
-      "detail": "Hamburgo não está no Wikidata"
-    },
-    {
-      "qid": "Q14584722",
-      "name": "Vitinho (futebolista)",
-      "result": "mismatch",
-      "detail": "Internacional-RS não está no Wikidata"
-    },
-    {
-      "qid": "Q20716703",
-      "name": "Wesley Moraes",
-      "result": "mismatch",
-      "detail": "Levante não está no Wikidata"
-    },
-    {
-      "qid": "Q56223006",
-      "name": "Carlos Augusto",
-      "result": "verified"
-    },
-    {
-      "qid": "Q31766",
-      "name": "Mariano Ferreira Filho",
-      "result": "mismatch",
-      "detail": "América-MG não está no Wikidata"
-    },
-    {
-      "qid": "Q66651898",
-      "name": "Abner Vinícius da Silva Santos",
-      "result": "mismatch",
-      "detail": "Real Betis não está no Wikidata"
-    },
-    {
-      "qid": "Q218105",
-      "name": "Túlio Lustosa Seixas Pinheiro",
-      "result": "verified"
-    },
-    {
-      "qid": "Q263411",
-      "name": "Thiago Quirino da Silva",
-      "result": "mismatch",
-      "detail": "Oita Trinita não está no Wikidata"
-    },
-    {
-      "qid": "Q197561",
-      "name": "José Jadílson dos Santos Silva",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q197572",
-      "name": "Hugo Henrique Assis do Nascimento",
-      "result": "mismatch",
-      "detail": "Belenenses não está no Wikidata"
-    },
-    {
-      "qid": "Q197584",
-      "name": "Henrique Pacheco Lima",
-      "result": "mismatch",
-      "detail": "Fluminense não está no Wikidata"
-    },
-    {
-      "qid": "Q197593",
-      "name": "Clesly Evandro Guimarães",
-      "result": "verified"
-    },
-    {
-      "qid": "Q210101",
-      "name": "Edmilson Alves",
-      "result": "mismatch",
-      "detail": "ECUS não está no Wikidata"
-    },
-    {
-      "qid": "Q210119",
-      "name": "Alex Antônio de Melo Santos",
-      "result": "mismatch",
-      "detail": "Kamatamare Sanuki não está no Wikidata"
-    },
-    {
-      "qid": "Q210128",
-      "name": "Diego de Souza Gama Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q210225",
-      "name": "Sandro Cardoso dos Santos",
-      "result": "mismatch",
-      "detail": "Changsha Ginde não está no Wikidata"
-    },
-    {
-      "qid": "Q375496",
-      "name": "Fábio Rochemback",
-      "result": "verified"
-    },
-    {
-      "qid": "Q447215",
-      "name": "Lincoln",
-      "result": "mismatch",
-      "detail": "Total não está no Wikidata"
-    },
-    {
-      "qid": "Q455804",
-      "name": "Ilsinho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q461505",
-      "name": "Ederson Honorato Campos",
-      "result": "mismatch",
-      "detail": "RS Futebol não está no Wikidata"
-    },
-    {
-      "qid": "Q180164",
-      "name": "Alan Douglas Borges de Carvalho",
-      "result": "mismatch",
-      "detail": "Tianjin Quanjian não está no Wikidata"
-    },
-    {
-      "qid": "Q508075",
-      "name": "Bruno Uvini",
-      "result": "mismatch",
-      "detail": "Al-Nassr não está no Wikidata"
-    },
-    {
-      "qid": "Q2529972",
-      "name": "Aluísio Chaves Ribeiro Moraes Júnior",
-      "result": "mismatch",
-      "detail": "Tianjin Quanjian não está no Wikidata"
-    },
-    {
-      "qid": "Q993172",
-      "name": "Bruno Coutinho Martins",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1028083",
-      "name": "Airton Graciliano dos Santos",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q554591",
-      "name": "Ronny Heberson Furtado de Araújo",
-      "result": "mismatch",
-      "detail": "Fortaleza não está no Wikidata"
-    },
-    {
-      "qid": "Q4720844",
-      "name": "Alexandre Gallo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q4389795",
-      "name": "Ramon Lopez de Freitas",
-      "result": "mismatch",
-      "detail": "Khor Fakkan não está no Wikidata"
-    },
-    {
-      "qid": "Q677923",
-      "name": "Fábio",
-      "result": "mismatch",
-      "detail": "Fluminense não está no Wikidata"
-    },
-    {
-      "qid": "Q713886",
-      "name": "Giuliano",
-      "result": "verified"
-    },
-    {
-      "qid": "Q718871",
-      "name": "Adalto Batista da Silva",
-      "result": "mismatch",
-      "detail": "Santo André não está no Wikidata"
-    },
-    {
-      "qid": "Q827215",
-      "name": "Jorge Pereira da Silva",
-      "result": "mismatch",
-      "detail": "Deportivo Municipal não está no Wikidata"
-    },
-    {
-      "qid": "Q887969",
-      "name": "Válber Costa",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q935446",
-      "name": "Jymmy Dougllas França",
-      "result": "mismatch",
-      "detail": "Guaratinguetá não está no Wikidata"
-    },
-    {
-      "qid": "Q959642",
-      "name": "Obina",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q965510",
-      "name": "Éldis Fernando Damasio",
-      "result": "mismatch",
-      "detail": "Linense não está no Wikidata"
-    },
-    {
-      "qid": "Q1185466",
-      "name": "Rodrigo Fabiano Mendes",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q1185667",
-      "name": "Elpídio Pereira da Silva Filho",
-      "result": "mismatch",
-      "detail": "Sporting não está no Wikidata"
-    },
-    {
-      "qid": "Q1339366",
-      "name": "Rafael Marques Mariano",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1574428",
-      "name": "Alexandre Luiz Fernandes",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q2321775",
-      "name": "José Maria Rodrigues Alves",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q39079181",
-      "name": "Paulo Henrique Sampaio Filho",
-      "result": "mismatch",
-      "detail": "Atlético-MG não está no Wikidata"
-    },
-    {
-      "qid": "Q18124343",
-      "name": "Danilo Barbosa da Silva",
-      "result": "mismatch",
-      "detail": "Benfica não está no Wikidata"
-    },
-    {
-      "qid": "Q18233590",
-      "name": "Rafael da Silva",
-      "result": "mismatch",
-      "detail": "Wuhan Zall não está no Wikidata"
-    },
-    {
-      "qid": "Q14628966",
-      "name": "Éderson Alves Ribeiro Silva",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q28131394",
-      "name": "Luiz Felipe Ramos Marchi",
-      "result": "verified"
-    },
-    {
-      "qid": "Q65030995",
-      "name": "Igor Jesus",
-      "result": "verified"
-    },
-    {
-      "qid": "Q69691627",
-      "name": "Junior Messias",
-      "result": "mismatch",
-      "detail": "Casale não está no Wikidata"
-    },
-    {
-      "qid": "Q47360",
-      "name": "Aldrovani Menon",
-      "result": "mismatch",
-      "detail": "Matsubara-BRA não está no Wikidata"
-    },
-    {
-      "qid": "Q47756",
-      "name": "Éverton Nogueira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q218114",
-      "name": "Fabrício de Souza",
-      "result": "verified"
-    },
-    {
-      "qid": "Q181193",
-      "name": "Roger Silva",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q183210",
-      "name": "Brandão",
-      "result": "verified"
-    },
-    {
-      "qid": "Q197591",
-      "name": "Marcel Augusto Ortolan",
-      "result": "verified"
-    },
-    {
-      "qid": "Q210026",
-      "name": "Fumagalli",
-      "result": "mismatch",
-      "detail": "Ferroviária não está no Wikidata"
-    },
-    {
-      "qid": "Q217882",
-      "name": "Rodrigo Souto",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q217992",
-      "name": "Eduardo Francisco da Silva Neto",
-      "result": "verified"
-    },
-    {
-      "qid": "Q218095",
-      "name": "Wolnei Caio",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q382069",
-      "name": "Giovanni Silva de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q458691",
-      "name": "Welliton Soares Morais",
-      "result": "mismatch",
-      "detail": "Kayserispor não está no Wikidata"
-    },
-    {
-      "qid": "Q464911",
-      "name": "Ricardo Henrique da Silva dos Santos",
-      "result": "mismatch",
-      "detail": "Fagiano Okayama não está no Wikidata"
-    },
-    {
-      "qid": "Q180934",
-      "name": "Luís Fernando Lojudice Martinez",
-      "result": "verified"
-    },
-    {
-      "qid": "Q180959",
-      "name": "Carlos Alexandre Souza Silva",
-      "result": "mismatch",
-      "detail": "Shijiazhuang Ever Bright não está no Wikidata"
-    },
-    {
-      "qid": "Q314225",
-      "name": "Keirrison",
-      "result": "mismatch",
-      "detail": "Arouca não está no Wikidata"
-    },
-    {
-      "qid": "Q322691",
-      "name": "Rodrigo Pereira Possebon",
-      "result": "mismatch",
-      "detail": "Al Riffa não está no Wikidata"
-    },
-    {
-      "qid": "Q335916",
-      "name": "Anderson Carvalho",
-      "result": "mismatch",
-      "detail": "Grêmio Barueri não está no Wikidata"
-    },
-    {
-      "qid": "Q352716",
-      "name": "Abuda",
-      "result": "mismatch",
-      "detail": "Fernandópolis não está no Wikidata"
-    },
-    {
-      "qid": "Q355742",
-      "name": "Ademir da Guia",
-      "result": "verified"
-    },
-    {
-      "qid": "Q371215",
-      "name": "Renan Brito Soares",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q513648",
-      "name": "Jonathan Cícero Moreira",
-      "result": "mismatch",
-      "detail": "Athlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q517914",
-      "name": "Dadá Maravilha",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2449611",
-      "name": "Mazarópi",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2451450",
-      "name": "Kayke Moreno de Andrade Rodrigues",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q2722916",
-      "name": "Ricardo Alves Pereira",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q2752693",
-      "name": "Renan Bardini Bressan",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q1027858",
-      "name": "Raudinei Anversa Freire",
-      "result": "mismatch",
-      "detail": "Juventude não está no Wikidata"
-    },
-    {
-      "qid": "Q524712",
-      "name": "Jonathan Reis",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2608653",
-      "name": "Zé Mario",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q3081138",
-      "name": "Renato Ribeiro Calixto",
-      "result": "mismatch",
-      "detail": "Ituano não está no Wikidata"
-    },
-    {
-      "qid": "Q619109",
-      "name": "Eduardo da Silva Nascimento Neto",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q654041",
-      "name": "Ariclenes da Silva Ferreira",
-      "result": "mismatch",
-      "detail": "Lokomotiv não está no Wikidata"
-    },
-    {
-      "qid": "Q718903",
-      "name": "Dutra",
-      "result": "mismatch",
-      "detail": "Bacabal não está no Wikidata"
-    },
-    {
-      "qid": "Q718946",
-      "name": "Marcos Aurélio de Oliveira Lima",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q718960",
-      "name": "Alessandro Nunes Nascimento",
-      "result": "verified"
-    },
-    {
-      "qid": "Q718964",
-      "name": "Roberto Júlio de Figueiredo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q721984",
-      "name": "Nílton De Sordi",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q723383",
-      "name": "Luís Oliveira",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q937218",
-      "name": "Guilherme Oliveira Santos",
-      "result": "mismatch",
-      "detail": "Sampaio Corrêa não está no Wikidata"
-    },
-    {
-      "qid": "Q887980",
-      "name": "Rychely",
-      "result": "mismatch",
-      "detail": "Mirassol não está no Wikidata"
-    },
-    {
-      "qid": "Q888091",
-      "name": "Leandro Costa Miranda Moraes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q919942",
-      "name": "Falcão",
-      "result": "mismatch",
-      "detail": "Brasil Kirin não está no Wikidata"
-    },
-    {
-      "qid": "Q927135",
-      "name": "Hugo Alcântara",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q927470",
-      "name": "Francisco Aramburu",
-      "result": "mismatch",
-      "detail": "Ferro Carril-RS não está no Wikidata"
-    },
-    {
-      "qid": "Q928137",
-      "name": "Marcelo Ramos",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q3245467",
-      "name": "Péricles Chamusca",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1185872",
-      "name": "Henrique Arlindo Etges",
-      "result": "mismatch",
-      "detail": "União São João não está no Wikidata"
-    },
-    {
-      "qid": "Q954475",
-      "name": "Waldir Peres",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q955965",
-      "name": "Sérgio Soares",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q965517",
-      "name": "Paulo Antônio de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q965766",
-      "name": "Adiel de Oliveira Amorim",
-      "result": "mismatch",
-      "detail": "Wuhan Zall FC não está no Wikidata"
-    },
-    {
-      "qid": "Q1191021",
-      "name": "Ramón Osni Moreira Lage",
-      "result": "mismatch",
-      "detail": "Brasiliense não está no Wikidata"
-    },
-    {
-      "qid": "Q1254357",
-      "name": "Fernando Lucas Martins",
-      "result": "mismatch",
-      "detail": "Spartak de Moscou não está no Wikidata"
-    },
-    {
-      "qid": "Q1254883",
-      "name": "Rodrigo Gral",
-      "result": "mismatch",
-      "detail": "DPMM FC não está no Wikidata"
-    },
-    {
-      "qid": "Q1343384",
-      "name": "Reginaldo Ferreira da Silva",
-      "result": "mismatch",
-      "detail": "Paganese não está no Wikidata"
-    },
-    {
-      "qid": "Q1353788",
-      "name": "Josimar Higino Pereira",
-      "result": "mismatch",
-      "detail": "Fortaleza não está no Wikidata"
-    },
-    {
-      "qid": "Q1408157",
-      "name": "Marcelo Grohe",
-      "result": "mismatch",
-      "detail": "Al-Ittihad não está no Wikidata"
-    },
-    {
-      "qid": "Q1440120",
-      "name": "Márcio Rodrigues Araújo",
-      "result": "mismatch",
-      "detail": "Chapecoense não está no Wikidata"
-    },
-    {
-      "qid": "Q1440374",
-      "name": "Gilmar Silva Santos",
-      "result": "mismatch",
-      "detail": "Prudente não está no Wikidata"
-    },
-    {
-      "qid": "Q1574276",
-      "name": "Davi Rodrigues de Jesus",
-      "result": "mismatch",
-      "detail": "Nei Mongol Zhongyou não está no Wikidata"
-    },
-    {
-      "qid": "Q2093183",
-      "name": "Anselmo Ramon",
-      "result": "mismatch",
-      "detail": "Guarani não está no Wikidata"
-    },
-    {
-      "qid": "Q2093661",
-      "name": "Pedro Júnior",
-      "result": "mismatch",
-      "detail": "Wuhan Zall não está no Wikidata"
-    },
-    {
-      "qid": "Q1824497",
-      "name": "Marcelo Mabilia",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1825181",
-      "name": "Antônio Rinaldo Gonçalves",
-      "result": "mismatch",
-      "detail": "Serrano não está no Wikidata"
-    },
-    {
-      "qid": "Q2266089",
-      "name": "Dino Sani",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2294362",
-      "name": "Edvaldo Alves de Santa Rosa",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2294406",
-      "name": "Jonas Eduardo Américo",
-      "result": "mismatch",
-      "detail": "Colorado não está no Wikidata"
-    },
-    {
-      "qid": "Q2307148",
-      "name": "Moderato Wisinteiner",
-      "result": "mismatch",
-      "detail": "Guarani-RS não está no Wikidata"
-    },
-    {
-      "qid": "Q2311308",
-      "name": "Abel Braga",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2334475",
-      "name": "Zé Carlos",
-      "result": "mismatch",
-      "detail": "Marília não está no Wikidata"
-    },
-    {
-      "qid": "Q98534760",
-      "name": "Marcos Leonardo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q17589329",
-      "name": "Wellington Daniel Bueno",
-      "result": "mismatch",
-      "detail": "Tokushima Vortis não está no Wikidata"
-    },
-    {
-      "qid": "Q15401973",
-      "name": "Alex Roberto Santana Rafael",
-      "result": "mismatch",
-      "detail": "Olé Brasil não está no Wikidata"
-    },
-    {
-      "qid": "Q59649459",
-      "name": "Lucas Beltrán",
-      "result": "verified"
-    },
-    {
-      "qid": "Q17267205",
-      "name": "Anderson José Lopes de Souza",
-      "result": "mismatch",
-      "detail": "Marcílio Dias não está no Wikidata"
-    },
-    {
-      "qid": "Q18275387",
-      "name": "Andrei Girotto",
-      "result": "mismatch",
-      "detail": "Al-Taawoun não está no Wikidata"
-    },
-    {
-      "qid": "Q18277749",
-      "name": "Thiago Henrique Mendes Ribeiro",
-      "result": "mismatch",
-      "detail": "Lille não está no Wikidata"
-    },
-    {
-      "qid": "Q100879633",
-      "name": "Ângelo Gabriel",
-      "result": "mismatch",
-      "detail": "Chelsea não está no Wikidata"
-    },
-    {
-      "qid": "Q35694605",
-      "name": "Carlos Vinícius Alves Morais",
-      "result": "mismatch",
-      "detail": "Caldense não está no Wikidata"
-    },
-    {
-      "qid": "Q58762",
-      "name": "Leonardo de Deus Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q69975567",
-      "name": "Francisco Evanilson de Lima Barbosa",
-      "result": "mismatch",
-      "detail": "ŠTK Šamorín não está no Wikidata"
-    },
-    {
-      "qid": "Q218611",
-      "name": "Marcos Rocha",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q250962",
-      "name": "Geovanni",
-      "result": "mismatch",
-      "detail": "Hull City não está no Wikidata"
-    },
-    {
-      "qid": "Q290372",
-      "name": "Régis Pitbull",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q197719",
-      "name": "Gilsinho",
-      "result": "mismatch",
-      "detail": "Atlético Goianiense não está no Wikidata"
-    },
-    {
-      "qid": "Q210023",
-      "name": "Anderson Andrade Antunes",
-      "result": "mismatch",
-      "detail": "Rio Branco de Andradas não está no Wikidata"
-    },
-    {
-      "qid": "Q210071",
-      "name": "Adilson Ferreira de Souza",
-      "result": "mismatch",
-      "detail": "ADAP não está no Wikidata"
-    },
-    {
-      "qid": "Q217873",
-      "name": "Tartá",
-      "result": "mismatch",
-      "detail": "Bragantino não está no Wikidata"
-    },
-    {
-      "qid": "Q381207",
-      "name": "Matuzalém",
-      "result": "mismatch",
-      "detail": "Real Monterosi não está no Wikidata"
-    },
-    {
-      "qid": "Q389196",
-      "name": "Paulo César Carpegiani",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q451048",
-      "name": "Denni Rocha dos Santos",
-      "result": "mismatch",
-      "detail": "Sliema não está no Wikidata"
-    },
-    {
-      "qid": "Q458481",
-      "name": "Aílton de Oliveira Modesto",
-      "result": "mismatch",
-      "detail": "Santo André não está no Wikidata"
-    },
-    {
-      "qid": "Q465023",
-      "name": "Luís Alberto Silva dos Santos",
-      "result": "verified"
-    },
-    {
-      "qid": "Q164575",
-      "name": "Paulo Assunção",
-      "result": "verified"
-    },
-    {
-      "qid": "Q359071",
-      "name": "Pedro Botelho",
-      "result": "mismatch",
-      "detail": "Figueirense não está no Wikidata"
-    },
-    {
-      "qid": "Q508434",
-      "name": "Angelo Benedicto Sormani",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q510123",
-      "name": "Elias",
-      "result": "mismatch",
-      "detail": "Atlético de Madrid não está no Wikidata"
-    },
-    {
-      "qid": "Q514577",
-      "name": "Dentinho",
-      "result": "mismatch",
-      "detail": "Ceará não está no Wikidata"
-    },
-    {
-      "qid": "Q518810",
-      "name": "Luiz Marcelo Morais dos Reis",
-      "result": "mismatch",
-      "detail": "Mogi Mirim não está no Wikidata"
-    },
-    {
-      "qid": "Q2447197",
-      "name": "Joel Camargo",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q1947869",
-      "name": "Marquinhos Paraná",
-      "result": "mismatch",
-      "detail": "Operário não está no Wikidata"
-    },
-    {
-      "qid": "Q978042",
-      "name": "Jair Rosa Pinto",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1027483",
-      "name": "Apodi",
-      "result": "mismatch",
-      "detail": "Sport não está no Wikidata"
-    },
-    {
-      "qid": "Q1028073",
-      "name": "Leandro Simioni",
-      "result": "mismatch",
-      "detail": "XV de Piracicaba não está no Wikidata"
-    },
-    {
-      "qid": "Q1028309",
-      "name": "José Alexandre Alves Lindo",
-      "result": "mismatch",
-      "detail": "Guarani não está no Wikidata"
-    },
-    {
-      "qid": "Q527624",
-      "name": "Weligton Robson Pena de Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q560329",
-      "name": "Maicon Pereira Roque",
-      "result": "mismatch",
-      "detail": "Galatasaray não está no Wikidata"
-    },
-    {
-      "qid": "Q603190",
-      "name": "Júlio César da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q4291204",
-      "name": "Heberty Fernandes de Andrade",
-      "result": "mismatch",
-      "detail": "Recanatese não está no Wikidata"
-    },
-    {
-      "qid": "Q2975841",
-      "name": "Rodrigo Tiuí",
-      "result": "mismatch",
-      "detail": "Sporting-POR não está no Wikidata"
-    },
-    {
-      "qid": "Q3018748",
-      "name": "Marcos Júnior",
-      "result": "mismatch",
-      "detail": "Cuiabá não está no Wikidata"
-    },
-    {
-      "qid": "Q3041366",
-      "name": "Josimar Rodrigues Souza Roberto",
-      "result": "mismatch",
-      "detail": "CSA não está no Wikidata"
-    },
-    {
-      "qid": "Q3087907",
-      "name": "Luan Garcia Teixeira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q614391",
-      "name": "Roberto Lopes Miranda",
-      "result": "verified"
-    },
-    {
-      "qid": "Q617382",
-      "name": "Dênis Marques",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q703634",
-      "name": "Bauer",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q706496",
-      "name": "Rafael dos Santos de Oliveira",
-      "result": "mismatch",
-      "detail": "GO Audax não está no Wikidata"
-    },
-    {
-      "qid": "Q712406",
-      "name": "Neto Baiano",
-      "result": "mismatch",
-      "detail": "Mirassol não está no Wikidata"
-    },
-    {
-      "qid": "Q718894",
-      "name": "Antônio Carlos Santos",
-      "result": "mismatch",
-      "detail": "UANL não está no Wikidata"
-    },
-    {
-      "qid": "Q718949",
-      "name": "Davi José Silva do Nascimento",
-      "result": "mismatch",
-      "detail": "Matsumoto Yamaga não está no Wikidata"
-    },
-    {
-      "qid": "Q719466",
-      "name": "Finazzi",
-      "result": "mismatch",
-      "detail": "Rio Branco-MG não está no Wikidata"
-    },
-    {
-      "qid": "Q742644",
-      "name": "Reinaldo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q5340332",
-      "name": "Edson Tavares",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q10263686",
-      "name": "Dado Cavalcanti",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q887974",
-      "name": "Alberto Luiz de Souza",
-      "result": "mismatch",
-      "detail": "Rio Branco-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q887982",
-      "name": "Léo San",
-      "result": "verified"
-    },
-    {
-      "qid": "Q888010",
-      "name": "Sidiclei de Souza",
-      "result": "verified"
-    },
-    {
-      "qid": "Q888032",
-      "name": "Renato Carlos Martins Júnior",
-      "result": "mismatch",
-      "detail": "Varzim não está no Wikidata"
-    },
-    {
-      "qid": "Q3246328",
-      "name": "Valdeir Badú Vieira",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1185920",
-      "name": "José Ilson dos Santos",
-      "result": "mismatch",
-      "detail": "XV de Piracicaba não está no Wikidata"
-    },
-    {
-      "qid": "Q1185480",
-      "name": "Fabiano Cezar Viegas",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q1185582",
-      "name": "Marcos Aurélio Galeano",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1185635",
-      "name": "Marcelo Miguel Pelissari",
-      "result": "mismatch",
-      "detail": "Paraguaçuense não está no Wikidata"
-    },
-    {
-      "qid": "Q1254494",
-      "name": "Schwenck",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q1255932",
-      "name": "José Róbson do Nascimento",
-      "result": "mismatch",
-      "detail": "Paulistano-PE não está no Wikidata"
-    },
-    {
-      "qid": "Q1284800",
-      "name": "Edino Nazareth Filho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1365706",
-      "name": "Sidnei Rechel da Silva Junior",
-      "result": "mismatch",
-      "detail": "Cruzeiro não está no Wikidata"
-    },
-    {
-      "qid": "Q1573378",
-      "name": "José Antônio Martins Galvão",
-      "result": "mismatch",
-      "detail": "Ituano não está no Wikidata"
-    },
-    {
-      "qid": "Q1573458",
-      "name": "Rodrigo Vergilio",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q1574084",
-      "name": "Marcelino Júnior Lopes Arruda",
-      "result": "mismatch",
-      "detail": "Jeonbuk Hyundai Motors não está no Wikidata"
-    },
-    {
-      "qid": "Q2092417",
-      "name": "Renato Cajá",
-      "result": "mismatch",
-      "detail": "Bahia não está no Wikidata"
-    },
-    {
-      "qid": "Q2093052",
-      "name": "Toninho Cecílio",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q2093145",
-      "name": "Marcus Vinicius de Morais",
-      "result": "mismatch",
-      "detail": "Rio Branco-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q2153488",
-      "name": "Sérgio Dutra Junior",
-      "result": "mismatch",
-      "detail": "Athletico-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q4979165",
-      "name": "Bruno Suzuki",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q3663845",
-      "name": "Cauê Cecilio da Silva",
-      "result": "mismatch",
-      "detail": "Moreirense não está no Wikidata"
-    },
-    {
-      "qid": "Q3700733",
-      "name": "Roberto César Zardin Rodrigues",
-      "result": "mismatch",
-      "detail": "Atlético de Ibirama não está no Wikidata"
-    },
-    {
-      "qid": "Q1824433",
-      "name": "Marcos Antonio García Nascimento",
-      "result": "mismatch",
-      "detail": "Vasco da Gama não está no Wikidata"
-    },
-    {
-      "qid": "Q1824490",
-      "name": "Claudecir Aparecido de Aguiar",
-      "result": "mismatch",
-      "detail": "Mogi Mirim não está no Wikidata"
-    },
-    {
-      "qid": "Q1824521",
-      "name": "Gesiel José de Lima",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2255368",
-      "name": "Reinaldo Vicente Simão",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2256145",
-      "name": "Giuliano Tadeu Aranda",
-      "result": "mismatch",
-      "detail": "Araçatuba não está no Wikidata"
-    },
-    {
-      "qid": "Q2294414",
-      "name": "Marco Antônio Feliciano",
-      "result": "verified"
-    },
-    {
-      "qid": "Q4979352",
-      "name": "Bruno Peres",
-      "result": "mismatch",
-      "detail": "Torino não está no Wikidata"
-    },
-    {
-      "qid": "Q2306110",
-      "name": "Leivinha",
-      "result": "mismatch",
-      "detail": "Linense não está no Wikidata"
-    },
-    {
-      "qid": "Q2399046",
-      "name": "Lori Sandri",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q15831136",
-      "name": "Pablo Felipe Teixeira",
-      "result": "mismatch",
-      "detail": "São Paulo não está no Wikidata"
-    },
-    {
-      "qid": "Q15964397",
-      "name": "Sérgio Antônio Soler de Oliveira Júnior",
-      "result": "mismatch",
-      "detail": "Vitória não está no Wikidata"
-    },
-    {
-      "qid": "Q15402028",
-      "name": "Carlos Eduardo Bendini Giusti",
-      "result": "verified"
-    },
-    {
-      "qid": "Q15991578",
-      "name": "Fernando Marçal Oliveira",
-      "result": "mismatch",
-      "detail": "Botafogo não está no Wikidata"
-    },
-    {
-      "qid": "Q18358167",
-      "name": "Maurício Antônio",
-      "result": "mismatch",
-      "detail": "Al-Batin não está no Wikidata"
-    },
-    {
-      "qid": "Q18394141",
-      "name": "Thiago Maia",
-      "result": "mismatch",
-      "detail": "Lille não está no Wikidata"
-    },
-    {
-      "qid": "Q27443365",
-      "name": "Raphael Veiga",
-      "result": "verified"
-    },
-    {
-      "qid": "Q15207061",
-      "name": "Lucas Lima",
-      "result": "mismatch",
-      "detail": "Palmeiras não está no Wikidata"
-    },
-    {
-      "qid": "Q14091212",
-      "name": "Leonardo da Silva Souza",
-      "result": "mismatch",
-      "detail": "Maringá não está no Wikidata"
-    },
-    {
-      "qid": "Q19973714",
-      "name": "Milton Mendes",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q47323",
-      "name": "Edoson Silva Martins",
-      "result": "mismatch",
-      "detail": "Aris não está no Wikidata"
-    },
-    {
-      "qid": "Q47364",
-      "name": "Paulo Rodrigues Barc",
-      "result": "mismatch",
-      "detail": "Nacional FC-MG não está no Wikidata"
-    },
-    {
-      "qid": "Q85782624",
-      "name": "Luis Henrique",
-      "result": "mismatch",
-      "detail": "Marseille não está no Wikidata"
-    },
-    {
-      "qid": "Q262954",
-      "name": "Marcelinho Paraíba",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q210153",
-      "name": "Ataliba",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q212491",
-      "name": "Zé Elias",
-      "result": "verified"
-    },
-    {
-      "qid": "Q217876",
-      "name": "Rogério Miranda Silva",
-      "result": "mismatch",
-      "detail": "Remo não está no Wikidata"
-    },
-    {
-      "qid": "Q439450",
-      "name": "Alex Silva",
-      "result": "mismatch",
-      "detail": "Hercílio Luz não está no Wikidata"
-    },
-    {
-      "qid": "Q460029",
-      "name": "Alcides Araújo Alves",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q460484",
-      "name": "Luís Eduardo Schmidt",
-      "result": "mismatch",
-      "detail": "Real Betis não está no Wikidata"
-    },
-    {
-      "qid": "Q463751",
-      "name": "Júlio Sérgio Bertagnoli",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q117655",
-      "name": "Igor de Camargo",
-      "result": "mismatch",
-      "detail": "APOEL não está no Wikidata"
-    },
-    {
-      "qid": "Q2455175",
-      "name": "Valdemar Rodrigues Martins",
-      "result": "mismatch",
-      "detail": "Inter-SM não está no Wikidata"
-    },
-    {
-      "qid": "Q2507087",
-      "name": "Elton Rodrigues Brandão",
-      "result": "mismatch",
-      "detail": "Coritiba não está no Wikidata"
-    },
-    {
-      "qid": "Q372643",
-      "name": "Carlos Eduardo Marques",
-      "result": "mismatch",
-      "detail": "Vitória não está no Wikidata"
-    },
-    {
-      "qid": "Q1066658",
-      "name": "Reinaldo Gonçalves Félix",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q1071079",
-      "name": "André Luiz Rodrigues Lopes",
-      "result": "mismatch",
-      "detail": "Confiança não está no Wikidata"
-    },
-    {
-      "qid": "Q525199",
-      "name": "José Carlos Serrão",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q537644",
-      "name": "Daniel Carvalho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q553061",
-      "name": "Evaristo de Macedo",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q555601",
-      "name": "Waldemar de Brito",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q559474",
-      "name": "Edu Dracena",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q4707335",
-      "name": "Alan Mineiro",
-      "result": "mismatch",
-      "detail": "Atlético Paranaense não está no Wikidata"
-    },
-    {
-      "qid": "Q5274756",
-      "name": "Diego Oliveira",
-      "result": "mismatch",
-      "detail": "FC Tokyo não está no Wikidata"
-    },
-    {
-      "qid": "Q2565969",
-      "name": "Jair Marinho",
-      "result": "mismatch",
-      "detail": "Alianza Lima não está no Wikidata"
-    },
-    {
-      "qid": "Q2626107",
-      "name": "João Pedro Galvão",
-      "result": "mismatch",
-      "detail": "Fenerbahçe não está no Wikidata"
-    },
-    {
-      "qid": "Q2016547",
-      "name": "Nathan Júnior",
-      "result": "mismatch",
-      "detail": "Al-Fateh não está no Wikidata"
-    },
-    {
-      "qid": "Q614969",
-      "name": "André Luiz de Souza Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q668103",
-      "name": "Alex Chandre de Oliveira",
-      "result": "mismatch",
-      "detail": "Ponte Preta não está no Wikidata"
-    },
-    {
-      "qid": "Q703983",
-      "name": "Derlei",
-      "result": "mismatch",
-      "detail": "Sporting CP não está no Wikidata"
-    },
-    {
-      "qid": "Q714354",
-      "name": "Túlio Maravilha",
-      "result": "mismatch",
-      "detail": "Potyguar Seridoense não está no Wikidata"
-    },
-    {
-      "qid": "Q715599",
-      "name": "Erison Carlos dos Santos Silva",
-      "result": "mismatch",
-      "detail": "Atlético-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q756122",
-      "name": "Felipe Félix",
-      "result": "mismatch",
-      "detail": "Nazarenos não está no Wikidata"
-    },
-    {
-      "qid": "Q5428255",
-      "name": "Fabrício dos Santos Messias",
-      "result": "mismatch",
-      "detail": "Kashima Antlers não está no Wikidata"
-    },
-    {
-      "qid": "Q5993769",
-      "name": "Igor Sartori",
-      "result": "mismatch",
-      "detail": "Volta Redonda não está no Wikidata"
-    },
-    {
-      "qid": "Q887989",
-      "name": "Harison da Silva Nery",
-      "result": "mismatch",
-      "detail": "Shenzhen Phoenix não está no Wikidata"
-    },
-    {
-      "qid": "Q887996",
-      "name": "Jonílson Clovis Nascimento Breves",
-      "result": "mismatch",
-      "detail": "Comercial-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q888029",
-      "name": "Enílton",
-      "result": "mismatch",
-      "detail": "Barreira não está no Wikidata"
-    },
-    {
-      "qid": "Q919825",
-      "name": "Nelinho",
-      "result": "no-infobox"
-    },
-    {
-      "qid": "Q922118",
-      "name": "Rodrigo José Lima dos Santos",
-      "result": "mismatch",
-      "detail": "J. Malucelli não está no Wikidata"
-    },
-    {
-      "qid": "Q923774",
-      "name": "Matheus Leite Nascimento",
-      "result": "mismatch",
-      "detail": "Shijiazhuang Ever Bright não está no Wikidata"
-    },
-    {
-      "qid": "Q932851",
-      "name": "Matías Aguirregaray",
-      "result": "mismatch",
-      "detail": "Tijuana não está no Wikidata"
-    },
-    {
-      "qid": "Q3251347",
-      "name": "Marco Aurelio Silva Businhani",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1185895",
-      "name": "José Ricardo dos Santos Oliveira",
-      "result": "verified"
-    },
-    {
-      "qid": "Q965503",
-      "name": "Tiago Prado",
-      "result": "mismatch",
-      "detail": "Roma Apucarana não está no Wikidata"
-    },
-    {
-      "qid": "Q971732",
-      "name": "Danilo Fernando Avelar",
-      "result": "mismatch",
-      "detail": "Amiens não está no Wikidata"
-    },
-    {
-      "qid": "Q1124971",
-      "name": "Eric de Oliveira Pereira",
-      "result": "mismatch",
-      "detail": "CFZ de Brasília não está no Wikidata"
-    },
-    {
-      "qid": "Q1185530",
-      "name": "Marco Aurélio Fernandes da Silva",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1185587",
-      "name": "Sandro Chaves de Assis Rosa",
-      "result": "mismatch",
-      "detail": "ABC não está no Wikidata"
-    },
-    {
-      "qid": "Q1185618",
-      "name": "Ricardo Souza Silva",
-      "result": "mismatch",
-      "detail": "Sport não está no Wikidata"
-    },
-    {
-      "qid": "Q5852801",
-      "name": "Everton Luiz Guimarães Bilher",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q2073162",
-      "name": "Marcos Pizzelli",
-      "result": "mismatch",
-      "detail": "Al-Fujairah não está no Wikidata"
-    },
-    {
-      "qid": "Q1254334",
-      "name": "Washington Luiz Mascarenhas Silva",
-      "result": "mismatch",
-      "detail": "ECO não está no Wikidata"
-    },
-    {
-      "qid": "Q1254383",
-      "name": "Fernando Almeida de Oliveira",
-      "result": "mismatch",
-      "detail": "Villareal não está no Wikidata"
-    },
-    {
-      "qid": "Q1254721",
-      "name": "Danilo Gomes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1255953",
-      "name": "Bentinho",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1341709",
-      "name": "Dudu",
-      "result": "mismatch",
-      "detail": "Al-Duhail não está no Wikidata"
-    },
-    {
-      "qid": "Q1378124",
-      "name": "Casagrande",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1383449",
-      "name": "Wellington Luís de Sousa",
-      "result": "mismatch",
-      "detail": "Botafogo-SP não está no Wikidata"
-    },
-    {
-      "qid": "Q3909869",
-      "name": "Edinaldo Gomes Pereira",
-      "result": "mismatch",
-      "detail": "Cascavel não está no Wikidata"
-    },
-    {
-      "qid": "Q3940042",
-      "name": "Rodrigo Mancha",
-      "result": "mismatch",
-      "detail": "Independente-PR não está no Wikidata"
-    },
-    {
-      "qid": "Q1440130",
-      "name": "Anaílson Brito Noleto",
-      "result": "mismatch",
-      "detail": "XV de Piracicaba não está no Wikidata"
-    },
-    {
-      "qid": "Q1440137",
-      "name": "Zé Luís",
-      "result": "mismatch",
-      "detail": "Atlético Mineiro não está no Wikidata"
-    },
-    {
-      "qid": "Q1440166",
-      "name": "Valdeci Basílio da Silva",
-      "result": "mismatch",
-      "detail": "Andradina não está no Wikidata"
-    },
-    {
-      "qid": "Q1440209",
-      "name": "Júnior Maranhão",
-      "result": "mismatch",
-      "detail": "Moto Club de São Luís não está no Wikidata"
-    },
-    {
-      "qid": "Q1440213",
-      "name": "José Carlos Garcia Leal",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1440624",
-      "name": "Osmar Aparecido de Azevedo",
-      "result": "mismatch",
-      "detail": "Inter de Limeira não está no Wikidata"
-    },
-    {
-      "qid": "Q1440632",
-      "name": "Serginho Baiano",
-      "result": "mismatch",
-      "detail": "CRB não está no Wikidata"
-    },
-    {
-      "qid": "Q11571",
-      "name": "Cristiano Ronaldo",
-      "result": "verified"
-    },
-    {
-      "qid": "Q1835",
-      "name": "Zinédine Zidane",
-      "result": "verified"
-    },
-    {
-      "qid": "Q17515",
-      "name": "Diego Maradona",
-      "result": "verified"
-    },
-    {
-      "qid": "Q10520",
-      "name": "David Beckham",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2255847",
-      "name": "Alison Barros Moraes",
-      "result": "verified"
-    },
-    {
-      "qid": "Q2255874",
-      "name": "Edmílson Matias",
-      "result": "verified"
-    }
-  ]
+ "ranAt": "2026-11-05T16:01:47.224Z",
+ "outcomes": [
+  {
+   "qid": "Q28973866",
+   "name": "Vinícius Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q616664",
+   "name": "Casemiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q38136",
+   "name": "Marcelo Vieira da Silva Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q485697",
+   "name": "Pepe",
+   "result": "verified"
+  },
+  {
+   "qid": "Q47526",
+   "name": "Zico",
+   "result": "verified"
+  },
+  {
+   "qid": "Q193706",
+   "name": "David Luiz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q11571",
+   "name": "Cristiano Ronaldo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1835",
+   "name": "Zinédine Zidane",
+   "result": "verified"
+  },
+  {
+   "qid": "Q17515",
+   "name": "Diego Maradona",
+   "result": "verified"
+  },
+  {
+   "qid": "Q58323172",
+   "name": "Bruno Guimarães",
+   "result": "verified"
+  },
+  {
+   "qid": "Q30089624",
+   "name": "Lucas Paquetá",
+   "result": "verified"
+  },
+  {
+   "qid": "Q531814",
+   "name": "Kaká",
+   "result": "verified"
+  },
+  {
+   "qid": "Q58441",
+   "name": "Robinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q18237361",
+   "name": "Alisson Becker",
+   "result": "verified"
+  },
+  {
+   "qid": "Q62786",
+   "name": "Hulk",
+   "result": "verified"
+  },
+  {
+   "qid": "Q178683",
+   "name": "Cafu",
+   "result": "verified"
+  },
+  {
+   "qid": "Q182459",
+   "name": "Júlio César Soares Espíndola",
+   "result": "verified"
+  },
+  {
+   "qid": "Q311511",
+   "name": "Zagallo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q102331",
+   "name": "Sócrates",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19497",
+   "name": "Oscar dos Santos Emboaba Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q138075",
+   "name": "Alexandre Pato",
+   "result": "verified"
+  },
+  {
+   "qid": "Q10520",
+   "name": "David Beckham",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312772",
+   "name": "Fred",
+   "result": "verified"
+  },
+  {
+   "qid": "Q215890",
+   "name": "Dunga",
+   "result": "verified"
+  },
+  {
+   "qid": "Q17493",
+   "name": "Thiago Alcântara",
+   "result": "verified"
+  },
+  {
+   "qid": "Q42728914",
+   "name": "Rodrygo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q57148",
+   "name": "Cacau",
+   "result": "verified"
+  },
+  {
+   "qid": "Q20806743",
+   "name": "Richarlison",
+   "result": "verified"
+  },
+  {
+   "qid": "Q310598",
+   "name": "Marcus Túlio Tanaka",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19708656",
+   "name": "Gabriel Jesus",
+   "result": "verified"
+  },
+  {
+   "qid": "Q391680",
+   "name": "Douglas Costa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q437329",
+   "name": "Danilo Luiz da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q641425",
+   "name": "Fabinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q29950055",
+   "name": "Éder Militão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28861547",
+   "name": "Raphinha",
+   "result": "verified"
+  },
+  {
+   "qid": "Q61460651",
+   "name": "Gabriel Teodoro Martinelli Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q17074511",
+   "name": "Ederson Moraes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q80761",
+   "name": "Dante",
+   "result": "verified"
+  },
+  {
+   "qid": "Q83329",
+   "name": "Nílton Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312886",
+   "name": "Lucas Moura",
+   "result": "verified"
+  },
+  {
+   "qid": "Q35831063",
+   "name": "Matheus Cunha",
+   "result": "verified"
+  },
+  {
+   "qid": "Q204407",
+   "name": "Ramires",
+   "result": "verified"
+  },
+  {
+   "qid": "Q152968",
+   "name": "Kevin Kurányi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q313570",
+   "name": "Hernanes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q192963",
+   "name": "Luís Fabiano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q39230",
+   "name": "Marquinhos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q295262",
+   "name": "Carlos Alberto Torres",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3810078",
+   "name": "Jorginho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q295891",
+   "name": "Taffarel",
+   "result": "verified"
+  },
+  {
+   "qid": "Q357844",
+   "name": "Renato Augusto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2444565",
+   "name": "Mário Fernandes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q467232",
+   "name": "Dudu Cearense",
+   "result": "verified"
+  },
+  {
+   "qid": "Q47489",
+   "name": "Djalminha",
+   "result": "verified"
+  },
+  {
+   "qid": "Q94850",
+   "name": "Adriano Correia Claro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q110644260",
+   "name": "Endrick",
+   "result": "verified"
+  },
+  {
+   "qid": "Q468656",
+   "name": "Fábio Simplício",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2015814",
+   "name": "Gilmar Luís Rinaldi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q237561",
+   "name": "Belletti",
+   "result": "verified"
+  },
+  {
+   "qid": "Q309731",
+   "name": "Amoroso",
+   "result": "verified"
+  },
+  {
+   "qid": "Q311407",
+   "name": "Tostão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q202429",
+   "name": "Juan Silveira dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210950",
+   "name": "Luisão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q178774",
+   "name": "Bismarck Barreto Faria",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1249859",
+   "name": "Rogério Ceni",
+   "result": "verified"
+  },
+  {
+   "qid": "Q59205608",
+   "name": "Antony",
+   "result": "verified"
+  },
+  {
+   "qid": "Q216142",
+   "name": "Alex Rodrigo Dias da Costa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q376394",
+   "name": "Rodrigo Moreno Machado",
+   "result": "verified"
+  },
+  {
+   "qid": "Q318119",
+   "name": "Miranda",
+   "result": "verified"
+  },
+  {
+   "qid": "Q257606",
+   "name": "Gilmar",
+   "result": "verified"
+  },
+  {
+   "qid": "Q194439",
+   "name": "Marcos Senna",
+   "result": "verified"
+  },
+  {
+   "qid": "Q929023",
+   "name": "Ronaldão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q965448",
+   "name": "Frederico Rodrigues Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q181128",
+   "name": "Donizete Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q197729",
+   "name": "Marques Batista de Abreu",
+   "result": "verified"
+  },
+  {
+   "qid": "Q72904",
+   "name": "Luiz Adriano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q109428",
+   "name": "Diego Ribas da Cunha",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15214940",
+   "name": "Alex Telles",
+   "result": "verified"
+  },
+  {
+   "qid": "Q128276",
+   "name": "Antônio Benedito da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q455557",
+   "name": "Humberlito Borges",
+   "result": "verified"
+  },
+  {
+   "qid": "Q25175970",
+   "name": "Gabriel dos Santos Magalhães",
+   "result": "verified"
+  },
+  {
+   "qid": "Q204450",
+   "name": "Felipe Melo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q280306",
+   "name": "Gérson de Oliveira Nunes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q372092",
+   "name": "Zito",
+   "result": "verified"
+  },
+  {
+   "qid": "Q177885",
+   "name": "Gomes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q712145",
+   "name": "França",
+   "result": "verified"
+  },
+  {
+   "qid": "Q181168",
+   "name": "Bernardo Fernandes da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q216910",
+   "name": "Fábio Aurélio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312895",
+   "name": "Raí",
+   "result": "verified"
+  },
+  {
+   "qid": "Q888627",
+   "name": "Carlos Alexandre Torres",
+   "result": "verified"
+  },
+  {
+   "qid": "Q13646572",
+   "name": "Gabigol",
+   "result": "verified"
+  },
+  {
+   "qid": "Q27801691",
+   "name": "David Neres",
+   "result": "verified"
+  },
+  {
+   "qid": "Q888006",
+   "name": "Daniel da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q17619350",
+   "name": "Andreas Pereira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q40652",
+   "name": "Tite",
+   "result": "verified"
+  },
+  {
+   "qid": "Q221798",
+   "name": "Cicinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q208687",
+   "name": "Nilmar",
+   "result": "verified"
+  },
+  {
+   "qid": "Q311424",
+   "name": "Maestro Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q311641",
+   "name": "Denílson de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q653138",
+   "name": "Marcos Paulo Alves",
+   "result": "verified"
+  },
+  {
+   "qid": "Q167698",
+   "name": "Éder Citadin Martins",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3928977",
+   "name": "Rafael Tolói",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1043195",
+   "name": "Renato Pé Murcho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q64005114",
+   "name": "João Pedro Junqueira de Jesus",
+   "result": "verified"
+  },
+  {
+   "qid": "Q223229",
+   "name": "Doni",
+   "result": "verified"
+  },
+  {
+   "qid": "Q313082",
+   "name": "Diego Alves",
+   "result": "verified"
+  },
+  {
+   "qid": "Q14602686",
+   "name": "Gabriel Paulista",
+   "result": "verified"
+  },
+  {
+   "qid": "Q342474",
+   "name": "Marcos Roberto Silveira Reis",
+   "result": "verified"
+  },
+  {
+   "qid": "Q463460",
+   "name": "Mauro Ramos de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312140",
+   "name": "Serginho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q83639138",
+   "name": "Igor Thiago",
+   "result": "verified"
+  },
+  {
+   "qid": "Q266410",
+   "name": "Pedro Tonon Geromel",
+   "result": "verified"
+  },
+  {
+   "qid": "Q298172",
+   "name": "Roger Guerreiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q314281",
+   "name": "Vanderlei Luxemburgo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1988686",
+   "name": "Douglas Pereira dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q920039",
+   "name": "Cássio Ramos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q298320",
+   "name": "Rodrigo Taddei",
+   "result": "verified"
+  },
+  {
+   "qid": "Q342457",
+   "name": "Mauro Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q10333326",
+   "name": "Murilo Ribeiro de Almeida",
+   "result": "verified"
+  },
+  {
+   "qid": "Q563649",
+   "name": "Victor",
+   "result": "verified"
+  },
+  {
+   "qid": "Q973416",
+   "name": "Fernando Reges",
+   "result": "verified"
+  },
+  {
+   "qid": "Q550019",
+   "name": "Roberto Dinamite",
+   "result": "verified"
+  },
+  {
+   "qid": "Q4025436",
+   "name": "Everton Ribeiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q111016177",
+   "name": "Vitor Roque",
+   "result": "verified"
+  },
+  {
+   "qid": "Q160363",
+   "name": "Aílton Gonçalves da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q326476",
+   "name": "Jonas",
+   "result": "verified"
+  },
+  {
+   "qid": "Q507815",
+   "name": "Alex de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1573556",
+   "name": "Leandro Castán",
+   "result": "verified"
+  },
+  {
+   "qid": "Q99485542",
+   "name": "Sávio Moreira de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q112604843",
+   "name": "Beraldo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q10268484",
+   "name": "Douglas Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q438442",
+   "name": "Everaldo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q359481",
+   "name": "Helton",
+   "result": "verified"
+  },
+  {
+   "qid": "Q361252",
+   "name": "Telê Santana",
+   "result": "verified"
+  },
+  {
+   "qid": "Q31760",
+   "name": "Jussiê",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1526974",
+   "name": "Márcio Roberto dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312687",
+   "name": "Mineiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q64606160",
+   "name": "Reinier",
+   "result": "verified"
+  },
+  {
+   "qid": "Q864670",
+   "name": "Robson Ponte",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1255953",
+   "name": "Bentinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q721804",
+   "name": "Marcelo Antônio Guedes Filho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q316959",
+   "name": "Rodrigo Izecson dos Santos Leite",
+   "result": "verified"
+  },
+  {
+   "qid": "Q342237",
+   "name": "Afonso Alves",
+   "result": "verified"
+  },
+  {
+   "qid": "Q969901",
+   "name": "Guilherme Alvim Marinato",
+   "result": "verified"
+  },
+  {
+   "qid": "Q218101",
+   "name": "Carlos Adriano de Jesus Soares",
+   "result": "verified"
+  },
+  {
+   "qid": "Q516898",
+   "name": "André Bahia",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1990849",
+   "name": "Jenílson Ângelo de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q197603",
+   "name": "Rodrigo Lacerda Ramos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210114",
+   "name": "Jean Carlo Witte",
+   "result": "verified"
+  },
+  {
+   "qid": "Q361352",
+   "name": "Mehmet Aurélio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q721017",
+   "name": "Marcelo Mattos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1344142",
+   "name": "Carlos Alberto Carvalho dos Anjos Junior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q29097",
+   "name": "Renato Dirnei Florêncio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210238",
+   "name": "Marcio Richardes de Andrade",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1345763",
+   "name": "Renato Gaúcho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q72219351",
+   "name": "Johnny Cardoso",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210072",
+   "name": "Raphael Botti",
+   "result": "verified"
+  },
+  {
+   "qid": "Q431320",
+   "name": "Francileudo Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q720548",
+   "name": "Friaça",
+   "result": "verified"
+  },
+  {
+   "qid": "Q717927",
+   "name": "Domingos Antônio da Guia",
+   "result": "verified"
+  },
+  {
+   "qid": "Q4798073",
+   "name": "Arthur Maia",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1203358",
+   "name": "Marquinhos Cambalhota",
+   "result": "verified"
+  },
+  {
+   "qid": "Q67222776",
+   "name": "Samuel Lino",
+   "result": "verified"
+  },
+  {
+   "qid": "Q375703",
+   "name": "Guilherme Madalena Siqueira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q720593",
+   "name": "José Roberto de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q455804",
+   "name": "Ilsinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q713886",
+   "name": "Giuliano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1825489",
+   "name": "Daniel Rossi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q218105",
+   "name": "Túlio Lustosa Seixas Pinheiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q197593",
+   "name": "Clesly Evandro Guimarães",
+   "result": "verified"
+  },
+  {
+   "qid": "Q65030995",
+   "name": "Igor Jesus",
+   "result": "verified"
+  },
+  {
+   "qid": "Q47756",
+   "name": "Éverton Nogueira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q218114",
+   "name": "Fabrício de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q180934",
+   "name": "Luís Fernando Lojudice Martinez",
+   "result": "verified"
+  },
+  {
+   "qid": "Q355742",
+   "name": "Ademir da Guia",
+   "result": "verified"
+  },
+  {
+   "qid": "Q718964",
+   "name": "Roberto Júlio de Figueiredo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q718960",
+   "name": "Alessandro Nunes Nascimento",
+   "result": "verified"
+  },
+  {
+   "qid": "Q382069",
+   "name": "Giovanni Silva de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q614969",
+   "name": "André Luiz de Souza Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2255847",
+   "name": "Alison Barros Moraes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q197591",
+   "name": "Marcel Augusto Ortolan",
+   "result": "verified"
+  },
+  {
+   "qid": "Q524712",
+   "name": "Jonathan Reis",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2294362",
+   "name": "Edvaldo Alves de Santa Rosa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q98534760",
+   "name": "Marcos Leonardo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q59649459",
+   "name": "Lucas Beltrán",
+   "result": "verified"
+  },
+  {
+   "qid": "Q58762",
+   "name": "Leonardo de Deus Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q164575",
+   "name": "Paulo Assunção",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1185895",
+   "name": "José Ricardo dos Santos Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q887982",
+   "name": "Léo San",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1185582",
+   "name": "Marcos Aurélio Galeano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q465023",
+   "name": "Luís Alberto Silva dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q527624",
+   "name": "Weligton Robson Pena de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q603190",
+   "name": "Júlio César da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q614391",
+   "name": "Roberto Lopes Miranda",
+   "result": "verified"
+  },
+  {
+   "qid": "Q888010",
+   "name": "Sidiclei de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2255368",
+   "name": "Reinaldo Vicente Simão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2294414",
+   "name": "Marco Antônio Feliciano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q27443365",
+   "name": "Raphael Veiga",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1254721",
+   "name": "Danilo Gomes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q529207",
+   "name": "Ronaldo Nazário",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1824521",
+   "name": "Gesiel José de Lima",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15402028",
+   "name": "Carlos Eduardo Bendini Giusti",
+   "result": "verified"
+  },
+  {
+   "qid": "Q212491",
+   "name": "Zé Elias",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1378124",
+   "name": "Casagrande",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1440213",
+   "name": "José Carlos Garcia Leal",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2255874",
+   "name": "Edmílson Matias",
+   "result": "verified"
+  },
+  {
+   "qid": "Q142794",
+   "name": "Neymar",
+   "result": "verified"
+  },
+  {
+   "qid": "Q39444",
+   "name": "Ronaldinho Gaúcho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q359738",
+   "name": "Alex Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q190142",
+   "name": "Gilberto Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q220593",
+   "name": "Lucas Leiva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q16745198",
+   "name": "Malcom",
+   "result": "verified"
+  },
+  {
+   "qid": "Q137242",
+   "name": "Bernard",
+   "result": "verified"
+  },
+  {
+   "qid": "Q57167",
+   "name": "Zé Roberto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28363823",
+   "name": "Douglas Luiz Soares de Paulo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2714065",
+   "name": "Edivaldo Martins da Fonseca",
+   "result": "verified"
+  },
+  {
+   "qid": "Q932827",
+   "name": "Fagner",
+   "result": "verified"
+  },
+  {
+   "qid": "Q18921427",
+   "name": "Fellipe Bertoldo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1839524",
+   "name": "Felipe Augusto de Almeida Monteiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q719472",
+   "name": "Thiego",
+   "result": "verified"
+  },
+  {
+   "qid": "Q252711",
+   "name": "Ânderson Polga",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210056",
+   "name": "Emerson Thome",
+   "result": "verified"
+  },
+  {
+   "qid": "Q378101",
+   "name": "Marcelinho Carioca",
+   "result": "verified"
+  },
+  {
+   "qid": "Q5370912",
+   "name": "Emerson Palmieri",
+   "result": "verified"
+  },
+  {
+   "qid": "Q44815",
+   "name": "Giovane Élber",
+   "result": "verified"
+  },
+  {
+   "qid": "Q217992",
+   "name": "Eduardo Francisco da Silva Neto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q965517",
+   "name": "Paulo Antônio de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q56223006",
+   "name": "Carlos Augusto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q101764291",
+   "name": "Luiz Henrique André Rosa da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3087907",
+   "name": "Luan Garcia Teixeira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q375496",
+   "name": "Fábio Rochemback",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28131394",
+   "name": "Luiz Felipe Ramos Marchi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q183210",
+   "name": "Brandão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q39667548",
+   "name": "Arthur Henrique Ramos de Oliveira Melo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q537644",
+   "name": "Daniel Carvalho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3251347",
+   "name": "Marco Aurelio Silva Businhani",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1185530",
+   "name": "Marco Aurélio Fernandes da Silva",
+   "result": "verified"
+  }
+ ]
 }
