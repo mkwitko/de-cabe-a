@@ -13,6 +13,7 @@ import { todaysChallenge } from '../challenges/challenges.service';
 import { searchPlayers } from '../knowledge/search';
 import { guestSession } from '../session/session';
 import { getAttempt, startAttempt, submitAction } from './attempts.service';
+import { progressionRoutes } from '../progression/progression.routes';
 
 const GAMES = [
   { mode: 'CAREER_PATH', name: 'Career Path' },
@@ -23,6 +24,7 @@ const GAMES = [
 export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now, random, secureCookie } = app.deps;
   app.addHook('onRequest', guestSession(prisma, { secureCookie, now }));
+  await app.register(progressionRoutes);
 
   app.get('/games', { schema: { response: { 200: GamesResponse } } }, async (req) => {
     const at = now();

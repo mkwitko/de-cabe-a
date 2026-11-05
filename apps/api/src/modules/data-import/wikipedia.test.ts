@@ -29,6 +29,25 @@ describe('parseInfoboxCareer (pt.wikipedia Info/Futebol)', () => {
     ]);
   });
 
+  it('reads indented numbered fields', () => {
+    const text =
+      '{{Info/Futebol\n |nome = Zico\n |ano1              = 1971–1983\n |clube1            = {{Futebol Flamengo}}\n |ano2 = 1983–1985\n |clube2 = {{Futebol Udinese}}\n}}';
+    expect(parseInfoboxCareer(text)?.map((e) => [e.club, e.fromYear, e.toYear])).toEqual([
+      ['Flamengo', 1971, 1983],
+      ['Udinese', 1983, 1985],
+    ]);
+  });
+
+  it('reads the Info/Futebolista list format (ano / clubes with <br>)', () => {
+    const text =
+      '{{Info/Futebolista\n|jovemanos = 1991–1992\n|jovemclubes = {{Futebol Sport}}\n|ano = 1993–1995<br>1995–2001<br>2013\n|clubes = {{Futebol Sport}}<br>{{Futebol Vasco}}<br>→ {{Futebol New York Red Bulls}} (emp.)\n}}';
+    expect(parseInfoboxCareer(text)).toEqual([
+      { index: 1, fromYear: 1993, toYear: 1995, club: 'Sport', isLoan: false },
+      { index: 2, fromYear: 1995, toYear: 2001, club: 'Vasco', isLoan: false },
+      { index: 3, fromYear: 2013, toYear: 2013, club: 'New York Red Bulls', isLoan: true },
+    ]);
+  });
+
   it('returns null when there is no football infobox', () => {
     expect(parseInfoboxCareer('Sem infobox')).toBeNull();
   });

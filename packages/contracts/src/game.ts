@@ -150,3 +150,43 @@ export const GamesResponse = z.strictObject({
   ),
 });
 export type GamesResponse = z.infer<typeof GamesResponse>;
+
+/** GET /v1/me/history */
+export const HistoryQuery = z.object({
+  mode: GameMode.optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export const HistoryResponse = z.strictObject({
+  items: z.array(
+    z.strictObject({
+      attemptId: z.string(),
+      mode: GameMode,
+      kind: ChallengeKind,
+      publicNumber: z.number().nullable(),
+      status: AttemptStatus,
+      score: z.number(),
+      completedAt: z.string(),
+    }),
+  ),
+  nextCursor: z.string().nullable(),
+});
+export type HistoryResponse = z.infer<typeof HistoryResponse>;
+
+const Streaks = { currentStreak: z.number(), maxStreak: z.number(), practicePlayed: z.number() };
+/** GET /v1/me/stats (daily only, except practicePlayed) */
+export const StatsResponse = z.strictObject({
+  CAREER_PATH: z.strictObject({
+    played: z.number(),
+    won: z.number(),
+    distribution: z.record(z.string(), z.number()),
+    ...Streaks,
+  }),
+  FOOTBALL_GRID: z.strictObject({
+    played: z.number(),
+    avgScore: z.number(),
+    perfect: z.number(),
+    ...Streaks,
+  }),
+});
+export type StatsResponse = z.infer<typeof StatsResponse>;

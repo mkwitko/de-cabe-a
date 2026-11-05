@@ -24,28 +24,39 @@ function clean(raw: string): string {
     .trim();
 }
 
+const year = (s: string | undefined) => (s && /^\d{4}$/.test(s) ? Number(s) : null);
+
+function entry(index: number, years: string, raw: string): InfoboxEntry {
+  const [from, to] = years.split(/[–—-]/).map((s) => s.trim());
+  return {
+    index,
+    fromYear: year(from),
+    toYear: to === undefined ? year(from) : year(to),
+    club: clean(raw),
+    isLoan: /\(emp(?:réstimo|\.)?\)|→/i.test(raw),
+  };
+}
+
+/** Senior career from {{Info/Futebol}} (numbered anoN/clubeN) or {{Info/Futebolista}} (ano/clubes lists). */
 export function parseInfoboxCareer(wikitext: string): InfoboxEntry[] | null {
   const start = wikitext.search(/\{\{\s*Info\/Futebol/i);
   if (start < 0) return null;
   const box = wikitext.slice(start);
-  const field = (name: string) => new RegExp(`^\\|\\s*${name}(\\d+)\\s*=(.*)$`, 'gm');
+  const numbered = (name: string) => new RegExp(`^\\s*\\|\\s*${name}(\\d+)\\s*=(.*)$`, 'gm');
   const years = new Map<number, string>();
-  for (const m of box.matchAll(field('ano'))) years.set(Number(m[1]), m[2]!.trim());
+  for (const m of box.matchAll(numbered('ano'))) years.set(Number(m[1]), m[2]!.trim());
   const out: InfoboxEntry[] = [];
-  for (const m of box.matchAll(field('clube'))) {
-    const index = Number(m[1]);
-    const raw = m[2]!;
-    const [from, to] = (years.get(index) ?? '').split(/[–—-]/).map((s) => s.trim());
-    const year = (s: string | undefined) => (s && /^\d{4}$/.test(s) ? Number(s) : null);
-    out.push({
-      index,
-      fromYear: year(from),
-      toYear: to === undefined ? year(from) : year(to),
-      club: clean(raw),
-      isLoan: /\(emp(?:réstimo|\.)?\)|→/i.test(raw),
-    });
-  }
-  return out.sort((a, b) => a.index - b.index);
+  for (const m of box.matchAll(numbered('clube')))
+    out.push(entry(Number(m[1]), years.get(Number(m[1])) ?? '', m[2]!));
+  if (out.length) return out.sort((a, b) => a.index - b.index);
+
+  const list = (name: string) =>
+    new RegExp(`^\\s*\\|\\s*${name}\\s*=(.*)$`, 'm').exec(box)?.[1]?.split(/<br\s*\/?>/i) ?? [];
+  const clubs = list('clubes');
+  const yearList = list('ano');
+  return clubs
+    .map((raw, i) => entry(i + 1, yearList[i]?.replace(/<[^>]+>/g, '').trim() ?? '', raw))
+    .filter((e) => e.club);
 }
 
 let last = 0;

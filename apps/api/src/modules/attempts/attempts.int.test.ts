@@ -266,6 +266,31 @@ describe('daily Career Path', () => {
       status: 'WON',
       score: 40,
     });
+
+    const history = (await g.req('GET', '/me/history')).json();
+    expect(history).toEqual({
+      items: [
+        {
+          attemptId: start.attempt.id,
+          mode: 'CAREER_PATH',
+          kind: 'daily',
+          publicNumber: dailyNumber,
+          status: 'WON',
+          score: 40,
+          completedAt: expect.any(String),
+        },
+      ],
+      nextCursor: null,
+    });
+    const stats = (await g.req('GET', '/me/stats')).json();
+    expect(stats.CAREER_PATH).toEqual({
+      played: 1,
+      won: 1,
+      distribution: { '1': 0, '2': 0, '3': 1, '4': 0, '5': 0, '6': 0 },
+      currentStreak: 1,
+      maxStreak: 1,
+      practicePlayed: 0,
+    });
   });
 
   it('another session cannot read or play the attempt (404)', async () => {

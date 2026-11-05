@@ -36,14 +36,12 @@ export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, reply) =>
-      reply
-        .code(201)
-        .send(
-          await createChallenge(prisma, {
-            ...req.body,
-            createdBy: editor(req.headers['x-editor']),
-          }),
-        ),
+      reply.code(201).send(
+        await createChallenge(prisma, {
+          ...req.body,
+          createdBy: editor(req.headers['x-editor']),
+        }),
+      ),
   );
   app.post('/challenges/:id/validate', { schema: { params: Id } }, (req) =>
     validateChallenge(prisma, req.params.id),
