@@ -13,6 +13,7 @@ import type {
 import { ApiError } from '../../lib/api';
 import { useGameTracking } from '../../lib/useGameTracking';
 import { useAction, useAttempt } from '../../lib/game';
+import { HintMask } from '../../components/HintMask';
 import { LevelEnd, LevelError } from '../LevelParts';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
@@ -87,6 +88,7 @@ export function GridPage({ level }: { level: number }) {
   const done = data.attempt.status !== 'IN_PROGRESS';
   const reveal = data.reveal as FootballGridReveal | null;
   const left = view.maxAttempts - view.attemptsUsed;
+  const hintOf = (i: number) => view.hints.find((h) => h.cellIndex === i);
 
   async function guess(p: PlayerRef | null) {
     if (!p || cell === null) return;
@@ -162,6 +164,13 @@ export function GridPage({ level }: { level: number }) {
                           <span className="opacity-70">ex.:</span>
                           <span className="font-semibold">{example.example.name}</span>
                         </span>
+                      ) : hintOf(i) ? (
+                        <span className="flex flex-col items-center gap-0.5 leading-tight">
+                          <HintMask initial={hintOf(i)!.initial} pattern={hintOf(i)!.pattern} />
+                          <span className="text-[0.7rem] text-chalk-soft sm:text-xs">
+                            {hintOf(i)!.validAnswers} servem
+                          </span>
+                        </span>
                       ) : (
                         <span
                           className="font-condensed text-2xl font-black sm:text-4xl"
@@ -223,6 +232,16 @@ export function GridPage({ level }: { level: number }) {
                   Toque numa célula e escolha um jogador que cumpra a linha e a coluna. Errar gasta
                   uma tentativa.
                 </p>
+                <p className="flex items-center gap-2 text-sm">
+                  <span className="font-condensed text-lg font-extrabold text-cover uppercase">
+                    Dicas: {view.hintsLeft} de 3
+                  </span>
+                  <span className="text-chalk-soft">
+                    {view.hints.length
+                      ? 'Fase vale no máximo 2 estrelas.'
+                      : 'Usar uma limita a fase a 2 estrelas.'}
+                  </span>
+                </p>
               </div>
               {view.wrongGuesses.length > 0 && (
                 <ul className="flex flex-col gap-1.5 text-sm" aria-label="Chutes errados">
@@ -279,6 +298,44 @@ export function GridPage({ level }: { level: number }) {
               exclude={used}
               autoFocus
             />
+            {hintOf(cell) ? (
+              <p className="flex flex-col items-start gap-1.5 rounded-lg bg-chalk/[0.07] px-3 py-2.5">
+                <span className="text-sm text-chalk-soft">Dica: </span>
+                <HintMask
+                  initial={hintOf(cell)!.initial}
+                  pattern={hintOf(cell)!.pattern}
+                  size="lg"
+                />
+                <span className="text-sm text-chalk-soft">
+                  {' '}
+                  {hintOf(cell)!.validAnswers} jogadores servem aqui
+                </span>
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="flex items-center justify-between gap-3 rounded-lg border-2 border-dashed border-cover/70 px-3 py-2 text-left hover:bg-cover/10 disabled:opacity-40"
+                disabled={view.hintsLeft === 0 || action.isPending}
+                onClick={() =>
+                  void action
+                    .mutateAsync({
+                      attemptId: data.attempt.id,
+                      input: { kind: 'hint', cellIndex: cell },
+                    })
+                    .catch(() => undefined)
+                }
+              >
+                <span>
+                  <span className="font-condensed block text-lg font-extrabold uppercase text-cover">
+                    Usar dica ({view.hintsLeft} de 3)
+                  </span>
+                  <span className="text-sm text-chalk-soft">
+                    Mostra a inicial de um jogador que serve. Com dica, a fase vale no máximo 2
+                    estrelas.
+                  </span>
+                </span>
+              </button>
+            )}
             <p className="text-sm text-chalk-soft">
               Errar gasta uma tentativa. Cada jogador vale uma vez por grid.
             </p>

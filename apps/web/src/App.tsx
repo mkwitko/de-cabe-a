@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import type { GamesResponse } from '@decabeca/contracts';
-import { useGames } from './lib/game';
+import { useGames, useStats } from './lib/game';
 import { CareerPathPage } from './games/career-path/CareerPathPage';
 import { GridPage } from './games/grid/GridPage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -134,7 +134,7 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
       <header className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-10">
         <BrandSticker />
         <p className="max-w-[34ch] text-lg leading-snug font-medium text-chalk sm:pb-3 sm:text-xl">
-          Pra quem sabe a escalação de cor. Um desafio por dia, sem cadastro, de cabeça.
+          Pra quem sabe a escalação de cor. Fase por fase, estrela por estrela, até virar lenda.
         </p>
       </header>
 
@@ -184,9 +184,39 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
   );
 }
 
+/** The player's standing at a glance: title, stars, ranking and what the next title needs. */
+function PlayerStrip() {
+  const { data } = useStats();
+  if (!data) return null;
+  return (
+    <Link
+      to="/stats"
+      className="mt-8 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-1 rounded-xl bg-chalk/[0.06] p-4 hover:bg-chalk/[0.09] sm:grid-cols-[auto_auto_auto_1fr] sm:gap-x-8"
+    >
+      <span className="font-condensed row-span-2 text-4xl leading-none font-black text-cover uppercase sm:row-span-1">
+        {data.title.name}
+      </span>
+      <span className="font-condensed tabular text-xl font-bold">★ {data.totalStars} estrelas</span>
+      <span className="font-condensed tabular text-xl font-bold">
+        {data.rank.all ? `${data.rank.all}º no ranking` : 'Fora do ranking'}
+      </span>
+      <span className="col-span-2 text-sm text-chalk-soft sm:col-span-1 sm:text-right">
+        {data.title.next
+          ? `Faltam ${data.title.next.missing} estrelas para ${data.title.next.name}`
+          : 'Título máximo. Lenda!'}
+      </span>
+    </Link>
+  );
+}
+
 function HomeRoute() {
   const { data } = useGames();
-  return <Home games={data} />;
+  return (
+    <>
+      <Home games={data} />
+      <PlayerStrip />
+    </>
+  );
 }
 
 const NAV = [

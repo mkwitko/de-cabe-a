@@ -38,3 +38,9 @@ export const POSITION_LABEL = {
   MF: 'Meio-campista',
   FW: 'Atacante',
 } as const;
+
+/** Hint mask: first letter, then one underscore per hidden letter, per word ("R______ _______"). */
+export const hintMask = (initial: string, pattern: number[]) =>
+  pattern
+    .map((n, i) => (i === 0 ? initial + '_'.repeat(Math.max(0, n - 1)) : '_'.repeat(n)))
+    .join(' ');

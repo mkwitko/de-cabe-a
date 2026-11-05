@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countryName, durationLabel, statsLabel, yearsLabel } from './format';
+import { countryName, durationLabel, hintMask, statsLabel, yearsLabel } from './format';
 
 describe('pt-BR career formatting', () => {
   it('formats years', () => {
@@ -22,5 +22,8 @@ describe('pt-BR career formatting', () => {
   it('names countries in Portuguese', () => {
     expect(countryName('BR')).toBe('Brasil');
     expect(countryName('ES')).toBe('Espanha');
+  });
+  it('masks a hinted name', () => {
+    expect(hintMask('Z', [2, 7])).toBe('Z_ _______');
   });
 });
