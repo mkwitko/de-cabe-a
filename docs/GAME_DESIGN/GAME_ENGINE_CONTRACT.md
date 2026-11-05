@@ -64,6 +64,12 @@ type CareerPathEvent = { type: 'correct' } | { type: 'wrong'; revealed: 'club'|'
 
 `toPublicView` retorna `trajectory.slice(0, revealedClubs)`, hints revelados, tentativas usadas, status. Nunca `answerPlayerId`.
 
+Decisões de implementação (slice 3, 2026-11-05):
+- A 6ª tentativa sem acerto emite `{ type: 'lost' }` (não `wrong`).
+- Pistas extras seguem a ordem posição → nacionalidade e pulam as ausentes no snapshot; esgotadas, `revealed: 'none'`.
+- `toPublicView.revealed` omite `clubId`; `history` lista as tentativas, com o acerto como `{ kind: 'correct' }` (sem `playerId`).
+- Inelegibilidade retorna códigos: `PLAYER_NOT_VERIFIED`, `TRAJECTORY_TOO_SHORT`, `TRAJECTORY_TOO_LONG`, `UNVERIFIED_SPELL`, `TIER_PRACTICE_ONLY`.
+
 ## 4. Football Grid
 
 ```ts
