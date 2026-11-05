@@ -42,7 +42,7 @@ Erros: 400 `VALIDATION_ERROR`.
 ---
 
 ## POST /v1/attempts
-Inicia partida. Público. **Idempotente por (sessão, challenge)**: se já existe, retorna a existente com 200 (não 201).
+Inicia ou retoma partida. Público. Daily: **idempotente por (sessão, challenge)**; se já existe, retorna a existente com 200 (não 201). Practice **[APROVADO 2026-11-05]**: se a sessão tem partida practice `IN_PROGRESS` no modo, retorna essa com 200 (retomar); senão sorteia e cria (201). Rejogar o mesmo desafio practice é permitido.
 
 Request:
 ```json
@@ -50,7 +50,7 @@ Request:
 ```
 ou `{ "mode": "FOOTBALL_GRID", "kind": "practice" }`.
 
-Regras: daily → resolve challenge de hoje (America/Sao_Paulo). practice → sorteia challenge `published` do modo, excluindo os 20 últimos da sessão.
+Regras: daily → resolve challenge de hoje (America/Sao_Paulo). practice → retoma `IN_PROGRESS` do modo, ou sorteia challenge `published` do modo excluindo os 20 últimos da sessão (sem candidato → sorteia entre todos).
 
 Response 201/200:
 ```json
@@ -71,7 +71,7 @@ Grid `view` exemplo:
 { "maxAttempts": 9, "attemptsUsed": 0, "rows": [ { "type": "club", "label": "Palmeiras" }, … ], "cols": [ … ], "cells": [ { "index": 0, "player": null }, … ] }
 ```
 
-Erros: 404 `NO_DAILY_CHALLENGE`, 404 `PRACTICE_POOL_EXHAUSTED`, 400.
+Erros: 404 `NO_DAILY_CHALLENGE`, 404 `PRACTICE_POOL_EXHAUSTED` (modo sem nenhum practice publicado), 400.
 
 ---
 
@@ -158,6 +158,6 @@ Erros admin: 401 `UNAUTHORIZED`; 409 `INVALID_TRANSITION`; 422 `DATA_QUALITY_VIO
 
 | Rota | Chave |
 |---|---|
-| POST /attempts | (sessionId, challengeId) via unique |
+| POST /attempts | Daily: (sessionId, challengeId) via unique parcial. Practice: retoma a `IN_PROGRESS` do modo |
 | POST /attempts/:id/actions | (attemptId, idempotencyKey) via unique; resposta recomputada do `AttemptAction.event` + estado atual |
 | Admin publish/retire | Transição de estado; repetição → 409 `INVALID_TRANSITION` |

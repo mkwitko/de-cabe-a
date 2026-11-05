@@ -23,7 +23,7 @@ Baseada em risco. Sem meta de cobertura percentual.
 - Daily respeita fuso: às 23:59 e 00:01 America/Sao_Paulo retorna desafios diferentes (relógio injetável no serviço).
 - Trigger de imutabilidade: `UPDATE snapshot` em published → erro.
 - Publish atribui `publicNumber` sequencial; unique de data.
-- Practice exclui 20 últimos; pool esgotado → 404.
+- Practice exclui 20 últimos; sem candidato → sorteia entre todos (rejogo); `IN_PROGRESS` do modo é retomada; modo sem practice → 404.
 - Search: aliases, acentos, prefixo por token, só `verified`, limite 10.
 - Stats/streak: cenário 3 dias seguidos + falha → streak 0; practice não conta.
 - Rate limit retorna 429.
