@@ -133,6 +133,7 @@ function positionFromInfobox(text: string): 'GK' | 'DF' | 'MF' | 'FW' | null {
   return null;
 }
 
+const RESERVE = /\b(ii|b|sub[ -]?\d{2}|u[ -]?\d{2}|reservas?|juniores|amateure)\b|\bII\b/i;
 const NICK_NOISE = /<[^>]+>|\[\[|\]\]|\{\{[^}]*\}\}|'{2,3}/g;
 
 interface Outcome {
@@ -165,6 +166,8 @@ async function crossCheck(
   const wdClubs = [...new Map(p.spells.map((s) => [s.clubId, s.club])).values()];
   const matched: { club: (typeof wdClubs)[number]; entry: InfoboxEntry }[] = [];
   for (const entry of wp) {
+    // Reserve and B teams are not senior career entries (they matched the first team before).
+    if (RESERVE.test(entry.club)) continue;
     // Exact matches first, so Santa Cruz never falls on Santos for a player who had both.
     const club =
       wdClubs.find((c) => exactClub(c, entry.club)) ??
@@ -178,8 +181,22 @@ async function crossCheck(
       };
     if (entry.fromYear === null)
       return { qid, name: p.canonicalName, result: 'mismatch', detail: `${entry.club} sem ano` };
+    const prev = matched.at(-1);
+    // The same club twice in a row with overlapping years is one passage, not two.
+    if (prev && prev.club.id === club.id && (prev.entry.toYear ?? 9999) >= entry.fromYear) {
+      prev.entry = {
+        ...prev.entry,
+        toYear:
+          entry.toYear === null || prev.entry.toYear === null
+            ? null
+            : Math.max(prev.entry.toYear, entry.toYear),
+      };
+      continue;
+    }
     matched.push({ club, entry });
   }
+  if (matched.length === 0)
+    return { qid, name: p.canonicalName, result: 'mismatch', detail: 'nenhum clube principal' };
 
   const now = new Date();
   const wpUrl = `https://${page!.lang}.wikipedia.org/wiki/${encodeURIComponent(page!.title.replace(/ /g, '_'))}`;
@@ -264,6 +281,35 @@ async function crossCheck(
 }
 
 // ── Run
+/** Merges consecutive overlapping spells at the same club in already verified careers. */
+async function mergeOverlappingRepeats() {
+  const players = await prisma.player.findMany({
+    where: { verificationStatus: 'verified', verifiedBy: CURATOR },
+    include: { spells: { where: { spellType: { not: 'youth' } }, orderBy: { sortIndex: 'asc' } } },
+  });
+  let merged = 0;
+  for (const p of players)
+    for (let i = 1; i < p.spells.length; i++) {
+      const a = p.spells[i - 1]!;
+      const b = p.spells[i]!;
+      if (a.clubId !== b.clubId || !a.startDate || !b.startDate) continue;
+      if ((a.endDate?.getTime() ?? Infinity) < b.startDate.getTime()) continue;
+      const end = a.endDate && b.endDate ? (a.endDate > b.endDate ? a.endDate : b.endDate) : null;
+      await prisma.$transaction([
+        prisma.careerSpell.update({
+          where: { id: a.id },
+          data: { endDate: end, endPrecision: end ? 'year' : 'unknown' },
+        }),
+        prisma.careerSpell.delete({ where: { id: b.id } }),
+      ]);
+      p.spells.splice(i, 1);
+      i--;
+      merged++;
+    }
+  log(`merged ${merged} overlapping repeated spells in verified careers`);
+}
+await mergeOverlappingRepeats();
+
 const list = await candidates();
 log(`${list.length} candidates`);
 const outcomes: Outcome[] = [];
