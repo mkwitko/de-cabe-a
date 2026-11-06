@@ -11,6 +11,17 @@ export class ApiError extends Error {
   }
 }
 
+/** Sign-in errors come from Better Auth in English; these are the ones a player can hit. */
+const AUTH_MESSAGES: Record<string, string> = {
+  INVALID_EMAIL_OR_PASSWORD: 'E-mail ou senha incorretos.',
+  USER_ALREADY_EXISTS: 'Esse e-mail já tem conta. Entre com ele.',
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'Esse e-mail já tem conta. Entre com ele.',
+  PASSWORD_TOO_SHORT: 'A senha precisa de pelo menos 8 caracteres.',
+  INVALID_EMAIL: 'Confira o e-mail.',
+  INVALID_TOKEN: 'Esse link expirou ou já foi usado. Peça outro.',
+  PROVIDER_NOT_FOUND: 'Entrar com Google ainda não está disponível.',
+};
+
 /** JSON fetch against the API (same origin; Vite proxies /v1 in dev). */
 export async function api<T>(
   path: string,
@@ -34,12 +45,15 @@ export async function api<T>(
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    const err = (body as ErrorBody | null)?.error;
+    // Our errors are { error: { code, message } }; sign-in errors (Better Auth) are { code, message }.
+    const err =
+      (body as ErrorBody | null)?.error ?? (body as { code?: string; message?: string } | null);
+    const code = err?.code ?? 'INTERNAL_ERROR';
     throw new ApiError(
       res.status,
-      err?.code ?? 'INTERNAL_ERROR',
-      err?.message ?? 'Erro inesperado.',
-      err?.details ?? {},
+      code,
+      AUTH_MESSAGES[code] ?? err?.message ?? 'Erro inesperado.',
+      (err as { details?: Record<string, unknown> } | null)?.details ?? {},
     );
   }
   return body as T;

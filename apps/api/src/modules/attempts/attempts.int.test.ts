@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { seedReference } from '../../seed-reference';
-import { ADMIN_TOKEN, testApp } from '../../test/app';
+import { ADMIN_TOKEN, sentEmails, testApp, WEB_ORIGIN } from '../../test/app';
 import { resetDb, testPrisma } from '../../test/db';
 import { countryIds, verifiedClubs, verifiedPlayer } from '../../test/factory';
 import { sessionHash } from '../session/session';
@@ -34,17 +34,23 @@ async function publish(payload: object) {
 
 /** A device keeping its own cookie. */
 function guest() {
-  let cookie = '';
+  const jar = new Map<string, string>();
   return {
     async req(method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) {
+      const cookie = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
       const res = await app.inject({
         method,
         url: `/v1${url}`,
-        headers: cookie ? { cookie } : {},
+        headers: { origin: WEB_ORIGIN, ...(cookie ? { cookie } : {}) },
         ...(payload ? { payload } : {}),
       });
       const set = res.headers['set-cookie'];
-      if (set) cookie = String(set).split(';')[0]!;
+      for (const c of set ? [set].flat() : []) {
+        const [pair] = String(c).split(';');
+        const [k, ...v] = pair!.split('=');
+        if (/Max-Age=0/i.test(String(c))) jar.delete(k!);
+        else jar.set(k!, v.join('='));
+      }
       return res;
     },
     act(attemptId: string, input: object, key = randomUUID()) {
@@ -608,36 +614,49 @@ describe('ranking, nickname and accounts', () => {
     ]);
   });
 
-  it('register keeps guest progress; login on another device sees it; wrong password is 401', async () => {
-    const reg = await ace.req('POST', '/auth/register', {
+  it('sign-up keeps guest progress; sign-in on another device sees it; wrong password is 401', async () => {
+    const reg = await ace.req('POST', '/auth/sign-up/email', {
       email: 'Ace@Example.com',
       password: 'segredo-123',
-      nickname: 'Fenômeno',
+      name: 'Fenômeno',
     });
-    expect(reg.statusCode, reg.body).toBe(201);
-    expect(reg.json()).toMatchObject({
+    expect(reg.statusCode, reg.body).toBe(200);
+    expect((await ace.req('GET', '/me')).json()).toMatchObject({
       nickname: 'Fenômeno',
       account: { email: 'ace@example.com' },
       totalStars: 6,
     });
-    const user = await prisma.user.findUniqueOrThrow({ where: { email: 'ace@example.com' } });
-    expect(user.passwordHash).toMatch(/^scrypt\$16384\$/);
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'ace@example.com' },
+      include: { accounts: true },
+    });
+    expect(user.accounts[0]).toMatchObject({ providerId: 'credential' });
+    expect(user.accounts[0]!.password).toMatch(/^scrypt\$16384\$/);
+    expect(sentEmails.at(-1)).toMatchObject({ to: 'ace@example.com' }); // e-mail verification
 
     const phone = guest();
-    expect(
-      (await phone.req('POST', '/auth/login', { email: 'ace@example.com', password: 'errada-999' }))
-        .statusCode,
-    ).toBe(401);
+    const wrong = await phone.req('POST', '/auth/sign-in/email', {
+      email: 'ace@example.com',
+      password: 'errada-999',
+    });
+    expect(wrong.statusCode).toBe(401);
     expect(
       (
-        await phone.req('POST', '/auth/login', { email: 'nobody@example.com', password: 'x' })
-      ).json().error.code,
-    ).toBe('INVALID_CREDENTIALS');
-    const login = await phone.req('POST', '/auth/login', {
+        await phone.req('POST', '/auth/sign-in/email', {
+          email: 'nobody@example.com',
+          password: 'xxxxxxxx',
+        })
+      ).statusCode,
+    ).toBe(401);
+    const login = await phone.req('POST', '/auth/sign-in/email', {
       email: 'ACE@example.com',
       password: 'segredo-123',
     });
-    expect(login.json()).toMatchObject({ nickname: 'Fenômeno', totalStars: 6 });
+    expect(login.statusCode, login.body).toBe(200);
+    expect((await phone.req('GET', '/me')).json()).toMatchObject({
+      nickname: 'Fenômeno',
+      totalStars: 6,
+    });
     expect(
       (await phone.req('GET', '/tracks/CAREER_PATH'))
         .json()
@@ -649,16 +668,54 @@ describe('ranking, nickname and accounts', () => {
     ).toBe(200);
     expect(
       (
-        await phone.req('POST', '/auth/register', {
+        await guest().req('POST', '/auth/sign-up/email', {
           email: 'ace@example.com',
           password: 'segredo-123',
-          nickname: 'Outro',
+          name: 'Outro Nome',
         })
-      ).json().error.code,
-    ).toBe('EMAIL_TAKEN');
+      ).statusCode,
+    ).toBeGreaterThanOrEqual(400);
 
     const out = await phone.req('POST', '/auth/logout');
     expect(out.json()).toMatchObject({ nickname: null, account: null, totalStars: 0 });
+  });
+
+  it('sign-up refuses a nickname in use', async () => {
+    const res = await guest().req('POST', '/auth/sign-up/email', {
+      email: 'other@example.com',
+      password: 'segredo-123',
+      name: 'fenomeno',
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().message).toBe('Esse apelido já está em uso.');
+  });
+
+  it('resets a forgotten password through the e-mailed link', async () => {
+    const g = guest();
+    expect(
+      (
+        await g.req('POST', '/auth/request-password-reset', {
+          email: 'ace@example.com',
+          redirectTo: `${WEB_ORIGIN}/conta/nova-senha`,
+        })
+      ).statusCode,
+    ).toBe(200);
+    const mail = sentEmails.at(-1)!;
+    expect(mail.subject).toMatch(/senha/i);
+    const token = /reset-password\/([^?\s]+)/.exec(mail.text)![1]!;
+    const reset = await g.req('POST', '/auth/reset-password', {
+      token,
+      newPassword: 'nova-senha-456',
+    });
+    expect(reset.statusCode, reset.body).toBe(200);
+    expect(
+      (
+        await g.req('POST', '/auth/sign-in/email', {
+          email: 'ace@example.com',
+          password: 'nova-senha-456',
+        })
+      ).statusCode,
+    ).toBe(200);
   });
 });
 

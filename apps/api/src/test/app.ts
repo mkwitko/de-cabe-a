@@ -2,8 +2,12 @@ import fixtures from '../modules/data-import/fixtures/wikidata.json';
 import type { EntityFetcher, WikidataEntity } from '../modules/data-import/wikidata-client';
 import { buildApp, type AppDeps } from '../app';
 import { testPrisma } from './db';
+import type { Mail } from '../modules/account/auth';
 
 export const ADMIN_TOKEN = 'test-admin-token-0123456789';
+export const WEB_ORIGIN = 'http://localhost:5173';
+/** E-mails the auth module sent during the tests (verification, password reset). */
+export const sentEmails: Mail[] = [];
 
 /** Serves the saved Wikidata fixtures; `patch` lets a test change an entity on re-import. */
 export function fixtureFetcher(
@@ -34,6 +38,12 @@ export function testApp(deps: Partial<AppDeps> = {}) {
       adminToken: ADMIN_TOKEN,
       fetchEntities: fixtureFetcher(),
       limits: { sessionsPerIp: 10_000, perSession: 10_000, search: 10_000, actions: 10_000 },
+      authOptions: {
+        secret: 'test-secret-0123456789abcdef0123456789',
+        baseURL: WEB_ORIGIN,
+        trustedOrigins: [WEB_ORIGIN],
+        sendEmail: async (m) => void sentEmails.push(m),
+      },
       ...deps,
     },
   );

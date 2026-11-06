@@ -285,16 +285,67 @@ model GuestSession {
 }
 
 /// Used only by the optional sign-up slice (RF-10); created early to avoid an FK migration
+/// Account (ADR-008, Better Auth). Better Auth's `name` is stored as `nickname`.
 model User {
-  id           String   @id @default(uuid(7))
-  email        String   @unique /// lowercased
-  passwordHash String /// scrypt$N$salt$hash
-  nickname     String
-  nicknameKey  String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(uuid(7))
+  email         String   @unique /// lowercased
+  emailVerified Boolean  @default(false)
+  image         String?
+  nickname      String
+  nicknameKey   String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  sessions GuestSession[]
+  sessions     GuestSession[]
+  authSessions AuthSession[]
+  accounts     Account[]
+}
+
+/// Better Auth session (sign-in state). Game progress stays on GuestSession (ADR-004).
+model AuthSession {
+  id        String   @id
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// Sign-in method of a user: "credential" (e-mail + password, scrypt$N$salt$hash) or a provider (google).
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+/// E-mail verification and password reset tokens (Better Auth).
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
 }
 
 enum AttemptStatus {

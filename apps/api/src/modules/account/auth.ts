@@ -1,0 +1,147 @@
+/**
+ * Sign-in (ADR-008): Better Auth handles e-mail + password (verification, password reset) and
+ * Google. Game progress stays on the guest session (ADR-004): after a sign-in the guest session
+ * of this device is linked to the account, as before.
+ */
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { normalizeName } from '@decabeca/engine';
+import { betterAuth } from 'better-auth';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
+import type { PrismaClient } from '../../generated/prisma/client';
+import { hashPassword, verifyPassword } from './password';
+
+export interface Mail {
+  to: string;
+  subject: string;
+  text: string;
+}
+
+export interface AuthOptions {
+  secret: string;
+  /** Public origin of the web app; auth routes are served under it at /v1/auth (Vite proxy in dev). */
+  baseURL: string;
+  trustedOrigins: string[];
+  google?: { clientId: string; clientSecret: string } | undefined;
+  sendEmail: (mail: Mail) => Promise<void>;
+}
+
+/** The guest session of the request being handled, for the hooks below. */
+export const authRequest = new AsyncLocalStorage<{
+  sessionId: string;
+  userId: string | null;
+  /** Set when the request signed a user in: the route links the guest session to it. */
+  signedIn?: string;
+}>();
+
+// Small blocklist; the ranking is public. ponytail: extend from the rejection report as needed.
+const BLOCKED = /(porra|caralho|merda|buceta|puta|viado|fdp|pqp|cuzao|nazi|hitler)/;
+export const nicknameKey = (n: string) => normalizeName(n).replace(/\s+/g, '');
+
+/** Throws when the nickname is invalid or used by another account or another guest. */
+export async function assertNicknameFree(
+  prisma: PrismaClient,
+  nickname: string,
+  mine: { sessionId: string; userId: string | null },
+) {
+  const key = nicknameKey(nickname);
+  if (key.length < 3 || BLOCKED.test(key))
+    throw new APIError('BAD_REQUEST', { message: 'Escolha outro apelido.' });
+  const [user, guest] = await Promise.all([
+    prisma.user.findUnique({ where: { nicknameKey: key } }),
+    prisma.guestSession.findUnique({ where: { nicknameKey: key } }),
+  ]);
+  if ((user && user.id !== mine.userId) || (guest && guest.id !== mine.sessionId))
+    throw new APIError('CONFLICT', { message: 'Esse apelido já está em uso.' });
+  return key;
+}
+
+/** A free nickname from a social profile name: "Mauricio Oliveira", then "Mauricio Oliveira 2"... */
+async function freeNickname(prisma: PrismaClient, name: string) {
+  const base = name.trim().slice(0, 20) || 'Jogador';
+  for (let i = 1; ; i++) {
+    const candidate = i === 1 ? base : `${base.slice(0, 17)} ${i}`;
+    const key = nicknameKey(candidate);
+    if (key.length < 3 || BLOCKED.test(key)) return freeNickname(prisma, 'Jogador');
+    const taken =
+      (await prisma.user.findUnique({ where: { nicknameKey: key } })) ||
+      (await prisma.guestSession.findUnique({ where: { nicknameKey: key } }));
+    if (!taken) return { nickname: candidate, key };
+  }
+}
+
+export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
+  return betterAuth({
+    secret: opts.secret,
+    baseURL: opts.baseURL,
+    basePath: '/v1/auth',
+    trustedOrigins: opts.trustedOrigins,
+    database: prismaAdapter(prisma, { provider: 'postgresql' }),
+    user: {
+      fields: { name: 'nickname' },
+      additionalFields: { nicknameKey: { type: 'string', required: false, input: false } },
+    },
+    session: { modelName: 'authSession' },
+    // Rate limits come from the API (per IP on the auth routes).
+    rateLimit: { enabled: false },
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 8,
+      // Same scrypt format as the accounts created before Better Auth (migrated as they are).
+      password: {
+        hash: hashPassword,
+        verify: ({ hash, password }) => verifyPassword(password, hash),
+      },
+      sendResetPassword: async ({ user, url }) => {
+        void opts.sendEmail({
+          to: user.email,
+          subject: 'De Cabeça: crie uma nova senha',
+          text: `Para criar uma nova senha, abra o link (vale por 1 hora):\n${url}\n\nSe não foi você, ignore este e-mail.`,
+        });
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        void opts.sendEmail({
+          to: user.email,
+          subject: 'De Cabeça: confirme seu e-mail',
+          text: `Confirme seu e-mail abrindo o link:\n${url}`,
+        });
+      },
+    },
+    socialProviders: opts.google ? { google: { ...opts.google, prompt: 'select_account' } } : {},
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user, ctx) => {
+            const req = authRequest.getStore();
+            const mine = { sessionId: req?.sessionId ?? '', userId: null };
+            if (ctx?.path?.startsWith('/callback')) {
+              // Social sign-up: the guest's nickname if it has one, else a free one from the profile.
+              const guest = req
+                ? await prisma.guestSession.findUnique({ where: { id: req.sessionId } })
+                : null;
+              const picked = guest?.nickname
+                ? { nickname: guest.nickname, key: guest.nicknameKey! }
+                : await freeNickname(prisma, user.name);
+              return { data: { ...user, name: picked.nickname, nicknameKey: picked.key } };
+            }
+            const key = await assertNicknameFree(prisma, user.name, mine);
+            return { data: { ...user, nicknameKey: key } };
+          },
+        },
+      },
+    },
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        const signedIn = ctx.context.newSession?.user.id;
+        const req = authRequest.getStore();
+        if (signedIn && req) req.signedIn = signedIn;
+      }),
+    },
+  });
+}
+
+export type Auth = ReturnType<typeof createAuth>;

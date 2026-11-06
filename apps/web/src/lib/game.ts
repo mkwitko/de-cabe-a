@@ -86,7 +86,7 @@ export function useAccount() {
       path: string;
       method: 'POST' | 'PATCH';
       json?: object;
-    }) => api<MeResponse>(path, { method, json: json ?? {} }),
+    }) => api<unknown>(path, { method, json: json ?? {} }),
     onSuccess: () => qc.invalidateQueries(),
   });
 }
