@@ -38,6 +38,7 @@ export const CareerPathView = z.strictObject({
   attemptsUsed: z.number(),
   /** Shown from the first attempt (career-path@2). */
   position: PositionGroup.nullable(),
+  secondaryPositions: z.array(PositionGroup),
   revealed: z.array(RevealedClub),
   extraHints: z.strictObject({
     position: PositionGroup.optional(),

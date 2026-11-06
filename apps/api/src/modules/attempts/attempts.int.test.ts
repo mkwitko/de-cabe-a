@@ -451,6 +451,7 @@ describe('Football Grid', () => {
         canonicalName: 'Tardio da Silva',
         nationalityCountryId: countries.BR!,
         primaryPositionGroup: 'MF',
+        secondaryPositionGroups: ['FW'],
         aliases: {
           create: [
             {
@@ -481,6 +482,13 @@ describe('Football Grid', () => {
       (await g.act(start.attempt.id, { kind: 'guess', cellIndex: 0, playerId: late.id })).json()
         .event,
     ).toEqual({ type: 'correct', cellIndex: 0 });
+    // Cell 6 = forward x Milan: a midfielder who also plays as a forward fits.
+    const g2 = guest();
+    const start2 = (await g2.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 })).json();
+    expect(
+      (await g2.act(start2.attempt.id, { kind: 'guess', cellIndex: 6, playerId: late.id })).json()
+        .event,
+    ).toEqual({ type: 'correct', cellIndex: 6 });
     // Out of the base again for the tests that follow.
     await prisma.player.update({
       where: { id: late.id },

@@ -49,7 +49,7 @@ interface Candidate {
   canonicalName: string;
   notabilityTier: keyof typeof TIER_ORDER;
   nationalities: Set<string>;
-  position: string | null;
+  positions: Set<string>;
   clubs: Set<string>;
   countries: Set<string>;
 }
@@ -74,7 +74,10 @@ async function loadCandidates(prisma: PrismaClient): Promise<Candidate[]> {
       p.nationalityCountryId,
       ...(p.secondaryNationalityCountryId ? [p.secondaryNationalityCountryId] : []),
     ]),
-    position: p.primaryPositionGroup,
+    positions: new Set([
+      ...(p.primaryPositionGroup ? [p.primaryPositionGroup] : []),
+      ...p.secondaryPositionGroups,
+    ]),
     clubs: new Set(p.spells.map((s) => s.clubId)),
     countries: new Set(p.spells.map((s) => s.club.countryId)),
   }));
@@ -86,7 +89,7 @@ const matches = (c: CriterionParam, p: Candidate) =>
     : c.type === 'nationality'
       ? p.nationalities.has(c.countryId)
       : c.type === 'position'
-        ? p.position === c.positionGroup
+        ? p.positions.has(c.positionGroup)
         : p.countries.has(c.countryId);
 
 export async function buildGridSnapshot(
@@ -216,7 +219,8 @@ export async function meetsCell(
     c.type === 'club'
       ? p.spells.some((s) => s.clubId === c.clubId)
       : c.type === 'position'
-        ? p.primaryPositionGroup === c.positionGroup
+        ? p.primaryPositionGroup === c.positionGroup ||
+          p.secondaryPositionGroups.includes(c.positionGroup)
         : c.type === 'nationality'
           ? p.nationalityCountryId === c.countryId ||
             p.secondaryNationalityCountryId === c.countryId

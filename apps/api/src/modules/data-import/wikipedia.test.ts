@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInfoboxCareer, positionFromInfobox } from './wikipedia';
+import { parseInfoboxCareer, positionFromInfobox, positionsFromInfobox } from './wikipedia';
 
 const WIKITEXT = `{{Info/Futebol
 |nome              = Ronaldo
@@ -256,5 +256,25 @@ describe('positionFromInfobox', () => {
     ['{{Info/Futebol\n|nome = X\n}}', null],
   ])('%s', (text, group) => {
     expect(positionFromInfobox(text)).toBe(group);
+  });
+});
+
+describe('positionsFromInfobox', () => {
+  it.each([
+    // Kaká and Neymar: attacking midfielders count as forwards too.
+    ['{{Info/Futebol\n|posição = [[Meio-campista|Meia-atacante]]\n}}', ['MF', 'FW']],
+    [
+      '{{Infobox football biography\n| position = [[Midfielder#Attacking midfielder|Attacking midfielder]]\n}}',
+      ['MF', 'FW'],
+    ],
+    ['{{Info/Futebol\n|posição = [[Volante]] e [[zagueiro]]\n}}', ['MF', 'DF']],
+    [
+      '{{Infobox football biography\n| position = [[Winger (association football)|Winger]], [[full-back]]\n}}',
+      ['FW', 'DF'],
+    ],
+    ['{{Sportivo\n|Ruolo = [[Centrocampista]]\n}}', ['MF']],
+    ['{{Info/Futebol\n|nome = X\n}}', []],
+  ])('%s', (text, groups) => {
+    expect(positionsFromInfobox(text)).toEqual(groups);
   });
 });

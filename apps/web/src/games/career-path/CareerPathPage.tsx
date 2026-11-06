@@ -34,7 +34,7 @@ function Clues({ view }: { view: CareerPathView }) {
         <div className="flex items-baseline gap-2 rounded-full bg-cover px-3 py-1 text-ink">
           <dt className="text-xs font-bold uppercase">Posição</dt>
           <dd className="font-condensed text-lg font-black uppercase">
-            {POSITION_LABEL[view.position]}
+            {[view.position, ...view.secondaryPositions].map((g) => POSITION_LABEL[g]).join(' / ')}
           </dd>
         </div>
       )}

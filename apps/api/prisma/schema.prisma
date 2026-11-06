@@ -102,6 +102,8 @@ model Player {
   secondaryNationalityCountryId String?
   secondaryNationality          Country?           @relation("secondaryNationality", fields: [secondaryNationalityCountryId], references: [id])
   primaryPositionGroup          PositionGroup? /// required before verification (DQ-04)
+  /// Other positions the player is known for (Kaká: MF, also FW); Grid accepts any of them.
+  secondaryPositionGroups       PositionGroup[] @default([])
   positionDetail                String?
   notabilityTier                NotabilityTier     @default(T3)
   wikidataId                    String?            @unique

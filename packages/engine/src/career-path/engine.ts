@@ -29,6 +29,8 @@ export const CareerPathConfig = z.object({
     .min(1),
   extraHints: z.object({
     position: PositionGroup.optional(),
+    /** Other positions the player is known for (Kaká: MF, also FW); shown with the main one. */
+    secondaryPositions: z.array(PositionGroup).optional(),
     nationalityCode: z.string().length(2).optional(),
   }),
   difficultyTier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
@@ -122,6 +124,7 @@ export const careerPath: GameEngine<
       maxAttempts: config.maxAttempts,
       attemptsUsed: state.attempts.length,
       position: config.extraHints.position ?? null,
+      secondaryPositions: config.extraHints.secondaryPositions ?? [],
       revealed: config.trajectory
         .slice(0, state.revealedClubs)
         .map(({ clubId: _clubId, ...entry }) => entry),

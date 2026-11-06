@@ -6,7 +6,7 @@ import { writeFileSync } from 'node:fs';
 import { createPrisma } from '../../apps/api/src/db';
 import {
   fetchWikitext,
-  positionFromInfobox,
+  positionsFromInfobox,
   type WikiLang,
 } from '../../apps/api/src/modules/data-import/wikipedia';
 
@@ -20,7 +20,13 @@ const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 
 
 const players = await prisma.player.findMany({
   where: { verificationStatus: 'verified', notes: { contains: 'wikipedia.org/wiki/' } },
-  select: { id: true, canonicalName: true, primaryPositionGroup: true, notes: true },
+  select: {
+    id: true,
+    canonicalName: true,
+    primaryPositionGroup: true,
+    secondaryPositionGroups: true,
+    notes: true,
+  },
 });
 log(`${players.length} players`);
 const changes: { id: string; name: string; from: string | null; to: string }[] = [];
@@ -37,11 +43,17 @@ for (const [i, p] of players.entries()) {
       await new Promise((r) => setTimeout(r, 5000 * (tries + 1)));
     }
   }
-  const position = text ? positionFromInfobox(text) : null;
-  if (position && position !== p.primaryPositionGroup) {
+  const [position, ...secondary] = text ? positionsFromInfobox(text) : [];
+  if (position && position !== p.primaryPositionGroup)
     changes.push({ id: p.id, name: p.canonicalName, from: p.primaryPositionGroup, to: position });
-    await prisma.player.update({ where: { id: p.id }, data: { primaryPositionGroup: position } });
-  }
+  if (
+    position &&
+    (position !== p.primaryPositionGroup || secondary.join() !== p.secondaryPositionGroups.join())
+  )
+    await prisma.player.update({
+      where: { id: p.id },
+      data: { primaryPositionGroup: position, secondaryPositionGroups: secondary },
+    });
   if ((i + 1) % 200 === 0) log(`${i + 1}/${players.length}, ${changes.length} changed`);
 }
 

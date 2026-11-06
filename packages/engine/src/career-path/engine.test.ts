@@ -131,6 +131,19 @@ describe('careerPath transitions (CAREER_PATH.md §1, §7)', () => {
     });
   });
 
+  it('shows secondary positions from the start too, never as a hint (Kaká: MF, also FW)', () => {
+    const cfg = config(5, { position: 'MF', secondaryPositions: ['FW'], nationalityCode: 'BR' });
+    expect(careerPath.toPublicView(careerPath.createInitialState(cfg), cfg)).toMatchObject({
+      position: 'MF',
+      secondaryPositions: ['FW'],
+      extraHints: {},
+    });
+    const old = config(5, { position: 'MF' });
+    expect(careerPath.toPublicView(careerPath.createInitialState(old), old)).toMatchObject({
+      secondaryPositions: [],
+    });
+  });
+
   it('skips the nationality hint when the snapshot does not have it', () => {
     const { events } = play(config(3, { position: 'FW' }), [skip, skip, skip]);
     expect(events.map((e) => (e.type === 'wrong' ? e.revealed : e.type))).toEqual([
@@ -176,6 +189,7 @@ describe('careerPath views', () => {
       maxAttempts: 6,
       attemptsUsed: 1,
       position: null,
+      secondaryPositions: [],
       revealed: [1, 2].map((n) => {
         const { clubId: _omit, ...rest } = club(n);
         return rest;

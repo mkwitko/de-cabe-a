@@ -14,7 +14,7 @@ import { isNationalTeam } from '../../apps/api/src/modules/data-import/wikidata-
 import {
   fetchWikitext,
   parseInfoboxCareer,
-  positionFromInfobox,
+  positionsFromInfobox,
   type InfoboxEntry,
   type WikiLang,
 } from '../../apps/api/src/modules/data-import/wikipedia';
@@ -338,7 +338,8 @@ async function crossCheck(
 
   // The infobox names the main position ("Meia-atacante"); Wikidata often lists only one role
   // ("winger" for Kaká), so the infobox wins and Wikidata is the fallback.
-  const position = positionFromInfobox(text) ?? p.primaryPositionGroup;
+  const positions = positionsFromInfobox(text);
+  const position = positions[0] ?? p.primaryPositionGroup;
   if (!position) return fail({ qid, name: p.canonicalName, result: 'no-position' });
 
   // Agreement rule (ADR-006): the career sequence comes from pt.wikipedia and every club in it
@@ -475,6 +476,7 @@ async function crossCheck(
       data: {
         notabilityTier: tierFor(links),
         primaryPositionGroup: position,
+        secondaryPositionGroups: positions.filter((g) => g !== position),
         notes: `Carreira conferida com ${wpUrl}`,
       },
     });

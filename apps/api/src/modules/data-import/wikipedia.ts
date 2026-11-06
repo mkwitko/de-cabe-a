@@ -261,22 +261,31 @@ const POSITION_WORDS: [string, 'GK' | 'DF' | 'MF' | 'FW'][] = [
   ].map((w) => [w, 'FW'] as [string, 'FW']),
 ];
 
+// An attacking midfielder (Kaká, Neymar) is a midfielder who also plays as a forward.
+const ATTACKING_MIDFIELDER =
+  / (?:meia atacante|attacking midfielder|mediapunta|mediocampista ofensivo|trequartista|offensives mittelfeld|milieu offensif) /;
+
 /**
- * Main position from the infobox field (pt posição, en/de position, es posición, it Ruolo, fr poste).
- * The first position word in the field wins: "Meia-atacante" is a midfielder, "Flügel, Sturm" a forward.
+ * Positions from the infobox field (pt posição, en/de position, es posición, it Ruolo, fr poste),
+ * in the order they appear: the first is the main one ("Volante e zagueiro" is MF, also DF).
  */
-export function positionFromInfobox(wikitext: string): 'GK' | 'DF' | 'MF' | 'FW' | null {
+export function positionsFromInfobox(wikitext: string): ('GK' | 'DF' | 'MF' | 'FW')[] {
   const raw =
     /^\s*\|\s*(?:posi[cç][aã]o|position|posici[oó]n|ruolo|poste)\s*=(.*)$/im.exec(wikitext)?.[1] ??
     '';
   const text = ` ${normalizeName(raw.replace(/<ref[\s\S]*?(?:\/>|<\/ref>)/g, '').replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1'))} `;
-  let best: { at: number; group: 'GK' | 'DF' | 'MF' | 'FW' } | null = null;
+  const found: { at: number; group: 'GK' | 'DF' | 'MF' | 'FW' }[] = [];
   for (const [word, group] of POSITION_WORDS) {
     const at = text.indexOf(` ${word}`);
-    if (at >= 0 && (!best || at < best.at)) best = { at, group };
+    if (at >= 0) found.push({ at, group });
   }
-  return best?.group ?? null;
+  const groups = [...new Set(found.sort((a, b) => a.at - b.at).map((f) => f.group))];
+  if (ATTACKING_MIDFIELDER.test(text) && !groups.includes('FW')) groups.push('FW');
+  return groups;
 }
+
+/** Main position: the first one in the field ("Meia-atacante" is a midfielder). */
+export const positionFromInfobox = (wikitext: string) => positionsFromInfobox(wikitext)[0] ?? null;
 
 let last = 0;
 /** Wikitext of a Wikipedia page via the MediaWiki API (≤ 1 req/s). */

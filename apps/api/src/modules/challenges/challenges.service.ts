@@ -113,6 +113,9 @@ export function careerPathConfig(
     trajectory: report.trajectory,
     extraHints: {
       ...(p.primaryPositionGroup ? { position: p.primaryPositionGroup } : {}),
+      ...(p.secondaryPositionGroups.length
+        ? { secondaryPositions: p.secondaryPositionGroups }
+        : {}),
       nationalityCode: p.nationality.isoCode,
     },
     difficultyTier: difficultyTier ?? report.suggestedDifficulty,
