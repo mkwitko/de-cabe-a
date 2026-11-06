@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import {
   hasZodFastifySchemaValidationErrors,
@@ -12,6 +13,7 @@ import type { PrismaClient } from './generated/prisma/client';
 import { AppError } from './errors';
 import { track } from './modules/analytics/analytics';
 import { levelReportAdminRoutes } from './modules/reports/level-reports';
+import { metricsRoutes, serverMetrics } from './modules/admin/metrics';
 import { adminAuth } from './modules/admin/auth';
 import { createAuth, type Auth, type AuthOptions } from './modules/account/auth';
 import { importRoutes } from './modules/data-import/import.routes';
@@ -77,6 +79,8 @@ export function buildApp(
     auth: createAuth(rest.prisma, authOptions),
   });
 
+  app.decorate('serverMetrics', serverMetrics(app));
+
   app.setErrorHandler((err, req, reply) => {
     if (hasZodFastifySchemaValidationErrors(err))
       return reply
@@ -98,6 +102,8 @@ export function buildApp(
         .code(429)
         .send(body('RATE_LIMITED', 'Muitas requisições. Tente de novo em instantes.'));
     req.log.error(err);
+    // Unexpected errors only (handled 4xx above never reach here); no-op without SENTRY_DSN.
+    Sentry.captureException(err);
     return reply.code(500).send(body('INTERNAL_ERROR', 'Erro interno.'));
   });
   app.setNotFoundHandler((_req, reply) =>
@@ -116,6 +122,7 @@ export function buildApp(
       await admin.register(challengeRoutes);
       await admin.register(reportRoutes);
       await admin.register(levelReportAdminRoutes);
+      await admin.register(metricsRoutes);
     },
     { prefix: '/v1/admin' },
   );

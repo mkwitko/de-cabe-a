@@ -1,3 +1,5 @@
+// Must stay the first import (instruments the modules below).
+import './instrument';
 import { buildApp } from './app';
 import { createPrisma } from './db';
 import { mailer } from './modules/account/email';
