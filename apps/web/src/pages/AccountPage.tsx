@@ -66,7 +66,7 @@ export function AccountPage() {
           </p>
         </aside>
 
-        <div className="flex max-w-xl flex-col gap-10">
+        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
           <form
             className="flex flex-col gap-3"
             onSubmit={(e) => submit(e, '/v1/me', 'PATCH', { nickname })}
@@ -87,7 +87,7 @@ export function AccountPage() {
           </form>
 
           {m.account ? (
-            <section className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8">
+            <section className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0">
               <h2 className={h2}>Sessão</h2>
               <p className="text-chalk-soft">
                 Seu progresso está salvo na conta e aparece em qualquer aparelho em que você entrar.
@@ -101,7 +101,7 @@ export function AccountPage() {
             </section>
           ) : (
             <form
-              className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8"
+              className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0"
               onSubmit={(e) =>
                 submit(
                   e,

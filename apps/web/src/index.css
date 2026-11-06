@@ -36,6 +36,8 @@
   html {
     background: var(--color-pitch-deep);
     scrollbar-color: var(--color-chalk-soft) var(--color-pitch-deep);
+    /* Same centre with or without a scrollbar: the shell never shifts between pages. */
+    scrollbar-gutter: stable;
   }
 
   body {
