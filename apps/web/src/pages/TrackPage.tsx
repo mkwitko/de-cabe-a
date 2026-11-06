@@ -2,6 +2,7 @@
  * A game's track as album pages of 10 levels (ADR-007): done levels are pasted stickers with
  * their stars, the next level is the open slot, the rest are locked slots. Scrolls to the current level.
  */
+import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import type { GameMode, TrackResponse } from '@decabeca/contracts';
@@ -148,6 +149,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
           );
         })}
       </div>
+      <AdSlot slot={AD_SLOTS.track} />
     </div>
   );
 }

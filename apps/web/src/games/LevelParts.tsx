@@ -1,4 +1,5 @@
 /** Pieces shared by both games' level screens (ADR-007): end-of-level panel and level errors. */
+import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import { formatClock } from './Clock';
 import { useRef, useState, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
@@ -156,6 +157,7 @@ export function LevelEnd({
         )}
       </div>
       <ReportError mode={mode} level={level} />
+      <AdSlot slot={AD_SLOTS.result} />
     </section>
   );
 }
