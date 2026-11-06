@@ -8,12 +8,14 @@ import {
 } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import type { GamesResponse } from '@decabeca/contracts';
-import { useGames, useStats } from './lib/game';
+import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
+import type { GameMode } from '@decabeca/contracts';
 import { CareerPathPage } from './games/career-path/CareerPathPage';
 import { GridPage } from './games/grid/GridPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { TrackPage } from './pages/TrackPage';
 import { RankingPage } from './pages/RankingPage';
+import { ImpostorPage } from './games/impostor/ImpostorPage';
 import { ModeGate } from './games/Clock';
 import { NewPasswordPage } from './pages/NewPasswordPage';
 import { AccountPage } from './pages/AccountPage';
@@ -45,6 +47,18 @@ const GAMES = [
       'Cada célula pede um jogador que cumpra a linha e a coluna.',
       'Você tem 9 tentativas; errar gasta uma e a célula fica vazia.',
       'Cada jogador vale uma vez só por grid.',
+    ],
+  },
+  {
+    slot: '03',
+    mode: 'IMPOSTOR',
+    name: 'Impostor',
+    path: '/impostor',
+    rule: 'Três jogaram no clube, um nunca vestiu a camisa. Ache o impostor.',
+    howTo: [
+      'Cada fase tem 5 rodadas, cada uma com um clube e 4 jogadores.',
+      'Três jogaram no clube; toque no que nunca jogou.',
+      'Uma escolha por rodada. Acerte as 5 para 3 estrelas.',
     ],
   },
 ] as const;
@@ -144,7 +158,7 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
           Jogos
         </h2>
-        <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+        <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((g) => {
             return (
               <li
@@ -296,6 +310,8 @@ function PublicRoutes() {
         <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
         <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
         <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
+        <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
+        <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
         <Route path="/ranking" element={<RankingPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/stats" element={<StatsPage />} />
@@ -308,16 +324,17 @@ function PublicRoutes() {
 }
 
 /** /career-path/:level and /grid/:level; the key remounts the game when the level changes. */
-function LevelRoute({ mode }: { mode: 'CAREER_PATH' | 'FOOTBALL_GRID' }) {
+function LevelRoute({ mode }: { mode: GameMode }) {
   const level = Number(useParams().level);
-  if (!Number.isInteger(level) || level < 1)
-    return <Navigate to={mode === 'CAREER_PATH' ? '/career-path' : '/grid'} replace />;
-  const title = `${mode === 'CAREER_PATH' ? 'Career Path' : 'Grid'} · Fase ${level}`;
+  if (!Number.isInteger(level) || level < 1) return <Navigate to={GAME_PATH[mode]} replace />;
+  const title = `${mode === 'FOOTBALL_GRID' ? 'Grid' : GAME_NAME[mode]} · Fase ${level}`;
   return (
     <ModeGate key={level} mode={mode} level={level} title={title}>
       {(timed) =>
         mode === 'CAREER_PATH' ? (
           <CareerPathPage level={level} timed={timed} />
+        ) : mode === 'IMPOSTOR' ? (
+          <ImpostorPage level={level} timed={timed} />
         ) : (
           <GridPage level={level} timed={timed} />
         )

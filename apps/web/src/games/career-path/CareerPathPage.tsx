@@ -140,7 +140,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
           ? 'Acertou!'
           : ev?.type === 'lost'
             ? 'Fim de jogo.'
-            : `${describe}. ${ev?.type === 'wrong' && ev.revealed === 'club' ? 'Novo clube revelado.' : ev?.type === 'wrong' && ev.revealed === 'extraHint' ? 'Nova pista revelada.' : ''}`,
+            : `${describe}. ${ev && 'revealed' in ev && ev.revealed === 'club' ? 'Novo clube revelado.' : ev && 'revealed' in ev && ev.revealed === 'extraHint' ? 'Nova pista revelada.' : ''}`,
       );
       if (ev?.type === 'wrong' && 'vibrate' in navigator) navigator.vibrate?.(60);
     } catch {

@@ -65,6 +65,7 @@ export function StatsPage() {
   if (!data) return <Skeleton className="h-96" />;
   const cp = data.CAREER_PATH;
   const grid = data.FOOTBALL_GRID;
+  const imp = data.IMPOSTOR;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
   const next = data.title.next;
   const rank = (n: number | null) =>
@@ -112,7 +113,7 @@ export function StatsPage() {
         </div>
       </section>
 
-      <div className="grid gap-12 md:grid-cols-2 md:gap-10">
+      <div className="grid gap-12 md:grid-cols-2 md:gap-10 xl:grid-cols-3">
         <section
           aria-labelledby="cp-stats"
           className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
@@ -181,6 +182,32 @@ export function StatsPage() {
               Nenhum grid jogado ainda.{' '}
               <Link to="/grid" className="text-chalk underline underline-offset-4">
                 Ver as fases do Grid
+              </Link>
+            </p>
+          )}
+        </section>
+
+        <section
+          aria-labelledby="impostor-stats"
+          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        >
+          <h2 id="impostor-stats" className="font-condensed text-3xl font-black uppercase">
+            Impostor
+          </h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <Figure label="fases jogadas">{imp.completed}</Figure>
+            <Figure label="estrelas">
+              <StarIcon className="size-7 text-cover" />
+              {imp.stars}
+            </Figure>
+            <Figure label="fases com 3 estrelas">{imp.threeStars}</Figure>
+            <Figure label="5 de 5">{imp.perfect}</Figure>
+          </dl>
+          {imp.completed === 0 && (
+            <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
+              Nenhum impostor caçado ainda.{' '}
+              <Link to="/impostor" className="text-chalk underline underline-offset-4">
+                Ver as fases do Impostor
               </Link>
             </p>
           )}

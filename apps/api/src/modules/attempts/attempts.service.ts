@@ -3,7 +3,7 @@
  * idempotent actions, views without answers, stars at the end.
  * Every rule runs in the engine; this layer loads, locks, persists and presents.
  */
-import type { AttemptResponse, PlayerRef } from '@decabeca/contracts';
+import type { ImpostorReveal, ImpostorView, AttemptResponse, PlayerRef } from '@decabeca/contracts';
 import {
   starsFor,
   type CareerPathConfig,
@@ -17,7 +17,7 @@ import { engineFor, type GameModeCode } from '../challenges/engines';
 import { track } from '../analytics/analytics';
 import { meetsCell } from '../challenges/grid-snapshot';
 
-const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid' } as const;
+const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid', IMPOSTOR: 'Impostor' } as const;
 export const SHARE_HOST = 'decabecafc.com.br';
 
 export interface Player {
@@ -57,7 +57,11 @@ export async function present(
   let view: AttemptResponse['view'];
   let reveal: AttemptResponse['reveal'] = null;
 
-  if (challenge.gameMode === 'CAREER_PATH') {
+  if (challenge.gameMode === 'IMPOSTOR') {
+    // Impostor views carry only names and ids frozen in the snapshot: no lookups needed.
+    view = { ...(engine.toPublicView(state, config) as ImpostorView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as ImpostorReveal;
+  } else if (challenge.gameMode === 'CAREER_PATH') {
     const s = state as CareerPathState;
     const c = config as CareerPathConfig;
     const guessed = s.attempts.flatMap((a) => (a.kind === 'guess' ? [a.playerId] : []));
@@ -197,7 +201,11 @@ async function assertUnlocked(
 }
 
 /** Time limit of a level played against the clock (ADR-009), in seconds. */
-export const TIME_LIMIT_SEC: Record<GameModeCode, number> = { CAREER_PATH: 90, FOOTBALL_GRID: 180 };
+export const TIME_LIMIT_SEC: Record<GameModeCode, number> = {
+  CAREER_PATH: 90,
+  FOOTBALL_GRID: 180,
+  IMPOSTOR: 60,
+};
 /** Network slack before an action counts as late. */
 const GRACE_MS = 2000;
 
@@ -321,7 +329,8 @@ export async function submitAction(
     const expired =
       !a.completedAt && a.deadlineAt !== null && now.getTime() > a.deadlineAt.getTime() + GRACE_MS;
     if (expired)
-      rawInput = a.challenge.gameMode === 'CAREER_PATH' ? { kind: 'give_up' } : { kind: 'finish' };
+      rawInput =
+        a.challenge.gameMode === 'FOOTBALL_GRID' ? { kind: 'finish' } : { kind: 'give_up' };
     const input = engine.parseInput(rawInput) as {
       kind: string;
       playerId?: string;
@@ -362,7 +371,7 @@ export async function submitAction(
         status,
         score,
         stars: done
-          ? starsFor(engine.id as 'career-path' | 'football-grid', score, {
+          ? starsFor(engine.id as 'career-path' | 'football-grid' | 'impostor', score, {
               hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
             })
           : 0,
@@ -389,7 +398,9 @@ export async function submitAction(
     const attemptsUsed =
       a.challenge.gameMode === 'FOOTBALL_GRID'
         ? (out.state as { attemptsUsed: number }).attemptsUsed
-        : seq;
+        : a.challenge.gameMode === 'IMPOSTOR'
+          ? (out.state as { picks: string[] }).picks.length
+          : seq;
     if (input.kind === 'guess')
       pending.push([
         'answer_submitted',
