@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
-export const GameMode = z.enum(['CAREER_PATH', 'FOOTBALL_GRID', 'IMPOSTOR', 'TIMELINE']);
+export const GameMode = z.enum([
+  'CAREER_PATH',
+  'FOOTBALL_GRID',
+  'IMPOSTOR',
+  'TIMELINE',
+  'HIGHER_LOWER',
+]);
 export type GameMode = z.infer<typeof GameMode>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
 export type AttemptStatus = z.infer<typeof AttemptStatus>;
@@ -194,6 +200,36 @@ export const TimelineReveal = z.strictObject({
 });
 export type TimelineReveal = z.infer<typeof TimelineReveal>;
 
+/** Mais ou Menos (ADR-011): two spells, who had more goals or games; values after the pick. */
+const HlSide = z.strictObject({
+  playerId: z.string(),
+  playerName: z.string(),
+  clubName: z.string(),
+});
+const HlSideValue = HlSide.extend({ value: z.number() });
+export const HigherLowerView = z.strictObject({
+  status: z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']),
+  round: z.number(),
+  totalRounds: z.number(),
+  rounds: z.array(
+    z.strictObject({
+      metric: z.enum(['goals', 'games']),
+      a: HlSideValue,
+      b: HlSideValue,
+      choice: z.enum(['a', 'b']),
+      correct: z.boolean(),
+    }),
+  ),
+  current: z.strictObject({ metric: z.enum(['goals', 'games']), a: HlSide, b: HlSide }).nullable(),
+});
+export type HigherLowerView = z.infer<typeof HigherLowerView>;
+export const HigherLowerReveal = z.strictObject({
+  rounds: z.array(
+    z.strictObject({ metric: z.enum(['goals', 'games']), a: HlSideValue, b: HlSideValue }),
+  ),
+});
+export type HigherLowerReveal = z.infer<typeof HigherLowerReveal>;
+
 export const AttemptSummary = z.strictObject({
   id: z.string(),
   challengeId: z.string(),
@@ -236,15 +272,27 @@ const GameEvent = z.union([
     round: z.number(),
     order: z.array(z.string()),
   }),
+  // Mais ou Menos: both values are shown once the round is played.
+  z.strictObject({
+    type: z.enum(['correct', 'wrong']),
+    round: z.number(),
+    values: z.tuple([z.number(), z.number()]),
+  }),
 ]);
 
 /** POST /v1/attempts, GET /v1/attempts/:id, POST /v1/attempts/:id/actions */
 export const AttemptResponse = z.strictObject({
   attempt: AttemptSummary,
   event: GameEvent.optional(),
-  view: z.union([CareerPathView, FootballGridView, ImpostorView, TimelineView]),
+  view: z.union([CareerPathView, FootballGridView, ImpostorView, TimelineView, HigherLowerView]),
   reveal: z
-    .union([CareerPathReveal, FootballGridReveal, ImpostorReveal, TimelineReveal])
+    .union([
+      CareerPathReveal,
+      FootballGridReveal,
+      ImpostorReveal,
+      TimelineReveal,
+      HigherLowerReveal,
+    ])
     .nullable(),
   share: z.strictObject({ text: z.string() }).nullable(),
 });
@@ -269,6 +317,7 @@ export const SubmitActionRequest = z.object({
     z.object({ kind: z.literal('give_up') }),
     z.object({ kind: z.literal('pick'), playerId: z.string().min(1) }),
     z.object({ kind: z.literal('order'), clubIds: z.array(z.string()).length(4) }),
+    z.object({ kind: z.literal('choose'), side: z.enum(['a', 'b']) }),
     z.object({ kind: z.literal('hint'), cellIndex: z.number().int() }),
   ]),
 });
@@ -357,6 +406,12 @@ export const StatsResponse = z.strictObject({
     perfect: z.number(),
   }),
   TIMELINE: z.strictObject({
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
+    perfect: z.number(),
+  }),
+  HIGHER_LOWER: z.strictObject({
     completed: z.number(),
     stars: z.number(),
     threeStars: z.number(),

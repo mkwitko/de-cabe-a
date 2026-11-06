@@ -45,6 +45,9 @@ const HowToPlayPage = lazy(() =>
 const TimelinePage = lazy(() =>
   import('./games/timeline/TimelinePage').then((m) => ({ default: m.TimelinePage })),
 );
+const HigherLowerPage = lazy(() =>
+  import('./games/higher-lower/HigherLowerPage').then((m) => ({ default: m.HigherLowerPage })),
+);
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 const GAMES = [
@@ -94,6 +97,18 @@ const GAMES = [
       'Cada fase tem 5 jogadores, com 4 clubes de cada um.',
       'Toque nos clubes do primeiro ao último; toque de novo para desfazer.',
       'Uma resposta por jogador. Acerte as 5 ordens para 3 estrelas.',
+    ],
+  },
+  {
+    slot: '05',
+    mode: 'HIGHER_LOWER',
+    name: 'Mais ou Menos',
+    path: '/mais-ou-menos',
+    rule: 'Duas passagens reais: quem fez mais gols, ou mais jogos, pelo clube?',
+    howTo: [
+      'Cada fase tem 5 duelos entre jogadores em seus clubes.',
+      'Toque em quem tem o número maior (gols ou jogos pelo clube).',
+      'Os números aparecem depois. Acerte os 5 para 3 estrelas.',
     ],
   },
 ] as const;
@@ -366,6 +381,8 @@ function PublicRoutes() {
           <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
           <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
           <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
+          <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
+          <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
@@ -395,6 +412,8 @@ function LevelRoute({ mode }: { mode: GameMode }) {
           <ImpostorPage level={level} timed={timed} />
         ) : mode === 'TIMELINE' ? (
           <TimelinePage level={level} timed={timed} />
+        ) : mode === 'HIGHER_LOWER' ? (
+          <HigherLowerPage level={level} timed={timed} />
         ) : (
           <GridPage level={level} timed={timed} />
         )

@@ -1,3 +1,4 @@
+import { GAME_NAME } from '../lib/game';
 /** Players' error reports, grouped by level, with the level's data next to them. */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,7 +15,7 @@ interface Spell {
 }
 interface ReportedLevel {
   challengeId: string;
-  mode: 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE';
+  mode: 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE' | 'HIGHER_LOWER';
   level: number | null;
   challengeStatus: string;
   shown: { extraHints?: Record<string, unknown> };
@@ -74,15 +75,7 @@ export function LevelReportsPage() {
         <article key={l.challengeId} className="rounded-lg border border-ink/15 p-4">
           <header className="flex flex-wrap items-baseline gap-3">
             <h2 className="text-lg font-bold">
-              {
-                {
-                  CAREER_PATH: 'Career Path',
-                  FOOTBALL_GRID: 'Grid',
-                  IMPOSTOR: 'Impostor',
-                  TIMELINE: 'Linha do tempo',
-                }[l.mode]
-              }{' '}
-              · Fase {l.level}
+              {GAME_NAME[l.mode]} · Fase {l.level}
             </h2>
             <span className="text-sm text-ink/70">
               {l.reports.length} relato(s) · fase {l.challengeStatus}

@@ -28,6 +28,7 @@ const GAMES = [
   { mode: 'FOOTBALL_GRID', name: 'Grid' },
   { mode: 'IMPOSTOR', name: 'Impostor' },
   { mode: 'TIMELINE', name: 'Linha do tempo' },
+  { mode: 'HIGHER_LOWER', name: 'Mais ou Menos' },
 ] as const;
 
 /** Public game routes; every request runs with a guest session (created on first visit). */

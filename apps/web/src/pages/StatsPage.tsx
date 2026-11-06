@@ -67,6 +67,7 @@ export function StatsPage() {
   const grid = data.FOOTBALL_GRID;
   const imp = data.IMPOSTOR;
   const tl = data.TIMELINE;
+  const hl = data.HIGHER_LOWER;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
   const next = data.title.next;
   const rank = (n: number | null) =>
@@ -229,6 +230,24 @@ export function StatsPage() {
             </Figure>
             <Figure label="fases com 3 estrelas">{tl.threeStars}</Figure>
             <Figure label="5 de 5">{tl.perfect}</Figure>
+          </dl>
+        </section>
+
+        <section
+          aria-labelledby="hl-stats"
+          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        >
+          <h2 id="hl-stats" className="font-condensed text-3xl font-black uppercase">
+            Mais ou Menos
+          </h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <Figure label="fases jogadas">{hl.completed}</Figure>
+            <Figure label="estrelas">
+              <StarIcon className="size-7 text-cover" />
+              {hl.stars}
+            </Figure>
+            <Figure label="fases com 3 estrelas">{hl.threeStars}</Figure>
+            <Figure label="5 de 5">{hl.perfect}</Figure>
           </dl>
         </section>
       </div>

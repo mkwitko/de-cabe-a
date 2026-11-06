@@ -6,6 +6,8 @@
 import { playerSlug } from '../seo/seo.routes';
 import type {
   AttemptResponse,
+  HigherLowerReveal,
+  HigherLowerView,
   ImpostorReveal,
   ImpostorView,
   PlayerRef,
@@ -30,6 +32,7 @@ const NAMES = {
   FOOTBALL_GRID: 'Grid',
   IMPOSTOR: 'Impostor',
   TIMELINE: 'Linha do tempo',
+  HIGHER_LOWER: 'Mais ou Menos',
 } as const;
 export const SHARE_HOST = 'decabecafc.com.br';
 
@@ -70,7 +73,10 @@ export async function present(
   let view: AttemptResponse['view'];
   let reveal: AttemptResponse['reveal'] = null;
 
-  if (challenge.gameMode === 'TIMELINE') {
+  if (challenge.gameMode === 'HIGHER_LOWER') {
+    view = { ...(engine.toPublicView(state, config) as HigherLowerView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as HigherLowerReveal;
+  } else if (challenge.gameMode === 'TIMELINE') {
     // Timeline views carry names, ids and years frozen in the snapshot: no lookups needed.
     view = { ...(engine.toPublicView(state, config) as TimelineView), status: attempt.status };
     if (done) reveal = engine.toRevealView(state, config) as TimelineReveal;
@@ -229,6 +235,7 @@ export const TIME_LIMIT_SEC: Record<GameModeCode, number> = {
   FOOTBALL_GRID: 180,
   IMPOSTOR: 60,
   TIMELINE: 90,
+  HIGHER_LOWER: 60,
 };
 /** Network slack before an action counts as late. */
 const GRACE_MS = 2000;
@@ -396,7 +403,8 @@ export async function submitAction(
         score,
         stars: done
           ? starsFor(
-              engine.id as 'career-path' | 'football-grid' | 'impostor' | 'timeline',
+              engine.id as
+                'career-path' | 'football-grid' | 'impostor' | 'timeline' | 'higher-lower',
               score,
               {
                 hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
@@ -430,7 +438,9 @@ export async function submitAction(
           ? (out.state as { picks: string[] }).picks.length
           : a.challenge.gameMode === 'TIMELINE'
             ? (out.state as { answers: string[][] }).answers.length
-            : seq;
+            : a.challenge.gameMode === 'HIGHER_LOWER'
+              ? (out.state as { choices: string[] }).choices.length
+              : seq;
     if (input.kind === 'guess')
       pending.push([
         'answer_submitted',

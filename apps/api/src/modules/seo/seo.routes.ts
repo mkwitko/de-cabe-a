@@ -135,7 +135,7 @@ export const seoRoutes: FastifyPluginAsync = async (app) => {
     const clubList = clubs.map((c) => c.club.shortName);
     const uniqueClubs = [...new Set(clubList)];
     // Direct answer first (what search snippets and AI answers quote).
-    const answer = `${p.canonicalName} é um ${pos} ${p.nationality.name === 'Brasil' ? 'brasileiro' : `de ${p.nationality.name}`}${born ? ` nascido em ${born}` : ''}. Na carreira profissional passou por ${uniqueClubs.length} ${uniqueClubs.length === 1 ? 'clube' : 'clubes'}: ${uniqueClubs.join(', ')}${hasStats ? `, com ${games} jogos e ${goals} gols em ligas` : ''}.`;
+    const answer = `${p.canonicalName} é um ${pos} ${p.nationality.name === 'Brasil' ? 'brasileiro' : `de ${p.nationality.name}`}${born ? ` nascido em ${born}` : ''}. Na carreira profissional passou por ${uniqueClubs.length} ${uniqueClubs.length === 1 ? 'clube' : 'clubes'}: ${uniqueClubs.join(', ')}${hasStats ? `, com ${games} jogos e ${goals} gols` : ''}.`;
     // Teammates (same club, overlapping years): internal links between careers.
     const mates = await prisma.player.findMany({
       where: {
@@ -205,14 +205,14 @@ export const seoRoutes: FastifyPluginAsync = async (app) => {
 <a class="cta" href="/career-path">Você adivinharia pela carreira? Jogar Career Path</a>
 <h2>Clubes, jogos e gols</h2>
 <div class="scroll"><table><thead><tr><th>Clube</th><th>País</th><th>Período</th><th>Jogos</th><th>Gols</th></tr></thead><tbody>${rows}</tbody></table></div>
-${hasStats ? `<p>Total em ligas: <strong>${games} jogos</strong> e <strong>${goals} gols</strong>.</p>` : ''}
+${hasStats ? `<p>Total: <strong>${games} jogos</strong> e <strong>${goals} gols</strong>.</p>` : ''}
 ${quiz}
 ${statsBlock}
 ${mates.length ? `<h2>Jogou nos mesmos clubes</h2><ul class="grid">${mates.map((m) => `<li><a href="/jogador/${playerSlug(m)}">${esc(m.canonicalName)}</a></li>`).join('')}</ul>` : ''}
 <h2>Teste seu conhecimento</h2>
 <p>No De Cabeça você adivinha o jogador pela sequência de clubes, completa a grade de clubes e posições e caça o impostor que nunca jogou no clube.</p>
 <a class="cta" href="/">Jogar agora, é grátis</a>
-<p class="src">Dados conferidos entre Wikidata e Wikipédia${wikiUrl ? ` (<a href="${esc(wikiUrl)}" rel="nofollow">fonte</a>)` : ''}; textos da Wikipédia sob CC BY-SA. Jogos e gols em ligas, quando a fonte informa.</p>`;
+<p class="src">Dados conferidos entre Wikidata e Wikipédia${wikiUrl ? ` (<a href="${esc(wikiUrl)}" rel="nofollow">fonte</a>)` : ''}; textos da Wikipédia sob CC BY-SA. Jogos e gols como a ficha da Wikipédia informa (em geral, só pelo campeonato).</p>`;
     const jsonLd = [
       {
         '@context': 'https://schema.org',
@@ -340,7 +340,7 @@ ${letters
 - [Como jogar](${o}/como-jogar): regras, estrelas, títulos e ranking.
 
 ## Dados
-- [Jogadores](${o}/jogadores): carreiras de ${n} jogadores conferidas entre Wikidata e Wikipédia (clubes, anos, jogos e gols em ligas). Cada página tem um resumo direto no topo.
+- [Jogadores](${o}/jogadores): carreiras de ${n} jogadores conferidas entre Wikidata e Wikipédia (clubes, anos, jogos e gols). Cada página tem um resumo direto no topo.
 - Fontes: Wikidata (CC0) e Wikipédia (CC BY-SA), conferidas por um curador de IA com regras escritas.
 `);
   });

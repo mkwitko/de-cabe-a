@@ -1,3 +1,4 @@
+import { buildHigherLowerSnapshot, HigherLowerParams } from './higher-lower-snapshot';
 import { buildTimelineSnapshot, TimelineParams } from './timeline-snapshot';
 /**
  * Challenge lifecycle (API_SPEC.md admin, ADR-002, ADR-007): snapshot generation, eligibility,
@@ -127,7 +128,7 @@ export function careerPathConfig(
 export interface CreateChallengeInput {
   mode: GameModeCode;
   difficultyTier?: 1 | 2 | 3 | undefined;
-  params: { playerId: string } | GridParams | ImpostorParams | TimelineParams;
+  params: { playerId: string } | GridParams | ImpostorParams | TimelineParams | HigherLowerParams;
   createdBy: string;
 }
 
@@ -138,6 +139,15 @@ function usages(
 ): { playerId: string; role: string }[] {
   if (mode === 'CAREER_PATH')
     return [{ playerId: String(snapshot.answerPlayerId), role: 'answer' }];
+  if (mode === 'HIGHER_LOWER')
+    return [
+      ...new Set(
+        (snapshot.rounds as { a: { playerId: string }; b: { playerId: string } }[]).flatMap((r) => [
+          r.a.playerId,
+          r.b.playerId,
+        ]),
+      ),
+    ].map((playerId) => ({ playerId, role: 'compare' }));
   if (mode === 'TIMELINE')
     return (snapshot.rounds as { playerId: string }[]).map((r) => ({
       playerId: r.playerId,
@@ -165,6 +175,16 @@ async function buildSnapshot(prisma: PrismaClient, input: Omit<CreateChallengeIn
         reasons: report.reasons,
       });
     const config = careerPathConfig(report, input.difficultyTier);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'HIGHER_LOWER') {
+    const params = HigherLowerParams.parse(input.params);
+    const built = await buildHigherLowerSnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase do Mais ou Menos não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.HIGHER_LOWER.validateConfig(built.config);
     return { config, difficultyTier: config.difficultyTier };
   }
   if (input.mode === 'TIMELINE') {
