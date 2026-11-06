@@ -42,3 +42,12 @@ Script temporário (fora do produto, em `scripts/research/`) que roda 5 consulta
 - Resultado documentado em `DATA_QUALITY.md` §Baseline.
 
 Nada do produto depende de contratar API paga.
+
+## Partidas e escalações (2026-11-06)
+
+| Fonte | Licença | O que importamos | Uso |
+|---|---|---|---|
+| OpenFootball `football.json` | CC0 (domínio público, inclusive comercial) | 25.742 partidas das ligas da Inglaterra, Espanha, Itália, Alemanha, França, Portugal e Holanda, 2010-11 a 2023-24 (resultados) | Liberado |
+| StatsBomb open data | Pede citar "StatsBomb" e usar o logo; contrato completo em `LICENSE.pdf` do repositório | 281 partidas de Copas do Mundo (1958–2022), Copa América 2024 e Eurocopas, com escalações (13.516 linhas; 63% ligadas a jogadores nossos) | **Só depois de ler o contrato** (uso com anúncios) |
+
+Script: `scripts/research/import-matches.ts` (tabelas `Match` e `MatchLineup`). Jogador de escalação só é ligado ao nosso quando nome (ou apelido) e nacionalidade batem com exatamente um jogador; time só é ligado a clube quando o nome bate. Base para Missing XI e Técnico de Bolso. Scraping de sites com termos que proíbem (Transfermarkt, FBref, Sofascore, ogol) continua fora.
