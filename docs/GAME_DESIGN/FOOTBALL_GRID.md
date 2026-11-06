@@ -87,12 +87,12 @@ De Cabeça · Grid #45 · 7/9
 🟩🟩⬛
 🟩🟩🟩
 ⬛🟩🟩
-decabeca.app/g/45
+decabecafc.com.br/g/45
 ```
 
 Não lista critérios nem jogadores.
 
-Domínio `decabeca.app` é placeholder (Q3 em `PRD.md`).
+Domínio: `decabecafc.com.br` (Q3 em `PRD.md`); as fases usam o link da trilha.
 
 ## 11. Casos extremos
 

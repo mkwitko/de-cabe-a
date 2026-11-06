@@ -1,7 +1,7 @@
 /* global URL, Headers, fetch -- Cloudflare Workers runtime */
 // Cloudflare Pages Function (ADR-010): <site>/v1/* goes to the API on the Oracle VM, so the site,
 // the guest cookie and the sign-in all stay on one domain. API_ORIGIN is a Pages environment
-// variable, e.g. https://api-origin.seudominio.com.br
+// variable, e.g. https://api-origin.decabecafc.com.br
 export async function onRequest({ request, env }) {
   const url = new URL(request.url);
   const target = new URL(url.pathname + url.search, env.API_ORIGIN);
