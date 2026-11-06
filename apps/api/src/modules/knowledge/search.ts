@@ -8,6 +8,7 @@ import { normalizeName } from '@decabeca/engine';
 import type { PrismaClient } from '../../generated/prisma/client';
 
 const TIER = { T1: 0, T2: 1, T3: 2, T4: 3 } as const;
+const POSITION = { GK: 'goleiro', DF: 'defensor', MF: 'meia', FW: 'atacante' } as const;
 
 export async function searchPlayers(
   prisma: PrismaClient,
@@ -59,25 +60,29 @@ export async function searchPlayers(
     )
     .slice(0, limit);
 
-  const nameCount = new Map<string, number>();
-  for (const r of ranked)
-    nameCount.set(r.player.canonicalName, (nameCount.get(r.player.canonicalName) ?? 0) + 1);
-
   return ranked.map(({ player, alias, normalized, isPrimary }) => {
+    // Every result says who it is, since many players share a first name or nickname ("Marcelo"):
+    // main club (most league games, else the longest spell) · birth year · position.
+    const span = (x: (typeof player.spells)[number]) =>
+      (x.endDate ?? new Date()).getTime() - (x.startDate?.getTime() ?? 0);
+    const main = [...player.spells].sort(
+      (a, b) => (b.appearances ?? -1) - (a.appearances ?? -1) || span(b) - span(a),
+    )[0];
+    const who = [
+      main?.club.shortName,
+      player.birthDate?.getUTCFullYear(),
+      player.primaryPositionGroup ? POSITION[player.primaryPositionGroup] : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
     // Typed exactly a nickname that is not the canonical name (Dida, canonical "Nelson de Jesus
-    // Silva"): show the nickname, with the canonical name to confirm who it is.
+    // Silva"): show the nickname, with the canonical name first in the line below.
     if (normalized === term && !isPrimary)
-      return { id: player.id, name: alias, disambiguation: player.canonicalName };
-    // Homonyms get "birth year · longest club" so the player can tell them apart.
-    let disambiguation: string | null = null;
-    if ((nameCount.get(player.canonicalName) ?? 0) > 1) {
-      const span = (s: (typeof player.spells)[number]) =>
-        (s.endDate ?? new Date()).getTime() - (s.startDate?.getTime() ?? 0);
-      const main = [...player.spells].sort((a, b) => span(b) - span(a))[0];
-      disambiguation =
-        [player.birthDate?.getUTCFullYear(), main?.club.shortName].filter(Boolean).join(' · ') ||
-        null;
-    }
-    return { id: player.id, name: player.canonicalName, disambiguation };
+      return {
+        id: player.id,
+        name: alias,
+        disambiguation: [player.canonicalName, who].filter(Boolean).join(' · '),
+      };
+    return { id: player.id, name: player.canonicalName, disambiguation: who || null };
   });
 }

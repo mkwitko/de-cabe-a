@@ -367,10 +367,10 @@ describe('player search', () => {
       data: { verificationStatus: 'imported' },
     });
   });
-  it('orders by notability and disambiguates homonyms', async () => {
+  it('orders by notability; every result says who it is (main club · birth year · position)', async () => {
     expect((await search('ze rob')).json().players).toEqual([
-      { id: ids.ze, name: 'Zé Roberto', disambiguation: '1974 · Palmeiras' },
-      { id: ids.ze2, name: 'Zé Roberto', disambiguation: '1980 · Vasco' },
+      { id: ids.ze, name: 'Zé Roberto', disambiguation: 'Palmeiras · 1974 · meia' },
+      { id: ids.ze2, name: 'Zé Roberto', disambiguation: 'Vasco · 1980 · meia' },
     ]);
   });
   it('finds a player by the name fans use when the canonical one is the full name (Dida)', async () => {
@@ -379,7 +379,7 @@ describe('player search', () => {
       data: { playerId: romario.id, alias: 'Baixinho', normalized: 'baixinho', kind: 'variant' },
     });
     expect((await search('baixinho')).json().players).toEqual([
-      { id: romario.id, name: 'Baixinho', disambiguation: 'Romário' },
+      { id: romario.id, name: 'Baixinho', disambiguation: expect.stringMatching(/^Romário · /) },
     ]);
     await prisma.playerAlias.deleteMany({ where: { normalized: 'baixinho' } });
   });
