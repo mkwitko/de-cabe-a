@@ -81,5 +81,5 @@ Piloto fechado com 20–50 pessoas por 2 semanas (link direto, sem divulgação)
 
 - Q1 Método de cadastro (RF-10).
 - Q2 Hospedagem (ver `ARCHITECTURE.md` §Deploy) — nenhuma contratada.
-- Q3 Nome: "De Cabeça" (decidido 2026-11-05). Domínio: `decabecafm.com.br` (escolhido 2026-11-06; `decabeca.com.br` é de terceiros). Verificar registro INPI antes do lançamento.
+- Q3 Nome: "De Cabeça" (decidido 2026-11-05). Domínio: `decabecafc.com.br` (escolhido 2026-11-06; `decabeca.com.br` é de terceiros). Verificar registro INPI antes do lançamento.
 - Q4 Tamanho mínimo do pool de jogadores verificados para lançar o piloto (recomendação: 300 jogadores com carreira completa verificada; 60 desafios de Career Path e 30 grids publicáveis).

@@ -87,12 +87,12 @@ De Cabeça · Grid #45 · 7/9
 🟩🟩⬛
 🟩🟩🟩
 ⬛🟩🟩
-decabecafm.com.br/g/45
+decabecafc.com.br/g/45
 ```
 
 Não lista critérios nem jogadores.
 
-Domínio: `decabecafm.com.br` (Q3 em `PRD.md`); as fases usam o link da trilha.
+Domínio: `decabecafc.com.br` (Q3 em `PRD.md`); as fases usam o link da trilha.
 
 ## 11. Casos extremos
 
