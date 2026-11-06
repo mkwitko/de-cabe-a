@@ -1,10 +1,16 @@
 # Pilot hosting on the Oracle VM (ADR-010): Postgres + API behind Caddy (HTTPS).
 # Run from the repository root:
 #   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build
+# Logs: JSON lines (pino) in Docker's json-file driver, rotated (see x-logging).
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '5' }
+
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    logging: *logging
     environment:
       POSTGRES_USER: decabeca
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
@@ -20,6 +26,7 @@ services:
   api:
     build: { context: .., dockerfile: apps/api/Dockerfile }
     restart: unless-stopped
+    logging: *logging
     depends_on: { postgres: { condition: service_healthy } }
     env_file: .env.prod
     environment:
@@ -29,6 +36,7 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *logging
     depends_on: [api]
     ports: ['80:80', '443:443']
     environment:

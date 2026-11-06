@@ -51,6 +51,13 @@ Google Cloud Console → APIs e serviços → Credenciais → ID do cliente OAut
 2. Cron: `30 6 * * * /opt/de-cabeca/deploy/backup.sh >> /var/log/decabeca-backup.log 2>&1` (guarda 14 dias).
 3. **Antes do lançamento, restaurar um backup uma vez** num Postgres descartável e abrir a API apontando para ele.
 
+## 7. Observabilidade
+
+- **Logs**: a API escreve JSON (pino), uma linha por requisição, com rota, status e tempo. Ver: `docker compose -f deploy/docker-compose.prod.yml logs -f api`. O Docker gira os arquivos (10 MB × 5 por serviço).
+- **Erros e desempenho (Sentry, plano grátis)**: criar a organização e dois projetos (Node e React) em sentry.io; `SENTRY_DSN` em `deploy/.env.prod` (API) e `VITE_SENTRY_DSN` nas variáveis do Pages (web, lida no build). Sem DSN, nada é enviado. Amostra de 10% das requisições para latência (`SENTRY_TRACES_SAMPLE_RATE`). Nenhum dado pessoal (IP, cookie, corpo) é enviado.
+- **Métricas do piloto**: `/admin/metrics` (jogadores, conclusão, compartilhamento, retorno D1/D7, fases difíceis ou fáceis demais, latência P50/P95 e erros por rota desde o último start). A IA lê o mesmo com `scripts/research/metrics.ts`.
+- **Disponibilidade**: monitor de uptime do Sentry (ou health check do Cloudflare) em `https://decabecafc.com.br/v1/health`, alerta por e-mail.
+
 ## Antes de abrir o piloto
 
 - [ ] `pnpm -r typecheck && pnpm -r lint && pnpm test && pnpm test:e2e` verdes.

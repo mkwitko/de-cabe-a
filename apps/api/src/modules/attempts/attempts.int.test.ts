@@ -720,6 +720,26 @@ describe('ranking, nickname and accounts', () => {
 });
 
 describe('editorial reports and analytics', () => {
+  it('pilot metrics: players, completion, per-level difficulty and API latency', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/admin/metrics?days=30',
+      headers: admin,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const m = res.json();
+    expect(m.totals.started).toBeGreaterThan(0);
+    expect(m.totals.completed).toBeGreaterThan(0);
+    expect(m.daily[0]).toMatchObject({ players: expect.any(Number), started: expect.any(Number) });
+    expect(m.levels).toContainEqual(
+      expect.objectContaining({ mode: 'CAREER_PATH', level: 1, started: expect.any(Number) }),
+    );
+    expect(m.server.routes).toContainEqual(
+      expect.objectContaining({ route: 'POST /v1/attempts', p95ms: expect.any(Number) }),
+    );
+    expect((await app.inject({ method: 'GET', url: '/v1/admin/metrics' })).statusCode).toBe(401);
+  });
+
   it('records searches without results and wrong grid guesses', async () => {
     await guest().req('GET', '/players/search?q=Zezinho%20Inexistente');
     await guest().req('GET', '/players/search?q=zezinho inexistente');
