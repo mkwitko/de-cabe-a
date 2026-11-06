@@ -1,7 +1,7 @@
 // Builds and publishes the level tracks (ADR-006, ADR-007): Career Path and Grid levels in
 // rising difficulty, through the same services and eligibility checks as the admin panel.
 // Re-runnable: published levels stay, new ones are appended up to the targets.
-// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-levels.ts [--cp 60] [--grid 30]
+// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-levels.ts [--cp 60] [--grid 30] [--club-uses 7] [--broad-uses 20]
 import { checkGridCombination, type Criterion } from '../../packages/engine/src/index';
 import { createPrisma } from '../../apps/api/src/db';
 import {
@@ -217,9 +217,12 @@ console.log(
   `Grid: ${found.length} candidate grids with ≥ ${MIN} answers per cell (${criteria.length} criteria)`,
 );
 
-// Variety: a club appears in at most 7 grids, a broad criterion (position, country, nationality)
-// in at most 20; then easier grids (bigger pools) first.
-const maxUses = (k: string) => (k.includes('"club"') ? 7 : 20);
+// Variety: a club appears in at most --club-uses grids (7), a broad criterion (position, country,
+// nationality) in at most --broad-uses (20); then easier grids (bigger pools) first. A longer
+// track needs higher limits: the broad criteria run out first.
+const CLUB_USES = arg('--club-uses', 7);
+const BROAD_USES = arg('--broad-uses', 20);
+const maxUses = (k: string) => (k.includes('"club"') ? CLUB_USES : BROAD_USES);
 const usage = new Map<string, number>();
 const ordered2: typeof found = [];
 // Grids already in the track count towards usage and are never published twice.
