@@ -220,12 +220,18 @@ export async function validateChallenge(prisma: PrismaClient, id: string) {
   return prisma.challenge.update({ where: { id }, data: { status: 'validated' } });
 }
 
-/** validated -> published; the challenge becomes the next level of its game's track. */
+/**
+ * validated -> published. A replacement takes the number of the level it supersedes (replace in
+ * place: the track keeps its numbering); any other challenge becomes the next level.
+ */
 export async function publishChallenge(prisma: PrismaClient, id: string, now: Date) {
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('challenge_publish'))`;
     const c = await tx.challenge.findUniqueOrThrow({ where: { id } });
     if (c.status !== 'validated') throw invalid(c, 'published');
+    const superseded = c.supersedesId
+      ? await tx.challenge.findUnique({ where: { id: c.supersedesId } })
+      : null;
     const last = await tx.challenge.aggregate({
       where: { gameMode: c.gameMode },
       _max: { publicNumber: true },
@@ -235,13 +241,16 @@ export async function publishChallenge(prisma: PrismaClient, id: string, now: Da
       data: {
         status: 'published',
         publishedAt: now,
-        publicNumber: (last._max.publicNumber ?? 0) + 1,
+        publicNumber:
+          superseded?.status === 'retired' && superseded.publicNumber
+            ? superseded.publicNumber
+            : (last._max.publicNumber ?? 0) + 1,
       },
     });
   });
 }
 
-/** published -> retired; attempts stay intact. Optional replacement draft (published later as a new level). */
+/** published -> retired; attempts stay intact. Optional replacement draft, published later under the same level number. */
 export async function retireChallenge(
   prisma: PrismaClient,
   id: string,

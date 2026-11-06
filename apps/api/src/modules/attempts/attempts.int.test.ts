@@ -748,6 +748,37 @@ describe('retire', () => {
   });
 });
 
+describe('replace in place', () => {
+  it('a published replacement takes the retired level number; old players keep their attempt', async () => {
+    const old = await prisma.challenge.findFirstOrThrow({
+      where: { gameMode: 'FOOTBALL_GRID', publicNumber: 1, status: 'published' },
+    });
+    const g = guest();
+    const mine = (await g.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 })).json();
+    const draft = (
+      await adminPost(`/challenges/${old.id}/retire`, {
+        reason: 'Posição corrigida',
+        replacementParams: gridParams,
+      })
+    ).json().replacement;
+    expect((await adminPost(`/challenges/${draft.id}/validate`)).statusCode).toBe(200);
+    expect((await adminPost(`/challenges/${draft.id}/publish`)).json()).toMatchObject({
+      status: 'published',
+      publicNumber: 1,
+    });
+    const again = await g.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 });
+    expect(again.statusCode).toBe(200);
+    expect(again.json().attempt.id).toBe(mine.attempt.id);
+    expect((await g.req('GET', '/tracks/FOOTBALL_GRID')).json().levels[0]).toMatchObject({
+      level: 1,
+      state: 'in_progress',
+    });
+    const fresh = await guest().req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 });
+    expect(fresh.statusCode).toBe(201);
+    expect(fresh.json().attempt.challengeId).toBe(draft.id);
+  });
+});
+
 describe('rate limits', () => {
   it('limits searches per session and new sessions per IP with 429 RATE_LIMITED', async () => {
     const limited = testApp({

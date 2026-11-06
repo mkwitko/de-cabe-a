@@ -171,19 +171,20 @@ async function assertUnlocked(
 ) {
   const before = await prisma.challenge.findMany({
     where: { gameMode: mode, status: 'published', publicNumber: { lt: level } },
-    select: { id: true },
+    select: { id: true, publicNumber: true },
   });
   if (!before.length) return;
+  // A level replaced in place counts as done when the player finished its old version.
   const done = await prisma.attempt.findMany({
     where: {
       ...scope(player),
-      challengeId: { in: before.map((c) => c.id) },
+      challenge: { gameMode: mode, publicNumber: { lt: level } },
       completedAt: { not: null },
     },
-    select: { challengeId: true },
-    distinct: ['challengeId'],
+    select: { challenge: { select: { publicNumber: true } } },
   });
-  if (done.length < before.length)
+  const numbers = new Set(done.map((a) => a.challenge.publicNumber));
+  if (before.some((c) => !numbers.has(c.publicNumber)))
     throw new AppError(403, 'LEVEL_LOCKED', 'Termine a fase anterior para liberar esta.');
 }
 
@@ -194,16 +195,27 @@ export async function startAttempt(
   level: number,
   now: Date,
 ): Promise<{ created: boolean; response: AttemptResponse }> {
-  const challenge = await prisma.challenge.findFirst({
+  // A level replaced in place has its retired versions plus the published one.
+  const versions = await prisma.challenge.findMany({
     where: { gameMode: mode, publicNumber: level, status: { in: ['published', 'retired'] } },
   });
-  if (!challenge) throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase não encontrada.');
-  // One attempt per level per player, across all sessions of an account (no replay).
+  if (!versions.length) throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase não encontrada.');
+  // One attempt per level per player, across all sessions of an account (no replay); a player who
+  // started an old version keeps it.
   const existing = await prisma.attempt.findFirst({
-    where: { ...scope(player), challengeId: challenge.id },
+    where: { ...scope(player), challengeId: { in: versions.map((v) => v.id) } },
     orderBy: { startedAt: 'asc' },
   });
-  if (existing) return { created: false, response: await present(prisma, existing, challenge) };
+  if (existing)
+    return {
+      created: false,
+      response: await present(
+        prisma,
+        existing,
+        versions.find((v) => v.id === existing.challengeId)!,
+      ),
+    };
+  const challenge = versions.find((v) => v.status === 'published') ?? versions[0]!;
   if (challenge.status !== 'published')
     throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase retirada.');
   await assertUnlocked(prisma, player, mode, level);

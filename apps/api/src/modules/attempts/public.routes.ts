@@ -49,19 +49,28 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
       select: { id: true, publicNumber: true, difficultyTier: true },
       orderBy: { publicNumber: 'asc' },
     });
+    // Keyed by level number: an attempt on a version replaced in place still counts.
     const attempts = await prisma.attempt.findMany({
-      where: { ...playerAttempts(req), challengeId: { in: levels.map((l) => l.id) } },
-      select: { challengeId: true, completedAt: true, stars: true, score: true },
+      where: {
+        ...playerAttempts(req),
+        challenge: { gameMode: mode, publicNumber: { in: levels.map((l) => l.publicNumber!) } },
+      },
+      select: {
+        completedAt: true,
+        stars: true,
+        score: true,
+        challenge: { select: { publicNumber: true } },
+      },
     });
-    const best = new Map<string, (typeof attempts)[number]>();
+    const best = new Map<number, (typeof attempts)[number]>();
     for (const a of attempts) {
-      const prev = best.get(a.challengeId);
-      if (!prev || (a.completedAt && !prev.completedAt) || a.stars > prev.stars)
-        best.set(a.challengeId, a);
+      const n = a.challenge.publicNumber!;
+      const prev = best.get(n);
+      if (!prev || (a.completedAt && !prev.completedAt) || a.stars > prev.stars) best.set(n, a);
     }
     let open = true;
     return levels.map((l) => {
-      const a = best.get(l.id);
+      const a = best.get(l.publicNumber!);
       const state = a?.completedAt ? 'done' : a ? 'in_progress' : open ? 'open' : 'locked';
       if (state !== 'done') open = false;
       return {

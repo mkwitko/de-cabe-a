@@ -1,7 +1,7 @@
 // Adds every Wikidata position (P413) as a secondary position, next to the ones read from the
 // Wikipedia infobox. Kaká's pt infobox says only "meio-campista"; Wikidata adds "winger" (FW).
 // The main position never changes here. Re-runnable.
-// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/merge-wikidata-positions.ts
+// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/merge-wikidata-positions.ts [--verified]
 import { createPrisma } from '../../apps/api/src/db';
 import { fetchEntities } from '../../apps/api/src/modules/data-import/wikidata-client';
 import { positionGroup } from '../../apps/api/src/modules/data-import/wikidata-mapper';
@@ -17,7 +17,10 @@ type Group = 'GK' | 'DF' | 'MF' | 'FW';
 
 // Verified players first: they are the ones Career Path levels are built from.
 const players = await prisma.player.findMany({
-  where: { wikidataId: { not: null }, verificationStatus: { not: 'rejected' } },
+  where: {
+    wikidataId: { not: null },
+    verificationStatus: process.argv.includes('--verified') ? 'verified' : { not: 'rejected' },
+  },
   select: { id: true, wikidataId: true, primaryPositionGroup: true, secondaryPositionGroups: true },
   orderBy: { verificationStatus: 'desc' },
 });

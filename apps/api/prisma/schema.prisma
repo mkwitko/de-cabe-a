@@ -220,7 +220,8 @@ model Challenge {
   usages   ChallengePlayerUsage[]
   attempts Attempt[]
 
-  @@unique([gameMode, publicNumber])
+  /// A replacement takes the retired level's number (replace in place), so only published levels are unique.
+  @@unique([gameMode, publicNumber], where: raw("status = 'published'"))
   @@index([gameMode, status])
 }
 
