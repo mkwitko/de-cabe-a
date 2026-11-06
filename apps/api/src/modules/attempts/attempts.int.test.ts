@@ -287,7 +287,7 @@ describe('levels (ADR-007)', () => {
       reveal: { answer: { id: answerId, name: 'Ronaldo' } },
     });
     expect(right.json().share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabeca.app',
+      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafm.com.br',
     );
     expect((await g.act(start.attempt.id, { kind: 'skip' })).json().error.code).toBe(
       'GAME_ALREADY_COMPLETED',
@@ -327,7 +327,7 @@ describe('levels (ADR-007)', () => {
     const lost = await playCareer(g, 1, null, 6);
     expect(lost.attempt).toMatchObject({ status: 'LOST', stars: 0 });
     expect(lost.share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabeca.app',
+      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafm.com.br',
     );
     expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 2 })).statusCode).toBe(
       201,
@@ -446,7 +446,7 @@ describe('Football Grid', () => {
     });
     expect(end.json().reveal.cells[4].validAnswers).toBeGreaterThanOrEqual(8);
     expect(end.json().share.text).toBe(
-      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabeca.app',
+      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafm.com.br',
     );
   });
 

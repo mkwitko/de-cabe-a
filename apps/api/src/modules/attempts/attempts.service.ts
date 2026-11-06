@@ -18,7 +18,7 @@ import { track } from '../analytics/analytics';
 import { meetsCell } from '../challenges/grid-snapshot';
 
 const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid' } as const;
-export const SHARE_HOST = 'decabeca.app';
+export const SHARE_HOST = 'decabecafm.com.br';
 
 export interface Player {
   sessionId: string;

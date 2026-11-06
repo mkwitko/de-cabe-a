@@ -1,8 +1,8 @@
 # Deploy do piloto (ADR-010)
 
-Web estática no **Cloudflare Pages**; API + Postgres na **VM da Oracle** em Docker, atrás do Caddy (HTTPS). O site e a API ficam no **mesmo domínio**: o Pages encaminha `seudominio/v1/*` para a VM (`apps/web/functions/v1/[[path]].js`). O cookie de convidado e o login dependem disso.
+Web estática no **Cloudflare Pages**; API + Postgres na **VM da Oracle** em Docker, atrás do Caddy (HTTPS). O site e a API ficam no **mesmo domínio**: o Pages encaminha `decabecafm.com.br/v1/*` para a VM (`apps/web/functions/v1/[[path]].js`). O cookie de convidado e o login dependem disso.
 
-Nomes usados abaixo: `seudominio.com.br` (site) e `api-origin.seudominio.com.br` (origem da API, que ninguém abre direto).
+Nomes usados abaixo: `decabecafm.com.br` (site) e `api-origin.decabecafm.com.br` (origem da API, que ninguém abre direto).
 
 ## 1. Domínio e DNS (Cloudflare)
 
@@ -16,10 +16,10 @@ Nomes usados abaixo: `seudominio.com.br` (site) e `api-origin.seudominio.com.br`
 2. Instalar Docker e o plugin compose; clonar o repositório em `/opt/de-cabeca`.
 3. `cp deploy/.env.prod.example deploy/.env.prod` e preencher:
    - `POSTGRES_PASSWORD`, `ADMIN_TOKEN`, `BETTER_AUTH_SECRET`: `openssl rand -base64 32` cada.
-   - `API_HOST=api-origin.seudominio.com.br`, `WEB_ORIGIN=https://seudominio.com.br`.
+   - `API_HOST=api-origin.decabecafm.com.br`, `WEB_ORIGIN=https://decabecafm.com.br`.
    - Google e Resend: passos 4 e 5 (pode subir sem eles; o login com Google fica desligado e os e-mails vão para o log).
 4. Subir: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build`. As migrações rodam na partida da API.
-5. Conferir: `https://api-origin.seudominio.com.br/v1/health` responde `200`.
+5. Conferir: `https://api-origin.decabecafm.com.br/v1/health` responde `200`.
 6. Base de jogadores: restaurar o dump do ambiente local (`pg_dump` local → `psql` no contêiner `postgres`), em vez de reimportar tudo.
 
 Atualizar: `git pull` e o mesmo `up -d --build`.
@@ -28,21 +28,21 @@ Atualizar: `git pull` e o mesmo `up -d --build`.
 
 - Projeto ligado ao repositório GitHub, branch `main`.
 - Build: `corepack enable && pnpm install --frozen-lockfile && pnpm --filter @decabeca/web build`; saída `apps/web/dist`; diretório raiz: `/` (as Functions ficam em `apps/web/functions`, então use **Root directory** `apps/web` e build `cd ../.. && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @decabeca/web build`, saída `dist`).
-- Variável de ambiente (Production): `API_ORIGIN=https://api-origin.seudominio.com.br`.
-- Domínio personalizado: `seudominio.com.br`.
-- Teste: `https://seudominio.com.br/v1/health` → `200` (passou pela Function até a VM).
+- Variável de ambiente (Production): `API_ORIGIN=https://api-origin.decabecafm.com.br`.
+- Domínio personalizado: `decabecafm.com.br`.
+- Teste: `https://decabecafm.com.br/v1/health` → `200` (passou pela Function até a VM).
 
 ## 4. Login com Google
 
 Google Cloud Console → APIs e serviços → Credenciais → ID do cliente OAuth (aplicativo da Web):
-- Origem JavaScript autorizada: `https://seudominio.com.br`
-- URI de redirecionamento autorizado: `https://seudominio.com.br/v1/auth/callback/google` (em desenvolvimento: `http://127.0.0.1:5173/v1/auth/callback/google`)
+- Origem JavaScript autorizada: `https://decabecafm.com.br`
+- URI de redirecionamento autorizado: `https://decabecafm.com.br/v1/auth/callback/google` (em desenvolvimento: `http://127.0.0.1:5173/v1/auth/callback/google`)
 - Copiar ID e segredo para `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` em `deploy/.env.prod` e reiniciar a API.
 
 ## 5. E-mail (Resend)
 
-1. Resend → Domains → adicionar `seudominio.com.br` e criar no Cloudflare os registros DNS que ele pedir (SPF/DKIM).
-2. Criar uma API key só de envio → `RESEND_API_KEY`; `EMAIL_FROM=De Cabeça <nao-responda@seudominio.com.br>`.
+1. Resend → Domains → adicionar `decabecafm.com.br` e criar no Cloudflare os registros DNS que ele pedir (SPF/DKIM).
+2. Criar uma API key só de envio → `RESEND_API_KEY`; `EMAIL_FROM=De Cabeça <nao-responda@decabecafm.com.br>`.
 3. Reiniciar a API e testar "Esqueci a senha" na página Conta.
 
 ## 6. Backup

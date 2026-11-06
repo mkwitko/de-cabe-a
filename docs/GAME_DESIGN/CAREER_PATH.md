@@ -108,12 +108,12 @@ Não há ranking entre usuários no MVP; sem desempate necessário.
 ```text
 De Cabeça · Career Path #123 · 3/6
 ⬛⬛🟩
-decabeca.app/c/123
+decabecafm.com.br/c/123
 ```
 
 Um quadrado por tentativa: ⬛ erro/pular, 🟩 acerto. Derrota: `X/6` e seis ⬛. Nunca inclui clubes nem nome.
 
-Domínio `decabeca.app` é placeholder (Q3 em `PRD.md`).
+Domínio: `decabecafm.com.br` (Q3 em `PRD.md`); as fases usam o link da trilha.
 
 ## 13. Casos extremos
 
