@@ -1,4 +1,5 @@
 /** Pieces shared by both games' level screens (ADR-007): end-of-level panel and level errors. */
+import { formatClock } from './Clock';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
@@ -78,6 +79,12 @@ export function LevelEnd({
             {headline}
           </h2>
           <div className="mt-3 text-lg leading-snug font-semibold">{detail}</div>
+          {data.attempt.durationSec !== null && (
+            <p className="mt-2 text-base font-semibold">
+              ⏱ {formatClock(data.attempt.durationSec)}
+              {data.attempt.timed ? ' · contra o relógio' : ''}
+            </p>
+          )}
           <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-dashed border-ink/25 pt-3">
             <Stars n={stars} size="size-9" onCover />
             <p className="font-condensed tabular text-right leading-none font-black uppercase">

@@ -20,23 +20,30 @@ export function weekStart(now: Date): Date {
   return new Date(Date.parse(`${today}T03:00:00Z`) - dow * 86400_000);
 }
 
-export async function rankRows(prisma: PrismaClient, since: Date | null): Promise<RankRow[]> {
+/** `timed`: only levels played against the clock, ties broken by the faster total (ADR-009). */
+export async function rankRows(
+  prisma: PrismaClient,
+  since: Date | null,
+  timed = false,
+): Promise<RankRow[]> {
   const rows = await prisma.$queryRaw<
     { pk: string; nickname: string | null; stars: bigint; score: bigint }[]
   >`
     WITH best AS (
-      SELECT COALESCE(s."userId", s.id) AS pk, a."challengeId", MAX(a.stars) AS stars, MAX(a.score) AS score
+      SELECT COALESCE(s."userId", s.id) AS pk, a."challengeId", MAX(a.stars) AS stars, MAX(a.score) AS score,
+        MIN(EXTRACT(EPOCH FROM LEAST(a."completedAt", COALESCE(a."deadlineAt", a."completedAt")) - a."startedAt")) AS secs
       FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId"
       WHERE a."completedAt" IS NOT NULL AND (${since}::timestamp IS NULL OR a."completedAt" >= ${since}::timestamp)
+        AND (${timed} = false OR a.timed)
       GROUP BY 1, 2
     ), totals AS (
-      SELECT pk, SUM(stars) AS stars, SUM(score) AS score FROM best GROUP BY pk
+      SELECT pk, SUM(stars) AS stars, SUM(score) AS score, SUM(secs) AS secs FROM best GROUP BY pk
     )
     SELECT t.pk, COALESCE(u.nickname, g.nickname) AS nickname, t.stars, t.score
     FROM totals t
     LEFT JOIN "User" u ON u.id = t.pk
     LEFT JOIN "GuestSession" g ON g.id = t.pk
-    ORDER BY t.stars DESC, t.score DESC, t.pk`;
+    ORDER BY t.stars DESC, CASE WHEN ${timed} THEN t.secs END ASC, t.score DESC, t.pk`;
   return rows.map((r) => ({
     pk: r.pk,
     nickname: r.nickname,

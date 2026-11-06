@@ -287,7 +287,7 @@ describe('levels (ADR-007)', () => {
       reveal: { answer: { id: answerId, name: 'Ronaldo' } },
     });
     expect(right.json().share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆\ndecabeca.app',
+      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabeca.app',
     );
     expect((await g.act(start.attempt.id, { kind: 'skip' })).json().error.code).toBe(
       'GAME_ALREADY_COMPLETED',
@@ -327,7 +327,7 @@ describe('levels (ADR-007)', () => {
     const lost = await playCareer(g, 1, null, 6);
     expect(lost.attempt).toMatchObject({ status: 'LOST', stars: 0 });
     expect(lost.share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆\ndecabeca.app',
+      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabeca.app',
     );
     expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 2 })).statusCode).toBe(
       201,
@@ -446,7 +446,7 @@ describe('Football Grid', () => {
     });
     expect(end.json().reveal.cells[4].validAnswers).toBeGreaterThanOrEqual(8);
     expect(end.json().share.text).toBe(
-      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆\ndecabeca.app',
+      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabeca.app',
     );
   });
 
@@ -783,6 +783,54 @@ describe('editorial reports and analytics', () => {
         })
       ).statusCode,
     ).toBe(400);
+  });
+});
+
+describe('timed mode (ADR-009)', () => {
+  it('a timed level gets a deadline; an action after it ends the level; the time is shown', async () => {
+    const start = clock;
+    const g = guest();
+    const first = await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1, timed: true });
+    expect(first.json().attempt).toMatchObject({
+      timed: true,
+      deadlineAt: new Date(start.getTime() + 90_000).toISOString(),
+      durationSec: null,
+    });
+    clock = new Date(start.getTime() + 95_000);
+    const late = await g.act(first.json().attempt.id, { kind: 'skip' });
+    expect(late.json().event).toEqual({ type: 'lost' });
+    expect(late.json().attempt).toMatchObject({ status: 'LOST', stars: 0, durationSec: 90 });
+    expect(late.json().share.text).toContain('⏱ 1:30');
+
+    // Untimed: the time is information only.
+    const h = guest();
+    clock = start;
+    const free = (await h.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1 })).json();
+    expect(free.attempt).toMatchObject({ timed: false, deadlineAt: null });
+    const answer = (
+      (await prisma.challenge.findUniqueOrThrow({ where: { id: free.attempt.challengeId } }))
+        .snapshot as { answerPlayerId: string }
+    ).answerPlayerId;
+    clock = new Date(start.getTime() + 300_000);
+    const won = (await h.act(free.attempt.id, { kind: 'guess', playerId: answer })).json();
+    expect(won.attempt).toMatchObject({ status: 'WON', stars: 3, durationSec: 300 });
+    expect(won.share.text).toContain('⏱ 5:00');
+
+    // Timed win in time: listed in the timed ranking, not the untimed one.
+    const r = guest();
+    await r.req('PATCH', '/me', { nickname: 'Relampago' });
+    clock = start;
+    const fast = (
+      await r.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1, timed: true })
+    ).json();
+    clock = new Date(start.getTime() + 20_000);
+    expect(
+      (await r.act(fast.attempt.id, { kind: 'guess', playerId: answer })).json().attempt,
+    ).toMatchObject({ status: 'WON', stars: 3, durationSec: 20 });
+    const timedBoard = (await r.req('GET', '/ranking?scope=timed')).json();
+    expect(timedBoard.entries.map((e: { nickname: string }) => e.nickname)).toEqual(['Relampago']);
+    expect(timedBoard.me).toMatchObject({ position: 1, stars: 3 });
+    clock = start;
   });
 });
 

@@ -144,6 +144,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.mode,
         req.body.level,
         now(),
+        req.body.timed,
       );
       return reply.code(created ? 201 : 200).send(response);
     },

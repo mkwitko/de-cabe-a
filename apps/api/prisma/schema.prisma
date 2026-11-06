@@ -369,6 +369,9 @@ model Attempt {
   stars         Int           @default(0) /// 0–3 (ADR-007)
   startedAt     DateTime
   completedAt   DateTime?
+  /// Against the clock (ADR-009): chosen at start; past deadlineAt the level ends.
+  timed         Boolean       @default(false)
+  deadlineAt    DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 

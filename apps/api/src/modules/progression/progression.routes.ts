@@ -103,7 +103,11 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
     '/ranking',
     { schema: { querystring: RankingQuery, response: { 200: RankingResponse } } },
     async (req) => {
-      const rows = await rankRows(prisma, req.query.scope === 'week' ? weekStart(now()) : null);
+      const rows = await rankRows(
+        prisma,
+        req.query.scope === 'week' ? weekStart(now()) : null,
+        req.query.scope === 'timed',
+      );
       return { scope: req.query.scope, ...ranking(rows, me(req)) };
     },
   );

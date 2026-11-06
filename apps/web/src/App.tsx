@@ -14,6 +14,7 @@ import { GridPage } from './games/grid/GridPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { TrackPage } from './pages/TrackPage';
 import { RankingPage } from './pages/RankingPage';
+import { ModeGate } from './games/Clock';
 import { NewPasswordPage } from './pages/NewPasswordPage';
 import { AccountPage } from './pages/AccountPage';
 import { StatsPage } from './pages/StatsPage';
@@ -311,9 +312,16 @@ function LevelRoute({ mode }: { mode: 'CAREER_PATH' | 'FOOTBALL_GRID' }) {
   const level = Number(useParams().level);
   if (!Number.isInteger(level) || level < 1)
     return <Navigate to={mode === 'CAREER_PATH' ? '/career-path' : '/grid'} replace />;
-  return mode === 'CAREER_PATH' ? (
-    <CareerPathPage key={level} level={level} />
-  ) : (
-    <GridPage key={level} level={level} />
+  const title = `${mode === 'CAREER_PATH' ? 'Career Path' : 'Grid'} · Fase ${level}`;
+  return (
+    <ModeGate key={level} mode={mode} level={level} title={title}>
+      {(timed) =>
+        mode === 'CAREER_PATH' ? (
+          <CareerPathPage level={level} timed={timed} />
+        ) : (
+          <GridPage level={level} timed={timed} />
+        )
+      }
+    </ModeGate>
   );
 }

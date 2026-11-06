@@ -144,6 +144,15 @@ describe('careerPath transitions (CAREER_PATH.md §1, §7)', () => {
     });
   });
 
+  it('give_up ends the game as lost without using an attempt (time up, ADR-009)', () => {
+    const cfg = config(3);
+    const s0 = careerPath.createInitialState(cfg);
+    const out = careerPath.submit(s0, { kind: 'give_up' }, cfg);
+    expect(out.event).toEqual({ type: 'lost' });
+    expect(out.state).toMatchObject({ status: 'LOST', attempts: [] });
+    expect(careerPath.score(out.state, cfg)).toBe(0);
+  });
+
   it('skips the nationality hint when the snapshot does not have it', () => {
     const { events } = play(config(3, { position: 'FW' }), [skip, skip, skip]);
     expect(events.map((e) => (e.type === 'wrong' ? e.revealed : e.type))).toEqual([

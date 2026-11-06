@@ -5,6 +5,7 @@ Status: aceito (2026-11-06).
 ## Decisão
 - **Web** (`apps/web`, estático): Cloudflare Pages.
 - **API e Postgres**: na VM da Oracle Cloud que já existe, em Docker Compose (Postgres 16 + API), atrás de um proxy com HTTPS (Caddy).
+- **Mesmo domínio para web e API**: o site chama `/v1` no próprio endereço, e o cookie de convidado e o login (Better Auth) dependem disso; o retorno do Google é `<site>/v1/auth/callback/google`. O Cloudflare encaminha `seudominio/v1/*` para a VM (Pages Function ou regra de rota); a API não fica num subdomínio próprio.
 - **Backup**: `pg_dump` diário enviado para fora da VM (Cloudflare R2, plano grátis).
 
 ## Alternativas
