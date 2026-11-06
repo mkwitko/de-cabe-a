@@ -1,4 +1,5 @@
 import { buildHigherLowerSnapshot, HigherLowerParams } from './higher-lower-snapshot';
+import { buildMissingXiSnapshot, MissingXiParams } from './missing-xi-snapshot';
 import { buildTimelineSnapshot, TimelineParams } from './timeline-snapshot';
 /**
  * Challenge lifecycle (API_SPEC.md admin, ADR-002, ADR-007): snapshot generation, eligibility,
@@ -128,7 +129,13 @@ export function careerPathConfig(
 export interface CreateChallengeInput {
   mode: GameModeCode;
   difficultyTier?: 1 | 2 | 3 | undefined;
-  params: { playerId: string } | GridParams | ImpostorParams | TimelineParams | HigherLowerParams;
+  params:
+    | { playerId: string }
+    | GridParams
+    | ImpostorParams
+    | TimelineParams
+    | HigherLowerParams
+    | MissingXiParams;
   createdBy: string;
 }
 
@@ -139,6 +146,10 @@ function usages(
 ): { playerId: string; role: string }[] {
   if (mode === 'CAREER_PATH')
     return [{ playerId: String(snapshot.answerPlayerId), role: 'answer' }];
+  if (mode === 'MISSING_XI')
+    return (snapshot.slots as { playerId: string | null; hidden: boolean }[])
+      .filter((s) => s.hidden && s.playerId)
+      .map((s) => ({ playerId: s.playerId!, role: 'lineup' }));
   if (mode === 'HIGHER_LOWER')
     return [
       ...new Set(
@@ -165,16 +176,31 @@ function usages(
   }));
 }
 
-async function buildSnapshot(prisma: PrismaClient, input: Omit<CreateChallengeInput, 'createdBy'>) {
+/** `ignoreChallengeId`: the level being replaced, so its own answer does not count as reused. */
+export async function buildSnapshot(
+  prisma: PrismaClient,
+  input: Omit<CreateChallengeInput, 'createdBy'>,
+  ignoreChallengeId?: string,
+) {
   if (input.mode === 'CAREER_PATH') {
     if (!('playerId' in input.params))
       throw new AppError(400, 'VALIDATION_ERROR', 'params.playerId é obrigatório.');
-    const report = await careerPathEligibility(prisma, input.params.playerId);
+    const report = await careerPathEligibility(prisma, input.params.playerId, ignoreChallengeId);
     if (!report.eligible)
       throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Jogador não elegível para o desafio.', {
         reasons: report.reasons,
       });
     const config = careerPathConfig(report, input.difficultyTier);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'MISSING_XI') {
+    const params = MissingXiParams.parse(input.params);
+    const built = await buildMissingXiSnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase da Escalação não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.MISSING_XI.validateConfig(built.config);
     return { config, difficultyTier: config.difficultyTier };
   }
   if (input.mode === 'HIGHER_LOWER') {
@@ -229,7 +255,7 @@ export async function createChallenge(
   input: CreateChallengeInput,
   supersedesId?: string,
 ) {
-  const { config, difficultyTier } = await buildSnapshot(prisma, input);
+  const { config, difficultyTier } = await buildSnapshot(prisma, input, supersedesId);
   return prisma.challenge.create({
     data: {
       gameMode: input.mode,
@@ -335,20 +361,22 @@ export async function retireChallenge(
 ) {
   const c = await getChallenge(prisma, id);
   if (c.status !== 'published') throw invalid(c, 'retired');
+  // Build the replacement first: if it is not eligible the level stays published, never a hole.
+  const draft = replacement
+    ? await createChallenge(
+        prisma,
+        {
+          mode: c.gameMode,
+          difficultyTier: replacement.difficultyTier,
+          params: replacement.params,
+          createdBy,
+        },
+        c.id,
+      )
+    : null;
   const retired = await prisma.challenge.update({
     where: { id },
     data: { status: 'retired', retiredReason: reason },
   });
-  if (!replacement) return { retired, replacement: null };
-  const draft = await createChallenge(
-    prisma,
-    {
-      mode: c.gameMode,
-      difficultyTier: replacement.difficultyTier,
-      params: replacement.params,
-      createdBy,
-    },
-    c.id,
-  );
   return { retired, replacement: draft };
 }

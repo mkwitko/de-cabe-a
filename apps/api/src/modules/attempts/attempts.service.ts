@@ -11,6 +11,8 @@ import type {
   HigherLowerView,
   ImpostorReveal,
   ImpostorView,
+  MissingXiReveal,
+  MissingXiView,
   PlayerRef,
   TimelineReveal,
   TimelineView,
@@ -34,6 +36,7 @@ const NAMES = {
   IMPOSTOR: 'Impostor',
   TIMELINE: 'Linha do tempo',
   HIGHER_LOWER: 'Mais ou Menos',
+  MISSING_XI: 'Escalação',
 } as const;
 export const SHARE_HOST = 'decabecafc.com.br';
 
@@ -74,7 +77,10 @@ export async function present(
   let view: AttemptResponse['view'];
   let reveal: AttemptResponse['reveal'] = null;
 
-  if (challenge.gameMode === 'HIGHER_LOWER') {
+  if (challenge.gameMode === 'MISSING_XI') {
+    view = { ...(engine.toPublicView(state, config) as MissingXiView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as MissingXiReveal;
+  } else if (challenge.gameMode === 'HIGHER_LOWER') {
     view = { ...(engine.toPublicView(state, config) as HigherLowerView), status: attempt.status };
     if (done) reveal = engine.toRevealView(state, config) as HigherLowerReveal;
   } else if (challenge.gameMode === 'TIMELINE') {
@@ -237,6 +243,7 @@ export const TIME_LIMIT_SEC: Record<GameModeCode, number> = {
   IMPOSTOR: 60,
   TIMELINE: 90,
   HIGHER_LOWER: 60,
+  MISSING_XI: 120,
 };
 /** Network slack before an action counts as late. */
 const GRACE_MS = 2000;
@@ -403,14 +410,9 @@ export async function submitAction(
         status,
         score,
         stars: done
-          ? starsFor(
-              engine.id as
-                'career-path' | 'football-grid' | 'impostor' | 'timeline' | 'higher-lower',
-              score,
-              {
-                hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
-              },
-            )
+          ? starsFor(engine.id as Parameters<typeof starsFor>[0], score, {
+              hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
+            })
           : 0,
         ...(done ? { completedAt: expired ? a.deadlineAt! : now } : {}),
       },
@@ -439,16 +441,19 @@ export async function submitAction(
           ? (out.state as { picks: string[] }).picks.length
           : a.challenge.gameMode === 'TIMELINE'
             ? (out.state as { answers: string[][] }).answers.length
-            : a.challenge.gameMode === 'HIGHER_LOWER'
-              ? (out.state as { choices: string[] }).choices.length
-              : seq;
+            : a.challenge.gameMode === 'MISSING_XI'
+              ? (out.state as { found: string[]; wrong: string[] }).found.length +
+                (out.state as { found: string[]; wrong: string[] }).wrong.length
+              : a.challenge.gameMode === 'HIGHER_LOWER'
+                ? (out.state as { choices: string[] }).choices.length
+                : seq;
     if (input.kind === 'guess')
       pending.push([
         'answer_submitted',
         {
           ...base,
           attemptsUsed,
-          correct: ev.type === 'correct',
+          correct: ev.type === 'correct' || ev.type === 'found',
           ...(ev.cellIndex !== undefined ? { cellIndex: ev.cellIndex } : {}),
         },
       ]);

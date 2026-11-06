@@ -6,6 +6,7 @@ export const GameMode = z.enum([
   'IMPOSTOR',
   'TIMELINE',
   'HIGHER_LOWER',
+  'MISSING_XI',
 ]);
 export type GameMode = z.infer<typeof GameMode>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
@@ -232,6 +233,49 @@ export const HigherLowerReveal = z.strictObject({
 });
 export type HigherLowerReveal = z.infer<typeof HigherLowerReveal>;
 
+/** Escalação (ADR-011): a final's starting XI with some names hidden; hidden ids never sent. */
+const XiMatch = z.strictObject({
+  competition: z.string(),
+  season: z.string(),
+  stage: z.string().nullable(),
+  homeTeam: z.string(),
+  awayTeam: z.string(),
+  homeScore: z.number().nullable(),
+  awayScore: z.number().nullable(),
+  source: z.string(),
+});
+export const MissingXiView = z.strictObject({
+  status: z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']),
+  match: XiMatch,
+  side: z.enum(['home', 'away']),
+  hidden: z.number(),
+  wrongLeft: z.number(),
+  slots: z.array(
+    z.strictObject({
+      position: z.string(),
+      jersey: z.number().nullable(),
+      name: z.string().nullable(),
+      playerId: z.string().nullable(),
+      found: z.boolean(),
+    }),
+  ),
+});
+export type MissingXiView = z.infer<typeof MissingXiView>;
+export const MissingXiReveal = z.strictObject({
+  match: XiMatch,
+  side: z.enum(['home', 'away']),
+  slots: z.array(
+    z.strictObject({
+      position: z.string(),
+      jersey: z.number().nullable(),
+      name: z.string(),
+      playerId: z.string().nullable(),
+      hidden: z.boolean(),
+    }),
+  ),
+});
+export type MissingXiReveal = z.infer<typeof MissingXiReveal>;
+
 export const AttemptSummary = z.strictObject({
   id: z.string(),
   challengeId: z.string(),
@@ -268,6 +312,9 @@ const GameEvent = z.union([
     impostorId: z.string(),
   }),
   z.strictObject({ type: z.literal('ended') }),
+  // Escalação: a hidden slot found, or a wrong guess.
+  z.strictObject({ type: z.literal('found'), slot: z.number() }),
+  z.strictObject({ type: z.literal('wrong'), wrongLeft: z.number() }),
   // Linha do tempo: the right order is shown once the round is played.
   z.strictObject({
     type: z.enum(['correct', 'wrong']),
@@ -286,7 +333,14 @@ const GameEvent = z.union([
 export const AttemptResponse = z.strictObject({
   attempt: AttemptSummary,
   event: GameEvent.optional(),
-  view: z.union([CareerPathView, FootballGridView, ImpostorView, TimelineView, HigherLowerView]),
+  view: z.union([
+    CareerPathView,
+    FootballGridView,
+    ImpostorView,
+    TimelineView,
+    HigherLowerView,
+    MissingXiView,
+  ]),
   reveal: z
     .union([
       CareerPathReveal,
@@ -294,6 +348,7 @@ export const AttemptResponse = z.strictObject({
       ImpostorReveal,
       TimelineReveal,
       HigherLowerReveal,
+      MissingXiReveal,
     ])
     .nullable(),
   share: z.strictObject({ text: z.string() }).nullable(),
@@ -414,6 +469,12 @@ export const StatsResponse = z.strictObject({
     perfect: z.number(),
   }),
   HIGHER_LOWER: z.strictObject({
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
+    perfect: z.number(),
+  }),
+  MISSING_XI: z.strictObject({
     completed: z.number(),
     stars: z.number(),
     threeStars: z.number(),

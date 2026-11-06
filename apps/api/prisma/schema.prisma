@@ -197,6 +197,7 @@ enum GameModeCode {
   IMPOSTOR
   TIMELINE
   HIGHER_LOWER
+  MISSING_XI
 }
 
 enum ChallengeStatus {

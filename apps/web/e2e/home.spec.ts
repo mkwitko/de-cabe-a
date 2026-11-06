@@ -97,3 +97,51 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await expect(page.getByRole('status')).toContainText('Sem conexão');
   await context.setOffline(false);
 });
+
+test('Modo Carreira: create a footballer, train him with a level, play a match', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /Crie seu craque/ }).click();
+  await page.getByLabel('Nome do craque').fill('Craque do Teste');
+  await page.getByRole('button', { name: 'Atacante' }).click();
+  await page.getByLabel('Clube').selectOption({ label: 'Sub-20 do Flamengo' });
+  await page.getByRole('button', { name: 'Começar a carreira' }).click();
+  await expect(page.getByRole('heading', { name: 'Craque do Teste' })).toBeVisible();
+  await expect(page.getByText(/Faltam 3 estrelas de treino/)).toBeVisible();
+
+  // Win Career Path level 1 at the first guess: 3 stars = 3 training points = one match.
+  await page.goto('/career-path/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
+  await page.getByRole('option', { name: /Ronaldo/ }).click();
+  await page.getByRole('button', { name: 'Chutar' }).click();
+  await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
+  await page.getByRole('link', { name: /de treino para o seu craque/ }).click();
+
+  await page.getByRole('button', { name: 'Jogar a partida' }).click();
+  await expect(page.getByText('Rodada 1 ·', { exact: false }).first()).toBeVisible();
+  await expect(page.getByText(/nota \d+\.\d/).first()).toBeVisible();
+});
+
+test('Escalação: find hidden starters of a final, a wrong guess costs one of five', async ({
+  page,
+}) => {
+  await page.goto('/escalacao/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await expect(page.getByRole('heading', { name: 'Alemanha 0 × 2 Brasil' })).toBeVisible();
+  await expect(page.getByText('0/5')).toBeVisible();
+  const search = page.getByRole('combobox', { name: 'Jogador titular' });
+  await search.fill('fenom');
+  await page.getByRole('option', { name: /Ronaldo/ }).click();
+  await page.getByRole('button', { name: 'Escalar' }).click();
+  await expect(page.getByText('1/5')).toBeVisible();
+  await search.fill('Craque L3C3 5');
+  await page.getByRole('option', { name: 'Craque L3C3 5' }).click();
+  await page.getByRole('button', { name: 'Escalar' }).click();
+  await expect(page.getByLabel('4 erros restantes')).toBeVisible();
+  await expect(page.getByText('Não jogaram: Craque L3C3 5')).toBeVisible();
+  await page.getByRole('button', { name: 'Desistir e ver a escalação' }).click();
+  await expect(page.getByRole('heading', { name: '1 de 5 desta vez' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Wikipédia' })).toBeVisible();
+});

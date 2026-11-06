@@ -109,14 +109,29 @@ function buildRounds(level: number) {
 if (process.argv.includes('--replace-unfair')) {
   const { retireChallenge } =
     await import('../../apps/api/src/modules/challenges/challenges.service');
+  // Also duels showing a club renamed by repair-club-names.ts (its old, wrong name).
+  const renamed = new Set<string>();
+  try {
+    const { readFileSync } = await import('node:fs');
+    const { changes } = JSON.parse(
+      readFileSync(new URL('./club-name-repair.json', import.meta.url), 'utf8'),
+    ) as { changes: { from: string; reason: string }[] };
+    for (const ch of changes) if (ch.reason === 'wrong name') renamed.add(ch.from);
+  } catch {
+    /* no repair report: fairness only */
+  }
   const published = await prisma.challenge.findMany({
     where: { gameMode: 'HIGHER_LOWER', status: 'published' },
     orderBy: { publicNumber: 'asc' },
   });
   let replaced = 0;
   for (const c of published) {
-    const snap = c.snapshot as { rounds: { a: { value: number }; b: { value: number } }[] };
-    if (snap.rounds.every((r) => clearWinner(r.a.value, r.b.value))) continue;
+    const snap = c.snapshot as {
+      rounds: { a: { value: number; clubName: string }; b: { value: number; clubName: string } }[];
+    };
+    const ok = (r: (typeof snap.rounds)[number]) =>
+      clearWinner(r.a.value, r.b.value) && !renamed.has(r.a.clubName) && !renamed.has(r.b.clubName);
+    if (snap.rounds.every(ok)) continue;
     const { rounds, maxTier } = buildRounds(c.publicNumber!);
     if (rounds.length < 5) continue;
     const { replacement } = await retireChallenge(

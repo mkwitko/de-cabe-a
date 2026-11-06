@@ -61,6 +61,49 @@
       ]
     },
     {
+      "path": "/linha-do-tempo",
+      "title": "Linha do tempo: ponha a carreira do jogador em ordem | De Cabeça",
+      "description": "Quatro clubes de um jogador, embaralhados. Ponha na ordem da carreira, do primeiro ao último. Cinco jogadores por fase.",
+      "h1": "Linha do tempo: em que ordem ele jogou?",
+      "text": [
+        "Cada fase tem cinco jogadores, com quatro clubes de cada um fora de ordem.",
+        "Toque nos clubes do primeiro ao último. Acerte as cinco ordens para três estrelas."
+      ],
+      "links": [
+        ["/linha-do-tempo", "Começar a Linha do tempo"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
+      "path": "/mais-ou-menos",
+      "title": "Mais ou Menos: quem fez mais gols pelo clube? | De Cabeça",
+      "description": "Duas passagens reais de jogadores por clubes. Quem fez mais gols, ou mais jogos? Cinco duelos por fase.",
+      "h1": "Mais ou Menos: quem tem o número maior?",
+      "text": [
+        "Cada rodada mostra dois jogadores em seus clubes e pergunta quem fez mais gols ou mais jogos ali.",
+        "Os números aparecem depois da escolha. Acerte os cinco duelos para três estrelas."
+      ],
+      "links": [
+        ["/mais-ou-menos", "Começar o Mais ou Menos"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
+      "path": "/escalacao",
+      "title": "Escalação: complete o time de uma final histórica | De Cabeça",
+      "description": "O time titular de uma final real da Copa do Mundo, Champions, Libertadores ou Copa América, com nomes escondidos. Lembre quem estava em campo.",
+      "h1": "Escalação: quem jogou aquela final?",
+      "text": [
+        "Cada fase mostra os onze titulares de uma final real no campo, com alguns nomes escondidos.",
+        "Busque os jogadores que estavam em campo. Cinco erros encerram a fase; ache todos para três estrelas.",
+        "Escalações da Wikipédia (CC BY-SA)."
+      ],
+      "links": [
+        ["/escalacao", "Começar a Escalação"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
       "path": "/ranking",
       "title": "Ranking De Cabeça: quem mais sabe de futebol | De Cabeça",
       "description": "Ranking geral, da semana e contra o relógio dos jogadores do De Cabeça, por estrelas conquistadas nas fases.",

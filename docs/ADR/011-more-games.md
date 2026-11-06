@@ -11,7 +11,8 @@ O autor quer mais modos de jogo. A matriz de `COMPETITIVE_ANALYSIS.md` §3 indic
 - Snapshot imutável como os outros jogos; a validação remonta a fase com os dados atuais (um "jogou aqui" rejeitado ou uma passagem nova do impostor derruba a fase).
 - Trilha, estrelas, ranking, relatos de erro, modo contra o relógio e métricas são os mesmos dos outros jogos.
 - **Linha do tempo** (`TIMELINE`, engine `timeline@1`, 2026-11-06): 5 rodadas; cada uma mostra um jogador e 4 clubes dele embaralhados (passagens profissionais verificadas, anos de início distintos: o primeiro, o último e os dois mais longos do meio). Tocar na ordem da carreira; uma resposta por rodada; estrelas como o Impostor; contra o relógio 90 s. Fases geradas por `scripts/research/publish-timeline.ts`.
-- Próximos, nesta ordem: Mais ou Menos, Mystery Player, Connections.
+- **Escalação** (`MISSING_XI`, engine `missing-xi@1`, 2026-11-06): os 11 titulares de um lado de uma final real (Copa do Mundo, Copa dos Campeões/Champions, Libertadores em jogo único, Copa América), num campo vertical, com nomes escondidos. A pessoa busca jogadores; 5 erros encerram a fase. Escondidos: os 5 mais conhecidos (nível 1), 7 (nível 2) ou todos os ligados à nossa base (nível 3); só jogadores ligados podem ser escondidos, e o lado precisa de ao menos 6 ligados. Pontuação = parte encontrada (0–100); estrelas: 100 = 3, ≥ 70 = 2, ≥ 40 = 1. Contra o relógio: 120 s. Escalações da Wikipédia em inglês (CC BY-SA, crédito com link na tela), importadas por `scripts/research/import-lineups.ts`; fases por `scripts/research/publish-missing-xi.ts`. Treina Visão no Modo Carreira.
+- Próximos: Mystery Player, Connections.
 
 ## Consequências
 Cada jogo novo toca: engine (pura, testada), contratos (view/reveal/stats), `GameModeCode`, apresentação na API, tela, card da home, stats e histórico. Fases geradas por `scripts/research/publish-impostor.ts`.

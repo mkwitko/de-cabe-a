@@ -48,6 +48,9 @@ const HowToPlayPage = lazy(() =>
 const TimelinePage = lazy(() =>
   import('./games/timeline/TimelinePage').then((m) => ({ default: m.TimelinePage })),
 );
+const MissingXiPage = lazy(() =>
+  import('./games/missing-xi/MissingXiPage').then((m) => ({ default: m.MissingXiPage })),
+);
 const HigherLowerPage = lazy(() =>
   import('./games/higher-lower/HigherLowerPage').then((m) => ({ default: m.HigherLowerPage })),
 );
@@ -115,6 +118,18 @@ const GAMES = [
       'Cada fase tem 5 duelos entre jogadores em seus clubes.',
       'Toque em quem tem o número maior (gols ou jogos pelo clube).',
       'Os números aparecem depois. Acerte os 5 para 3 estrelas.',
+    ],
+  },
+  {
+    slot: '06',
+    mode: 'MISSING_XI',
+    name: 'Escalação',
+    path: '/escalacao',
+    rule: 'Complete a escalação de uma final histórica.',
+    howTo: [
+      'Cada fase é o time titular de uma final real, com nomes escondidos.',
+      'Busque os jogadores que estavam em campo; 5 erros encerram a fase.',
+      'Ache todos os escondidos para 3 estrelas.',
     ],
   },
 ] as const;
@@ -447,6 +462,8 @@ function PublicRoutes() {
           <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
           <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
           <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
+          <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
+          <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
@@ -477,6 +494,8 @@ function LevelRoute({ mode }: { mode: GameMode }) {
           <ImpostorPage level={level} timed={timed} />
         ) : mode === 'TIMELINE' ? (
           <TimelinePage level={level} timed={timed} />
+        ) : mode === 'MISSING_XI' ? (
+          <MissingXiPage level={level} timed={timed} />
         ) : mode === 'HIGHER_LOWER' ? (
           <HigherLowerPage level={level} timed={timed} />
         ) : (

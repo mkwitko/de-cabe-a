@@ -24,7 +24,12 @@ export function useGameTracking(data: AttemptResponse | undefined) {
         beacon('game_abandoned', {
           mode: d.attempt.mode,
           level: d.attempt.level,
-          attemptsUsed: 'attemptsUsed' in d.view ? d.view.attemptsUsed : d.view.round,
+          attemptsUsed:
+            'attemptsUsed' in d.view
+              ? d.view.attemptsUsed
+              : 'round' in d.view
+                ? d.view.round
+                : 5 - d.view.wrongLeft,
         });
     };
     document.addEventListener('visibilitychange', onHide);
