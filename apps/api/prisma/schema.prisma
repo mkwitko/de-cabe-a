@@ -311,6 +311,7 @@ model GuestSession {
   updatedAt   DateTime @updatedAt
 
   attempts Attempt[]
+  careers      CareerPlayer[]
 }
 
 /// Used only by the optional sign-up slice (RF-10); created early to avoid an FK migration
@@ -477,4 +478,86 @@ model MatchLineup {
 
   @@index([matchId])
   @@index([playerId])
+}
+
+/// Modo Carreira (docs/GAME_DESIGN/CAREER_MODE.md): the player's own footballer. One active per
+/// player (account or guest session); retired ones stay as the player's history.
+model CareerPlayer {
+  id        String          @id @default(uuid(7))
+  sessionId String
+  session   GuestSession    @relation(fields: [sessionId], references: [id])
+  name      String
+  position  PositionGroup
+  /// { finishing, passing, vision, defending, physical } 0–99
+  attributes Json
+  /// Training points not yet turned into +1 (per attribute).
+  bank      Json
+  /// Training points toward the next match (each match costs TRAINING_PER_MATCH).
+  matchCredit Int           @default(0)
+  /// For a youth start: the big club whose youth team the player came from.
+  originClubId String?
+  status    String          @default("active") /// active | retired
+  seasons   CareerSeason[]
+  training  CareerTraining[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([sessionId, status])
+}
+
+/// Stars of one finished level turned into training (one row per attempt; daily cap applies).
+model CareerTraining {
+  id        String       @id @default(uuid(7))
+  careerId  String
+  career    CareerPlayer @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  attemptId String?
+  mode      String /// game mode, or VARIETY for the 3-games-a-day bonus
+  attribute String
+  points    Int
+  day       String /// YYYY-MM-DD in São Paulo
+  createdAt DateTime     @default(now())
+
+  @@unique([careerId, attemptId])
+  @@index([careerId, day])
+}
+
+model CareerSeason {
+  id          String        @id @default(uuid(7))
+  careerId    String
+  career      CareerPlayer  @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  number      Int
+  clubId      String?
+  clubName    String
+  tier        String /// BASE | C | B | A | LIB | EUR | UCL
+  competition String
+  teamStrength Int
+  /// [{ name, clubId, strength, note }] in round order
+  opponents   Json
+  /// [{ tier, clubId, clubName, label }] once the season is over
+  offers      Json?
+  finishedAt  DateTime?
+  matches     CareerMatch[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([careerId, number])
+}
+
+model CareerMatch {
+  id            String       @id @default(uuid(7))
+  seasonId      String
+  season        CareerSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  round         Int
+  opponentName  String
+  home          Boolean
+  teamGoals     Int
+  opponentGoals Int
+  playerGoals   Int
+  assists       Int
+  rating        Float
+  headline      String
+  note          String?
+  createdAt     DateTime     @default(now())
+
+  @@unique([seasonId, round])
 }

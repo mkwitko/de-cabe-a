@@ -7,8 +7,10 @@ export function ShareButton({
   text,
   onShared,
   secondary,
+  label = 'Copiar resultado',
 }: {
   text: string;
+  label?: string;
   onShared?: (method: 'webshare' | 'clipboard') => void;
   secondary?: boolean;
 }) {
@@ -36,7 +38,7 @@ export function ShareButton({
     <div className="flex flex-col gap-2">
       <button type="button" className={secondary ? btnSecondary : btnPrimary} onClick={share}>
         <Icon name={state === 'copied' ? 'check' : 'share'} />
-        {state === 'copied' ? 'Copiado!' : 'Copiar resultado'}
+        {state === 'copied' ? 'Copiado!' : label}
       </button>
       <span className="sr-only" aria-live="polite">
         {state === 'copied' ? 'Resultado copiado.' : ''}

@@ -97,6 +97,14 @@ export function LevelEnd({
         </div>
       </div>
 
+      {stars > 0 && (
+        <Link
+          to="/carreira"
+          className="-mt-2 text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
+        >
+          +{stars} de treino para o seu craque no Modo Carreira
+        </Link>
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {next ? (
           <Link to={`${GAME_PATH[mode]}/${next.level}`} className={btnPrimary}>
