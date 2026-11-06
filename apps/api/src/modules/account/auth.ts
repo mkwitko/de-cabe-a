@@ -37,6 +37,8 @@ export const authRequest = new AsyncLocalStorage<{
 // Small blocklist; the ranking is public. ponytail: extend from the rejection report as needed.
 const BLOCKED = /(porra|caralho|merda|buceta|puta|viado|fdp|pqp|cuzao|nazi|hitler)/;
 export const nicknameKey = (n: string) => normalizeName(n).replace(/\s+/g, '');
+/** Names shown publicly (nicknames, career footballers) pass the same word filter. */
+export const isBlockedName = (n: string) => BLOCKED.test(nicknameKey(n));
 
 /** Throws when the nickname is invalid or used by another account or another guest. */
 export async function assertNicknameFree(

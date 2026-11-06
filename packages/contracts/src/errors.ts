@@ -25,6 +25,10 @@ export const ErrorCode = z.enum([
   'INVALID_CREDENTIALS',
   'LEVEL_NOT_FINISHED',
   'PLAYER_NOT_IN_ROUND',
+  'CAREER_EXISTS',
+  'SEASON_OVER',
+  'NEEDS_TRAINING',
+  'SEASON_NOT_OVER',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

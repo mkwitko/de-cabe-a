@@ -17,3 +17,4 @@ export * from './impostor/engine';
 export * from './timeline/engine';
 export * from './higher-lower/engine';
 export * from './stars';
+export * from './career/career';

@@ -18,7 +18,7 @@ try {
 }
 const prisma = createPrisma(process.env.DATABASE_URL!);
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
-const all = !['--openfootball', '--extra'].some((f) => process.argv.includes(f));
+const all = !['--openfootball', '--extra', '--relink'].some((f) => process.argv.includes(f));
 async function get<T>(url: string): Promise<T | null> {
   for (let tries = 0; tries < 3; tries++) {
     try {
@@ -39,9 +39,26 @@ const strip = (n: string) =>
     .replace(/\b(fc|cf|afc|sc|ac|ssc|as|cd|ud|sd|rc|ca|ec|se)\b/g, '')
     .replace(/\s+/g, ' ')
     .trim();
-const clubs = await prisma.club.findMany({ select: { id: true, name: true, shortName: true } });
+// Ordered by history (spells) so, when two clubs share a stripped name ("Fluminense FC" and a
+// small "Fluminense EC"), the one with more history wins. Short names never override full names.
+const clubs = await prisma.club.findMany({
+  select: {
+    id: true,
+    name: true,
+    shortName: true,
+    country: { select: { isoCode: true } },
+    _count: { select: { spells: true } },
+  },
+  orderBy: { spells: { _count: 'asc' } },
+});
 const clubByName = new Map<string, string>();
-for (const c of clubs) for (const n of [c.name, c.shortName]) clubByName.set(strip(n), c.id);
+// Same names in different countries ("Liverpool", "Nacional", "Guarani"): keyed by country too.
+const clubByNameCountry = new Map<string, string>();
+for (const c of clubs)
+  for (const n of [c.shortName, c.name]) {
+    clubByName.set(strip(n), c.id);
+    clubByNameCountry.set(`${strip(n)}|${c.country.isoCode}`, c.id);
+  }
 // OpenFootball's Brazilian names that differ from ours (after the suffix strip).
 const BR_ALIASES: Record<string, string> = {
   'ca mineiro': 'Atlético-MG',
@@ -64,8 +81,32 @@ const BR_ALIASES: Record<string, string> = {
 };
 const byShort = new Map(clubs.map((c) => [c.shortName, c.id]));
 for (const [k, v] of Object.entries(BR_ALIASES))
-  if (byShort.has(v)) clubByName.set(k, byShort.get(v)!);
-const clubOf = (team: string) => clubByName.get(strip(team)) ?? null;
+  if (byShort.has(v)) {
+    clubByName.set(k, byShort.get(v)!);
+    clubByNameCountry.set(`${k}|BR`, byShort.get(v)!);
+  }
+/** With a country, only a club of that country matches (no cross-country homonyms). */
+const clubOf = (team: string, country?: string | null) =>
+  country
+    ? (clubByNameCountry.get(`${strip(team)}|${country}`) ?? null)
+    : (clubByName.get(strip(team)) ?? null);
+
+// --relink: recompute the club of every imported match from its team names (after fixes here).
+if (process.argv.includes('--relink')) {
+  const ms = await prisma.match.findMany({
+    select: { id: true, homeTeam: true, awayTeam: true, homeClubId: true, awayClubId: true },
+  });
+  let changed = 0;
+  for (const m of ms) {
+    const h = clubOf(m.homeTeam);
+    const a = clubOf(m.awayTeam);
+    if (h !== m.homeClubId || a !== m.awayClubId) {
+      await prisma.match.update({ where: { id: m.id }, data: { homeClubId: h, awayClubId: a } });
+      changed++;
+    }
+  }
+  log(`relinked ${changed} of ${ms.length} matches`);
+}
 
 if (all || process.argv.includes('--openfootball')) {
   const OF = 'https://raw.githubusercontent.com/openfootball/football.json/master';
@@ -95,8 +136,18 @@ if (all || process.argv.includes('--openfootball')) {
       const f = await get<F>(`${OF}/${season}/${code}.json`);
       if (!f?.matches) continue;
       const data = f.matches.map((m, i) => {
-        const home = clubOf(m.team1);
-        const away = clubOf(m.team2);
+        const iso =
+          {
+            'en.1': 'GB',
+            'es.1': 'ES',
+            'it.1': 'IT',
+            'de.1': 'DE',
+            'fr.1': 'FR',
+            'pt.1': 'PT',
+            'nl.1': 'NL',
+          }[code] ?? null;
+        const home = clubOf(m.team1, iso);
+        const away = clubOf(m.team2, iso);
         if (home) clubLinked++;
         if (away) clubLinked++;
         return {
@@ -188,8 +239,8 @@ if (all || process.argv.includes('--extra')) {
         stage: m.stage,
         homeTeam: m.home,
         awayTeam: m.away,
-        homeClubId: clubOf(m.home),
-        awayClubId: clubOf(m.away),
+        homeClubId: clubOf(m.home, m.homeCountry ?? (path.includes('/brazil/') ? 'BR' : null)),
+        awayClubId: clubOf(m.away, m.awayCountry ?? (path.includes('/brazil/') ? 'BR' : null)),
         homeScore: m.homeScore,
         awayScore: m.awayScore,
       })),

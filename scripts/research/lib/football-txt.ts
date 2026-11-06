@@ -8,6 +8,9 @@ export interface TxtMatch {
   date: Date | null;
   home: string;
   away: string;
+  /** ISO-2 country from the team's FIFA tag ("(URU)"), when the file gives it. */
+  homeCountry: string | null;
+  awayCountry: string | null;
   homeScore: number | null;
   awayScore: number | null;
 }
@@ -38,6 +41,56 @@ export function parseScore(s: string): [number, number] | null {
   const m = /^(\d+)-(\d+)/.exec(s.trim());
   return m ? [Number(m[1]), Number(m[2])] : null;
 }
+
+// FIFA codes used by OpenFootball's continental files -> ISO-2 (as our Country table).
+const FIFA: Record<string, string> = {
+  ARG: 'AR',
+  BRA: 'BR',
+  URU: 'UY',
+  PAR: 'PY',
+  CHI: 'CL',
+  COL: 'CO',
+  PER: 'PE',
+  ECU: 'EC',
+  BOL: 'BO',
+  VEN: 'VE',
+  MEX: 'MX',
+  ENG: 'GB',
+  SCO: 'GB',
+  WAL: 'GB',
+  ESP: 'ES',
+  ITA: 'IT',
+  GER: 'DE',
+  FRA: 'FR',
+  POR: 'PT',
+  NED: 'NL',
+  BEL: 'BE',
+  TUR: 'TR',
+  SUI: 'CH',
+  AUT: 'AT',
+  GRE: 'GR',
+  UKR: 'UA',
+  RUS: 'RU',
+  CRO: 'HR',
+  SRB: 'RS',
+  CZE: 'CZ',
+  DEN: 'DK',
+  SWE: 'SE',
+  NOR: 'NO',
+  POL: 'PL',
+  ROU: 'RO',
+  BUL: 'BG',
+  HUN: 'HU',
+  SVK: 'SK',
+  SVN: 'SI',
+  ISR: 'IL',
+  CYP: 'CY',
+  KAZ: 'KZ',
+  BLR: 'BY',
+  AZE: 'AZ',
+  SCG: 'RS',
+};
+export const countryOf = (t: string) => FIFA[/\(([A-Z]{3})\)\s*$/.exec(t)?.[1] ?? ''] ?? null;
 
 /** "AC Milan (ITA)" -> "AC Milan"; "Vasco da Gama RJ" -> "Vasco da Gama". */
 export const cleanTeam = (t: string) =>
@@ -83,6 +136,8 @@ export function parseFootballTxt(text: string): { title: string; matches: TxtMat
       date,
       home: cleanTeam(m[1]),
       away: cleanTeam(m[2]),
+      homeCountry: countryOf(m[1]),
+      awayCountry: countryOf(m[2]),
       homeScore: score?.[0] ?? null,
       awayScore: score?.[1] ?? null,
     });
@@ -113,6 +168,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   ok(r.matches[1]!.homeScore === 1 && r.matches[1]!.awayScore === 4, 'aet over pens');
   ok(r.matches[2]!.homeScore === 0 && r.matches[2]!.awayScore === 0, 'pens only: ft');
   ok(r.matches[3]!.home === 'AC Milan' && r.matches[3]!.homeScore === 2, 'aet, country tag');
+  ok(r.matches[3]!.homeCountry === 'IT' && r.matches[3]!.awayCountry === 'GB', 'country codes');
   ok(r.matches[4]!.homeScore === null, 'unplayed');
   console.log('football-txt ok');
 }

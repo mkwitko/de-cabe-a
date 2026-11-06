@@ -51,6 +51,9 @@ const TimelinePage = lazy(() =>
 const HigherLowerPage = lazy(() =>
   import('./games/higher-lower/HigherLowerPage').then((m) => ({ default: m.HigherLowerPage })),
 );
+const CareerPage = lazy(() =>
+  import('./pages/CareerPage').then((m) => ({ default: m.CareerPage })),
+);
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 const GAMES = [
@@ -206,6 +209,27 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
           Pra quem sabe a escalação de cor. Fase por fase, estrela por estrela, até virar lenda.
         </p>
       </header>
+
+      {/* Modo Carreira: the stars from every game train the player's own footballer. */}
+      <Link
+        to="/carreira"
+        className="mt-10 flex flex-col gap-2 rounded-2xl bg-cover p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+      >
+        <span>
+          <span className="block text-xs font-bold tracking-wide uppercase">
+            Novo · Modo Carreira
+          </span>
+          <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
+            Crie seu craque e leve ele da base à Europa
+          </span>
+          <span className="mt-1 block font-semibold">
+            Cada estrela que você ganha nos jogos vira treino.
+          </span>
+        </span>
+        <span className="font-condensed self-start rounded-lg bg-ink px-5 py-3 text-lg font-extrabold text-paper uppercase sm:self-center">
+          Jogar
+        </span>
+      </Link>
 
       <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
         <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
@@ -430,6 +454,7 @@ function PublicRoutes() {
           <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
           <Route path="/privacidade" element={<PrivacyPage />} />
           <Route path="/como-jogar" element={<HowToPlayPage />} />
+          <Route path="/carreira" element={<CareerPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

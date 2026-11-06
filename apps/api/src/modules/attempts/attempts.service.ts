@@ -1,3 +1,4 @@
+import { awardTraining } from '../career/career.service';
 /**
  * Attempts (ARCHITECTURE.md §4, ADR-007): one attempt per level per player, sequential unlock,
  * idempotent actions, views without answers, stars at the end.
@@ -476,5 +477,8 @@ export async function submitAction(
     return { attempt: updated, challenge: a.challenge, event: out.event };
   });
   for (const [name, props] of pending) await track(prisma, player.sessionId, name, props);
+  // Modo Carreira: a finished level's stars train the player's footballer.
+  if (attempt.completedAt && pending.some(([n]) => n === 'game_completed'))
+    await awardTraining(prisma, player, attempt, now);
   return present(prisma, attempt, challenge, event, now);
 }

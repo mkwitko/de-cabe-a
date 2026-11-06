@@ -913,6 +913,94 @@ describe('search pages (SEO)', () => {
   });
 });
 
+describe('Modo Carreira', () => {
+  it('creates a youth player, trains from stars, plays a season, gets offers, retires', async () => {
+    // A real-looking Série A season among the test clubs (the calendar comes from real matches).
+    const names = [
+      'Flamengo',
+      'Santos',
+      'Palmeiras',
+      'Grêmio',
+      'Vasco',
+      'Botafogo',
+      'Cruzeiro',
+      'Corinthians',
+    ];
+    const ids = names.map((n) => clubs[n]?.id).filter((x): x is string => Boolean(x));
+    const data = [];
+    let k = 0;
+    for (const h of ids)
+      for (const a of ids)
+        if (h !== a)
+          data.push({
+            source: 'test',
+            sourceRef: `test:${k++}`,
+            competition: 'Brasileirão Série A',
+            season: '2025',
+            homeTeam: h,
+            awayTeam: a,
+            homeClubId: h,
+            awayClubId: a,
+            homeScore: k % 3,
+            awayScore: k % 2,
+          });
+    await prisma.match.createMany({ data });
+
+    const g = guest();
+    const opts = (await g.req('GET', '/career/options')).json();
+    const youth = opts.youth.find((c: { name: string }) => c.name === 'Sub-20 do Flamengo');
+    expect(youth).toBeTruthy();
+    const created = await g.req('POST', '/career', {
+      name: 'Zé Teste',
+      position: 'FW',
+      start: 'youth',
+      clubId: youth.clubId,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    expect(created.json().career).toMatchObject({
+      name: 'Zé Teste',
+      season: { tier: 'BASE', club: 'Sub-20 do Flamengo', round: 0 },
+    });
+    expect(
+      (
+        await g.req('POST', '/career', {
+          name: 'Outro',
+          position: 'MF',
+          start: 'youth',
+          clubId: youth.clubId,
+        })
+      ).statusCode,
+    ).toBe(409);
+
+    expect((await g.req('POST', '/career/play')).json().error.code).toBe('NEEDS_TRAINING');
+    // A level won in one guess gives 3 stars = 3 training points = one match.
+    await playCareer(g, 1, answerId, 0);
+    const trained = (await g.req('GET', '/career')).json().career;
+    expect(trained.matchCredit).toBe(3);
+    expect(trained.attributes.vision).toBeGreaterThan(44); // Career Path trains vision
+
+    const played = await g.req('POST', '/career/play');
+    expect(played.statusCode, played.body).toBe(200);
+    expect(played.json().career.season.matches[0]).toMatchObject({
+      round: 1,
+      headline: expect.any(String),
+    });
+
+    // Rest of the season (training credit given directly).
+    const career = await prisma.careerPlayer.findFirstOrThrow({ where: { name: 'Zé Teste' } });
+    await prisma.careerPlayer.update({ where: { id: career.id }, data: { matchCredit: 27 } });
+    let view;
+    for (let i = 2; i <= 10; i++) view = (await g.req('POST', '/career/play')).json();
+    expect(view.career.season.round).toBe(10);
+    expect(view.career.season.offers.length).toBeGreaterThan(0);
+    const stay = (await g.req('POST', '/career/offer', { index: -1 })).json();
+    expect(stay.career.season).toMatchObject({ number: 2, round: 0 });
+    expect(stay.career.path.map((s: { season: number }) => s.season)).toEqual([1, 2]);
+
+    expect((await g.req('POST', '/career/retire')).json()).toEqual({ career: null });
+  });
+});
+
 describe('Mais ou Menos (ADR-011)', () => {
   it('compares real spells, refuses too-close rounds, plays a level', async () => {
     const club = clubs['Santos']!.id;
