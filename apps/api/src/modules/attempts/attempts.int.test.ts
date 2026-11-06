@@ -846,8 +846,14 @@ describe('timed mode (ADR-009)', () => {
     expect(first.json().attempt).toMatchObject({
       timed: true,
       deadlineAt: new Date(start.getTime() + 90_000).toISOString(),
+      secondsLeft: 90,
       durationSec: null,
     });
+    // The screen counts from the server's seconds left, never from the phone's clock.
+    clock = new Date(start.getTime() + 30_000);
+    expect(
+      (await g.req('GET', `/attempts/${first.json().attempt.id}`)).json().attempt.secondsLeft,
+    ).toBe(60);
     clock = new Date(start.getTime() + 95_000);
     const late = await g.act(first.json().attempt.id, { kind: 'skip' });
     expect(late.json().event).toEqual({ type: 'lost' });

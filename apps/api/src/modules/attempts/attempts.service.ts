@@ -48,6 +48,7 @@ export async function present(
   attempt: Attempt,
   challenge: Challenge,
   event?: unknown,
+  now: Date = new Date(),
 ): Promise<AttemptResponse> {
   const engine = engineFor(challenge.gameMode);
   const config = engine.validateConfig(challenge.snapshot);
@@ -156,6 +157,10 @@ export async function present(
       stars: attempt.stars,
       timed: attempt.timed,
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
+      secondsLeft:
+        attempt.deadlineAt && !attempt.completedAt
+          ? Math.max(0, (attempt.deadlineAt.getTime() - now.getTime()) / 1000)
+          : null,
       durationSec: durationSec(attempt),
     },
     ...(event !== undefined ? { event: event as NonNullable<AttemptResponse['event']> } : {}),
@@ -233,6 +238,8 @@ export async function startAttempt(
         prisma,
         existing,
         versions.find((v) => v.id === existing.challengeId)!,
+        undefined,
+        now,
       ),
     };
   const challenge = versions.find((v) => v.status === 'published') ?? versions[0]!;
@@ -261,13 +268,13 @@ export async function startAttempt(
       level,
       difficultyTier: challenge.difficultyTier,
     });
-    return { created: true, response: await present(prisma, attempt, challenge) };
+    return { created: true, response: await present(prisma, attempt, challenge, undefined, now) };
   } catch (err) {
     if ((err as { code?: string }).code !== 'P2002') throw err;
     const again = await prisma.attempt.findFirstOrThrow({
       where: { sessionId: player.sessionId, challengeId: challenge.id },
     });
-    return { created: false, response: await present(prisma, again, challenge) };
+    return { created: false, response: await present(prisma, again, challenge, undefined, now) };
   }
 }
 
@@ -285,9 +292,9 @@ async function loadOwned(
   return attempt;
 }
 
-export async function getAttempt(prisma: PrismaClient, id: string, player: Player) {
+export async function getAttempt(prisma: PrismaClient, id: string, player: Player, now: Date) {
   const a = await loadOwned(prisma, id, player);
-  return present(prisma, a, a.challenge);
+  return present(prisma, a, a.challenge, undefined, now);
 }
 
 export async function submitAction(
@@ -418,5 +425,5 @@ export async function submitAction(
     return { attempt: updated, challenge: a.challenge, event: out.event };
   });
   for (const [name, props] of pending) await track(prisma, player.sessionId, name, props);
-  return present(prisma, attempt, challenge, event);
+  return present(prisma, attempt, challenge, event, now);
 }

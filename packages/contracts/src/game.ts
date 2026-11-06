@@ -110,6 +110,9 @@ export const AttemptSummary = z.strictObject({
   /** Against the clock (ADR-009): the server closes the level at deadlineAt. */
   timed: z.boolean(),
   deadlineAt: z.string().nullable(),
+  /** Seconds left by the server's clock when this response was built; the screen counts from it,
+   * so a phone with a wrong clock never loses (or gains) time. */
+  secondsLeft: z.number().nullable(),
   /** Time the level took, once finished (shown in both modes). */
   durationSec: z.number().nullable(),
 });
