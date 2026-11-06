@@ -1,0 +1,1435 @@
+{
+ "ranAt": "2026-11-06T00:36:27.564Z",
+ "changes": [
+  {
+   "id": "01a1ac2c-ff93-717a-8f7f-b276b3e0cbb1",
+   "name": "Fernando Reges",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2c-ffaa-730b-bfe7-3a76d8cd0858",
+   "name": "Everton Ribeiro",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2e-4dc3-72e3-8672-a5874c95ab07",
+   "name": "Jussiê",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac2f-a02a-77d9-a393-5ef2ace80c4e",
+   "name": "Robson Ponte",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2f-9f27-736c-86cf-f0f179a41e79",
+   "name": "Alex Teixeira",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac2f-9f09-745d-8fd1-f9fd4394e533",
+   "name": "Afonso Alves",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac30-d284-741d-9093-0c37e2e1c16e",
+   "name": "Wilson Piazza",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac30-d4e6-7289-8544-99e6c3642c1f",
+   "name": "Leandro Lessa Azevedo",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac43-37f8-7130-89fc-e80c850e7852",
+   "name": "Dudu",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac3b-c24e-72bd-ab64-385a19c7a6d1",
+   "name": "Johnny Cardoso",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac3b-c235-74d5-89fc-f3f65789f69f",
+   "name": "Samuel Lino",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac3c-f2cc-715d-bd46-eae468a9b0ab",
+   "name": "Levir Culpi",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ac3e-2603-74e7-8d4a-2e64b44e7f18",
+   "name": "Fabrício de Souza",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac3e-263f-745a-96c9-3b8b5edf31a1",
+   "name": "Giovanni Silva de Oliveira",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac3f-72ca-75a4-966a-4f008fff0a7d",
+   "name": "Eduardo da Silva Nascimento Neto",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac3f-7247-7790-ae8c-05c0496e4b25",
+   "name": "Edvaldo Alves de Santa Rosa",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac40-c04b-701d-820d-5037a836c346",
+   "name": "Leivinha",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac41-ff10-7414-8d9d-7ce2664d1aaf",
+   "name": "Carlos Eduardo Bendini Giusti",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ac43-3868-73d1-a6b2-ec227d68afac",
+   "name": "José Carlos Garcia Leal",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ac22-8fcc-76ed-ade8-3c0afe273516",
+   "name": "Neymar",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac22-8ffc-775a-a06e-852f6f095def",
+   "name": "Ronaldinho Gaúcho",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac9b-89c7-7728-a57d-38822294000a",
+   "name": "Caio Henrique",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ac9b-8ac8-764e-8758-41ea86f412ea",
+   "name": "Érika Cristiano dos Santos",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac9d-74e6-766a-b352-3994f50e18da",
+   "name": "Eduardo Marques de Jesus Passos",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac27-ba37-705a-8753-2b83885e0ceb",
+   "name": "Alex Santos",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ac2b-a541-765c-9cc9-cbcc36925340",
+   "name": "Zé Roberto",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2e-4adf-708c-9fcd-e66a6aa505dc",
+   "name": "Fellipe Bertoldo",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac3f-70ef-71bc-a988-ec992d0ca953",
+   "name": "Paulo Antônio de Oliveira",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac43-3734-745e-9166-79a2b31af8e9",
+   "name": "Marco Aurélio Fernandes da Silva",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac30-d67f-776d-906d-bcf238034ec2",
+   "name": "Edi Andradina",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac9f-23cf-770e-acca-76060c300826",
+   "name": "Paulo Isidoro",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac9f-243d-77b8-9257-eedf3cb26453",
+   "name": "Josef de Souza Dias",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1aca0-f7ec-726b-9c5d-470dad632ce7",
+   "name": "Diego Souza",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1aca0-f788-735e-8d1a-62dc9a4e6f76",
+   "name": "Jean Raphael Vanderlei Moreira",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1aca0-f929-773f-8dc6-dc69c4e629f5",
+   "name": "Cuca",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1aca0-fa63-748e-a61e-765747699caf",
+   "name": "José Perácio",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1aca2-7f91-7117-86bb-6bff18cbd380",
+   "name": "Gerson Fraga Vieira",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1aca2-8047-72b8-af78-535ac0a407a9",
+   "name": "Emerson de Andrade Santos",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1aca4-6ec1-76dc-85d8-6e0e74e74b0f",
+   "name": "Andressa Alves da Silva",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1aca4-722e-7079-b0df-f926e3a039ab",
+   "name": "Píndaro de Carvalho Rodrigues",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1aca6-6bd0-775f-a3d0-16cb57aefaf2",
+   "name": "Joel Antônio Martins",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1aca7-f6fd-703c-8391-f1bd1b21af6b",
+   "name": "Júlio César Godinho Catole",
+   "from": "FW",
+   "to": "DF"
+  },
+  {
+   "id": "01a1acc4-ad76-715f-946c-93b7de68e0dc",
+   "name": "Sidney Colônia Cunha",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acc4-aee7-758a-91bd-e990bda3f92a",
+   "name": "Michel Garbini Pereira",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acaa-1359-73f1-959d-c6845fe36f7c",
+   "name": "Hermógenes Valente Fonseca",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1acac-0d24-700e-9655-5c783dba81f0",
+   "name": "Henik Luiz Andrade",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acaf-be2f-732c-9b27-91c8c171a13b",
+   "name": "Ely do Amparo",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acaf-bfc0-745a-a0d7-212098d04d9c",
+   "name": "Yago Pikachu",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1acb1-b80e-733d-b1d2-591e221e915f",
+   "name": "Gabriel Santana",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acb1-ba05-731d-991e-8b118b159a43",
+   "name": "Mauro Raphael",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1acb3-9461-73fc-8388-8d236297359b",
+   "name": "Ananias Elói Castro Monteiro",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1acaf-bdc7-768c-9f12-3d8536bcba2d",
+   "name": "Luan Madson Gedeão de Paiva",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acb4-e2e3-7394-87ba-687e0539d989",
+   "name": "Mauro Júnior",
+   "from": "FW",
+   "to": "DF"
+  },
+  {
+   "id": "01a1acb4-e150-7059-91f4-df60089deafa",
+   "name": "Manoel de Aguiar Fagundes",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acb4-e1cc-706c-a74b-d2ec229a0634",
+   "name": "José Clayton Menezes Ribeiro",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acb7-6a52-734f-8b73-f8e0efc5c31a",
+   "name": "Oscarino Costa Silva",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acbb-4498-73db-b15e-c8cf819c6fb1",
+   "name": "Allano",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1acbe-7d9a-73dc-bb72-ff2cb48ad54b",
+   "name": "Leonardo Rodriguez Pereira",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acc9-15b8-73bd-868d-2a8ae15cf23a",
+   "name": "Bruno Felipe Souza da Silva",
+   "from": "FW",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ac22-91dc-72ae-b026-7f862ada6f3a",
+   "name": "Philippe Coutinho",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2a-5e58-7749-8845-40f497b0784e",
+   "name": "Júlio Baptista",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2c-f9db-7451-9253-a98618ec4ecb",
+   "name": "Iomar do Nascimento",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2e-4c08-7528-8594-e0ada8d89468",
+   "name": "Sávio",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ac2e-4e15-7647-a1ec-94eef0c06a7c",
+   "name": "Ricardinho",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac30-d704-702f-8544-0bdfdf5d201a",
+   "name": "Wellington Nogueira Lopes de Avellar",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acc2-4dec-711c-9631-4796651557f4",
+   "name": "William Douglas De Amorim",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acc2-4e22-7472-87f1-2081aa1e8919",
+   "name": "Leandro Henrique do Nascimento",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac3c-f5ac-710c-9afc-4257bcc7d48d",
+   "name": "Alex Antônio de Melo Santos",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1acb4-e1ae-71ad-9438-a7792e3154c1",
+   "name": "Reynaldo dos Santos Silva",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ac43-3742-72c7-938d-42721adfa40f",
+   "name": "Sandro Chaves de Assis Rosa",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acbe-7dd7-7751-b1de-441ae552ecbb",
+   "name": "Athirson",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1acc4-af01-70c3-b6ec-e4953ed59913",
+   "name": "Gérson Magrão",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1acc9-156b-770f-9a13-ce9015887c36",
+   "name": "Wanderson",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad34-4c48-767b-95e4-b85be9d8368a",
+   "name": "Juan Alano",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1acc6-596b-767e-9139-542f19bc2a22",
+   "name": "Renan Mota",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad27-386a-737f-b7c6-c34ec2118342",
+   "name": "Neuciano Gusmão",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad31-7d3b-71bd-8440-d34ed92febf9",
+   "name": "Hélio Junio Nunes de Castro",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad29-dbab-7658-9412-631a1119c3b6",
+   "name": "Tiago da Rocha Vieira",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad29-dd66-716b-b1c0-cd080de4c7a4",
+   "name": "Alípio",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad31-7e26-740d-ae9e-2aca81e71d4e",
+   "name": "Kady Iuri Borges Malinowski",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad2c-d9f6-7641-94a8-4e30217c6c6a",
+   "name": "Osvaldo Brandão",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad2c-dbc3-7319-9ccb-223df7401d54",
+   "name": "Natanael de Souza Santos Junior",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad34-4c5f-768b-a421-1735db655d04",
+   "name": "Marquinhos Cipriano",
+   "from": "FW",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad34-4d64-70d0-a3a9-66e69d9438ee",
+   "name": "Allan",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad34-4e61-74af-96c4-f4c10d160e4c",
+   "name": "Marquinhos",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad37-afa0-7138-9b9b-559b3009fb2d",
+   "name": "William Cleite Boaventura",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad4b-211a-7630-b931-8a8c3cbb5f95",
+   "name": "Vladimir Marín",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad39-fbb3-701e-a8dc-4b0f36b168d7",
+   "name": "Davidson de Oliveira Morais",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad39-ffa0-74f9-9bee-29de6f4ed786",
+   "name": "Eduardo Adelino da Silva",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad39-fdf0-74f4-a8b3-3eab7b23bc2f",
+   "name": "Paulo Menezes",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad3c-34e7-77a8-a1a8-44feabf16f93",
+   "name": "José Marcelo Januário de Araújo",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad3c-369b-7479-be92-1e878233d297",
+   "name": "Jorge Luiz Sousa",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad3c-36b0-728a-a6c0-a0b65dbdf244",
+   "name": "Rafael da Silva Francisco",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad3c-35c9-70a1-964c-7bcc99f5c78b",
+   "name": "Odirlei de Souza Gaspar",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad3e-d5e0-74f8-ba59-bf9c94574d42",
+   "name": "Javier Mascherano",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad3e-d638-7799-9980-30d5865e853f",
+   "name": "Kazuyoshi Miura",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad3e-d703-70c8-b397-28bf88eaef09",
+   "name": "Bryan Ruiz",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad4b-2082-765e-b08f-098426e94a63",
+   "name": "Jorge Orlando Aravena Plaza",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad4d-4481-77ad-82f6-dc8e63b74bc5",
+   "name": "Martín Hidalgo",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad4b-1eee-760d-9a2b-e05ee5fe82da",
+   "name": "Tressor Moreno",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad40-930c-748f-b490-d0330d8dec37",
+   "name": "Christian Cueva",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad40-948f-763f-83bd-32be311c187d",
+   "name": "Yoshimar Yotún",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad42-7973-7149-bfbb-2293e0c48ca8",
+   "name": "Zakaria Labyad",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad42-79fe-7084-b3b0-10040a16b1be",
+   "name": "Igor Jovićević",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad42-7ca1-721f-9e19-2114c4885036",
+   "name": "Joaquín Piquerez",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad42-7bb8-7416-8112-68f013e5b9d4",
+   "name": "Jorge Carrascal",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad4d-40b2-7393-a66f-37658431707d",
+   "name": "Andrés Fabricio Romero",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad4d-4137-744f-8640-c9849a646a06",
+   "name": "Juan Sánchez Miño",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad44-83c2-7258-ba8e-028c0fb94f16",
+   "name": "Gabriel Suazo",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad44-8423-7348-a519-53ea64a0fdf3",
+   "name": "Michael Arroyo",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad44-843a-76bb-b651-3e54556531aa",
+   "name": "Ramón Sosa",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad47-1b9b-7309-a986-05d6310268d4",
+   "name": "Osvaldo Héctor Cruz",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad47-1adc-7113-8556-6f59b1761221",
+   "name": "Javier Ambrois",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad47-1c9d-727d-82b8-d3df88fb235f",
+   "name": "Ignacio Scocco",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad49-22d0-72cc-b163-b0c565bbf54d",
+   "name": "Ramón Mifflin",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad49-2362-73d7-a995-e9407c641014",
+   "name": "Walter Montillo",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad49-20cf-7558-a4f4-a3cd1e08952a",
+   "name": "Héctor Silva",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad49-21b7-7359-b300-767943775403",
+   "name": "Jefferson Savarino",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad49-238c-7191-a00c-c7776b5acbbb",
+   "name": "Joffre Guerrón",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad4d-4225-75e9-80e9-ded7aa5745b8",
+   "name": "Mariano Torres",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad4d-428e-70bf-bd10-4b4d5452a8a4",
+   "name": "Ricardo Laborde",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad4d-42a8-70e1-8933-02384c05c974",
+   "name": "Luis Bolaños",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad4d-442e-73ff-ada7-2f15330aaee0",
+   "name": "Percy Olivares",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad4d-4200-70de-a3b0-241a7dce6274",
+   "name": "Julio Buffarini",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad64-8e24-74bd-bb11-46ac1cf6a5e5",
+   "name": "Lorenzo Insigne",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad68-0744-710d-ad5a-44b276b5a996",
+   "name": "Antonio Candreva",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad4f-3a39-762d-9f33-69d9790bb73b",
+   "name": "Yony Andrés González Copete",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad4f-3be7-731a-841a-d4cb38f03591",
+   "name": "Arjen Robben",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad4f-3d42-70fe-8f07-8764d19e0c31",
+   "name": "Luís Figo",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad69-94a1-767c-a8a2-be336fc19a09",
+   "name": "Leonardo Spinazzola",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad51-257f-72bc-b453-859aa7c95e3b",
+   "name": "Jesús Navas",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad52-cb78-71d9-ae41-889b37f23f42",
+   "name": "Vicente del Bosque",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad52-cc0b-74e2-89f6-61a7c820e1ee",
+   "name": "Rafael Benítez",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad54-c36a-717d-89cc-159a219680a6",
+   "name": "Hatem Ben Arfa",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad54-c60f-75eb-831b-bcbfa631e9ae",
+   "name": "Erik Lamela",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad66-41f4-73ea-9317-e062fc239a16",
+   "name": "Giovanni Trapattoni",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad56-53cf-7669-95c4-599ef72c9a15",
+   "name": "Pablo Sarabia",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad56-56b4-71bc-8f06-46ac41290c18",
+   "name": "Ion Andoni Goikoetxea",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad58-2444-739a-9b4e-a2bf9e41ae5d",
+   "name": "Andoni Iraola",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad58-24a8-765f-ac84-d3045d42989f",
+   "name": "Adama Traoré",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad58-2725-7147-a021-4500eedebc31",
+   "name": "Sofiane Feghouli",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad69-94cf-71d9-8e2d-b24d00025411",
+   "name": "Álvaro Recoba",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad69-9720-70b9-a8cf-ac5684e11c09",
+   "name": "Lorik Cana",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad59-d429-75d8-9143-9d595fc8507b",
+   "name": "Yevhen Konoplyanka",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad59-d655-702d-b238-3fbeaf50cb85",
+   "name": "Enzo Pérez",
+   "from": "GK",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad59-d6b1-7313-ab24-5c008e4c23b0",
+   "name": "Salem Al-Dawsari",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad66-4326-749c-b365-620e21ca4a0e",
+   "name": "Victor Moses",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad6b-5ecc-76ed-8402-1a294020df96",
+   "name": "Enzo Bearzot",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad6b-5f76-74bc-bc62-3a2e0b7d3fed",
+   "name": "Sebastian Giovinco",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad5b-9063-77c9-9d4d-1dd542cc03c5",
+   "name": "David Bisconti",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad5b-916c-7568-8c5b-a31a0eaa5215",
+   "name": "László Kubala",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad5b-9182-758f-9642-12fddd942e12",
+   "name": "Isaac Cuenca",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad68-056f-760e-af10-7c83e34fc2b0",
+   "name": "Mauro Camoranesi",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad5d-7e95-7579-ab09-cc06c691f0c5",
+   "name": "Hiroki Abe",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad5d-8082-72a7-9a06-374c2e990ae5",
+   "name": "Albert Riera",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad5d-81d6-72ba-8406-38afab0db0f9",
+   "name": "Steve McManaman",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad5d-823b-725c-b141-0d0ad765adf0",
+   "name": "Alessio Cerci",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad5d-8178-77dd-8be8-09dbce7727b3",
+   "name": "Harvey Elliott",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad5f-5ab6-77b0-afce-1d4f4d29d6a3",
+   "name": "Markel Susaeta",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad5f-5a60-72c9-b0ef-90f28180cea7",
+   "name": "Javier Clemente",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad60-eef4-7301-b78c-086ec3b389cb",
+   "name": "Diego Perotti",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad60-f17f-718f-bfcb-1d8984c77dd0",
+   "name": "Óscar de Marcos",
+   "from": "FW",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad62-eaf7-72e9-a451-05c5a5e2d46a",
+   "name": "Roberto Baggio",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad62-ed4b-777e-b396-41068998cfd7",
+   "name": "Ashley Young",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad62-eca9-77e1-970f-541a784c57f5",
+   "name": "Javier Zanetti",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad68-0789-73a4-9514-128a5894e9c7",
+   "name": "Robin Gosens",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad68-0778-7642-9757-ca122ad1a88f",
+   "name": "Q314856",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad62-eb18-770e-b4c4-c6175bba596c",
+   "name": "Lukas Podolski",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad6b-5df1-72fe-b167-91e64b260486",
+   "name": "Suso",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad84-2941-7442-91b4-50f6a839efcb",
+   "name": "Kōji Nakata",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad6b-6093-71ee-a4c8-218b6ac9c446",
+   "name": "Ludovic Giuly",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad84-29f1-777a-8331-09a0348d9b6f",
+   "name": "Junya Itō",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad88-5f26-73f4-ba6c-a09a09ebcfd2",
+   "name": "Shoya Nakajima",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad6c-f42a-747b-bfe1-bc719f66e70f",
+   "name": "Adem Ljajić",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad84-2a8f-7425-9d75-1db12c929f2d",
+   "name": "Florian Thauvin",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad84-2a25-7282-944e-bc36f784dcae",
+   "name": "Thorgan Hazard",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad6e-8b91-7668-93e2-7d91e4b26c3b",
+   "name": "Vlad Chiricheș",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad70-3985-73ad-b373-00ac9da4c579",
+   "name": "Stefan Reuter",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad70-3bd5-704f-8ac1-cbedc66487ab",
+   "name": "Kevin Keegan",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad71-d6dd-7728-9a28-0dd1067607a7",
+   "name": "Phil Foden",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad71-d736-75af-8814-7cd1f53e2b86",
+   "name": "Fredrik Ljungberg",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad71-d99f-7334-8b65-58629630198b",
+   "name": "Landon Donovan",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad73-5c26-71ba-a4ee-3afd390d3dd0",
+   "name": "Clint Dempsey",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad73-5dad-7518-9ccb-897a48f72a26",
+   "name": "Yuki Abe",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad73-5e5c-7748-8596-fab610ecb089",
+   "name": "Mark Milligan",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad73-5ce6-70b1-b605-a359dd365a27",
+   "name": "André Ayew",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad73-5ecc-730a-8195-27856af9c1df",
+   "name": "Phil Jagielka",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad75-11b8-7094-bb9d-8927190cef63",
+   "name": "Oleksandr Zinchenko",
+   "from": "FW",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad75-13f7-753d-8544-878de45bc48e",
+   "name": "Alexandre Song",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad75-1615-70ea-90a6-841883055e4a",
+   "name": "Marc Overmars",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad85-fd77-76da-97a4-a6277ec98ff3",
+   "name": "Lucien Laurent",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad76-a662-7041-bddf-b3c4b446f0cb",
+   "name": "Fabian Delph",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad76-a6fb-77d7-9bc4-6586a62941e9",
+   "name": "Xavi Simons",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad78-670e-77db-bbaf-c8ee6d69b5a4",
+   "name": "Shaun Wright-Phillips",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad78-675e-70b7-95ec-dc0e46387038",
+   "name": "Harry Kewell",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad78-6918-7178-ad3d-4c0f11d1203f",
+   "name": "Duncan Edwards",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad78-6a27-7060-a2ec-4b7999476e5f",
+   "name": "Ola Toivonen",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad85-fc9c-7499-860b-e9734be7873a",
+   "name": "Kamil Grosicki",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad7a-07f3-7684-b6ef-2555df285241",
+   "name": "Rudi Vata",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad7b-9378-728f-80b7-f461a18de223",
+   "name": "Emre Can",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad7b-90cd-77bd-884a-f8bb6b33a60e",
+   "name": "Jón Daði Böðvarsson",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad7b-9234-75ab-b38c-e0cd1a58a625",
+   "name": "Joshua Kimmich",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad7d-139c-7101-a047-1e42401aed38",
+   "name": "Uli Hoeneß",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad7d-1499-708f-a77c-14e2d88a9e06",
+   "name": "Marcell Jansen",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad85-ff47-73c8-b91b-8740368357e6",
+   "name": "Ainsley Maitland-Niles",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad7e-7e15-71cd-a1ae-4bccb028c837",
+   "name": "Kevin Großkreutz",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad7e-7f22-753b-8d56-4c3424580f50",
+   "name": "Christopher Nkunku",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad7e-81e8-7061-9a5c-9820eb69c053",
+   "name": "Sigfried Held",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad7e-8238-75fb-a068-86979515a68c",
+   "name": "Gerald Asamoah",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad7e-8319-76fe-a47a-d5c7486699bc",
+   "name": "Sebastian Rudy",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad7e-7f04-706b-a40e-1821e1531908",
+   "name": "Naoya Kikuchi",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad7e-836e-7022-9665-f893415262b3",
+   "name": "Admir Mehmedi",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad80-a47b-7786-bb12-8d6565891c92",
+   "name": "Mirko Hrgović",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "id": "01a1ad80-a4cf-74de-9aab-3dfeb0f17b1f",
+   "name": "Clemens Fritz",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad80-a541-74bc-a630-2776f84fbd92",
+   "name": "Michael Baur",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "id": "01a1ad80-a64c-750e-898b-351aec536fbd",
+   "name": "Aleksandar Dragović",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad82-4f83-72ff-8078-27cc5b75645d",
+   "name": "Theodor Gebre Selassie",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "id": "01a1ad82-4d94-774e-a4af-fba92f829d10",
+   "name": "Benjamin Henrichs",
+   "from": "MF",
+   "to": "DF"
+  }
+ ],
+ "affectedLevels": [
+  {
+   "level": 103,
+   "challengeId": "01a1ad8a-8b14-7121-b023-5efd68ed50cf",
+   "id": "01a1ad70-3bd5-704f-8ac1-cbedc66487ab",
+   "name": "Kevin Keegan",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 1,
+   "challengeId": "01a1ac72-3cef-77e9-89b1-75005cd6a4bb",
+   "id": "01a1ac22-8fcc-76ed-ade8-3c0afe273516",
+   "name": "Neymar",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 43,
+   "challengeId": "01a1ac72-44c8-734c-bd4b-e30bb37a99f4",
+   "id": "01a1ac27-ba37-705a-8753-2b83885e0ceb",
+   "name": "Alex Santos",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "level": 46,
+   "challengeId": "01a1ac72-4544-75dc-942c-8d470845eff2",
+   "id": "01a1ac2b-a541-765c-9cc9-cbcc36925340",
+   "name": "Zé Roberto",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "level": 66,
+   "challengeId": "01a1ad8a-8532-74f0-b397-be5d6fcc1fc6",
+   "id": "01a1ad62-eca9-77e1-970f-541a784c57f5",
+   "name": "Javier Zanetti",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "level": 13,
+   "challengeId": "01a1ac72-3f4d-75a6-9cba-ccc2a4bbb6bb",
+   "id": "01a1ac22-8ffc-775a-a06e-852f6f095def",
+   "name": "Ronaldinho Gaúcho",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 21,
+   "challengeId": "01a1ac72-4139-752e-9b36-ea4ee2ca345f",
+   "id": "01a1ac2c-ff93-717a-8f7f-b276b3e0cbb1",
+   "name": "Fernando Reges",
+   "from": "DF",
+   "to": "MF"
+  },
+  {
+   "level": 24,
+   "challengeId": "01a1ac72-41bb-71f5-8ab7-e5754f9bff2f",
+   "id": "01a1ac2c-ffaa-730b-bfe7-3a76d8cd0858",
+   "name": "Everton Ribeiro",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 106,
+   "challengeId": "01a1ad8a-8b84-7024-a2fc-371959249da2",
+   "id": "01a1ad4f-3d42-70fe-8f07-8764d19e0c31",
+   "name": "Luís Figo",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 94,
+   "challengeId": "01a1ad8a-898e-714b-8e7b-0f31681d5648",
+   "id": "01a1ad62-ed4b-777e-b396-41068998cfd7",
+   "name": "Ashley Young",
+   "from": "DF",
+   "to": "FW"
+  },
+  {
+   "level": 109,
+   "challengeId": "01a1ad8a-8bf1-747f-bc22-c4d497355bbe",
+   "id": "01a1ad3e-d5e0-74f8-ba59-bf9c94574d42",
+   "name": "Javier Mascherano",
+   "from": "MF",
+   "to": "DF"
+  },
+  {
+   "level": 111,
+   "challengeId": "01a1ad8a-8c4a-76bd-a21c-d233ad27d179",
+   "id": "01a1ad62-eaf7-72e9-a451-05c5a5e2d46a",
+   "name": "Roberto Baggio",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 164,
+   "challengeId": "01a1ad8a-945b-766e-aad7-c42d204bee9e",
+   "id": "01a1ac22-91dc-72ae-b026-7f862ada6f3a",
+   "name": "Philippe Coutinho",
+   "from": "FW",
+   "to": "MF"
+  },
+  {
+   "level": 143,
+   "challengeId": "01a1ad8a-911f-75cb-8720-e8fbe78c5231",
+   "id": "01a1ad4f-3be7-731a-841a-d4cb38f03591",
+   "name": "Arjen Robben",
+   "from": "MF",
+   "to": "FW"
+  },
+  {
+   "level": 177,
+   "challengeId": "01a1ad8a-9662-74f4-ba5a-405a42900872",
+   "id": "01a1ad62-eb18-770e-b4c4-c6175bba596c",
+   "name": "Lukas Podolski",
+   "from": "MF",
+   "to": "FW"
+  }
+ ]
+}
