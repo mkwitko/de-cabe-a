@@ -1,3 +1,4 @@
+import { AdConsentChoice } from '../components/AdSlot';
 /** Privacy notice (LGPD; required by AdSense). Plain and short, PT-BR. */
 export function PrivacyPage() {
   const h2 = 'font-condensed text-2xl font-extrabold uppercase';
@@ -32,9 +33,10 @@ export function PrivacyPage() {
           dados pessoais.
         </li>
         <li>
-          <strong>Google AdSense</strong>: mostra anúncios fora da hora de jogar. Pedimos anúncios
-          não personalizados (sem perfil montado a partir da sua navegação), mas o Google pode usar
-          cookies para entregar e medir os anúncios. Veja{' '}
+          <strong>Google AdSense</strong>: mostra anúncios fora da hora de jogar. Anúncios do seu
+          interesse (com perfil montado pelo Google a partir da sua navegação) só se você aceitar;
+          senão, anúncios comuns. Em ambos os casos o Google pode usar cookies para entregar e medir
+          os anúncios. Veja{' '}
           <a
             className="underline underline-offset-4"
             href="https://policies.google.com/technologies/ads?hl=pt-BR"
@@ -49,6 +51,7 @@ export function PrivacyPage() {
           <strong>Resend</strong>: envia os e-mails de confirmação e de nova senha.
         </li>
       </ul>
+      <AdConsentChoice />
       <h2 className={h2}>Seus direitos</h2>
       <p>
         Você pode pedir para ver, corrigir ou apagar seus dados, ou sair a qualquer momento pela
