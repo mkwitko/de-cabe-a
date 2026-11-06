@@ -40,6 +40,8 @@ export function PlayerSearch({
   const [status, setStatus] = useState<'idle' | 'loading' | 'empty' | 'error'>('idle');
   const input = useRef<HTMLInputElement>(null);
   const [cardId, setCardId] = useState<string | null>(null);
+  const cardOpen = useRef(false);
+  cardOpen.current = cardId !== null;
 
   useEffect(() => {
     if (!selected) setQ('');
@@ -91,6 +93,10 @@ export function PlayerSearch({
     } else if (e.key === 'Enter' && open && results[active]) {
       e.preventDefault();
       choose(results[active]);
+    } else if (e.key === 'i' && e.altKey && results[active]) {
+      // Alt+I: card of the highlighted option (the "Ficha" buttons are pointer-only).
+      e.preventDefault();
+      setCardId(results[active].id);
     } else if (e.key === 'Escape') {
       setOpen(false);
     }
@@ -123,7 +129,7 @@ export function PlayerSearch({
             if (selected) onSelect(null);
           }}
           onKeyDown={onKeyDown}
-          onBlur={() => setTimeout(() => setOpen(false), 120)}
+          onBlur={() => setTimeout(() => !cardOpen.current && setOpen(false), 120)}
           onFocus={() => results.length && setOpen(true)}
           className="min-h-12 w-full bg-transparent text-base font-medium outline-none placeholder:text-ink/45"
         />
@@ -164,12 +170,26 @@ export function PlayerSearch({
             className={`flex min-h-14 cursor-pointer items-center gap-3 px-3 py-2 ${i === active ? 'bg-cover' : ''}`}
           >
             <Avatar name={p.name} photo={p.photo ?? null} />
-            <span className="flex min-w-0 flex-col">
+            <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-base leading-tight font-bold">{p.name}</span>
               {p.disambiguation && (
                 <span className="text-sm leading-tight text-ink/70">{p.disambiguation}</span>
               )}
             </span>
+            {/* See who it is before choosing; does not select the option. */}
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label={`Ficha de ${p.name}`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCardId(p.id);
+              }}
+              className="shrink-0 rounded-md border border-ink/25 px-2 py-1 text-xs font-bold uppercase hover:bg-ink/10"
+            >
+              Ficha
+            </button>
           </li>
         ))}
         {status === 'empty' && (
