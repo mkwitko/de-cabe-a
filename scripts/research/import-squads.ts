@@ -78,7 +78,7 @@ for (const [n, club] of clubs.entries()) {
       const out = await importWikidataPlayers(prisma, batch, cachedFetch);
       created += out.created.length;
     } catch (e) {
-      log(`  ${club.shortName} batch failed: ${(e as Error).message.slice(0, 100)}`);
+      log(`  ${club.shortName} batch failed: ${String((e as Error).message || e).slice(0, 300)}`);
     }
     for (const q of batch) known.add(q);
   }

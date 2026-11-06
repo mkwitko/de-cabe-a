@@ -1,7 +1,7 @@
 // One-off: players imported before the mapper kept other-language labels as aliases miss the
 // name fans use (Dida's pt label is "Nelson de Jesus Silva"). Adds the mul/en/es/it labels.
 // Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/backfill-label-aliases.ts
-import { normalizeName } from '@decabeca/engine';
+import { normalizeName } from '../../packages/engine/src/index';
 import { createPrisma } from '../../apps/api/src/db';
 import { fetchEntities } from '../../apps/api/src/modules/data-import/wikidata-client';
 
