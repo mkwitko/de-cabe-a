@@ -25,7 +25,7 @@ Mobile-first web (360 px base, up to 1280 px). Played one-handed on a phone. Sha
 ## Capabilities and Constraints
 
 - Two games only in the MVP; no multiplayer, payments, ads or live data. Ranking, stars and titles are in (ADR-007). Optional account by e-mail and password; no password recovery yet. Layout reserves space for future ads.
-- No club logos or player photos in the MVP (licensing). Clubs are shown with initials and colours; countries with flags.
+- No club logos (licensing): clubs are shown with initials and colours; countries with flags. Player photos only from Wikimedia Commons (free licences), always with author and licence next to them.
 - PT-BR only. Theme follows `prefers-color-scheme`; no settings screen.
 - Full spec in `docs/` (PRD, game design, UX spec).
 

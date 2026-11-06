@@ -1,3 +1,4 @@
+import { buildTimelineSnapshot, TimelineParams } from './timeline-snapshot';
 /**
  * Challenge lifecycle (API_SPEC.md admin, ADR-002, ADR-007): snapshot generation, eligibility,
  * validate -> publish (becomes the next level of its game's track) -> retire.
@@ -126,7 +127,7 @@ export function careerPathConfig(
 export interface CreateChallengeInput {
   mode: GameModeCode;
   difficultyTier?: 1 | 2 | 3 | undefined;
-  params: { playerId: string } | GridParams | ImpostorParams;
+  params: { playerId: string } | GridParams | ImpostorParams | TimelineParams;
   createdBy: string;
 }
 
@@ -137,6 +138,11 @@ function usages(
 ): { playerId: string; role: string }[] {
   if (mode === 'CAREER_PATH')
     return [{ playerId: String(snapshot.answerPlayerId), role: 'answer' }];
+  if (mode === 'TIMELINE')
+    return (snapshot.rounds as { playerId: string }[]).map((r) => ({
+      playerId: r.playerId,
+      role: 'timeline',
+    }));
   if (mode === 'IMPOSTOR')
     return (snapshot.rounds as { impostorId: string }[]).map((r) => ({
       playerId: r.impostorId,
@@ -159,6 +165,16 @@ async function buildSnapshot(prisma: PrismaClient, input: Omit<CreateChallengeIn
         reasons: report.reasons,
       });
     const config = careerPathConfig(report, input.difficultyTier);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'TIMELINE') {
+    const params = TimelineParams.parse(input.params);
+    const built = await buildTimelineSnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase da Linha do tempo não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.TIMELINE.validateConfig(built.config);
     return { config, difficultyTier: config.difficultyTier };
   }
   if (input.mode === 'IMPOSTOR') {

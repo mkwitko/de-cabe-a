@@ -4,7 +4,14 @@
  * Every rule runs in the engine; this layer loads, locks, persists and presents.
  */
 import { playerSlug } from '../seo/seo.routes';
-import type { ImpostorReveal, ImpostorView, AttemptResponse, PlayerRef } from '@decabeca/contracts';
+import type {
+  AttemptResponse,
+  ImpostorReveal,
+  ImpostorView,
+  PlayerRef,
+  TimelineReveal,
+  TimelineView,
+} from '@decabeca/contracts';
 import {
   starsFor,
   type CareerPathConfig,
@@ -18,7 +25,12 @@ import { engineFor, type GameModeCode } from '../challenges/engines';
 import { track } from '../analytics/analytics';
 import { meetsCell } from '../challenges/grid-snapshot';
 
-const NAMES = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid', IMPOSTOR: 'Impostor' } as const;
+const NAMES = {
+  CAREER_PATH: 'Career Path',
+  FOOTBALL_GRID: 'Grid',
+  IMPOSTOR: 'Impostor',
+  TIMELINE: 'Linha do tempo',
+} as const;
 export const SHARE_HOST = 'decabecafc.com.br';
 
 export interface Player {
@@ -58,7 +70,11 @@ export async function present(
   let view: AttemptResponse['view'];
   let reveal: AttemptResponse['reveal'] = null;
 
-  if (challenge.gameMode === 'IMPOSTOR') {
+  if (challenge.gameMode === 'TIMELINE') {
+    // Timeline views carry names, ids and years frozen in the snapshot: no lookups needed.
+    view = { ...(engine.toPublicView(state, config) as TimelineView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as TimelineReveal;
+  } else if (challenge.gameMode === 'IMPOSTOR') {
     // Impostor views carry only names and ids frozen in the snapshot: no lookups needed.
     view = { ...(engine.toPublicView(state, config) as ImpostorView), status: attempt.status };
     if (done) reveal = engine.toRevealView(state, config) as ImpostorReveal;
@@ -212,6 +228,7 @@ export const TIME_LIMIT_SEC: Record<GameModeCode, number> = {
   CAREER_PATH: 90,
   FOOTBALL_GRID: 180,
   IMPOSTOR: 60,
+  TIMELINE: 90,
 };
 /** Network slack before an action counts as late. */
 const GRACE_MS = 2000;
@@ -378,9 +395,13 @@ export async function submitAction(
         status,
         score,
         stars: done
-          ? starsFor(engine.id as 'career-path' | 'football-grid' | 'impostor', score, {
-              hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
-            })
+          ? starsFor(
+              engine.id as 'career-path' | 'football-grid' | 'impostor' | 'timeline',
+              score,
+              {
+                hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
+              },
+            )
           : 0,
         ...(done ? { completedAt: expired ? a.deadlineAt! : now } : {}),
       },
@@ -407,7 +428,9 @@ export async function submitAction(
         ? (out.state as { attemptsUsed: number }).attemptsUsed
         : a.challenge.gameMode === 'IMPOSTOR'
           ? (out.state as { picks: string[] }).picks.length
-          : seq;
+          : a.challenge.gameMode === 'TIMELINE'
+            ? (out.state as { answers: string[][] }).answers.length
+            : seq;
     if (input.kind === 'guess')
       pending.push([
         'answer_submitted',

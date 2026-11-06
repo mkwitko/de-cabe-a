@@ -1,12 +1,14 @@
 /**
  * Accessible player autocomplete (UX_SPEC.md §8): ARIA combobox + listbox, 150 ms debounce,
- * cancels the previous request, ↑ ↓ Enter Escape, disambiguation for homonyms.
+ * cancels the previous request, ↑ ↓ Enter Escape. Each option shows photo (or initials) and who
+ * the player is; the chosen one has a "Ficha" button with more about them.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import type { PlayerRef } from '@decabeca/contracts';
 import { searchPlayers } from '../lib/game';
 import { track } from '../lib/analytics';
 import { Icon } from './Icon';
+import { Avatar, PlayerCardDialog } from './PlayerCardDialog';
 
 interface Props {
   label: string;
@@ -37,6 +39,7 @@ export function PlayerSearch({
   const [active, setActive] = useState(-1);
   const [status, setStatus] = useState<'idle' | 'loading' | 'empty' | 'error'>('idle');
   const input = useRef<HTMLInputElement>(null);
+  const [cardId, setCardId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selected) setQ('');
@@ -124,6 +127,15 @@ export function PlayerSearch({
           onFocus={() => results.length && setOpen(true)}
           className="min-h-12 w-full bg-transparent text-base font-medium outline-none placeholder:text-ink/45"
         />
+        {selected && (
+          <button
+            type="button"
+            onClick={() => setCardId(selected.id)}
+            className="shrink-0 rounded-md border border-ink/25 px-2 py-1 text-xs font-bold uppercase hover:bg-ink/5"
+          >
+            Ficha
+          </button>
+        )}
         {status === 'loading' && (
           <span
             className="size-4 shrink-0 animate-spin rounded-full border-2 border-ink/20 border-t-ink motion-reduce:animate-none"
@@ -136,7 +148,7 @@ export function PlayerSearch({
         role="listbox"
         aria-label="Jogadores"
         hidden={!showList}
-        className={`absolute inset-x-0 z-30 max-h-72 ${dropUp ? 'bottom-full mb-1 lg:top-full lg:bottom-auto lg:mt-1 lg:mb-0' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
+        className={`absolute inset-x-0 z-30 max-h-[min(26rem,60dvh)] ${dropUp ? 'bottom-full mb-1 lg:top-full lg:bottom-auto lg:mt-1 lg:mb-0' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
       >
         {results.map((p, i) => (
           <li
@@ -149,10 +161,15 @@ export function PlayerSearch({
               choose(p);
             }}
             onMouseEnter={() => setActive(i)}
-            className={`flex cursor-pointer items-baseline justify-between gap-3 px-3 py-2.5 ${i === active ? 'bg-cover' : ''}`}
+            className={`flex min-h-14 cursor-pointer items-center gap-3 px-3 py-2 ${i === active ? 'bg-cover' : ''}`}
           >
-            <span className="font-semibold">{p.name}</span>
-            {p.disambiguation && <span className="text-sm text-ink/65">{p.disambiguation}</span>}
+            <Avatar name={p.name} photo={p.photo ?? null} />
+            <span className="flex min-w-0 flex-col">
+              <span className="text-base leading-tight font-bold">{p.name}</span>
+              {p.disambiguation && (
+                <span className="text-sm leading-tight text-ink/70">{p.disambiguation}</span>
+              )}
+            </span>
           </li>
         ))}
         {status === 'empty' && (
@@ -161,6 +178,7 @@ export function PlayerSearch({
           </li>
         )}
       </ul>
+      <PlayerCardDialog playerId={cardId} onClose={() => setCardId(null)} />
       {status === 'error' && (
         <p role="alert" className="mt-1 text-sm text-cover">
           Não deu para buscar agora. Confira a conexão.

@@ -383,6 +383,63 @@ describe('player search', () => {
     ]);
     await prisma.playerAlias.deleteMany({ where: { normalized: 'baixinho' } });
   });
+  it('Brazilian football first: a verified Brazilian beats famous imported foreigners', async () => {
+    const foreign = await prisma.player.create({
+      data: {
+        canonicalName: 'Arthurzão Estrangeiro',
+        nationalityCountryId: countries.AR!,
+        notabilityTier: 'T1',
+        aliases: {
+          create: [
+            {
+              alias: 'Arthurzão Estrangeiro',
+              normalized: 'arthurzao estrangeiro',
+              kind: 'canonical',
+              isPrimary: true,
+            },
+          ],
+        },
+      },
+    });
+    const br = await verifiedPlayer(prisma, {
+      name: 'Arthurzão Gremista',
+      clubIds: [clubs['Grêmio']!.id],
+      nationalityId: countries.BR!,
+      tier: 'T4',
+    });
+    const names = (await search('arthurzao')).json().players.map((p: { id: string }) => p.id);
+    expect(names).toEqual([br.id, foreign.id]);
+    await prisma.player.update({
+      where: { id: foreign.id },
+      data: { verificationStatus: 'rejected' },
+    });
+  });
+  it('player card: names, positions, formation club, most games club and photo credit', async () => {
+    await prisma.player.update({
+      where: { id: ids.ze! },
+      data: {
+        photoFile: 'Zé Roberto 2010.jpg',
+        photoAuthor: 'Fulano',
+        photoLicense: 'CC BY-SA 4.0',
+      },
+    });
+    const card = await guest().req('GET', `/players/${ids.ze}/card`);
+    expect(card.statusCode, card.body).toBe(200);
+    expect(card.json()).toMatchObject({
+      name: 'Zé Roberto',
+      birthYear: 1974,
+      nationalityCode: 'BR',
+      positions: ['MF'],
+      formationClub: 'Palmeiras',
+      photo: {
+        author: 'Fulano',
+        license: 'CC BY-SA 4.0',
+        url: expect.stringContaining('Special:FilePath'),
+      },
+    });
+    expect((await search('ze rob')).json().players[0].photo).toContain('width=96');
+    expect((await guest().req('GET', '/players/nope/card')).statusCode).toBe(404);
+  });
   it('validates q length and limit', async () => {
     expect((await search('r')).statusCode).toBe(400);
     expect((await guest().req('GET', '/players/search?q=ro&limit=1')).json().players).toHaveLength(
@@ -848,6 +905,52 @@ describe('search pages (SEO)', () => {
     expect((await app.inject({ method: 'GET', url: '/jogador/ninguem-q1' })).statusCode).toBe(404);
     expect((await app.inject({ method: 'GET', url: '/jogadores' })).body).toContain(path!);
     expect((await app.inject({ method: 'GET', url: '/llms.txt' })).body).toContain('# De Cabeça');
+  });
+});
+
+describe('Linha do tempo (ADR-011)', () => {
+  it('publishes 5 players with 4 clubs each, hides the order, plays it', async () => {
+    const names = ['Flamengo', 'Santos', 'Milan', 'Real Madrid', 'Barcelona', 'PSV'];
+    const ids: string[] = [];
+    for (const i of [0, 1, 2, 3, 4])
+      ids.push(
+        (
+          await verifiedPlayer(prisma, {
+            name: `Viajante ${i}`,
+            clubIds: names.slice(i % 2, (i % 2) + 4).map((n) => clubs[n]!.id),
+            nationalityId: countries.BR!,
+          })
+        ).id,
+      );
+    const level = await publish({
+      mode: 'TIMELINE',
+      params: { rounds: ids.map((playerId) => ({ playerId })) },
+    });
+    expect(level.publicNumber).toBe(1);
+    const g = guest();
+    const start = (await g.req('POST', '/attempts', { mode: 'TIMELINE', level: 1 })).json();
+    expect(start.view).toMatchObject({
+      round: 0,
+      totalRounds: 5,
+      current: { playerName: 'Viajante 0' },
+    });
+    expect(JSON.stringify(start.view)).not.toContain('"from"');
+    const snap = (
+      await prisma.challenge.findUniqueOrThrow({ where: { id: start.attempt.challengeId } })
+    ).snapshot as { rounds: { clubs: { id: string }[] }[] };
+    let res;
+    for (const [i, r] of snap.rounds.entries()) {
+      const order = r.clubs.map((c) => c.id);
+      res = (
+        await g.act(start.attempt.id, {
+          kind: 'order',
+          clubIds: i === 4 ? [order[1], order[0], order[2], order[3]] : order,
+        })
+      ).json();
+    }
+    expect(res.event).toMatchObject({ type: 'wrong', round: 4 });
+    expect(res.attempt).toMatchObject({ status: 'COMPLETED', score: 4, stars: 2 });
+    expect(res.share.text).toContain('Linha do tempo · Fase 1 · 4/5');
   });
 });
 

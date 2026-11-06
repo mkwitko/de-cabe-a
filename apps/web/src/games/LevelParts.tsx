@@ -169,6 +169,11 @@ const REASONS: Record<GameMode, [string, string][]> = {
     ['wrong_stats', 'Jogos, gols ou anos errados'],
     ['other', 'Outra coisa'],
   ],
+  TIMELINE: [
+    ['club_missing', 'Clube que ele não jogou, ou faltando'],
+    ['wrong_stats', 'Anos errados ou ordem errada'],
+    ['other', 'Outra coisa'],
+  ],
   IMPOSTOR: [
     ['club_missing', 'Um dos "jogou aqui" nunca jogou no clube'],
     ['answer_refused', 'O impostor jogou, sim, no clube'],

@@ -1,8 +1,10 @@
 /**
- * Player autocomplete (CAREER_PATH.md §6, DATA_QUALITY.md §3): normalized prefix match on
- * any token of any alias, verified and imported players (never rejected), ordered by notability
- * then primary alias. Grid answers may be any player in the base (FOOTBALL_GRID.md, revision 2026-11-05).
+ * Player autocomplete (CAREER_PATH.md §6, DATA_QUALITY.md §3): normalized prefix match on any
+ * token of any alias, verified and imported players (never rejected). Order: exact alias, then
+ * verified careers, then Brazilian football (Brazilians or who played in Brazil), then fame.
+ * Grid answers may be any player in the base (FOOTBALL_GRID.md, revision 2026-11-05).
  */
+import { photoThumb } from './player-card';
 import type { PlayerRef } from '@decabeca/contracts';
 import { normalizeName } from '@decabeca/engine';
 import type { PrismaClient } from '../../generated/prisma/client';
@@ -17,28 +19,40 @@ export async function searchPlayers(
 ): Promise<PlayerRef[]> {
   const term = normalizeName(q);
   if (term.length < 2) return [];
-  const aliases = await prisma.playerAlias.findMany({
-    where: {
-      player: { verificationStatus: { in: ['verified', 'imported'] } },
-      OR: [{ normalized: { startsWith: term } }, { normalized: { contains: ` ${term}` } }],
-    },
-    include: {
-      player: {
-        include: {
-          spells: {
-            where: {
-              verificationStatus: { not: 'rejected' },
-              spellType: { in: ['professional', 'loan'] },
+  // Two pools so a common name ("alex", 95k players in the base) never crowds the curated
+  // (verified) players out of the row cap.
+  const query = (status: 'verified' | 'imported', take: number) =>
+    prisma.playerAlias.findMany({
+      where: {
+        player: { verificationStatus: status },
+        OR: [{ normalized: { startsWith: term } }, { normalized: { contains: ` ${term}` } }],
+      },
+      include: {
+        player: {
+          include: {
+            spells: {
+              where: {
+                verificationStatus: { not: 'rejected' },
+                spellType: { in: ['professional', 'loan'] },
+              },
+              include: { club: true },
             },
-            include: { club: true },
           },
         },
       },
-    },
-    // ponytail: 200 rows cap; the most notable first so short terms still reach the stars.
-    orderBy: { player: { notabilityTier: 'asc' } },
-    take: 200,
-  });
+      // ponytail: row caps per pool, most notable first; enough for an autocomplete.
+      orderBy: { player: { notabilityTier: 'asc' } },
+      take,
+    });
+  const [verified, imported, br] = await Promise.all([
+    query('verified', 300),
+    query('imported', 150),
+    prisma.country.findUnique({ where: { isoCode: 'BR' }, select: { id: true } }),
+  ]);
+  const aliases = [...verified, ...imported];
+  // Brazilian football first (PRODUCT.md): Brazilians and anyone who played in Brazil.
+  const brazilian = (p: (typeof aliases)[number]['player']) =>
+    p.nationalityCountryId === br?.id || p.spells.some((s) => s.club.countryId === br?.id);
   const best = new Map<string, (typeof aliases)[number]>();
   for (const a of aliases) {
     const prev = best.get(a.playerId);
@@ -54,6 +68,9 @@ export async function searchPlayers(
     .sort(
       (a, b) =>
         Number(b.normalized === term) - Number(a.normalized === term) ||
+        Number(b.player.verificationStatus === 'verified') -
+          Number(a.player.verificationStatus === 'verified') ||
+        Number(brazilian(b.player)) - Number(brazilian(a.player)) ||
         TIER[a.player.notabilityTier] - TIER[b.player.notabilityTier] ||
         Number(b.isPrimary) - Number(a.isPrimary) ||
         a.player.canonicalName.localeCompare(b.player.canonicalName),
@@ -80,9 +97,15 @@ export async function searchPlayers(
     if (normalized === term && !isPrimary)
       return {
         id: player.id,
+        ...(player.photoFile ? { photo: photoThumb(player.photoFile) } : {}),
         name: alias,
         disambiguation: [player.canonicalName, who].filter(Boolean).join(' · '),
       };
-    return { id: player.id, name: player.canonicalName, disambiguation: who || null };
+    return {
+      id: player.id,
+      name: player.canonicalName,
+      disambiguation: who || null,
+      ...(player.photoFile ? { photo: photoThumb(player.photoFile) } : {}),
+    };
   });
 }

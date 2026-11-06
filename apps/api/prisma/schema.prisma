@@ -105,6 +105,10 @@ model Player {
   /// Other positions the player is known for (Kaká: MF, also FW); Grid accepts any of them.
   secondaryPositionGroups       PositionGroup[] @default([])
   positionDetail                String?
+  /// Wikimedia Commons file of the Wikidata image (P18), with its credit (CC licences need it).
+  photoFile                     String?
+  photoAuthor                   String?
+  photoLicense                  String?
   notabilityTier                NotabilityTier     @default(T3)
   wikidataId                    String?            @unique
   verificationStatus            VerificationStatus @default(imported)
@@ -191,6 +195,7 @@ enum GameModeCode {
   CAREER_PATH
   FOOTBALL_GRID
   IMPOSTOR
+  TIMELINE
 }
 
 enum ChallengeStatus {
