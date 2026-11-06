@@ -155,7 +155,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/attempts/:id',
     { schema: { params: z.object({ id: z.string() }), response: { 200: AttemptResponse } } },
-    (req) => getAttempt(prisma, req.params.id, req),
+    (req) => getAttempt(prisma, req.params.id, req, now()),
   );
 
   app.post(

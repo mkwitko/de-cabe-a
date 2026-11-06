@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { useTrack } from '../lib/game';
@@ -67,28 +67,37 @@ export function ModeGate({
   );
 }
 
-/** Countdown of a timed level; at zero it ends the level once (the server would anyway). */
+/**
+ * Countdown of a timed level. It counts down from the server's `secondsLeft` using the phone's
+ * monotonic timer (performance.now), never the phone's wall clock: a phone whose clock is wrong
+ * neither loses nor gains time. At zero it ends the level once (the server would anyway).
+ */
 export function Countdown({ data, onTimeUp }: { data: AttemptResponse; onTimeUp: () => void }) {
-  const deadline = data.attempt.deadlineAt ? Date.parse(data.attempt.deadlineAt) : null;
-  const [left, setLeft] = useState(() =>
-    deadline ? Math.ceil((deadline - Date.now()) / 1000) : 0,
+  const { secondsLeft, status } = data.attempt;
+  const running = secondsLeft != null && status === 'IN_PROGRESS';
+  // Re-anchored on every server response (each action returns a fresh secondsLeft).
+  const endAt = useMemo(
+    () => (secondsLeft == null ? null : performance.now() + secondsLeft * 1000),
+    [secondsLeft],
   );
+  const [left, setLeft] = useState(() => Math.ceil(secondsLeft ?? 0));
   const fired = useRef(false);
   const timeUp = useRef(onTimeUp);
   timeUp.current = onTimeUp;
-  const running = deadline !== null && data.attempt.status === 'IN_PROGRESS';
   useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => {
-      const s = Math.ceil((deadline - Date.now()) / 1000);
+    if (!running || endAt === null) return;
+    const tick = () => {
+      const s = Math.ceil((endAt - performance.now()) / 1000);
       setLeft(s);
       if (s <= 0 && !fired.current) {
         fired.current = true;
         timeUp.current();
       }
-    }, 250);
+    };
+    tick();
+    const t = setInterval(tick, 250);
     return () => clearInterval(t);
-  }, [running, deadline]);
+  }, [running, endAt]);
   if (!running) return null;
   const low = left <= 10;
   return (
@@ -97,7 +106,7 @@ export function Countdown({ data, onTimeUp }: { data: AttemptResponse; onTimeUp:
       aria-label={`Tempo restante: ${formatClock(left)}`}
       className={`font-condensed tabular rounded-full px-3 py-1 text-2xl leading-none font-black ${low ? 'bg-cover text-ink motion-safe:animate-pulse' : 'border-2 border-chalk-soft/60 text-chalk'}`}
     >
-      ⏱ {formatClock(left)}
+      ⏱ {formatClock(Math.max(0, left))}
     </p>
   );
 }
