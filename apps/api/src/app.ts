@@ -11,6 +11,7 @@ import { ZodError } from 'zod';
 import type { PrismaClient } from './generated/prisma/client';
 import { AppError } from './errors';
 import { track } from './modules/analytics/analytics';
+import { levelReportAdminRoutes } from './modules/reports/level-reports';
 import { adminAuth } from './modules/admin/auth';
 import { createAuth, type Auth, type AuthOptions } from './modules/account/auth';
 import { importRoutes } from './modules/data-import/import.routes';
@@ -114,6 +115,7 @@ export function buildApp(
       await admin.register(knowledgeRoutes);
       await admin.register(challengeRoutes);
       await admin.register(reportRoutes);
+      await admin.register(levelReportAdminRoutes);
     },
     { prefix: '/v1/admin' },
   );

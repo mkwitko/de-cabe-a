@@ -786,6 +786,58 @@ describe('editorial reports and analytics', () => {
   });
 });
 
+describe('level reports', () => {
+  it('a player who finished a level reports an error; the panel lists it with context and resolves it', async () => {
+    const g = guest();
+    // Reporting before finishing is refused: it would hint that something is off (no spoilers).
+    const early = await g.req('POST', '/levels/CAREER_PATH/1/report', { reason: 'position' });
+    expect(early.statusCode).toBe(403);
+    await playCareer(g, 1, null, 6); // lose level 1
+    const res = await g.req('POST', '/levels/CAREER_PATH/1/report', {
+      reason: 'position',
+      note: 'É meia, não atacante',
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    // One report per player per level: a second one replaces the first.
+    await g.req('POST', '/levels/CAREER_PATH/1/report', { reason: 'other', note: 'corrigindo' });
+    expect(await prisma.levelReport.count({ where: { status: 'open', note: 'corrigindo' } })).toBe(
+      1,
+    );
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/v1/admin/level-reports',
+      headers: admin,
+    });
+    expect(list.statusCode).toBe(200);
+    const level = list
+      .json()
+      .levels.find(
+        (l: { level: number; mode: string }) => l.level === 1 && l.mode === 'CAREER_PATH',
+      );
+    expect(level).toMatchObject({
+      reports: expect.arrayContaining([
+        expect.objectContaining({ reason: 'other', note: 'corrigindo' }),
+      ]),
+      answer: { name: 'Ronaldo' },
+    });
+    expect(level.answer.spells.length).toBeGreaterThan(0);
+
+    const id = level.reports[0].id;
+    const done = await app.inject({
+      method: 'PATCH',
+      url: `/v1/admin/level-reports/${id}`,
+      headers: admin,
+      payload: { status: 'fixed', resolution: 'Posição corrigida para meia' },
+    });
+    expect(done.statusCode, done.body).toBe(200);
+    expect(await prisma.levelReport.findUniqueOrThrow({ where: { id } })).toMatchObject({
+      status: 'fixed',
+      resolvedBy: 'tester',
+    });
+  });
+});
+
 describe('timed mode (ADR-009)', () => {
   it('a timed level gets a deadline; an action after it ends the level; the time is shown', async () => {
     const start = clock;

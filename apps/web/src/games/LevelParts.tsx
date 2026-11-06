@@ -1,14 +1,15 @@
 /** Pieces shared by both games' level screens (ADR-007): end-of-level panel and level errors. */
 import { formatClock } from './Clock';
-import type { ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { track } from '../lib/analytics';
-import type { ApiError } from '../lib/api';
+import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useLevelRanking, useMe, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { Stars } from '../components/Stars';
-import { btnPrimary, Notice } from '../components/ui';
+import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 
 export function LevelError({
   error,
@@ -154,6 +155,115 @@ export function LevelEnd({
           </p>
         )}
       </div>
+      <ReportError mode={mode} level={level} />
     </section>
+  );
+}
+
+const REASONS: Record<GameMode, [string, string][]> = {
+  CAREER_PATH: [
+    ['position', 'Posição errada'],
+    ['club_missing', 'Clube faltando, sobrando ou fora de ordem'],
+    ['wrong_stats', 'Jogos, gols ou anos errados'],
+    ['other', 'Outra coisa'],
+  ],
+  FOOTBALL_GRID: [
+    ['answer_refused', 'Uma resposta certa foi recusada'],
+    ['position', 'Posição errada de algum jogador'],
+    ['club_missing', 'Clube ou país errado de algum jogador'],
+    ['other', 'Outra coisa'],
+  ],
+};
+
+/** "Essa fase tem um erro?": goes to the editorial panel (and the AI curator), after the level. */
+function ReportError({ mode, level }: { mode: GameMode; level: number }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [reason, setReason] = useState(REASONS[mode][0]![0]);
+  const [note, setNote] = useState('');
+  const send = useMutation({
+    mutationFn: () =>
+      api(`/v1/levels/${mode}/${level}/report`, {
+        method: 'POST',
+        json: { reason, ...(note.trim() ? { note: note.trim() } : {}) },
+      }),
+  });
+  return (
+    <div className="flex flex-col items-center gap-2 border-t border-chalk/10 pt-4 text-center">
+      {send.isSuccess ? (
+        <p role="status" className="text-chalk-soft">
+          Valeu! A gente vai conferir essa fase.
+        </p>
+      ) : (
+        <button
+          type="button"
+          className="text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
+          onClick={() => dialog.current?.showModal()}
+        >
+          Essa fase tem um erro?
+        </button>
+      )}
+      <dialog
+        ref={dialog}
+        aria-labelledby="report-title"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-paper p-5 text-left text-ink backdrop:bg-black/55"
+      >
+        <form
+          method="dialog"
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send.mutate(undefined, { onSuccess: () => dialog.current?.close() });
+          }}
+        >
+          <h2 id="report-title" className="font-condensed text-2xl font-black uppercase">
+            O que está errado?
+          </h2>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="sr-only">Motivo</legend>
+            {REASONS[mode].map(([value, label]) => (
+              <label key={value} className="flex min-h-11 items-center gap-3 font-semibold">
+                <input
+                  type="radio"
+                  name="reason"
+                  value={value}
+                  checked={reason === value}
+                  onChange={() => setReason(value)}
+                  className="size-5 accent-ink"
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          <label className="flex flex-col gap-1 font-semibold">
+            Detalhe (opcional)
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="Ex.: o Kaká era meia, não atacante"
+              className="rounded-lg border-2 border-ink/15 bg-white px-3 py-2 text-base"
+            />
+          </label>
+          {send.error && (
+            <p role="alert" className="rounded-lg bg-cover px-3 py-2 font-semibold">
+              {(send.error as ApiError).message}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <button className={btnPrimary} disabled={send.isPending}>
+              Enviar
+            </button>
+            <button
+              type="button"
+              className={`${btnSecondary} border-ink/30 text-ink hover:border-ink hover:bg-ink/5`}
+              onClick={() => dialog.current?.close()}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </div>
   );
 }

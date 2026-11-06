@@ -223,6 +223,7 @@ model Challenge {
   /// A replacement takes the retired level's number (replace in place), so only published levels are unique.
   @@unique([gameMode, publicNumber], where: raw("status = 'published'"))
   @@index([gameMode, status])
+  reports        LevelReport[]
 }
 
 /// Divergence between a re-import and an existing record (DATA_QUALITY.md §1)
@@ -239,6 +240,27 @@ model ImportDiff {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@index([status])
+}
+
+/// A player's report of an error in a finished level (position, missing club, stats, valid
+/// answer refused). Reviewed in /admin and by the AI curator (scripts/research/reports.ts).
+model LevelReport {
+  id          String    @id @default(uuid(7))
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  sessionId   String
+  reason      String /// position | club_missing | wrong_stats | answer_refused | other
+  note        String?
+  cellIndex   Int? /// Grid: the cell the report is about
+  status      String    @default("open") /// open | fixed | dismissed
+  resolution  String?
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([challengeId, sessionId])
   @@index([status])
 }
 
