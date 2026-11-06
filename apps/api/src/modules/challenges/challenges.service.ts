@@ -2,6 +2,7 @@
  * Challenge lifecycle (API_SPEC.md admin, ADR-002, ADR-007): snapshot generation, eligibility,
  * validate -> publish (becomes the next level of its game's track) -> retire.
  */
+import { buildImpostorSnapshot, ImpostorParams } from './impostor-snapshot';
 import {
   buildTrajectory,
   careerPath,
@@ -125,7 +126,7 @@ export function careerPathConfig(
 export interface CreateChallengeInput {
   mode: GameModeCode;
   difficultyTier?: 1 | 2 | 3 | undefined;
-  params: { playerId: string } | GridParams;
+  params: { playerId: string } | GridParams | ImpostorParams;
   createdBy: string;
 }
 
@@ -136,6 +137,11 @@ function usages(
 ): { playerId: string; role: string }[] {
   if (mode === 'CAREER_PATH')
     return [{ playerId: String(snapshot.answerPlayerId), role: 'answer' }];
+  if (mode === 'IMPOSTOR')
+    return (snapshot.rounds as { impostorId: string }[]).map((r) => ({
+      playerId: r.impostorId,
+      role: 'impostor',
+    }));
   const cells = snapshot.cells as { exampleAnswerPlayerId: string }[];
   return [...new Set(cells.map((c) => c.exampleAnswerPlayerId))].map((playerId) => ({
     playerId,
@@ -153,6 +159,16 @@ async function buildSnapshot(prisma: PrismaClient, input: Omit<CreateChallengeIn
         reasons: report.reasons,
       });
     const config = careerPathConfig(report, input.difficultyTier);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'IMPOSTOR') {
+    const params = ImpostorParams.parse(input.params);
+    const built = await buildImpostorSnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase do Impostor não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.IMPOSTOR.validateConfig(built.config);
     return { config, difficultyTier: config.difficultyTier };
   }
   if (!('rows' in input.params))
@@ -216,6 +232,28 @@ export async function validateChallenge(prisma: PrismaClient, id: string) {
       throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Jogador deixou de ser elegível.', {
         reasons: report.reasons,
       });
+  }
+  if (c.gameMode === 'IMPOSTOR') {
+    // Data may have changed since the draft: a member's spell rejected, the impostor's added.
+    const snap = c.snapshot as {
+      rounds: { clubId: string; players: { id: string }[]; impostorId: string }[];
+    };
+    const built = await buildImpostorSnapshot(prisma, {
+      rounds: snap.rounds.map((r) => ({
+        clubId: r.clubId,
+        memberIds: r.players.map((p) => p.id).filter((id) => id !== r.impostorId),
+        impostorId: r.impostorId,
+      })),
+    });
+    if (!built.eligible)
+      throw new AppError(
+        422,
+        'CHALLENGE_NOT_ELIGIBLE',
+        'Fase do Impostor deixou de ser elegível.',
+        {
+          reasons: built.reasons,
+        },
+      );
   }
   return prisma.challenge.update({ where: { id }, data: { status: 'validated' } });
 }

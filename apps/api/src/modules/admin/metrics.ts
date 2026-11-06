@@ -63,7 +63,7 @@ export async function pilotMetrics(prisma: PrismaClient, days: number, now: Date
   >`
     SELECT c."gameMode" AS mode, c."publicNumber" AS level,
            COUNT(a.id) AS started, COUNT(a."completedAt") AS completed,
-           COUNT(*) FILTER (WHERE a.status = 'WON' OR (c."gameMode" = 'FOOTBALL_GRID' AND a.stars >= 2)) AS won,
+           COUNT(*) FILTER (WHERE a.status = 'WON' OR (c."gameMode" <> 'CAREER_PATH' AND a.stars >= 2)) AS won,
            AVG(a.stars) FILTER (WHERE a."completedAt" IS NOT NULL)::float AS "avgStars",
            AVG(EXTRACT(EPOCH FROM a."completedAt" - a."startedAt"))::float AS "avgSec",
            (SELECT COUNT(*) FROM "LevelReport" r WHERE r."challengeId" = c.id AND r.status = 'open') AS reports

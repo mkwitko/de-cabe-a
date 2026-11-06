@@ -13,8 +13,16 @@ import type {
 } from '@decabeca/contracts';
 import { api } from './api';
 
-export const GAME_PATH = { CAREER_PATH: '/career-path', FOOTBALL_GRID: '/grid' } as const;
-export const GAME_NAME = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Football Grid' } as const;
+export const GAME_PATH = {
+  CAREER_PATH: '/career-path',
+  FOOTBALL_GRID: '/grid',
+  IMPOSTOR: '/impostor',
+} as const;
+export const GAME_NAME = {
+  CAREER_PATH: 'Career Path',
+  FOOTBALL_GRID: 'Football Grid',
+  IMPOSTOR: 'Impostor',
+} as const;
 
 export const useGames = () =>
   useQuery({ queryKey: ['games'], queryFn: () => api<GamesResponse>('/v1/games') });

@@ -24,6 +24,7 @@ export const ErrorCode = z.enum([
   'EMAIL_TAKEN',
   'INVALID_CREDENTIALS',
   'LEVEL_NOT_FINISHED',
+  'PLAYER_NOT_IN_ROUND',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

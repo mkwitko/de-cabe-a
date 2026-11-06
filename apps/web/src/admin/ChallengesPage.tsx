@@ -8,7 +8,7 @@ import { adminApi, ErrorNote } from './AdminApp';
 
 interface Row {
   id: string;
-  gameMode: 'CAREER_PATH' | 'FOOTBALL_GRID';
+  gameMode: 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR';
   status: string;
   level: number | null;
   difficultyTier: number;
@@ -68,6 +68,7 @@ export function ChallengesPage() {
           >
             <option value="CAREER_PATH">Career Path</option>
             <option value="FOOTBALL_GRID">Grid</option>
+            <option value="IMPOSTOR">Impostor</option>
           </select>
           <span className="text-sm">{published} fases publicadas</span>
         </div>
@@ -168,7 +169,10 @@ function CreateForm({ mode, onCreated }: { mode: Row['gameMode']; onCreated: () 
     mutationFn: () =>
       mode === 'CAREER_PATH'
         ? adminApi('/eligibility/career-path', { method: 'POST', json: { playerId } })
-        : adminApi('/eligibility/grid', { method: 'POST', json: params() }),
+        : mode === 'IMPOSTOR'
+          ? // Impostor is checked when the draft is created (422 with the reasons).
+            Promise.resolve({ note: 'Crie a fase: a validação lista os motivos se algo falhar.' })
+          : adminApi('/eligibility/grid', { method: 'POST', json: params() }),
     onSuccess: setReport,
   });
   const create = useMutation({
@@ -181,7 +185,8 @@ function CreateForm({ mode, onCreated }: { mode: Row['gameMode']; onCreated: () 
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-condensed text-xl font-extrabold uppercase">
-        Nova fase ({mode === 'CAREER_PATH' ? 'Career Path' : 'Grid'})
+        Nova fase (
+        {{ CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid', IMPOSTOR: 'Impostor' }[mode]})
       </h2>
       {mode === 'CAREER_PATH' ? (
         <div className="flex flex-wrap items-center gap-2 text-sm">

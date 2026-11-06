@@ -190,6 +190,7 @@ model Source {
 enum GameModeCode {
   CAREER_PATH
   FOOTBALL_GRID
+  IMPOSTOR
 }
 
 enum ChallengeStatus {

@@ -167,6 +167,11 @@ const REASONS: Record<GameMode, [string, string][]> = {
     ['wrong_stats', 'Jogos, gols ou anos errados'],
     ['other', 'Outra coisa'],
   ],
+  IMPOSTOR: [
+    ['club_missing', 'Um dos "jogou aqui" nunca jogou no clube'],
+    ['answer_refused', 'O impostor jogou, sim, no clube'],
+    ['other', 'Outra coisa'],
+  ],
   FOOTBALL_GRID: [
     ['answer_refused', 'Uma resposta certa foi recusada'],
     ['position', 'Posição errada de algum jogador'],

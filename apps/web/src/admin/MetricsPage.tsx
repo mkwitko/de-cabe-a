@@ -151,7 +151,17 @@ export function MetricsPage() {
               <tbody>
                 {levels.map((l) => (
                   <tr key={`${l.mode}-${l.level}`}>
-                    <td className={td}>{l.mode === 'CAREER_PATH' ? 'Career Path' : 'Grid'}</td>
+                    <td className={td}>
+                      {
+                        (
+                          {
+                            CAREER_PATH: 'Career Path',
+                            FOOTBALL_GRID: 'Grid',
+                            IMPOSTOR: 'Impostor',
+                          } as Record<string, string>
+                        )[l.mode]
+                      }
+                    </td>
                     <td className={td}>{l.level}</td>
                     <td className={td}>{l.started}</td>
                     <td className={td}>{p(l.abandonRate)}</td>

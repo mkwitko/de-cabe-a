@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const GameMode = z.enum(['CAREER_PATH', 'FOOTBALL_GRID']);
+export const GameMode = z.enum(['CAREER_PATH', 'FOOTBALL_GRID', 'IMPOSTOR']);
 export type GameMode = z.infer<typeof GameMode>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
 export type AttemptStatus = z.infer<typeof AttemptStatus>;
@@ -99,6 +99,42 @@ export const FootballGridReveal = z.strictObject({
   ),
 });
 
+/** Impostor (ADR-011): a club and 4 players per round; past rounds show the impostor. */
+const ImpostorPlayer = z.strictObject({ id: z.string(), name: z.string() });
+export const ImpostorView = z.strictObject({
+  status: z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']),
+  round: z.number(),
+  totalRounds: z.number(),
+  rounds: z.array(
+    z.strictObject({
+      clubName: z.string(),
+      clubCountryCode: z.string(),
+      players: z.array(ImpostorPlayer),
+      picked: z.string(),
+      impostorId: z.string(),
+      correct: z.boolean(),
+    }),
+  ),
+  current: z
+    .strictObject({
+      clubName: z.string(),
+      clubCountryCode: z.string(),
+      players: z.array(ImpostorPlayer),
+    })
+    .nullable(),
+});
+export type ImpostorView = z.infer<typeof ImpostorView>;
+export const ImpostorReveal = z.strictObject({
+  rounds: z.array(
+    z.strictObject({
+      clubName: z.string(),
+      players: z.array(ImpostorPlayer),
+      impostorId: z.string(),
+    }),
+  ),
+});
+export type ImpostorReveal = z.infer<typeof ImpostorReveal>;
+
 export const AttemptSummary = z.strictObject({
   id: z.string(),
   challengeId: z.string(),
@@ -128,14 +164,21 @@ const GameEvent = z.union([
   z.strictObject({ type: z.literal('lost') }),
   z.strictObject({ type: z.literal('hint'), cellIndex: z.number() }),
   z.strictObject({ type: z.literal('completed') }),
+  // Impostor: the round's impostor is shown once the round is played.
+  z.strictObject({
+    type: z.enum(['correct', 'wrong']),
+    round: z.number(),
+    impostorId: z.string(),
+  }),
+  z.strictObject({ type: z.literal('ended') }),
 ]);
 
 /** POST /v1/attempts, GET /v1/attempts/:id, POST /v1/attempts/:id/actions */
 export const AttemptResponse = z.strictObject({
   attempt: AttemptSummary,
   event: GameEvent.optional(),
-  view: z.union([CareerPathView, FootballGridView]),
-  reveal: z.union([CareerPathReveal, FootballGridReveal]).nullable(),
+  view: z.union([CareerPathView, FootballGridView, ImpostorView]),
+  reveal: z.union([CareerPathReveal, FootballGridReveal, ImpostorReveal]).nullable(),
   share: z.strictObject({ text: z.string() }).nullable(),
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
@@ -157,6 +200,7 @@ export const SubmitActionRequest = z.object({
     z.object({ kind: z.literal('skip') }),
     z.object({ kind: z.literal('finish') }),
     z.object({ kind: z.literal('give_up') }),
+    z.object({ kind: z.literal('pick'), playerId: z.string().min(1) }),
     z.object({ kind: z.literal('hint'), cellIndex: z.number().int() }),
   ]),
 });
@@ -236,6 +280,12 @@ export const StatsResponse = z.strictObject({
     stars: z.number(),
     threeStars: z.number(),
     avgScore: z.number(),
+    perfect: z.number(),
+  }),
+  IMPOSTOR: z.strictObject({
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
     perfect: z.number(),
   }),
 });

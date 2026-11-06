@@ -1,3 +1,4 @@
+import { ImpostorParams } from './impostor-snapshot';
 import { GameMode } from '@decabeca/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -13,7 +14,7 @@ import { buildGridSnapshot, GridParams } from './grid-snapshot';
 
 const Id = z.object({ id: z.string() });
 const Tier = z.union([z.literal(1), z.literal(2), z.literal(3)]);
-const Params = z.union([z.object({ playerId: z.string() }), GridParams]);
+const Params = z.union([z.object({ playerId: z.string() }), GridParams, ImpostorParams]);
 
 export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now } = app.deps;

@@ -806,6 +806,76 @@ describe('editorial reports and analytics', () => {
   });
 });
 
+describe('Impostor (ADR-011)', () => {
+  it('publishes a 5-round level, refuses an impostor who played there, plays it', async () => {
+    const clubNames = ['Flamengo', 'Santos', 'Milan', 'Real Madrid', 'Barcelona'];
+    const other = clubs['PSV']!.id;
+    const rounds: { clubId: string; memberIds: string[]; impostorId: string }[] = [];
+    for (const [i, name] of clubNames.entries()) {
+      const memberIds = [];
+      for (const k of [1, 2, 3])
+        memberIds.push(
+          (
+            await verifiedPlayer(prisma, {
+              name: `Membro ${i}${k}`,
+              clubIds: [clubs[name]!.id],
+              nationalityId: countries.BR!,
+            })
+          ).id,
+        );
+      const imp = await verifiedPlayer(prisma, {
+        name: `Impostor ${i}`,
+        clubIds: [other],
+        nationalityId: countries.BR!,
+      });
+      rounds.push({ clubId: clubs[name]!.id, memberIds, impostorId: imp.id });
+    }
+    // An "impostor" who did play for the club is refused.
+    const r0 = rounds[0]!;
+    const bad = await adminPost('/challenges', {
+      mode: 'IMPOSTOR',
+      params: {
+        rounds: [
+          {
+            clubId: r0.clubId,
+            memberIds: [r0.memberIds[1], r0.memberIds[2], rounds[1]!.memberIds[1]],
+            impostorId: r0.memberIds[0],
+          },
+          ...rounds.slice(1),
+        ],
+      },
+    });
+    expect(bad.statusCode).toBe(422);
+    expect(bad.json().error.details.reasons).toContain('ROUND_0_IMPOSTOR_PLAYED');
+
+    const level = await publish({ mode: 'IMPOSTOR', params: { rounds } });
+    expect(level.publicNumber).toBe(1);
+    const g = guest();
+    const start = (await g.req('POST', '/attempts', { mode: 'IMPOSTOR', level: 1 })).json();
+    expect(start.view).toMatchObject({
+      round: 0,
+      totalRounds: 5,
+      current: { clubName: 'Flamengo' },
+    });
+    expect(JSON.stringify(start.view)).not.toContain('impostorId');
+    let res;
+    for (const [i, r] of rounds.entries())
+      res = (
+        await g.act(start.attempt.id, {
+          kind: 'pick',
+          playerId: i === 4 ? r.memberIds[0] : r.impostorId,
+        })
+      ).json();
+    expect(res.event).toMatchObject({ type: 'wrong', round: 4, impostorId: rounds[4]!.impostorId });
+    expect(res.attempt).toMatchObject({ status: 'COMPLETED', score: 4, stars: 2 });
+    expect(res.reveal.rounds).toHaveLength(5);
+    expect(res.share.text).toContain('Impostor · Fase 1 · 4/5');
+    expect(
+      (await g.req('GET', '/games')).json().games.map((x: { mode: string }) => x.mode),
+    ).toContain('IMPOSTOR');
+  });
+});
+
 describe('level reports', () => {
   it('a player who finished a level reports an error; the panel lists it with context and resolves it', async () => {
     const g = guest();

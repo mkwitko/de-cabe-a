@@ -5,7 +5,11 @@ import { useTrack } from '../lib/game';
 import { GameHeader, Skeleton } from '../components/ui';
 
 /** Time limits (ADR-009); the server holds the real deadline. */
-export const TIME_LIMIT_SEC: Record<GameMode, number> = { CAREER_PATH: 90, FOOTBALL_GRID: 180 };
+export const TIME_LIMIT_SEC: Record<GameMode, number> = {
+  CAREER_PATH: 90,
+  FOOTBALL_GRID: 180,
+  IMPOSTOR: 60,
+};
 export const formatClock = (sec: number) =>
   `${Math.floor(sec / 60)}:${String(Math.max(0, sec) % 60).padStart(2, '0')}`;
 

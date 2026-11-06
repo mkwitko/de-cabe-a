@@ -23,6 +23,7 @@ import { getAttempt, startAttempt, submitAction } from './attempts.service';
 const GAMES = [
   { mode: 'CAREER_PATH', name: 'Career Path' },
   { mode: 'FOOTBALL_GRID', name: 'Grid' },
+  { mode: 'IMPOSTOR', name: 'Impostor' },
 ] as const;
 
 /** Public game routes; every request runs with a guest session (created on first visit). */
