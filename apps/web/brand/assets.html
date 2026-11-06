@@ -1,0 +1,133 @@
+<!doctype html>
+<!--
+  Source of the share image and app icons (album world, DESIGN.md). Regenerate with the Vite dev
+  server running: open /brand/assets.html?v=og|icon|maskable and screenshot the #art element
+  (scripts in the PR that added it). Not shipped: lives outside public/.
+-->
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face {
+        font-family: 'Archivo';
+        src: url('/node_modules/@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2')
+          format('woff2-variations');
+        font-weight: 100 900;
+        font-stretch: 62% 125%;
+      }
+      :root {
+        --pitch: oklch(0.46 0.12 152);
+        --pitch-deep: oklch(0.38 0.1 152);
+        --paper: oklch(0.985 0.006 100);
+        --cover: oklch(0.88 0.165 95);
+        --ink: oklch(0.27 0.07 152);
+        --chalk: oklch(0.98 0.012 150);
+      }
+      body {
+        margin: 0;
+        font-family: 'Archivo', sans-serif;
+      }
+      #art {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        background: var(--pitch) radial-gradient(var(--pitch-deep) 1.2px, transparent 1.3px) 0 0 /
+          9px 9px;
+      }
+      .sticker {
+        background: var(--paper);
+        border-radius: 18px;
+        padding: 16px;
+        transform: rotate(-3deg);
+        box-shadow:
+          0 30px 60px -18px rgb(0 0 0 / 0.5),
+          0 3px 6px rgb(0 0 0 / 0.25);
+      }
+      .field {
+        background: var(--cover);
+        color: var(--ink);
+        border-radius: 9px;
+        padding: 22px 34px 30px;
+      }
+      .no {
+        display: block;
+        text-align: right;
+        font-weight: 800;
+        font-size: 22px;
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        margin: 4px 0 0;
+        font-weight: 900;
+        font-stretch: 68%;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.85;
+        white-space: nowrap;
+      }
+      .tag {
+        margin: 18px 0 0;
+        font-weight: 700;
+      }
+      .line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 46px;
+        text-align: center;
+        color: var(--chalk);
+        font-weight: 800;
+        font-stretch: 80%;
+        font-size: 34px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+      /* Icons: the sticker alone, big type */
+      .icon .sticker {
+        padding: 10%;
+        border-radius: 12%;
+        transform: rotate(-6deg);
+        width: 70%;
+        height: 70%;
+        box-sizing: border-box;
+        display: grid;
+      }
+      .icon .field {
+        display: grid;
+        place-items: center;
+        border-radius: 9%;
+        padding: 0;
+      }
+      .icon h1 {
+        font-size: 150px;
+        margin: 0;
+        line-height: 0.8;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="art"></div>
+    <script>
+      const v = new URLSearchParams(location.search).get('v') ?? 'og';
+      const art = document.getElementById('art');
+      if (v === 'og') {
+        Object.assign(art.style, { width: '1200px', height: '630px' });
+        art.innerHTML = `
+          <div class="sticker" style="margin-top:-60px"><div class="field">
+            <span class="no">Nº 00</span>
+            <h1 style="font-size:150px">De Cabeça</h1>
+            <p class="tag" style="font-size:30px">Minijogos de futebol</p>
+          </div></div>
+          <p class="line">Fase por fase, estrela por estrela, até virar lenda</p>`;
+      } else {
+        // maskable: content inside the 80% safe zone; plain icon: a bit bigger.
+        const size = 512;
+        Object.assign(art.style, { width: size + 'px', height: size + 'px' });
+        art.classList.add('icon');
+        art.innerHTML = `<div class="sticker" style="${v === 'maskable' ? 'width:62%;height:62%' : ''}"><div class="field"><h1 style="${v === 'maskable' ? 'font-size:128px' : ''}">DC</h1></div></div>`;
+      }
+    </script>
+  </body>
+</html>
