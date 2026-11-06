@@ -1,3 +1,4 @@
+import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import {
   lazy,
   Suspense,
@@ -17,6 +18,7 @@ import { TrackPage } from './pages/TrackPage';
 import { RankingPage } from './pages/RankingPage';
 import { ImpostorPage } from './games/impostor/ImpostorPage';
 import { ModeGate } from './games/Clock';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { NewPasswordPage } from './pages/NewPasswordPage';
 import { AccountPage } from './pages/AccountPage';
 import { StatsPage } from './pages/StatsPage';
@@ -231,6 +233,14 @@ function HomeRoute() {
     <>
       <Home games={data} />
       <PlayerStrip />
+      <div className="mt-10">
+        <AdSlot slot={AD_SLOTS.home} />
+      </div>
+      <p className="mt-10 text-center text-sm text-chalk-soft">
+        <Link to="/privacidade" className="underline underline-offset-4 hover:text-chalk">
+          Privacidade
+        </Link>
+      </p>
     </>
   );
 }
@@ -317,6 +327,7 @@ function PublicRoutes() {
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/conta" element={<AccountPage />} />
         <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
+        <Route path="/privacidade" element={<PrivacyPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
