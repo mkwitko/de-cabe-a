@@ -42,6 +42,9 @@ const AccountPage = lazy(() =>
 const HowToPlayPage = lazy(() =>
   import('./pages/HowToPlayPage').then((m) => ({ default: m.HowToPlayPage })),
 );
+const TimelinePage = lazy(() =>
+  import('./games/timeline/TimelinePage').then((m) => ({ default: m.TimelinePage })),
+);
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 const GAMES = [
@@ -79,6 +82,18 @@ const GAMES = [
       'Cada fase tem 5 rodadas, cada uma com um clube e 4 jogadores.',
       'Três jogaram no clube; toque no que nunca jogou.',
       'Uma escolha por rodada. Acerte as 5 para 3 estrelas.',
+    ],
+  },
+  {
+    slot: '04',
+    mode: 'TIMELINE',
+    name: 'Linha do tempo',
+    path: '/linha-do-tempo',
+    rule: 'Quatro clubes de um jogador, embaralhados. Ponha na ordem da carreira.',
+    howTo: [
+      'Cada fase tem 5 jogadores, com 4 clubes de cada um.',
+      'Toque nos clubes do primeiro ao último; toque de novo para desfazer.',
+      'Uma resposta por jogador. Acerte as 5 ordens para 3 estrelas.',
     ],
   },
 ] as const;
@@ -349,6 +364,8 @@ function PublicRoutes() {
           <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
           <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
           <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
+          <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
+          <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
@@ -376,6 +393,8 @@ function LevelRoute({ mode }: { mode: GameMode }) {
           <CareerPathPage level={level} timed={timed} />
         ) : mode === 'IMPOSTOR' ? (
           <ImpostorPage level={level} timed={timed} />
+        ) : mode === 'TIMELINE' ? (
+          <TimelinePage level={level} timed={timed} />
         ) : (
           <GridPage level={level} timed={timed} />
         )

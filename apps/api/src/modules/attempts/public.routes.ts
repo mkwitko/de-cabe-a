@@ -3,6 +3,7 @@ import {
   AttemptResponse,
   GameMode,
   GamesResponse,
+  PlayerCard,
   PlayerSearchQuery,
   PlayerSearchResponse,
   StartAttemptRequest,
@@ -13,6 +14,8 @@ import { normalizeName } from '@decabeca/engine';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { searchPlayers } from '../knowledge/search';
+import { playerCard } from '../knowledge/player-card';
+import { AppError } from '../../errors';
 import { guestSession, playerAttempts } from '../session/session';
 import { progressionRoutes } from '../progression/progression.routes';
 import { analyticsRoutes } from '../analytics/analytics';
@@ -24,6 +27,7 @@ const GAMES = [
   { mode: 'CAREER_PATH', name: 'Career Path' },
   { mode: 'FOOTBALL_GRID', name: 'Grid' },
   { mode: 'IMPOSTOR', name: 'Impostor' },
+  { mode: 'TIMELINE', name: 'Linha do tempo' },
 ] as const;
 
 /** Public game routes; every request runs with a guest session (created on first visit). */
@@ -109,6 +113,19 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
       mode: req.params.mode,
       levels: await track(req, req.params.mode),
     }),
+  );
+
+  app.get(
+    '/players/:id/card',
+    {
+      config: { rateLimit: { max: limits.search, timeWindow: '1 minute' } },
+      schema: { params: z.object({ id: z.string() }), response: { 200: PlayerCard } },
+    },
+    async (req) => {
+      const card = await playerCard(prisma, req.params.id);
+      if (!card) throw new AppError(404, 'NOT_FOUND', 'Jogador não encontrado.');
+      return card;
+    },
   );
 
   app.get(

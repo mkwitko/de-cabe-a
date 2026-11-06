@@ -6,7 +6,12 @@ import { fetchHistory } from '../lib/game';
 import { btnPrimary, btnSecondary, Notice, Skeleton } from '../components/ui';
 import { Stars } from '../components/Stars';
 
-const NAME = { CAREER_PATH: 'Career Path', FOOTBALL_GRID: 'Grid', IMPOSTOR: 'Impostor' } as const;
+const NAME = {
+  CAREER_PATH: 'Career Path',
+  FOOTBALL_GRID: 'Grid',
+  IMPOSTOR: 'Impostor',
+  TIMELINE: 'Linha do tempo',
+} as const;
 const date = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
   month: '2-digit',
@@ -15,7 +20,7 @@ const date = new Intl.DateTimeFormat('pt-BR', {
 
 function result(mode: GameMode, status: string, score: number) {
   if (mode === 'FOOTBALL_GRID') return `${score}/9`;
-  if (mode === 'IMPOSTOR') return `${score}/5`;
+  if (mode === 'IMPOSTOR' || mode === 'TIMELINE') return `${score}/5`;
   return status === 'WON' ? `${7 - score / 10}/6` : 'X/6';
 }
 
@@ -38,6 +43,7 @@ export function HistoryPage() {
             ['CAREER_PATH', 'Career Path'],
             ['FOOTBALL_GRID', 'Grid'],
             ['IMPOSTOR', 'Impostor'],
+            ['TIMELINE', 'Linha do tempo'],
           ] as const
         ).map(([m, label]) => (
           <button

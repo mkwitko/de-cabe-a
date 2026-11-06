@@ -17,11 +17,13 @@ export const GAME_PATH = {
   CAREER_PATH: '/career-path',
   FOOTBALL_GRID: '/grid',
   IMPOSTOR: '/impostor',
+  TIMELINE: '/linha-do-tempo',
 } as const;
 export const GAME_NAME = {
   CAREER_PATH: 'Career Path',
   FOOTBALL_GRID: 'Football Grid',
   IMPOSTOR: 'Impostor',
+  TIMELINE: 'Linha do tempo',
 } as const;
 
 export const useGames = () =>
