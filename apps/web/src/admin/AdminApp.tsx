@@ -7,6 +7,7 @@ import { Link, Route, Routes, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
 import { ChallengesPage, ReportsPage } from './ChallengesPage';
+import { LevelReportsPage } from './LevelReportsPage';
 
 const TOKEN_KEY = 'dc_admin_token';
 
@@ -51,6 +52,7 @@ function Shell({ children }: { children: ReactNode }) {
           <Link to="/admin">Jogadores</Link>
           <Link to="/admin/challenges">Fases</Link>
           <Link to="/admin/reports">Relatórios</Link>
+          <Link to="/admin/level-reports">Relatos de erro</Link>
         </nav>
         <button
           className="ml-auto text-sm underline"
@@ -519,6 +521,7 @@ export default function AdminApp() {
         <Route path="players/:id" element={<PlayerPage />} />
         <Route path="challenges" element={<ChallengesPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="level-reports" element={<LevelReportsPage />} />
       </Routes>
     </Shell>
   );

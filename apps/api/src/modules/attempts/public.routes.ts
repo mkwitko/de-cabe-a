@@ -17,6 +17,7 @@ import { guestSession, playerAttempts } from '../session/session';
 import { progressionRoutes } from '../progression/progression.routes';
 import { analyticsRoutes } from '../analytics/analytics';
 import { accountRoutes } from '../account/account.routes';
+import { levelReportRoutes } from '../reports/level-reports';
 import { getAttempt, startAttempt, submitAction } from './attempts.service';
 
 const GAMES = [
@@ -41,6 +42,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(progressionRoutes);
   await app.register(analyticsRoutes);
   await app.register(accountRoutes);
+  await app.register(levelReportRoutes);
 
   /** The player's track of one game: every published level with its state (ADR-007). */
   async function track(req: { sessionId: string; userId: string | null }, mode: GameMode) {

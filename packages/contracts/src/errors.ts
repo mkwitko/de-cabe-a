@@ -23,6 +23,7 @@ export const ErrorCode = z.enum([
   'NICKNAME_TAKEN',
   'EMAIL_TAKEN',
   'INVALID_CREDENTIALS',
+  'LEVEL_NOT_FINISHED',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

@@ -72,3 +72,11 @@ Spot-check de 2026-11-05 (`scripts/research/wikidata-spotcheck.ts`, resultado em
 - Wikidata × infobox da Wikipédia PT (número de passagens): **9 de 17** comparáveis batem exatamente; diferenças típicas de 1–2 passagens (empréstimos curtos, clubes amadores, retorno contado como passagem separada). Marcelinho Carioca (21 × 12) e Sócrates (8 × 6) são os maiores desvios. 3 páginas sem infobox legível (Falcão, Bebeto, Dida).
 
 Conclusão: a cobertura dos jogadores conhecidos é boa e datada; a granularidade das passagens difere entre fontes, o que justifica a regra da curadoria (ADR-006): só vira `verified` a carreira cuja sequência de clubes concorda entre as duas fontes.
+
+## Relatos de erro dos jogadores (2026-11-06)
+
+Ao terminar uma fase, o jogador pode marcar "Essa fase tem um erro?" (posição, clubes, jogos/gols/anos, resposta certa recusada, outro, com detalhe opcional). Só depois de terminar, para não dar pista. Um relato por jogador por fase (o novo substitui o anterior).
+
+Fila em dois lugares, mesma fonte (`LevelReport`):
+- **Painel** `/admin/level-reports`: relatos agrupados por fase, com o jogador da resposta, posições na base e na fase, passagens por clube e a fonte (Wikipedia/Wikidata). Botões "Corrigido" e "Descartar" com o que foi feito.
+- **IA curadora** (terminal): `scripts/research/reports.ts list` dá o mesmo conteúdo em JSON. Fluxo: conferir nas fontes (`Player.notes` tem a página da Wikipedia), corrigir `Player`/`CareerSpell`, substituir a fase no lugar com `scripts/research/replace-level.ts <modo> <fase> "<motivo>"` e fechar com `reports.ts resolve <id> fixed "<o que foi feito>"`.
