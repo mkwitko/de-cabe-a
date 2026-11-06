@@ -1,5 +1,7 @@
 # UX Spec
 
+> **Revisão 2026-11-05 (ADR-007):** rotas agora são `/`, `/career-path` e `/grid` (trilha de fases), `/career-path/:fase`, `/grid/:fase`, `/ranking`, `/stats`, `/history`, `/conta`. Navegação: Jogos / Ranking / Stats / Conta. Fim de fase: estrelas, próxima fase, share e top 10 da fase.
+
 Mobile-first (360px base), funciona até 1280px. PT-BR. Sem design visual final aqui.
 
 ## 1. Arquitetura de informação

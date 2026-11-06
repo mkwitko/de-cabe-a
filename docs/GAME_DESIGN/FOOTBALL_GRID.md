@@ -1,5 +1,7 @@
 # Game Design — Football Grid
 
+> **Revisão 2026-11-05 (ADR-007):** daily e treino foram substituídos pela trilha de fases (§9 não vale mais). Toda fase usa o mínimo de 8 respostas por célula. Estrelas: 9 células = 3, 6–8 = 2, 3–5 = 1.
+
 Versão da engine: `football-grid@1`.
 
 ## 1. Regras

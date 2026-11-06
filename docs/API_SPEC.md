@@ -1,5 +1,15 @@
 # API Spec — v1
 
+> **Revisão 2026-11-05 (ADR-007).** Onde conflitar, vale isto:
+> - `GET /v1/games` → por jogo: `levels`, `completed`, `stars`, `nextLevel`.
+> - `GET /v1/tracks/:mode` → fases com `state` (`locked|open|in_progress|done`), `stars`, `score`, `difficultyTier`.
+> - `POST /v1/attempts { mode, level }` → 201 nova / 200 existente; 403 `LEVEL_LOCKED`, 404 `LEVEL_NOT_FOUND`. Uma tentativa por fase por jogador (conta ou convidado).
+> - `AttemptSummary` = `{ id, challengeId, mode, level, status, score, stars }`.
+> - `GET /v1/me/stats` → `totalStars`, `title`, `rank { all, week }` e números por jogo; `GET /v1/me/history` itens com `level` e `stars`.
+> - `GET /v1/ranking?scope=all|week`, `GET /v1/ranking/levels/:mode/:level` (top 10).
+> - `GET|PATCH /v1/me` (apelido), `POST /v1/auth/register|login|logout` (cadastro opcional; 409 `EMAIL_TAKEN`/`NICKNAME_TAKEN`, 401 `INVALID_CREDENTIALS`; 10/min por IP).
+> - Admin: sem `kind`, `scheduledFor` nem `/schedule`; `publish` anexa a próxima fase; `GET /v1/admin/challenges?mode=&status=`.
+
 Base: `/v1`. JSON. Cookie `dc_session` (HttpOnly) criado automaticamente na primeira resposta de qualquer rota pública. Erros no formato de `ARCHITECTURE.md` §6.
 
 Schemas em `packages/contracts`. Abaixo, TypeScript/Zod resumido.
@@ -33,7 +43,9 @@ Response 200:
 ---
 
 ## GET /v1/players/search?q=&limit=
-Autocomplete. Público. `q` 2–40 chars, `limit` ≤ 10 (default 10). Rate limit 60/min por sessão.
+Autocomplete. Público. `q` 2–40 chars, `limit` ≤ 10 (default 10). Rate limit 60/min por sessão. Homônimos recebem `disambiguation` = "ano de nascimento · clube mais longo".
+
+Rate limits (429 `RATE_LIMITED`): criação de sessão 20/min por IP; rotas públicas 300/min por sessão; ações 120/min por sessão.
 
 Response 200: `{ "players": PlayerRef[] }`. Só players `verified`. Ordem: notabilityTier, isPrimary.
 
@@ -118,12 +130,12 @@ Response: `{ "items": [ { "attemptId", "mode", "kind", "publicNumber", "status",
   "FOOTBALL_GRID": { "played": 8, "avgScore": 6.4, "perfect": 1, "currentStreak": 2, "maxStreak": 4 }
 }
 ```
-Só `kind=daily` conta para streak; practice conta em `played`/`won` em campos separados (`practicePlayed`).
+`played`, `won`, `distribution`, `avgScore` e `perfect` contam só `kind=daily`; `practicePlayed` conta os treinos. Streak = dias civis (America/Sao_Paulo) seguidos com daily concluído, ganho ou perdido; um dia sem jogar zera (implementado 2026-11-05).
 
 ---
 
 ## POST /v1/events
-Analytics. Body: `{ "events": [ { "name": "game_started", "ts": "…", "props": { … } } ] }`, máx. 20 por request. Response 202. Nomes validados contra lista de `ANALYTICS.md`; props desconhecidas descartadas.
+Analytics do cliente. Body: `{ "events": [ { "name": "game_viewed", "ts": "…", "props": { … } } ] }`, máx. 20 por request. Response 202. Só `game_viewed`, `result_shared`, `game_abandoned`, `search_no_result`; props fora da lista do evento são descartadas. Os eventos de jogo (`game_started`, `answer_submitted`, `hint_revealed`, `game_completed`, `action_rejected`) são gravados pela API.
 
 ---
 
@@ -146,13 +158,13 @@ Analytics. Body: `{ "events": [ { "name": "game_started", "ts": "…", "props": 
 | POST | /v1/admin/challenges/:id/retire | Body `{ reason }`; `published → retired`; opcional `replacementParams` cria novo draft com `supersedesId` |
 | GET | /v1/admin/challenges?mode=&status=&from=&to= | Calendário |
 | GET | /v1/admin/challenges/:id/preview | Snapshot completo (única rota que o expõe) |
-| GET | /v1/admin/reports/rejections | Relatórios de `DATA_QUALITY.md` §5 |
+| GET | /v1/admin/reports/rejections | Relatórios de `DATA_QUALITY.md` §5: buscas sem resultado, palpites errados no Grid, verificados com passagens importadas |
 | POST | /v1/admin/eligibility/career-path | Body `{ playerId }` → trajetória calculada + motivo de inelegibilidade |
 | POST | /v1/admin/eligibility/grid | Body `{ rows, cols }` → contagem por célula + avisos |
 
 Publicação de daily: cron **não** necessário. `scheduled` com `scheduledFor = hoje` é tratado como publicado pela query de daily? **Não**: para manter `publicNumber` sequencial e imutabilidade clara, publicação é ação explícita. Recomendação: editor publica a semana inteira com antecedência; rota `GET /v1/games` só considera `status=published AND scheduledFor=today`. Job de auto-publicação fica como sugestão pós-MVP.
 
-Erros admin: 401 `UNAUTHORIZED`; 409 `INVALID_TRANSITION`; 422 `DATA_QUALITY_VIOLATION` com `details.rules: ["DQ-01"]`; 422 `CHALLENGE_NOT_ELIGIBLE` com `details.reasons`.
+Erros admin: 401 `UNAUTHORIZED`; 409 `DATE_TAKEN` (já existe daily vivo na data); 409 `INVALID_TRANSITION`; 422 `DATA_QUALITY_VIOLATION` com `details.rules: ["DQ-01"]`; 422 `CHALLENGE_NOT_ELIGIBLE` com `details.reasons`.
 
 ## Idempotência (resumo)
 

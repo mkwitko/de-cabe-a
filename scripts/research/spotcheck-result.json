@@ -1,0 +1,147 @@
+{
+  "ranAt": "2026-11-05T14:15:02.760Z",
+  "totalBr": "10258",
+  "allDated": "4885",
+  "sample": [
+    {
+      "name": "Zico",
+      "qid": "Q47526",
+      "wikidataClubSpells": 4,
+      "withStartDate": 4,
+      "wikipediaPtClubs": 4
+    },
+    {
+      "name": "Sócrates",
+      "qid": "Q102331",
+      "wikidataClubSpells": 8,
+      "withStartDate": 7,
+      "wikipediaPtClubs": 6
+    },
+    {
+      "name": "Romário",
+      "qid": "Q178649",
+      "wikidataClubSpells": 16,
+      "withStartDate": 15,
+      "wikipediaPtClubs": 17
+    },
+    {
+      "name": "Ronaldo Nazário",
+      "qid": "Q529207",
+      "wikidataClubSpells": 7,
+      "withStartDate": 7,
+      "wikipediaPtClubs": 7
+    },
+    {
+      "name": "Rivaldo",
+      "qid": "Q483577",
+      "wikidataClubSpells": 16,
+      "withStartDate": 16,
+      "wikipediaPtClubs": 15
+    },
+    {
+      "name": "Cafu",
+      "qid": "Q178683",
+      "wikidataClubSpells": 6,
+      "withStartDate": 6,
+      "wikipediaPtClubs": 6
+    },
+    {
+      "name": "Roberto Carlos",
+      "qid": "Q429039",
+      "wikidataClubSpells": 9,
+      "withStartDate": 9,
+      "wikipediaPtClubs": 9
+    },
+    {
+      "name": "Kaká",
+      "qid": "Q531814",
+      "wikidataClubSpells": 6,
+      "withStartDate": 6,
+      "wikipediaPtClubs": 6
+    },
+    {
+      "name": "Ronaldinho",
+      "qid": "Q39444",
+      "wikidataClubSpells": 9,
+      "withStartDate": 9,
+      "wikipediaPtClubs": 9
+    },
+    {
+      "name": "Neymar",
+      "qid": "Q142794",
+      "wikidataClubSpells": 5,
+      "withStartDate": 5,
+      "wikipediaPtClubs": 5
+    },
+    {
+      "name": "Paulo Roberto Falcão",
+      "qid": "Q312454",
+      "wikidataClubSpells": 3,
+      "withStartDate": 3,
+      "wikipediaPtClubs": null
+    },
+    {
+      "name": "Careca",
+      "qid": "Q342489",
+      "wikidataClubSpells": 8,
+      "withStartDate": 8,
+      "wikipediaPtClubs": 8
+    },
+    {
+      "name": "Bebeto",
+      "qid": "Q204825",
+      "wikidataClubSpells": 15,
+      "withStartDate": 14,
+      "wikipediaPtClubs": null
+    },
+    {
+      "name": "Cláudio Taffarel",
+      "qid": "Q295891",
+      "wikidataClubSpells": 8,
+      "withStartDate": 6,
+      "wikipediaPtClubs": 6
+    },
+    {
+      "name": "Dida",
+      "qid": "Q188544",
+      "wikidataClubSpells": 9,
+      "withStartDate": 9,
+      "wikipediaPtClubs": null
+    },
+    {
+      "name": "Juninho Pernambucano",
+      "qid": "Q203451",
+      "wikidataClubSpells": 7,
+      "withStartDate": 7,
+      "wikipediaPtClubs": 7
+    },
+    {
+      "name": "Alex de Souza",
+      "qid": "Q507815",
+      "wikidataClubSpells": 11,
+      "withStartDate": 11,
+      "wikipediaPtClubs": 10
+    },
+    {
+      "name": "Marcelinho Carioca",
+      "qid": "Q378101",
+      "wikidataClubSpells": 21,
+      "withStartDate": 21,
+      "wikipediaPtClubs": 12
+    },
+    {
+      "name": "Edmundo",
+      "qid": "Q445541",
+      "wikidataClubSpells": 20,
+      "withStartDate": 20,
+      "wikipediaPtClubs": 19
+    },
+    {
+      "name": "Túlio Maravilha",
+      "qid": "Q714354",
+      "wikidataClubSpells": 39,
+      "withStartDate": 39,
+      "wikipediaPtClubs": 41
+    }
+  ]
+}

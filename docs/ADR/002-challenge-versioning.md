@@ -14,3 +14,6 @@ A base de jogadores muda (correções, novos spells). Um desafio publicado preci
 
 ## Consequências
 Engines antigas permanecem no código enquanto houver desafio publicado com aquela versão. Snapshot duplica dados (aceitável: KB por desafio).
+
+## Revisão 2026-11-06: substituição no lugar
+Com a trilha de fases (ADR-007), o substituto publicado herda o `publicNumber` da fase retirada, e a numeração da trilha não muda. O número é único só entre desafios `published` (índice parcial). Quem já começou a versão antiga continua nela; o progresso da trilha conta por número de fase, então terminar a versão antiga libera a fase seguinte. Primeiro uso: 18 fases de Career Path com posição desatualizada (Kaká aparecia como atacante).

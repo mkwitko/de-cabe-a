@@ -2,9 +2,26 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/coverage/**', '**/playwright-report/**', '**/test-results/**'] },
+  {
+    ignores: [
+      '**/generated/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      // `_name` marks a value discarded on purpose (e.g. omitting a field by destructuring).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
+    },
+  },
   {
     // Architecture boundary (ARCHITECTURE.md §1-2): the web app never imports game rules.
     files: ['apps/web/**'],

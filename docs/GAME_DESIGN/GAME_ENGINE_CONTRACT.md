@@ -64,6 +64,12 @@ type CareerPathEvent = { type: 'correct' } | { type: 'wrong'; revealed: 'club'|'
 
 `toPublicView` retorna `trajectory.slice(0, revealedClubs)`, hints revelados, tentativas usadas, status. Nunca `answerPlayerId`.
 
+Decisões de implementação (slice 3, 2026-11-05):
+- A 6ª tentativa sem acerto emite `{ type: 'lost' }` (não `wrong`).
+- Pistas extras seguem a ordem posição → nacionalidade e pulam as ausentes no snapshot; esgotadas, `revealed: 'none'`.
+- `toPublicView.revealed` omite `clubId`; `history` lista as tentativas, com o acerto como `{ kind: 'correct' }` (sem `playerId`).
+- Inelegibilidade retorna códigos: `PLAYER_NOT_VERIFIED`, `TRAJECTORY_TOO_SHORT`, `TRAJECTORY_TOO_LONG`, `UNVERIFIED_SPELL`, `TIER_PRACTICE_ONLY`.
+
 ## 4. Football Grid
 
 ```ts
@@ -109,3 +115,10 @@ type FootballGridEvent = { type: 'correct'; cellIndex: number } | { type: 'wrong
 - Nenhum `Date.now()`, `Math.random()` ou I/O dentro de `packages/engine`.
 - Testes unitários: tabelas de transição (estado × input → estado, evento), pontuação, share text, `toPublicView` sem vazamento (teste que serializa e verifica ausência de `answerPlayerId`/`eligiblePlayerIds`).
 - `engineVersion` fixo no snapshot. Mudança de regra = nova versão, engine antiga mantida enquanto houver desafio publicado com ela.
+
+## career-path@2 (2026-11-05)
+
+Pedido do autor do produto: mais informação por clube e a posição desde o início.
+- Cada item da trajetória ganha `appearances`, `goals` (jogos e gols no clube, da infobox) e `loanFromName` (clube de origem do empréstimo).
+- `toPublicView` passa a expor `position` desde a primeira tentativa; a única pista extra (após todos os clubes) é a nacionalidade.
+- A v1 foi removida porque nenhuma fase publicada a usava (as fases foram republicadas na v2).

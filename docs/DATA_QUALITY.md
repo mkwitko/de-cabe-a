@@ -9,7 +9,7 @@ imported ──(editor revisa)──▶ verified
 draft (criado manualmente) ──▶ verified | rejected
 ```
 
-Transições só via API admin, com `verifiedBy` e `verifiedAt`. Reimport nunca rebaixa `verified`; cria registro de divergência (`ImportDiff`, tabela simples: entidade, campo, valor atual, valor importado, status) para o editor decidir.
+Transições só via API admin (ou pelo agente de curadoria, ADR-006, com `verifiedBy = "ai-curator"`), com `verifiedBy` e `verifiedAt`. `verified → imported` reabre um registro para edição. Reimport nunca rebaixa `verified`; cria registro de divergência (`ImportDiff`, tabela simples: entidade, campo, valor atual, valor importado, status) para o editor decidir.
 
 ## 2. Regras de qualidade (checagens automáticas)
 
@@ -64,4 +64,11 @@ Atribuído manualmente. Sem fórmula automática no MVP.
 
 ## 6. Baseline
 
-Preencher após o spot-check de `DATA_SOURCES.md` §4. Hoje: **desconhecido**.
+Spot-check de 2026-11-05 (`scripts/research/wikidata-spotcheck.ts`, resultado em `scripts/research/spotcheck-result.json`):
+
+- Jogadores com cidadania brasileira (P27=Q155), ocupação futebolista e ao menos um P54: **10.258**.
+- Desses, com data de início (P580) em **todas** as passagens: **4.885 (47,6%)**.
+- Amostra fixa de 20 nomes: **20/20** encontrados; passagens em clubes (sem seleções): 227, com data de início: **222 (97,8%)**.
+- Wikidata × infobox da Wikipédia PT (número de passagens): **9 de 17** comparáveis batem exatamente; diferenças típicas de 1–2 passagens (empréstimos curtos, clubes amadores, retorno contado como passagem separada). Marcelinho Carioca (21 × 12) e Sócrates (8 × 6) são os maiores desvios. 3 páginas sem infobox legível (Falcão, Bebeto, Dida).
+
+Conclusão: a cobertura dos jogadores conhecidos é boa e datada; a granularidade das passagens difere entre fontes, o que justifica a regra da curadoria (ADR-006): só vira `verified` a carreira cuja sequência de clubes concorda entre as duas fontes.

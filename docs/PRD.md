@@ -1,5 +1,7 @@
 # PRD — De Cabeça MVP
 
+> **Revisão 2026-11-05 (ADR-007):** daily e treino saem; entram trilha de fases por jogo, estrelas 0–3, títulos, ranking (geral, semanal, por fase) e cadastro opcional (convidado continua podendo jogar). Onde este documento conflitar com o ADR-007, vale o ADR-007.
+
 Status: proposto. Decisões aprovadas pelo autor do produto estão marcadas **[APROVADO]**; recomendações desta análise, **[RECOMENDADO]**; pendentes, **[PENDENTE]**.
 
 ## 1. Escopo do MVP

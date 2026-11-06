@@ -61,12 +61,14 @@ Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && p
 - **Aceite:** `pnpm db:migrate && pnpm db:seed` sem erro; teste de integração do trigger passa; testes de `normalizeName` passam; `quality.ts` detecta cada violação com fixture.
 - **Testes:** unit normalize + DQ; integration trigger.
 - **Riscos:** `uuid(7)` indisponível → usar `uuid()`.
+- **Feito (2026-11-05):** Prisma 7.10 com `@prisma/adapter-pg`; `uuid(7)` disponível. Unique de attempt daily via índice parcial (`partialIndexes` preview). Trigger em migration manual. DQ-08 é impossível de violar no banco hoje (`Club.countryId` é NOT NULL); a função existe para DTOs incompletos. Seed: 249 países ISO + 60 clubes (32 BR, 28 estrangeiros). Integração roda no schema `test` (`pnpm --filter @decabeca/api test:int`).
 
 ## Slice 3 — Engine Career Path
 - **Escopo:** `packages/engine/src/career-path/` conforme `GAME_ENGINE_CONTRACT.md` §3 e `CAREER_PATH.md` §1, §3, §7, §8, §12; `buildTrajectory(spells)` (função pura sobre DTOs) conforme `CAREER_PATH.md` §4; `isEligible(playerDto)` conforme §5 (sem a regra de 180 dias, que precisa de banco).
 - **Dependências:** 1.
 - **Aceite:** todos os casos de `TEST_STRATEGY.md` §1 para CP passam; `toPublicView` nunca contém `answerPlayerId` (teste de propriedade com todos os estados alcançáveis).
 - **Riscos:** regra de "retorno após empréstimo" ambígua → testar os dois cenários do §4 explicitamente.
+- **Feito (2026-11-05):** `careerPathV1`, `buildTrajectory`, `checkCareerPathEligibility` em `packages/engine/src/career-path/`; contrato em `src/contract.ts`. Teste de vazamento percorre todos os estados alcançáveis. Decisões em `GAME_ENGINE_CONTRACT.md` §3.
 
 ## Slice 4 — Import Wikidata + spot-check
 - **Escopo:** `scripts/research/wikidata-spotcheck.ts` (as 5 consultas de `DATA_SOURCES.md` §4; grava resultado em `docs/DATA_QUALITY.md` §Baseline manualmente); `modules/data-import/wikidata.ts`: dado lista de QIDs, busca entidade (API `wbgetentities`), mapeia P54/P580/P582/P1642/P413/P27/P569/labels → `Player`, `Club`, `CareerSpell`, `PlayerAlias` com status `imported`; `ImportDiff` quando entidade já existe; rota `POST /v1/admin/import/wikidata` (token).
@@ -132,3 +134,30 @@ Verificação final (saída real no PR): `pnpm install && pnpm -r typecheck && p
 
 ## Slice 15 — Cadastro opcional (pós-piloto, bloqueado por RF-10)
 Não planejar em detalhe até decisão.
+
+## Estado em 2026-11-05 (slices 4–14)
+
+Implementados na branch `feat/mvp-slices-4-14`, um commit por slice (Conventional Commits). Desvios do plano:
+
+- **Slice 4:** o spot-check usa a API da Wikipédia PT para comparar a carreira (resultado em `DATA_QUALITY.md` §6). `Player.primaryPositionGroup` virou opcional até a verificação (DQ-04 pressupunha isso).
+- **Slice 5:** `verified → imported` reabre registros; `verifiedBy` vem do header `X-Editor`.
+- **Slices 6 e 9:** cookie de sessão sem assinatura (token de 256 bits + hash no banco); `SESSION_SECRET` removido. Treino pode ser rejogado e é retomado se estiver em andamento. Daily retirado libera a data (índice parcial). Practice não recebe `publicNumber`; share do treino diz "(treino)".
+- **Slice 8** foi feito antes do 6 terminar, porque o registro de engines da API precisa das duas.
+- **Slice 11:** streak conta dia com daily concluído (ganho ou perdido); dia sem jogar zera.
+- **Slice 13:** eventos de jogo gravados pela API; o cliente só envia o que o servidor não vê.
+- **Slice 14:** rate limits com `@fastify/rate-limit` (por sessão) e janela em memória por IP para criar sessão; e2e completo no CI com Postgres próprio; checklist em `docs/DEPLOY.md`.
+- **Conteúdo do piloto:** feito pela IA (ADR-006) com `scripts/research/curate.ts` (import + conferência Wikidata × Wikipédia PT) e `scripts/research/publish-pilot.ts` (30 dias de daily por jogo + treino).
+- **Slice 15** continua bloqueado (RF-10).
+
+## Revisão ADR-007 (2026-11-05)
+
+Pedido do autor do produto: sem daily nem treino; vários desafios pré-criados em trilha de fases; ranking da comunidade; estrelas, títulos e stats. Implementado na mesma branch: migration `levels_stars_accounts`, `starsFor`/`titleFor` na engine, rotas de trilha, ranking, apelido e cadastro opcional, telas de trilha/ranking/conta/stats, e2e reescrito. Conteúdo: `scripts/research/publish-levels.ts`.
+
+### Conteúdo gerado pela IA (2026-11-05, base local)
+
+- Candidatos: ~800 futebolistas (brasileiros com ≥ 15 sitelinks + estrelas internacionais com ≥ 140) do Wikidata.
+- **236 jogadores verificados** pela regra do ADR-006, 0 violações bloqueantes (`validate-pool.ts`), 55 avisos DQ-06 (empréstimos sem marca). Meta do piloto (300) não atingida: ~60% dos candidatos têm clube da infobox que o Wikidata não lista, ou não têm infobox. Próximo passo: ampliar candidatos ou revisar o relatório `scripts/research/curation-report.json`.
+- **Trilha Career Path: 60 fases** (de 124 jogadores elegíveis), dificuldade crescente.
+- **Trilha Grid: 20 fases** distintas (≥ 8 respostas por célula; clube em no máximo 7 grids). Mais fases pedem um pool maior.
+- QA por amostragem achou e corrigiu: time B casado com o principal (39 passagens fundidas) e "Inter" casado com "Internacional" (`--recheck`).
+- O conteúdo vive no banco local; para reproduzir: `curate.ts --limit 800` e depois `publish-levels.ts`.

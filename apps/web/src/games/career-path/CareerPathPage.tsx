@@ -1,0 +1,239 @@
+/**
+ * Career Path level (UX_SPEC.md §3, ADR-007). The career is a path of club stickers on the album
+ * page; the dugout panel (attempts, position, guess) sits beside it on wide screens and docks to
+ * the bottom of the screen on phones.
+ */
+import { useMemo, useState } from 'react';
+import type {
+  AttemptResponse,
+  CareerPathReveal,
+  CareerPathView,
+  PlayerRef,
+} from '@decabeca/contracts';
+import { ApiError } from '../../lib/api';
+import { useGameTracking } from '../../lib/useGameTracking';
+import { useAction, useAttempt } from '../../lib/game';
+import { countryName, POSITION_LABEL } from '../../lib/format';
+import { LevelEnd, LevelError } from '../LevelParts';
+import { Icon } from '../../components/Icon';
+import { PlayerSearch } from '../../components/PlayerSearch';
+import {
+  AttemptDots,
+  btnPrimary,
+  btnSecondary,
+  GameHeader,
+  Skeleton,
+  useOnline,
+} from '../../components/ui';
+import { Trajectory } from './Trajectory';
+
+function Clues({ view }: { view: CareerPathView }) {
+  return (
+    <dl className="flex flex-wrap gap-2">
+      {view.position && (
+        <div className="flex items-baseline gap-2 rounded-full bg-cover px-3 py-1 text-ink">
+          <dt className="text-xs font-bold uppercase">Posição</dt>
+          <dd className="font-condensed text-lg font-black uppercase">
+            {[view.position, ...view.secondaryPositions].map((g) => POSITION_LABEL[g]).join(' / ')}
+          </dd>
+        </div>
+      )}
+      {view.extraHints.nationalityCode && (
+        <div className="flex items-baseline gap-2 rounded-full bg-cover px-3 py-1 text-ink motion-safe:animate-[paste_420ms_var(--ease-out-expo)]">
+          <dt className="text-xs font-bold uppercase">Nacionalidade</dt>
+          <dd className="font-condensed text-lg font-black uppercase">
+            {countryName(view.extraHints.nationalityCode)}
+          </dd>
+        </div>
+      )}
+    </dl>
+  );
+}
+
+function Guesses({ view }: { view: CareerPathView }) {
+  if (!view.history.length) return null;
+  return (
+    <ul className="flex flex-wrap gap-2 text-sm" aria-label="Seus palpites">
+      {view.history.map((h, i) => (
+        <li
+          key={i}
+          className="inline-flex items-center gap-1 rounded-full border border-chalk-soft/50 px-2.5 py-1 text-chalk-soft"
+        >
+          <Icon
+            name={h.kind === 'skip' ? 'skip' : h.kind === 'correct' ? 'check' : 'cross'}
+            className="size-3.5"
+          />
+          {h.kind === 'guess' ? h.name : h.kind === 'skip' ? 'Pulou' : 'Acertou'}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Verdict and answer for the result sticker. */
+function resultCopy(data: AttemptResponse) {
+  const reveal = data.reveal as CareerPathReveal;
+  const view = data.view as CareerPathView;
+  const won = data.attempt.status === 'WON';
+  return {
+    headline: won
+      ? view.attemptsUsed === 1
+        ? 'De placa! Na primeira.'
+        : `Acertou em ${view.attemptsUsed} de 6!`
+      : 'Não foi dessa vez.',
+    detail: (
+      <p>
+        Era <strong className="font-black">{reveal.answer.name}</strong> ·{' '}
+        {reveal.trajectory.length} clubes
+      </p>
+    ),
+  };
+}
+
+export function CareerPathPage({ level }: { level: number }) {
+  const attempt = useAttempt('CAREER_PATH', level);
+  const action = useAction('CAREER_PATH', level);
+  const online = useOnline();
+  const [selected, setSelected] = useState<PlayerRef | null>(null);
+  const [announce, setAnnounce] = useState('');
+  const data = attempt.data;
+  useGameTracking(data);
+  const view = data?.view as CareerPathView | undefined;
+  const guessed = useMemo(
+    () => new Set(view?.history.flatMap((h) => (h.kind === 'guess' ? [h.playerId] : [])) ?? []),
+    [view?.history],
+  );
+  const title = `Career Path · Fase ${level}`;
+
+  if (attempt.isPending)
+    return (
+      <div className="flex flex-col gap-4">
+        <GameHeader title={title} />
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton key={i} className="h-20" />
+        ))}
+      </div>
+    );
+  if (attempt.error)
+    return (
+      <div className="flex flex-col gap-6">
+        <GameHeader title={title} />
+        <LevelError
+          error={attempt.error as ApiError}
+          mode="CAREER_PATH"
+          retry={() => void attempt.refetch()}
+        />
+      </div>
+    );
+  if (!data || !view) return null;
+  const done = data.attempt.status !== 'IN_PROGRESS';
+  const reveal = data.reveal as CareerPathReveal | null;
+
+  async function submit(input: object, describe: string) {
+    try {
+      const res = await action.mutateAsync({ attemptId: data!.attempt.id, input });
+      setSelected(null);
+      const ev = res.event;
+      setAnnounce(
+        ev?.type === 'correct'
+          ? 'Acertou!'
+          : ev?.type === 'lost'
+            ? 'Fim de jogo.'
+            : `${describe}. ${ev?.type === 'wrong' && ev.revealed === 'club' ? 'Novo clube revelado.' : ev?.type === 'wrong' && ev.revealed === 'extraHint' ? 'Nova pista revelada.' : ''}`,
+      );
+      if (ev?.type === 'wrong' && 'vibrate' in navigator) navigator.vibrate?.(60);
+    } catch {
+      /* shown from action.error */
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <GameHeader
+        title={title}
+        aside={
+          <AttemptDots
+            used={view.attemptsUsed}
+            max={view.maxAttempts}
+            won={data.attempt.status === 'WON'}
+          />
+        }
+      />
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(20rem,1fr)] lg:items-start">
+        {/* Left: the career path */}
+        <section aria-labelledby="path-title" className="order-2 lg:order-1">
+          <h2 id="path-title" className="sr-only">
+            Trajetória
+          </h2>
+          <Trajectory
+            clubs={done && reveal ? reveal.trajectory : view.revealed}
+            pending={!done}
+            label={done ? 'Trajetória completa' : 'Clubes revelados'}
+          />
+        </section>
+
+        {/* Right: the dugout panel (docks to the bottom on phones while playing) */}
+        <aside className="order-1 flex flex-col gap-5 lg:sticky lg:top-6 lg:order-2">
+          {done ? (
+            <LevelEnd data={data} {...resultCopy(data)} />
+          ) : (
+            <>
+              <Clues view={view} />
+              <Guesses view={view} />
+              <form
+                className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur lg:static lg:gap-3 lg:rounded-xl lg:border lg:bg-chalk/[0.05] lg:p-4 lg:backdrop-blur-none"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (selected)
+                    void submit({ kind: 'guess', playerId: selected.id }, `Não é ${selected.name}`);
+                }}
+              >
+                <p className="hidden text-sm font-semibold text-chalk-soft lg:block">
+                  Quem fez essa carreira?
+                </p>
+                <div className="flex items-stretch gap-2">
+                  <div className="min-w-0 flex-1">
+                    <PlayerSearch
+                      label="Quem é o jogador?"
+                      onSelect={setSelected}
+                      selected={selected}
+                      exclude={guessed}
+                      disabled={!online || action.isPending}
+                      autoFocus
+                      dropUp
+                    />
+                  </div>
+                  <button
+                    className={`${btnPrimary} px-4`}
+                    disabled={!selected || !online || action.isPending}
+                  >
+                    Chutar
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className={`${btnSecondary} min-h-10 text-base`}
+                  disabled={!online || action.isPending}
+                  onClick={() => void submit({ kind: 'skip' }, 'Pulou')}
+                >
+                  <Icon name="skip" /> Pular e ver o próximo clube
+                </button>
+                {action.error && (
+                  <p role="alert" className="text-sm text-cover">
+                    {(action.error as ApiError).message}
+                  </p>
+                )}
+              </form>
+            </>
+          )}
+        </aside>
+      </div>
+      {/* room for the guess form docked at the bottom on phones */}
+      {!done && <div className="h-32 lg:hidden" aria-hidden="true" />}
+    </div>
+  );
+}

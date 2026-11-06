@@ -8,15 +8,27 @@
     "start": "tsx src/server.ts",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run && vitest run -c vitest.int.config.ts",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "test:unit": "vitest run",
+    "test:int": "vitest run -c vitest.int.config.ts",
+    "e2e:prepare": "prisma migrate deploy && tsx src/test/e2e-seed.ts"
   },
   "dependencies": {
     "@decabeca/contracts": "workspace:*",
+    "@decabeca/engine": "workspace:*",
+    "@fastify/rate-limit": "^10.3.0",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "fastify": "^5.12.8",
     "fastify-type-provider-zod": "^7.0.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "prisma": "7.10.1",
     "tsx": "^4.23.15"
   }
 }

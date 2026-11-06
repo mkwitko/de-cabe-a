@@ -1,5 +1,7 @@
 # Test Strategy
 
+> **Revisão 2026-11-05 (ADR-007):** o fluxo e2e e os testes de integração cobrem trilha, desbloqueio, estrelas, ranking (geral, semanal, por fase), apelido e conta; os itens de daily, fuso da virada e streak deixaram de existir.
+
 Baseada em risco. Sem meta de cobertura percentual.
 
 ## 1. Unit (Vitest, `packages/engine`, sem banco)

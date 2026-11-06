@@ -1,0 +1,1 @@
+`wikidata.json`: real Wikidata entities (CC0) fetched on 2026-11-05 with `wbgetentities` for Ronaldo Nazário (Q529207), Kaká (Q531814) and Juninho Pernambucano (Q203451), plus their teams, countries and positions. Trimmed to the properties the mapper reads (P27, P54, P106, P413, P569, P1477; teams: P17, P31, P571; countries: P297).

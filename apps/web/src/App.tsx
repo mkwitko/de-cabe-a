@@ -1,16 +1,49 @@
-import { useRef, type CSSProperties, type PointerEvent } from 'react';
-import { Route, Routes } from 'react-router';
+import {
+  lazy,
+  Suspense,
+  useRef,
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
+import type { GamesResponse } from '@decabeca/contracts';
+import { useGames, useStats } from './lib/game';
+import { CareerPathPage } from './games/career-path/CareerPathPage';
+import { GridPage } from './games/grid/GridPage';
+import { HistoryPage } from './pages/HistoryPage';
+import { TrackPage } from './pages/TrackPage';
+import { RankingPage } from './pages/RankingPage';
+import { AccountPage } from './pages/AccountPage';
+import { StatsPage } from './pages/StatsPage';
+import { btnPrimary, Skeleton, useOnline } from './components/ui';
+
+const AdminApp = lazy(() => import('./admin/AdminApp'));
 
 const GAMES = [
   {
     slot: '01',
+    mode: 'CAREER_PATH',
     name: 'Career Path',
+    path: '/career-path',
     rule: 'Adivinhe o jogador pela sequência de clubes. Seis chances.',
+    howTo: [
+      'Você vê o primeiro clube da carreira de um jogador.',
+      'Cada chute errado ou "pular" revela o próximo clube.',
+      'Acerte em até 6 tentativas. Quanto antes, mais pontos.',
+    ],
   },
   {
     slot: '02',
+    mode: 'FOOTBALL_GRID',
     name: 'Football Grid',
+    path: '/grid',
     rule: 'Ache um jogador para cada cruzamento da grade 3×3. Nove chances.',
+    howTo: [
+      'Cada célula pede um jogador que cumpra a linha e a coluna.',
+      'Você tem 9 tentativas; errar gasta uma e a célula fica vazia.',
+      'Cada jogador vale uma vez só por grid.',
+    ],
   },
 ] as const;
 
@@ -41,7 +74,7 @@ function BrandSticker() {
     >
       <div className="relative overflow-hidden rounded-[5px] bg-cover px-5 pt-4 pb-5 text-ink">
         <span className="tabular block text-right text-xs font-bold tracking-wide">Nº 00</span>
-        <h1 className="font-condensed mt-1 text-[clamp(3rem,14vw,5.5rem)] leading-[0.85] whitespace-nowrap font-black tracking-[-0.02em] uppercase">
+        <h1 className="font-condensed mt-1 text-[clamp(3rem,14vw,5.5rem)] leading-[0.85] font-black tracking-[-0.02em] whitespace-nowrap uppercase">
           De Cabeça
         </h1>
         <p className="mt-3 text-sm font-semibold">Minijogos de futebol</p>
@@ -58,53 +91,233 @@ function BrandSticker() {
   );
 }
 
-export function Home() {
+type Track = GamesResponse['games'][number];
+
+function TrackState({ track, path }: { track: Track | undefined; path: string }) {
+  if (!track) return <Skeleton className="h-11 w-40" />;
+  if (track.levels === 0) return <p className="font-semibold text-chalk-soft">Fases a caminho.</p>;
+  const pct = (track.completed / track.levels) * 100;
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-4 pt-10 pb-8 sm:px-8 sm:pt-16">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3 text-sm font-semibold">
+        <span className="font-condensed tabular text-2xl font-black">
+          {track.completed}/{track.levels}
+        </span>
+        <span className="text-chalk-soft">fases</span>
+        <span
+          className="font-condensed tabular ml-auto text-xl font-black"
+          aria-label={`${track.stars} estrelas`}
+        >
+          ★ {track.stars}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-chalk/15" aria-hidden="true">
+        <div className="h-full rounded-full bg-cover" style={{ width: `${pct}%` }} />
+      </div>
+      <Link
+        to={track.nextLevel ? `${path}/${track.nextLevel}` : path}
+        className={`${btnPrimary} self-start`}
+      >
+        {track.nextLevel
+          ? track.completed
+            ? `Jogar fase ${track.nextLevel}`
+            : 'Começar'
+          : 'Ver fases'}
+      </Link>
+    </div>
+  );
+}
+
+export function Home({ games }: { games?: GamesResponse | undefined }) {
+  return (
+    <>
       <header className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-10">
         <BrandSticker />
         <p className="max-w-[34ch] text-lg leading-snug font-medium text-chalk sm:pb-3 sm:text-xl">
-          Pra quem sabe a escalação de cor. Um desafio por dia, sem cadastro, de cabeça.
+          Pra quem sabe a escalação de cor. Fase por fase, estrela por estrela, até virar lenda.
         </p>
       </header>
 
-      <section aria-labelledby="jogos" className="mt-14 sm:mt-20">
+      <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
         <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
-          Jogos do álbum
+          Jogos
         </h2>
         <ul className="mt-5 grid gap-4 sm:grid-cols-2">
-          {GAMES.map((g) => (
-            <li
-              key={g.slot}
-              className="relative flex min-h-56 flex-col rounded-lg border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] p-5"
-            >
-              <span
-                aria-hidden="true"
-                className="font-condensed tabular text-7xl leading-none font-black text-chalk-soft/50"
+          {GAMES.map((g) => {
+            return (
+              <li
+                key={g.slot}
+                className="relative flex min-h-64 flex-col gap-3 rounded-lg border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] p-5"
               >
-                {g.slot}
-              </span>
-              <h3 className="font-condensed mt-auto text-3xl font-extrabold uppercase">{g.name}</h3>
-              <p className="mt-1.5 max-w-[32ch] text-chalk-soft">{g.rule}</p>
-              <span className="font-condensed absolute top-5 right-5 rotate-[-8deg] rounded-sm border-2 border-stamp px-2 py-0.5 text-sm font-extrabold tracking-wider text-stamp uppercase">
-                Em breve
-              </span>
+                <span
+                  aria-hidden="true"
+                  className="font-condensed tabular text-7xl leading-none font-black text-chalk-soft/50"
+                >
+                  {g.slot}
+                </span>
+                <h3 className="font-condensed mt-auto text-3xl font-extrabold uppercase">
+                  {g.name}
+                </h3>
+                <p className="max-w-[32ch] text-chalk-soft">{g.rule}</p>
+                <TrackState track={games?.games.find((x) => x.mode === g.mode)} path={g.path} />
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
+                  <Link to={g.path} className="underline underline-offset-4">
+                    Ver fases
+                  </Link>
+                  <details className="group">
+                    <summary className="cursor-pointer list-none underline underline-offset-4">
+                      Como jogar?
+                    </summary>
+                    <ol className="mt-2 flex list-decimal flex-col gap-1 pl-5 font-normal text-chalk-soft">
+                      {g.howTo.map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ol>
+                  </details>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </>
+  );
+}
+
+/** The player's standing at a glance: title, stars, ranking and what the next title needs. */
+function PlayerStrip() {
+  const { data } = useStats();
+  if (!data) return null;
+  return (
+    <Link
+      to="/stats"
+      className="mt-8 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-1 rounded-xl bg-chalk/[0.06] p-4 hover:bg-chalk/[0.09] sm:grid-cols-[auto_auto_auto_1fr] sm:gap-x-8"
+    >
+      <span className="font-condensed row-span-2 text-4xl leading-none font-black text-cover uppercase sm:row-span-1">
+        {data.title.name}
+      </span>
+      <span className="font-condensed tabular text-xl font-bold">★ {data.totalStars} estrelas</span>
+      <span className="font-condensed tabular text-xl font-bold">
+        {data.rank.all ? `${data.rank.all}º no ranking` : 'Fora do ranking'}
+      </span>
+      <span className="col-span-2 text-sm text-chalk-soft sm:col-span-1 sm:text-right">
+        {data.title.next
+          ? `Faltam ${data.title.next.missing} estrelas para ${data.title.next.name}`
+          : 'Título máximo. Lenda!'}
+      </span>
+    </Link>
+  );
+}
+
+function HomeRoute() {
+  const { data } = useGames();
+  return (
+    <>
+      <Home games={data} />
+      <PlayerStrip />
+    </>
+  );
+}
+
+const NAV = [
+  ['/', 'Jogos'],
+  ['/ranking', 'Ranking'],
+  ['/stats', 'Stats'],
+  ['/conta', 'Conta'],
+] as const;
+
+function Shell({ children }: { children: ReactNode }) {
+  const online = useOnline();
+  const { pathname } = useLocation();
+  const home = pathname === '/';
+  // Level screens use the full width for the board/path plus the side panel.
+  const wide = /^\/(career-path|grid)\/\d+/.test(pathname);
+  return (
+    <div
+      className={`mx-auto flex min-h-dvh w-full flex-col px-4 pt-4 pb-28 sm:px-8 sm:pb-12 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}
+    >
+      <nav
+        aria-label="Principal"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:backdrop-blur-none"
+      >
+        <ul
+          className={`mx-auto flex justify-around sm:justify-end sm:gap-6 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}
+        >
+          {!home && (
+            <li className="mr-auto hidden sm:block">
+              <Link to="/" className="font-condensed text-2xl font-black uppercase">
+                De Cabeça
+              </Link>
+            </li>
+          )}
+          {NAV.map(([to, label]) => (
+            <li key={to}>
+              <NavLink
+                to={to}
+                end={to === '/'}
+                className={({ isActive }) =>
+                  `font-condensed flex min-h-14 items-center px-4 text-lg font-extrabold uppercase tracking-wide sm:min-h-11 sm:px-0 ${isActive ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`
+                }
+              >
+                {label}
+              </NavLink>
             </li>
           ))}
         </ul>
-      </section>
-
-      <footer className="mt-auto pt-14 text-sm text-chalk-soft">
-        Figurinhas coladas aqui quando os jogos abrirem.
-      </footer>
-    </main>
+      </nav>
+      {!online && (
+        <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
+          Sem conexão. As jogadas voltam quando a internet voltar.
+        </p>
+      )}
+      <main className={home ? 'pt-6 sm:pt-4' : ''}>{children}</main>
+    </div>
   );
 }
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/admin/*"
+        element={
+          <Suspense fallback={null}>
+            <AdminApp />
+          </Suspense>
+        }
+      />
+      <Route path="*" element={<PublicRoutes />} />
     </Routes>
+  );
+}
+
+function PublicRoutes() {
+  return (
+    <Shell>
+      <Routes>
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
+        <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
+        <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
+        <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
+        <Route path="/ranking" element={<RankingPage />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/conta" element={<AccountPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Shell>
+  );
+}
+
+/** /career-path/:level and /grid/:level; the key remounts the game when the level changes. */
+function LevelRoute({ mode }: { mode: 'CAREER_PATH' | 'FOOTBALL_GRID' }) {
+  const level = Number(useParams().level);
+  if (!Number.isInteger(level) || level < 1)
+    return <Navigate to={mode === 'CAREER_PATH' ? '/career-path' : '/grid'} replace />;
+  return mode === 'CAREER_PATH' ? (
+    <CareerPathPage key={level} level={level} />
+  ) : (
+    <GridPage key={level} level={level} />
   );
 }
