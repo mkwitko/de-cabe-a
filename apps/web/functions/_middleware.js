@@ -3,7 +3,7 @@
 // the search pages (/jogador/*, /jogadores, /sitemap.xml, /llms.txt), all on the site's domain so
 // the guest cookie, sign-in and SEO stay on one origin. Everything else is the static site.
 // API_ORIGIN is a Pages environment variable, e.g. https://api-origin.decabecafc.com.br
-const API_PATHS = /^\/(v1\/|jogador\/|jogadores$|sitemap\.xml$|llms\.txt$)/;
+const API_PATHS = /^\/(v1\/|jogador\/|jogadores$|sitemap\.xml$|llms\.txt$|creditos$)/;
 
 export async function onRequest({ request, env, next }) {
   const url = new URL(request.url);

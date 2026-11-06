@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { useTrack } from '../lib/game';
+import { play } from '../lib/sound';
 import { GameHeader, Skeleton } from '../components/ui';
 
 /** Time limits (ADR-009); the server holds the real deadline. */
@@ -55,7 +56,10 @@ export function ModeGate({
         {options.map((o) => (
           <button
             key={String(o.timed)}
-            onClick={() => setTimed(o.timed)}
+            onClick={() => {
+              play('whistle');
+              setTimed(o.timed);
+            }}
             className={`flex min-h-40 flex-col gap-3 rounded-xl p-5 text-left transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 ${o.timed ? 'bg-cover text-ink' : 'border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] text-chalk'}`}
           >
             <span className="font-condensed text-2xl font-black uppercase">{o.name}</span>

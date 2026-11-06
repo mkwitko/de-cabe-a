@@ -169,7 +169,7 @@ export function PlayerSearch({
             onMouseEnter={() => setActive(i)}
             className={`flex min-h-14 cursor-pointer items-center gap-3 px-3 py-2 ${i === active ? 'bg-cover' : ''}`}
           >
-            <Avatar name={p.name} photo={p.photo ?? null} />
+            <Avatar name={p.name} photo={p.photo ?? null} credit={p.photoCredit} />
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-base leading-tight font-bold">{p.name}</span>
               {p.disambiguation && (
@@ -192,6 +192,20 @@ export function PlayerSearch({
             </button>
           </li>
         ))}
+        {results.some((p) => p.photo) && (
+          <li role="presentation" className="px-3 py-1.5 text-xs text-ink/60">
+            Fotos: Wikimedia Commons ·{' '}
+            <a
+              href="/creditos"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              créditos
+            </a>
+          </li>
+        )}
         {status === 'empty' && (
           <li className="px-3 py-2.5 text-ink/65">
             Nenhum jogador com esse nome. Tente outra grafia ou o apelido.

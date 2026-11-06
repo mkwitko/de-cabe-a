@@ -18,6 +18,8 @@ export const PlayerRef = z.strictObject({
   disambiguation: z.string().nullable(),
   /** Small Wikimedia Commons thumbnail, when the player has a freely licensed photo. */
   photo: z.string().nullable().optional(),
+  /** "Foto: author · licence" (CC licences require the credit where the photo shows). */
+  photoCredit: z.string().optional(),
 });
 
 /** GET /v1/players/:id/card: who the player is (never the whole career during play). */

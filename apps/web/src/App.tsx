@@ -1,8 +1,11 @@
+import { onSoundChange, setSound, soundOn } from './lib/sound';
 import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
 import {
   lazy,
   Suspense,
+  useEffect,
   useRef,
+  useState,
   type CSSProperties,
   type PointerEvent,
   type ReactNode,
@@ -308,6 +311,40 @@ const NAV = [
   ['/conta', 'Conta'],
 ] as const;
 
+/** Sound on/off (off by default); the state lives on the device. */
+function SoundToggle() {
+  const [on, setOn] = useState(soundOn);
+  useEffect(() => onSoundChange(setOn), []);
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={() => setSound(!on)}
+      className={`font-condensed flex min-h-14 min-w-11 items-center justify-center gap-1.5 px-2 text-base font-extrabold uppercase tracking-wide sm:min-h-11 sm:px-0 sm:text-lg ${on ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`}
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="size-6 sm:size-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+        {on ? (
+          <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+        ) : (
+          <path d="M17 9l5 6M22 9l-5 6" />
+        )}
+      </svg>
+      {/* Icon only on the phone's bottom bar; the name stays for screen readers. */}
+      <span className="sr-only sm:not-sr-only">Som</span>
+    </button>
+  );
+}
+
 function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const { pathname } = useLocation();
@@ -332,13 +369,16 @@ function Shell({ children }: { children: ReactNode }) {
                 to={to}
                 end={to === '/'}
                 className={({ isActive }) =>
-                  `font-condensed flex min-h-14 items-center px-4 text-lg font-extrabold uppercase tracking-wide sm:min-h-11 sm:px-0 ${isActive ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`
+                  `font-condensed flex min-h-14 items-center px-2 text-base font-extrabold uppercase tracking-wide sm:min-h-11 sm:px-0 sm:text-lg ${isActive ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`
                 }
               >
                 {label}
               </NavLink>
             </li>
           ))}
+          <li>
+            <SoundToggle />
+          </li>
         </ul>
       </nav>
       {!online && (
