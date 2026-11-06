@@ -77,6 +77,28 @@ describe('mapPlayer (real fixtures)', () => {
     expect(r.aliases.map((a) => a.alias)).toContain('Dida');
   });
 
+  it('keeps every Wikidata position: the first is the main one (Kaká: MF, also FW)', () => {
+    const ronaldo = players.find((p) => p.id === 'Q529207')!;
+    const claim = (id: string) => ({
+      mainsnak: {
+        snaktype: 'value',
+        property: 'P413',
+        datavalue: { value: { id }, type: 'wikibase-entityid' },
+      },
+      rank: 'normal',
+    });
+    const kaka = {
+      ...ronaldo,
+      claims: { ...ronaldo.claims, P413: [claim('QAM'), claim('QW'), claim('QCM')] },
+    } as unknown as WikidataEntity;
+    const r = mapPlayer(kaka, {
+      ...lookups,
+      positionLabels: { QAM: 'attacking midfielder', QW: 'winger', QCM: 'midfielder' },
+    });
+    expect(r.player.primaryPositionGroup).toBe('MF');
+    expect(r.player.secondaryPositionGroups).toEqual(['FW']);
+  });
+
   it('drops national teams and keeps club spells with dates', () => {
     const r = byId('Q529207');
     expect(r.spells.map((s) => s.clubQid).sort()).toEqual(

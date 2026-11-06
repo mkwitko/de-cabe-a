@@ -162,6 +162,7 @@ export async function importWikidataPlayers(
         nationalityCountryId: nationality.id,
         secondaryNationalityCountryId: secondary?.id ?? null,
         primaryPositionGroup: m.player.primaryPositionGroup,
+        secondaryPositionGroups: m.player.secondaryPositionGroups,
         sourceId: wikidata.id,
         sourceRef: ref(wikidataId),
         aliases: { create: m.aliases },

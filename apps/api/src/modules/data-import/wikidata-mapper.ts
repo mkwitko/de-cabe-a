@@ -38,6 +38,7 @@ export interface MappedPlayer {
     nationalityIso: string | null;
     secondaryNationalityIso: string | null;
     primaryPositionGroup: PositionGroup | null;
+    secondaryPositionGroups: PositionGroup[];
   };
   aliases: {
     alias: string;
@@ -136,11 +137,15 @@ export function mapPlayer(e: WikidataEntity, lookups: Lookups): MappedPlayer {
     fullNameValue && typeof fullNameValue === 'object' && 'text' in fullNameValue
       ? fullNameValue.text
       : null;
-  const position =
-    claims(e, 'P413')
-      .map((c) => itemId(snakValue(c.mainsnak)))
-      .map((id) => (id ? positionGroup(lookups.positionLabels[id] ?? '') : null))
-      .find((g) => g) ?? null;
+  const positions = [
+    ...new Set(
+      claims(e, 'P413')
+        .map((c) => itemId(snakValue(c.mainsnak)))
+        .map((id) => (id ? positionGroup(lookups.positionLabels[id] ?? '') : null))
+        .filter((g): g is PositionGroup => g !== null),
+    ),
+  ];
+  const position = positions[0] ?? null;
 
   const canonicalName = label(e);
   const aliases: MappedPlayer['aliases'] = [];
@@ -202,6 +207,7 @@ export function mapPlayer(e: WikidataEntity, lookups: Lookups): MappedPlayer {
       nationalityIso: nationalities[0] ?? null,
       secondaryNationalityIso: nationalities.find((n) => n !== nationalities[0]) ?? null,
       primaryPositionGroup: position,
+      secondaryPositionGroups: positions.slice(1),
     },
     aliases,
     spells,
