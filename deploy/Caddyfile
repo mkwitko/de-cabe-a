@@ -1,0 +1,6 @@
+# HTTPS for the API origin. Players never open this host: the site (Cloudflare Pages) forwards
+# <site>/v1/* here, so web and API share one domain (ADR-010).
+{$API_HOST} {
+	encode gzip
+	reverse_proxy api:3000
+}
