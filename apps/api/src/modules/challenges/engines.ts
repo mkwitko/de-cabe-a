@@ -1,6 +1,14 @@
-import { careerPath, footballGrid, impostor, timeline, type GameEngine } from '@decabeca/engine';
+import {
+  careerPath,
+  footballGrid,
+  higherLower,
+  impostor,
+  timeline,
+  type GameEngine,
+} from '@decabeca/engine';
 
-export type GameModeCode = 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE';
+export type GameModeCode =
+  'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE' | 'HIGHER_LOWER';
 
 /** Engine registry (ADR-005): one literal object, keyed by game mode. */
 export const ENGINES = {
@@ -8,6 +16,7 @@ export const ENGINES = {
   FOOTBALL_GRID: footballGrid,
   IMPOSTOR: impostor,
   TIMELINE: timeline,
+  HIGHER_LOWER: higherLower,
 } as const;
 
 /** Untyped access for the generic attempt flow; per-game presenters keep the types. */

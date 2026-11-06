@@ -908,6 +908,63 @@ describe('search pages (SEO)', () => {
   });
 });
 
+describe('Mais ou Menos (ADR-011)', () => {
+  it('compares real spells, refuses too-close rounds, plays a level', async () => {
+    const club = clubs['Santos']!.id;
+    const make = async (name: string, games: number, goals: number) => {
+      const p = await verifiedPlayer(prisma, {
+        name,
+        clubIds: [club],
+        nationalityId: countries.BR!,
+      });
+      await prisma.careerSpell.updateMany({
+        where: { playerId: p.id },
+        data: { appearances: games, goals },
+      });
+      return p.id;
+    };
+    const ids = [];
+    for (const i of [0, 1, 2, 3, 4])
+      ids.push([await make(`Artilheiro ${i}`, 200, 100), await make(`Reserva ${i}`, 40, 5)]);
+    const round = (a: string, b: string, metric: 'goals' | 'games') => ({
+      metric,
+      a: { playerId: a, clubId: club },
+      b: { playerId: b, clubId: club },
+    });
+    const close = await make('Quase Igual', 199, 99);
+    const bad = await adminPost('/challenges', {
+      mode: 'HIGHER_LOWER',
+      params: {
+        rounds: [
+          round(ids[0]![0]!, close, 'goals'),
+          ...ids.slice(1).map(([a, b]) => round(a!, b!, 'goals')),
+        ],
+      },
+    });
+    expect(bad.statusCode).toBe(422);
+    expect(bad.json().error.details.reasons).toContain('ROUND_0_TOO_CLOSE');
+
+    const level = await publish({
+      mode: 'HIGHER_LOWER',
+      params: { rounds: ids.map(([a, b], i) => round(a!, b!, i % 2 ? 'games' : 'goals')) },
+    });
+    const g = guest();
+    const start = (
+      await g.req('POST', '/attempts', { mode: 'HIGHER_LOWER', level: level.publicNumber })
+    ).json();
+    expect(start.view.current).toMatchObject({
+      metric: 'goals',
+      a: { playerName: 'Artilheiro 0' },
+    });
+    expect(JSON.stringify(start.view)).not.toContain('"value"');
+    let res;
+    for (const i of [0, 1, 2, 3, 4])
+      res = (await g.act(start.attempt.id, { kind: 'choose', side: i === 4 ? 'b' : 'a' })).json();
+    expect(res.event).toMatchObject({ type: 'wrong', round: 4, values: [100, 5] }); // round 4 compares goals
+    expect(res.attempt).toMatchObject({ status: 'COMPLETED', score: 4, stars: 2 });
+  });
+});
+
 describe('Linha do tempo (ADR-011)', () => {
   it('publishes 5 players with 4 clubs each, hides the order, plays it', async () => {
     const names = ['Flamengo', 'Santos', 'Milan', 'Real Madrid', 'Barcelona', 'PSV'];

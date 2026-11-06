@@ -10,6 +10,7 @@ export const TIME_LIMIT_SEC: Record<GameMode, number> = {
   FOOTBALL_GRID: 180,
   IMPOSTOR: 60,
   TIMELINE: 90,
+  HIGHER_LOWER: 60,
 };
 export const formatClock = (sec: number) =>
   `${Math.floor(sec / 60)}:${String(Math.max(0, sec) % 60).padStart(2, '0')}`;

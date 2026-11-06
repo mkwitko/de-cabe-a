@@ -1,4 +1,5 @@
 import { TimelineParams } from './timeline-snapshot';
+import { HigherLowerParams } from './higher-lower-snapshot';
 import { ImpostorParams } from './impostor-snapshot';
 import { GameMode } from '@decabeca/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -20,6 +21,7 @@ const Params = z.union([
   GridParams,
   ImpostorParams,
   TimelineParams,
+  HigherLowerParams,
 ]);
 
 export const challengeRoutes: FastifyPluginAsyncZod = async (app) => {

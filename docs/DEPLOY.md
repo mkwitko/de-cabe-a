@@ -31,6 +31,7 @@ Atualizar: `git pull` e o mesmo `up -d --build`.
 - Variável de ambiente (Production): `API_ORIGIN=https://api-origin.decabecafc.com.br`.
 - Domínio personalizado: `decabecafc.com.br`.
 - Teste: `https://decabecafc.com.br/v1/health` → `200` (passou pela Function até a VM).
+- **Limite do plano grátis**: Functions têm cota diária de pedidos (cerca de 100 mil/dia; confira o valor atual no painel). `apps/web/public/_routes.json` faz a função rodar só em `/v1/*` e nas páginas de busca; imagens, JS e CSS saem direto do Pages sem gastar a cota. Acompanhe o uso em Workers & Pages → Metrics. Se o tráfego encostar no limite: plano pago do Workers (barato) ou um subdomínio próprio para a API, com cookie no domínio raiz.
 
 ## 4. Login com Google
 

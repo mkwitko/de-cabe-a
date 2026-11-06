@@ -169,6 +169,11 @@ const REASONS: Record<GameMode, [string, string][]> = {
     ['wrong_stats', 'Jogos, gols ou anos errados'],
     ['other', 'Outra coisa'],
   ],
+  HIGHER_LOWER: [
+    ['wrong_stats', 'Número de jogos ou gols errado'],
+    ['club_missing', 'Ele não jogou nesse clube'],
+    ['other', 'Outra coisa'],
+  ],
   TIMELINE: [
     ['club_missing', 'Clube que ele não jogou, ou faltando'],
     ['wrong_stats', 'Anos errados ou ordem errada'],

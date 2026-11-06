@@ -196,6 +196,7 @@ enum GameModeCode {
   FOOTBALL_GRID
   IMPOSTOR
   TIMELINE
+  HIGHER_LOWER
 }
 
 enum ChallengeStatus {
