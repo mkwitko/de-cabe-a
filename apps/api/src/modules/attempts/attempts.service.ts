@@ -141,7 +141,7 @@ export async function present(
   const stars = '★'.repeat(attempt.stars) + '☆'.repeat(3 - attempt.stars);
   const share = done
     ? {
-        text: `${engine.buildShareText(state, config, { label: `${NAMES[mode]} · Fase ${challenge.publicNumber}`, url: SHARE_HOST }).replace(`\n${SHARE_HOST}`, ` ${stars}\n${SHARE_HOST}`)}`,
+        text: `${engine.buildShareText(state, config, { label: `${NAMES[mode]} · Fase ${challenge.publicNumber}`, url: SHARE_HOST }).replace(`\n${SHARE_HOST}`, ` ${stars} ⏱ ${clock(durationSec(attempt) ?? 0)}${attempt.timed ? ' contra o relógio' : ''}\n${SHARE_HOST}`)}`,
       }
     : null;
 
@@ -154,6 +154,9 @@ export async function present(
       status: attempt.status,
       score: attempt.score,
       stars: attempt.stars,
+      timed: attempt.timed,
+      deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
+      durationSec: durationSec(attempt),
     },
     ...(event !== undefined ? { event: event as NonNullable<AttemptResponse['event']> } : {}),
     view,
@@ -188,12 +191,29 @@ async function assertUnlocked(
     throw new AppError(403, 'LEVEL_LOCKED', 'Termine a fase anterior para liberar esta.');
 }
 
+/** Time limit of a level played against the clock (ADR-009), in seconds. */
+export const TIME_LIMIT_SEC: Record<GameModeCode, number> = { CAREER_PATH: 90, FOOTBALL_GRID: 180 };
+/** Network slack before an action counts as late. */
+const GRACE_MS = 2000;
+
+/** Seconds the level took; a timed level never counts past its deadline. */
+const durationSec = (a: Attempt) =>
+  a.completedAt
+    ? Math.round(
+        (Math.min(a.completedAt.getTime(), a.deadlineAt?.getTime() ?? Infinity) -
+          a.startedAt.getTime()) /
+          1000,
+      )
+    : null;
+const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
 export async function startAttempt(
   prisma: PrismaClient,
   player: Player,
   mode: GameModeCode,
   level: number,
   now: Date,
+  timed = false,
 ): Promise<{ created: boolean; response: AttemptResponse }> {
   // A level replaced in place has its retired versions plus the published one.
   const versions = await prisma.challenge.findMany({
@@ -232,6 +252,8 @@ export async function startAttempt(
         state: state as Prisma.InputJsonValue,
         status: 'IN_PROGRESS',
         startedAt: now,
+        timed,
+        deadlineAt: timed ? new Date(now.getTime() + TIME_LIMIT_SEC[mode] * 1000) : null,
       },
     });
     await track(prisma, player.sessionId, 'game_started', {
@@ -288,6 +310,11 @@ export async function submitAction(
 
     const engine = engineFor(a.challenge.gameMode);
     let config = engine.validateConfig(a.challenge.snapshot);
+    // Against the clock: an action after the deadline ends the level with what was done in time.
+    const expired =
+      !a.completedAt && a.deadlineAt !== null && now.getTime() > a.deadlineAt.getTime() + GRACE_MS;
+    if (expired)
+      rawInput = a.challenge.gameMode === 'CAREER_PATH' ? { kind: 'give_up' } : { kind: 'finish' };
     const input = engine.parseInput(rawInput) as {
       kind: string;
       playerId?: string;
@@ -332,7 +359,7 @@ export async function submitAction(
               hintsUsed: (out.state as { hints?: number[] }).hints?.length ?? 0,
             })
           : 0,
-        ...(done ? { completedAt: now } : {}),
+        ...(done ? { completedAt: expired ? a.deadlineAt! : now } : {}),
       },
     });
     const seq = (await tx.attemptAction.count({ where: { attemptId: id } })) + 1;
@@ -384,7 +411,8 @@ export async function submitAction(
           score,
           stars: updated.stars,
           attemptsUsed,
-          durationSec: Math.round((now.getTime() - a.startedAt.getTime()) / 1000),
+          durationSec: durationSec(updated) ?? 0,
+          timed: a.timed,
         },
       ]);
     return { attempt: updated, challenge: a.challenge, event: out.event };

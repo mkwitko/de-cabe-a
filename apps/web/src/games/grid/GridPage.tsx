@@ -15,6 +15,7 @@ import { useGameTracking } from '../../lib/useGameTracking';
 import { useAction, useAttempt } from '../../lib/game';
 import { HintMask } from '../../components/HintMask';
 import { LevelEnd, LevelError } from '../LevelParts';
+import { Countdown } from '../Clock';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
 import { PlayerSearch } from '../../components/PlayerSearch';
@@ -45,8 +46,8 @@ function CriterionHead({ c }: { c: Crit }) {
 const cellLabel = (v: FootballGridView, i: number) =>
   `${v.rows[Math.floor(i / 3)]!.label} e ${v.cols[i % 3]!.label}`;
 
-export function GridPage({ level }: { level: number }) {
-  const attempt = useAttempt('FOOTBALL_GRID', level);
+export function GridPage({ level, timed = false }: { level: number; timed?: boolean }) {
+  const attempt = useAttempt('FOOTBALL_GRID', level, timed);
   const action = useAction('FOOTBALL_GRID', level);
   const online = useOnline();
   const [cell, setCell] = useState<number | null>(null);
@@ -112,7 +113,17 @@ export function GridPage({ level }: { level: number }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <GameHeader title={title} />
+      <GameHeader
+        title={title}
+        aside={
+          <Countdown
+            data={data}
+            onTimeUp={() =>
+              void action.mutate({ attemptId: data.attempt.id, input: { kind: 'finish' } })
+            }
+          />
+        }
+      />
       <p className="sr-only" aria-live="polite">
         {announce}
       </p>

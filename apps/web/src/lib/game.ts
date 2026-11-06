@@ -23,7 +23,7 @@ export const useTrack = (mode: GameMode) =>
 export const useStats = () =>
   useQuery({ queryKey: ['stats'], queryFn: () => api<StatsResponse>('/v1/me/stats') });
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<MeResponse>('/v1/me') });
-export const useRanking = (scope: 'all' | 'week') =>
+export const useRanking = (scope: 'all' | 'week' | 'timed') =>
   useQuery({
     queryKey: ['ranking', scope],
     queryFn: () => api<RankingResponse>(`/v1/ranking?scope=${scope}`),
@@ -41,10 +41,11 @@ export const fetchHistory = (mode: GameMode | '', cursor: string | null) =>
   );
 
 /** Starts or resumes the level's attempt; the server returns the same one on reload. */
-export function useAttempt(mode: GameMode, level: number) {
+export function useAttempt(mode: GameMode, level: number, timed = false) {
   return useQuery({
     queryKey: ['attempt', mode, level],
-    queryFn: () => api<AttemptResponse>('/v1/attempts', { method: 'POST', json: { mode, level } }),
+    queryFn: () =>
+      api<AttemptResponse>('/v1/attempts', { method: 'POST', json: { mode, level, timed } }),
     staleTime: Infinity,
     retry: 0,
   });

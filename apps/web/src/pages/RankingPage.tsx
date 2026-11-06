@@ -4,7 +4,7 @@ import { useRanking } from '../lib/game';
 import { Skeleton } from '../components/ui';
 
 export function RankingPage() {
-  const [scope, setScope] = useState<'all' | 'week'>('all');
+  const [scope, setScope] = useState<'all' | 'week' | 'timed'>('all');
   const { data } = useRanking(scope);
   return (
     <div className="flex flex-col gap-5">
@@ -14,6 +14,7 @@ export function RankingPage() {
           [
             ['all', 'Geral'],
             ['week', 'Semana'],
+            ['timed', 'Contra o relógio'],
           ] as const
         ).map(([s, label]) => (
           <button
@@ -53,7 +54,9 @@ export function RankingPage() {
         <p className="text-chalk-soft">
           {scope === 'week'
             ? 'Ninguém pontuou esta semana ainda. É a sua chance.'
-            : 'Ninguém no ranking ainda.'}
+            : scope === 'timed'
+              ? 'Ninguém jogou contra o relógio ainda. Escolha esse modo ao abrir uma fase.'
+              : 'Ninguém no ranking ainda.'}
         </p>
       ) : (
         <>

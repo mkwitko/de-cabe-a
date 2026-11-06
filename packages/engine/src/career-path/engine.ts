@@ -40,6 +40,8 @@ export type CareerPathConfig = z.infer<typeof CareerPathConfig>;
 export const CareerPathInput = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('guess'), playerId: z.string().min(1) }),
   z.object({ kind: z.literal('skip') }),
+  /** Ends the game as lost; sent when the clock runs out (ADR-009). */
+  z.object({ kind: z.literal('give_up') }),
 ]);
 export type CareerPathInput = z.infer<typeof CareerPathInput>;
 
@@ -87,6 +89,8 @@ export const careerPath: GameEngine<
       state.attempts.some((a) => a.kind === 'guess' && a.playerId === input.playerId)
     )
       throw new EngineRuleError('DUPLICATE_GUESS');
+    if (input.kind === 'give_up')
+      return { state: { ...state, status: 'LOST' }, event: { type: 'lost' } };
 
     const correct = input.kind === 'guess' && input.playerId === config.answerPlayerId;
     const attempts = [

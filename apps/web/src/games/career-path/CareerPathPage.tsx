@@ -15,6 +15,7 @@ import { useGameTracking } from '../../lib/useGameTracking';
 import { useAction, useAttempt } from '../../lib/game';
 import { countryName, POSITION_LABEL } from '../../lib/format';
 import { LevelEnd, LevelError } from '../LevelParts';
+import { Countdown } from '../Clock';
 import { Icon } from '../../components/Icon';
 import { PlayerSearch } from '../../components/PlayerSearch';
 import {
@@ -90,8 +91,8 @@ function resultCopy(data: AttemptResponse) {
   };
 }
 
-export function CareerPathPage({ level }: { level: number }) {
-  const attempt = useAttempt('CAREER_PATH', level);
+export function CareerPathPage({ level, timed = false }: { level: number; timed?: boolean }) {
+  const attempt = useAttempt('CAREER_PATH', level, timed);
   const action = useAction('CAREER_PATH', level);
   const online = useOnline();
   const [selected, setSelected] = useState<PlayerRef | null>(null);
@@ -152,11 +153,17 @@ export function CareerPathPage({ level }: { level: number }) {
       <GameHeader
         title={title}
         aside={
-          <AttemptDots
-            used={view.attemptsUsed}
-            max={view.maxAttempts}
-            won={data.attempt.status === 'WON'}
-          />
+          <div className="flex items-center gap-3">
+            <Countdown
+              data={data}
+              onTimeUp={() => void submit({ kind: 'give_up' }, 'Acabou o tempo')}
+            />
+            <AttemptDots
+              used={view.attemptsUsed}
+              max={view.maxAttempts}
+              won={data.attempt.status === 'WON'}
+            />
+          </div>
         }
       />
       <p className="sr-only" aria-live="polite">

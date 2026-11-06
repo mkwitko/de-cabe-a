@@ -15,6 +15,8 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   // 2. Career Path level 1: wrong guess reveals club 2
   await page.getByRole('link', { name: 'Começar' }).first().click();
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
+  // Mode chosen once, before the level starts (ADR-009).
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
   const revealed = page.getByRole('list', { name: 'Clubes revelados' }).getByRole('listitem');
   await expect(revealed.first()).toContainText('Cruzeiro');
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('Romar');
@@ -63,6 +65,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
 
   // 8. Grid level 1: one right, one wrong, finish, examples shown
   await page.goto('/grid/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
   await page.getByRole('gridcell', { name: 'Flamengo e Milan: vazia' }).click();
   await page
     .getByRole('combobox', { name: 'Quem cumpre os dois critérios?' })

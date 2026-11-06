@@ -107,6 +107,11 @@ export const AttemptSummary = z.strictObject({
   status: AttemptStatus,
   score: z.number(),
   stars: z.number(),
+  /** Against the clock (ADR-009): the server closes the level at deadlineAt. */
+  timed: z.boolean(),
+  deadlineAt: z.string().nullable(),
+  /** Time the level took, once finished (shown in both modes). */
+  durationSec: z.number().nullable(),
 });
 export type AttemptSummary = z.infer<typeof AttemptSummary>;
 
@@ -132,7 +137,12 @@ export const AttemptResponse = z.strictObject({
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
 
-export const StartAttemptRequest = z.object({ mode: GameMode, level: z.number().int().min(1) });
+export const StartAttemptRequest = z.object({
+  mode: GameMode,
+  level: z.number().int().min(1),
+  /** Chosen once, when the level starts (ADR-009). */
+  timed: z.boolean().default(false),
+});
 export const SubmitActionRequest = z.object({
   idempotencyKey: z.uuid(),
   input: z.union([
@@ -143,6 +153,7 @@ export const SubmitActionRequest = z.object({
     }),
     z.object({ kind: z.literal('skip') }),
     z.object({ kind: z.literal('finish') }),
+    z.object({ kind: z.literal('give_up') }),
     z.object({ kind: z.literal('hint'), cellIndex: z.number().int() }),
   ]),
 });
@@ -228,7 +239,8 @@ export const StatsResponse = z.strictObject({
 export type StatsResponse = z.infer<typeof StatsResponse>;
 
 /** GET /v1/ranking?scope=all|week */
-export const RankingQuery = z.object({ scope: z.enum(['all', 'week']).default('all') });
+/** `timed`: stars from levels played against the clock, ties broken by the faster total (ADR-009). */
+export const RankingQuery = z.object({ scope: z.enum(['all', 'week', 'timed']).default('all') });
 const RankingEntry = z.strictObject({
   position: z.number(),
   nickname: z.string(),
@@ -238,7 +250,7 @@ const RankingEntry = z.strictObject({
   isMe: z.boolean(),
 });
 export const RankingResponse = z.strictObject({
-  scope: z.enum(['all', 'week']),
+  scope: z.enum(['all', 'week', 'timed']),
   entries: z.array(RankingEntry),
   me: z.strictObject({
     position: z.number().nullable(),
