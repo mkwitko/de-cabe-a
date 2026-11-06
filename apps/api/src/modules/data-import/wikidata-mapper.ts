@@ -154,6 +154,9 @@ export function mapPlayer(e: WikidataEntity, lookups: Lookups): MappedPlayer {
   addAlias(fullName, 'full');
   for (const lang of ['pt', 'en'])
     for (const a of e.aliases?.[lang] ?? []) addAlias(a.value, 'variant');
+  // The pt label is sometimes the full name (Dida is "Nelson de Jesus Silva"); other
+  // languages keep the name fans use.
+  for (const lang of ['mul', 'en', 'es', 'it']) addAlias(e.labels?.[lang]?.value, 'variant');
 
   const spells: MappedSpell[] = [];
   for (const c of claims(e, 'P54')) {

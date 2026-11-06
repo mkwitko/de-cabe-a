@@ -367,6 +367,16 @@ describe('player search', () => {
       { id: ids.ze2, name: 'Zé Roberto', disambiguation: '1980 · Vasco' },
     ]);
   });
+  it('finds a player by the name fans use when the canonical one is the full name (Dida)', async () => {
+    const romario = await prisma.player.findFirstOrThrow({ where: { canonicalName: 'Romário' } });
+    await prisma.playerAlias.create({
+      data: { playerId: romario.id, alias: 'Baixinho', normalized: 'baixinho', kind: 'variant' },
+    });
+    expect((await search('baixinho')).json().players).toEqual([
+      { id: romario.id, name: 'Baixinho', disambiguation: 'Romário' },
+    ]);
+    await prisma.playerAlias.deleteMany({ where: { normalized: 'baixinho' } });
+  });
   it('validates q length and limit', async () => {
     expect((await search('r')).statusCode).toBe(400);
     expect((await guest().req('GET', '/players/search?q=ro&limit=1')).json().players).toHaveLength(

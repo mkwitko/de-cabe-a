@@ -57,7 +57,8 @@ export const fetchEntities: EntityFetcher = async (ids) => {
       action: 'wbgetentities',
       format: 'json',
       props: 'labels|aliases|descriptions|claims|sitelinks',
-      languages: 'pt|en',
+      // mul/es/it labels carry the name fans use when the pt label is the full name (Dida).
+      languages: 'pt|en|mul|es|it',
       ids: ids.slice(i, i + 50).join('|'),
     });
     const body = (await throttledGet(`${API}?${params}`)) as {

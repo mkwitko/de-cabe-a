@@ -34,16 +34,25 @@ export async function searchPlayers(
         },
       },
     },
+    // ponytail: 200 rows cap; the most notable first so short terms still reach the stars.
+    orderBy: { player: { notabilityTier: 'asc' } },
     take: 200,
   });
   const best = new Map<string, (typeof aliases)[number]>();
   for (const a of aliases) {
     const prev = best.get(a.playerId);
-    if (!prev || (a.isPrimary && !prev.isPrimary)) best.set(a.playerId, a);
+    const exact = (x: typeof a) => x.normalized === term;
+    if (
+      !prev ||
+      exact(a) > exact(prev) ||
+      (exact(a) === exact(prev) && a.isPrimary && !prev.isPrimary)
+    )
+      best.set(a.playerId, a);
   }
   const ranked = [...best.values()]
     .sort(
       (a, b) =>
+        Number(b.normalized === term) - Number(a.normalized === term) ||
         TIER[a.player.notabilityTier] - TIER[b.player.notabilityTier] ||
         Number(b.isPrimary) - Number(a.isPrimary) ||
         a.player.canonicalName.localeCompare(b.player.canonicalName),
@@ -54,7 +63,11 @@ export async function searchPlayers(
   for (const r of ranked)
     nameCount.set(r.player.canonicalName, (nameCount.get(r.player.canonicalName) ?? 0) + 1);
 
-  return ranked.map(({ player }) => {
+  return ranked.map(({ player, alias, normalized, isPrimary }) => {
+    // Typed exactly a nickname that is not the canonical name (Dida, canonical "Nelson de Jesus
+    // Silva"): show the nickname, with the canonical name to confirm who it is.
+    if (normalized === term && !isPrimary)
+      return { id: player.id, name: alias, disambiguation: player.canonicalName };
     // Homonyms get "birth year · longest club" so the player can tell them apart.
     let disambiguation: string | null = null;
     if ((nameCount.get(player.canonicalName) ?? 0) > 1) {

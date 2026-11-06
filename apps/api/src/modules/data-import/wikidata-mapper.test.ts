@@ -56,8 +56,25 @@ describe('mapPlayer (real fixtures)', () => {
       ['Ronaldo Luís Nazário de Lima', 'full'],
       ['Ronaldo Fenômeno', 'variant'],
       ['R9', 'variant'],
+      ['Ronaldo', 'variant'], // English label
     ]);
     expect(r.aliases[0]).toMatchObject({ normalized: 'ronaldo nazario', isPrimary: true });
+  });
+
+  it('keeps the name other languages use, e.g. Dida (pt label is the full name)', () => {
+    const ronaldo = players.find((p) => p.id === 'Q529207')!;
+    const dida = {
+      ...ronaldo,
+      labels: {
+        pt: { value: 'Nelson de Jesus Silva' },
+        en: { value: 'Dida' },
+        mul: { value: 'Dida' },
+      },
+      aliases: {},
+    } as WikidataEntity;
+    const r = mapPlayer(dida, lookups);
+    expect(r.player.canonicalName).toBe('Nelson de Jesus Silva');
+    expect(r.aliases.map((a) => a.alias)).toContain('Dida');
   });
 
   it('drops national teams and keeps club spells with dates', () => {
