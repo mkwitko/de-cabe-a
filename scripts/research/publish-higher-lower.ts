@@ -69,8 +69,7 @@ const usedPairs = new Set<string>();
 const live = existing.filter((c) => c.status === 'published').length;
 console.log(`Mais ou Menos: ${live} live, ${pool.length} player-club totals`);
 
-let made = 0;
-for (let level = live + 1; level <= TARGET; level++) {
+function buildRounds(level: number) {
   const maxTier = level <= 20 ? 2 : level <= 60 ? 3 : 4;
   const fit = pool.filter((r) => r.tierN <= maxTier);
   const used = new Set<string>();
@@ -102,6 +101,43 @@ for (let level = live + 1; level <= TARGET; level++) {
       b: { playerId: b.playerId, clubId: b.clubId },
     });
   }
+  return { rounds, maxTier };
+}
+
+// --replace-unfair: published levels with a duel that fails the current fairness rule are
+// replaced in place (same number) with new duels.
+if (process.argv.includes('--replace-unfair')) {
+  const { retireChallenge } =
+    await import('../../apps/api/src/modules/challenges/challenges.service');
+  const published = await prisma.challenge.findMany({
+    where: { gameMode: 'HIGHER_LOWER', status: 'published' },
+    orderBy: { publicNumber: 'asc' },
+  });
+  let replaced = 0;
+  for (const c of published) {
+    const snap = c.snapshot as { rounds: { a: { value: number }; b: { value: number } }[] };
+    if (snap.rounds.every((r) => clearWinner(r.a.value, r.b.value))) continue;
+    const { rounds, maxTier } = buildRounds(c.publicNumber!);
+    if (rounds.length < 5) continue;
+    const { replacement } = await retireChallenge(
+      prisma,
+      c.id,
+      'Duelo apertado demais (jogos/gols da Wikipédia podem ser só da liga ou de todas as competições)',
+      { params: { rounds }, difficultyTier: maxTier === 2 ? 1 : maxTier === 3 ? 2 : 3 },
+      'ai-curator',
+    );
+    await validateChallenge(prisma, replacement!.id);
+    await publishChallenge(prisma, replacement!.id, new Date());
+    replaced++;
+  }
+  console.log(`Mais ou Menos: replaced ${replaced} of ${published.length} levels in place`);
+  await prisma.$disconnect();
+  process.exit(0);
+}
+
+let made = 0;
+for (let level = live + 1; level <= TARGET; level++) {
+  const { rounds, maxTier } = buildRounds(level);
   if (rounds.length < 5) {
     console.log(`level ${level}: not enough duels, stopping`);
     break;

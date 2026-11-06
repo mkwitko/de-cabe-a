@@ -34,9 +34,15 @@ export async function spellTotals(prisma: PrismaClient, playerId: string, clubId
   };
 }
 
-/** A fair round: the bigger value beats the smaller by at least 3 and 10%. */
-export const clearWinner = (x: number, y: number) =>
-  Math.abs(x - y) >= Math.max(3, Math.ceil(0.1 * Math.max(x, y)));
+/**
+ * A fair round. Infobox numbers are sometimes league-only and sometimes all competitions (Totti:
+ * 619 league games for Roma, 786 in all), about +20–30%. Requiring the bigger value to be at
+ * least 40% above the smaller (and 5 more) keeps the right answer right either way.
+ */
+export const clearWinner = (x: number, y: number) => {
+  const [hi, lo] = x > y ? [x, y] : [y, x];
+  return hi - lo >= 5 && hi >= lo * 1.4;
+};
 
 export async function buildHigherLowerSnapshot(
   prisma: PrismaClient,

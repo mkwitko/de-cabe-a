@@ -1,12 +1,12 @@
 // Real matches from open sources, for future games (Missing XI, Técnico de Bolso):
-//  - StatsBomb open data (attribution: "StatsBomb", logo): World Cups, Copa América, Euros, with
-//    lineups. Read their user agreement (open-data LICENSE.pdf) before using it in a game.
+//  - Not StatsBomb: its open-data user agreement (LICENSE.pdf, 2023-09-08) forbids commercial use
+//    and providing the data to third parties (1.2.1, 1.2.2), so it cannot feed an ad-supported game.
 //  - OpenFootball football.json (CC0): results of the main European leagues, 2010-11 to 2025-26.
 // Lineup players are linked to ours only when name and nationality match exactly one player;
 // teams to our clubs when the name matches. Re-runnable (sourceRef is unique).
 //  - OpenFootball (CC0) extra: World Cups 1930–2026, Champions League 2011–26, Brasileirão A/B
 //    2018–26, Copa do Brasil, Libertadores and Sul-Americana 2012–26 (Football.TXT files).
-// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/import-matches.ts [--statsbomb] [--openfootball] [--extra]
+// Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/import-matches.ts [--openfootball] [--extra]
 import { createPrisma } from '../../apps/api/src/db';
 import { normalizeName } from '../../packages/engine/src/index';
 import { parseFootballTxt } from './lib/football-txt';
@@ -18,7 +18,7 @@ try {
 }
 const prisma = createPrisma(process.env.DATABASE_URL!);
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
-const all = !['--statsbomb', '--openfootball', '--extra'].some((f) => process.argv.includes(f));
+const all = !['--openfootball', '--extra'].some((f) => process.argv.includes(f));
 async function get<T>(url: string): Promise<T | null> {
   for (let tries = 0; tries < 3; tries++) {
     try {
@@ -66,114 +66,6 @@ const byShort = new Map(clubs.map((c) => [c.shortName, c.id]));
 for (const [k, v] of Object.entries(BR_ALIASES))
   if (byShort.has(v)) clubByName.set(k, byShort.get(v)!);
 const clubOf = (team: string) => clubByName.get(strip(team)) ?? null;
-
-// Players by normalized alias, with nationality in English (StatsBomb country names).
-const en = new Intl.DisplayNames(['en'], { type: 'region' });
-const players = await prisma.player.findMany({
-  where: { verificationStatus: { in: ['verified', 'imported'] } },
-  select: {
-    id: true,
-    nationality: { select: { isoCode: true } },
-    aliases: { select: { normalized: true } },
-  },
-});
-const byAlias = new Map<string, { id: string; country: string }[]>();
-for (const p of players) {
-  const country = normalizeName(en.of(p.nationality.isoCode) ?? '');
-  for (const a of p.aliases)
-    byAlias.set(a.normalized, [...(byAlias.get(a.normalized) ?? []), { id: p.id, country }]);
-}
-function playerOf(names: (string | null | undefined)[], country: string | undefined) {
-  const c = normalizeName(country ?? '');
-  for (const n of names) {
-    if (!n) continue;
-    const hits = (byAlias.get(normalizeName(n)) ?? []).filter((h) => !c || h.country === c);
-    const ids = [...new Set(hits.map((h) => h.id))];
-    if (ids.length === 1) return ids[0]!;
-  }
-  return null;
-}
-
-if (all || process.argv.includes('--statsbomb')) {
-  const SB = 'https://raw.githubusercontent.com/statsbomb/open-data/master/data';
-  type Comp = {
-    competition_id: number;
-    season_id: number;
-    competition_name: string;
-    season_name: string;
-    competition_gender: string;
-  };
-  const comps = ((await get<Comp[]>(`${SB}/competitions.json`)) ?? []).filter(
-    (c) =>
-      c.competition_gender === 'male' &&
-      /^(FIFA World Cup|Copa America|UEFA Euro)$/.test(c.competition_name),
-  );
-  let matches = 0;
-  let linked = 0;
-  let lineupRows = 0;
-  for (const c of comps) {
-    type M = {
-      match_id: number;
-      match_date: string;
-      home_score: number;
-      away_score: number;
-      home_team: { home_team_name: string };
-      away_team: { away_team_name: string };
-      competition_stage?: { name: string };
-    };
-    for (const m of (await get<M[]>(`${SB}/matches/${c.competition_id}/${c.season_id}.json`)) ??
-      []) {
-      const sourceRef = `statsbomb:${m.match_id}`;
-      if (await prisma.match.findUnique({ where: { sourceRef } })) continue;
-      type L = {
-        team_name: string;
-        lineup: {
-          player_name: string;
-          player_nickname: string | null;
-          jersey_number: number;
-          country?: { name: string };
-          positions: { position: string; start_reason: string }[];
-        }[];
-      }[];
-      const lineups = (await get<L>(`${SB}/lineups/${m.match_id}.json`)) ?? [];
-      const rows = lineups.flatMap((t) =>
-        t.lineup.map((pl) => {
-          const playerId = playerOf([pl.player_nickname, pl.player_name], pl.country?.name);
-          if (playerId) linked++;
-          return {
-            side: t.team_name === m.home_team.home_team_name ? 'home' : 'away',
-            playerName: pl.player_name,
-            nickname: pl.player_nickname,
-            country: pl.country?.name ?? null,
-            playerId,
-            position: pl.positions[0]?.position ?? null,
-            jersey: pl.jersey_number,
-            starter: pl.positions[0]?.start_reason === 'Starting XI',
-          };
-        }),
-      );
-      lineupRows += rows.length;
-      await prisma.match.create({
-        data: {
-          source: 'statsbomb',
-          sourceRef,
-          competition: c.competition_name,
-          season: c.season_name,
-          date: new Date(m.match_date),
-          stage: m.competition_stage?.name ?? null,
-          homeTeam: m.home_team.home_team_name,
-          awayTeam: m.away_team.away_team_name,
-          homeScore: m.home_score,
-          awayScore: m.away_score,
-          lineups: { create: rows },
-        },
-      });
-      matches++;
-    }
-    log(`StatsBomb ${c.competition_name} ${c.season_name}: total ${matches} matches`);
-  }
-  log(`StatsBomb: ${matches} matches, ${lineupRows} lineup rows, ${linked} linked to our players`);
-}
 
 if (all || process.argv.includes('--openfootball')) {
   const OF = 'https://raw.githubusercontent.com/openfootball/football.json/master';
