@@ -23,7 +23,10 @@ const google =
     : undefined;
 
 const app = buildApp(
-  { logger: true },
+  // Behind Caddy + the Pages Function (ADR-010) the client IP comes in X-Forwarded-For.
+  // ponytail: the origin is public, so a direct caller can forge it; restrict Caddy to
+  // Cloudflare's IP ranges if per-IP limits get abused.
+  { logger: true, trustProxy: process.env.TRUST_PROXY === '1' },
   {
     prisma: createPrisma(env('DATABASE_URL')),
     adminToken: env('ADMIN_TOKEN'),
