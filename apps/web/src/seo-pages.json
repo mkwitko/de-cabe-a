@@ -1,0 +1,115 @@
+{
+  "site": "https://decabecafc.com.br",
+  "pages": [
+    {
+      "path": "/",
+      "title": "De Cabeça · Minijogos de futebol: adivinhe o jogador, grid e impostor",
+      "description": "Jogos de futebol em português: adivinhe o jogador pela carreira, complete a grade 3×3 e ache o impostor que nunca jogou no clube. Grátis, fase por fase, com ranking.",
+      "h1": "De Cabeça: minijogos de futebol",
+      "text": [
+        "Teste quanto você sabe de futebol de cabeça. Três jogos, centenas de fases, estrelas, títulos e ranking da comunidade.",
+        "Career Path: adivinhe o jogador pela sequência de clubes. Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
+      ],
+      "links": [
+        ["/career-path", "Jogar Career Path"],
+        ["/grid", "Jogar Football Grid"],
+        ["/impostor", "Jogar Impostor"],
+        ["/como-jogar", "Como jogar"],
+        ["/jogadores", "Carreiras de jogadores"]
+      ]
+    },
+    {
+      "path": "/career-path",
+      "title": "Career Path: adivinhe o jogador pela carreira | De Cabeça",
+      "description": "Veja os clubes de um jogador, um por vez, com jogos e gols, e adivinhe quem é em até 6 tentativas. Centenas de fases de futebol brasileiro e mundial.",
+      "h1": "Career Path: adivinhe o jogador pela carreira",
+      "text": [
+        "Você vê o primeiro clube da carreira de um jogador, com anos, jogos e gols. Cada erro revela o próximo clube.",
+        "Acerte em até 6 tentativas; quanto antes, mais estrelas. A posição aparece desde o começo."
+      ],
+      "links": [
+        ["/career-path", "Começar a fase 1"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
+      "path": "/grid",
+      "title": "Football Grid: a grade 3×3 de futebol em português | De Cabeça",
+      "description": "Complete a grade 3×3: cada casa pede um jogador que cumpra a linha e a coluna, como clube, país ou posição. Nove chances e três dicas por grade.",
+      "h1": "Football Grid: complete a grade 3×3",
+      "text": [
+        "Cada casa cruza dois critérios, como ter jogado no Flamengo e no Milan, ou ser argentino e meio-campista. Vale qualquer jogador que cumpra os dois.",
+        "Nove tentativas, três dicas, e cada jogador vale uma vez por grade."
+      ],
+      "links": [
+        ["/grid", "Começar o Grid"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
+      "path": "/impostor",
+      "title": "Impostor: ache o jogador que nunca jogou no clube | De Cabeça",
+      "description": "Um clube e quatro jogadores: três jogaram lá, um nunca vestiu a camisa. Ache o impostor em cinco rodadas por fase.",
+      "h1": "Impostor: quem nunca jogou no clube?",
+      "text": [
+        "Em cada rodada aparece um clube e quatro jogadores. Três tiveram passagem por ele; um nunca jogou lá.",
+        "Cinco rodadas por fase, uma escolha por rodada. Acerte as cinco para três estrelas."
+      ],
+      "links": [
+        ["/impostor", "Começar o Impostor"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
+      "path": "/ranking",
+      "title": "Ranking De Cabeça: quem mais sabe de futebol | De Cabeça",
+      "description": "Ranking geral, da semana e contra o relógio dos jogadores do De Cabeça, por estrelas conquistadas nas fases.",
+      "h1": "Ranking",
+      "text": [
+        "Estrelas somadas em todas as fases dos três jogos. Escolha um apelido para aparecer."
+      ],
+      "links": [["/ranking", "Ver o ranking"]]
+    },
+    {
+      "path": "/como-jogar",
+      "title": "Como jogar De Cabeça: regras, estrelas e títulos | De Cabeça",
+      "description": "Regras do Career Path, Football Grid e Impostor, como ganhar estrelas, títulos de Reserva a Lenda, ranking e modo contra o relógio.",
+      "h1": "Como jogar",
+      "text": [
+        "Cada jogo é uma trilha de fases. Terminar uma fase abre a próxima, e cada fase vale de 0 a 3 estrelas.",
+        "As estrelas somam títulos: Reserva, Titular (15), Craque (60) e Lenda (150)."
+      ],
+      "links": [["/", "Escolher um jogo"]]
+    }
+  ],
+  "faq": [
+    [
+      "O De Cabeça é grátis?",
+      "Sim. Todos os jogos são grátis e funcionam no navegador, sem instalar nada e sem cadastro."
+    ],
+    [
+      "Preciso criar conta?",
+      "Não. Você joga como convidado. A conta (e-mail ou Google) é opcional e serve para levar seu progresso para outro aparelho."
+    ],
+    [
+      "Como funciona o Career Path?",
+      "Você vê os clubes de um jogador, um por vez, com anos, jogos e gols, e tem 6 tentativas para dizer quem é. Acertar em 1 ou 2 vale 3 estrelas."
+    ],
+    [
+      "Como funciona o Football Grid?",
+      "Cada casa da grade 3×3 pede um jogador que cumpra a linha e a coluna (clube, país ou posição). São 9 tentativas e 3 dicas; completar a grade sem dica vale 3 estrelas."
+    ],
+    [
+      "Como funciona o Impostor?",
+      "Em cada rodada há um clube e 4 jogadores: 3 jogaram lá e 1 nunca jogou. São 5 rodadas; acertar as 5 vale 3 estrelas."
+    ],
+    [
+      "O que é o modo contra o relógio?",
+      "Antes de começar uma fase você escolhe jogar no seu tempo ou contra o relógio. Contra o relógio, a fase acaba quando o tempo termina e conta para um ranking próprio."
+    ],
+    [
+      "De onde vêm os dados dos jogadores?",
+      "Das carreiras na Wikidata e na Wikipédia, conferidas entre as duas fontes. Se achar um erro, use \"Essa fase tem um erro?\" no fim da fase."
+    ]
+  ]
+}

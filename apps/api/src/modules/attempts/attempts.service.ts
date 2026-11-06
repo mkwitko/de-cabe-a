@@ -3,6 +3,7 @@
  * idempotent actions, views without answers, stars at the end.
  * Every rule runs in the engine; this layer loads, locks, persists and presents.
  */
+import { playerSlug } from '../seo/seo.routes';
 import type { ImpostorReveal, ImpostorView, AttemptResponse, PlayerRef } from '@decabeca/contracts';
 import {
   starsFor,
@@ -87,10 +88,16 @@ export async function present(
         trajectory: CareerPathConfig['trajectory'];
         extraHints: CareerPathConfig['extraHints'];
       };
+      const answer = await prisma.player.findUnique({
+        where: { id: r.answerPlayerId },
+        select: { id: true, canonicalName: true, wikidataId: true, verificationStatus: true },
+      });
       reveal = {
         answer: ref(refs, r.answerPlayerId),
         trajectory: r.trajectory.map(({ clubId: _clubId, ...t }) => t),
         extraHints: r.extraHints,
+        answerPage:
+          answer?.verificationStatus === 'verified' ? `/jogador/${playerSlug(answer)}` : null,
       };
     }
   } else {

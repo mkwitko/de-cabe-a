@@ -14,6 +14,7 @@ import { AppError } from './errors';
 import { track } from './modules/analytics/analytics';
 import { levelReportAdminRoutes } from './modules/reports/level-reports';
 import { metricsRoutes, serverMetrics } from './modules/admin/metrics';
+import { seoRoutes } from './modules/seo/seo.routes';
 import { adminAuth } from './modules/admin/auth';
 import { createAuth, type Auth, type AuthOptions } from './modules/account/auth';
 import { importRoutes } from './modules/data-import/import.routes';
@@ -127,6 +128,8 @@ export function buildApp(
     { prefix: '/v1/admin' },
   );
   app.register(publicRoutes, { prefix: '/v1' });
+  // Search pages on the site's domain (forwarded by the Pages Function, like /v1).
+  app.register(seoRoutes);
 
   return app;
 }

@@ -1,6 +1,6 @@
 # Deploy do piloto (ADR-010)
 
-Web estática no **Cloudflare Pages**; API + Postgres na **VM da Oracle** em Docker, atrás do Caddy (HTTPS). O site e a API ficam no **mesmo domínio**: o Pages encaminha `decabecafc.com.br/v1/*` para a VM (`apps/web/functions/v1/[[path]].js`). O cookie de convidado e o login dependem disso.
+Web estática no **Cloudflare Pages**; API + Postgres na **VM da Oracle** em Docker, atrás do Caddy (HTTPS). O site e a API ficam no **mesmo domínio**: o Pages encaminha `decabecafc.com.br/v1/*` para a VM (`apps/web/functions/_middleware.js`, que também encaminha as páginas de busca `/jogador/*`, `/jogadores`, `/sitemap.xml` e `/llms.txt`). O cookie de convidado e o login dependem disso.
 
 Nomes usados abaixo: `decabecafc.com.br` (site) e `api-origin.decabecafc.com.br` (origem da API, que ninguém abre direto).
 

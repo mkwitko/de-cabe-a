@@ -39,6 +39,9 @@ const NewPasswordPage = lazy(() =>
 const AccountPage = lazy(() =>
   import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })),
 );
+const HowToPlayPage = lazy(() =>
+  import('./pages/HowToPlayPage').then((m) => ({ default: m.HowToPlayPage })),
+);
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 const GAMES = [
@@ -255,6 +258,14 @@ function HomeRoute() {
         <Link to="/privacidade" className="underline underline-offset-4 hover:text-chalk">
           Privacidade
         </Link>
+        {' · '}
+        <Link to="/como-jogar" className="underline underline-offset-4 hover:text-chalk">
+          Como jogar
+        </Link>
+        {' · '}
+        <a href="/jogadores" className="underline underline-offset-4 hover:text-chalk">
+          Carreiras de jogadores
+        </a>
       </p>
     </>
   );
@@ -344,6 +355,7 @@ function PublicRoutes() {
           <Route path="/conta" element={<AccountPage />} />
           <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
           <Route path="/privacidade" element={<PrivacyPage />} />
+          <Route path="/como-jogar" element={<HowToPlayPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

@@ -806,6 +806,51 @@ describe('editorial reports and analytics', () => {
   });
 });
 
+describe('Career Path reveal', () => {
+  it('reveals a level whose answer has secondary positions, with a link to the career page', async () => {
+    const kaka = await verifiedPlayer(prisma, {
+      name: 'Kaká Teste',
+      clubIds: [clubs['Santos']!.id, clubs['Milan']!.id, clubs['Real Madrid']!.id],
+      nationalityId: countries.BR!,
+      position: 'MF',
+    });
+    await prisma.player.update({
+      where: { id: kaka.id },
+      data: { secondaryPositionGroups: ['FW'] },
+    });
+    const lvl = await publish({ mode: 'CAREER_PATH', params: { playerId: kaka.id } });
+    const g = guest();
+    // Earlier levels must be finished to open this one: finish them first.
+    for (let n = 1; n < lvl.publicNumber; n++) await playCareer(g, n, null, 6);
+    const res = await playCareer(g, lvl.publicNumber, kaka.id, 0);
+    expect(res.attempt.status, JSON.stringify(res)).toBe('WON');
+    expect(res.reveal.extraHints).toMatchObject({ position: 'MF', secondaryPositions: ['FW'] });
+    expect(res.reveal.answerPage).toMatch(/^\/jogador\/kaka-teste-/);
+  });
+});
+
+describe('search pages (SEO)', () => {
+  it('player page with direct answer and structured data; index, sitemap and llms.txt', async () => {
+    const ronaldo = await prisma.player.findFirstOrThrow({ where: { canonicalName: 'Ronaldo' } });
+    const sitemap = await app.inject({ method: 'GET', url: '/sitemap.xml' });
+    expect(sitemap.statusCode).toBe(200);
+    const path = new RegExp(`/jogador/ronaldo-${ronaldo.id}`).exec(sitemap.body)?.[0];
+    expect(path).toBeTruthy();
+    const page = await app.inject({ method: 'GET', url: path! });
+    expect(page.statusCode).toBe(200);
+    expect(page.headers['content-type']).toContain('text/html');
+    expect(page.body).toContain(
+      '<title>Carreira de Ronaldo: clubes, jogos e gols | De Cabeça</title>',
+    );
+    expect(page.body).toContain('Ronaldo é um atacante brasileiro');
+    expect(page.body).toContain('"@type":"Person"');
+    expect(page.body).toContain('<link rel="canonical" href="http://localhost:5173/jogador/');
+    expect((await app.inject({ method: 'GET', url: '/jogador/ninguem-q1' })).statusCode).toBe(404);
+    expect((await app.inject({ method: 'GET', url: '/jogadores' })).body).toContain(path!);
+    expect((await app.inject({ method: 'GET', url: '/llms.txt' })).body).toContain('# De Cabeça');
+  });
+});
+
 describe('Impostor (ADR-011)', () => {
   it('publishes a 5-round level, refuses an impostor who played there, plays it', async () => {
     const clubNames = ['Flamengo', 'Santos', 'Milan', 'Real Madrid', 'Barcelona'];

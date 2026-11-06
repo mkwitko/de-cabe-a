@@ -86,6 +86,15 @@ function resultCopy(data: AttemptResponse) {
       <p>
         Era <strong className="font-black">{reveal.answer.name}</strong> ·{' '}
         {reveal.trajectory.length} clubes
+        {reveal.answerPage && (
+          <>
+            {' · '}
+            {/* Server-rendered career page (not a SPA route): plain link. */}
+            <a href={reveal.answerPage} className="underline underline-offset-4">
+              Ver a carreira
+            </a>
+          </>
+        )}
       </p>
     ),
   };
