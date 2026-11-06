@@ -1,4 +1,4 @@
-import { AD_SLOTS, AdSlot } from './components/AdSlot';
+import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
 import {
   lazy,
   Suspense,
@@ -359,6 +359,7 @@ function PublicRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <AdConsentBanner />
     </Shell>
   );
 }
