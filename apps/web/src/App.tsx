@@ -11,20 +11,35 @@ import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from '
 import type { GamesResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
 import type { GameMode } from '@decabeca/contracts';
-import { CareerPathPage } from './games/career-path/CareerPathPage';
-import { GridPage } from './games/grid/GridPage';
-import { HistoryPage } from './pages/HistoryPage';
 import { TrackPage } from './pages/TrackPage';
-import { RankingPage } from './pages/RankingPage';
-import { ImpostorPage } from './games/impostor/ImpostorPage';
 import { ModeGate } from './games/Clock';
-import { PrivacyPage } from './pages/PrivacyPage';
-import { NewPasswordPage } from './pages/NewPasswordPage';
-import { AccountPage } from './pages/AccountPage';
-import { StatsPage } from './pages/StatsPage';
 import { btnPrimary, Skeleton, useOnline } from './components/ui';
 
 const AdminApp = lazy(() => import('./admin/AdminApp'));
+// Each screen loads on demand: the first visit downloads only the shell and the home.
+const CareerPathPage = lazy(() =>
+  import('./games/career-path/CareerPathPage').then((m) => ({ default: m.CareerPathPage })),
+);
+const GridPage = lazy(() => import('./games/grid/GridPage').then((m) => ({ default: m.GridPage })));
+const ImpostorPage = lazy(() =>
+  import('./games/impostor/ImpostorPage').then((m) => ({ default: m.ImpostorPage })),
+);
+const HistoryPage = lazy(() =>
+  import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })),
+);
+const RankingPage = lazy(() =>
+  import('./pages/RankingPage').then((m) => ({ default: m.RankingPage })),
+);
+const PrivacyPage = lazy(() =>
+  import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
+);
+const NewPasswordPage = lazy(() =>
+  import('./pages/NewPasswordPage').then((m) => ({ default: m.NewPasswordPage })),
+);
+const AccountPage = lazy(() =>
+  import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })),
+);
+const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 const GAMES = [
   {
@@ -314,22 +329,24 @@ export function App() {
 function PublicRoutes() {
   return (
     <Shell>
-      <Routes>
-        <Route path="/" element={<HomeRoute />} />
-        <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
-        <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
-        <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
-        <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
-        <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
-        <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
-        <Route path="/ranking" element={<RankingPage />} />
-        <Route path="/history" element={<HistoryPage />} />
-        <Route path="/stats" element={<StatsPage />} />
-        <Route path="/conta" element={<AccountPage />} />
-        <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
-        <Route path="/privacidade" element={<PrivacyPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<Skeleton className="h-96" />}>
+        <Routes>
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
+          <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
+          <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
+          <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
+          <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
+          <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
+          <Route path="/ranking" element={<RankingPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/stats" element={<StatsPage />} />
+          <Route path="/conta" element={<AccountPage />} />
+          <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
+          <Route path="/privacidade" element={<PrivacyPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </Shell>
   );
 }

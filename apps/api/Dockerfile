@@ -1,11 +1,21 @@
 # API image (ADR-010). Build from the repository root:
 #   docker build -f apps/api/Dockerfile -t decabeca-api .
-FROM node:24-alpine
+# Two stages: the build installs the workspace, `pnpm deploy` copies only the API with its
+# production dependencies (prisma and tsx included: migrations and the TS sources run at start).
+# The Prisma client generated in the build stage is copied as is.
+FROM node:24-alpine AS build
 WORKDIR /app
 RUN corepack enable
 COPY . .
-RUN pnpm install --frozen-lockfile --filter @decabeca/api...
+RUN pnpm install --frozen-lockfile --filter @decabeca/api... \
+ && pnpm --filter @decabeca/api deploy --legacy --prod /out \
+ && cp -r apps/api/prisma apps/api/prisma.config.ts /out/ \
+ && rm -rf /out/src/generated && cp -r apps/api/src/generated /out/src/generated
+
+FROM node:24-alpine
+WORKDIR /app
+COPY --from=build /out .
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
 EXPOSE 3000
-# Migrations first, then the server (tsx runs the TypeScript sources, as in development).
-CMD ["sh", "-c", "pnpm --filter @decabeca/api exec prisma migrate deploy && pnpm --filter @decabeca/api start"]
+USER node
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/server.ts"]
