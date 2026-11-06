@@ -9,6 +9,7 @@ describe('engine package', () => {
       'impostor',
       'timeline',
       'higher-lower',
+      'missing-xi',
     ]);
   });
 });

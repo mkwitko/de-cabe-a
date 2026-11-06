@@ -12,6 +12,7 @@ const NAME = {
   IMPOSTOR: 'Impostor',
   TIMELINE: 'Linha do tempo',
   HIGHER_LOWER: 'Mais ou Menos',
+  MISSING_XI: 'Escalação',
 } as const;
 const date = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -21,6 +22,7 @@ const date = new Intl.DateTimeFormat('pt-BR', {
 
 function result(mode: GameMode, status: string, score: number) {
   if (mode === 'FOOTBALL_GRID') return `${score}/9`;
+  if (mode === 'MISSING_XI') return `${score}%`;
   if (mode === 'IMPOSTOR' || mode === 'TIMELINE' || mode === 'HIGHER_LOWER') return `${score}/5`;
   return status === 'WON' ? `${7 - score / 10}/6` : 'X/6';
 }
@@ -37,7 +39,7 @@ export function HistoryPage() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="font-condensed text-4xl font-black uppercase">Histórico</h1>
-      <div className="flex gap-2" role="group" aria-label="Filtrar por jogo">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por jogo">
         {(
           [
             ['', 'Todos'],
@@ -46,6 +48,7 @@ export function HistoryPage() {
             ['IMPOSTOR', 'Impostor'],
             ['TIMELINE', 'Linha do tempo'],
             ['HIGHER_LOWER', 'Mais ou Menos'],
+            ['MISSING_XI', 'Escalação'],
           ] as const
         ).map(([m, label]) => (
           <button

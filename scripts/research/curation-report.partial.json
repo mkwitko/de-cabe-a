@@ -1,0 +1,1711 @@
+{
+ "ranAt": "2026-11-06T22:53:11.324Z",
+ "outcomes": [
+  {
+   "qid": "Q101053044",
+   "name": "Piero Hincapié",
+   "result": "verified"
+  },
+  {
+   "qid": "Q10327357",
+   "name": "Matheus Ferraz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q104414736",
+   "name": "Nico Williams",
+   "result": "verified"
+  },
+  {
+   "qid": "Q104454",
+   "name": "Mario Götze",
+   "result": "verified"
+  },
+  {
+   "qid": "Q10513877",
+   "name": "William Douglas De Amorim",
+   "result": "verified"
+  },
+  {
+   "qid": "Q10526787",
+   "name": "Wataru Endō",
+   "result": "verified"
+  },
+  {
+   "qid": "Q106387",
+   "name": "Stefan Kießling",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1064902",
+   "name": "Samir Lima de Araújo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q107076",
+   "name": "Torsten Frings",
+   "result": "verified"
+  },
+  {
+   "qid": "Q109417",
+   "name": "Angelos Charisteas",
+   "result": "mismatch",
+   "detail": "AFC Ajax não está no Wikidata"
+  },
+  {
+   "qid": "Q1094301",
+   "name": "Felipe Aliste Lopes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q109868",
+   "name": "Birgit Prinz",
+   "result": "mismatch",
+   "detail": "1. FFC Frankfurt não está no Wikidata"
+  },
+  {
+   "qid": "Q110053",
+   "name": "Mats Hummels",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1103892",
+   "name": "Cléber Monteiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q113351",
+   "name": "Tomislav Marić",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q1144663",
+   "name": "Benedicto Antonio Angeli",
+   "result": "verified"
+  },
+  {
+   "qid": "Q11688787",
+   "name": "Leonardo Valencia",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1185635",
+   "name": "Marcelo Miguel Pelissari",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1185667",
+   "name": "Elpídio Pereira da Silva Filho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1188407",
+   "name": "Jardel Nivaldo Vieira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q11948",
+   "name": "Michael Ballack",
+   "result": "mismatch",
+   "detail": "Bayern Munique não está no Wikidata"
+  },
+  {
+   "qid": "Q1220376",
+   "name": "Diego Aguirre",
+   "result": "verified"
+  },
+  {
+   "qid": "Q122354",
+   "name": "Diego Benaglio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1255953",
+   "name": "Bentinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q126640",
+   "name": "Marcelo Lipatín",
+   "result": "verified"
+  },
+  {
+   "qid": "Q127452",
+   "name": "Dani Carvajal",
+   "result": "verified"
+  },
+  {
+   "qid": "Q128276",
+   "name": "Antônio Benedito da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q129109",
+   "name": "Matthias Ginter",
+   "result": "verified"
+  },
+  {
+   "qid": "Q129810",
+   "name": "Kevin Volland",
+   "result": "verified"
+  },
+  {
+   "qid": "Q131234",
+   "name": "Toni Kroos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q13365847",
+   "name": "Niklas Süle",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1342632",
+   "name": "José Clayton Menezes Ribeiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1353800",
+   "name": "Tita",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1355593",
+   "name": "Rolando Schiavi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q137231",
+   "name": "Arkadiusz Milik",
+   "result": "verified"
+  },
+  {
+   "qid": "Q137242",
+   "name": "Bernard",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1377766",
+   "name": "Fábio dos Santos Barbosa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q140319",
+   "name": "Ubaldo Fillol",
+   "result": "mismatch",
+   "detail": "Racing não está no Wikidata"
+  },
+  {
+   "qid": "Q141354",
+   "name": "Sebastian Kehl",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1440166",
+   "name": "Valdeci Basílio da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1440632",
+   "name": "Serginho Baiano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q14640027",
+   "name": "Jonathan Tah",
+   "result": "verified"
+  },
+  {
+   "qid": "Q151034",
+   "name": "Kevin-Prince Boateng",
+   "result": "verified"
+  },
+  {
+   "qid": "Q151838",
+   "name": "Axel Witsel",
+   "result": "verified"
+  },
+  {
+   "qid": "Q152354",
+   "name": "Hans-Jörg Butt",
+   "result": "verified"
+  },
+  {
+   "qid": "Q152886",
+   "name": "Lars Bender",
+   "result": "verified"
+  },
+  {
+   "qid": "Q152972",
+   "name": "Oliver Neuville",
+   "result": "verified"
+  },
+  {
+   "qid": "Q152984",
+   "name": "Christoph Metzelder",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15402028",
+   "name": "Carlos Eduardo Bendini Giusti",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15427619",
+   "name": "Kazuki Nagasawa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q154305",
+   "name": "Niko Kovač",
+   "result": "verified"
+  },
+  {
+   "qid": "Q154397",
+   "name": "Roman Weidenfeller",
+   "result": "verified"
+  },
+  {
+   "qid": "Q154623",
+   "name": "Lucas Barrios",
+   "result": "verified"
+  },
+  {
+   "qid": "Q154963",
+   "name": "René Adler",
+   "result": "verified"
+  },
+  {
+   "qid": "Q155911",
+   "name": "Thomas Häßler",
+   "result": "verified"
+  },
+  {
+   "qid": "Q155919",
+   "name": "Andreas Möller",
+   "result": "verified"
+  },
+  {
+   "qid": "Q157584",
+   "name": "Nelson Haedo Valdez",
+   "result": "verified"
+  },
+  {
+   "qid": "Q157847",
+   "name": "Harald Schumacher",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15830968",
+   "name": "Diego Carlos Santos Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15831207",
+   "name": "Wanderson",
+   "result": "verified"
+  },
+  {
+   "qid": "Q158367",
+   "name": "Kevin Großkreutz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q159050",
+   "name": "Jens Nowotny",
+   "result": "verified"
+  },
+  {
+   "qid": "Q15991578",
+   "name": "Fernando Marçal Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q160791",
+   "name": "Simon Rolfes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q160808",
+   "name": "Clemens Fritz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1608978",
+   "name": "Dorival Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q161038",
+   "name": "Neven Subotić",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1626880",
+   "name": "Luís Henrique Dias",
+   "result": "verified"
+  },
+  {
+   "qid": "Q163750",
+   "name": "Jorge de Amorim Campos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1639968",
+   "name": "Ander Herrera",
+   "result": "verified"
+  },
+  {
+   "qid": "Q164575",
+   "name": "Paulo Assunção",
+   "result": "mismatch",
+   "detail": "Deportivo La Coruña não está no Wikidata"
+  },
+  {
+   "qid": "Q164676",
+   "name": "Makoto Hasebe",
+   "result": "verified"
+  },
+  {
+   "qid": "Q165125",
+   "name": "Javier Hernández",
+   "result": "verified"
+  },
+  {
+   "qid": "Q165697",
+   "name": "Sven Bender",
+   "result": "verified"
+  },
+  {
+   "qid": "Q166710",
+   "name": "Michael Baur",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q16910257",
+   "name": "Patrik Schick",
+   "result": "verified"
+  },
+  {
+   "qid": "Q170235",
+   "name": "Dimitar Berbatov",
+   "result": "verified"
+  },
+  {
+   "qid": "Q17515",
+   "name": "Diego Maradona",
+   "result": "verified"
+  },
+  {
+   "qid": "Q17612631",
+   "name": "Mikel Merino",
+   "result": "verified"
+  },
+  {
+   "qid": "Q176304",
+   "name": "Mathew Leckie",
+   "result": "verified"
+  },
+  {
+   "qid": "Q179172",
+   "name": "Bojan Krkić",
+   "result": "verified"
+  },
+  {
+   "qid": "Q180986",
+   "name": "Edmilson dos Santos Silva",
+   "result": "mismatch",
+   "detail": "Red Bull Brasil não está no Wikidata"
+  },
+  {
+   "qid": "Q181128",
+   "name": "Donizete Oliveira",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q181139",
+   "name": "Ramon Menezes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q181271",
+   "name": "Fernando Rech",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1824370",
+   "name": "Anderson Gils",
+   "result": "verified"
+  },
+  {
+   "qid": "Q183210",
+   "name": "Brandão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q184269",
+   "name": "Darijo Srna",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1849128",
+   "name": "Vlad Chiricheș",
+   "result": "mismatch",
+   "detail": "FC Steaua Bucareste não está no Wikidata"
+  },
+  {
+   "qid": "Q18608497",
+   "name": "Iñaki Williams",
+   "result": "verified"
+  },
+  {
+   "qid": "Q18719485",
+   "name": "Borja Iglesias",
+   "result": "verified"
+  },
+  {
+   "qid": "Q187238",
+   "name": "Tim Cahill",
+   "result": "verified"
+  },
+  {
+   "qid": "Q187891",
+   "name": "Fernando Llorente",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1910910",
+   "name": "Matías Rodríguez",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19274473",
+   "name": "Nadiem Amiri",
+   "result": "verified"
+  },
+  {
+   "qid": "Q192923",
+   "name": "Sokratis Papastathopoulos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q192971",
+   "name": "Damien Duff",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19345715",
+   "name": "Exequiel Palacios",
+   "result": "verified"
+  },
+  {
+   "qid": "Q193488",
+   "name": "Steven Pienaar",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19364",
+   "name": "Andrés Guardado",
+   "result": "verified"
+  },
+  {
+   "qid": "Q1938",
+   "name": "Bacary Sagna",
+   "result": "verified"
+  },
+  {
+   "qid": "Q194439",
+   "name": "Marcos Senna",
+   "result": "mismatch",
+   "detail": "São Caetano não está no Wikidata"
+  },
+  {
+   "qid": "Q195426",
+   "name": "Evair Aparecido Paulino",
+   "result": "verified"
+  },
+  {
+   "qid": "Q197600",
+   "name": "Fellype Gabriel",
+   "result": "verified"
+  },
+  {
+   "qid": "Q197719",
+   "name": "Gilsinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19938984",
+   "name": "Manuel Akanji",
+   "result": "verified"
+  },
+  {
+   "qid": "Q19958843",
+   "name": "Robert Andrich",
+   "result": "verified"
+  },
+  {
+   "qid": "Q20048235",
+   "name": "Matheus Sávio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q201885",
+   "name": "Theofanis Gekas",
+   "result": "verified"
+  },
+  {
+   "qid": "Q202237",
+   "name": "Landon Donovan",
+   "result": "mismatch",
+   "detail": "Bayern Munique não está no Wikidata"
+  },
+  {
+   "qid": "Q202429",
+   "name": "Juan Silveira dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2036160",
+   "name": "Thomas Meunier",
+   "result": "verified"
+  },
+  {
+   "qid": "Q204555",
+   "name": "Zinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2053358",
+   "name": "Matías Vecino",
+   "result": "verified"
+  },
+  {
+   "qid": "Q206306",
+   "name": "Vedran Ćorluka",
+   "result": "verified"
+  },
+  {
+   "qid": "Q20669370",
+   "name": "Rivaldo Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q207407",
+   "name": "Elano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q20851003",
+   "name": "Ousmane Dembélé",
+   "result": "verified"
+  },
+  {
+   "qid": "Q208706",
+   "name": "Stipe Pletikosa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2093023",
+   "name": "Eduardo Marques de Jesus Passos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2093052",
+   "name": "Toninho Cecílio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q20992981",
+   "name": "Benjamin Henrichs",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210125",
+   "name": "Wellington Nogueira Lopes de Avellar",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210153",
+   "name": "Ataliba",
+   "result": "verified"
+  },
+  {
+   "qid": "Q210238",
+   "name": "Marcio Richardes de Andrade",
+   "result": "verified"
+  },
+  {
+   "qid": "Q212491",
+   "name": "Zé Elias",
+   "result": "verified"
+  },
+  {
+   "qid": "Q215425",
+   "name": "Andriy Voronin",
+   "result": "verified"
+  },
+  {
+   "qid": "Q21552771",
+   "name": "Jean Patrick Reis",
+   "result": "verified"
+  },
+  {
+   "qid": "Q215952",
+   "name": "Emerson",
+   "result": "verified"
+  },
+  {
+   "qid": "Q220746",
+   "name": "Juan Pablo Sorín",
+   "result": "verified"
+  },
+  {
+   "qid": "Q22279773",
+   "name": "Christian Pulisic",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2255298",
+   "name": "Edson Araújo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2255380",
+   "name": "Livonir Ruschel",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q2255656",
+   "name": "Marcelo BARON Polanczyk",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2255837",
+   "name": "Washington Luiz Pereira dos Santos",
+   "result": "mismatch",
+   "detail": "São Gabriel Futebol Clube só em uma fonte"
+  },
+  {
+   "qid": "Q2256047",
+   "name": "André Pinto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q227892",
+   "name": "Alessandro Nesta",
+   "result": "verified"
+  },
+  {
+   "qid": "Q228616",
+   "name": "Marta Vieira da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q23759917",
+   "name": "Alexander Isak",
+   "result": "verified"
+  },
+  {
+   "qid": "Q23908113",
+   "name": "Unai Simón Mendibil",
+   "result": "verified"
+  },
+  {
+   "qid": "Q24069297",
+   "name": "Gabi Nunes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q24084221",
+   "name": "Domilson Cordeiro dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q24084301",
+   "name": "Donyell Malen",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2420047",
+   "name": "Josip Drmić",
+   "result": "verified"
+  },
+  {
+   "qid": "Q245295",
+   "name": "Euzebiusz Smolarek",
+   "result": "mismatch",
+   "detail": "25px Al-Khor não está no Wikidata"
+  },
+  {
+   "qid": "Q2502118",
+   "name": "Santiago Arias",
+   "result": "verified"
+  },
+  {
+   "qid": "Q253348",
+   "name": "Blerim Džemaili",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2598007",
+   "name": "João Batista Casemiro Marques",
+   "result": "verified"
+  },
+  {
+   "qid": "Q26932598",
+   "name": "Achraf Hakimi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2699262",
+   "name": "Marcelo Sarvas",
+   "result": "mismatch",
+   "detail": "Mjällby AIF não está no Wikidata"
+  },
+  {
+   "qid": "Q2712711",
+   "name": "Vicente Biurrun",
+   "result": "verified"
+  },
+  {
+   "qid": "Q271882",
+   "name": "Robert Kovač",
+   "result": "mismatch",
+   "detail": "Bayern Munique não está no Wikidata"
+  },
+  {
+   "qid": "Q27310755",
+   "name": "Kai Havertz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2762113",
+   "name": "Ehsan Hajsafi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q27694",
+   "name": "Emre Can",
+   "result": "verified"
+  },
+  {
+   "qid": "Q27801691",
+   "name": "David Neres",
+   "result": "mismatch",
+   "detail": "Jong Ajax não está no Wikidata"
+  },
+  {
+   "qid": "Q27917453",
+   "name": "Hiroki Abe",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28239",
+   "name": "Gonzalo Castro Randon",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2825080",
+   "name": "Adriano Fabiano Rossato",
+   "result": "verified"
+  },
+  {
+   "qid": "Q284078",
+   "name": "Yevhen Konoplyanka",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28717698",
+   "name": "Julian Ryerson",
+   "result": "verified"
+  },
+  {
+   "qid": "Q287841",
+   "name": "Hajime Hosogai",
+   "result": "verified"
+  },
+  {
+   "qid": "Q288559",
+   "name": "Érika Cristiano dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28872567",
+   "name": "Nayef Aguerd",
+   "result": "verified"
+  },
+  {
+   "qid": "Q28967995",
+   "name": "Erling Haaland",
+   "result": "verified"
+  },
+  {
+   "qid": "Q29117304",
+   "name": "Ewerton da Silva Pereira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q29162",
+   "name": "Tomáš Rosický",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2931622",
+   "name": "Marcelo Moretto de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q294990",
+   "name": "Michal Kadlec",
+   "result": "verified"
+  },
+  {
+   "qid": "Q295065",
+   "name": "Ivica Vastić",
+   "result": "verified"
+  },
+  {
+   "qid": "Q295456",
+   "name": "Fernando Redondo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q2959198",
+   "name": "Charles Gbeke",
+   "result": "mismatch",
+   "detail": "Montreal Impact não está no Wikidata"
+  },
+  {
+   "qid": "Q299367",
+   "name": "Cristiano Marques Gomes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q299383",
+   "name": "Dmitriy Sychov",
+   "result": "mismatch",
+   "detail": "Lokomotiv Moscou não está no Wikidata"
+  },
+  {
+   "qid": "Q299413",
+   "name": "Javier Clemente",
+   "result": "verified"
+  },
+  {
+   "qid": "Q30185287",
+   "name": "Mauro Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3022487",
+   "name": "Denílson Antônio Paludo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q303108",
+   "name": "Taison",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3051320",
+   "name": "Eliézio Santos Santana",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3051783",
+   "name": "Eltinho",
+   "result": "verified"
+  },
+  {
+   "qid": "Q308925",
+   "name": "Jürgen Kohler",
+   "result": "verified"
+  },
+  {
+   "qid": "Q309731",
+   "name": "Amoroso",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3099284",
+   "name": "Joaquim Alberto Silva",
+   "result": "mismatch",
+   "detail": "Hangzhou Greentown não está no Wikidata"
+  },
+  {
+   "qid": "Q309966",
+   "name": "Bernd Leno",
+   "result": "verified"
+  },
+  {
+   "qid": "Q310519",
+   "name": "Ulf Kirsten",
+   "result": "verified"
+  },
+  {
+   "qid": "Q310598",
+   "name": "Marcus Túlio Tanaka",
+   "result": "verified"
+  },
+  {
+   "qid": "Q310625",
+   "name": "Marc Bartra Aregall",
+   "result": "verified"
+  },
+  {
+   "qid": "Q311559",
+   "name": "Joshua Kennedy",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312115",
+   "name": "Tom Starke",
+   "result": "verified"
+  },
+  {
+   "qid": "Q312408",
+   "name": "Telmo Zarra",
+   "result": "verified"
+  },
+  {
+   "qid": "Q313576",
+   "name": "Henrique Adriano Buss",
+   "result": "verified"
+  },
+  {
+   "qid": "Q314227",
+   "name": "Domagoj Vida",
+   "result": "verified"
+  },
+  {
+   "qid": "Q314259",
+   "name": "Iker Muniain",
+   "result": "verified"
+  },
+  {
+   "qid": "Q315831",
+   "name": "Roque Júnior",
+   "result": "verified"
+  },
+  {
+   "qid": "Q316229",
+   "name": "Paulo Sérgio Silvestre Nascimento",
+   "result": "verified"
+  },
+  {
+   "qid": "Q316436",
+   "name": "César Sampaio",
+   "result": "verified"
+  },
+  {
+   "qid": "Q316772",
+   "name": "Raúl García Escudero",
+   "result": "verified"
+  },
+  {
+   "qid": "Q317201",
+   "name": "Txiki Begiristain",
+   "result": "verified"
+  },
+  {
+   "qid": "Q317216",
+   "name": "Andoni Iraola",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3189132",
+   "name": "Juliano Mineiro Fernandes",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3195361",
+   "name": "Kepa Arrizabalaga",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3209607",
+   "name": "Ante Rebić",
+   "result": "verified"
+  },
+  {
+   "qid": "Q321330",
+   "name": "Mile Jedinak",
+   "result": "verified"
+  },
+  {
+   "qid": "Q321567",
+   "name": "Antonio Rukavina",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3245512",
+   "name": "Angelo Carlos Pretti",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3245931",
+   "name": "Musashi Mizushima",
+   "result": "mismatch",
+   "detail": "San Paolo não está no Wikidata"
+  },
+  {
+   "qid": "Q326159",
+   "name": "Niclas Füllkrug",
+   "result": "verified"
+  },
+  {
+   "qid": "Q327285",
+   "name": "Stefan Reuter",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3302219",
+   "name": "André Neitzke",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3302284",
+   "name": "Marquem Gonçalves Ferreira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q331975",
+   "name": "Naohiro Takahara",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q331984",
+   "name": "Yuki Abe",
+   "result": "verified"
+  },
+  {
+   "qid": "Q33297140",
+   "name": "Alexis Mac Allister",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3391096",
+   "name": "Fabiano Soares Pessoa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3501096",
+   "name": "Jonathan Fabbro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q350345",
+   "name": "Nejc Pečnik",
+   "result": "verified"
+  },
+  {
+   "qid": "Q350684",
+   "name": "Markel Susaeta",
+   "result": "mismatch",
+   "detail": "Athletic Bilbao não está no Wikidata"
+  },
+  {
+   "qid": "Q356566",
+   "name": "Adhemar Ferreira de Camargo Neto",
+   "result": "mismatch",
+   "detail": "São Bento não está no Wikidata"
+  },
+  {
+   "qid": "Q3568390",
+   "name": "William Amaral de Andrade",
+   "result": "verified"
+  },
+  {
+   "qid": "Q357844",
+   "name": "Renato Augusto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q358222",
+   "name": "Ion Andoni Goikoetxea",
+   "result": "verified"
+  },
+  {
+   "qid": "Q358862",
+   "name": "Admir Mehmedi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q359118",
+   "name": "Ernesto Valverde",
+   "result": "verified"
+  },
+  {
+   "qid": "Q359738",
+   "name": "Alex Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q360580",
+   "name": "Shinji Ono",
+   "result": "verified"
+  },
+  {
+   "qid": "Q361024",
+   "name": "Branko Ilič",
+   "result": "verified"
+  },
+  {
+   "qid": "Q36184031",
+   "name": "Gregor Kobel",
+   "result": "verified"
+  },
+  {
+   "qid": "Q370348",
+   "name": "Adrián Ramos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q376063",
+   "name": "Adriano Vieira Louzada",
+   "result": "verified"
+  },
+  {
+   "qid": "Q378513",
+   "name": "Željko Petrović",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3802597",
+   "name": "Ismaily Gonçalves dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q380703",
+   "name": "Tadanari Lee",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3840425",
+   "name": "Luis de la Fuente",
+   "result": "verified"
+  },
+  {
+   "qid": "Q3855340",
+   "name": "Aymeric Laporte",
+   "result": "verified"
+  },
+  {
+   "qid": "Q386973",
+   "name": "Basarab Panduru",
+   "result": "verified"
+  },
+  {
+   "qid": "Q389848",
+   "name": "Jorge Fossati",
+   "result": "verified"
+  },
+  {
+   "qid": "Q391680",
+   "name": "Douglas Costa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q4018100",
+   "name": "Wanderson Souza Carneiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q42396622",
+   "name": "Callum Hudson-Odoi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q4241680",
+   "name": "Raphaël Guerreiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q4274903",
+   "name": "Andrés Fabricio Romero",
+   "result": "verified"
+  },
+  {
+   "qid": "Q431368",
+   "name": "Asmir Begović",
+   "result": "mismatch",
+   "detail": "Ipswich Town não está no Wikidata"
+  },
+  {
+   "qid": "Q436230",
+   "name": "Lucas Biglia",
+   "result": "verified"
+  },
+  {
+   "qid": "Q4373959",
+   "name": "Éder Lima dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q44073",
+   "name": "Bixente Lizarazu",
+   "result": "verified"
+  },
+  {
+   "qid": "Q44389",
+   "name": "Bernd Schuster",
+   "result": "verified"
+  },
+  {
+   "qid": "Q44464",
+   "name": "Rudi Völler",
+   "result": "verified"
+  },
+  {
+   "qid": "Q444711",
+   "name": "Paulo José de Oliveira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q445541",
+   "name": "Edmundo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q44977",
+   "name": "Pierre-Emerick Aubameyang",
+   "result": "verified"
+  },
+  {
+   "qid": "Q455161",
+   "name": "Uwe Bein",
+   "result": "verified"
+  },
+  {
+   "qid": "Q455804",
+   "name": "Ilsinho",
+   "result": "mismatch",
+   "detail": "Shakhtar Donetsk não está no Wikidata"
+  },
+  {
+   "qid": "Q458101",
+   "name": "Ciro Immobile",
+   "result": "verified"
+  },
+  {
+   "qid": "Q465023",
+   "name": "Luís Alberto Silva dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q467194",
+   "name": "Washington Stecanela Cerqueira",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q47545173",
+   "name": "Marquinhos Cipriano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q47760",
+   "name": "Edu Marangon",
+   "result": "verified"
+  },
+  {
+   "qid": "Q484384",
+   "name": "Fábio Coentrão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q48892",
+   "name": "Didier Drogba",
+   "result": "verified"
+  },
+  {
+   "qid": "Q506861",
+   "name": "Jean Raphael Vanderlei Moreira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q507062",
+   "name": "Yuichiro Nagai",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q507190",
+   "name": "Paco Alcácer",
+   "result": "verified"
+  },
+  {
+   "qid": "Q508690",
+   "name": "Marcos Venâncio de Albuquerque",
+   "result": "mismatch",
+   "detail": "São Caetano não está no Wikidata"
+  },
+  {
+   "qid": "Q509178",
+   "name": "Sigfried Held",
+   "result": "verified"
+  },
+  {
+   "qid": "Q514376",
+   "name": "Athirson",
+   "result": "verified"
+  },
+  {
+   "qid": "Q514427",
+   "name": "Granit Xhaka",
+   "result": "verified"
+  },
+  {
+   "qid": "Q515938",
+   "name": "Alex Teixeira",
+   "result": "verified"
+  },
+  {
+   "qid": "Q516805",
+   "name": "Claudio Borghi",
+   "result": "verified"
+  },
+  {
+   "qid": "Q524390",
+   "name": "Basile Boli",
+   "result": "verified"
+  },
+  {
+   "qid": "Q5254202",
+   "name": "Guilherme Augusto Dellatorre",
+   "result": "mismatch",
+   "detail": "Brasil de Pelotas não está no Wikidata"
+  },
+  {
+   "qid": "Q528590",
+   "name": "Ewerthon Henrique de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q5298679",
+   "name": "Sardar Azmoun",
+   "result": "mismatch",
+   "detail": "Shabab Al-Ahli não está no Wikidata"
+  },
+  {
+   "qid": "Q547455",
+   "name": "Gábor Király",
+   "result": "mismatch",
+   "detail": "Munique 1860 não está no Wikidata"
+  },
+  {
+   "qid": "Q55081204",
+   "name": "Alerrandro Barra Mansa Realino de Souza",
+   "result": "verified"
+  },
+  {
+   "qid": "Q555339",
+   "name": "Doriva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q558869",
+   "name": "Tomoaki Makino",
+   "result": "verified"
+  },
+  {
+   "qid": "Q5610343",
+   "name": "Lenny",
+   "result": "verified"
+  },
+  {
+   "qid": "Q57114",
+   "name": "Jens Lehmann",
+   "result": "verified"
+  },
+  {
+   "qid": "Q57167",
+   "name": "Zé Roberto",
+   "result": "verified"
+  },
+  {
+   "qid": "Q57183",
+   "name": "Matthias Sammer",
+   "result": "verified"
+  },
+  {
+   "qid": "Q57814261",
+   "name": "Adriana Leal da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q58377",
+   "name": "André Schürrle",
+   "result": "verified"
+  },
+  {
+   "qid": "Q58494476",
+   "name": "Mykhaylo Mudryk",
+   "result": "verified"
+  },
+  {
+   "qid": "Q593943",
+   "name": "Edgar Bruno Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q5981954",
+   "name": "Lucas Vázquez",
+   "result": "verified"
+  },
+  {
+   "qid": "Q603190",
+   "name": "Júlio César da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q612077",
+   "name": "Antônio da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q62015814",
+   "name": "Nico Schlotterbeck",
+   "result": "verified"
+  },
+  {
+   "qid": "Q642850",
+   "name": "Sebastian Rode",
+   "result": "verified"
+  },
+  {
+   "qid": "Q64606160",
+   "name": "Reinier",
+   "result": "verified"
+  },
+  {
+   "qid": "Q654337",
+   "name": "Jean Sony Alcenat",
+   "result": "verified"
+  },
+  {
+   "qid": "Q6547862",
+   "name": "Liliu",
+   "result": "verified"
+  },
+  {
+   "qid": "Q665550",
+   "name": "Ranko Despotović",
+   "result": "verified"
+  },
+  {
+   "qid": "Q666748",
+   "name": "Aleksandar Dragović",
+   "result": "mismatch",
+   "detail": "Áustria Viena não está no Wikidata"
+  },
+  {
+   "qid": "Q670289",
+   "name": "Xandão",
+   "result": "mismatch",
+   "detail": "Red Bull Brasil não está no Wikidata"
+  },
+  {
+   "qid": "Q67198835",
+   "name": "Jeremie Frimpong",
+   "result": "verified"
+  },
+  {
+   "qid": "Q681938",
+   "name": "Marlos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q686183",
+   "name": "Michael Rummenigge",
+   "result": "mismatch",
+   "detail": "Urawa Reds não está no Wikidata"
+  },
+  {
+   "qid": "Q695858",
+   "name": "Paulo Rink",
+   "result": "verified"
+  },
+  {
+   "qid": "Q705456",
+   "name": "Matthew Špiranović",
+   "result": "verified"
+  },
+  {
+   "qid": "Q712145",
+   "name": "França",
+   "result": "verified"
+  },
+  {
+   "qid": "Q7155168",
+   "name": "Paulo António Alves",
+   "result": "verified"
+  },
+  {
+   "qid": "Q7155258",
+   "name": "Paulo Miranda (zagueiro)",
+   "result": "verified"
+  },
+  {
+   "qid": "Q719780",
+   "name": "Caio César Alves dos Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q720606",
+   "name": "Evanílson",
+   "result": "verified"
+  },
+  {
+   "qid": "Q72904",
+   "name": "Luiz Adriano",
+   "result": "verified"
+  },
+  {
+   "qid": "Q73480",
+   "name": "Willian Borges da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q735746",
+   "name": "Bruno Fornaroli",
+   "result": "verified"
+  },
+  {
+   "qid": "Q738376",
+   "name": "Tsukasa Umesaki",
+   "result": "verified"
+  },
+  {
+   "qid": "Q75019636",
+   "name": "Gio Reyna",
+   "result": "verified"
+  },
+  {
+   "qid": "Q7503330",
+   "name": "Shoya Nakajima",
+   "result": "verified"
+  },
+  {
+   "qid": "Q75857",
+   "name": "Nuri Şahin",
+   "result": "verified"
+  },
+  {
+   "qid": "Q763465",
+   "name": "Hakan Çalhanoğlu",
+   "result": "verified"
+  },
+  {
+   "qid": "Q77305",
+   "name": "Guido Buchwald",
+   "result": "verified"
+  },
+  {
+   "qid": "Q797945",
+   "name": "Charles Aránguiz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q81191297",
+   "name": "Yasmim Assis Ribeiro",
+   "result": "verified"
+  },
+  {
+   "qid": "Q81587",
+   "name": "Anderson Bamba",
+   "result": "verified"
+  },
+  {
+   "qid": "Q822781",
+   "name": "Jonas Hofmann",
+   "result": "verified"
+  },
+  {
+   "qid": "Q83006",
+   "name": "David Villa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q864670",
+   "name": "Robson Ponte",
+   "result": "verified"
+  },
+  {
+   "qid": "Q888001",
+   "name": "Gilberto Carlos Nascimento",
+   "result": "verified"
+  },
+  {
+   "qid": "Q91213689",
+   "name": "Giovana Quieroz Costa",
+   "result": "verified"
+  },
+  {
+   "qid": "Q921324",
+   "name": "Alejandro Grimaldo",
+   "result": "verified"
+  },
+  {
+   "qid": "Q923402",
+   "name": "Alan Patrick",
+   "result": "verified"
+  },
+  {
+   "qid": "Q926353",
+   "name": "Enzo Pérez",
+   "result": "verified"
+  },
+  {
+   "qid": "Q927066",
+   "name": "Rafael Bastos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q929023",
+   "name": "Ronaldão",
+   "result": "verified"
+  },
+  {
+   "qid": "Q935220",
+   "name": "David Cortes da Silva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q94699949",
+   "name": "Florian Wirtz",
+   "result": "verified"
+  },
+  {
+   "qid": "Q948402",
+   "name": "Bruno Gabriel Soares",
+   "result": "verified"
+  },
+  {
+   "qid": "Q948435",
+   "name": "Silvio Paiva",
+   "result": "verified"
+  },
+  {
+   "qid": "Q965448",
+   "name": "Frederico Rodrigues Santos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q969748",
+   "name": "Flávio Campos",
+   "result": "verified"
+  },
+  {
+   "qid": "Q993172",
+   "name": "Bruno Coutinho Martins",
+   "result": "verified"
+  }
+ ]
+}

@@ -13,3 +13,4 @@ test-results/
 # Prisma generated client
 apps/api/src/generated/
 **/.impeccable/hook.cache.json
+.playwright-mcp/

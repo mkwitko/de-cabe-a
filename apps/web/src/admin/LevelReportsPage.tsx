@@ -1,3 +1,4 @@
+import type { GameMode } from '@decabeca/contracts';
 import { GAME_NAME } from '../lib/game';
 /** Players' error reports, grouped by level, with the level's data next to them. */
 import { useState } from 'react';
@@ -15,7 +16,7 @@ interface Spell {
 }
 interface ReportedLevel {
   challengeId: string;
-  mode: 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE' | 'HIGHER_LOWER';
+  mode: GameMode;
   level: number | null;
   challengeStatus: string;
   shown: { extraHints?: Record<string, unknown> };

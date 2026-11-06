@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { AppError } from '../../errors';
 import { playerAttempts } from '../session/session';
 import { ranking, rankRows, weekStart } from './ranking';
+import type { GameModeCode } from '../challenges/engines';
 
 /** History, stats and ranking, derived from attempts (ADR-007). */
 export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -65,13 +66,13 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
     const done = await prisma.attempt.findMany({
       where: { ...playerAttempts(req), completedAt: { not: null } },
     });
-    const of = (mode: 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE' | 'HIGHER_LOWER') =>
-      done.filter((a) => a.gameMode === mode);
+    const of = (mode: GameModeCode) => done.filter((a) => a.gameMode === mode);
     const cp = of('CAREER_PATH');
     const grid = of('FOOTBALL_GRID');
     const imp = of('IMPOSTOR');
     const tl = of('TIMELINE');
     const hl = of('HIGHER_LOWER');
+    const xi = of('MISSING_XI');
     const sum = (xs: typeof done) => xs.reduce((s, a) => s + a.stars, 0);
     const distribution: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0 };
     for (const a of cp.filter((x) => x.status === 'WON')) distribution[String(7 - a.score / 10)]!++;
@@ -117,6 +118,12 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
         stars: sum(hl),
         threeStars: hl.filter((a) => a.stars === 3).length,
         perfect: hl.filter((a) => a.score === 5).length,
+      },
+      MISSING_XI: {
+        completed: xi.length,
+        stars: sum(xi),
+        threeStars: xi.filter((a) => a.stars === 3).length,
+        perfect: xi.filter((a) => a.score === 100).length,
       },
     };
   });

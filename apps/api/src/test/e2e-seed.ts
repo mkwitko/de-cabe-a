@@ -103,5 +103,88 @@ await live({
   params: { rows: [...grid.rows], cols: [...grid.cols] },
   createdBy: 'e2e',
 });
+// A real-looking Série A season among the seed clubs: the Modo Carreira calendar comes from it.
+const brClubs = [
+  'Flamengo',
+  'Santos',
+  'Palmeiras',
+  'Grêmio',
+  'Vasco',
+  'Botafogo',
+  'Cruzeiro',
+  'São Paulo',
+]
+  .map((n) => clubs[n]?.id)
+  .filter((x): x is string => Boolean(x));
+let k = 0;
+await prisma.match.createMany({
+  data: brClubs.flatMap((h) =>
+    brClubs
+      .filter((a) => a !== h)
+      .map((a) => ({
+        source: 'e2e',
+        sourceRef: `e2e:${k++}`,
+        competition: 'Brasileirão Série A',
+        season: '2025',
+        homeTeam: h,
+        awayTeam: a,
+        homeClubId: h,
+        awayClubId: a,
+        homeScore: k % 3,
+        awayScore: k % 2,
+      })),
+  ),
+});
+// Escalação level 1: a final whose away XI mixes the seed stars and Grid players.
+const xi = [
+  ['Craque L1C1 2', 'GK'],
+  ['Craque L1C1 3', 'RB'],
+  ['Craque L1C1 4', 'CB'],
+  ['Craque L1C1 5', 'CB'],
+  ['Craque L1C1 6', 'LB'],
+  ['Craque L1C1 7', 'DM'],
+  ['Craque L1C1 8', 'CM'],
+  ['Craque L1C1 1', 'CM'],
+  ['Kaká', 'AM'],
+  ['Romário', 'SS'],
+  ['Ronaldo', 'CF'],
+] as const;
+const xiIds = new Map(
+  (
+    await prisma.player.findMany({
+      where: { canonicalName: { in: xi.map(([n]) => n) } },
+      select: { id: true, canonicalName: true },
+    })
+  ).map((p) => [p.canonicalName, p.id]),
+);
+const final = await prisma.match.create({
+  data: {
+    source: 'wikipedia',
+    sourceRef: 'wikipedia:en:2002 FIFA World Cup final',
+    competition: 'FIFA World Cup',
+    season: '2002',
+    stage: 'Final',
+    homeTeam: 'Germany',
+    awayTeam: 'Brazil',
+    homeScore: 0,
+    awayScore: 2,
+    lineups: {
+      create: xi.map(([name, position], i) => ({
+        side: 'away',
+        playerName: name,
+        position,
+        jersey: i + 1,
+        starter: true,
+        playerId: xiIds.get(name) ?? null,
+      })),
+    },
+  },
+});
+await live({
+  mode: 'MISSING_XI',
+  params: { matchId: final.id, side: 'away' },
+  difficultyTier: 1,
+  createdBy: 'e2e',
+});
 console.log('e2e seed ready');
 await prisma.$disconnect();

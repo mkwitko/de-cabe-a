@@ -5,6 +5,7 @@ export const ENGINE_IDS = [
   'impostor',
   'timeline',
   'higher-lower',
+  'missing-xi',
 ] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 export { normalizeName } from './text/normalize';
@@ -16,5 +17,6 @@ export * from './football-grid/engine';
 export * from './impostor/engine';
 export * from './timeline/engine';
 export * from './higher-lower/engine';
+export * from './missing-xi/engine';
 export * from './stars';
 export * from './career/career';

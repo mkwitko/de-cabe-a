@@ -1,0 +1,893 @@
+{
+ "ranAt": "2026-11-06T22:35:58.286Z",
+ "changes": [
+  {
+   "id": "01a1ad42-7d10-7201-9d6c-78d166634a8f",
+   "from": "Hertha Berlim",
+   "to": "Hertha Berlim II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acbb-4318-70d8-a19a-eba9d820280a",
+   "from": "Internacional",
+   "to": "Internacional Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac2d-00a2-76ec-a058-510a4b634e95",
+   "from": "Palmeiras",
+   "to": "Palmeiras B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad34-4d4c-706b-80e9-cccfb5fd1abe",
+   "from": "Grêmio",
+   "to": "Grêmio Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad4f-3cfd-7471-8460-dcfa1a1f3712",
+   "from": "Napoli",
+   "to": "Napoli B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac27-bc62-72bc-a031-972d0c6b06df",
+   "from": "Benfica",
+   "to": "Benfica B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1aca4-7046-7680-bdc3-ed1647204d48",
+   "from": "Benfica",
+   "to": "Benfica Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad5d-7fdd-70f8-b332-f76f3d806cbd",
+   "from": "Juventus",
+   "to": "Juventus B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad3e-d7d6-724d-bac9-487a3b0b9502",
+   "from": "Bayern de Munique",
+   "to": "Bayern de Munique II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad62-ede7-765d-8bef-ec6721e7cc15",
+   "from": "Bayern de Munique",
+   "to": "Bayern de Munique Sub-20",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad7b-8f27-72d8-9270-992066f21e27",
+   "from": "Chelsea",
+   "to": "Chelsea Sub-20",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acb4-e3f7-76fc-a755-3eb76bd1b9d8",
+   "from": "Arsenal",
+   "to": "Arsenal Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1aca4-6eb9-709f-a873-df332527a791",
+   "from": "Roma",
+   "to": "Roma Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acb9-6f3c-737a-974e-495585f1ad51",
+   "from": "Atlético de Madrid",
+   "to": "Atlético de Madrid B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad62-eb96-7074-b154-350eb5f51762",
+   "from": "Atlético de Madrid",
+   "to": "Atlético de Madrid Sub-20",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acb1-b69e-70e9-83d5-f86f4b6ef869",
+   "from": "Real Madrid",
+   "to": "Real Madrid Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac22-92a2-7654-ae29-9d0706e56bb0",
+   "from": "Barcelona",
+   "to": "Barcelona B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac22-929c-70d8-9f24-0712222d2bfd",
+   "from": "Barcelona",
+   "to": "Barcelona B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acb4-e3f1-76fb-92ca-de806bf4ee4e",
+   "from": "Barcelona",
+   "to": "Barcelona B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac22-91f6-71e1-bdd3-e3e0e66fb4f5",
+   "from": "Marítimo",
+   "to": "Marítimo B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1aca0-fa1a-73c9-8fd0-1945da9849eb",
+   "from": "Espanyol",
+   "to": "Espanyol B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad42-791a-72ae-92ca-bae0a8f39c98",
+   "from": "Mallorca",
+   "to": "Mallorca B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad37-b008-74fc-a8d1-dfbf6c7fd6c2",
+   "from": "Real Sociedad",
+   "to": "Real Sociedad B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac3c-f3a3-73fc-b546-214f26db89ff",
+   "from": "Braga",
+   "to": "Braga B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac30-d7a0-733f-a2d7-3dc612e1c0ad",
+   "from": "Rayo Vallecano",
+   "to": "Rayo Vallecano B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acac-0fbc-7476-9674-0ba29d19fcdd",
+   "from": "Hoffenheim",
+   "to": "Hoffenheim II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad54-c3a5-735f-975d-3319f3d70481",
+   "from": "Valladolid",
+   "to": "Valladolid B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad39-fc08-736d-825d-cdde6ea84034",
+   "from": "Villarreal",
+   "to": "Villarreal B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad39-fc04-7794-a13f-dee5b92358ae",
+   "from": "Villarreal",
+   "to": "Villarreal B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad7b-9100-71cb-8ccf-17b5a26daea4",
+   "from": "Tottenham",
+   "to": "Tottenham B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac26-ad07-729e-ac8a-3c6a03dc60f6",
+   "from": "Stuttgart",
+   "to": "Stuttgart II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad4f-3b07-7720-b834-068a8913c076",
+   "from": "Monaco",
+   "to": "Monaco II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac26-acda-7368-afe8-4ad0d9985194",
+   "from": "Vitória de Guimarães",
+   "to": "Vitória de Guimarães B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acb4-e3fb-7352-9238-dc153eaf6289",
+   "from": "Everton",
+   "to": "Everton Feminino",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1aca4-6ff5-744f-b328-af91022fb123",
+   "from": "Ajax",
+   "to": "Ajax B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad62-ed75-739a-baab-f618dcfb69d2",
+   "from": "Ajax",
+   "to": "Ajax Sub-20",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad52-cedc-715f-a14a-62eaa73883e3",
+   "from": "Sochaux",
+   "to": "Sochaux II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad5f-5ac5-735d-a8ac-0b49cc79d8d9",
+   "from": "Leganés",
+   "to": "Leganés B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad58-23f2-7589-a436-729ed75593c1",
+   "from": "Almería",
+   "to": "Almería B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac43-37e8-7725-81dd-7215a9f50475",
+   "from": "Schalke 04",
+   "to": "Schalke 04 II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad4f-3c04-77e5-a2e2-0b2769247a78",
+   "from": "Lille",
+   "to": "Lille II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad7a-04ce-7430-8407-07e294eeb19f",
+   "from": "Wolfsburg",
+   "to": "Wolfsburg II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad5d-7e3e-7002-999c-12a943c37004",
+   "from": "Werder Bremen",
+   "to": "Werder Bremen II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acb7-6c3c-758f-b961-d48b3cd34bbb",
+   "from": "Mainz 05",
+   "to": "Mainz 05 II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad7b-91bd-713c-a0cd-cefcce5c57b1",
+   "from": "Karlsruher",
+   "to": "Karlsruher II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad54-c4f6-7496-bbe7-b63c666258a1",
+   "from": "Alavés",
+   "to": "Alavés B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad4f-3cbe-748d-887d-799f57f78bd3",
+   "from": "Sporting de Gijón",
+   "to": "Sporting de Gijón B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad62-eb09-7378-8356-2eccb34f0a58",
+   "from": "Köln",
+   "to": "Köln II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad78-6784-723d-804a-0a4dcaafe1b6",
+   "from": "Hannover 96",
+   "to": "Hannover 96 II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad85-fef1-7609-b6f7-c52ef830f498",
+   "from": "Toulouse",
+   "to": "Toulouse II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acc4-af0c-779a-949c-ce6d84c31cbd",
+   "from": "Panionios",
+   "to": "Panionios B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad5b-918e-7364-afec-87c1df2b8e4e",
+   "from": "Tenerife",
+   "to": "Tenerife B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad51-24cb-718d-9ad9-468315185307",
+   "from": "Osasuna",
+   "to": "Osasuna B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad5d-7ee2-71d4-a433-b9660465430d",
+   "from": "Metz",
+   "to": "Metz II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1acc4-b00f-704c-851e-2bea863c9bb0",
+   "from": "Panetolikos",
+   "to": "Panetolikos B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad59-d53a-73f8-8039-781d50a60754",
+   "from": "Greuther Fürth",
+   "to": "Greuther Fürth II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad5b-8efc-7345-8302-466a84c6a1d9",
+   "from": "Puntarenas",
+   "to": "Puntarenas B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad7a-0707-73e3-a060-a230cce0e89e",
+   "from": "Bury",
+   "to": "Bury B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad60-ef0e-72ff-bfa7-00c151c3425f",
+   "from": "Laval",
+   "to": "Laval B",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad7e-82fd-70cb-81ed-bc788ffb515c",
+   "from": "Freiburg",
+   "to": "Freiburg II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad62-ea44-7625-81a8-d3bcd02695e1",
+   "from": "1. FC Kaiserslautern",
+   "to": "1. FC Kaiserslautern II",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ad64-8de0-744e-b9ba-60c15c57e7bd",
+   "from": "Paris Saint-Germain",
+   "to": "Paris Saint-Germain Sub-20",
+   "reason": "reserve"
+  },
+  {
+   "id": "01a1ac2b-a73b-718a-93b9-6a060040b4b5",
+   "from": "Internacional",
+   "to": "Inter de Santa Maria",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac8d-b8ec-77db-a672-5e466a07a666",
+   "from": "Palmeiras",
+   "to": "Sociedade Esportiva Palmeiras",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac27-b97f-723c-943e-36a58c511b0a",
+   "from": "São Paulo",
+   "to": "São José Esporte Clube",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac2e-516b-7649-93c5-271378700580",
+   "from": "Vasco",
+   "to": "Vasco da Gama Futebol Clube",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac2a-59ea-75bd-870b-cfe00a10b06f",
+   "from": "Novorizontino",
+   "to": "Grêmio Esportivo Novorizontino",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac27-b94e-740e-a9d8-c1c8e50b2e0c",
+   "from": "Bayern de Munique",
+   "to": "Bayer 04 Leverkusen",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad4f-3d6b-74f6-a2a0-f06f39885af8",
+   "from": "Valencia",
+   "to": "Valencia Club de Fútbol Mestalla",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acab-64f9-72b8-9b98-e72eeb7a6d28",
+   "from": "Flamengo",
+   "to": "Clube de Regatas do Flamengo",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac22-9309-763c-8651-b0595f2edd61",
+   "from": "Boca Juniors",
+   "to": "Asociación Atlética Argentinos Juniors",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac81-1c91-7208-a112-f35340972fe3",
+   "from": "Al-Arabi",
+   "to": "Al-Arabi Kuwait",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac22-908d-7669-b39b-0fd1f7d2e80b",
+   "from": "Real Madrid",
+   "to": "Real Madrid Castilla Club de Fútbol",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac30-d2b3-74cd-ada5-9e47b40c04d6",
+   "from": "Deportivo La Coruña",
+   "to": "Clube Desportivo Nacional",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac9d-189f-767f-9484-237e47d4f407",
+   "from": "Corinthians",
+   "to": "Sport Club Corinthians Paulista",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad7a-064c-71bc-8723-35f48dcba039",
+   "from": "Real Sociedad",
+   "to": "Real Sociedad Femenino",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acb7-693a-756c-a851-4cb7280fd173",
+   "from": "Rayo Vallecano",
+   "to": "Rayo Vallecano Femenino",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac26-aae3-75c1-915d-4a87c52e2cff",
+   "from": "Shakhtar Donetsk",
+   "to": "Futbolniy Klub Shakhtar",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad82-4ffe-7038-b22a-fbeea840e158",
+   "from": "Lyon",
+   "to": "Lyon-La Duchère",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac29-00c3-7393-91d2-c735f3cdc66f",
+   "from": "São Caetano",
+   "to": "América Futebol Clube",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac29-0251-7122-84a5-24b1d0e087a2",
+   "from": "Ponte Preta",
+   "to": "Rio Preto Esporte Clube",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad42-7b6c-754d-a22f-136610da095d",
+   "from": "Everton",
+   "to": "Everton de Viña del Mar",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac8a-5a15-757b-9242-4be62c7ef5dd",
+   "from": "Belenenses",
+   "to": "B-SAD",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad84-294f-70b8-ae90-afacb7ad7c04",
+   "from": "Betis",
+   "to": "Real Betis Cantera",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac26-ad32-7417-a86a-1e97b91dbc40",
+   "from": "Red Bull Salzburg",
+   "to": "Urawa Red Diamonds",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acc9-15d3-7653-80bf-03793763153a",
+   "from": "CSKA Moscou",
+   "to": "CSKA Moscow",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac27-bef9-726f-bc7e-46c013aa87ea",
+   "from": "Al-Shabab",
+   "to": "Al-Shabab Al Arabi Club",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1abef-070b-7608-adc3-8a1688dc58a8",
+   "from": "Borussia Mönchengladbach",
+   "to": "Borussia Dortmund",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac27-bdf8-770b-afd4-ca1ec64c4a36",
+   "from": "Yokohama F. Marinos",
+   "to": "Yokohama Flügels",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad4b-206d-70ec-9756-712e5f595305",
+   "from": "Naval",
+   "to": "Club de Deportes Naval",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad85-fd82-7778-b3fb-e735b779c911",
+   "from": "Spartak Moscou",
+   "to": "FC Spartak Tambov",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad59-f042-756d-9772-68f59dc4aa48",
+   "from": "Independiente",
+   "to": "C.A. Independiente de La Chorrera",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac2b-a9f5-7650-bdc0-db43c24cf6cc",
+   "from": "Esportivo",
+   "to": "Clube Esportivo Bento Gonçalves",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac2e-4d68-712e-850a-13c7bf2769b7",
+   "from": "Brasil de Pelotas",
+   "to": "Desportivo Brasil",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac2f-a10c-726d-a738-45ee34e77d5d",
+   "from": "Steaua București",
+   "to": "Fotbal Club FCSB",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac43-3785-711d-98df-ddd5b773d8cb",
+   "from": "Al-Ahli",
+   "to": "Al-Ahli Sports Club",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acc2-4d56-7758-9f31-9ae2c41b3015",
+   "from": "Tiradentes",
+   "to": "Sociedade Esportiva Tiradentes",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acd4-5ab2-76ee-9d5c-272648c6d0c3",
+   "from": "Sanjoanense",
+   "to": "Sociedade Esportiva Sanjoanense",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acb3-4b5c-73e9-89c7-23e750b7579d",
+   "from": "Catanduvense",
+   "to": "Grêmio Esportivo Catanduvense",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acb9-6be3-73b7-b8cd-01bc276dc105",
+   "from": "Melbourne Victory",
+   "to": "Melbourne City Football Club",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac43-3956-70d9-8044-b5bda3a1f32a",
+   "from": "Vila Nova",
+   "to": "Clube Esportivo Nova Esperança",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac28-fd74-740c-81e4-d783af50cfb7",
+   "from": "Rosario Central",
+   "to": "Central Español Fútbol Club",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac96-6b7e-752f-9247-922e1f25f3b9",
+   "from": "CRAC",
+   "to": "Clube Recreativo Atlético Campoverdense",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac2c-fd7a-7757-a8b7-5171830c6399",
+   "from": "Rio Claro",
+   "to": "Esporte Clube Rio Verde",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad4b-1d34-7543-8eda-6c1f266d2671",
+   "from": "ASA",
+   "to": "Atlético Sport Aviação",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acc6-56e2-759c-9d31-44e77853a6b1",
+   "from": "Toledo",
+   "to": "Império Toledo de Futebol",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acb3-96b9-753f-b009-e3acec45cb14",
+   "from": "Rangers",
+   "to": "Club Social de Deportes Rangers",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acc2-4dd5-74eb-93bd-ab6448536299",
+   "from": "Astra Giurgiu",
+   "to": "SCM Dunărea Giurgiu",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac2f-a3d8-743d-9c97-75dfe18373b9",
+   "from": "AEK Larnaca",
+   "to": "Alki Larnaca FC",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1aca7-f7d4-7574-97d8-3ab90d4869f8",
+   "from": "São José-SP",
+   "to": "São Vicente Atlético Clube",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acb4-e1b8-7000-825d-1eed476f7e20",
+   "from": "Stade Gabèsien",
+   "to": "Stade Tunisien",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac41-fef7-7229-b500-9b617044d69b",
+   "from": "Austria Lustenau",
+   "to": "FC Lustenau 07",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad76-a51a-755f-a6e4-0f5c55e6fcdc",
+   "from": "Central Coast Mariners",
+   "to": "South Coast United SC",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad69-93ce-762c-97b1-2d661bb02629",
+   "from": "Hajduk Split",
+   "to": "RNK Split",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac43-3718-734e-ad98-7d2a5f3708cf",
+   "from": "Farul Constanța",
+   "to": "Fotbal Club Viitorul Constanța",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac26-ab12-7609-bf51-5f5ebc2efaaf",
+   "from": "Orlando Pride",
+   "to": "Football Club Gold Pride",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acc0-e792-7149-928d-e0b465954af6",
+   "from": "Vasco da Gama",
+   "to": "Club de Regatas Vasco da Gama",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac29-02ad-751d-9ed5-aa0f4b8b2452",
+   "from": "Maccabi Tel Aviv",
+   "to": "Hapoel Tel Aviv",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1aca0-f6aa-74c1-9519-23a429dd10b4",
+   "from": "VfL Osnabrück",
+   "to": "Verein für Leibesübungen von 1899",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acb4-e3ed-763a-ae91-25a83494e968",
+   "from": "Madrid CFF",
+   "to": "Atlético Madrid Femenino",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1aca4-7042-750b-9e1b-88b79588c9cc",
+   "from": "Madrid CFF",
+   "to": "Madrid Club de Fútbol Femenino",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad59-d34d-7534-b86e-05cfbd88f1a4",
+   "from": "Iraklis",
+   "to": "G.S. Iraklis Thessaloniki",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ac94-0139-723b-9466-79cf2adbcaaf",
+   "from": "Serrano",
+   "to": "Grêmio Recreativo Serrano",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1aca6-6b08-70ae-8ac1-5acee521fae8",
+   "from": "Montreal Impact",
+   "to": "Club de Foot Montréal",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad56-5501-76fd-883b-3d24fcf484e3",
+   "from": "Cracovia",
+   "to": "Miejski Klub Sportowy Cracovia Sportowa Spółka Akcyjna",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1acbe-7ef3-7652-a20c-c8be9ac9d178",
+   "from": "Mjällby AIF",
+   "to": "Karlskrona AIF",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad6b-6125-77a8-b7e0-49bfc8ba8523",
+   "from": "Ipswich Town",
+   "to": "Macclesfield Town F.C.",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acc6-5495-7275-8675-6435b8e08bd0",
+   "from": "FC Gloria Buzău",
+   "to": "FC Buzău",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ac40-be75-714b-a66d-fb9a2378433a",
+   "from": "União Barbarense",
+   "to": "Clube de Futebol União",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acc9-189d-7440-95fe-2564a0cabb78",
+   "from": "Olimpija",
+   "to": "Nogometni Klub Olimpija Ljubljana",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad44-83ba-7251-8405-d2fcce256a4e",
+   "from": "Colo-Colo",
+   "to": "Colo Colo de Futebol e Regatas",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad29-dc5a-748e-9c77-ab2be39cd8de",
+   "from": "CSKA Sofia",
+   "to": "FC CSKA 1948 Sofia",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad68-0548-73ae-b124-b77d3e01a156",
+   "from": "Huracán",
+   "to": "Huracán de Tres Arroyos",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad37-b001-729c-b39b-baf3ff4458a8",
+   "from": "Athletic Bilbao",
+   "to": "Athletic Club",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad51-239b-741a-aeb9-4013be894410",
+   "from": "VSE St. Pölten",
+   "to": "SKN St. Pölten",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1acc9-14bd-7488-9033-0a253b61965e",
+   "from": "1. FFC Frankfurt",
+   "to": "FSV Frankfurt",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad5c-09be-704d-872a-a19e550015a0",
+   "from": "Gorica",
+   "to": "HNK Gorica",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad47-1b4e-704b-ac3c-eeffe6806294",
+   "from": "Deportes Concepción",
+   "to": "Club de Deportes Melipilla",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ad5b-9212-703b-9f46-448049b80a05",
+   "from": "Santa Coloma",
+   "to": "Unio Esportiva Santa Coloma",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ad84-2c15-7739-a800-017a536f6e25",
+   "from": "FUS Rabat",
+   "to": "Fath Union Sport Football Club",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ae31-be55-737a-b74e-97d3a6497761",
+   "from": "PFC Naftex Burgas",
+   "to": "PFC Neftochimic Burgas",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ae5f-f9d6-77ba-968b-269ee859375b",
+   "from": "Abahani Limited",
+   "to": "Chittagong Abahani Limited",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ae23-8c79-72db-992e-484843d37a7b",
+   "from": "IK Skovbakken",
+   "to": "VSK Aarhus",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ae5d-3dae-741b-844d-598d5a5ef919",
+   "from": "USM Annaba",
+   "to": "HAMRA Annaba",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ae5d-d508-7419-91b8-031c2913c553",
+   "from": "BK Skjold",
+   "to": "Boldklubben Skjold",
+   "reason": "longer name"
+  },
+  {
+   "id": "01a1ae64-9fd6-770f-a8a8-e5eb4e59d10e",
+   "from": "Association Sportive des Douanes",
+   "to": "AS OTR Lomé",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ae4c-d324-763c-a56c-6a6e1eadf62c",
+   "from": "FC Torpedo-ZIL Moscow",
+   "to": "Futbolniy Klub Torpedo-ZIL",
+   "reason": "wrong name"
+  },
+  {
+   "id": "01a1ae4e-bf22-7319-a515-557e9ca9d8fe",
+   "from": "Dreams Football Club",
+   "to": "Hong Kong Sapling",
+   "reason": "wrong name"
+  }
+ ]
+}

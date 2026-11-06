@@ -305,6 +305,9 @@ ${letters
       '/career-path',
       '/grid',
       '/impostor',
+      '/linha-do-tempo',
+      '/mais-ou-menos',
+      '/escalacao',
       '/ranking',
       '/jogadores',
       '/como-jogar',
@@ -338,7 +341,9 @@ ${letters
         (p) =>
           `<tr><td><a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.photoFile!)}" rel="nofollow">${esc(p.canonicalName)}</a></td><td>${esc(p.photoAuthor ?? '—')}</td><td>${esc(p.photoLicense ?? '—')}</td></tr>`,
       )
-      .join('')}</tbody></table></div>`;
+      .join('')}</tbody></table></div>
+<h2>Escalações</h2>
+<p>As escalações das finais do jogo Escalação vêm dos artigos das finais na <a href="https://en.wikipedia.org/" rel="nofollow">Wikipédia em inglês</a>, sob a licença <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.pt-br" rel="nofollow">CC BY-SA 4.0</a>; cada fase tem o link do artigo de origem. Resultados de partidas: <a href="https://github.com/openfootball" rel="nofollow">OpenFootball</a> (domínio público).</p>`;
     return reply
       .header('cache-control', 'public, max-age=86400')
       .type('text/html; charset=utf-8')
@@ -346,9 +351,9 @@ ${letters
         page({
           origin: origin(),
           path: '/creditos',
-          title: 'Créditos das fotos | De Cabeça',
+          title: 'Créditos | De Cabeça',
           description:
-            'Autores e licenças das fotos de jogadores usadas no De Cabeça (Wikimedia Commons).',
+            'Autores e licenças das fotos (Wikimedia Commons) e das escalações (Wikipédia) usadas no De Cabeça.',
           body,
           noindex: true,
         }),
@@ -368,6 +373,9 @@ ${letters
 - [Career Path](${o}/career-path): adivinhe o jogador pela sequência de clubes, com jogos e gols por clube; 6 tentativas.
 - [Football Grid](${o}/grid): grade 3×3; cada casa pede um jogador que cumpra a linha e a coluna (clube, país, posição).
 - [Impostor](${o}/impostor): um clube e 4 jogadores; 3 jogaram lá, ache o que nunca jogou.
+- [Linha do tempo](${o}/linha-do-tempo): quatro clubes de um jogador, embaralhados; ponha na ordem da carreira.
+- [Mais ou Menos](${o}/mais-ou-menos): duas passagens reais; quem fez mais gols ou jogos pelo clube.
+- [Escalação](${o}/escalacao): o time titular de uma final real (Copa do Mundo, Champions, Libertadores, Copa América) com nomes escondidos; complete a escalação.
 - [Como jogar](${o}/como-jogar): regras, estrelas, títulos e ranking.
 
 ## Dados

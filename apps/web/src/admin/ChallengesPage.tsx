@@ -1,3 +1,4 @@
+import type { GameMode } from '@decabeca/contracts';
 import { GAME_NAME } from '../lib/game';
 /**
  * Editorial view of the level tracks (ADR-007): levels per game in order, drafts, create,
@@ -9,7 +10,7 @@ import { adminApi, ErrorNote } from './AdminApp';
 
 interface Row {
   id: string;
-  gameMode: 'CAREER_PATH' | 'FOOTBALL_GRID' | 'IMPOSTOR' | 'TIMELINE' | 'HIGHER_LOWER';
+  gameMode: GameMode;
   status: string;
   level: number | null;
   difficultyTier: number;
@@ -72,6 +73,7 @@ export function ChallengesPage() {
             <option value="IMPOSTOR">Impostor</option>
             <option value="TIMELINE">Linha do tempo</option>
             <option value="HIGHER_LOWER">Mais ou Menos</option>
+            <option value="MISSING_XI">Escalação</option>
           </select>
           <span className="text-sm">{published} fases publicadas</span>
         </div>
@@ -172,7 +174,7 @@ function CreateForm({ mode, onCreated }: { mode: Row['gameMode']; onCreated: () 
     mutationFn: () =>
       mode === 'CAREER_PATH'
         ? adminApi('/eligibility/career-path', { method: 'POST', json: { playerId } })
-        : mode === 'IMPOSTOR' || mode === 'TIMELINE' || mode === 'HIGHER_LOWER'
+        : mode !== 'FOOTBALL_GRID'
           ? // Impostor is checked when the draft is created (422 with the reasons).
             Promise.resolve({ note: 'Crie a fase: a validação lista os motivos se algo falhar.' })
           : adminApi('/eligibility/grid', { method: 'POST', json: params() }),

@@ -1299,6 +1299,22 @@ describe('retire', () => {
   });
 });
 
+describe('retire with a replacement that cannot be built', () => {
+  it('keeps the level published (no hole in the track)', async () => {
+    const level = await prisma.challenge.findFirstOrThrow({
+      where: { gameMode: 'FOOTBALL_GRID', publicNumber: 1, status: 'published' },
+    });
+    const res = await adminPost(`/challenges/${level.id}/retire`, {
+      reason: 'Teste',
+      replacementParams: { playerId: 'nao-existe' },
+    });
+    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect((await prisma.challenge.findUniqueOrThrow({ where: { id: level.id } })).status).toBe(
+      'published',
+    );
+  });
+});
+
 describe('replace in place', () => {
   it('a published replacement takes the retired level number; old players keep their attempt', async () => {
     const old = await prisma.challenge.findFirstOrThrow({

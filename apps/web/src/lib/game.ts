@@ -20,6 +20,7 @@ export const GAME_PATH = {
   IMPOSTOR: '/impostor',
   TIMELINE: '/linha-do-tempo',
   HIGHER_LOWER: '/mais-ou-menos',
+  MISSING_XI: '/escalacao',
 } as const;
 export const GAME_NAME = {
   CAREER_PATH: 'Career Path',
@@ -27,6 +28,7 @@ export const GAME_NAME = {
   IMPOSTOR: 'Impostor',
   TIMELINE: 'Linha do tempo',
   HIGHER_LOWER: 'Mais ou Menos',
+  MISSING_XI: 'Escalação',
 } as const;
 
 export const useGames = () =>

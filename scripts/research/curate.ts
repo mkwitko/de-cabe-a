@@ -1,7 +1,7 @@
 // AI curation (ADR-006): candidates -> Wikidata import -> cross-check against Wikipedia infoboxes (pt/en/es/it/de/fr) ->
 // verify what both sources agree on. Re-runnable; verified players are left as they are.
 // Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/curate.ts [--limit N]
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { normalizeName } from '../../packages/engine/src/text/normalize';
 import { createPrisma } from '../../apps/api/src/db';
 import { importWikidataPlayers } from '../../apps/api/src/modules/data-import/import.service';
@@ -30,12 +30,23 @@ const CURATOR = 'ai-curator';
 const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > 0 ? Number(process.argv[limitArg + 1]) : 360;
 /** --recheck: rebuild every career the curator verified with the current rules; failures go back to imported. */
-const RECHECK = process.argv.includes('--recheck') || process.argv.includes('--only-verified');
+const RECHECK =
+  process.argv.includes('--recheck') ||
+  process.argv.includes('--only-verified') ||
+  process.argv.includes('--only-qids');
 /** --only-verified: skip the candidate search and recheck only the curator-verified players. */
 const ONLY_VERIFIED = process.argv.includes('--only-verified');
 /** --fresh-since <ISO>: with --recheck, careers verified at or after this time are kept as they are. */
 const freshArg = process.argv.indexOf('--fresh-since');
 const FRESH_SINCE = freshArg > 0 ? new Date(process.argv[freshArg + 1]!) : null;
+/** --only-qids <file>: recheck only these Wikidata ids (one per line), e.g. after a club fix. */
+const qidsArg = process.argv.indexOf('--only-qids');
+const ONLY_QIDS =
+  qidsArg > 0
+    ? readFileSync(process.argv[qidsArg + 1]!, 'utf8')
+        .split(/\s+/)
+        .filter(Boolean)
+    : null;
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // ── 1. Candidates: most-linked Brazilian footballers + global stars who matter to Brazilian fans.
@@ -264,7 +275,11 @@ function exactClub(club: { name: string; shortName: string }, wp: string): boole
   const w = normalizeName(wp);
   if (w && (w === normalizeName(club.shortName) || w === normalizeName(club.name))) return true;
   const a = clubTokens(club);
-  return tokens(wp).some((t) => a.includes(t) || t === initials(club));
+  const ts = tokens(wp);
+  // Two or more words must all match: "São Paulo" is not "São José", "Bayern de Munique" is not
+  // "Bayer Leverkusen".
+  if (ts.length >= 2) return ts.every((t) => a.includes(t)) || ts.some((t) => t === initials(club));
+  return ts.some((t) => a.includes(t) || t === initials(club));
 }
 
 /** Transliterations and adjectives: Olympiakos/Olympiacos, Lyon/Lyonnais, Rennes/Rennais. */
@@ -278,8 +293,9 @@ function fuzzyClub(club: { name: string; shortName: string }, wp: string): boole
   return tokens(wp).some((t) =>
     a.some(
       (x) =>
-        (t.length >= 5 && x.length >= 4 && distance(x, t) <= (t.length >= 8 ? 2 : 1)) ||
-        (Math.min(x.length, t.length) >= 4 &&
+        // Long words only: "bayer"/"bayern" are different clubs, "olympiakos"/"olympiacos" are not.
+        (t.length >= 7 && x.length >= 7 && distance(x, t) <= (t.length >= 9 ? 2 : 1)) ||
+        (Math.min(x.length, t.length) >= 6 &&
           prefix(x, t) >= 4 &&
           x !== 'inter' &&
           t !== 'inter' &&
@@ -446,9 +462,8 @@ async function crossCheck(
         },
       });
       if (!loan) parent = m.club.id;
-      // Imported clubs carry the full legal name; use the common name from the infobox.
-      if (m.club.shortName === m.club.name && m.entry.club.length <= 30)
-        await tx.club.update({ where: { id: m.club.id }, data: { shortName: m.entry.club } });
+      // No club renaming here: a fuzzy pairing once gave Leverkusen the name "Bayern de Munique"
+      // (repair-club-names.ts). Club names come from Wikidata/Wikipedia titles only.
       if (m.club.verificationStatus !== 'verified')
         await tx.club.update({
           where: { id: m.club.id },
@@ -533,8 +548,9 @@ async function mergeOverlappingRepeats() {
 }
 await mergeOverlappingRepeats();
 
-const list = ONLY_VERIFIED ? [] : await candidates();
-if (RECHECK) {
+const list = ONLY_VERIFIED || ONLY_QIDS ? [] : await candidates();
+if (ONLY_QIDS) for (const qid of ONLY_QIDS) list.push({ qid, links: 0 });
+else if (RECHECK) {
   const known = new Set(list.map((c) => c.qid));
   for (const p of await prisma.player.findMany({
     where: { verifiedBy: CURATOR, wikidataId: { not: null } },
@@ -587,8 +603,9 @@ for (let i = 0; i < list.length; i += 50) {
   );
   log(`batch ${i / 50 + 1}:`, JSON.stringify(tally));
 }
+// A partial recheck (--only-qids) must not overwrite the full run's report.
 writeFileSync(
-  new URL('./curation-report.json', import.meta.url),
+  new URL(ONLY_QIDS ? './curation-report.partial.json' : './curation-report.json', import.meta.url),
   JSON.stringify({ ranAt: new Date().toISOString(), outcomes }, null, 1) + '\n',
 );
 log('verified players:', await prisma.player.count({ where: { verificationStatus: 'verified' } }));
