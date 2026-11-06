@@ -97,7 +97,13 @@ export async function searchPlayers(
     if (normalized === term && !isPrimary)
       return {
         id: player.id,
-        ...(player.photoFile ? { photo: photoThumb(player.photoFile) } : {}),
+        ...(player.photoFile
+          ? {
+              photo: photoThumb(player.photoFile),
+              photoCredit:
+                `Foto: ${player.photoAuthor ?? 'Wikimedia Commons'} · ${player.photoLicense ?? ''}`.trim(),
+            }
+          : {}),
         name: alias,
         disambiguation: [player.canonicalName, who].filter(Boolean).join(' · '),
       };
@@ -105,7 +111,13 @@ export async function searchPlayers(
       id: player.id,
       name: player.canonicalName,
       disambiguation: who || null,
-      ...(player.photoFile ? { photo: photoThumb(player.photoFile) } : {}),
+      ...(player.photoFile
+        ? {
+            photo: photoThumb(player.photoFile),
+            photoCredit:
+              `Foto: ${player.photoAuthor ?? 'Wikimedia Commons'} · ${player.photoLicense ?? ''}`.trim(),
+          }
+        : {}),
     };
   });
 }

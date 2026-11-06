@@ -9,10 +9,13 @@ import { Skeleton } from './ui';
 export function Avatar({
   name,
   photo,
+  credit,
   size = 'size-10',
 }: {
   name: string;
   photo?: string | null;
+  /** Shown on hover / long press: CC licences require the credit where the photo shows. */
+  credit?: string | undefined;
   size?: string;
 }) {
   const initials = name
@@ -25,6 +28,7 @@ export function Avatar({
     <img
       src={photo}
       alt=""
+      title={credit}
       loading="lazy"
       className={`${size} shrink-0 rounded-full bg-ink/10 object-cover object-top`}
     />

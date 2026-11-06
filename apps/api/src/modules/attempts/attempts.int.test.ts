@@ -437,7 +437,12 @@ describe('player search', () => {
         url: expect.stringContaining('Special:FilePath'),
       },
     });
-    expect((await search('ze rob')).json().players[0].photo).toContain('width=96');
+    expect((await search('ze rob')).json().players[0]).toMatchObject({
+      photo: expect.stringContaining('width=96'),
+      photoCredit: 'Foto: Fulano · CC BY-SA 4.0',
+    });
+    const credits = await app.inject({ method: 'GET', url: '/creditos' });
+    expect(credits.body).toContain('Fulano');
     expect((await guest().req('GET', '/players/nope/card')).statusCode).toBe(404);
   });
   it('validates q length and limit', async () => {

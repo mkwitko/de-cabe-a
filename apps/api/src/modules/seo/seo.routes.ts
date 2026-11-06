@@ -324,6 +324,37 @@ ${letters
       );
   });
 
+  // Photo credits: CC licences require author and licence; thumbnails link here (ADR-012 era).
+  app.get('/creditos', async (_req, reply) => {
+    const ps = await prisma.player.findMany({
+      where: { photoFile: { not: null }, verificationStatus: { not: 'rejected' } },
+      select: { canonicalName: true, photoFile: true, photoAuthor: true, photoLicense: true },
+      orderBy: { canonicalName: 'asc' },
+    });
+    const body = `<h1>Créditos das fotos</h1>
+<p class="lead">As fotos dos jogadores vêm do Wikimedia Commons, com licenças livres. Obrigado a cada fotógrafo.</p>
+<div class="scroll"><table><thead><tr><th>Jogador</th><th>Autor</th><th>Licença</th></tr></thead><tbody>${ps
+      .map(
+        (p) =>
+          `<tr><td><a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.photoFile!)}" rel="nofollow">${esc(p.canonicalName)}</a></td><td>${esc(p.photoAuthor ?? '—')}</td><td>${esc(p.photoLicense ?? '—')}</td></tr>`,
+      )
+      .join('')}</tbody></table></div>`;
+    return reply
+      .header('cache-control', 'public, max-age=86400')
+      .type('text/html; charset=utf-8')
+      .send(
+        page({
+          origin: origin(),
+          path: '/creditos',
+          title: 'Créditos das fotos | De Cabeça',
+          description:
+            'Autores e licenças das fotos de jogadores usadas no De Cabeça (Wikimedia Commons).',
+          body,
+          noindex: true,
+        }),
+      );
+  });
+
   // For AI assistants and AI search (llmstxt.org): what the site is and where the facts are.
   app.get('/llms.txt', async (_req, reply) => {
     const o = origin();

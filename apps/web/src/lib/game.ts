@@ -1,3 +1,4 @@
+import { play } from './sound';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AttemptResponse,
@@ -74,6 +75,13 @@ export function useAction(mode: GameMode, level: number) {
       }),
     onSuccess: (data) => {
       qc.setQueryData(['attempt', mode, level], data);
+      // Sound for the outcome (off unless the player turned it on).
+      if (data.attempt.status !== 'IN_PROGRESS')
+        play(
+          data.attempt.stars === 3 ? 'win' : data.event?.type === 'correct' ? 'correct' : 'wrong',
+        );
+      else if (data.event?.type === 'correct') play('correct');
+      else if (data.event?.type === 'wrong') play('wrong');
       if (data.attempt.status !== 'IN_PROGRESS')
         for (const key of ['games', 'track', 'stats', 'me', 'ranking', 'level-ranking'])
           void qc.invalidateQueries({ queryKey: [key] });

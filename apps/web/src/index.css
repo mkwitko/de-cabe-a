@@ -45,6 +45,7 @@
     font-family: var(--font-sans);
     color: var(--color-chalk);
     background-color: var(--color-pitch);
+    isolation: isolate;
     /* printed halftone of the album page */
     background-image: radial-gradient(
       color-mix(in oklch, var(--color-pitch-deep) 70%, transparent) 1px,
@@ -52,6 +53,28 @@
     );
     background-size: 6px 6px;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * The pitch behind the album page, fixed while the page scrolls: mowing stripes and the
+   * field markings (a vertical pitch, 68 × 105; "slice" shows the whole pitch on a phone and
+   * the centre circle on a wide screen). Faint enough to never compete with text.
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 76 113' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='white' stroke-opacity='0.07' stroke-width='0.22'%3E%3Crect x='0' y='0' width='68' height='105'/%3E%3Cline x1='0' y1='52.5' x2='68' y2='52.5'/%3E%3Ccircle cx='34' cy='52.5' r='9.15'/%3E%3Crect x='13.84' y='0' width='40.32' height='16.5'/%3E%3Crect x='24.84' y='0' width='18.32' height='5.5'/%3E%3Crect x='13.84' y='88.5' width='40.32' height='16.5'/%3E%3Crect x='24.84' y='99.5' width='18.32' height='5.5'/%3E%3Cpath d='M26.7 16.5a9.15 9.15 0 0 0 14.6 0M26.7 88.5a9.15 9.15 0 0 1 14.6 0'/%3E%3C/g%3E%3Cg fill='white' fill-opacity='0.09'%3E%3Ccircle cx='34' cy='52.5' r='0.5'/%3E%3Ccircle cx='34' cy='11' r='0.4'/%3E%3Ccircle cx='34' cy='94' r='0.4'/%3E%3C/g%3E%3C/svg%3E"),
+      repeating-linear-gradient(
+        180deg,
+        transparent 0 9vh,
+        color-mix(in oklch, var(--color-pitch-deep) 22%, transparent) 9vh 18vh
+      );
+    background-size: cover, auto;
+    background-position: center;
   }
 
   ::selection {

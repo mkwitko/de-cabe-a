@@ -59,6 +59,12 @@ One family, self-hosted: **Archivo Variable** (`@fontsource-variable/archivo/wdt
 - Mobile-first (360px base): one column, bottom tab bar (`min-h-14` targets), no horizontal scroll at 360px.
 - Motion: sticker tilt (home), paste-in for stickers and clue chips (`ease-out-expo`, 420–500ms); all off under `prefers-reduced-motion`.
 
+## Pitch and sound
+
+- **Pitch behind the page** (`body::before`, fixed): mowing stripes (pitch-deep at 22%, 9vh bands) and field markings as an inline SVG of a vertical 68 × 105 pitch, `slice`-fitted (whole pitch on a phone, centre circle on wide screens), white at 7% opacity. The album halftone stays on top. Never strong enough to compete with text.
+- **Sound** (`src/lib/sound.ts`): synthesised with Web Audio (no files): whistle when a level starts, rising chord + crowd on a right answer, falling "uhh" on a wrong one, cheer on a 3-star finish. **Off by default**; speaker toggle in the nav (icon only on the phone's bottom bar), choice kept on the device.
+- **Photos**: Wikimedia Commons only, always credited — under the photo in the card, as the thumbnail's title in the search list, and on `/creditos` (linked from the list).
+
 ## Browser surfaces
 
 `::selection` cover on ink; `:focus-visible` 3px cover outline, 3px offset; `scrollbar-color` chalk-soft on pitch-deep; `color-scheme: light dark`.
