@@ -436,3 +436,45 @@ model SearchMiss {
 
   @@index([lastAt])
 }
+
+/// A real match from an open source (StatsBomb open data, OpenFootball CC0). Raw team names kept;
+/// clubId set when the name matches one of our clubs. For future games (Missing XI, Técnico).
+model Match {
+  id          String        @id @default(uuid(7))
+  source      String /// statsbomb | openfootball
+  sourceRef   String        @unique /// e.g. "statsbomb:3869685", "openfootball:2023-24/en.1:12"
+  competition String
+  season      String
+  date        DateTime?
+  stage       String?
+  homeTeam    String
+  awayTeam    String
+  homeClubId  String?
+  awayClubId  String?
+  homeScore   Int?
+  awayScore   Int?
+  lineups     MatchLineup[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([competition, season])
+}
+
+/// One player in a match lineup (StatsBomb). playerId set when the name and nationality match
+/// exactly one player of ours.
+model MatchLineup {
+  id         String  @id @default(uuid(7))
+  matchId    String
+  match      Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  side       String /// home | away
+  playerName String
+  nickname   String?
+  country    String?
+  playerId   String?
+  position   String?
+  jersey     Int?
+  starter    Boolean @default(false)
+
+  @@index([matchId])
+  @@index([playerId])
+}
