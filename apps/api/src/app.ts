@@ -12,6 +12,7 @@ import type { PrismaClient } from './generated/prisma/client';
 import { AppError } from './errors';
 import { track } from './modules/analytics/analytics';
 import { adminAuth } from './modules/admin/auth';
+import { createAuth, type Auth, type AuthOptions } from './modules/account/auth';
 import { importRoutes } from './modules/data-import/import.routes';
 import { knowledgeRoutes } from './modules/knowledge/knowledge.routes';
 import { challengeRoutes } from './modules/challenges/challenges.routes';
@@ -30,7 +31,17 @@ export interface AppDeps {
   secureCookie: boolean;
   /** Per-minute limits (ARCHITECTURE.md §8, API_SPEC.md). */
   limits: { sessionsPerIp: number; perSession: number; search: number; actions: number };
+  /** Better Auth (ADR-008), built from `authOptions`. */
+  auth: Auth;
 }
+
+/** Development defaults: e-mails go to the log until Resend is configured (ADR-008). */
+const devAuthOptions: AuthOptions = {
+  secret: 'dev-only-secret-change-me-0123456789abcdef',
+  baseURL: 'http://127.0.0.1:5173',
+  trustedOrigins: ['http://127.0.0.1:5173', 'http://localhost:5173'],
+  sendEmail: async (m) => console.info(`[e-mail para ${m.to}] ${m.subject}\n${m.text}`),
+};
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -48,8 +59,10 @@ const body = (
 
 export function buildApp(
   opts: FastifyServerOptions = {},
-  deps: Partial<AppDeps> & Pick<AppDeps, 'prisma' | 'adminToken'>,
+  deps: Partial<Omit<AppDeps, 'auth'>> &
+    Pick<AppDeps, 'prisma' | 'adminToken'> & { authOptions?: AuthOptions },
 ) {
+  const { authOptions = devAuthOptions, ...rest } = deps;
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
@@ -59,7 +72,8 @@ export function buildApp(
     random: Math.random,
     secureCookie: process.env.NODE_ENV === 'production',
     limits: { sessionsPerIp: 20, perSession: 300, search: 60, actions: 120 },
-    ...deps,
+    ...rest,
+    auth: createAuth(rest.prisma, authOptions),
   });
 
   app.setErrorHandler((err, req, reply) => {

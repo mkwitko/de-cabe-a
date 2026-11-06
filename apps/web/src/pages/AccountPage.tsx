@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import type { ApiError } from '../lib/api';
+import { useMutation } from '@tanstack/react-query';
+import { api, type ApiError } from '../lib/api';
 import { useAccount, useMe } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
@@ -23,7 +24,16 @@ export function AccountPage() {
   const me = useMe();
   const act = useAccount();
   const [nickname, setNickname] = useState('');
-  const [mode, setMode] = useState<'register' | 'login'>('register');
+  const [mode, setMode] = useState<'register' | 'login' | 'forgot'>('register');
+  // Google: the API answers with the consent URL; the callback comes back to /conta.
+  const google = useMutation({
+    mutationFn: () =>
+      api<{ url: string }>('/v1/auth/sign-in/social', {
+        method: 'POST',
+        json: { provider: 'google', callbackURL: `${location.origin}/conta` },
+      }),
+    onSuccess: ({ url }) => location.assign(url),
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   if (!me.data) return <Skeleton className="h-96" />;
@@ -92,6 +102,25 @@ export function AccountPage() {
               <p className="text-chalk-soft">
                 Seu progresso está salvo na conta e aparece em qualquer aparelho em que você entrar.
               </p>
+              {!m.account.emailVerified && (
+                <p className="rounded-lg border-2 border-dashed border-cover/60 px-4 py-3 text-chalk">
+                  Confirme seu e-mail pelo link que enviamos para <strong>{m.account.email}</strong>
+                  .{' '}
+                  <button
+                    type="button"
+                    className="font-semibold underline underline-offset-4"
+                    onClick={() =>
+                      act.mutate({
+                        path: '/v1/auth/send-verification-email',
+                        method: 'POST',
+                        json: { email: m.account!.email, callbackURL: '/conta' },
+                      })
+                    }
+                  >
+                    Reenviar
+                  </button>
+                </p>
+              )}
               <button
                 className={`${btnSecondary} self-start`}
                 onClick={() => act.mutate({ path: '/v1/auth/logout', method: 'POST' })}
@@ -103,22 +132,51 @@ export function AccountPage() {
             <form
               className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0"
               onSubmit={(e) =>
-                submit(
-                  e,
-                  mode === 'register' ? '/v1/auth/register' : '/v1/auth/login',
-                  'POST',
-                  mode === 'register'
-                    ? { email, password, nickname: nickname || m.nickname }
-                    : { email, password },
-                )
+                mode === 'forgot'
+                  ? submit(e, '/v1/auth/request-password-reset', 'POST', {
+                      email,
+                      redirectTo: `${location.origin}/conta/nova-senha`,
+                    })
+                  : submit(
+                      e,
+                      mode === 'register' ? '/v1/auth/sign-up/email' : '/v1/auth/sign-in/email',
+                      'POST',
+                      mode === 'register'
+                        ? { email, password, name: nickname || m.nickname || '' }
+                        : { email, password },
+                    )
               }
             >
-              <h2 className={h2}>{mode === 'register' ? 'Criar conta (opcional)' : 'Entrar'}</h2>
+              <h2 className={h2}>
+                {mode === 'register'
+                  ? 'Criar conta (opcional)'
+                  : mode === 'login'
+                    ? 'Entrar'
+                    : 'Esqueci a senha'}
+              </h2>
               <p className="text-chalk-soft">
                 {mode === 'register'
                   ? 'Guarda seu progresso e suas estrelas para jogar em outro aparelho. Sem conta você continua jogando normalmente.'
-                  : 'Entre para trazer seu progresso para este aparelho.'}
+                  : mode === 'login'
+                    ? 'Entre para trazer seu progresso para este aparelho.'
+                    : 'Mandamos um link para você criar uma senha nova.'}
               </p>
+              {mode !== 'forgot' && (
+                <>
+                  <button
+                    type="button"
+                    className={`${btnSecondary} w-full gap-3 bg-paper text-ink hover:bg-paper/90`}
+                    disabled={google.isPending}
+                    onClick={() => google.mutate()}
+                  >
+                    <GoogleMark />
+                    Continuar com Google
+                  </button>
+                  <p className="flex items-center gap-3 text-sm text-chalk-soft before:h-px before:flex-1 before:bg-chalk/20 after:h-px after:flex-1 after:bg-chalk/20">
+                    ou com e-mail
+                  </p>
+                </>
+              )}
               <Field
                 label="E-mail"
                 type="email"
@@ -127,18 +185,24 @@ export function AccountPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <Field
-                label="Senha"
-                type="password"
-                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                minLength={mode === 'register' ? 8 : 1}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              {mode !== 'forgot' && (
+                <Field
+                  label="Senha"
+                  type="password"
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  minLength={mode === 'register' ? 8 : 1}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              )}
               <div className="flex flex-wrap items-center gap-4">
                 <button className={btnPrimary} disabled={act.isPending}>
-                  {mode === 'register' ? 'Criar conta' : 'Entrar'}
+                  {mode === 'register'
+                    ? 'Criar conta'
+                    : mode === 'login'
+                      ? 'Entrar'
+                      : 'Enviar link'}
                 </button>
                 <button
                   type="button"
@@ -147,6 +211,15 @@ export function AccountPage() {
                 >
                   {mode === 'register' ? 'Já tenho conta' : 'Criar conta nova'}
                 </button>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    className="font-semibold underline underline-offset-4"
+                    onClick={() => setMode('forgot')}
+                  >
+                    Esqueci a senha
+                  </button>
+                )}
               </div>
               {mode === 'register' && !nickname && !m.nickname && (
                 <p className="text-sm text-chalk-soft">
@@ -160,13 +233,44 @@ export function AccountPage() {
               {error.message}
             </p>
           )}
+          {(google.error as ApiError | null) && (
+            <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
+              {(google.error as ApiError).message}
+            </p>
+          )}
           {act.isSuccess && !error && (
             <p role="status" className="text-chalk-soft">
-              Pronto.
+              {mode === 'forgot' && !m.account
+                ? 'Se esse e-mail tiver conta, o link já está a caminho.'
+                : 'Pronto.'}
             </p>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+/** Google "G" mark (brand guidelines allow it on sign-in buttons). */
+function GoogleMark() {
+  return (
+    <svg aria-hidden viewBox="0 0 48 48" className="size-5">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.7 17.7 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.5 5.8c4.4-4 6.8-10 6.8-17.2z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.5 0 11.9-2.1 15.8-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.3 2.3-6.3 0-11.6-4.2-13.5-10l-7.8 6C6.6 42.6 14.6 48 24 48z"
+      />
+    </svg>
   );
 }

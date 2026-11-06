@@ -272,21 +272,12 @@ export const Nickname = z
   .regex(/^[\p{L}\p{N} ._-]+$/u, 'Use letras, números, espaço, ponto, hífen ou _.');
 export const MeResponse = z.strictObject({
   nickname: z.string().nullable(),
-  account: z.strictObject({ email: z.string() }).nullable(),
+  account: z.strictObject({ email: z.string(), emailVerified: z.boolean() }).nullable(),
   totalStars: z.number(),
   title: Title,
 });
 export type MeResponse = z.infer<typeof MeResponse>;
 export const UpdateMeRequest = z.object({ nickname: Nickname });
-export const RegisterRequest = z.object({
-  email: z.email().max(200),
-  password: z.string().min(8).max(200),
-  nickname: Nickname,
-});
-export const LoginRequest = z.object({
-  email: z.email().max(200),
-  password: z.string().min(1).max(200),
-});
 export type CareerPathReveal = z.infer<typeof CareerPathReveal>;
 export type FootballGridReveal = z.infer<typeof FootballGridReveal>;
 

@@ -14,6 +14,7 @@ import { GridPage } from './games/grid/GridPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { TrackPage } from './pages/TrackPage';
 import { RankingPage } from './pages/RankingPage';
+import { NewPasswordPage } from './pages/NewPasswordPage';
 import { AccountPage } from './pages/AccountPage';
 import { StatsPage } from './pages/StatsPage';
 import { btnPrimary, Skeleton, useOnline } from './components/ui';
@@ -298,6 +299,7 @@ function PublicRoutes() {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/conta" element={<AccountPage />} />
+        <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
