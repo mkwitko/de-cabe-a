@@ -63,8 +63,11 @@ export const CareerPathReveal = z.strictObject({
   trajectory: z.array(RevealedClub),
   extraHints: z.strictObject({
     position: PositionGroup.optional(),
+    secondaryPositions: z.array(PositionGroup).optional(),
     nationalityCode: z.string().optional(),
   }),
+  /** The answer's career page (/jogador/...), when the career is verified. */
+  answerPage: z.string().nullable(),
 });
 
 // ── Football Grid views (never the eligible pools) ──

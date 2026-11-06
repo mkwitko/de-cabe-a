@@ -1,9 +1,13 @@
 /* global URL, Headers, fetch -- Cloudflare Workers runtime */
-// Cloudflare Pages Function (ADR-010): <site>/v1/* goes to the API on the Oracle VM, so the site,
-// the guest cookie and the sign-in all stay on one domain. API_ORIGIN is a Pages environment
-// variable, e.g. https://api-origin.decabecafc.com.br
-export async function onRequest({ request, env }) {
+// Cloudflare Pages middleware (ADR-010): the API on the Oracle VM answers /v1/* (game API) and
+// the search pages (/jogador/*, /jogadores, /sitemap.xml, /llms.txt), all on the site's domain so
+// the guest cookie, sign-in and SEO stay on one origin. Everything else is the static site.
+// API_ORIGIN is a Pages environment variable, e.g. https://api-origin.decabecafc.com.br
+const API_PATHS = /^\/(v1\/|jogador\/|jogadores$|sitemap\.xml$|llms\.txt$)/;
+
+export async function onRequest({ request, env, next }) {
   const url = new URL(request.url);
+  if (!API_PATHS.test(url.pathname)) return next();
   const target = new URL(url.pathname + url.search, env.API_ORIGIN);
   const headers = new Headers(request.headers);
   headers.set('x-forwarded-host', url.host);
