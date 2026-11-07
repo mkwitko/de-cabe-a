@@ -40,6 +40,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm audit --audit-level=high
 
   e2e:
     name: e2e (Playwright, Chromium)
