@@ -1,5 +1,7 @@
 import { buildHigherLowerSnapshot, HigherLowerParams } from './higher-lower-snapshot';
 import { buildMissingXiSnapshot, MissingXiParams } from './missing-xi-snapshot';
+import { buildMysterySnapshot, MysteryParams } from './mystery-snapshot';
+import { buildConnectionsSnapshot, ConnectionsParams } from './connections-snapshot';
 import { buildTimelineSnapshot, TimelineParams } from './timeline-snapshot';
 /**
  * Challenge lifecycle (API_SPEC.md admin, ADR-002, ADR-007): snapshot generation, eligibility,
@@ -135,7 +137,8 @@ export interface CreateChallengeInput {
     | ImpostorParams
     | TimelineParams
     | HigherLowerParams
-    | MissingXiParams;
+    | MissingXiParams
+    | ConnectionsParams;
   createdBy: string;
 }
 
@@ -146,6 +149,14 @@ function usages(
 ): { playerId: string; role: string }[] {
   if (mode === 'CAREER_PATH')
     return [{ playerId: String(snapshot.answerPlayerId), role: 'answer' }];
+  if (mode === 'CONNECTIONS')
+    return (snapshot.groups as { playerIds: string[] }[])
+      .flatMap((g) => g.playerIds)
+      .map((playerId) => ({ playerId, role: 'connections' }));
+  if (mode === 'MYSTERY_PLAYER')
+    return [
+      { playerId: String((snapshot.answer as { playerId: string }).playerId), role: 'mystery' },
+    ];
   if (mode === 'MISSING_XI')
     return (snapshot.slots as { playerId: string | null; hidden: boolean }[])
       .filter((s) => s.hidden && s.playerId)
@@ -191,6 +202,26 @@ export async function buildSnapshot(
         reasons: report.reasons,
       });
     const config = careerPathConfig(report, input.difficultyTier);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'CONNECTIONS') {
+    const params = ConnectionsParams.parse(input.params);
+    const built = await buildConnectionsSnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase de Conexões não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.CONNECTIONS.validateConfig(built.config);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'MYSTERY_PLAYER') {
+    const params = MysteryParams.parse(input.params);
+    const built = await buildMysterySnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase do Craque Misterioso não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.MYSTERY_PLAYER.validateConfig(built.config);
     return { config, difficultyTier: config.difficultyTier };
   }
   if (input.mode === 'MISSING_XI') {

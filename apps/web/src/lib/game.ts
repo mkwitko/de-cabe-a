@@ -21,6 +21,8 @@ export const GAME_PATH = {
   TIMELINE: '/linha-do-tempo',
   HIGHER_LOWER: '/mais-ou-menos',
   MISSING_XI: '/escalacao',
+  CONNECTIONS: '/conexoes',
+  MYSTERY_PLAYER: '/craque-misterioso',
 } as const;
 export const GAME_NAME = {
   CAREER_PATH: 'Career Path',
@@ -29,6 +31,8 @@ export const GAME_NAME = {
   TIMELINE: 'Linha do tempo',
   HIGHER_LOWER: 'Mais ou Menos',
   MISSING_XI: 'Escalação',
+  CONNECTIONS: 'Conexões',
+  MYSTERY_PLAYER: 'Craque Misterioso',
 } as const;
 
 export const useGames = () =>

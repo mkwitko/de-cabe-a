@@ -104,6 +104,34 @@
       ]
     },
     {
+      "path": "/craque-misterioso",
+      "title": "Craque Misterioso: adivinhe o jogador de futebol | De Cabeça",
+      "description": "Um jogador escondido e 8 palpites. Cada chute mostra se a nacionalidade e a posição batem, se ele é mais velho ou mais novo e os clubes em comum.",
+      "h1": "Craque Misterioso: quem é o jogador?",
+      "text": [
+        "Chute qualquer jogador da base. O jogo compara com o craque escondido: nacionalidade, posição, ano de nascimento e clubes em comum.",
+        "São 8 palpites. Acerte em até 3 para três estrelas."
+      ],
+      "links": [
+        ["/craque-misterioso", "Começar o Craque Misterioso"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
+      "path": "/conexoes",
+      "title": "Conexões: ache os 4 grupos de jogadores | De Cabeça",
+      "description": "16 jogadores de futebol em 4 grupos escondidos: mesmo clube, mesma seleção ou titulares da mesma final. Ache as conexões com até 4 erros.",
+      "h1": "Conexões: o que esses jogadores têm em comum?",
+      "text": [
+        "Cada fase tem 16 jogadores. Escolha quatro que tenham algo em comum e confirme.",
+        "Cada jogador está em um grupo só. Quatro erros encerram a fase; ache os quatro grupos com até um erro para três estrelas."
+      ],
+      "links": [
+        ["/conexoes", "Começar as Conexões"],
+        ["/como-jogar", "Regras e estrelas"]
+      ]
+    },
+    {
       "path": "/ranking",
       "title": "Ranking De Cabeça: quem mais sabe de futebol | De Cabeça",
       "description": "Ranking geral, da semana e contra o relógio dos jogadores do De Cabeça, por estrelas conquistadas nas fases.",

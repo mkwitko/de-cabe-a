@@ -206,7 +206,7 @@ export function AccountPage() {
                 </button>
                 <button
                   type="button"
-                  className="font-semibold underline underline-offset-4"
+                  className="min-h-10 font-semibold underline underline-offset-4"
                   onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
                 >
                   {mode === 'register' ? 'Já tenho conta' : 'Criar conta nova'}

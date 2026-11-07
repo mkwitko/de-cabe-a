@@ -17,7 +17,8 @@ export function parseLineups(wikitext: string): [LineupRow[], LineupRow[]] | nul
   let current: LineupRow[] | null = null;
   let starters = true;
   for (const line of wikitext.split('\n')) {
-    const m = ROW.exec(line.trim());
+    // "{{abbr|RB|Right-back}}" -> "RB" (some articles spell positions out).
+    const m = ROW.exec(line.replace(/\{\{abbr\|([A-Z]{2,3})\|[^}]*\}\}/g, '$1').trim());
     if (!m) {
       // The "Substitutes:" header row; prose and player-row notes mention "substitute" too.
       if (line.startsWith('|') && /Substitut/i.test(line)) starters = false;

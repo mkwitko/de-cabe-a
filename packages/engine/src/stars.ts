@@ -1,6 +1,14 @@
 /** Stars 0–3 per finished level, from the engine score (ADR-007). */
 export function starsFor(
-  engine: 'career-path' | 'football-grid' | 'impostor' | 'timeline' | 'higher-lower' | 'missing-xi',
+  engine:
+    | 'career-path'
+    | 'football-grid'
+    | 'impostor'
+    | 'timeline'
+    | 'higher-lower'
+    | 'missing-xi'
+    | 'mystery-player'
+    | 'connections',
   score: number,
   opts: { hintsUsed?: number } = {},
 ): 0 | 1 | 2 | 3 {
@@ -8,6 +16,10 @@ export function starsFor(
     // score = (7 - attempts) * 10: 1–2 attempts -> 3, 3–4 -> 2, 5–6 -> 1, lost -> 0
     return score >= 50 ? 3 : score >= 30 ? 2 : score >= 10 ? 1 : 0;
   }
+  // Conexões: 10 per group + mistakes left when all four are found.
+  if (engine === 'connections') return score >= 43 ? 3 : score >= 40 ? 2 : score >= 20 ? 1 : 0;
+  // Craque Misterioso: score = 9 - guesses (8 = first guess).
+  if (engine === 'mystery-player') return score >= 6 ? 3 : score >= 4 ? 2 : score >= 1 ? 1 : 0;
   // Escalação: share of hidden players found, 0–100.
   if (engine === 'missing-xi') return score === 100 ? 3 : score >= 70 ? 2 : score >= 40 ? 1 : 0;
   // Impostor: right picks out of 5.

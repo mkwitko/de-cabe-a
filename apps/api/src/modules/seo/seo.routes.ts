@@ -308,6 +308,8 @@ ${letters
       '/linha-do-tempo',
       '/mais-ou-menos',
       '/escalacao',
+      '/craque-misterioso',
+      '/conexoes',
       '/ranking',
       '/jogadores',
       '/como-jogar',
@@ -375,7 +377,9 @@ ${letters
 - [Impostor](${o}/impostor): um clube e 4 jogadores; 3 jogaram lá, ache o que nunca jogou.
 - [Linha do tempo](${o}/linha-do-tempo): quatro clubes de um jogador, embaralhados; ponha na ordem da carreira.
 - [Mais ou Menos](${o}/mais-ou-menos): duas passagens reais; quem fez mais gols ou jogos pelo clube.
-- [Escalação](${o}/escalacao): o time titular de uma final real (Copa do Mundo, Champions, Libertadores, Copa América) com nomes escondidos; complete a escalação.
+- [Craque Misterioso](${o}/craque-misterioso): descubra o jogador escondido; cada palpite mostra nacionalidade, posição, idade e clubes em comum; 8 palpites.
+- [Conexões](${o}/conexoes): 16 jogadores em 4 grupos escondidos (mesmo clube, mesma seleção, titulares da mesma final).
+- [Escalação](${o}/escalacao): o time titular de um jogo real (finais de Copa do Mundo, Champions, Libertadores e Copa América; mata-matas de Copa) com nomes escondidos; complete a escalação.
 - [Como jogar](${o}/como-jogar): regras, estrelas, títulos e ranking.
 
 ## Dados

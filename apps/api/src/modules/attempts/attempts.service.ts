@@ -7,12 +7,16 @@ import { awardTraining } from '../career/career.service';
 import { playerSlug } from '../seo/seo.routes';
 import type {
   AttemptResponse,
+  ConnectionsReveal,
+  ConnectionsView,
   HigherLowerReveal,
   HigherLowerView,
   ImpostorReveal,
   ImpostorView,
   MissingXiReveal,
   MissingXiView,
+  MysteryReveal,
+  MysteryView,
   PlayerRef,
   TimelineReveal,
   TimelineView,
@@ -29,6 +33,7 @@ import { AppError } from '../../errors';
 import { engineFor, type GameModeCode } from '../challenges/engines';
 import { track } from '../analytics/analytics';
 import { meetsCell } from '../challenges/grid-snapshot';
+import { playerFacts } from '../challenges/mystery-snapshot';
 
 const NAMES = {
   CAREER_PATH: 'Career Path',
@@ -37,6 +42,8 @@ const NAMES = {
   TIMELINE: 'Linha do tempo',
   HIGHER_LOWER: 'Mais ou Menos',
   MISSING_XI: 'Escalação',
+  MYSTERY_PLAYER: 'Craque Misterioso',
+  CONNECTIONS: 'Conexões',
 } as const;
 export const SHARE_HOST = 'decabecafc.com.br';
 
@@ -77,7 +84,13 @@ export async function present(
   let view: AttemptResponse['view'];
   let reveal: AttemptResponse['reveal'] = null;
 
-  if (challenge.gameMode === 'MISSING_XI') {
+  if (challenge.gameMode === 'CONNECTIONS') {
+    view = { ...(engine.toPublicView(state, config) as ConnectionsView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as ConnectionsReveal;
+  } else if (challenge.gameMode === 'MYSTERY_PLAYER') {
+    view = { ...(engine.toPublicView(state, config) as MysteryView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as MysteryReveal;
+  } else if (challenge.gameMode === 'MISSING_XI') {
     view = { ...(engine.toPublicView(state, config) as MissingXiView), status: attempt.status };
     if (done) reveal = engine.toRevealView(state, config) as MissingXiReveal;
   } else if (challenge.gameMode === 'HIGHER_LOWER') {
@@ -244,6 +257,8 @@ export const TIME_LIMIT_SEC: Record<GameModeCode, number> = {
   TIMELINE: 90,
   HIGHER_LOWER: 60,
   MISSING_XI: 120,
+  MYSTERY_PLAYER: 120,
+  CONNECTIONS: 120,
 };
 /** Network slack before an action counts as late. */
 const GRACE_MS = 2000;
@@ -370,6 +385,17 @@ export async function submitAction(
     if (expired)
       rawInput =
         a.challenge.gameMode === 'FOOTBALL_GRID' ? { kind: 'finish' } : { kind: 'give_up' };
+    // Craque Misterioso: the guessed player's facts come from the base, never from the client.
+    if (
+      a.challenge.gameMode === 'MYSTERY_PLAYER' &&
+      (rawInput as { kind?: string }).kind === 'guess'
+    ) {
+      const id = String((rawInput as { playerId?: unknown }).playerId ?? '');
+      const f = await playerFacts(tx, id);
+      if (!f) throw new AppError(400, 'UNKNOWN_PLAYER', 'Jogador desconhecido.');
+      const { verified: _v, ...facts } = f;
+      rawInput = { kind: 'guess', playerId: id, facts };
+    }
     const input = engine.parseInput(rawInput) as {
       kind: string;
       playerId?: string;
@@ -441,19 +467,28 @@ export async function submitAction(
           ? (out.state as { picks: string[] }).picks.length
           : a.challenge.gameMode === 'TIMELINE'
             ? (out.state as { answers: string[][] }).answers.length
-            : a.challenge.gameMode === 'MISSING_XI'
-              ? (out.state as { found: string[]; wrong: string[] }).found.length +
-                (out.state as { found: string[]; wrong: string[] }).wrong.length
-              : a.challenge.gameMode === 'HIGHER_LOWER'
-                ? (out.state as { choices: string[] }).choices.length
-                : seq;
+            : a.challenge.gameMode === 'CONNECTIONS'
+              ? (out.state as { found: number[]; misses: string[] }).found.length +
+                (out.state as { found: number[]; misses: string[] }).misses.length
+              : a.challenge.gameMode === 'MYSTERY_PLAYER'
+                ? (out.state as { guesses: unknown[] }).guesses.length
+                : a.challenge.gameMode === 'MISSING_XI'
+                  ? (out.state as { found: string[]; wrong: string[] }).found.length +
+                    (out.state as { found: string[]; wrong: string[] }).wrong.length
+                  : a.challenge.gameMode === 'HIGHER_LOWER'
+                    ? (out.state as { choices: string[] }).choices.length
+                    : seq;
     if (input.kind === 'guess')
       pending.push([
         'answer_submitted',
         {
           ...base,
           attemptsUsed,
-          correct: ev.type === 'correct' || ev.type === 'found',
+          correct:
+            ev.type === 'correct' ||
+            ev.type === 'found' ||
+            ev.type === 'won' ||
+            ev.type === 'group_found',
           ...(ev.cellIndex !== undefined ? { cellIndex: ev.cellIndex } : {}),
         },
       ]);

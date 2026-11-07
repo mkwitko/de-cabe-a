@@ -96,20 +96,31 @@ if (
 let saved = 0;
 let rows = 0;
 let linked = 0;
-for (const f of finals) {
-  const sourceRef = `wikipedia:en:${f.title}`;
-  if (await prisma.match.findUnique({ where: { sourceRef } })) continue;
-  const text = await wikitext(f.title);
-  if (!text) continue;
+interface MatchText {
+  sourceRef: string;
+  text: string;
+  competition: string;
+  season: string;
+  stage: string;
+  /** Team names when the text has no kit boxes (knockout pages: from the section heading). */
+  teams?: [string, string];
+  label: string;
+}
+
+/** Parses one match's wikitext, links the players and stores Match + MatchLineup. */
+async function saveMatch(f: MatchText) {
+  const { text, sourceRef } = f;
   const lineups = parseLineups(text);
   if (!lineups) {
-    log(`${f.title}: no lineup tables`);
-    continue;
+    log(`${f.label}: no lineup tables`);
+    return;
   }
   // Team names from the kit boxes (same order as the line-up tables); score from the match box.
-  const kits = [...text.matchAll(/\{\{Football kit[\s\S]*?\|\s*title\s*=\s*([^\n]+)/gi)].map((m) =>
-    cleanTeam(m[1]!),
-  );
+  const kits =
+    f.teams ??
+    [...text.matchAll(/\{\{Football kit[\s\S]*?\|\s*title\s*=\s*([^\n]+)/gi)].map((m) =>
+      cleanTeam(m[1]!),
+    );
   const t1 = /team1score\s*=\s*(\d+)/.exec(text);
   const t2 = /team2score\s*=\s*(\d+)/.exec(text);
   const line = /\|\s*score\s*=\s*(.*)/.exec(text)?.[1] ?? '';
@@ -169,7 +180,7 @@ for (const f of finals) {
       sourceRef,
       competition: f.competition,
       season: f.season,
-      stage: 'Final',
+      stage: f.stage,
       homeTeam: kits[0] ?? 'Time 1',
       awayTeam: kits[1] ?? 'Time 2',
       homeScore: score ? Number(score[1]) : null,
@@ -178,7 +189,54 @@ for (const f of finals) {
     },
   });
   saved++;
-  log(`${f.title}: ${kits[0]} ${score?.[1] ?? '?'}–${score?.[2] ?? '?'} ${kits[1]}`);
+  log(`${f.label}: ${kits[0]} ${score?.[1] ?? '?'}–${score?.[2] ?? '?'} ${kits[1]}`);
 }
-log(`saved ${saved} finals, ${rows} lineup rows, ${linked} linked to our players`);
+
+for (const f of finals) {
+  const sourceRef = `wikipedia:en:${f.title}`;
+  if (await prisma.match.findUnique({ where: { sourceRef } })) continue;
+  const text = await wikitext(f.title);
+  if (text) await saveMatch({ ...f, sourceRef, text, stage: 'Final', label: f.title });
+}
+
+// Knockout stages (World Cup, Copa América): one article, a "===A vs B===" section per match
+// under "==Round of 16==", "==Quarter-finals==", ... The final has its own article (above).
+const knockout = [
+  ...Array.from({ length: 11 }, (_, i) => 1986 + 4 * i).map((y) => ({
+    title: `${y} FIFA World Cup knockout stage`,
+    competition: 'FIFA World Cup',
+    season: String(y),
+  })),
+  ...[2011, 2015, 2016, 2019, 2021, 2024].map((y) => ({
+    title: `${y} Copa América knockout stage`,
+    competition: 'Copa América',
+    season: String(y),
+  })),
+];
+for (const k of knockout) {
+  const text = await wikitext(k.title);
+  if (!text) continue;
+  let stage = '';
+  const parts = text.split(/^(==+)\s*([^=\n]+?)\s*\1\s*$/m);
+  // split() with 2 groups: [before, marks, title, body, marks, title, body, ...]
+  for (let i = 1; i < parts.length; i += 3) {
+    const level = parts[i]!.length;
+    const title = parts[i + 1]!;
+    const body = parts[i + 2] ?? '';
+    if (level === 2) stage = title;
+    const vs = /^(.+?)\s+v(?:s\.?)?\s+(.+)$/.exec(title);
+    if (level !== 3 || !vs || /^final$/i.test(stage)) continue;
+    const sourceRef = `wikipedia:en:${k.title}#${title}`;
+    if (await prisma.match.findUnique({ where: { sourceRef } })) continue;
+    await saveMatch({
+      ...k,
+      sourceRef,
+      text: body,
+      stage,
+      teams: [vs[1]!.trim(), vs[2]!.trim()],
+      label: `${k.title} · ${title}`,
+    });
+  }
+}
+log(`saved ${saved} matches, ${rows} lineup rows, ${linked} linked to our players`);
 await prisma.$disconnect();

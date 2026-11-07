@@ -48,6 +48,14 @@ const HowToPlayPage = lazy(() =>
 const TimelinePage = lazy(() =>
   import('./games/timeline/TimelinePage').then((m) => ({ default: m.TimelinePage })),
 );
+const MysteryPlayerPage = lazy(() =>
+  import('./games/mystery-player/MysteryPlayerPage').then((m) => ({
+    default: m.MysteryPlayerPage,
+  })),
+);
+const ConnectionsPage = lazy(() =>
+  import('./games/connections/ConnectionsPage').then((m) => ({ default: m.ConnectionsPage })),
+);
 const MissingXiPage = lazy(() =>
   import('./games/missing-xi/MissingXiPage').then((m) => ({ default: m.MissingXiPage })),
 );
@@ -125,11 +133,35 @@ const GAMES = [
     mode: 'MISSING_XI',
     name: 'Escalação',
     path: '/escalacao',
-    rule: 'Complete a escalação de uma final histórica.',
+    rule: 'Complete a escalação de um jogo histórico: finais e mata-matas de Copa.',
     howTo: [
-      'Cada fase é o time titular de uma final real, com nomes escondidos.',
+      'Cada fase é o time titular de um jogo real (final, semi, quartas...), com nomes escondidos.',
       'Busque os jogadores que estavam em campo; 5 erros encerram a fase.',
       'Ache todos os escondidos para 3 estrelas.',
+    ],
+  },
+  {
+    slot: '07',
+    mode: 'MYSTERY_PLAYER',
+    name: 'Craque Misterioso',
+    path: '/craque-misterioso',
+    rule: 'Um craque escondido. Cada palpite mostra o que ele tem em comum com o seu chute.',
+    howTo: [
+      'Chute qualquer jogador: veja se a nacionalidade e a posição batem, se ele é mais velho ou mais novo e os clubes em comum.',
+      'São 8 palpites para descobrir quem é.',
+      'Acerte em até 3 palpites para 3 estrelas.',
+    ],
+  },
+  {
+    slot: '08',
+    mode: 'CONNECTIONS',
+    name: 'Conexões',
+    path: '/conexoes',
+    rule: '16 jogadores, 4 grupos escondidos. Ache o que cada quatro têm em comum.',
+    howTo: [
+      'Toque em 4 jogadores que você acha que têm algo em comum e confirme.',
+      'Grupos: mesmo clube, mesma seleção ou titulares da mesma final. Cada jogador está em um grupo só.',
+      '4 erros encerram a fase. Ache os 4 grupos com até 1 erro para 3 estrelas.',
     ],
   },
 ] as const;
@@ -269,11 +301,14 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
                 <p className="max-w-[32ch] text-chalk-soft">{g.rule}</p>
                 <TrackState track={games?.games.find((x) => x.mode === g.mode)} path={g.path} />
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
-                  <Link to={g.path} className="underline underline-offset-4">
+                  <Link
+                    to={g.path}
+                    className="inline-flex min-h-10 items-center underline underline-offset-4"
+                  >
                     Ver fases
                   </Link>
                   <details className="group">
-                    <summary className="cursor-pointer list-none underline underline-offset-4">
+                    <summary className="flex min-h-10 cursor-pointer list-none items-center underline underline-offset-4">
                       Como jogar?
                     </summary>
                     <ol className="mt-2 flex list-decimal flex-col gap-1 pl-5 font-normal text-chalk-soft">
@@ -462,6 +497,10 @@ function PublicRoutes() {
           <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
           <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
           <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
+          <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
+          <Route path="/craque-misterioso/:level" element={<LevelRoute mode="MYSTERY_PLAYER" />} />
+          <Route path="/conexoes" element={<TrackPage mode="CONNECTIONS" />} />
+          <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
           <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
           <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
           <Route path="/ranking" element={<RankingPage />} />
@@ -494,6 +533,10 @@ function LevelRoute({ mode }: { mode: GameMode }) {
           <ImpostorPage level={level} timed={timed} />
         ) : mode === 'TIMELINE' ? (
           <TimelinePage level={level} timed={timed} />
+        ) : mode === 'MYSTERY_PLAYER' ? (
+          <MysteryPlayerPage level={level} timed={timed} />
+        ) : mode === 'CONNECTIONS' ? (
+          <ConnectionsPage level={level} timed={timed} />
         ) : mode === 'MISSING_XI' ? (
           <MissingXiPage level={level} timed={timed} />
         ) : mode === 'HIGHER_LOWER' ? (

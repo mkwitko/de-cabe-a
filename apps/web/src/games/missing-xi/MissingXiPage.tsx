@@ -10,6 +10,7 @@ import type {
   MissingXiView,
   PlayerRef,
 } from '@decabeca/contracts';
+import { teamPt } from '@decabeca/contracts';
 import { PlayerSearch } from '../../components/PlayerSearch';
 import { btnPrimary, btnSecondary, GameHeader, Skeleton, useOnline } from '../../components/ui';
 import type { ApiError } from '../../lib/api';
@@ -18,39 +19,25 @@ import { useGameTracking } from '../../lib/useGameTracking';
 import { Countdown } from '../Clock';
 import { LevelEnd, LevelError } from '../LevelParts';
 
-const TEAM_PT: Record<string, string> = {
-  Brazil: 'Brasil',
-  Germany: 'Alemanha',
-  'West Germany': 'Alemanha Ocidental',
-  France: 'França',
-  Italy: 'Itália',
-  Netherlands: 'Holanda',
-  Spain: 'Espanha',
-  England: 'Inglaterra',
-  Uruguay: 'Uruguai',
-  Hungary: 'Hungria',
-  Sweden: 'Suécia',
-  Czechoslovakia: 'Tchecoslováquia',
-  Croatia: 'Croácia',
-  Colombia: 'Colômbia',
-  Mexico: 'México',
-  Paraguay: 'Paraguai',
-  Bolivia: 'Bolívia',
-  Ecuador: 'Equador',
-  Belgium: 'Bélgica',
-};
 const COMPETITION_PT: Record<string, string> = {
   'FIFA World Cup': 'Copa do Mundo',
   'UEFA Champions League': 'Liga dos Campeões',
   'Copa Libertadores': 'Libertadores',
   'Copa América': 'Copa América',
 };
-export const teamPt = (name: string) => TEAM_PT[name] ?? name;
+const STAGE_PT: Record<string, string> = {
+  Final: 'Final',
+  'Semi-finals': 'Semifinal',
+  'Quarter-finals': 'Quartas de final',
+  'Round of 16': 'Oitavas de final',
+  'Third place play-off': 'Disputa do 3º lugar',
+  'Match for third place': 'Disputa do 3º lugar',
+};
 
 export function matchTitle(m: MissingXiView['match']) {
   const score = m.homeScore !== null && m.awayScore !== null;
   return {
-    title: `Final da ${COMPETITION_PT[m.competition] ?? m.competition} ${m.season}`,
+    title: `${STAGE_PT[m.stage ?? 'Final'] ?? 'Jogo'} da ${COMPETITION_PT[m.competition] ?? m.competition} ${m.season}`,
     score: `${teamPt(m.homeTeam)} ${score ? `${m.homeScore} × ${m.awayScore}` : '×'} ${teamPt(m.awayTeam)}`,
   };
 }
@@ -58,9 +45,9 @@ export function matchTitle(m: MissingXiView['match']) {
 /** Pitch line of a Wikipedia position code, from the goal (0) to the attack (5). */
 function lineOf(pos: string) {
   if (pos === 'GK') return 0;
-  if (['SW', 'CB', 'RB', 'LB', 'DF', 'FB'].includes(pos)) return 1;
+  if (['SW', 'CB', 'RB', 'LB', 'DF', 'FB', 'CH'].includes(pos)) return 1;
   if (['DM', 'RWB', 'LWB'].includes(pos)) return 2;
-  if (['CM', 'MF', 'RM', 'LM'].includes(pos)) return 3;
+  if (['CM', 'MF', 'RM', 'LM', 'RH', 'LH', 'HB'].includes(pos)) return 3;
   if (['AM', 'RW', 'LW', 'SS', 'OL', 'OR', 'IL', 'IR'].includes(pos)) return 4;
   return 5;
 }
@@ -146,7 +133,10 @@ function Credit({ source }: { source: string }) {
       Escalação:{' '}
       <a
         className="underline underline-offset-4"
-        href={`https://en.wikipedia.org/wiki/${encodeURIComponent(source.replace(/ /g, '_'))}`}
+        href={`https://en.wikipedia.org/wiki/${source
+          .split('#')
+          .map((x) => encodeURIComponent(x.replace(/ /g, '_')))
+          .join('#')}`}
         target="_blank"
         rel="noreferrer"
       >
@@ -259,7 +249,7 @@ export function MissingXiPage({ level, timed = false }: { level: number; timed?:
           <div>
             <p className="font-semibold text-chalk-soft">{final}</p>
             <h2 className="font-condensed text-3xl leading-tight font-black uppercase">{score}</h2>
-            <p className="font-semibold">Escale o {team}: os titulares daquela final.</p>
+            <p className="font-semibold">Escale o {team}: os titulares daquele jogo.</p>
           </div>
           <Pitch slots={slots} />
           <Credit source={view.match.source} />
