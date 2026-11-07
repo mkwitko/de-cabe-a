@@ -69,6 +69,8 @@ export function StatsPage() {
   const tl = data.TIMELINE;
   const hl = data.HIGHER_LOWER;
   const xi = data.MISSING_XI;
+  const mysStats = data.MYSTERY_PLAYER;
+  const conStats = data.CONNECTIONS;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
   const next = data.title.next;
   const rank = (n: number | null) =>
@@ -269,9 +271,48 @@ export function StatsPage() {
             <Figure label="escalações completas">{xi.perfect}</Figure>
           </dl>
         </section>
+
+        <section
+          aria-labelledby="mys-stats"
+          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        >
+          <h2 id="mys-stats" className="font-condensed text-3xl font-black uppercase">
+            Craque Misterioso
+          </h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <Figure label="fases jogadas">{mysStats.completed}</Figure>
+            <Figure label="estrelas">
+              <StarIcon className="size-7 text-cover" />
+              {mysStats.stars}
+            </Figure>
+            <Figure label="fases com 3 estrelas">{mysStats.threeStars}</Figure>
+            <Figure label="de primeira">{mysStats.perfect}</Figure>
+          </dl>
+        </section>
+
+        <section
+          aria-labelledby="con-stats"
+          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        >
+          <h2 id="con-stats" className="font-condensed text-3xl font-black uppercase">
+            Conexões
+          </h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <Figure label="fases jogadas">{conStats.completed}</Figure>
+            <Figure label="estrelas">
+              <StarIcon className="size-7 text-cover" />
+              {conStats.stars}
+            </Figure>
+            <Figure label="fases com 3 estrelas">{conStats.threeStars}</Figure>
+            <Figure label="sem erros">{conStats.perfect}</Figure>
+          </dl>
+        </section>
       </div>
 
-      <Link to="/history" className="self-start font-semibold underline underline-offset-4">
+      <Link
+        to="/history"
+        className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4"
+      >
         Ver histórico de partidas
       </Link>
     </div>

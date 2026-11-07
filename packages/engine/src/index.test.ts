@@ -10,6 +10,8 @@ describe('engine package', () => {
       'timeline',
       'higher-lower',
       'missing-xi',
+      'mystery-player',
+      'connections',
     ]);
   });
 });

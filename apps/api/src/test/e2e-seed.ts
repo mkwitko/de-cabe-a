@@ -42,6 +42,7 @@ const ronaldo = await verifiedPlayer(prisma, {
   nationalityId: countries.BR!,
   position: 'FW',
   tier: 'T1',
+  birthYear: 1976,
   aliases: ['Ronaldo Fenômeno', 'R9'],
 });
 await verifiedPlayer(prisma, {
@@ -57,6 +58,7 @@ const kaka = await verifiedPlayer(prisma, {
   nationalityId: countries.BR!,
   position: 'MF',
   tier: 'T1',
+  birthYear: 1982,
 });
 
 // Grid: rows Flamengo, Santos, forwards; cols Milan, Real Madrid, Argentines. 8 synthetic players per cell.
@@ -184,6 +186,24 @@ await live({
   mode: 'MISSING_XI',
   params: { matchId: final.id, side: 'away' },
   difficultyTier: 1,
+  createdBy: 'e2e',
+});
+// Craque Misterioso level 1: Kaká.
+await live({ mode: 'MYSTERY_PLAYER', params: { playerId: kaka.id }, createdBy: 'e2e' });
+// Conexões level 1: four groups of Grid players who fit only one club each.
+const byName = async (n: string) =>
+  (await prisma.player.findFirstOrThrow({ where: { canonicalName: n } })).id;
+const four = (cell: string) => Promise.all([1, 2, 3, 4].map((i) => byName(`Craque ${cell} ${i}`)));
+await live({
+  mode: 'CONNECTIONS',
+  params: {
+    groups: [
+      { criterion: { type: 'club', clubId: c('Milan') }, playerIds: await four('L3C1') },
+      { criterion: { type: 'club', clubId: c('Real Madrid') }, playerIds: await four('L3C2') },
+      { criterion: { type: 'club', clubId: c('Flamengo') }, playerIds: await four('L1C3') },
+      { criterion: { type: 'club', clubId: c('Santos') }, playerIds: await four('L2C3') },
+    ],
+  },
   createdBy: 'e2e',
 });
 console.log('e2e seed ready');

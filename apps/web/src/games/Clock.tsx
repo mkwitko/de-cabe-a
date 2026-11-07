@@ -13,6 +13,8 @@ export const TIME_LIMIT_SEC: Record<GameMode, number> = {
   TIMELINE: 90,
   HIGHER_LOWER: 60,
   MISSING_XI: 120,
+  CONNECTIONS: 120,
+  MYSTERY_PLAYER: 120,
 };
 export const formatClock = (sec: number) =>
   `${Math.floor(sec / 60)}:${String(Math.max(0, sec) % 60).padStart(2, '0')}`;

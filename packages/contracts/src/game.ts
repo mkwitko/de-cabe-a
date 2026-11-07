@@ -7,6 +7,8 @@ export const GameMode = z.enum([
   'TIMELINE',
   'HIGHER_LOWER',
   'MISSING_XI',
+  'MYSTERY_PLAYER',
+  'CONNECTIONS',
 ]);
 export type GameMode = z.infer<typeof GameMode>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
@@ -276,6 +278,56 @@ export const MissingXiReveal = z.strictObject({
 });
 export type MissingXiReveal = z.infer<typeof MissingXiReveal>;
 
+/** Craque Misterioso (ADR-011): each guess compared with the hidden player. */
+const MysteryFacts = z.strictObject({
+  playerId: z.string(),
+  name: z.string(),
+  nationalityCode: z.string(),
+  positionGroup: z.enum(['GK', 'DF', 'MF', 'FW']).nullable(),
+  birthYear: z.number().nullable(),
+  clubs: z.array(z.strictObject({ id: z.string(), name: z.string(), countryCode: z.string() })),
+});
+export const MysteryView = z.strictObject({
+  status: z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']),
+  guessesLeft: z.number(),
+  guesses: z.array(
+    z.strictObject({
+      playerId: z.string(),
+      name: z.string(),
+      nationalityCode: z.string(),
+      positionGroup: z.enum(['GK', 'DF', 'MF', 'FW']).nullable(),
+      birthYear: z.number().nullable(),
+      feedback: z.strictObject({
+        nationality: z.boolean(),
+        position: z.boolean(),
+        birthYear: z.enum(['older', 'younger', 'same', 'unknown']),
+        birthYearClose: z.boolean(),
+        sharedClubs: z.array(z.string()),
+        sharedCountries: z.array(z.string()),
+      }),
+    }),
+  ),
+});
+export type MysteryView = z.infer<typeof MysteryView>;
+export const MysteryReveal = z.strictObject({ answer: MysteryFacts });
+export type MysteryReveal = z.infer<typeof MysteryReveal>;
+
+/** Conexões (ADR-011): 16 players in 4 hidden groups. */
+const CnGroup = z.strictObject({
+  group: z.number(),
+  label: z.string(),
+  players: z.array(z.strictObject({ id: z.string(), name: z.string() })),
+});
+export const ConnectionsView = z.strictObject({
+  status: z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']),
+  mistakesLeft: z.number(),
+  found: z.array(CnGroup),
+  tiles: z.array(z.strictObject({ id: z.string(), name: z.string() })),
+});
+export type ConnectionsView = z.infer<typeof ConnectionsView>;
+export const ConnectionsReveal = z.strictObject({ groups: z.array(CnGroup) });
+export type ConnectionsReveal = z.infer<typeof ConnectionsReveal>;
+
 export const AttemptSummary = z.strictObject({
   id: z.string(),
   challengeId: z.string(),
@@ -315,6 +367,12 @@ const GameEvent = z.union([
   // Escalação: a hidden slot found, or a wrong guess.
   z.strictObject({ type: z.literal('found'), slot: z.number() }),
   z.strictObject({ type: z.literal('wrong'), wrongLeft: z.number() }),
+  // Craque Misterioso.
+  z.strictObject({ type: z.literal('won') }),
+  // Conexões.
+  z.strictObject({ type: z.literal('group_found'), group: z.number() }),
+  z.strictObject({ type: z.literal('miss'), oneAway: z.boolean(), mistakesLeft: z.number() }),
+  z.strictObject({ type: z.literal('wrong'), guessesLeft: z.number() }),
   // Linha do tempo: the right order is shown once the round is played.
   z.strictObject({
     type: z.enum(['correct', 'wrong']),
@@ -340,6 +398,8 @@ export const AttemptResponse = z.strictObject({
     TimelineView,
     HigherLowerView,
     MissingXiView,
+    MysteryView,
+    ConnectionsView,
   ]),
   reveal: z
     .union([
@@ -349,6 +409,8 @@ export const AttemptResponse = z.strictObject({
       TimelineReveal,
       HigherLowerReveal,
       MissingXiReveal,
+      MysteryReveal,
+      ConnectionsReveal,
     ])
     .nullable(),
   share: z.strictObject({ text: z.string() }).nullable(),
@@ -375,6 +437,7 @@ export const SubmitActionRequest = z.object({
     z.object({ kind: z.literal('pick'), playerId: z.string().min(1) }),
     z.object({ kind: z.literal('order'), clubIds: z.array(z.string()).length(4) }),
     z.object({ kind: z.literal('choose'), side: z.enum(['a', 'b']) }),
+    z.object({ kind: z.literal('group'), playerIds: z.array(z.string()).length(4) }),
     z.object({ kind: z.literal('hint'), cellIndex: z.number().int() }),
   ]),
 });
@@ -475,6 +538,18 @@ export const StatsResponse = z.strictObject({
     perfect: z.number(),
   }),
   MISSING_XI: z.strictObject({
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
+    perfect: z.number(),
+  }),
+  MYSTERY_PLAYER: z.strictObject({
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
+    perfect: z.number(),
+  }),
+  CONNECTIONS: z.strictObject({
     completed: z.number(),
     stars: z.number(),
     threeStars: z.number(),

@@ -120,6 +120,9 @@ if (process.argv.includes('--replace-unfair')) {
   } catch {
     /* no repair report: fairness only */
   }
+  // --levels-to-replace 82,86: also these levels (e.g. no longer valid after a re-curation).
+  const li = process.argv.indexOf('--levels-to-replace');
+  const forced = new Set(li > 0 ? process.argv[li + 1]!.split(',').map(Number) : []);
   const published = await prisma.challenge.findMany({
     where: { gameMode: 'HIGHER_LOWER', status: 'published' },
     orderBy: { publicNumber: 'asc' },
@@ -131,7 +134,7 @@ if (process.argv.includes('--replace-unfair')) {
     };
     const ok = (r: (typeof snap.rounds)[number]) =>
       clearWinner(r.a.value, r.b.value) && !renamed.has(r.a.clubName) && !renamed.has(r.b.clubName);
-    if (snap.rounds.every(ok)) continue;
+    if (snap.rounds.every(ok) && !forced.has(c.publicNumber!)) continue;
     const { rounds, maxTier } = buildRounds(c.publicNumber!);
     if (rounds.length < 5) continue;
     const { replacement } = await retireChallenge(

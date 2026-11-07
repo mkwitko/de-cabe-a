@@ -198,6 +198,8 @@ enum GameModeCode {
   TIMELINE
   HIGHER_LOWER
   MISSING_XI
+  MYSTERY_PLAYER
+  CONNECTIONS
 }
 
 enum ChallengeStatus {

@@ -29,7 +29,11 @@ export function useGameTracking(data: AttemptResponse | undefined) {
               ? d.view.attemptsUsed
               : 'round' in d.view
                 ? d.view.round
-                : 5 - d.view.wrongLeft,
+                : 'guesses' in d.view
+                  ? d.view.guesses.length
+                  : 'wrongLeft' in d.view
+                    ? 5 - d.view.wrongLeft
+                    : 0,
         });
     };
     document.addEventListener('visibilitychange', onHide);

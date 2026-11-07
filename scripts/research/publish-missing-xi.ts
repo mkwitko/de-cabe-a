@@ -61,6 +61,8 @@ const sides = matches
   .sort(
     (a, b) =>
       Number(BR.has(b.team)) - Number(BR.has(a.team)) ||
+      // Finals before knockout games.
+      Number(a.m.stage !== 'Final') - Number(b.m.stage !== 'Final') ||
       // Recent finals are easier to remember: newest first within each competition band.
       Number(Number(a.m.season) < 1990) - Number(Number(b.m.season) < 1990) ||
       COMP.indexOf(a.m.competition) - COMP.indexOf(b.m.competition) ||

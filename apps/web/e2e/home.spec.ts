@@ -145,3 +145,35 @@ test('Escalação: find hidden starters of a final, a wrong guess costs one of f
   await expect(page.getByRole('heading', { name: '1 de 5 desta vez' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Wikipédia' })).toBeVisible();
 });
+
+test('Craque Misterioso: a guess shows what matches, the right one wins', async ({ page }) => {
+  await page.goto('/craque-misterioso/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  const search = page.getByRole('combobox', { name: 'Seu palpite' });
+  await search.fill('fenom');
+  await page.getByRole('option', { name: /Ronaldo/ }).click();
+  await page.getByRole('button', { name: 'Chutar' }).click();
+  const row = page.getByRole('list', { name: 'Palpites' }).getByRole('listitem').first();
+  await expect(row).toContainText('Ronaldo');
+  await expect(row).toContainText('1976 ↑ ele nasceu depois');
+  await expect(row).toContainText('Milan');
+  await search.fill('Kak');
+  await page.getByRole('option', { name: 'Kaká' }).click();
+  await page.getByRole('button', { name: 'Chutar' }).click();
+  await expect(page.getByRole('heading', { name: 'Acertou em 2 de 8!' })).toBeVisible();
+});
+
+test('Conexões: a right group locks in, a wrong one costs a mistake', async ({ page }) => {
+  await page.goto('/conexoes/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  const tile = (n: string) => page.getByRole('button', { name: n, exact: true });
+  for (const i of [1, 2, 3, 4]) await tile(`Craque L3C1 ${i}`).click();
+  await page.getByRole('button', { name: /Confirmar grupo/ }).click();
+  await expect(page.getByText('Jogaram no Milan')).toBeVisible();
+  for (const n of ['Craque L3C2 1', 'Craque L3C2 2', 'Craque L1C3 1', 'Craque L2C3 1'])
+    await tile(n).click();
+  await page.getByRole('button', { name: /Confirmar grupo/ }).click();
+  await expect(page.getByLabel('3 erros restantes')).toBeVisible();
+  await page.getByRole('button', { name: 'Desistir e ver os grupos' }).click();
+  await expect(page.getByRole('heading', { name: '1 de 4 grupos desta vez' })).toBeVisible();
+});

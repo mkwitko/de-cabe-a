@@ -9,6 +9,7 @@ import { api, type ApiError } from '../lib/api';
 import { POSITION_LABEL } from '../lib/format';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { ShareButton } from '../components/ShareButton';
+import { CareerCardButton } from '../components/CareerCard';
 import { ClubBadge } from '../components/ClubBadge';
 import { play } from '../lib/sound';
 
@@ -285,6 +286,23 @@ export function CareerPage() {
         <PlayerSticker c={c} />
         <div className="flex flex-wrap gap-3">
           <ShareButton secondary text={shareText(c)} label="Compartilhar carreira" />
+          <CareerCardButton
+            text={shareText(c)}
+            data={{
+              name: c.name,
+              position: POSITION_LABEL[c.position],
+              overall: c.overall,
+              attributes: (Object.keys(ATTR) as Attr[]).map((a) => ({
+                label: ATTR[a].label,
+                value: c.attributes[a],
+              })),
+              clubs: [...new Set(c.path.map((p) => p.club))],
+              seasons: new Set(c.path.map((p) => p.season)).size,
+              matches: c.totals.matches,
+              goals: c.totals.goals,
+              assists: c.totals.assists,
+            }}
+          />
           <button
             className="text-sm font-semibold text-chalk-soft underline underline-offset-4"
             onClick={() => {

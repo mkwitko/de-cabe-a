@@ -177,6 +177,16 @@ const REASONS: Record<GameMode, [string, string][]> = {
     ['wrong_stats', 'Jogos, gols ou anos errados'],
     ['other', 'Outra coisa'],
   ],
+  MYSTERY_PLAYER: [
+    ['wrong_stats', 'Nacionalidade, posição ou idade errada'],
+    ['club_missing', 'Clube faltando ou que ele não jogou'],
+    ['other', 'Outra coisa'],
+  ],
+  CONNECTIONS: [
+    ['club_missing', 'Um jogador não pertence ao grupo'],
+    ['wrong_stats', 'Jogador cabe em dois grupos'],
+    ['other', 'Outra coisa'],
+  ],
   MISSING_XI: [
     ['club_missing', 'Jogador que não foi titular nessa final'],
     ['wrong_stats', 'Posição ou número errado'],

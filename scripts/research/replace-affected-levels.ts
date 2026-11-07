@@ -36,7 +36,15 @@ const param = ({ type, clubId, countryId, positionGroup }: Crit) =>
 const levels = await prisma.challenge.findMany({
   where: {
     status: 'published',
-    gameMode: { in: ['CAREER_PATH', 'FOOTBALL_GRID', 'IMPOSTOR', 'TIMELINE'] },
+    gameMode: {
+      in: [
+        'CAREER_PATH',
+        'FOOTBALL_GRID',
+        'IMPOSTOR',
+        'TIMELINE',
+        ...(process.argv.includes('--rebuilt') ? (['HIGHER_LOWER'] as const) : []),
+      ],
+    },
   },
   orderBy: [{ gameMode: 'asc' }, { publicNumber: 'asc' }],
 });
@@ -57,8 +65,34 @@ for (const c of levels) {
   const text = JSON.stringify(c.snapshot);
   if (!REBUILT && ![...ids].some((id) => text.includes(id))) continue;
   const s = c.snapshot as Record<string, unknown>;
+  // Mais ou Menos snapshots keep the club name, not its id: find it among the player's spells.
+  const hlSide = async (x: { playerId: string; clubName: string }) => ({
+    playerId: x.playerId,
+    clubId:
+      (
+        await prisma.careerSpell.findFirst({
+          where: { playerId: x.playerId, club: { shortName: x.clubName } },
+          select: { clubId: true },
+        })
+      )?.clubId ?? '',
+  });
+  const hlParams =
+    c.gameMode === 'HIGHER_LOWER'
+      ? {
+          rounds: await Promise.all(
+            (
+              s.rounds as {
+                metric: string;
+                a: { playerId: string; clubName: string };
+                b: { playerId: string; clubName: string };
+              }[]
+            ).map(async (r) => ({ metric: r.metric, a: await hlSide(r.a), b: await hlSide(r.b) })),
+          ),
+        }
+      : null;
   const params =
-    c.gameMode === 'CAREER_PATH'
+    hlParams ??
+    (c.gameMode === 'CAREER_PATH'
       ? { playerId: s.answerPlayerId as string }
       : c.gameMode === 'FOOTBALL_GRID'
         ? { rows: (s.rows as Crit[]).map(param), cols: (s.cols as Crit[]).map(param) }
@@ -72,7 +106,9 @@ for (const c of levels) {
                 impostorId: r.impostorId,
               })),
             }
-          : { rounds: (s.rounds as { playerId: string }[]).map((r) => ({ playerId: r.playerId })) };
+          : {
+              rounds: (s.rounds as { playerId: string }[]).map((r) => ({ playerId: r.playerId })),
+            });
   if (REBUILT) {
     const fresh = await buildSnapshot(
       prisma,
