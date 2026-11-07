@@ -417,28 +417,28 @@ export const AttemptResponse = z.strictObject({
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
 
-export const StartAttemptRequest = z.object({
+export const StartAttemptRequest = z.strictObject({
   mode: GameMode,
   level: z.number().int().min(1),
   /** Chosen once, when the level starts (ADR-009). */
   timed: z.boolean().default(false),
 });
-export const SubmitActionRequest = z.object({
+export const SubmitActionRequest = z.strictObject({
   idempotencyKey: z.uuid(),
   input: z.union([
-    z.object({
+    z.strictObject({
       kind: z.literal('guess'),
       playerId: z.string().min(1),
       cellIndex: z.number().int().optional(),
     }),
-    z.object({ kind: z.literal('skip') }),
-    z.object({ kind: z.literal('finish') }),
-    z.object({ kind: z.literal('give_up') }),
-    z.object({ kind: z.literal('pick'), playerId: z.string().min(1) }),
-    z.object({ kind: z.literal('order'), clubIds: z.array(z.string()).length(4) }),
-    z.object({ kind: z.literal('choose'), side: z.enum(['a', 'b']) }),
-    z.object({ kind: z.literal('group'), playerIds: z.array(z.string()).length(4) }),
-    z.object({ kind: z.literal('hint'), cellIndex: z.number().int() }),
+    z.strictObject({ kind: z.literal('skip') }),
+    z.strictObject({ kind: z.literal('finish') }),
+    z.strictObject({ kind: z.literal('give_up') }),
+    z.strictObject({ kind: z.literal('pick'), playerId: z.string().min(1) }),
+    z.strictObject({ kind: z.literal('order'), clubIds: z.array(z.string()).length(4) }),
+    z.strictObject({ kind: z.literal('choose'), side: z.enum(['a', 'b']) }),
+    z.strictObject({ kind: z.literal('group'), playerIds: z.array(z.string()).length(4) }),
+    z.strictObject({ kind: z.literal('hint'), cellIndex: z.number().int() }),
   ]),
 });
 
@@ -609,7 +609,7 @@ export const MeResponse = z.strictObject({
   title: Title,
 });
 export type MeResponse = z.infer<typeof MeResponse>;
-export const UpdateMeRequest = z.object({ nickname: Nickname });
+export const UpdateMeRequest = z.strictObject({ nickname: Nickname });
 export type CareerPathReveal = z.infer<typeof CareerPathReveal>;
 export type FootballGridReveal = z.infer<typeof FootballGridReveal>;
 
@@ -620,10 +620,10 @@ export const ClientEventName = z.enum([
   'game_abandoned',
   'search_no_result',
 ]);
-export const EventsRequest = z.object({
+export const EventsRequest = z.strictObject({
   events: z
     .array(
-      z.object({
+      z.strictObject({
         name: ClientEventName,
         ts: z.iso.datetime(),
         props: z

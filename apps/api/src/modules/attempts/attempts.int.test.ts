@@ -343,6 +343,23 @@ describe('levels (ADR-007)', () => {
     expect((await b.req('GET', `/attempts/${id}`)).json().error.code).toBe('ATTEMPT_NOT_FOUND');
     expect((await b.act(id, { kind: 'skip' })).statusCode).toBe(404);
   });
+
+  it('rejects client-supplied results: stars, score or elapsed time in any body (THREAT_MODEL T1)', async () => {
+    const g = guest();
+    const start = await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1, stars: 3 });
+    expect(start.statusCode).toBe(400);
+    const id = (await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1 })).json().attempt
+      .id;
+    for (const extra of [{ stars: 3 }, { score: 999 }, { elapsedMs: 1 }, { role: 'admin' }]) {
+      const res = await g.req('POST', `/attempts/${id}/actions`, {
+        idempotencyKey: randomUUID(),
+        input: { kind: 'skip' },
+        ...extra,
+      });
+      expect(res.statusCode, JSON.stringify(extra)).toBe(400);
+    }
+    expect(await prisma.attemptAction.count({ where: { attemptId: id } })).toBe(0);
+  });
 });
 
 describe('player search', () => {

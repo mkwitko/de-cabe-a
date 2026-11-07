@@ -2,5 +2,12 @@
 # <site>/v1/* here, so web and API share one domain (ADR-010).
 {$API_HOST} {
 	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		Content-Security-Policy "frame-ancestors 'none'"
+		-Server
+	}
 	reverse_proxy api:3000
 }
