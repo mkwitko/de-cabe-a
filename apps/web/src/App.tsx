@@ -287,7 +287,7 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
             return (
               <li
                 key={g.slot}
-                className="relative flex min-h-64 flex-col gap-3 rounded-lg border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] p-5"
+                className="relative flex min-h-64 flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5 shadow-[0_6px_20px_-12px_rgb(0_20_10/0.5)]"
               >
                 <span
                   aria-hidden="true"
@@ -424,10 +424,10 @@ function Shell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const home = pathname === '/';
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-28 sm:px-8 sm:pb-12">
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       <nav
         aria-label="Principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:backdrop-blur-none"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:pb-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:backdrop-blur-none"
       >
         <ul className="mx-auto flex max-w-7xl justify-around sm:justify-end sm:gap-6">
           {!home && (

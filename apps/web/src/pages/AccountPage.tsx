@@ -103,7 +103,7 @@ export function AccountPage() {
                 Seu progresso está salvo na conta e aparece em qualquer aparelho em que você entrar.
               </p>
               {!m.account.emailVerified && (
-                <p className="rounded-lg border-2 border-dashed border-cover/60 px-4 py-3 text-chalk">
+                <p className="rounded-lg border-2 border-cover/60 px-4 py-3 text-chalk">
                   Confirme seu e-mail pelo link que enviamos para <strong>{m.account.email}</strong>
                   .{' '}
                   <button

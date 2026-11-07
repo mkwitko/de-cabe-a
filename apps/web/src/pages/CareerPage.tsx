@@ -389,7 +389,7 @@ export function CareerPage() {
             </div>
           </section>
         ) : (
-          <section className="flex flex-col gap-3 rounded-2xl border-2 border-dashed border-chalk-soft/50 p-5">
+          <section className="flex flex-col gap-3 rounded-2xl border border-chalk/15 bg-chalk/[0.05] p-5">
             <p className="text-sm font-bold text-chalk-soft uppercase">
               Próxima partida · rodada {s.round + 1}
             </p>
