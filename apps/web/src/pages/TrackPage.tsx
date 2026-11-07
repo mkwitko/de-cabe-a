@@ -1,9 +1,9 @@
 /**
- * A game's track as album pages of 10 levels (ADR-007): done levels are pasted stickers with
- * their stars, the next level is the open slot, the rest are locked slots. Scrolls to the current level.
+ * A game's track as album chapters of 10 levels (ADR-007): done levels are pasted stickers with
+ * their stars, the next level is the open slot, the rest are locked slots. Only the chapter with
+ * the current level starts open; the others are one line each (native <details>).
  */
 import { AD_SLOTS, AdSlot } from '../components/AdSlot';
-import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import type { GameMode, TrackResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useTrack } from '../lib/game';
@@ -66,13 +66,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
   const pages = Array.from({ length: Math.ceil(levels.length / PAGE) }, (_, i) =>
     levels.slice(i * PAGE, i * PAGE + PAGE),
   );
-  const scrolled = useRef(false);
-
-  useEffect(() => {
-    if (scrolled.current || !current || current.level <= PAGE) return;
-    scrolled.current = true;
-    document.querySelector('[data-current]')?.scrollIntoView({ block: 'center' });
-  }, [current]);
+  const currentPage = current ? Math.floor((current.level - 1) / PAGE) : pages.length - 1;
 
   return (
     <div className="flex flex-col gap-8">
@@ -118,36 +112,59 @@ export function TrackPage({ mode }: { mode: GameMode }) {
         </section>
       )}
 
-      <div className="grid gap-8 xl:grid-cols-2">
-        {pages.map((page, i) => {
+      <div className="flex flex-col gap-3">
+        {pages.slice(0, currentPage + 3).map((page, i) => {
           const pageStars = page.reduce((s, l) => s + l.stars, 0);
+          const pageDone = page.filter((l) => l.state === 'done').length;
+          const locked = page.every((l) => l.state === 'locked');
           return (
-            <section key={i} aria-labelledby={`page-${i}`} className="flex flex-col gap-3">
-              <header className="flex items-baseline justify-between gap-3 border-b border-chalk/15 pb-2">
-                <h2 id={`page-${i}`} className="font-condensed text-xl font-extrabold uppercase">
-                  Página {i + 1}{' '}
-                  <span className="text-chalk-soft">
-                    · fases {page[0]!.level}–{page.at(-1)!.level}
+            <details
+              key={i}
+              open={i === currentPage}
+              className={`group rounded-xl border border-chalk/15 ${locked ? 'opacity-60' : 'bg-chalk/[0.05]'}`}
+            >
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-condensed text-xl font-extrabold uppercase">
+                    Capítulo {i + 1}
                   </span>
-                </h2>
-                <span
-                  className="font-condensed tabular text-lg font-bold text-chalk-soft"
-                  aria-label={`${pageStars} de ${page.length * 3} estrelas nesta página`}
-                >
-                  ★ {pageStars}/{page.length * 3}
+                  <span className="text-sm text-chalk-soft">
+                    fases {page[0]!.level}–{page.at(-1)!.level}
+                  </span>
                 </span>
-              </header>
+                <span className="flex shrink-0 items-center gap-3">
+                  <span
+                    className="font-condensed tabular text-lg font-bold whitespace-nowrap text-chalk-soft"
+                    aria-label={`${pageDone} de ${page.length} fases, ${pageStars} de ${page.length * 3} estrelas`}
+                  >
+                    {locked
+                      ? 'trancado'
+                      : `${pageDone}/${page.length} · ★ ${pageStars}/${page.length * 3}`}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="text-chalk-soft transition-transform duration-150 ease-standard group-open:rotate-180"
+                  >
+                    ▾
+                  </span>
+                </span>
+              </summary>
               <ol
-                className="grid grid-cols-5 gap-2 sm:gap-3"
+                className="grid grid-cols-5 gap-2 px-4 pb-4 sm:gap-3"
                 aria-label={`Fases ${page[0]!.level} a ${page.at(-1)!.level}`}
               >
                 {page.map((l) => (
                   <Tile key={l.level} l={l} mode={mode} current={current?.level === l.level} />
                 ))}
               </ol>
-            </section>
+            </details>
           );
         })}
+        {pages.length > currentPage + 3 && (
+          <p className="px-4 text-sm text-chalk-soft">
+            Mais {pages.length - currentPage - 3} capítulos trancados.
+          </p>
+        )}
       </div>
       <AdSlot slot={AD_SLOTS.track} />
     </div>

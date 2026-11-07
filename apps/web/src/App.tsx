@@ -248,6 +248,10 @@ function TrackState({ track, path }: { track: Track | undefined; path: string })
 }
 
 export function Home({ games }: { games?: GamesResponse | undefined }) {
+  // The game with the most progress that still has a level to play: one tap back into it.
+  const resume = games?.games
+    .filter((g) => g.completed > 0 && g.nextLevel)
+    .sort((a, b) => b.completed - a.completed)[0];
   return (
     <>
       <header className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-10">
@@ -278,6 +282,23 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         </span>
       </Link>
 
+      {resume && (
+        <Link
+          to={`${GAME_PATH[resume.mode]}/${resume.nextLevel}`}
+          className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
+        >
+          <span className="flex min-w-0 flex-col">
+            <span className="text-xs font-bold tracking-wide text-chalk-soft uppercase">
+              Continuar de onde parei
+            </span>
+            <span className="font-condensed truncate text-2xl font-black uppercase">
+              {resume.name} · Fase {resume.nextLevel}
+            </span>
+          </span>
+          <span className={`${btnPrimary} shrink-0`}>Jogar</span>
+        </Link>
+      )}
+
       <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
         <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
           Jogos
@@ -287,17 +308,9 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
             return (
               <li
                 key={g.slot}
-                className="relative flex min-h-64 flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5 shadow-[0_6px_20px_-12px_rgb(0_20_10/0.5)]"
+                className="relative flex min-h-56 flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5 shadow-[0_6px_20px_-12px_rgb(0_20_10/0.5)]"
               >
-                <span
-                  aria-hidden="true"
-                  className="font-condensed tabular text-7xl leading-none font-black text-chalk-soft/50"
-                >
-                  {g.slot}
-                </span>
-                <h3 className="font-condensed mt-auto text-3xl font-extrabold uppercase">
-                  {g.name}
-                </h3>
+                <h3 className="font-condensed text-3xl font-extrabold uppercase">{g.name}</h3>
                 <p className="max-w-[32ch] text-chalk-soft">{g.rule}</p>
                 <TrackState track={games?.games.find((x) => x.mode === g.mode)} path={g.path} />
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
