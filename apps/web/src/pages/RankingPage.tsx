@@ -51,17 +51,25 @@ export function RankingPage() {
       {!data ? (
         <Skeleton className="h-96" />
       ) : data.entries.length === 0 ? (
-        <p className="text-chalk-soft">
+        <p className="rounded-xl border border-chalk/15 bg-chalk/[0.05] p-5 text-chalk-soft">
           {scope === 'week'
             ? 'Ninguém pontuou esta semana ainda. É a sua chance.'
             : scope === 'timed'
               ? 'Ninguém jogou contra o relógio ainda. Escolha esse modo ao abrir uma fase.'
-              : 'Ninguém no ranking ainda.'}
+              : 'Ninguém no ranking ainda. Termine uma fase e escolha um apelido para ser o primeiro.'}
         </p>
       ) : (
         <>
-          {/* podium: 2nd, 1st, 3rd */}
-          <ol className="grid grid-cols-3 items-end gap-2 sm:gap-4" aria-label="Pódio">
+          <p className="text-sm text-chalk-soft">
+            {data.entries.length} {data.entries.length === 1 ? 'jogador' : 'jogadores'} ·{' '}
+            {scope === 'week'
+              ? 'desde segunda'
+              : scope === 'timed'
+                ? 'contra o relógio'
+                : 'desde o início'}
+          </p>
+          {/* podium on wide screens: 2nd, 1st, 3rd; on a phone everyone is in the list */}
+          <ol className="hidden grid-cols-3 items-end gap-4 sm:grid" aria-label="Pódio">
             {[1, 0, 2].map((k) => {
               const e = data.entries[k];
               if (!e) return <li key={k} />;
@@ -79,24 +87,24 @@ export function RankingPage() {
                   <span className="font-condensed tabular text-4xl leading-none font-black">
                     {e.position}º
                   </span>
-                  <span className="w-full truncate font-bold">{e.nickname}</span>
+                  <span className="w-full font-bold break-words">{e.nickname}</span>
                   <span className="text-xs opacity-70">{e.title}</span>
                   <span className="font-condensed tabular text-lg font-black">★ {e.stars}</span>
                 </li>
               );
             })}
           </ol>
-          <ol className="flex flex-col gap-1.5" start={4}>
-            {data.entries.slice(3).map((e) => (
+          <ol className="flex flex-col gap-1.5">
+            {data.entries.map((e) => (
               <li
                 key={e.position}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${e.isMe ? 'bg-cover text-ink' : 'bg-chalk/[0.07]'}`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${e.position <= 3 ? 'sm:hidden ' : ''}${e.isMe ? 'bg-cover text-ink' : e.position <= 3 ? 'bg-paper text-ink' : 'bg-chalk/[0.07]'}`}
               >
                 <span className="font-condensed tabular w-8 text-right text-2xl font-black">
                   {e.position}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-bold">{e.nickname}</span>
+                  <span className="font-bold break-words">{e.nickname}</span>
                   <span className="text-sm opacity-70">{e.title}</span>
                 </span>
                 <span

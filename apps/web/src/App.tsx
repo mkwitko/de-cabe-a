@@ -67,7 +67,7 @@ const CareerPage = lazy(() =>
 );
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
-const GAMES = [
+export const GAMES = [
   {
     slot: '01',
     mode: 'CAREER_PATH',
