@@ -14,10 +14,13 @@ export function Stars({
   n,
   size = 'size-5',
   onCover = false,
+  animate = false,
 }: {
   n: number;
   size?: string;
   onCover?: boolean;
+  /** Stamp the earned stars one after another (the end of a level). */
+  animate?: boolean;
 }) {
   const filled = onCover ? 'fill-ink text-ink' : 'fill-cover text-cover';
   return (
@@ -26,7 +29,8 @@ export function Stars({
         <svg
           key={i}
           viewBox="0 0 24 24"
-          className={`${size} ${i < n ? filled : `fill-none text-current ${onCover ? 'opacity-30' : 'opacity-40'}`}`}
+          className={`${size} ${i < n ? filled : `fill-none text-current ${onCover ? 'opacity-30' : 'opacity-40'}`} ${animate && i < n ? 'motion-safe:animate-[star-pop_360ms_var(--ease-emphasis)_both]' : ''}`}
+          style={animate && i < n ? { animationDelay: `${400 + i * 110}ms` } : undefined}
           stroke="currentColor"
           strokeWidth={1.8}
           strokeLinejoin="round"

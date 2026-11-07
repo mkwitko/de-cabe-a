@@ -110,6 +110,21 @@
   }
 }
 
+/* A star stamped onto the result card, one after another. */
+@keyframes star-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-20deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.25) rotate(4deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
 @keyframes shake {
   0%,
   100% {
