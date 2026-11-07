@@ -183,7 +183,7 @@ export function StatsPage() {
             <Figure label="álbuns completos">{grid.perfect}</Figure>
           </dl>
           {grid.completed === 0 && (
-            <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
+            <p className="rounded-lg bg-chalk/[0.06] px-4 py-3 text-sm text-chalk-soft">
               Nenhum grid jogado ainda.{' '}
               <Link to="/grid" className="text-chalk underline underline-offset-4">
                 Ver as fases do Grid
@@ -209,7 +209,7 @@ export function StatsPage() {
             <Figure label="5 de 5">{imp.perfect}</Figure>
           </dl>
           {imp.completed === 0 && (
-            <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
+            <p className="rounded-lg bg-chalk/[0.06] px-4 py-3 text-sm text-chalk-soft">
               Nenhum impostor caçado ainda.{' '}
               <Link to="/impostor" className="text-chalk underline underline-offset-4">
                 Ver as fases do Impostor

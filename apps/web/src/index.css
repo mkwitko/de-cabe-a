@@ -15,6 +15,8 @@
   --color-stamp: oklch(0.9 0.16 95);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasis: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @layer base {
@@ -48,7 +50,7 @@
     isolation: isolate;
     /* printed halftone of the album page */
     background-image: radial-gradient(
-      color-mix(in oklch, var(--color-pitch-deep) 70%, transparent) 1px,
+      color-mix(in oklch, var(--color-pitch-deep) 40%, transparent) 1px,
       transparent 1.4px
     );
     background-size: 6px 6px;

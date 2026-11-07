@@ -87,7 +87,7 @@ export function LevelEnd({
               {data.attempt.timed ? ' · contra o relógio' : ''}
             </p>
           )}
-          <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-dashed border-ink/25 pt-3">
+          <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
             <Stars n={stars} size="size-9" onCover />
             <p className="font-condensed tabular text-right leading-none font-black uppercase">
               <span className="text-3xl">{score}</span>

@@ -4,9 +4,9 @@ import { Icon } from './Icon';
 
 /** Primary action: the album-cover yellow on ink. */
 export const btnPrimary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-cover px-5 font-condensed text-lg font-extrabold uppercase tracking-wide text-ink shadow-[0_3px_8px_-2px_rgb(0_0_0/0.4)] transition-[transform,box-shadow] duration-150 ease-out-expo hover:-translate-y-px active:translate-y-0.5 active:shadow-none disabled:pointer-events-none disabled:opacity-45';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-cover px-5 font-condensed text-lg font-extrabold uppercase tracking-wide text-ink shadow-[0_3px_8px_-2px_rgb(0_0_0/0.4)] transition-[transform,box-shadow] duration-100 ease-standard hover:-translate-y-px active:scale-[0.98] active:shadow-none motion-reduce:transform-none disabled:pointer-events-none disabled:opacity-45';
 export const btnSecondary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-chalk-soft/60 px-4 font-condensed text-lg font-extrabold uppercase tracking-wide text-chalk hover:border-chalk hover:bg-chalk/[0.06] disabled:opacity-45';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-chalk-soft/60 px-4 font-condensed text-lg font-extrabold uppercase tracking-wide text-chalk transition-[transform,background-color,border-color] duration-100 ease-standard hover:border-chalk hover:bg-chalk/[0.06] active:scale-[0.98] motion-reduce:transform-none disabled:opacity-45';
 
 export function GameHeader({ title, aside }: { title: string; aside?: ReactNode }) {
   return (
@@ -69,7 +69,7 @@ export function Notice({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-lg border-2 border-dashed border-chalk-soft/50 p-6">
+    <div className="flex flex-col items-start gap-3 rounded-lg border-2 border-chalk-soft/40 bg-chalk/[0.05] p-6">
       <h2 className="font-condensed text-2xl font-extrabold uppercase">{title}</h2>
       {children && <p className="max-w-[48ch] text-chalk-soft">{children}</p>}
       {action}
