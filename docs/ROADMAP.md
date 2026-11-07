@@ -21,3 +21,7 @@ Ordem por dependência real. Cada slice termina com testes passando e algo demon
 | 15 | (Pós-piloto) Cadastro opcional | 14 + decisão RF-10 | — |
 
 Slices 3 e 8 podem andar em paralelo com 2/4 (não dependem de banco).
+
+## Depois do piloto (2026-11-07)
+
+Slices 1–15 concluídas. O plano seguinte (acabamento premium, Desafio do Dia, ligas de amigos, Draft de conhecimento, Creator Mode, Oficina de desafios) está em `GROWTH_PLAN.md`, em três ondas com critério de "pronto" por item.
