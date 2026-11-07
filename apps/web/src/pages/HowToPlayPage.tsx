@@ -1,29 +1,52 @@
-/** /como-jogar: rules and FAQ (same text as the prerendered page, from seo-pages.json). */
+/**
+ * /como-jogar: one short card per game (rule, three steps, try level 1); the FAQ from
+ * seo-pages.json stays below, folded. The prerendered page keeps the full text for search.
+ */
 import { Link } from 'react-router';
+import { GAMES } from '../App';
+import { btnPrimary } from '../components/ui';
 import seo from '../seo-pages.json';
 
 export function HowToPlayPage() {
-  const intro = seo.pages.find((p) => p.path === '/como-jogar')!;
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-5 leading-relaxed">
-      <h1 className="font-condensed text-4xl font-black uppercase">Como jogar</h1>
-      {intro.text.map((t) => (
-        <p key={t} className="text-lg">
-          {t}
+    <article className="flex flex-col gap-8">
+      <header className="flex flex-col gap-2">
+        <h1 className="font-condensed text-4xl font-black uppercase">Como jogar</h1>
+        <p className="max-w-[48ch] text-lg text-chalk-soft">
+          Oito jogos, trilhas de fases, 0 a 3 estrelas por fase. Aprende jogando: cada card tem uma
+          fase 1 para experimentar.
         </p>
-      ))}
-      {seo.faq.map(([q, a]) => (
-        <section key={q}>
-          <h2 className="font-condensed text-2xl font-extrabold uppercase">{q}</h2>
-          <p className="text-chalk-soft">{a}</p>
-        </section>
-      ))}
-      <Link
-        to="/"
-        className="font-condensed self-start rounded-lg bg-cover px-5 py-3 text-lg font-extrabold text-ink uppercase"
-      >
-        Escolher um jogo
-      </Link>
+      </header>
+      <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {GAMES.map((g) => (
+          <li
+            key={g.slot}
+            className="flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5"
+          >
+            <h2 className="font-condensed text-2xl font-extrabold uppercase">{g.name}</h2>
+            <p className="font-semibold">{g.rule}</p>
+            <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm text-chalk-soft marker:font-bold marker:text-cover">
+              {g.howTo.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <Link to={`${g.path}/1`} className={`${btnPrimary} mt-auto self-start`}>
+              Experimentar fase 1
+            </Link>
+          </li>
+        ))}
+      </ol>
+      <section className="flex flex-col gap-2">
+        <h2 className="font-condensed text-2xl font-extrabold uppercase">Perguntas frequentes</h2>
+        {seo.faq.map(([q, a]) => (
+          <details key={q} className="rounded-lg border border-chalk/15 bg-chalk/[0.05]">
+            <summary className="min-h-12 cursor-pointer list-none px-4 py-3 font-bold [&::-webkit-details-marker]:hidden">
+              {q}
+            </summary>
+            <p className="px-4 pb-4 text-chalk-soft">{a}</p>
+          </details>
+        ))}
+      </section>
     </article>
   );
 }
