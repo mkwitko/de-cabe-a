@@ -9,6 +9,7 @@ import type { GameMode, TrackResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useTrack } from '../lib/game';
 import { Stars } from '../components/Stars';
 import { GameHeader, Notice, Skeleton } from '../components/ui';
+import { StarIcon } from '../components/Stars';
 
 type Level = TrackResponse['levels'][number];
 const DIFFICULTY = { 1: 'fácil', 2: 'média', 3: 'difícil' } as Record<number, string>;
@@ -19,7 +20,7 @@ function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean
   if (l.state === 'locked')
     return (
       <li
-        className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-chalk-soft/25 text-chalk-soft/40"
+        className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-chalk-soft/35 text-chalk-soft/75"
         aria-label={`${label}, trancada`}
       >
         <span className="font-condensed tabular text-xl font-black sm:text-2xl">{l.level}</span>
@@ -98,7 +99,8 @@ export function TrackPage({ mode }: { mode: GameMode }) {
               />
             </div>
             <p className="text-sm text-chalk-soft">
-              fases concluídas · ★ {stars} de {levels.length * 3} estrelas
+              fases concluídas · <StarIcon className="inline size-[0.85em] align-[-0.08em]" />{' '}
+              {stars} de {levels.length * 3} estrelas
             </p>
           </div>
           {current && (
@@ -121,7 +123,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
             <details
               key={i}
               open={i === currentPage}
-              className={`group rounded-xl border border-chalk/15 ${locked ? 'opacity-60' : 'bg-chalk/[0.05]'}`}
+              className={`group rounded-xl border border-chalk/15 ${locked ? '' : 'bg-chalk/[0.05]'}`}
             >
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                 <span className="flex min-w-0 flex-col">
@@ -137,15 +139,31 @@ export function TrackPage({ mode }: { mode: GameMode }) {
                     className="font-condensed tabular text-lg font-bold whitespace-nowrap text-chalk-soft"
                     aria-label={`${pageDone} de ${page.length} fases, ${pageStars} de ${page.length * 3} estrelas`}
                   >
-                    {locked
-                      ? 'trancado'
-                      : `${pageDone}/${page.length} · ★ ${pageStars}/${page.length * 3}`}
+                    {locked ? (
+                      'trancado'
+                    ) : (
+                      <>
+                        {pageDone}/{page.length} ·{' '}
+                        <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {pageStars}/
+                        {page.length * 3}
+                      </>
+                    )}
                   </span>
                   <span
                     aria-hidden="true"
                     className="text-chalk-soft transition-transform duration-150 ease-standard group-open:rotate-180"
                   >
-                    ▾
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
                   </span>
                 </span>
               </summary>

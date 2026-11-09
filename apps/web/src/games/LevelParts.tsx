@@ -13,6 +13,7 @@ import { ResultCardButton } from '../components/ResultCard';
 import { Reactions } from '../components/Reactions';
 import { Stars } from '../components/Stars';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
+import { ClockIcon } from '../components/Icons';
 
 export function LevelError({
   error,
@@ -102,7 +103,8 @@ export function LevelEnd({
           <div className="mt-3 text-lg leading-snug font-semibold">{detail}</div>
           {data.attempt.durationSec !== null && (
             <p className="mt-2 text-base font-semibold">
-              ⏱ {formatClock(data.attempt.durationSec)}
+              <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
+              {formatClock(data.attempt.durationSec)}
               {data.attempt.timed ? ' · contra o relógio' : ''}
             </p>
           )}

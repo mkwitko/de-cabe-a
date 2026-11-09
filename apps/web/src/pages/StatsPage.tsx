@@ -115,6 +115,10 @@ export function StatsPage() {
             ) : null}
             <Link to="/ranking" className="text-chalk underline underline-offset-4">
               Ver ranking
+            </Link>{' '}
+            ·{' '}
+            <Link to="/conta" className="text-chalk underline underline-offset-4">
+              Conta, apelido e preferências
             </Link>
           </p>
         </div>

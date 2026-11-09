@@ -7,6 +7,7 @@ import { Link, useParams } from 'react-router';
 import { GAME_NAME, GAME_PATH, useDaily, useRound } from '../lib/game';
 import { Stars } from '../components/Stars';
 import { btnPrimary, btnSecondary, GameHeader, Notice, Skeleton } from '../components/ui';
+import { StarIcon } from '../components/Stars';
 
 /** "segunda-feira, 9 de novembro" for a YYYY-MM-DD civil date. */
 export const dayLabel = (date: string, weekday = true) =>
@@ -162,7 +163,7 @@ function Round() {
         ))}
       </ol>
       <p className="font-condensed tabular mt-3 text-xl font-black">
-        Sua rodada: ★ {data.me.total}
+        Sua rodada: <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {data.me.total}
         {data.me.position ? ` · ${data.me.position}º na rodada` : ''}
       </p>
       {data.entries.length > 0 && (
@@ -176,7 +177,9 @@ function Round() {
                 {e.position}
               </span>
               <span className="min-w-0 flex-1 truncate font-semibold">{e.nickname}</span>
-              <span className="font-condensed tabular font-bold">★ {e.stars}</span>
+              <span className="font-condensed tabular font-bold">
+                <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {e.stars}
+              </span>
             </li>
           ))}
         </ol>

@@ -131,7 +131,7 @@ export function PlayerSearch({
           onKeyDown={onKeyDown}
           onBlur={() => setTimeout(() => !cardOpen.current && setOpen(false), 120)}
           onFocus={() => results.length && setOpen(true)}
-          className="min-h-12 w-full bg-transparent text-base font-medium outline-none placeholder:text-ink/45"
+          className="min-h-12 w-full bg-transparent text-base font-medium outline-none placeholder:text-ink/70"
         />
         {selected && (
           <button

@@ -35,6 +35,23 @@
     }
   }
 
+  /* No orphan word under a paragraph; headings balance. */
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  /* Placeholders read at AA on paper and on pitch: the field's own colour, softened. */
+  ::placeholder {
+    color: color-mix(in oklch, currentColor 68%, transparent);
+    opacity: 1;
+  }
+
   html {
     background: var(--color-pitch-deep);
     scrollbar-color: var(--color-chalk-soft) var(--color-pitch-deep);
