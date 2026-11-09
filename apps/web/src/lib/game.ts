@@ -1,4 +1,5 @@
 import { play } from './sound';
+import { hapticForAction } from './haptics';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AttemptResponse,
@@ -86,6 +87,7 @@ export function useAction(mode: GameMode, level: number) {
       }),
     onSuccess: (data) => {
       qc.setQueryData(['attempt', mode, level], data);
+      hapticForAction(data);
       // Sound for the outcome (off unless the player turned it on).
       if (data.attempt.status !== 'IN_PROGRESS')
         play(

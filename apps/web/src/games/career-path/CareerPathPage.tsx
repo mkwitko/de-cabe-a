@@ -151,7 +151,6 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
             ? 'Fim de jogo.'
             : `${describe}. ${ev && 'revealed' in ev && ev.revealed === 'club' ? 'Novo clube revelado.' : ev && 'revealed' in ev && ev.revealed === 'extraHint' ? 'Nova pista revelada.' : ''}`,
       );
-      if (ev?.type === 'wrong' && 'vibrate' in navigator) navigator.vibrate?.(60);
     } catch {
       /* shown from action.error */
     }

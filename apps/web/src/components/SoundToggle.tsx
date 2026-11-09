@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { onSoundChange, setSound, soundOn } from '../lib/sound';
+import { hapticsOn, hapticsSupported, onHapticsChange, setHaptics } from '../lib/haptics';
 
 /** Sound on/off (off by default); the state lives on the device. */
 export function SoundToggle({ withLabel = false }: { withLabel?: boolean }) {
@@ -35,5 +36,23 @@ export function SoundToggle({ withLabel = false }: { withLabel?: boolean }) {
       </svg>
       {withLabel ? (on ? 'Som ligado' : 'Som desligado') : 'Som'}
     </button>
+  );
+}
+
+/** Vibration on/off, shown only where the phone can vibrate. */
+export function HapticsToggle() {
+  const [on, setOn] = useState(hapticsOn);
+  useEffect(() => onHapticsChange(setOn), []);
+  if (!hapticsSupported()) return null;
+  return (
+    <label className="flex min-h-11 items-center gap-3 font-semibold">
+      <input
+        type="checkbox"
+        className="size-5 accent-cover"
+        checked={on}
+        onChange={(e) => setHaptics(e.target.checked)}
+      />
+      Vibrar ao acertar, errar e ganhar estrela
+    </label>
   );
 }
