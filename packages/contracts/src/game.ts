@@ -764,3 +764,13 @@ export const ProfileResponse = z.strictObject({
   trophies: z.array(Trophy),
 });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;
+
+/** Reações (GROWTH_PLAN.md 2.5): predefined, one per player per level, undo allowed. */
+export const ReactionKind = z.enum(['craque', 'na-trave', 'que-memoria', 'pegadinha']);
+export type ReactionKind = z.infer<typeof ReactionKind>;
+export const ReactRequest = z.strictObject({ kind: ReactionKind });
+export const ReactionsResponse = z.strictObject({
+  counts: z.record(ReactionKind, z.number()),
+  mine: ReactionKind.nullable(),
+});
+export type ReactionsResponse = z.infer<typeof ReactionsResponse>;

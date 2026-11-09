@@ -227,9 +227,10 @@ model Challenge {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  usages   ChallengePlayerUsage[]
-  attempts Attempt[]
-  reports  LevelReport[]
+  usages    ChallengePlayerUsage[]
+  attempts  Attempt[]
+  reports   LevelReport[]
+  reactions LevelReaction[]
 
   /// A replacement takes the retired level's number (replace in place), so only published levels are unique.
   @@unique([gameMode, publicNumber], where: raw("status = 'published'"))
@@ -255,6 +256,17 @@ model ImportDiff {
 
 /// A player's report of an error in a finished level (position, missing club, stats, valid
 /// answer refused). Reviewed in /admin and by the AI curator (scripts/research/reports.ts).
+/// Reações (GROWTH_PLAN.md 2.5): one predefined reaction per player per level, after finishing it.
+model LevelReaction {
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  pk          String /// account id, or guest session id
+  kind        String /// craque | na-trave | que-memoria | pegadinha
+  createdAt   DateTime  @default(now())
+
+  @@id([challengeId, pk])
+}
+
 model LevelReport {
   id          String    @id @default(uuid(7))
   challengeId String

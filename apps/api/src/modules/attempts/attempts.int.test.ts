@@ -36,7 +36,7 @@ async function publish(payload: object) {
 function guest() {
   const jar = new Map<string, string>();
   return {
-    async req(method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) {
+    async req(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', url: string, payload?: object) {
       const cookie = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
       const res = await app.inject({
         method,
@@ -1510,5 +1510,32 @@ describe('Temporadas (GROWTH_PLAN.md 2.6)', () => {
     await g.req('PATCH', '/me/profile', { publicProfile: true });
     expect((await guest().req('GET', '/profiles/campeão t1')).json().trophies).toEqual([trophy]);
     clock = before;
+  });
+});
+
+describe('Reações (GROWTH_PLAN.md 2.5)', () => {
+  it('one reaction per player after finishing; choosing again replaces it; undo', async () => {
+    const g = guest();
+    const url = '/levels/CAREER_PATH/2/reactions';
+    expect((await g.req('PUT', url, { kind: 'craque' })).json().error.code).toBe(
+      'LEVEL_NOT_FINISHED',
+    );
+    await playCareer(g, 2, null, 6);
+    const zero = { craque: 0, 'na-trave': 0, 'que-memoria': 0, pegadinha: 0 };
+    const before = (await g.req('GET', url)).json().counts.craque as number;
+    expect((await g.req('PUT', url, { kind: 'craque' })).json()).toEqual({
+      counts: { ...zero, craque: before + 1 },
+      mine: 'craque',
+    });
+    expect((await g.req('PUT', url, { kind: 'na-trave' })).json()).toEqual({
+      counts: { ...zero, craque: before, 'na-trave': 1 },
+      mine: 'na-trave',
+    });
+    expect((await g.req('PUT', url, { kind: 'vaia' })).statusCode).toBe(400);
+    expect((await g.req('DELETE', url)).json()).toEqual({
+      counts: { ...zero, craque: before },
+      mine: null,
+    });
+    expect((await g.req('GET', '/levels/CAREER_PATH/999/reactions')).statusCode).toBe(404);
   });
 });

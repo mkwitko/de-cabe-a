@@ -10,6 +10,7 @@ import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useDaily, useLevelRanking, useMe, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
+import { Reactions } from '../components/Reactions';
 import { Stars } from '../components/Stars';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 
@@ -151,6 +152,8 @@ export function LevelEnd({
           </>
         )}
       </div>
+
+      <Reactions mode={mode} level={level} />
 
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
