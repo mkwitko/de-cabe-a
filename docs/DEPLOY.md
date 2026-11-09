@@ -20,7 +20,7 @@ Nomes usados abaixo: `decabecafc.com.br` (site) e `api-origin.decabecafc.com.br`
    - Google e Resend: passos 4 e 5 (pode subir sem eles; o login com Google fica desligado e os e-mails vão para o log).
 4. Subir: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build`. As migrações rodam na partida da API.
 5. Conferir: `https://api-origin.decabecafc.com.br/v1/health` responde `200`.
-6. Base de jogadores: restaurar o dump do ambiente local (`pg_dump` local → `psql` no contêiner `postgres`), em vez de reimportar tudo.
+6. Conteúdo do jogo (jogadores, partidas, escalações e todas as fases publicadas): no computador local, `deploy/content.sh export` gera `content.sql.gz` (cerca de 40 MB) sem nenhum dado de jogador; copiar para a VM (`scp`) e rodar `deploy/content.sh import content.sql.gz` depois que a API subiu uma vez (migrações aplicadas). Só num banco ainda sem conteúdo. Fases novas depois do lançamento: rodar os scripts `publish-*.ts` apontando para o banco de produção.
 
 Atualizar: `git pull` e o mesmo `up -d --build`.
 
@@ -51,7 +51,6 @@ Google Cloud Console → APIs e serviços → Credenciais → ID do cliente OAut
 1. Gerar o par de chaves uma vez: `pnpm --filter @decabeca/api exec web-push generate-vapid-keys`.
 2. No `.env` da VM: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT=mailto:contato@decabecafc.com.br`. Não trocar as chaves depois: inscrições antigas param de funcionar.
 3. A API manda às 9h (Brasília) o Desafio do Dia e, às segundas, o fechamento da semana das ligas. Cada lote é registrado em `PushSend` e sai uma vez só.
-4. Rodar `scripts/research/publish-draft.ts` depois da migração para criar as fases do Draft.
 
 ## 6. Backup
 
