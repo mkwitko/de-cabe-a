@@ -27,6 +27,7 @@ export default defineConfig({
         ADMIN_TOKEN: 'e2e-admin-token-0123456789',
         PORT: String(API_PORT),
         HOST: '127.0.0.1',
+        SESSIONS_PER_IP: '1000',
       },
       reuseExistingServer: false,
     },

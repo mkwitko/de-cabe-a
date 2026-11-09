@@ -65,6 +65,7 @@ const HigherLowerPage = lazy(() =>
 const CareerPage = lazy(() =>
   import('./pages/CareerPage').then((m) => ({ default: m.CareerPage })),
 );
+const DailyPage = lazy(() => import('./pages/DailyPage').then((m) => ({ default: m.DailyPage })));
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 export const GAMES = [
@@ -261,10 +262,24 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         </p>
       </header>
 
+      <Link
+        to="/d/hoje"
+        className="mt-10 flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:p-6"
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="text-xs font-bold tracking-wide uppercase">Desafio do Dia</span>
+          <span className="font-condensed text-3xl leading-none font-black uppercase sm:text-4xl">
+            Uma fase de cada jogo
+          </span>
+          <span className="mt-1 font-semibold">A mesma para todos. Nova à meia-noite.</span>
+        </span>
+        <span className={`${btnPrimary} shrink-0`}>Jogar</span>
+      </Link>
+
       {/* Modo Carreira: the stars from every game train the player's own footballer. */}
       <Link
         to="/carreira"
-        className="mt-10 flex flex-col gap-2 rounded-2xl bg-cover p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+        className="mt-6 flex flex-col gap-2 rounded-2xl bg-cover p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
       >
         <span>
           <span className="block text-xs font-bold tracking-wide uppercase">
@@ -516,6 +531,8 @@ function PublicRoutes() {
           <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
           <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
           <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
+          <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
+          <Route path="/d/:date" element={<DailyPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />

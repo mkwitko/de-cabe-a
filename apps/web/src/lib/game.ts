@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AttemptResponse,
   GameMode,
+  DailyResponse,
   GamesResponse,
   HistoryResponse,
   LevelRankingResponse,
@@ -39,6 +40,9 @@ export const useGames = () =>
   useQuery({ queryKey: ['games'], queryFn: () => api<GamesResponse>('/v1/games') });
 export const useTrack = (mode: GameMode) =>
   useQuery({ queryKey: ['track', mode], queryFn: () => api<TrackResponse>(`/v1/tracks/${mode}`) });
+/** Desafio do Dia: `date` is YYYY-MM-DD or 'hoje'. */
+export const useDaily = (date: string) =>
+  useQuery({ queryKey: ['daily', date], queryFn: () => api<DailyResponse>(`/v1/daily/${date}`) });
 export const useStats = () =>
   useQuery({ queryKey: ['stats'], queryFn: () => api<StatsResponse>('/v1/me/stats') });
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<MeResponse>('/v1/me') });

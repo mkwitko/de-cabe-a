@@ -32,6 +32,17 @@ const app = buildApp(
   {
     prisma: createPrisma(env('DATABASE_URL')),
     adminToken: env('ADMIN_TOKEN'),
+    // The e2e suite opens a fresh session per test from one IP; production keeps the default.
+    ...(process.env.SESSIONS_PER_IP && !production
+      ? {
+          limits: {
+            sessionsPerIp: Number(process.env.SESSIONS_PER_IP),
+            perSession: 300,
+            search: 60,
+            actions: 120,
+          },
+        }
+      : {}),
     authOptions: {
       secret: production
         ? env('BETTER_AUTH_SECRET')

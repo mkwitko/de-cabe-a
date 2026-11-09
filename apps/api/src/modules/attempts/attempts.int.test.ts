@@ -1399,3 +1399,50 @@ describe('rate limits', () => {
     await limited.close();
   });
 });
+
+describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
+  it('two players get the same levels; future and undrawn days are 404', async () => {
+    const a = (await guest().req('GET', '/daily/hoje')).json();
+    const b = (await guest().req('GET', '/daily/hoje')).json();
+    expect(a.date).toBe(a.today);
+    expect(a.games.length).toBeGreaterThan(0);
+    expect(b.games.map((g: { level: number }) => g.level)).toEqual(
+      a.games.map((g: { level: number }) => g.level),
+    );
+    expect(a.games.every((g: { solvedPct: null }) => g.solvedPct === null)).toBe(true);
+    expect((await guest().req('GET', '/daily/2099-01-01')).statusCode).toBe(404);
+    expect((await guest().req('GET', '/daily/2000-01-01')).statusCode).toBe(404);
+    expect((await guest().req('GET', '/daily/ontem')).statusCode).toBe(400);
+  });
+
+  it('the day level opens even when the track locks it; earlier days stay in the archive', async () => {
+    const { today } = (await guest().req('GET', '/daily/hoje')).json();
+    await prisma.dailyPick.update({
+      where: { day_gameMode: { day: new Date(`${today}T00:00:00Z`), gameMode: 'CAREER_PATH' } },
+      data: { level: 4 },
+    });
+    const g = guest();
+    // The track opens the day level out of order and keeps the one between locked.
+    expect(
+      (await g.req('GET', '/tracks/CAREER_PATH'))
+        .json()
+        .levels.map((l: { level: number; state: string }) => `${l.level}:${l.state}`),
+    ).toEqual(['2:open', '3:locked', '4:open']);
+    expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 4 })).statusCode).toBe(
+      201,
+    );
+    expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 3 })).statusCode).toBe(
+      403,
+    );
+    const career = (await g.req('GET', '/daily/hoje'))
+      .json()
+      .games.find((x: { mode: string }) => x.mode === 'CAREER_PATH');
+    expect(career).toMatchObject({ level: 4, state: 'in_progress' });
+
+    await prisma.dailyPick.create({
+      data: { day: new Date('2026-11-01T00:00:00Z'), gameMode: 'IMPOSTOR', level: 1 },
+    });
+    expect((await g.req('GET', '/daily/hoje')).json().archive).toContain('2026-11-01');
+    expect((await g.req('GET', '/daily/2026-11-01')).json().games).toHaveLength(1);
+  });
+});

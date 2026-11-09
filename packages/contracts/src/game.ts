@@ -635,3 +635,22 @@ export const EventsRequest = z.strictObject({
     .max(20),
 });
 export type EventsRequest = z.infer<typeof EventsRequest>;
+
+/** GET /v1/daily/:date (GROWTH_PLAN.md 1.9): the same level of each mode for everyone that day. */
+export const DailyResponse = z.strictObject({
+  date: z.string(),
+  today: z.string(),
+  games: z.array(
+    z.strictObject({
+      mode: GameMode,
+      level: z.number(),
+      state: z.enum(['open', 'in_progress', 'done']),
+      stars: z.number(),
+      /** Share of that day's finished plays with at least one star; null below 30 plays. */
+      solvedPct: z.number().nullable(),
+    }),
+  ),
+  /** Earlier days with a challenge, newest first. */
+  archive: z.array(z.string()),
+});
+export type DailyResponse = z.infer<typeof DailyResponse>;

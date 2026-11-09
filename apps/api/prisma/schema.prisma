@@ -564,3 +564,14 @@ model CareerMatch {
 
   @@unique([seasonId, round])
 }
+
+/// Desafio do Dia (GROWTH_PLAN.md 1.9): the level of each mode that everyone plays on a civil date
+/// (America/Sao_Paulo). Drawn once, on the first visit of the day, and never changed after.
+model DailyPick {
+  day      DateTime     @db.Date
+  gameMode GameModeCode
+  level    Int /// publicNumber in the mode's track; a level replaced in place keeps its number
+
+  @@id([day, gameMode])
+  @@index([gameMode, level])
+}
