@@ -32,6 +32,7 @@ export const ErrorCode = z.enum([
   'NICKNAME_REQUIRED',
   'TOO_MANY_LEAGUES',
   'LEAGUE_FULL',
+  'SQUAD_LOCKED',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

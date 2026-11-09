@@ -644,3 +644,16 @@ model PushSend {
   key       String   @id
   createdAt DateTime @default(now())
 }
+
+/// Fantasy de conhecimento (GROWTH_PLAN.md onda 3, versão mínima): 5 real players picked for a
+/// week (Monday, Brasília). Saved once and locked until Sunday; only levels started after
+/// `createdAt` score, so a squad never profits from answers already seen.
+model FantasySquad {
+  pk        String /// account id, or guest session id
+  week      DateTime @db.Date
+  playerIds String[]
+  createdAt DateTime @default(now())
+
+  @@id([pk, week])
+  @@index([week])
+}

@@ -1562,3 +1562,54 @@ describe('Medição da onda 2 (GROWTH_PLAN.md 5)', () => {
     expect(Array.isArray(m.dailyChallenge)).toBe(true);
   });
 });
+
+describe('Fantasy de conhecimento', () => {
+  it('locks a 5-player squad; a level whose answer is in it scores 5 per star +5 for 3', async () => {
+    const level = await prisma.challenge.findFirstOrThrow({
+      where: { gameMode: 'CAREER_PATH', publicNumber: 3, status: 'published' },
+      include: { usages: true },
+    });
+    const answer = level.usages.find((u) => u.role === 'answer')!.playerId;
+    const pool = await prisma.player.findMany({
+      where: { verificationStatus: 'verified', id: { not: answer } },
+      select: { id: true, primaryPositionGroup: true },
+    });
+    const per = new Map<string, number>();
+    const answerPos = (await prisma.player.findUniqueOrThrow({ where: { id: answer } }))
+      .primaryPositionGroup;
+    if (answerPos) per.set(answerPos, 1);
+    const others = pool
+      .filter((p) => {
+        const k = p.primaryPositionGroup ?? '';
+        if ((per.get(k) ?? 0) >= 2) return false;
+        per.set(k, (per.get(k) ?? 0) + 1);
+        return true;
+      })
+      .slice(0, 4)
+      .map((p) => p.id);
+    const g = guest();
+    await g.req('PATCH', '/me', { nickname: 'Fantasista' });
+    expect((await g.req('GET', '/fantasy')).json()).toMatchObject({ squad: null, total: 0 });
+    expect(
+      (await g.req('POST', '/fantasy', { playerIds: [answer, answer, ...others.slice(0, 3)] }))
+        .statusCode,
+    ).toBe(400);
+    const saved = await g.req('POST', '/fantasy', { playerIds: [answer, ...others] });
+    expect(saved.statusCode, saved.body).toBe(201);
+    expect(saved.json().squad).toHaveLength(5);
+    expect(
+      (await g.req('POST', '/fantasy', { playerIds: [answer, ...others] })).json().error.code,
+    ).toBe('SQUAD_LOCKED');
+
+    // Level 3 opens after 2 for a new player.
+    await playCareer(g, 2, null, 6);
+    const played = await playCareer(g, 3, null, 6);
+    await prisma.attempt.update({ where: { id: played.attempt.id }, data: { stars: 3 } });
+    const f = (await g.req('GET', '/fantasy')).json();
+    expect(f.squad.find((p: { id: string }) => p.id === answer).points).toBe(20);
+    expect(f.total).toBeGreaterThanOrEqual(20);
+    expect(f.entries.find((e: { isMe: boolean }) => e.isMe)).toMatchObject({
+      nickname: 'Fantasista',
+    });
+  });
+});
