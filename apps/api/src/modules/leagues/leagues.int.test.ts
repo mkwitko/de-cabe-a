@@ -73,6 +73,7 @@ describe('Ligas de amigos (GROWTH_PLAN.md 2.1)', () => {
   it(`a league takes at most ${MAX_MEMBERS} players; names are 3 to 40 characters`, async () => {
     const owner = await player('Dono');
     expect((await owner.req('POST', '/leagues', { name: 'ab' })).statusCode).toBe(400);
+    expect((await owner.req('POST', '/leagues', { name: 'Liga dos P0rra' })).statusCode).toBe(400);
     const { code } = (await owner.req('POST', '/leagues', { name: 'Liga cheia' })).json();
     for (let i = 1; i < MAX_MEMBERS; i++)
       expect(

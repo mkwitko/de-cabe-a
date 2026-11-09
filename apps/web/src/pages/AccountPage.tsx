@@ -1,3 +1,4 @@
+import { suggestNickname } from '../lib/nickname';
 import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api, type ApiError } from '../lib/api';
@@ -91,9 +92,18 @@ export function AccountPage() {
               required
               placeholder={m.nickname ?? 'Ex.: Camisa 10'}
             />
-            <button className={`${btnPrimary} self-start`} disabled={act.isPending}>
-              Salvar apelido
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button className={btnPrimary} disabled={act.isPending}>
+                Salvar apelido
+              </button>
+              <button
+                type="button"
+                className={btnSecondary}
+                onClick={() => setNickname(suggestNickname())}
+              >
+                Sugerir
+              </button>
+            </div>
           </form>
 
           {m.account ? (

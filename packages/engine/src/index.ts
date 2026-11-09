@@ -11,6 +11,7 @@ export const ENGINE_IDS = [
 ] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 export { normalizeName } from './text/normalize';
+export { isOffensive } from './text/offensive';
 export * from './contract';
 export * from './career-path/engine';
 export * from './career-path/trajectory';
