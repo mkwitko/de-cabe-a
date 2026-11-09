@@ -8,7 +8,7 @@ import { api, type ApiError } from '../lib/api';
 import { useAccount, useMe } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
-import { SoundToggle } from '../components/SoundToggle';
+import { HapticsToggle, SoundToggle } from '../components/SoundToggle';
 
 const input =
   'min-h-12 rounded-lg border-2 border-ink/15 bg-paper px-3 text-base text-ink focus:border-ink';
@@ -155,9 +155,10 @@ export function AccountPage() {
           <section className="flex flex-col gap-3">
             <h2 className={h2}>Preferências</h2>
             <p className="text-chalk-soft">
-              Apito, torcida e o "uhh" do erro. Fica guardado só neste aparelho.
+              Apito, torcida, o "uhh" do erro e a vibração. Fica guardado só neste aparelho.
             </p>
             <SoundToggle withLabel />
+            <HapticsToggle />
           </section>
 
           <Notifications />

@@ -104,7 +104,6 @@ export function GridPage({ level, timed = false }: { level: number; timed?: bool
         setMiss(index);
         setTimeout(() => setMiss(null), 600);
         setAnnounce(`${p.name} não serve aqui. Tentativa perdida.`);
-        if ('vibrate' in navigator) navigator.vibrate?.(60);
       } else setAnnounce(`${p.name}! Acertou.`);
     } catch {
       /* rendered from action.error */
