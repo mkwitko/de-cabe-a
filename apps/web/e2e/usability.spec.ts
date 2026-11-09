@@ -17,7 +17,8 @@ const ROUTES = [
   '/carreira',
   '/conta',
   '/como-jogar',
-  '/history', '/d/hoje',
+  '/history',
+  '/d/hoje',
 ];
 
 test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true });
