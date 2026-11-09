@@ -1,37 +1,23 @@
 # Deploy do piloto (ADR-010)
 
-Web estática no **Cloudflare Pages**; API + Postgres na **VM da Oracle** em Docker, atrás do Caddy (HTTPS). O site e a API ficam no **mesmo domínio**: o Pages encaminha `decabecafc.com.br/v1/*` para a VM (`apps/web/functions/_middleware.js`, que também encaminha as páginas de busca `/jogador/*`, `/jogadores`, `/sitemap.xml` e `/llms.txt`). O cookie de convidado e o login dependem disso.
+Tudo na **VM da Oracle** (`ubuntu@136.248.86.54`, ARM, compartilhada com outros projetos) em Docker: Postgres, API e web (Caddy serve o site e encaminha a API, então os dois ficam no **mesmo domínio**, como o cookie de convidado e o login exigem). A VM não abre portas: o **Cloudflare Tunnel** que já roda nela (`cloudflared`, `/etc/cloudflared/config.yml`) publica `decabecafc.com.br` → `127.0.0.1:8088`, e o HTTPS fica no Cloudflare. As portas 80/443 da VM são de outro projeto.
 
-Nomes usados abaixo: `decabecafc.com.br` (site) e `api-origin.decabecafc.com.br` (origem da API, que ninguém abre direto).
+## 1. Domínio no Cloudflare (dono)
 
-## 1. Domínio e DNS (Cloudflare)
+1. Cloudflare → *Add a domain* → `decabecafc.com.br`, plano Free, na conta onde o túnel foi criado.
+2. registro.br → domínio → DNS → trocar os servidores para os dois que o Cloudflare mostrar.
+3. Quando o Cloudflare marcar o domínio como ativo: `cloudflared tunnel route dns <túnel> decabecafc.com.br` e o mesmo para `www` (feito na VM).
 
-1. Comprar o domínio e apontar os nameservers para o Cloudflare.
-2. Registro `A` `api-origin` → IP público da VM, **DNS only** (nuvem cinza), para o Caddy emitir o certificado.
-3. O domínio raiz fica para o Pages (passo 3).
+## 2. VM
 
-## 2. VM da Oracle
+1. Código em `/opt/de-cabeca` (cópia do `main` por `git archive`; sem credencial do GitHub na VM).
+2. `deploy/.env.prod` gerado na VM a partir de `deploy/.env.prod.example` (segredos com `openssl rand`).
+3. Subir: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build`. As migrações rodam na partida da API.
+4. Ingress no túnel (`/etc/cloudflared/config.yml`, antes da regra 404): `decabecafc.com.br` e `www.decabecafc.com.br` → `http://localhost:8088`; `sudo systemctl restart cloudflared`.
+5. Conferir: `https://decabecafc.com.br/v1/health` responde `200`.
+6. Conteúdo do jogo (jogadores, partidas, escalações e todas as fases): no computador local, `deploy/content.sh export` gera `content.sql.gz` sem nenhum dado de jogador; copiar para a VM e rodar `deploy/content.sh import content.sql.gz` com a API já no ar. Só num banco ainda sem conteúdo.
 
-1. Liberar as portas 80 e 443 na *security list* da VCN e no firewall da VM (`iptables`/`firewalld`).
-2. Instalar Docker e o plugin compose; clonar o repositório em `/opt/de-cabeca`.
-3. `cp deploy/.env.prod.example deploy/.env.prod` e preencher:
-   - `POSTGRES_PASSWORD`, `ADMIN_TOKEN`, `BETTER_AUTH_SECRET`: `openssl rand -base64 32` cada.
-   - `API_HOST=api-origin.decabecafc.com.br`, `WEB_ORIGIN=https://decabecafc.com.br`.
-   - Google e Resend: passos 4 e 5 (pode subir sem eles; o login com Google fica desligado e os e-mails vão para o log).
-4. Subir: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build`. As migrações rodam na partida da API.
-5. Conferir: `https://api-origin.decabecafc.com.br/v1/health` responde `200`.
-6. Conteúdo do jogo (jogadores, partidas, escalações e todas as fases publicadas): no computador local, `deploy/content.sh export` gera `content.sql.gz` (cerca de 40 MB) sem nenhum dado de jogador; copiar para a VM (`scp`) e rodar `deploy/content.sh import content.sql.gz` depois que a API subiu uma vez (migrações aplicadas). Só num banco ainda sem conteúdo. Fases novas depois do lançamento: rodar os scripts `publish-*.ts` apontando para o banco de produção.
-
-Atualizar: `git pull` e o mesmo `up -d --build`.
-
-## 3. Cloudflare Pages
-
-- Projeto ligado ao repositório GitHub, branch `main`.
-- Build: `corepack enable && pnpm install --frozen-lockfile && pnpm --filter @decabeca/web build`; saída `apps/web/dist`; diretório raiz: `/` (as Functions ficam em `apps/web/functions`, então use **Root directory** `apps/web` e build `cd ../.. && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @decabeca/web build`, saída `dist`).
-- Variável de ambiente (Production): `API_ORIGIN=https://api-origin.decabecafc.com.br`.
-- Domínio personalizado: `decabecafc.com.br`.
-- Teste: `https://decabecafc.com.br/v1/health` → `200` (passou pela Function até a VM).
-- **Limite do plano grátis**: Functions têm cota diária de pedidos (cerca de 100 mil/dia; confira o valor atual no painel). `apps/web/public/_routes.json` faz a função rodar só em `/v1/*` e nas páginas de busca; imagens, JS e CSS saem direto do Pages sem gastar a cota. Acompanhe o uso em Workers & Pages → Metrics. Se o tráfego encostar no limite: plano pago do Workers (barato) ou um subdomínio próprio para a API, com cookie no domínio raiz.
+Atualizar: copiar o `main` de novo e o mesmo `up -d --build`; depois `docker builder prune -f` (o disco da VM é pequeno).
 
 ## 4. Login com Google
 
@@ -54,9 +40,9 @@ Google Cloud Console → APIs e serviços → Credenciais → ID do cliente OAut
 
 ## 6. Backup
 
-1. Criar o bucket `decabeca-backups` no Cloudflare R2 e um token S3; configurar o `rclone` na VM com um remote chamado `r2`.
-2. Cron: `30 6 * * * /opt/de-cabeca/deploy/backup.sh >> /var/log/decabeca-backup.log 2>&1` (guarda 14 dias).
-3. **Antes do lançamento, restaurar um backup uma vez** num Postgres descartável e abrir a API apontando para ele.
+1. Cron na VM: `30 6 * * * /opt/de-cabeca/deploy/backup.sh >> /opt/de-cabeca/backups/backup.log 2>&1`. Guarda 7 dias em `/opt/de-cabeca/backups`.
+2. Cópia fora da VM (recomendado): configurar o `rclone` com um remote `r2` (bucket `decabeca-backups` no Cloudflare R2); o script passa a enviar também.
+3. **Antes do lançamento, restaurar um backup uma vez** num Postgres descartável.
 
 ## 7. Observabilidade
 
