@@ -9,6 +9,7 @@ import { track } from '../lib/analytics';
 import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useDaily, useLevelRanking, useMe, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
+import { ResultCardButton } from '../components/ResultCard';
 import { Stars } from '../components/Stars';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 
@@ -28,8 +29,20 @@ export function LevelError({
   );
   if (error.code === 'LEVEL_LOCKED')
     return (
-      <Notice title="Fase trancada" action={back}>
-        Termine a fase anterior para liberar esta.
+      <Notice
+        title="Essa fase ainda não chegou"
+        action={
+          <div className="flex flex-wrap gap-3">
+            <Link to="/d/hoje" className={btnPrimary}>
+              Desafio do Dia
+            </Link>
+            <Link to={GAME_PATH[mode]} className={btnSecondary}>
+              Ir para a trilha
+            </Link>
+          </div>
+        }
+      >
+        Ela abre quando você terminar as anteriores. O Desafio do Dia está aberto para todo mundo.
       </Notice>
     );
   if (error.code === 'LEVEL_NOT_FOUND')
@@ -125,11 +138,17 @@ export function LevelEnd({
           </Link>
         )}
         {data.share && (
-          <ShareButton
-            secondary
-            text={data.share.text}
-            onShared={(method) => track('result_shared', { mode, level, method })}
-          />
+          <>
+            <ShareButton
+              secondary
+              text={data.share.text}
+              onShared={(method) => track('result_shared', { mode, level, method })}
+            />
+            <ResultCardButton
+              data={data}
+              onShared={() => track('result_shared', { mode, level, method: 'image' })}
+            />
+          </>
         )}
       </div>
 

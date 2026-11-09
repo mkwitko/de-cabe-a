@@ -18,7 +18,7 @@ export interface CareerCardData {
   assists: number;
 }
 
-const C = {
+export const C = {
   pitch: '#1d7a40',
   deep: '#145f30',
   paper: '#fbfaf4',
@@ -27,11 +27,11 @@ const C = {
 };
 
 /** Canvas font; `tight` uses the condensed width of Archivo, like the headings on the site. */
-const font = (weight: number, size: number, tight = false) =>
+export const font = (weight: number, size: number, tight = false) =>
   `${weight} ${tight ? 'condensed ' : ''}${size}px "Archivo Variable", sans-serif`;
 
 /** Shrinks the font until the text fits the width. */
-function fit(ctx: CanvasRenderingContext2D, text: string, max: number, size: number) {
+export function fit(ctx: CanvasRenderingContext2D, text: string, max: number, size: number) {
   let s = size;
   do {
     ctx.font = font(900, s, true);
@@ -134,22 +134,26 @@ export async function drawCareerCard(d: CareerCardData): Promise<Blob> {
   );
 }
 
+/** Shares the image as a file where the phone allows it; downloads it otherwise. */
+export async function shareImage(blob: Blob, name: string, text: string) {
+  const file = new File([blob], name, { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file], text }).catch(() => undefined);
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
 export function CareerCardButton({ data, text }: { data: CareerCardData; text: string }) {
   const [busy, setBusy] = useState(false);
   async function go() {
     setBusy(true);
     try {
-      const blob = await drawCareerCard(data);
-      const file = new File([blob], 'meu-craque-de-cabeca.png', { type: 'image/png' });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text }).catch(() => undefined);
-      } else {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = file.name;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      }
+      await shareImage(await drawCareerCard(data), 'meu-craque-de-cabeca.png', text);
     } finally {
       setBusy(false);
     }

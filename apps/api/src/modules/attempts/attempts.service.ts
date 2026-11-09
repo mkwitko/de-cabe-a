@@ -22,6 +22,8 @@ import type {
   TimelineReveal,
   TimelineView,
 } from '@decabeca/contracts';
+import { GAME_PATH } from '@decabeca/contracts';
+import { civilDate, dateColumn } from '../challenges/civil-date';
 import {
   starsFor,
   type CareerPathConfig,
@@ -194,11 +196,25 @@ export async function present(
 
   const mode = challenge.gameMode as GameModeCode;
   const stars = '★'.repeat(attempt.stars) + '☆'.repeat(3 - attempt.stars);
-  const share = done
-    ? {
-        text: `${engine.buildShareText(state, config, { label: `${NAMES[mode]} · Fase ${challenge.publicNumber}`, url: SHARE_HOST }).replace(`\n${SHARE_HOST}`, ` ${stars} ⏱ ${clock(durationSec(attempt) ?? 0)}${attempt.timed ? ' contra o relógio' : ''}\n${SHARE_HOST}`)}`,
-      }
-    : null;
+  let share = null;
+  if (done) {
+    const url = `${SHARE_HOST}${GAME_PATH[mode]}/${challenge.publicNumber}`;
+    // A level played as that day's Desafio do Dia says so: friends get the same level that day.
+    const day = civilDate(attempt.startedAt);
+    const daily = await prisma.dailyPick.findFirst({
+      where: { day: dateColumn(day), gameMode: mode, level: challenge.publicNumber ?? 0 },
+    });
+    const label = `${daily ? `Desafio do Dia ${day.slice(8)}/${day.slice(5, 7)} · ` : ''}${NAMES[mode]} · Fase ${challenge.publicNumber}`;
+    share = {
+      url,
+      text: engine
+        .buildShareText(state, config, { label, url })
+        .replace(
+          `\n${url}`,
+          ` ${stars} ⏱ ${clock(durationSec(attempt) ?? 0)}${attempt.timed ? ' contra o relógio' : ''}\n${url}`,
+        ),
+    };
+  }
 
   return {
     attempt: {
