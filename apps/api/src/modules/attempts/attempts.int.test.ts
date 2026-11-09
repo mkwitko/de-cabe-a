@@ -1444,6 +1444,14 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
     expect(lost.share.text).toContain(
       `Desafio do Dia ${today.slice(8)}/${today.slice(5, 7)} · Career Path · Fase 4`,
     );
+    // Achievements (2.3) see the finished level and that it was the Desafio do Dia.
+    const items = (await g.req('GET', '/me/achievements')).json().items as {
+      id: string;
+      progress: number;
+      done: boolean;
+    }[];
+    expect(items.find((x) => x.id === 'estreia')!.done).toBe(true);
+    expect(items.find((x) => x.id === 'fregues')!.progress).toBe(1);
 
     await prisma.dailyPick.create({
       data: { day: new Date('2026-11-01T00:00:00Z'), gameMode: 'IMPOSTOR', level: 1 },

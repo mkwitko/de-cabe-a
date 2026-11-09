@@ -1,4 +1,5 @@
 import {
+  AchievementsResponse,
   GameMode,
   HistoryQuery,
   HistoryResponse,
@@ -13,6 +14,9 @@ import { z } from 'zod';
 import { AppError } from '../../errors';
 import { playerAttempts } from '../session/session';
 import { ranking, rankRows, weekStart } from './ranking';
+import { achievements } from './achievements';
+import { myPks } from '../leagues/leagues';
+import { civilDate } from '../challenges/civil-date';
 import type { GameModeCode } from '../challenges/engines';
 
 /** History, stats and ranking, derived from attempts (ADR-007). */
@@ -58,6 +62,52 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
         })),
         nextCursor:
           rows.length > limit && last ? `${last.completedAt!.toISOString()}_${last.id}` : null,
+      };
+    },
+  );
+
+  app.get(
+    '/me/achievements',
+    { schema: { response: { 200: AchievementsResponse } } },
+    async (req) => {
+      const [done, picks, leagues] = await Promise.all([
+        prisma.attempt.findMany({
+          where: { ...playerAttempts(req), completedAt: { not: null } },
+          select: {
+            gameMode: true,
+            stars: true,
+            score: true,
+            timed: true,
+            startedAt: true,
+            challenge: { select: { publicNumber: true } },
+          },
+        }),
+        // ponytail: every draw (8 rows a day); filter by the player's days when this grows.
+        prisma.dailyPick.findMany(),
+        prisma.league.findMany({
+          where: { members: { some: { pk: { in: await myPks(prisma, req) } } } },
+          select: { _count: { select: { members: true } } },
+        }),
+      ]);
+      const day = (d: Date) => d.toISOString().slice(0, 10);
+      const drawn = new Set(picks.map((p) => `${day(p.day)}|${p.gameMode}|${p.level}`));
+      const dailyModes = new Map<string, number>();
+      for (const p of picks) dailyModes.set(day(p.day), (dailyModes.get(day(p.day)) ?? 0) + 1);
+      return {
+        items: achievements({
+          attempts: done.map((a) => {
+            // A level counts as that day's Desafio do Dia when started on the day it was drawn.
+            const played = civilDate(a.startedAt);
+            return {
+              ...a,
+              daily: drawn.has(`${played}|${a.gameMode}|${a.challenge.publicNumber}`)
+                ? played
+                : null,
+            };
+          }),
+          dailyModes,
+          biggestLeague: Math.max(0, ...leagues.map((l) => l._count.members)),
+        }),
       };
     },
   );

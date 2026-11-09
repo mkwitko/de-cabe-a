@@ -27,7 +27,7 @@ const newCode = () =>
 type Req = { sessionId: string; userId: string | null };
 const me = (req: Req) => req.userId ?? req.sessionId;
 /** Every pk a member row may hold for this player: the account and each of its sessions. */
-async function myPks(prisma: PrismaClient, req: Req) {
+export async function myPks(prisma: PrismaClient, req: Req) {
   if (!req.userId) return [req.sessionId];
   const sessions = await prisma.guestSession.findMany({
     where: { userId: req.userId },
