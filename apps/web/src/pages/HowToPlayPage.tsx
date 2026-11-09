@@ -2,18 +2,24 @@
  * /como-jogar: one short card per game (rule, three steps, try level 1); the FAQ from
  * seo-pages.json stays below, folded. The prerendered page keeps the full text for search.
  */
-import { Link } from 'react-router';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router';
 import { GAMES } from '../App';
 import { btnPrimary } from '../components/ui';
 import seo from '../seo-pages.json';
 
 export function HowToPlayPage() {
+  const { hash } = useLocation();
+  // A link from a home card (#career_path...) lands on that game's card.
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash]);
   return (
     <article className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="font-condensed text-4xl font-black uppercase">Como jogar</h1>
         <p className="max-w-[48ch] text-lg text-chalk-soft">
-          Oito jogos, trilhas de fases, 0 a 3 estrelas por fase. Aprende jogando: cada card tem uma
+          Nove jogos, trilhas de fases, 0 a 3 estrelas por fase. Aprende jogando: cada card tem uma
           fase 1 para experimentar.
         </p>
       </header>
@@ -21,7 +27,8 @@ export function HowToPlayPage() {
         {GAMES.map((g) => (
           <li
             key={g.slot}
-            className="flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5"
+            id={g.mode.toLowerCase()}
+            className="flex scroll-mt-6 flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5 target:ring-2 target:ring-cover"
           >
             <h2 className="font-condensed text-2xl font-extrabold uppercase">{g.name}</h2>
             <p className="font-semibold">{g.rule}</p>

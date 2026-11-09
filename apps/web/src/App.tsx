@@ -1,4 +1,5 @@
 import { SoundToggle } from './components/SoundToggle';
+import { GameArt } from './components/GameArt';
 import { RouteMeta } from './components/RouteMeta';
 import { StarIcon } from './components/Stars';
 import { DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
@@ -88,6 +89,7 @@ export const GAMES = [
   {
     slot: '01',
     mode: 'CAREER_PATH',
+    facts: ['6 chances', '1 min'],
     name: 'Career Path',
     path: '/career-path',
     rule: 'Adivinhe o jogador pela sequência de clubes. Seis chances.',
@@ -100,6 +102,7 @@ export const GAMES = [
   {
     slot: '02',
     mode: 'FOOTBALL_GRID',
+    facts: ['9 chances', '3 min'],
     name: 'Football Grid',
     path: '/grid',
     rule: 'Ache um jogador para cada cruzamento da grade 3×3. Nove chances.',
@@ -112,6 +115,7 @@ export const GAMES = [
   {
     slot: '03',
     mode: 'IMPOSTOR',
+    facts: ['5 rodadas', '2 min'],
     name: 'Impostor',
     path: '/impostor',
     rule: 'Três jogaram no clube, um nunca vestiu a camisa. Ache o impostor.',
@@ -124,6 +128,7 @@ export const GAMES = [
   {
     slot: '04',
     mode: 'TIMELINE',
+    facts: ['5 jogadores', '2 min'],
     name: 'Linha do tempo',
     path: '/linha-do-tempo',
     rule: 'Quatro clubes de um jogador, embaralhados. Ponha na ordem da carreira.',
@@ -136,6 +141,7 @@ export const GAMES = [
   {
     slot: '05',
     mode: 'HIGHER_LOWER',
+    facts: ['5 duelos', '1 min'],
     name: 'Mais ou Menos',
     path: '/mais-ou-menos',
     rule: 'Duas passagens reais: quem fez mais gols, ou mais jogos, pelo clube?',
@@ -148,6 +154,7 @@ export const GAMES = [
   {
     slot: '06',
     mode: 'MISSING_XI',
+    facts: ['até 5 erros', '3 min'],
     name: 'Escalação',
     path: '/escalacao',
     rule: 'Complete a escalação de um jogo histórico: finais e mata-matas de Copa.',
@@ -160,6 +167,7 @@ export const GAMES = [
   {
     slot: '07',
     mode: 'MYSTERY_PLAYER',
+    facts: ['8 palpites', '2 min'],
     name: 'Craque Misterioso',
     path: '/craque-misterioso',
     rule: 'Um craque escondido. Cada palpite mostra o que ele tem em comum com o seu chute.',
@@ -172,6 +180,7 @@ export const GAMES = [
   {
     slot: '08',
     mode: 'CONNECTIONS',
+    facts: ['até 4 erros', '3 min'],
     name: 'Conexões',
     path: '/conexoes',
     rule: '16 jogadores, 4 grupos escondidos. Ache o que cada quatro têm em comum.',
@@ -184,6 +193,7 @@ export const GAMES = [
   {
     slot: '09',
     mode: 'DRAFT',
+    facts: ['11 rodadas', '2 min'],
     name: 'Draft',
     path: '/draft',
     rule: 'Monte um 4-3-3 com titulares de jogos de verdade, uma posição por rodada.',
@@ -240,38 +250,153 @@ function BrandSticker() {
 
 type Track = GamesResponse['games'][number];
 
-function TrackState({ track, path }: { track: Track | undefined; path: string }) {
-  if (!track) return <Skeleton className="h-11 w-40" />;
-  if (track.levels === 0) return <p className="font-semibold text-chalk-soft">Fases a caminho.</p>;
-  const pct = (track.completed / track.levels) * 100;
+function TrackState({ track }: { track: Track | undefined }) {
+  if (!track) return <Skeleton className="h-9 w-full" />;
+  if (track.levels === 0) return <p className="font-semibold">Fases a caminho.</p>;
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 text-sm font-semibold">
-        <span className="font-condensed tabular text-2xl font-black">
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline gap-2 text-sm font-semibold">
+        <span className="font-condensed tabular text-xl font-black">
           {track.completed}/{track.levels}
         </span>
-        <span className="text-chalk-soft">fases</span>
+        <span>fases</span>
         <span
-          className="font-condensed tabular ml-auto text-xl font-black"
+          className="font-condensed tabular ml-auto text-lg font-black"
           aria-label={`${track.stars} estrelas`}
         >
           <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {track.stars}
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-chalk/15" aria-hidden="true">
-        <div className="h-full rounded-full bg-cover" style={{ width: `${pct}%` }} />
+      <div className="h-2 overflow-hidden rounded-full bg-ink/15" aria-hidden="true">
+        <div
+          className="h-full rounded-full bg-ink"
+          style={{ width: `${(track.completed / track.levels) * 100}%` }}
+        />
       </div>
-      <Link
-        to={track.nextLevel ? `${path}/${track.nextLevel}` : path}
-        className={`${btnPrimary} self-start`}
-      >
-        {track.nextLevel
-          ? track.completed
-            ? `Jogar fase ${track.nextLevel}`
-            : 'Começar'
-          : 'Ver fases'}
-      </Link>
     </div>
+  );
+}
+
+/**
+ * The nine games as a row of album stickers: drawing, what the game is, its pace, the player's
+ * progress and one button into the next level. Native scroll-snap; arrows on wider screens.
+ */
+function GameCarousel({ games }: { games?: GamesResponse | undefined }) {
+  const row = useRef<HTMLUListElement>(null);
+  const step = (dir: 1 | -1) => {
+    const el = row.current;
+    const card = el?.querySelector('li');
+    if (el && card) el.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: 'smooth' });
+  };
+  const arrow =
+    'hidden size-11 place-items-center rounded-full border border-chalk/25 text-chalk hover:bg-chalk/10 sm:grid';
+  return (
+    <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
+      <div className="flex items-end justify-between gap-4">
+        <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
+          Jogos
+        </h2>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={arrow}
+            onClick={() => step(-1)}
+            aria-label="Jogos anteriores"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={arrow}
+            onClick={() => step(1)}
+            aria-label="Próximos jogos"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <ul
+        ref={row}
+        className="-mx-4 mt-5 flex snap-x snap-mandatory gap-4 scroll-px-4 overflow-x-auto scroll-smooth px-4 pb-4 [scrollbar-width:none] sm:scroll-px-0 sm:[scrollbar-width:thin] sm:-mx-0 sm:px-0"
+      >
+        {GAMES.map((g) => {
+          const track = games?.games.find((x) => x.mode === g.mode);
+          return (
+            <li
+              key={g.mode}
+              className="flex w-[82%] max-w-80 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-paper text-ink shadow-[0_14px_30px_-14px_rgb(0_0_0/0.55)] sm:w-80"
+            >
+              <Link
+                to={g.path}
+                tabIndex={-1}
+                aria-hidden="true"
+                className="block bg-pitch-deep px-4 py-3"
+              >
+                <GameArt mode={g.mode} className="mx-auto h-32 w-full" />
+              </Link>
+              <div className="flex flex-1 flex-col gap-3 p-5">
+                <h3 className="font-condensed text-3xl leading-none font-black uppercase">
+                  <Link to={g.path} className="hover:underline hover:underline-offset-4">
+                    {g.name}
+                  </Link>
+                </h3>
+                <p className="font-medium">{g.rule}</p>
+                <p className="flex gap-2 text-sm font-semibold">
+                  {g.facts.map((f) => (
+                    <span key={f} className="rounded-full bg-ink/10 px-2.5 py-1">
+                      {f}
+                    </span>
+                  ))}
+                </p>
+                <div className="mt-auto flex flex-col gap-3 pt-2">
+                  <TrackState track={track} />
+                  <div className="flex items-center justify-between gap-3">
+                    <Link
+                      to={track?.nextLevel ? `${g.path}/${track.nextLevel}` : g.path}
+                      className="font-condensed inline-flex min-h-11 items-center rounded-lg bg-ink px-5 text-lg font-extrabold text-paper uppercase"
+                    >
+                      {track?.nextLevel
+                        ? track.completed
+                          ? `Jogar fase ${track.nextLevel}`
+                          : 'Começar'
+                        : 'Ver fases'}
+                    </Link>
+                    <Link
+                      to={`/como-jogar#${g.mode.toLowerCase()}`}
+                      className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+                    >
+                      Como jogar
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
@@ -338,43 +463,7 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         </Link>
       )}
 
-      <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
-        <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
-          Jogos
-        </h2>
-        <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {GAMES.map((g) => {
-            return (
-              <li
-                key={g.slot}
-                className="relative flex min-h-56 flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5 shadow-[0_6px_20px_-12px_rgb(0_20_10/0.5)]"
-              >
-                <h3 className="font-condensed text-3xl font-extrabold uppercase">{g.name}</h3>
-                <p className="max-w-[32ch] text-chalk-soft">{g.rule}</p>
-                <TrackState track={games?.games.find((x) => x.mode === g.mode)} path={g.path} />
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
-                  <Link
-                    to={g.path}
-                    className="inline-flex min-h-10 items-center underline underline-offset-4"
-                  >
-                    Ver fases
-                  </Link>
-                  <details className="group">
-                    <summary className="flex min-h-10 cursor-pointer list-none items-center underline underline-offset-4">
-                      Como jogar?
-                    </summary>
-                    <ol className="mt-2 flex list-decimal flex-col gap-1 pl-5 font-normal text-chalk-soft">
-                      {g.howTo.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ol>
-                  </details>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      <GameCarousel games={games} />
     </>
   );
 }
