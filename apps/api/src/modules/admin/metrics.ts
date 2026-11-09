@@ -71,6 +71,65 @@ export async function pilotMetrics(prisma: PrismaClient, days: number, now: Date
     WHERE c.status = 'published'
     GROUP BY c.id ORDER BY c."gameMode", c."publicNumber"`;
 
+  // Desafio do Dia (GROWTH_PLAN.md 1.9): levels started on the day they were that day's pick.
+  const dailyChallenge = await prisma.$queryRaw<
+    { day: string; players: bigint; started: bigint; completed: bigint }[]
+  >`
+    SELECT to_char(p.day, 'YYYY-MM-DD') AS day,
+           COUNT(DISTINCT COALESCE(s."userId", s.id)) AS players,
+           COUNT(*) AS started, COUNT(a."completedAt") AS completed
+    FROM "Attempt" a
+    JOIN "GuestSession" s ON s.id = a."sessionId"
+    JOIN "Challenge" c ON c.id = a."challengeId"
+    JOIN "DailyPick" p ON p."gameMode" = a."gameMode" AND p.level = c."publicNumber"
+      AND p.day = (a."startedAt" - interval '3 hours')::date
+    WHERE a."startedAt" >= ${since}
+    GROUP BY 1 ORDER BY 1`;
+
+  // Norte (GROWTH_PLAN.md 5): of the players who finished a level, how many shared or brought
+  // someone into a league; of those who arrived by a link, how many finished a level. By session.
+  const [north] = await prisma.$queryRaw<
+    {
+      completers: bigint;
+      spreaders: bigint;
+      arrivals: bigint;
+      arrivalsCompleted: bigint;
+      leaguesCreated: bigint;
+      leagueJoins: bigint;
+    }[]
+  >`
+    WITH e AS (SELECT "sessionHash" AS h, name FROM "Event" WHERE ts >= ${since}),
+    done AS (SELECT DISTINCT h FROM e WHERE name = 'game_completed'),
+    spread AS (SELECT DISTINCT h FROM e WHERE name IN ('result_shared', 'league_created')),
+    arrived AS (SELECT DISTINCT h FROM e WHERE name = 'link_opened')
+    SELECT (SELECT COUNT(*) FROM done) AS completers,
+           (SELECT COUNT(*) FROM done JOIN spread USING (h)) AS spreaders,
+           (SELECT COUNT(*) FROM arrived) AS arrivals,
+           (SELECT COUNT(*) FROM arrived JOIN done USING (h)) AS "arrivalsCompleted",
+           (SELECT COUNT(*) FROM e WHERE name = 'league_created') AS "leaguesCreated",
+           (SELECT COUNT(*) FROM e WHERE name = 'league_joined') AS "leagueJoins"`;
+  const links = await prisma.$queryRaw<{ kind: string; n: bigint }[]>`
+    SELECT props->>'kind' AS kind, COUNT(*) AS n FROM "Event"
+    WHERE name = 'link_opened' AND ts >= ${since} GROUP BY 1 ORDER BY 2 DESC`;
+
+  // D1 / D7 per weekly cohort (week of the first level, Monday in São Paulo).
+  const cohorts = await prisma.$queryRaw<
+    { week: string; cohort: bigint; d1: bigint; d7: bigint; d1base: bigint; d7base: bigint }[]
+  >`
+    WITH days AS (
+      SELECT DISTINCT COALESCE(s."userId", s.id) AS pk,
+             (a."startedAt" AT TIME ZONE 'America/Sao_Paulo')::date AS d
+      FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId"
+    ), first AS (SELECT pk, MIN(d) AS d0 FROM days GROUP BY pk),
+    today AS (SELECT (${now}::timestamptz AT TIME ZONE 'America/Sao_Paulo')::date AS t)
+    SELECT to_char(date_trunc('week', f.d0), 'YYYY-MM-DD') AS week, COUNT(*) AS cohort,
+      COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM days x WHERE x.pk = f.pk AND x.d = f.d0 + 1)) AS d1,
+      COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM days x WHERE x.pk = f.pk AND x.d = f.d0 + 7)) AS d7,
+      COUNT(*) FILTER (WHERE f.d0 + 1 < (SELECT t FROM today)) AS d1base,
+      COUNT(*) FILTER (WHERE f.d0 + 7 < (SELECT t FROM today)) AS d7base
+    FROM first f WHERE f.d0 >= (${since}::timestamptz AT TIME ZONE 'America/Sao_Paulo')::date
+    GROUP BY 1 ORDER BY 1`;
+
   const totals = daily.reduce(
     (t, d) => ({ started: t.started + n(d.started), completed: t.completed + n(d.completed) }),
     { started: 0, completed: 0 },
@@ -96,6 +155,27 @@ export async function pilotMetrics(prisma: PrismaClient, days: number, now: Date
       d1: pct(n(ret?.d1 ?? 0), n(ret?.d1base ?? 0)),
       d7: pct(n(ret?.d7 ?? 0), n(ret?.d7base ?? 0)),
     },
+    dailyChallenge: dailyChallenge.map((d) => ({
+      day: d.day,
+      players: n(d.players),
+      started: n(d.started),
+      completed: n(d.completed),
+    })),
+    community: {
+      completers: n(north?.completers ?? 0),
+      shareOrInviteRate: pct(n(north?.spreaders ?? 0), n(north?.completers ?? 0)),
+      linkArrivals: n(north?.arrivals ?? 0),
+      linkArrivalCompletionRate: pct(n(north?.arrivalsCompleted ?? 0), n(north?.arrivals ?? 0)),
+      linksByKind: links.map((l) => ({ kind: l.kind ?? 'unknown', n: n(l.n) })),
+      leaguesCreated: n(north?.leaguesCreated ?? 0),
+      leagueJoins: n(north?.leagueJoins ?? 0),
+    },
+    cohorts: cohorts.map((c) => ({
+      week: c.week,
+      players: n(c.cohort),
+      d1: pct(n(c.d1), n(c.d1base)),
+      d7: pct(n(c.d7), n(c.d7base)),
+    })),
     actionRejected: rejected.map((r) => ({ code: r.code, n: n(r.n) })),
     levels: levels.map((l) => {
       const completed = n(l.completed);

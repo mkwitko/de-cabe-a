@@ -138,7 +138,7 @@ export function AccountPage() {
                   <ShareButton
                     secondary
                     label="Copiar link do perfil"
-                    text={`${location.origin}/perfil/${encodeURIComponent(m.nickname)}`}
+                    text={`${location.origin}/perfil/${encodeURIComponent(m.nickname)}?ref=profile`}
                   />
                   <Link
                     to={`/perfil/${encodeURIComponent(m.nickname)}`}

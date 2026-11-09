@@ -287,7 +287,7 @@ describe('levels (ADR-007)', () => {
       reveal: { answer: { id: answerId, name: 'Ronaldo' } },
     });
     expect(right.json().share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1',
+      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1?ref=share',
     );
     expect((await g.act(start.attempt.id, { kind: 'skip' })).json().error.code).toBe(
       'GAME_ALREADY_COMPLETED',
@@ -327,7 +327,7 @@ describe('levels (ADR-007)', () => {
     const lost = await playCareer(g, 1, null, 6);
     expect(lost.attempt).toMatchObject({ status: 'LOST', stars: 0 });
     expect(lost.share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1',
+      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1?ref=share',
     );
     expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 2 })).statusCode).toBe(
       201,
@@ -525,7 +525,7 @@ describe('Football Grid', () => {
     });
     expect(end.json().reveal.cells[4].validAnswers).toBeGreaterThanOrEqual(8);
     expect(end.json().share.text).toBe(
-      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/grid/1',
+      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/grid/1?ref=share',
     );
   });
 
@@ -1440,7 +1440,7 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
     expect(career).toMatchObject({ level: 4, state: 'in_progress' });
     // The share says it was the Desafio do Dia and links to the level itself.
     const lost = await playCareer(g, 4, null, 6);
-    expect(lost.share.url).toBe('decabecafc.com.br/career-path/4');
+    expect(lost.share.url).toBe('decabecafc.com.br/career-path/4?ref=share');
     expect(lost.share.text).toContain(
       `Desafio do Dia ${today.slice(8)}/${today.slice(5, 7)} · Career Path · Fase 4`,
     );
@@ -1537,5 +1537,28 @@ describe('Reações (GROWTH_PLAN.md 2.5)', () => {
       mine: null,
     });
     expect((await g.req('GET', '/levels/CAREER_PATH/999/reactions')).statusCode).toBe(404);
+  });
+});
+
+describe('Medição da onda 2 (GROWTH_PLAN.md 5)', () => {
+  it('counts link arrivals that finish a level, sharing, and weekly D1/D7 cohorts', async () => {
+    const g = guest();
+    const ev = (name: string, props: object) =>
+      g.req('POST', '/events', { events: [{ name, ts: clock.toISOString(), props }] });
+    expect((await ev('link_opened', { kind: 'level', ref: 'share', other: 'x' })).statusCode).toBe(
+      202,
+    );
+    const done = await playCareer(g, 2, null, 6);
+    expect(done.share.url).toBe('decabecafc.com.br/career-path/2?ref=share');
+    await ev('result_shared', { mode: 'CAREER_PATH', level: 2, method: 'copy' });
+    const m = (
+      await app.inject({ method: 'GET', url: '/v1/admin/metrics?days=30', headers: admin })
+    ).json();
+    expect(m.community.linkArrivals).toBeGreaterThanOrEqual(1);
+    expect(m.community.linkArrivalCompletionRate).toBeGreaterThan(0);
+    expect(m.community.shareOrInviteRate).toBeGreaterThan(0);
+    expect(m.community.linksByKind).toContainEqual({ kind: 'level', n: expect.any(Number) });
+    expect(m.cohorts[0]).toMatchObject({ week: expect.any(String), players: expect.any(Number) });
+    expect(Array.isArray(m.dailyChallenge)).toBe(true);
   });
 });
