@@ -80,6 +80,11 @@ const PAGES: Record<string, Meta> = {
     title: 'Modo Carreira',
     description: 'Seu próprio jogador, treinado pelas estrelas que você ganha nos jogos.',
   },
+  '/copa': {
+    title: 'Copa dos Sonhos: monte seu time e seja campeão',
+    description:
+      'Draft com craques das maiores seleções de todas as Copas, química de quem jogou junto, tática e partidas simuladas até a final.',
+  },
   '/privacidade': { title: 'Privacidade', description: DEFAULT.description },
 };
 
