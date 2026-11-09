@@ -205,13 +205,18 @@ export async function present(
   let share = null;
   if (done) {
     // `?ref=share` lets the web count who arrives by a shared result (link_opened).
-    const url = `${SHARE_HOST}${GAME_PATH[mode]}/${challenge.publicNumber}?ref=share`;
+    const oficina = challenge.publicNumber === null;
+    const url = oficina
+      ? `${SHARE_HOST}/oficina/${challenge.id}?ref=share`
+      : `${SHARE_HOST}${GAME_PATH[mode]}/${challenge.publicNumber}?ref=share`;
     // A level played as that day's Desafio do Dia says so: friends get the same level that day.
     const day = civilDate(attempt.startedAt);
     const daily = await prisma.dailyPick.findFirst({
       where: { day: dateColumn(day), gameMode: mode, level: challenge.publicNumber ?? 0 },
     });
-    const label = `${daily ? `Desafio do Dia ${day.slice(8)}/${day.slice(5, 7)} · ` : ''}${NAMES[mode]} · Fase ${challenge.publicNumber}`;
+    const label = oficina
+      ? `Oficina De Cabeça · ${NAMES[mode]}`
+      : `${daily ? `Desafio do Dia ${day.slice(8)}/${day.slice(5, 7)} · ` : ''}${NAMES[mode]} · Fase ${challenge.publicNumber}`;
     share = {
       url,
       text: engine
@@ -306,11 +311,23 @@ export async function startAttempt(
   level: number,
   now: Date,
   timed = false,
+  /** An Oficina level (no track number): played by id, never locked. */
+  challengeId?: string,
 ): Promise<{ created: boolean; response: AttemptResponse }> {
   // A level replaced in place has its retired versions plus the published one.
-  const versions = await prisma.challenge.findMany({
-    where: { gameMode: mode, publicNumber: level, status: { in: ['published', 'retired'] } },
-  });
+  const versions = challengeId
+    ? await prisma.challenge.findMany({
+        where: {
+          id: challengeId,
+          gameMode: mode,
+          publicNumber: null,
+          status: 'published',
+          community: { state: { in: ['published', 'featured'] } },
+        },
+      })
+    : await prisma.challenge.findMany({
+        where: { gameMode: mode, publicNumber: level, status: { in: ['published', 'retired'] } },
+      });
   if (!versions.length) throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase não encontrada.');
   // One attempt per level per player, across all sessions of an account (no replay); a player who
   // started an old version keeps it.
@@ -333,7 +350,7 @@ export async function startAttempt(
   if (challenge.status !== 'published')
     throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase retirada.');
   // The Desafio do Dia opens its level to everyone, whatever their track (GROWTH_PLAN.md 1.9).
-  if (!(await isDailyLevel(prisma, mode, level, now)))
+  if (!challengeId && !(await isDailyLevel(prisma, mode, level, now)))
     await assertUnlocked(prisma, player, mode, level);
 
   const engine = engineFor(mode);
@@ -545,7 +562,11 @@ export async function submitAction(
   });
   for (const [name, props] of pending) await track(prisma, player.sessionId, name, props);
   // Modo Carreira: a finished level's stars train the player's footballer.
-  if (attempt.completedAt && pending.some(([n]) => n === 'game_completed'))
+  if (
+    attempt.completedAt &&
+    challenge.publicNumber !== null &&
+    pending.some(([n]) => n === 'game_completed')
+  )
     await awardTraining(prisma, player, attempt, now);
   return present(prisma, attempt, challenge, event, now);
 }

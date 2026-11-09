@@ -18,7 +18,7 @@ import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
 import type { GameMode } from '@decabeca/contracts';
 import { TrackPage } from './pages/TrackPage';
 import { ModeGate } from './games/Clock';
-import { btnPrimary, Skeleton, useOnline } from './components/ui';
+import { btnPrimary, btnSecondary, Skeleton, useOnline } from './components/ui';
 
 const AdminApp = lazy(() => import('./admin/AdminApp'));
 // Each screen loads on demand: the first visit downloads only the shell and the home.
@@ -73,6 +73,12 @@ const HigherLowerPage = lazy(() =>
 const CareerPage = lazy(() =>
   import('./pages/CareerPage').then((m) => ({ default: m.CareerPage })),
 );
+const oficina = () => import('./pages/OficinaPage');
+const OficinaPage = lazy(() => oficina().then((m) => ({ default: m.OficinaPage })));
+const OficinaCreatePage = lazy(() => oficina().then((m) => ({ default: m.OficinaCreatePage })));
+const OficinaLevelPage = lazy(() => oficina().then((m) => ({ default: m.OficinaLevelPage })));
+const CreatorPage = lazy(() => oficina().then((m) => ({ default: m.CreatorPage })));
+const EventPage = lazy(() => oficina().then((m) => ({ default: m.EventPage })));
 const CopaPage = lazy(() => import('./pages/CopaPage').then((m) => ({ default: m.CopaPage })));
 const DailyPage = lazy(() => import('./pages/DailyPage').then((m) => ({ default: m.DailyPage })));
 const LeaguesPage = lazy(() =>
@@ -465,6 +471,19 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         <span className={`${btnPrimary} self-start sm:self-center`}>Montar time</span>
       </Link>
 
+      <Link
+        to="/oficina"
+        className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="font-condensed text-2xl font-black uppercase">Oficina</span>
+          <span className="text-sm font-semibold text-chalk-soft">
+            Grids da comunidade, eventos e o seu próprio desafio
+          </span>
+        </span>
+        <span className={`${btnSecondary} shrink-0`}>Abrir</span>
+      </Link>
+
       {resume && (
         <Link
           to={`${GAME_PATH[resume.mode]}/${resume.nextLevel}`}
@@ -674,6 +693,11 @@ function PublicRoutes() {
           <Route path="/como-jogar" element={<HowToPlayPage />} />
           <Route path="/carreira" element={<CareerPage />} />
           <Route path="/copa" element={<CopaPage />} />
+          <Route path="/oficina" element={<OficinaPage />} />
+          <Route path="/oficina/criar" element={<OficinaCreatePage />} />
+          <Route path="/oficina/:id" element={<OficinaLevelPage />} />
+          <Route path="/criador/:nickname" element={<CreatorPage />} />
+          <Route path="/eventos/:slug" element={<EventPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

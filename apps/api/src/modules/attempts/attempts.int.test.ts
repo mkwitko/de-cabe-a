@@ -1734,3 +1734,50 @@ describe('Copa dos Sonhos', () => {
     expect(after.record.runs).toBe(1);
   });
 });
+
+describe('Oficina De Cabeça', () => {
+  it('a player builds a Grid, an editor approves it, others play, vote and report it', async () => {
+    const author = guest();
+    expect(
+      (await author.req('POST', '/oficina', { title: 'Meu grid', ...gridParams })).json().error
+        .code,
+    ).toBe('NICKNAME_REQUIRED');
+    await author.req('PATCH', '/me', { nickname: 'Criador Raiz' });
+    const created = await author.req('POST', '/oficina', { title: 'Meu grid', ...gridParams });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().id as string;
+    expect(created.json()).toMatchObject({ state: 'review', author: 'Criador Raiz' });
+
+    const player = guest();
+    await player.req('PATCH', '/me', { nickname: 'Plateia' });
+    expect((await player.req('GET', `/oficina/${id}`)).statusCode).toBe(404);
+    const start = { mode: 'FOOTBALL_GRID', level: 0, challengeId: id };
+    expect((await player.req('POST', '/attempts', start)).statusCode).toBe(404);
+
+    expect(
+      (await adminPost(`/oficina/${id}`, { state: 'published', sponsor: 'Padaria do Zé' }))
+        .statusCode,
+    ).toBe(200);
+    const before = (await player.req('GET', '/me/stats')).json().totalStars;
+    const attempt = (await player.req('POST', '/attempts', start)).json();
+    expect((await player.req('PUT', `/oficina/${id}/vote`, { up: true })).statusCode).toBe(409);
+    const done = await player.act(attempt.attempt.id, { kind: 'finish' });
+    expect(done.statusCode, done.body).toBe(200);
+    expect((await player.req('PUT', `/oficina/${id}/vote`, { up: true })).statusCode).toBe(204);
+    // Oficina levels never count for stars or titles.
+    expect((await player.req('GET', '/me/stats')).json().totalStars).toBe(before);
+
+    const list = (await player.req('GET', '/oficina?list=recomendados')).json().levels;
+    expect(list.find((l: { id: string }) => l.id === id)).toMatchObject({
+      up: 1,
+      plays: 1,
+      sponsor: 'Padaria do Zé',
+    });
+    const creator = (await player.req('GET', '/criador/criador%20raiz')).json();
+    expect(creator.levels).toHaveLength(1);
+    expect(creator.ranking[0]).toMatchObject({ nickname: 'Plateia', levels: 1 });
+
+    for (let i = 0; i < 3; i++) await guest().req('POST', `/oficina/${id}/report`);
+    expect((await player.req('GET', `/oficina/${id}`)).json().state).toBe('flagged');
+  });
+});

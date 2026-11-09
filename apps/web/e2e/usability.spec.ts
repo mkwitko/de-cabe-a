@@ -22,6 +22,8 @@ const ROUTES = [
   '/ligas',
   '/fantasy',
   '/copa',
+  '/oficina',
+  '/oficina/criar',
 ];
 
 test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true });

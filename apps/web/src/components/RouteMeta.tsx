@@ -85,6 +85,18 @@ const PAGES: Record<string, Meta> = {
     description:
       'Draft com craques das maiores seleções de todas as Copas, química de quem jogou junto, tática e partidas simuladas até a final.',
   },
+  '/oficina': {
+    title: 'Oficina: Grids da comunidade',
+    description: 'Monte seu Grid de futebol, jogue os da comunidade e participe de eventos.',
+  },
+  '/criador': {
+    title: 'Criador',
+    description: 'Desafios de um criador da Oficina e o ranking da audiência.',
+  },
+  '/eventos': {
+    title: 'Evento',
+    description: 'Desafios por tempo limitado, com ranking próprio.',
+  },
   '/privacidade': { title: 'Privacidade', description: DEFAULT.description },
 };
 

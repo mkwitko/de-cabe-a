@@ -81,6 +81,8 @@ export function LevelEnd({
   detail: ReactNode;
 }) {
   const { mode, level, stars, score } = data.attempt;
+  /** Oficina levels (no track number) have no next level, track ranking or training. */
+  const oficina = level === 0;
   const trackQ = useTrack(mode);
   const top = useLevelRanking(mode, level, true);
   const me = useMe();
@@ -118,7 +120,7 @@ export function LevelEnd({
         </div>
       </div>
 
-      {stars > 0 && (
+      {stars > 0 && !oficina && (
         <Link
           to="/carreira"
           className="-mt-2 text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
@@ -127,7 +129,11 @@ export function LevelEnd({
         </Link>
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {daily ? (
+        {oficina ? (
+          <Link to="/oficina" className={btnPrimary}>
+            Mais desafios da Oficina
+          </Link>
+        ) : daily ? (
           <Link to="/d/hoje" className={btnPrimary}>
             Voltar ao Desafio do Dia
           </Link>
@@ -155,49 +161,53 @@ export function LevelEnd({
         )}
       </div>
 
-      <Reactions mode={mode} level={level} />
+      {!oficina && <Reactions mode={mode} level={level} />}
 
-      <div className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="font-condensed text-xl font-extrabold uppercase">Top 10 da fase</h3>
-          <Link
-            to={GAME_PATH[mode]}
-            className="text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
-          >
-            Voltar às fases
-          </Link>
+      {!oficina && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="font-condensed text-xl font-extrabold uppercase">Top 10 da fase</h3>
+            <Link
+              to={GAME_PATH[mode]}
+              className="text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
+            >
+              Voltar às fases
+            </Link>
+          </div>
+          {me.data && !me.data.nickname && (
+            <p className="text-sm text-chalk-soft">
+              <Link to="/conta" className="text-chalk underline underline-offset-4">
+                Escolha um apelido
+              </Link>{' '}
+              para aparecer aqui.
+            </p>
+          )}
+          {top.data?.entries.length ? (
+            <ol className="flex flex-col">
+              {top.data.entries.map((e) => (
+                <li
+                  key={e.position}
+                  className={`flex min-h-11 items-center gap-3 border-b border-chalk/10 px-2 last:border-b-0 ${e.isMe ? 'rounded-md border-transparent bg-cover text-ink' : ''}`}
+                >
+                  <span className="font-condensed tabular w-6 text-right text-lg font-black">
+                    {e.position}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-semibold">{e.nickname}</span>
+                  <Stars n={e.stars} size="size-4" onCover={e.isMe} />
+                  <span className="font-condensed tabular w-10 text-right font-bold">
+                    {e.score}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
+              Ninguém com apelido terminou essa fase ainda. O lugar 1 está vago.
+            </p>
+          )}
         </div>
-        {me.data && !me.data.nickname && (
-          <p className="text-sm text-chalk-soft">
-            <Link to="/conta" className="text-chalk underline underline-offset-4">
-              Escolha um apelido
-            </Link>{' '}
-            para aparecer aqui.
-          </p>
-        )}
-        {top.data?.entries.length ? (
-          <ol className="flex flex-col">
-            {top.data.entries.map((e) => (
-              <li
-                key={e.position}
-                className={`flex min-h-11 items-center gap-3 border-b border-chalk/10 px-2 last:border-b-0 ${e.isMe ? 'rounded-md border-transparent bg-cover text-ink' : ''}`}
-              >
-                <span className="font-condensed tabular w-6 text-right text-lg font-black">
-                  {e.position}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-semibold">{e.nickname}</span>
-                <Stars n={e.stars} size="size-4" onCover={e.isMe} />
-                <span className="font-condensed tabular w-10 text-right font-bold">{e.score}</span>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
-            Ninguém com apelido terminou essa fase ainda. O lugar 1 está vago.
-          </p>
-        )}
-      </div>
-      <ReportError mode={mode} level={level} />
+      )}
+      {!oficina && <ReportError mode={mode} level={level} />}
       <AdSlot slot={AD_SLOTS.result} />
     </section>
   );

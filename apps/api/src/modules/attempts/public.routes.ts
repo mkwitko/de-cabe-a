@@ -25,6 +25,7 @@ import { reactionRoutes } from '../reports/reactions';
 import { pushRoutes } from '../push/push';
 import { fantasyRoutes } from '../fantasy/fantasy';
 import { copaRoutes } from '../copa/copa';
+import { oficinaRoutes } from '../oficina/oficina';
 import { careerRoutes } from '../career/career.routes';
 import { dailyRoutes } from '../daily/daily';
 import { leagueRoutes } from '../leagues/leagues';
@@ -65,6 +66,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(pushRoutes);
   await app.register(fantasyRoutes);
   await app.register(copaRoutes);
+  await app.register(oficinaRoutes);
   await app.register(careerRoutes);
   await app.register(dailyRoutes);
   await app.register(leagueRoutes);
@@ -200,6 +202,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.level,
         now(),
         req.body.timed,
+        req.body.challengeId,
       );
       return reply.code(created ? 201 : 200).send(response);
     },

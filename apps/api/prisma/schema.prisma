@@ -232,6 +232,7 @@ model Challenge {
   attempts  Attempt[]
   reports   LevelReport[]
   reactions LevelReaction[]
+  community CommunityLevel?
 
   /// A replacement takes the retired level's number (replace in place), so only published levels are unique.
   @@unique([gameMode, publicNumber], where: raw("status = 'published'"))
@@ -672,4 +673,49 @@ model CopaRun {
   updatedAt  DateTime @updatedAt
 
   @@index([pk, status])
+}
+
+/// Oficina De Cabeça (GROWTH_PLAN.md 3.2–3.3): a level a player built on an existing mode (Grid
+/// first), validated by the same snapshot builder as the editors' levels, approved by hand.
+/// States: review (Em revisão) -> published -> featured (Destaque); flagged (Sob revisão) after
+/// reports, still playable until an editor decides; archived. Never counts for stars or titles.
+model CommunityLevel {
+  challengeId String           @id
+  challenge   Challenge        @relation(fields: [challengeId], references: [id])
+  authorPk    String
+  title       String
+  state       String           @default("review")
+  /// "Apresentado por": a sponsor's name shown as a label (3.5).
+  sponsor     String?
+  reports     Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  votes       CommunityVote[]
+
+  @@index([state, createdAt])
+  @@index([authorPk])
+}
+
+/// One vote per player, only after finishing the level.
+model CommunityVote {
+  challengeId String
+  level       CommunityLevel @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
+  pk          String
+  up          Boolean
+  createdAt   DateTime       @default(now())
+
+  @@id([challengeId, pk])
+}
+
+/// A dated event (3.4): community levels open for a window, with a ranking and an optional sponsor.
+model GameEvent {
+  id           String   @id @default(uuid(7))
+  slug         String   @unique
+  title        String
+  description  String
+  sponsor      String?
+  startsAt     DateTime
+  endsAt       DateTime
+  challengeIds String[]
+  createdAt    DateTime @default(now())
 }

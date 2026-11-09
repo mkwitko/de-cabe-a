@@ -31,6 +31,7 @@ Around the games:
 - Stars add up to titles (Reserva, Titular, Craque, Lenda), 14 permanent achievements and the rankings: all-time, 4-week themed seasons (podium becomes a permanent trophy), week, against the clock, per level.
 - Ligas de amigos by link (up to 20, weekly ranking, no chat), optional public profile, predefined reactions on a finished level, a friendly nickname generator with an offensive-word filter.
 - Copa dos Sonhos: draft an XI from the great World Cup sides (4 candidates per position), chemistry from players who really played together, a tactic per match and a simulated World Cup against legendary national teams. Ratings are ours, from each player's World Cup record (starts, rounds reached, titles), never a game studio's; Olheiro shows them, Raiz hides them until the end.
+- Oficina: players build a Football Grid on our data; the server checks it (8 valid answers per cell) and an editor approves it before it goes live. Votes only after finishing, lists by Wilson lower bound, plays and date; reports put a level under review, never remove it. Creator pages (`/criador/:apelido`) rank the audience; dated events open a set of levels with their own ranking and an optional "apresentado por" label. Oficina levels never count for stars, titles or the main rankings.
 - Modo Carreira: the player's own footballer, trained by the stars earned in the games, from the base to Europe.
 - Opt-in push notifications: the new Desafio do Dia (09:00 Brasília) and a league's closed week.
 

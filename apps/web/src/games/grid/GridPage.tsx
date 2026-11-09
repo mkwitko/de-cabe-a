@@ -46,9 +46,20 @@ function CriterionHead({ c }: { c: Crit }) {
 const cellLabel = (v: FootballGridView, i: number) =>
   `${v.rows[Math.floor(i / 3)]!.label} e ${v.cols[i % 3]!.label}`;
 
-export function GridPage({ level, timed = false }: { level: number; timed?: boolean }) {
-  const attempt = useAttempt('FOOTBALL_GRID', level, timed);
-  const action = useAction('FOOTBALL_GRID', level);
+export function GridPage({
+  level,
+  timed = false,
+  challengeId,
+  name,
+}: {
+  level: number;
+  timed?: boolean;
+  /** An Oficina level, played by id. */
+  challengeId?: string;
+  name?: string;
+}) {
+  const attempt = useAttempt('FOOTBALL_GRID', level, timed, challengeId);
+  const action = useAction('FOOTBALL_GRID', level, challengeId);
   const online = useOnline();
   const [cell, setCell] = useState<number | null>(null);
   const [miss, setMiss] = useState<number | null>(null);
@@ -68,7 +79,7 @@ export function GridPage({ level, timed = false }: { level: number; timed?: bool
     else if (!sheet.current?.open) sheet.current?.showModal();
   }, [cell]);
 
-  const title = `Grid · Fase ${level}`;
+  const title = name ?? `Grid · Fase ${level}`;
   if (attempt.isPending)
     return (
       <div className="flex flex-col gap-4">

@@ -462,12 +462,18 @@ export const AttemptResponse = z.strictObject({
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
 
-export const StartAttemptRequest = z.strictObject({
-  mode: GameMode,
-  level: z.number().int().min(1),
-  /** Chosen once, when the level starts (ADR-009). */
-  timed: z.boolean().default(false),
-});
+export const StartAttemptRequest = z
+  .strictObject({
+    mode: GameMode,
+    /** Track level; 0 with `challengeId` for an Oficina level. */
+    level: z.number().int().min(0),
+    /** Chosen once, when the level starts (ADR-009). */
+    timed: z.boolean().default(false),
+    challengeId: z.string().max(64).optional(),
+  })
+  .refine((b) => (b.challengeId ? b.level === 0 : b.level >= 1), {
+    message: 'level >= 1, or 0 with challengeId',
+  });
 export const SubmitActionRequest = z.strictObject({
   idempotencyKey: z.uuid(),
   input: z.union([
@@ -949,3 +955,66 @@ export const CopaResponse = z.strictObject({
 });
 export type CopaRunView = z.infer<typeof CopaRunView>;
 export type CopaResponse = z.infer<typeof CopaResponse>;
+
+/** Oficina De Cabeça (GROWTH_PLAN.md 3.1–3.5): Grids built by players, reviewed by editors. */
+const Criterion = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('club'), clubId: z.string().max(64) }),
+  z.strictObject({ type: z.literal('nationality'), countryId: z.string().max(64) }),
+  z.strictObject({ type: z.literal('position'), positionGroup: PositionGroup }),
+  z.strictObject({ type: z.literal('played_in_country'), countryId: z.string().max(64) }),
+]);
+export type OficinaCriterion = z.infer<typeof Criterion>;
+export const CreateCommunityLevelRequest = z.strictObject({
+  title: z.string().trim().min(3).max(60),
+  rows: z.tuple([Criterion, Criterion, Criterion]),
+  cols: z.tuple([Criterion, Criterion, Criterion]),
+});
+export const OficinaCriteriaResponse = z.strictObject({
+  clubs: z.array(z.strictObject({ id: z.string(), name: z.string() })),
+  countries: z.array(z.strictObject({ id: z.string(), name: z.string() })),
+});
+export const CommunityList = z.enum(['recomendados', 'populares', 'novos']);
+export const CommunityLevelView = z.strictObject({
+  id: z.string(),
+  title: z.string(),
+  author: z.string(),
+  state: z.enum(['review', 'published', 'featured', 'flagged', 'archived']),
+  sponsor: z.string().nullable(),
+  createdAt: z.string(),
+  plays: z.number(),
+  /** Share of plays finished with at least one star. */
+  solved: z.number(),
+  up: z.number(),
+  down: z.number(),
+  /** Wilson lower bound of the up votes. */
+  quality: z.number(),
+});
+export type CommunityLevelView = z.infer<typeof CommunityLevelView>;
+export const VoteRequest = z.strictObject({ up: z.boolean() });
+const AudienceEntry = z.strictObject({
+  position: z.number(),
+  nickname: z.string(),
+  stars: z.number(),
+  levels: z.number(),
+});
+export const CreatorResponse = z.strictObject({
+  nickname: z.string(),
+  levels: z.array(CommunityLevelView),
+  plays: z.number(),
+  ranking: z.array(AudienceEntry),
+});
+export type CreatorResponse = z.infer<typeof CreatorResponse>;
+const EventView = z.strictObject({
+  slug: z.string(),
+  title: z.string(),
+  description: z.string(),
+  sponsor: z.string().nullable(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  status: z.enum(['upcoming', 'live', 'over']),
+  levels: z.array(CommunityLevelView),
+});
+export const EventsResponse = z.strictObject({ events: z.array(EventView) });
+export const EventResponse = EventView.extend({ ranking: z.array(AudienceEntry) });
+export type EventsResponse = z.infer<typeof EventsResponse>;
+export type EventResponse = z.infer<typeof EventResponse>;

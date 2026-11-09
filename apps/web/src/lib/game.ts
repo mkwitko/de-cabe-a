@@ -66,18 +66,21 @@ export const fetchHistory = (mode: GameMode | '', cursor: string | null) =>
   );
 
 /** Starts or resumes the level's attempt; the server returns the same one on reload. */
-export function useAttempt(mode: GameMode, level: number, timed = false) {
+export function useAttempt(mode: GameMode, level: number, timed = false, challengeId?: string) {
   return useQuery({
-    queryKey: ['attempt', mode, level],
+    queryKey: ['attempt', mode, challengeId ?? level],
     queryFn: () =>
-      api<AttemptResponse>('/v1/attempts', { method: 'POST', json: { mode, level, timed } }),
+      api<AttemptResponse>('/v1/attempts', {
+        method: 'POST',
+        json: challengeId ? { mode, level: 0, timed, challengeId } : { mode, level, timed },
+      }),
     staleTime: Infinity,
     retry: 0,
   });
 }
 
 /** Submits one action with a fresh idempotency key; replaces the cached attempt with the result. */
-export function useAction(mode: GameMode, level: number) {
+export function useAction(mode: GameMode, level: number, challengeId?: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ attemptId, input }: { attemptId: string; input: object }) =>
@@ -86,7 +89,7 @@ export function useAction(mode: GameMode, level: number) {
         json: { idempotencyKey: crypto.randomUUID(), input },
       }),
     onSuccess: (data) => {
-      qc.setQueryData(['attempt', mode, level], data);
+      qc.setQueryData(['attempt', mode, challengeId ?? level], data);
       hapticForAction(data);
       // Sound for the outcome (off unless the player turned it on).
       if (data.attempt.status !== 'IN_PROGRESS')
@@ -96,7 +99,7 @@ export function useAction(mode: GameMode, level: number) {
       else if (data.event?.type === 'correct') play('correct');
       else if (data.event?.type === 'wrong') play('wrong');
       if (data.attempt.status !== 'IN_PROGRESS')
-        for (const key of ['games', 'track', 'stats', 'me', 'ranking', 'level-ranking'])
+        for (const key of ['games', 'track', 'stats', 'me', 'ranking', 'level-ranking', 'oficina'])
           void qc.invalidateQueries({ queryKey: [key] });
     },
   });

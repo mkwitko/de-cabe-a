@@ -19,9 +19,14 @@ declare module 'fastify' {
   }
 }
 
-/** Prisma filter for "this player's attempts": every session of the account, or this guest session. */
-export const playerAttempts = (req: { sessionId: string; userId: string | null }) =>
-  req.userId ? { session: { userId: req.userId } } : { sessionId: req.sessionId };
+/**
+ * Prisma filter for "this player's attempts" on the tracks: every session of the account, or this
+ * guest session. Oficina levels (no track number) never count for stars, titles or achievements.
+ */
+export const playerAttempts = (req: { sessionId: string; userId: string | null }) => ({
+  ...(req.userId ? { session: { userId: req.userId } } : { sessionId: req.sessionId }),
+  challenge: { publicNumber: { not: null } },
+});
 
 export function setSessionCookie(reply: FastifyReply, token: string, secure: boolean) {
   reply.header(
