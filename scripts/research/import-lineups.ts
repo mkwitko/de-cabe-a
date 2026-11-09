@@ -1,5 +1,6 @@
-// Final-match lineups from English Wikipedia (CC BY-SA; credit "Wikipédia"): World Cup finals,
-// European Cup / Champions League finals, single-match Libertadores finals, Copa América finals.
+// Final-match lineups from English Wikipedia (CC BY-SA; credit "Wikipédia"): World Cup finals and
+// knockout rounds, European Cup / Champions League finals, Libertadores finals (single match and
+// two-legged), Copa do Brasil finals (two legs), Club World Cup finals, Copa América finals.
 // Players are linked to ours through the article link -> Wikidata id (missing ones are imported
 // from Wikidata). Stored as Match (source "wikipedia") + MatchLineup. Re-runnable.
 // Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/import-lineups.ts
@@ -68,6 +69,13 @@ for (let y = 2019; y <= 2026; y++)
   });
 for (const y of [1993, 1995, 1997, 1999, 2001, 2004, 2007, 2011, 2015, 2016, 2019, 2021, 2024])
   finals.push({ title: `${y} Copa América final`, competition: 'Copa América', season: String(y) });
+// Club World Cup finals: São Paulo 2005, Internacional 2006, Corinthians 2012, Flamengo 2019...
+for (let y = 2005; y <= 2025; y++)
+  finals.push({
+    title: `${y} FIFA Club World Cup final`,
+    competition: 'FIFA Club World Cup',
+    season: String(y),
+  });
 
 /** "{{nowrap|Inter Milan}}<ref …/>" -> "Inter Milan". */
 export function cleanTeam(raw: string) {
@@ -116,11 +124,14 @@ async function saveMatch(f: MatchText) {
     return;
   }
   // Team names from the kit boxes (same order as the line-up tables); score from the match box.
-  const kits =
-    f.teams ??
-    [...text.matchAll(/\{\{Football kit[\s\S]*?\|\s*title\s*=\s*([^\n]+)/gi)].map((m) =>
-      cleanTeam(m[1]!),
-    );
+  const fromKits = [...text.matchAll(/\{\{Football kit[\s\S]*?\|\s*title\s*=\s*([^\n]+)/gi)].map(
+    (m) => cleanTeam(m[1]!),
+  );
+  // Two-legged finals often have no kit boxes per leg: the match box names both teams.
+  const fromBox = [/\|\s*team1\s*=\s*([^\n]+)/.exec(text), /\|\s*team2\s*=\s*([^\n]+)/.exec(text)]
+    .filter((m): m is RegExpExecArray => Boolean(m))
+    .map((m) => cleanTeam(m[1]!));
+  const kits = f.teams ?? (fromKits.length >= 2 ? fromKits : fromBox);
   const t1 = /team1score\s*=\s*(\d+)/.exec(text);
   const t2 = /team2score\s*=\s*(\d+)/.exec(text);
   const line = /\|\s*score\s*=\s*(.*)/.exec(text)?.[1] ?? '';
@@ -235,6 +246,69 @@ for (const k of knockout) {
       stage,
       teams: [vs[1]!.trim(), vs[2]!.trim()],
       label: `${k.title} · ${title}`,
+    });
+  }
+}
+// Two-legged finals (Libertadores until 2018, Copa do Brasil): one article, a section per leg.
+const twoLegged = [
+  ...Array.from({ length: 2018 - 1960 + 1 }, (_, i) => 1960 + i).map((y) => ({
+    title: `${y} Copa Libertadores finals`,
+    competition: 'Copa Libertadores',
+    season: String(y),
+  })),
+  ...Array.from({ length: 2025 - 1989 + 1 }, (_, i) => 1989 + i).map((y) => ({
+    title: `${y} Copa do Brasil finals`,
+    competition: 'Copa do Brasil',
+    season: String(y),
+  })),
+];
+for (const k of twoLegged) {
+  const text = await wikitext(k.title);
+  if (!text) continue;
+  const parts = text.split(/^(==+)\s*([^=\n]+?)\s*\1\s*$/m);
+  for (let i = 1; i < parts.length; i += 3) {
+    const title = parts[i + 1]!;
+    const leg = /first leg/i.test(title)
+      ? 'Final, first leg'
+      : /second leg/i.test(title)
+        ? 'Final, second leg'
+        : null;
+    if (!leg) continue;
+    const sourceRef = `wikipedia:en:${k.title}#${title}`;
+    if (await prisma.match.findUnique({ where: { sourceRef } })) continue;
+    await saveMatch({
+      ...k,
+      sourceRef,
+      text: parts[i + 2] ?? '',
+      stage: leg,
+      label: `${k.title} · ${title}`,
+    });
+  }
+}
+
+// Earlier World Cup knockout rounds with their own article.
+for (const y of [1954, 1958, 1962, 1966, 1970]) {
+  const title = `${y} FIFA World Cup knockout stage`;
+  const text = await wikitext(title);
+  if (!text) continue;
+  let stage = '';
+  const parts = text.split(/^(==+)\s*([^=\n]+?)\s*\1\s*$/m);
+  for (let i = 1; i < parts.length; i += 3) {
+    const level = parts[i]!.length;
+    const head = parts[i + 1]!;
+    if (level === 2) stage = head;
+    const vs = /^(.+?)\s+v(?:s\.?)?\s+(.+)$/.exec(head);
+    if (level !== 3 || !vs || /^final$/i.test(stage)) continue;
+    const sourceRef = `wikipedia:en:${title}#${head}`;
+    if (await prisma.match.findUnique({ where: { sourceRef } })) continue;
+    await saveMatch({
+      competition: 'FIFA World Cup',
+      season: String(y),
+      sourceRef,
+      text: parts[i + 2] ?? '',
+      stage,
+      teams: [vs[1]!.trim(), vs[2]!.trim()],
+      label: `${title} · ${head}`,
     });
   }
 }
