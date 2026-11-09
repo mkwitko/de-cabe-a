@@ -608,6 +608,8 @@ export const MeResponse = z.strictObject({
   account: z.strictObject({ email: z.string(), emailVerified: z.boolean() }).nullable(),
   totalStars: z.number(),
   title: Title,
+  /** /perfil/:nickname is public (GROWTH_PLAN.md 2.2); off by default. */
+  publicProfile: z.boolean(),
 });
 export type MeResponse = z.infer<typeof MeResponse>;
 export const UpdateMeRequest = z.strictObject({ nickname: Nickname });
@@ -718,3 +720,15 @@ export const AchievementsResponse = z.strictObject({
   ),
 });
 export type AchievementsResponse = z.infer<typeof AchievementsResponse>;
+
+/** PATCH /v1/me/profile: show or hide /perfil/:nickname. */
+export const UpdateProfileRequest = z.strictObject({ publicProfile: z.boolean() });
+/** GET /v1/profiles/:nickname (only when the player made it public). */
+export const ProfileResponse = z.strictObject({
+  nickname: z.string(),
+  title: Title,
+  totalStars: z.number(),
+  games: z.array(z.strictObject({ mode: GameMode, completed: z.number(), stars: z.number() })),
+  achievements: z.array(z.strictObject({ id: z.string(), name: z.string() })),
+});
+export type ProfileResponse = z.infer<typeof ProfileResponse>;

@@ -84,3 +84,27 @@ describe('Ligas de amigos (GROWTH_PLAN.md 2.1)', () => {
     expect((await owner.req('GET', '/leagues/ZZZZZZ')).statusCode).toBe(404);
   });
 });
+
+describe('Perfil público (GROWTH_PLAN.md 2.2)', () => {
+  it('private by default; public only after the toggle; needs a nickname', async () => {
+    const anon = await player();
+    const off = await anon.req('PATCH', '/me/profile', { publicProfile: true });
+    expect(off.json().error.code).toBe('NICKNAME_REQUIRED');
+
+    const zico = await player('Galinho 10');
+    const visitor = await player();
+    expect((await zico.req('GET', '/me')).json().publicProfile).toBe(false);
+    expect((await visitor.req('GET', '/profiles/Galinho%2010')).statusCode).toBe(404);
+
+    expect(
+      (await zico.req('PATCH', '/me/profile', { publicProfile: true })).json().publicProfile,
+    ).toBe(true);
+    // Any spelling of the nickname finds it, as in the ranking.
+    const profile = (await visitor.req('GET', '/profiles/galinho10')).json();
+    expect(profile).toMatchObject({ nickname: 'Galinho 10', totalStars: 0, achievements: [] });
+    expect(profile.games).toHaveLength(8);
+
+    await zico.req('PATCH', '/me/profile', { publicProfile: false });
+    expect((await visitor.req('GET', '/profiles/Galinho%2010')).statusCode).toBe(404);
+  });
+});

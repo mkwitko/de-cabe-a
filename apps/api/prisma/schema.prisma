@@ -103,7 +103,7 @@ model Player {
   secondaryNationality          Country?           @relation("secondaryNationality", fields: [secondaryNationalityCountryId], references: [id])
   primaryPositionGroup          PositionGroup? /// required before verification (DQ-04)
   /// Other positions the player is known for (Kaká: MF, also FW); Grid accepts any of them.
-  secondaryPositionGroups       PositionGroup[] @default([])
+  secondaryPositionGroups       PositionGroup[]    @default([])
   positionDetail                String?
   /// Wikimedia Commons file of the Wikidata image (P18), with its credit (CC licences need it).
   photoFile                     String?
@@ -229,11 +229,11 @@ model Challenge {
 
   usages   ChallengePlayerUsage[]
   attempts Attempt[]
+  reports  LevelReport[]
 
   /// A replacement takes the retired level's number (replace in place), so only published levels are unique.
   @@unique([gameMode, publicNumber], where: raw("status = 'published'"))
   @@index([gameMode, status])
-  reports        LevelReport[]
 }
 
 /// Divergence between a re-import and an existing record (DATA_QUALITY.md §1)
@@ -303,18 +303,19 @@ model ChallengePlayerUsage {
 // ───────────────────────── Sessions and attempts (§2.3) ─────────────────────────
 
 model GuestSession {
-  id          String   @id @default(uuid(7))
-  tokenHash   String   @unique /// sha256 of the cookie token
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  lastSeenAt  DateTime
-  nickname    String? /// public name in the ranking (guests)
-  nicknameKey String?  @unique /// normalized nickname
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid(7))
+  tokenHash     String   @unique /// sha256 of the cookie token
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  lastSeenAt    DateTime
+  nickname      String? /// public name in the ranking (guests)
+  nicknameKey   String?  @unique /// normalized nickname
+  publicProfile Boolean  @default(false) /// /perfil/:nickname visible to anyone (GROWTH_PLAN.md 2.2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   attempts Attempt[]
-  careers      CareerPlayer[]
+  careers  CareerPlayer[]
 }
 
 /// Used only by the optional sign-up slice (RF-10); created early to avoid an FK migration
@@ -326,6 +327,7 @@ model User {
   image         String?
   nickname      String
   nicknameKey   String   @unique
+  publicProfile Boolean  @default(false) /// /perfil/:nickname visible to anyone (GROWTH_PLAN.md 2.2)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -486,24 +488,24 @@ model MatchLineup {
 /// Modo Carreira (docs/GAME_DESIGN/CAREER_MODE.md): the player's own footballer. One active per
 /// player (account or guest session); retired ones stay as the player's history.
 model CareerPlayer {
-  id        String          @id @default(uuid(7))
-  sessionId String
-  session   GuestSession    @relation(fields: [sessionId], references: [id])
-  name      String
-  position  PositionGroup
+  id           String           @id @default(uuid(7))
+  sessionId    String
+  session      GuestSession     @relation(fields: [sessionId], references: [id])
+  name         String
+  position     PositionGroup
   /// { finishing, passing, vision, defending, physical } 0–99
-  attributes Json
+  attributes   Json
   /// Training points not yet turned into +1 (per attribute).
-  bank      Json
+  bank         Json
   /// Training points toward the next match (each match costs TRAINING_PER_MATCH).
-  matchCredit Int           @default(0)
+  matchCredit  Int              @default(0)
   /// For a youth start: the big club whose youth team the player came from.
   originClubId String?
-  status    String          @default("active") /// active | retired
-  seasons   CareerSeason[]
-  training  CareerTraining[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  status       String           @default("active") /// active | retired
+  seasons      CareerSeason[]
+  training     CareerTraining[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   @@index([sessionId, status])
 }
@@ -525,23 +527,23 @@ model CareerTraining {
 }
 
 model CareerSeason {
-  id          String        @id @default(uuid(7))
-  careerId    String
-  career      CareerPlayer  @relation(fields: [careerId], references: [id], onDelete: Cascade)
-  number      Int
-  clubId      String?
-  clubName    String
-  tier        String /// BASE | C | B | A | LIB | EUR | UCL
-  competition String
+  id           String        @id @default(uuid(7))
+  careerId     String
+  career       CareerPlayer  @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  number       Int
+  clubId       String?
+  clubName     String
+  tier         String /// BASE | C | B | A | LIB | EUR | UCL
+  competition  String
   teamStrength Int
   /// [{ name, clubId, strength, note }] in round order
-  opponents   Json
+  opponents    Json
   /// [{ tier, clubId, clubName, label }] once the season is over
-  offers      Json?
-  finishedAt  DateTime?
-  matches     CareerMatch[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  offers       Json?
+  finishedAt   DateTime?
+  matches      CareerMatch[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@unique([careerId, number])
 }
