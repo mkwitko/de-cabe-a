@@ -11,7 +11,8 @@
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
-		Content-Security-Policy "frame-ancestors 'none'"
+		# Only our scripts plus AdSense; analytics and errors go to Sentry and PostHog (/ingest).
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://www.googletagservices.com https://adservice.google.com https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.ingest.us.sentry.io https://*.posthog.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://www.googletagservices.com https://adservice.google.com https://fundingchoicesmessages.google.com; frame-src https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://www.googletagservices.com https://adservice.google.com https://fundingchoicesmessages.google.com https://*.adtrafficquality.google; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; upgrade-insecure-requests"
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 		-Server
 	}
