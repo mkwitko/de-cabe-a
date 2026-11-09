@@ -108,7 +108,8 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
     },
     emailVerification: {
       sendOnSignUp: true,
-      autoSignInAfterVerification: true,
+      // Off: a verification link must not sign in whoever opens it (login CSRF, security scan F4).
+      autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url }) => {
         void opts.sendEmail({
           to: user.email,
