@@ -702,3 +702,19 @@ export const LeagueResponse = z.strictObject({
   ),
 });
 export type LeagueResponse = z.infer<typeof LeagueResponse>;
+
+/** GET /v1/me/achievements (GROWTH_PLAN.md 2.3): permanent, derived from finished levels. */
+export const AchievementsResponse = z.strictObject({
+  items: z.array(
+    z.strictObject({
+      id: z.string(),
+      category: z.enum(['progressao', 'especialidade', 'experiencia']),
+      name: z.string(),
+      description: z.string(),
+      progress: z.number(),
+      goal: z.number(),
+      done: z.boolean(),
+    }),
+  ),
+});
+export type AchievementsResponse = z.infer<typeof AchievementsResponse>;

@@ -4,6 +4,7 @@ import { useStats } from '../lib/game';
 import { TITLE_LADDER } from '../lib/format';
 import { StarIcon } from '../components/Stars';
 import { Skeleton } from '../components/ui';
+import { Achievements } from '../components/Achievements';
 
 /** One figure: label for assistive tech first (dt), number shown first. */
 function Figure({ label, children }: { label: string; children: ReactNode }) {
@@ -117,6 +118,8 @@ export function StatsPage() {
           </p>
         </div>
       </section>
+
+      <Achievements />
 
       <div className="grid gap-12 md:grid-cols-2 md:gap-10 xl:grid-cols-3">
         <section
