@@ -24,11 +24,17 @@ export const COMPETITION_PT: Record<string, string> = {
   'UEFA Champions League': 'Liga dos Campeões',
   'Copa Libertadores': 'Libertadores',
   'Copa América': 'Copa América',
+  'Copa do Brasil': 'Copa do Brasil',
+  'FIFA Club World Cup': 'Mundial de Clubes',
 };
 export const STAGE_PT: Record<string, string> = {
   Final: 'Final',
+  'Final, first leg': 'Final (ida)',
+  'Final, second leg': 'Final (volta)',
   'Semi-finals': 'Semifinal',
   'Quarter-finals': 'Quartas de final',
+  Semifinals: 'Semifinal',
+  Quarterfinals: 'Quartas de final',
   'Round of 16': 'Oitavas de final',
   'Third place play-off': 'Disputa do 3º lugar',
   'Match for third place': 'Disputa do 3º lugar',
