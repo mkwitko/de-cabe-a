@@ -1,7 +1,7 @@
 /**
  * Error and performance monitoring (Sentry), on only when SENTRY_DSN is set. Imported first by
- * server.ts so the SDK instruments Fastify, Prisma and fetch before they load. The SDK sends no
- * personal data (IPs, cookies, bodies) by default.
+ * server.ts so the SDK instruments Fastify, Prisma and fetch before they load. The request
+ * logger masks auth tokens in URLs and omits client IPs (see server.ts); pino lines go to Sentry Logs.
  */
 import * as Sentry from '@sentry/node';
 

@@ -32,11 +32,15 @@
 		rewrite * /static{uri}
 		reverse_proxy https://us-assets.i.posthog.com {
 			header_up Host us-assets.i.posthog.com
+			header_up -Cookie
+			header_up -Authorization
 		}
 	}
 	handle_path /ingest/* {
 		reverse_proxy https://us.i.posthog.com {
 			header_up Host us.i.posthog.com
+			header_up -Cookie
+			header_up -Authorization
 		}
 	}
 

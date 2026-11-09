@@ -30,7 +30,8 @@ type Req = { sessionId: string; userId: string | null };
 const pkOf = (req: Req) => req.userId ?? req.sessionId;
 export const MAX_IN_REVIEW = 5;
 export const REPORTS_TO_REVIEW = 3;
-const PLAYABLE = ['published', 'featured'];
+/** Flagged levels stay playable and listed: reports only open a review. */
+const PLAYABLE = ['published', 'featured', 'flagged'];
 
 /** Wilson score lower bound (95%) of the share of up votes. */
 export function wilson(up: number, total: number) {
@@ -269,10 +270,7 @@ export const oficinaRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const l = await prisma.communityLevel.findUnique({ where: { challengeId: req.params.id } });
       const mine = await myPks(prisma, req);
-      if (
-        !l ||
-        (!PLAYABLE.includes(l.state) && !mine.includes(l.authorPk) && l.state !== 'flagged')
-      )
+      if (!l || (!PLAYABLE.includes(l.state) && !mine.includes(l.authorPk)))
         throw new AppError(404, 'NOT_FOUND', 'Desafio não encontrado.');
       const [v] = await views(prisma, [l]);
       const vote = await prisma.communityVote.findUnique({
@@ -297,7 +295,7 @@ export const oficinaRoutes: FastifyPluginAsyncZod = async (app) => {
         where: {
           challengeId: req.params.id,
           completedAt: { not: null },
-          challenge: { community: { state: { in: [...PLAYABLE, 'flagged'] } } },
+          challenge: { community: { state: { in: PLAYABLE } } },
           session: req.userId ? { userId: req.userId } : { id: req.sessionId },
         },
       });
@@ -313,19 +311,32 @@ export const oficinaRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.post('/oficina/:id/report', { schema: { params: Id } }, async (req, reply) => {
-    const l = await prisma.communityLevel
-      .update({
-        where: { challengeId: req.params.id },
-        data: { reports: { increment: 1 } },
-      })
-      .catch(() => null);
-    if (!l) throw new AppError(404, 'NOT_FOUND', 'Desafio não encontrado.');
-    // Enough reports put it under review; an editor decides, nothing is removed automatically.
-    if (l.reports >= REPORTS_TO_REVIEW && PLAYABLE.includes(l.state))
-      await prisma.communityLevel.update({
-        where: { challengeId: l.challengeId },
-        data: { state: 'flagged' },
-      });
+    // Like a vote: only a player who finished the level, and one report per player.
+    const finished = await prisma.attempt.findFirst({
+      where: {
+        challengeId: req.params.id,
+        completedAt: { not: null },
+        challenge: { community: { state: { in: PLAYABLE } } },
+        session: req.userId ? { userId: req.userId } : { id: req.sessionId },
+      },
+    });
+    if (!finished)
+      throw new AppError(409, 'LEVEL_NOT_FINISHED', 'Termine o desafio para denunciar.');
+    const challengeId = req.params.id;
+    await prisma.communityReport.upsert({
+      where: { challengeId_pk: { challengeId, pk: pkOf(req) } },
+      create: { challengeId, pk: pkOf(req) },
+      update: {},
+    });
+    const reports = await prisma.communityReport.count({ where: { challengeId } });
+    // Enough distinct reporters put it under review; an editor decides, nothing is removed.
+    await prisma.communityLevel.updateMany({
+      where: { challengeId },
+      data: {
+        reports,
+        ...(reports >= REPORTS_TO_REVIEW ? { state: 'flagged' } : {}),
+      },
+    });
     return reply.code(204).send();
   });
 
@@ -440,7 +451,7 @@ export const oficinaAdminRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const l = await prisma.communityLevel.findUnique({ where: { challengeId: req.params.id } });
       if (!l) throw new AppError(404, 'NOT_FOUND', 'Desafio não encontrado.');
-      const live = PLAYABLE.includes(req.body.state) || req.body.state === 'flagged';
+      const live = PLAYABLE.includes(req.body.state);
       await prisma.$transaction([
         prisma.communityLevel.update({
           where: { challengeId: l.challengeId },
