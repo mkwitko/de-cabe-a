@@ -3,6 +3,8 @@
  * week. Every level you finish afterwards in which one of them is in the level's answer (Career
  * Path answer, a hidden starter, the impostor, a Draft starter...) scores for that player:
  * 5 per star, +5 for 3 stars. The squad is locked once saved, so knowledge picks it, not hindsight.
+ * Fantasy histórico (3.7): each week has a World Cup as theme and only players who were in its
+ * line-ups can be picked; the cups rotate week by week.
  */
 import { FANTASY_SIZE, FantasyResponse, SaveSquadRequest } from '@decabeca/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -15,6 +17,34 @@ import { ranking, weekStart } from '../progression/ranking';
 export const MAX_PER_POSITION = 2;
 export const POINTS_PER_STAR = 5;
 export const PERFECT_BONUS = 5;
+/** A World Cup becomes a theme when this many verified players are in its line-ups. */
+export const MIN_CUP_PLAYERS = 20;
+const EPOCH = Date.parse('2026-11-09T03:00:00Z');
+const WEEK = 7 * 86400_000;
+
+/** The week's World Cup and its verified players, or null when no cup has enough of them. */
+export async function weekCup(prisma: PrismaClient, monday: Date) {
+  const cups = await prisma.$queryRaw<{ season: string }[]>`
+    SELECT m.season FROM "Match" m
+    JOIN "MatchLineup" l ON l."matchId" = m.id
+    JOIN "Player" p ON p.id = l."playerId" AND p."verificationStatus" = 'verified'
+    WHERE m.competition = 'FIFA World Cup'
+    GROUP BY 1 HAVING COUNT(DISTINCT p.id) >= ${MIN_CUP_PLAYERS}
+    ORDER BY 1`;
+  if (!cups.length) return null;
+  const n = Math.floor((monday.getTime() - EPOCH) / WEEK);
+  const season = cups[((n % cups.length) + cups.length) % cups.length]!.season;
+  const players = await prisma.$queryRaw<
+    { id: string; name: string; position: 'GK' | 'DF' | 'MF' | 'FW' | null }[]
+  >`
+    SELECT DISTINCT p.id, p."canonicalName" AS name, p."primaryPositionGroup"::text AS position
+    FROM "Match" m
+    JOIN "MatchLineup" l ON l."matchId" = m.id
+    JOIN "Player" p ON p.id = l."playerId" AND p."verificationStatus" = 'verified'
+    WHERE m.competition = 'FIFA World Cup' AND m.season = ${season}
+    ORDER BY name`;
+  return { season, players };
+}
 
 /** Points per (squad owner, player) for the week starting on `monday` (YYYY-MM-DD). */
 export async function fantasyPoints(prisma: PrismaClient, monday: string) {
@@ -48,9 +78,10 @@ export const fantasyRoutes: FastifyPluginAsyncZod = async (app) => {
 
   async function view(req: { sessionId: string; userId: string | null }) {
     const monday = civilDate(weekStart(now()));
-    const [squads, points] = await Promise.all([
+    const [squads, points, cup] = await Promise.all([
       prisma.fantasySquad.findMany({ where: { week: dateColumn(monday) } }),
       fantasyPoints(prisma, monday),
+      weekCup(prisma, weekStart(now())),
     ]);
     const me = pk(req);
     const mine = squads.find((s) => s.pk === me);
@@ -83,6 +114,7 @@ export const fantasyRoutes: FastifyPluginAsyncZod = async (app) => {
     const r = ranking(rows, me);
     return {
       weekStart: monday,
+      cup,
       squad: mine
         ? mine.playerIds.map((id) => ({
             id,
@@ -115,6 +147,9 @@ export const fantasyRoutes: FastifyPluginAsyncZod = async (app) => {
       });
       if (players.length !== FANTASY_SIZE)
         throw new AppError(400, 'VALIDATION_ERROR', 'Algum jogador não está na nossa base.');
+      const cup = await weekCup(prisma, weekStart(now()));
+      if (cup && !ids.every((id) => cup.players.some((p) => p.id === id)))
+        throw new AppError(400, 'VALIDATION_ERROR', `Só vale quem jogou a Copa de ${cup.season}.`);
       const per = new Map<string, number>();
       for (const p of players)
         if (p.primaryPositionGroup)

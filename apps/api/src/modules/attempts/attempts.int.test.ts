@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { MIN_CUP_PLAYERS } from '../fantasy/fantasy';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { seedReference } from '../../seed-reference';
 import { ADMIN_TOKEN, sentEmails, testApp, WEB_ORIGIN } from '../../test/app';
@@ -1611,5 +1612,48 @@ describe('Fantasy de conhecimento', () => {
     expect(f.entries.find((e: { isMe: boolean }) => e.isMe)).toMatchObject({
       nickname: 'Fantasista',
     });
+  });
+
+  it('with a World Cup theme, only players of that cup can be picked', async () => {
+    const pool = await prisma.player.findMany({
+      where: { verificationStatus: 'verified' },
+      select: { id: true, primaryPositionGroup: true },
+      orderBy: { id: 'asc' },
+    });
+    const inCup = pool.slice(0, MIN_CUP_PLAYERS);
+    const outside = pool[MIN_CUP_PLAYERS]!;
+    const match = await prisma.match.create({
+      data: {
+        source: 'test',
+        sourceRef: 'test:fantasy-cup',
+        competition: 'FIFA World Cup',
+        season: '1950',
+        homeTeam: 'A',
+        awayTeam: 'B',
+        lineups: {
+          create: inCup.map((p) => ({ side: 'home', playerName: p.id, playerId: p.id })),
+        },
+      },
+    });
+    try {
+      const g = guest();
+      const f = (await g.req('GET', '/fantasy')).json();
+      expect(f.cup.season).toBe('1950');
+      expect(f.cup.players).toHaveLength(MIN_CUP_PLAYERS);
+      const per = new Map<string, number>();
+      const five = inCup
+        .filter((p) => {
+          const k = p.primaryPositionGroup ?? '';
+          per.set(k, (per.get(k) ?? 0) + 1);
+          return per.get(k)! <= 2;
+        })
+        .slice(0, 5)
+        .map((p) => p.id);
+      const bad = await g.req('POST', '/fantasy', { playerIds: [...five.slice(0, 4), outside.id] });
+      expect(bad.json().error.message).toContain('Copa de 1950');
+      expect((await g.req('POST', '/fantasy', { playerIds: five })).statusCode).toBe(201);
+    } finally {
+      await prisma.match.delete({ where: { id: match.id } });
+    }
   });
 });
