@@ -46,10 +46,13 @@ Google Cloud Console → APIs e serviços → Credenciais → ID do cliente OAut
 
 ## 7. Observabilidade
 
-- **Logs**: a API escreve JSON (pino), uma linha por requisição, com rota, status e tempo. Ver: `docker compose -f deploy/docker-compose.prod.yml logs -f api`. O Docker gira os arquivos (10 MB × 5 por serviço).
-- **Erros e desempenho (Sentry, plano grátis)**: criar a organização e dois projetos (Node e React) em sentry.io; `SENTRY_DSN` em `deploy/.env.prod` (API) e `VITE_SENTRY_DSN` nas variáveis do Pages (web, lida no build). Sem DSN, nada é enviado. Amostra de 10% das requisições para latência (`SENTRY_TRACES_SAMPLE_RATE`). Nenhum dado pessoal (IP, cookie, corpo) é enviado.
-- **Métricas do piloto**: `/admin/metrics` (jogadores, conclusão, compartilhamento, retorno D1/D7, fases difíceis ou fáceis demais, latência P50/P95 e erros por rota desde o último start). A IA lê o mesmo com `scripts/research/metrics.ts`.
-- **Disponibilidade**: monitor de uptime do Sentry (ou health check do Cloudflare) em `https://decabecafc.com.br/v1/health`, alerta por e-mail.
+Sem SSH para nada do dia a dia:
+
+- **Sentry** (org `futuro-brilhante`, projetos `de-cabeca-api` e `de-cabeca-web`): erros com stack trace da API e do navegador; desempenho por endpoint (média, P50, P95, P99) em *Insights › Backend*, com 10% das requisições amostradas e o trace ligando a página à API; **logs** da API (uma linha por requisição, avisos e erros) em *Explore › Logs*, com busca por rota, status, nível e período. DSNs em `SENTRY_DSN` e `VITE_SENTRY_DSN`.
+- **PostHog** (org e projeto "De Cabeça", região US): visitas, funis, retenção, gravação de sessão (campos mascarados) e os eventos de produto do site (`result_shared`, `link_opened`...). Chave em `VITE_POSTHOG_KEY`; os envios passam por `decabecafc.com.br/ingest` (Caddy), então bloqueador de anúncio não derruba.
+- **Métricas do piloto**: `/admin/metrics`, como antes.
+- **Disponibilidade**: monitor de uptime do Sentry em `https://decabecafc.com.br/v1/health`.
+- Último recurso: `docker compose -f deploy/docker-compose.prod.yml logs api` na VM.
 
 ## Antes de abrir o piloto
 

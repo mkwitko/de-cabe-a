@@ -46,6 +46,7 @@ services:
         VITE_ADSENSE_SLOT_RESULT: ${VITE_ADSENSE_SLOT_RESULT:-}
         VITE_ADSENSE_SLOT_TRACK: ${VITE_ADSENSE_SLOT_TRACK:-}
         VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        VITE_POSTHOG_KEY: ${VITE_POSTHOG_KEY:-}
     restart: unless-stopped
     logging: *logging
     depends_on: [api]

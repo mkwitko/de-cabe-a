@@ -17,6 +17,9 @@ if (process.env.SENTRY_DSN)
     environment: process.env.NODE_ENV ?? 'development',
     // A sample of requests for latency (P50/P95 per route in Sentry's performance view).
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+    // Every pino line (one per request, plus warnings and errors) goes to Sentry Logs, so
+    // production logs are searched there instead of on the VM.
+    integrations: [Sentry.pinoIntegration({ log: { levels: ['info', 'warn', 'error', 'fatal'] } })],
   });
 
 export { Sentry };
