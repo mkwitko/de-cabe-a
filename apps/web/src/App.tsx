@@ -1,16 +1,16 @@
-import { onSoundChange, setSound, soundOn } from './lib/sound';
+import { SoundToggle } from './components/SoundToggle';
+import { StarIcon } from './components/Stars';
+import { DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
 import {
   lazy,
   Suspense,
-  useEffect,
   useRef,
-  useState,
   type CSSProperties,
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
+import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import type { GamesResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
 import type { GameMode } from '@decabeca/contracts';
@@ -217,8 +217,7 @@ function BrandSticker() {
       className="group relative w-fit max-w-full shrink-0 -rotate-2 rounded-[10px] bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] transition-transform duration-500 ease-out-expo motion-safe:[transform:perspective(900px)_rotate(-2deg)_rotateX(calc((0.5-var(--my))*10deg))_rotateY(calc((var(--mx)-0.5)*12deg))]"
     >
       <div className="relative overflow-hidden rounded-[5px] bg-cover px-5 pt-4 pb-5 text-ink">
-        <span className="tabular block text-right text-xs font-bold tracking-wide">Nº 00</span>
-        <h1 className="font-condensed mt-1 text-[clamp(3rem,14vw,5.5rem)] leading-[0.85] font-black tracking-[-0.02em] whitespace-nowrap uppercase">
+        <h1 className="font-condensed text-[clamp(3rem,14vw,5.5rem)] leading-[0.85] font-black tracking-[-0.02em] whitespace-nowrap uppercase">
           De Cabeça
         </h1>
         <p className="mt-3 text-sm font-semibold">Minijogos de futebol</p>
@@ -252,7 +251,7 @@ function TrackState({ track, path }: { track: Track | undefined; path: string })
           className="font-condensed tabular ml-auto text-xl font-black"
           aria-label={`${track.stars} estrelas`}
         >
-          ★ {track.stars}
+          <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {track.stars}
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-chalk/15" aria-hidden="true">
@@ -291,11 +290,12 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         className="mt-10 flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:p-6"
       >
         <span className="flex min-w-0 flex-col">
-          <span className="text-xs font-bold tracking-wide uppercase">Desafio do Dia</span>
           <span className="font-condensed text-3xl leading-none font-black uppercase sm:text-4xl">
-            Uma fase de cada jogo
+            Desafio do Dia
           </span>
-          <span className="mt-1 font-semibold">A mesma para todos. Nova à meia-noite.</span>
+          <span className="mt-1.5 font-semibold">
+            Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
+          </span>
         </span>
         <span className={`${btnPrimary} shrink-0`}>Jogar</span>
       </Link>
@@ -306,14 +306,12 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         className="mt-6 flex flex-col gap-2 rounded-2xl bg-cover p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
       >
         <span>
-          <span className="block text-xs font-bold tracking-wide uppercase">
-            Novo · Modo Carreira
-          </span>
           <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
-            Crie seu craque e leve ele da base à Europa
+            Modo Carreira
           </span>
-          <span className="mt-1 block font-semibold">
-            Cada estrela que você ganha nos jogos vira treino.
+          <span className="mt-1.5 block font-semibold">
+            Crie seu craque e leve ele da base à Europa. Cada estrela que você ganha nos jogos vira
+            treino.
           </span>
         </span>
         <span className="font-condensed self-start rounded-lg bg-ink px-5 py-3 text-lg font-extrabold text-paper uppercase sm:self-center">
@@ -327,12 +325,10 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
           className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
         >
           <span className="flex min-w-0 flex-col">
-            <span className="text-xs font-bold tracking-wide text-chalk-soft uppercase">
-              Continuar de onde parei
-            </span>
             <span className="font-condensed truncate text-2xl font-black uppercase">
               {resume.name} · Fase {resume.nextLevel}
             </span>
+            <span className="text-sm font-semibold text-chalk-soft">Continuar de onde parei</span>
           </span>
           <span className={`${btnPrimary} shrink-0`}>Jogar</span>
         </Link>
@@ -391,7 +387,9 @@ function PlayerStrip() {
       <span className="font-condensed row-span-2 text-4xl leading-none font-black text-cover uppercase sm:row-span-1">
         {data.title.name}
       </span>
-      <span className="font-condensed tabular text-xl font-bold">★ {data.totalStars} estrelas</span>
+      <span className="font-condensed tabular text-xl font-bold">
+        <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {data.totalStars} estrelas
+      </span>
       <span className="font-condensed tabular text-xl font-bold">
         {data.rank.all ? `${data.rank.all}º no ranking` : 'Fora do ranking'}
       </span>
@@ -430,46 +428,32 @@ function HomeRoute() {
   );
 }
 
+/**
+ * Four places, each the home of a few pages: Jogos (home, tracks, levels, Modo Carreira),
+ * Desafio (Desafio do Dia and its round), Ranking (ranking, seasons, leagues), Perfil (stats,
+ * history, account and preferences, public profiles).
+ */
 const NAV = [
-  ['/', 'Jogos'],
-  ['/ranking', 'Ranking'],
-  ['/stats', 'Stats'],
-  ['/conta', 'Conta'],
+  {
+    to: '/',
+    label: 'Jogos',
+    Icon: GamesIcon,
+    match: (p: string) => !/^\/(d|ranking|ligas?|stats|history|conta|perfil)(\/|$)/.test(p),
+  },
+  { to: '/d/hoje', label: 'Desafio', Icon: DailyIcon, match: (p: string) => /^\/d(\/|$)/.test(p) },
+  {
+    to: '/ranking',
+    label: 'Ranking',
+    Icon: RankingIcon,
+    match: (p: string) => /^\/(ranking|ligas?)(\/|$)/.test(p),
+  },
+  {
+    to: '/stats',
+    label: 'Perfil',
+    Icon: ProfileIcon,
+    match: (p: string) => /^\/(stats|history|conta|perfil)(\/|$)/.test(p),
+  },
 ] as const;
-
-/** Sound on/off (off by default); the state lives on the device. */
-function SoundToggle() {
-  const [on, setOn] = useState(soundOn);
-  useEffect(() => onSoundChange(setOn), []);
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={() => setSound(!on)}
-      className={`font-condensed flex min-h-14 min-w-11 items-center justify-center gap-1.5 px-2 text-base font-extrabold uppercase tracking-wide sm:min-h-11 sm:px-0 sm:text-lg ${on ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`}
-    >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="size-6 sm:size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
-        {on ? (
-          <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
-        ) : (
-          <path d="M17 9l5 6M22 9l-5 6" />
-        )}
-      </svg>
-      {/* Icon only on the phone's bottom bar; the name stays for screen readers. */}
-      <span className="sr-only sm:not-sr-only">Som</span>
-    </button>
-  );
-}
 
 function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
@@ -479,9 +463,9 @@ function Shell({ children }: { children: ReactNode }) {
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       <nav
         aria-label="Principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:pb-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:backdrop-blur-none"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none"
       >
-        <ul className="mx-auto flex max-w-7xl justify-around sm:justify-end sm:gap-6">
+        <ul className="mx-auto grid h-16 max-w-xl grid-cols-4 sm:flex sm:h-auto sm:max-w-7xl sm:items-center sm:justify-end sm:gap-7">
           {!home && (
             <li className="mr-auto hidden sm:block">
               <Link to="/" className="font-condensed text-2xl font-black uppercase">
@@ -489,20 +473,27 @@ function Shell({ children }: { children: ReactNode }) {
               </Link>
             </li>
           )}
-          {NAV.map(([to, label]) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) =>
-                  `font-condensed flex min-h-14 items-center px-2 text-base font-extrabold uppercase tracking-wide sm:min-h-11 sm:px-0 sm:text-lg ${isActive ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`
-                }
-              >
-                {label}
-              </NavLink>
-            </li>
-          ))}
-          <li>
+          {NAV.map(({ to, label, Icon, match }) => {
+            const active = match(pathname);
+            return (
+              <li key={to} className="flex">
+                <Link
+                  to={to}
+                  aria-current={active ? 'page' : undefined}
+                  className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-lg sm:font-extrabold sm:uppercase ${active ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`}
+                >
+                  {/* active marker: a short cover bar on top of the phone tab, under the word on wide screens */}
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-0 h-[3px] w-8 rounded-b-full bg-cover transition-opacity duration-150 sm:top-auto sm:bottom-0 sm:w-full sm:rounded-full ${active ? 'opacity-100' : 'opacity-0'}`}
+                  />
+                  <Icon className="size-[22px] sm:hidden" />
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
+          <li className="hidden sm:block">
             <SoundToggle />
           </li>
         </ul>

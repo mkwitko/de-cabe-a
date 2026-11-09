@@ -65,12 +65,15 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await expect(page.getByRole('link', { name: /Fase 2, .*jogar/ })).toBeVisible();
 
   // 7. Nickname puts the guest in the ranking
-  await page.getByRole('link', { name: 'Conta', exact: true }).click();
+  await page.getByRole('link', { name: 'Perfil', exact: true }).click();
+  await page.getByRole('link', { name: 'Conta, apelido e preferências' }).click();
   await page.getByLabel('Apelido público').fill('Camisa 10');
   await page.getByRole('button', { name: 'Salvar apelido' }).click();
   await expect(page.getByText('Camisa 10', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ranking', exact: true }).click();
-  await expect(page.getByRole('listitem').filter({ hasText: 'Camisa 10' })).toContainText('★ 2');
+  await expect(
+    page.getByRole('listitem').filter({ hasText: 'Camisa 10' }).getByLabel('2 estrelas'),
+  ).toBeVisible();
 
   // 8. Grid level 1: one right, one wrong, finish, examples shown
   await page.goto('/grid/1');
@@ -95,7 +98,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   ).toBeVisible();
 
   // 9. Stats: title and stars; history lists both levels
-  await page.getByRole('link', { name: 'Stats', exact: true }).click();
+  await page.getByRole('link', { name: 'Perfil', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Reserva' })).toBeVisible();
   await expect(page.getByText('2 estrelas', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ver histórico de partidas' }).click();

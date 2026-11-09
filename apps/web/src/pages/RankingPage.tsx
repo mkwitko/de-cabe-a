@@ -3,6 +3,8 @@ import { Link } from 'react-router';
 import type { RankingScope } from '@decabeca/contracts';
 import { useRanking, useSeason } from '../lib/game';
 import { btnPrimary, Skeleton } from '../components/ui';
+import { TrophyIcon } from '../components/Icons';
+import { StarIcon } from '../components/Stars';
 
 export function RankingPage() {
   const [scope, setScope] = useState<RankingScope>('all');
@@ -51,7 +53,8 @@ export function RankingPage() {
               key={t.season}
               className="font-condensed rounded-lg bg-cover px-3 py-1.5 font-black text-ink uppercase"
             >
-              🏆 {t.position}º · Temporada {t.season}
+              <TrophyIcon className="inline size-[0.9em] align-[-0.1em]" /> {t.position}º ·
+              Temporada {t.season}
             </li>
           ))}
         </ul>
@@ -132,7 +135,9 @@ export function RankingPage() {
                   </span>
                   <span className="w-full font-bold break-words">{e.nickname}</span>
                   <span className="text-xs opacity-70">{e.title}</span>
-                  <span className="font-condensed tabular text-lg font-black">★ {e.stars}</span>
+                  <span className="font-condensed tabular text-lg font-black">
+                    <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {e.stars}
+                  </span>
                 </li>
               );
             })}
@@ -154,14 +159,15 @@ export function RankingPage() {
                   className="font-condensed tabular text-xl font-black"
                   aria-label={`${e.stars} estrelas`}
                 >
-                  ★ {e.stars}
+                  <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {e.stars}
                 </span>
               </li>
             ))}
           </ol>
           {data.me.position && data.me.position > 50 && (
             <p className="sticky bottom-20 rounded-lg bg-cover px-4 py-3 font-semibold text-ink sm:bottom-4">
-              Você: {data.me.position}º · ★ {data.me.stars}
+              Você: {data.me.position}º ·{' '}
+              <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {data.me.stars}
             </p>
           )}
         </>

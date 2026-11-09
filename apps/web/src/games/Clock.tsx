@@ -4,6 +4,7 @@ import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { useTrack } from '../lib/game';
 import { play } from '../lib/sound';
 import { GameHeader, Skeleton } from '../components/ui';
+import { ClockIcon } from '../components/Icons';
 
 /** Time limits (ADR-009); the server holds the real deadline. */
 export const TIME_LIMIT_SEC: Record<GameMode, number> = {
@@ -120,7 +121,7 @@ export function Countdown({ data, onTimeUp }: { data: AttemptResponse; onTimeUp:
       aria-label={`Tempo restante: ${formatClock(left)}`}
       className={`font-condensed tabular rounded-full px-3 py-1 text-2xl leading-none font-black ${low ? 'bg-cover text-ink motion-safe:animate-pulse' : 'border-2 border-chalk-soft/60 text-chalk'}`}
     >
-      ⏱ {formatClock(Math.max(0, left))}
+      <ClockIcon className="inline size-[0.8em] align-[-0.06em]" /> {formatClock(Math.max(0, left))}
     </p>
   );
 }

@@ -10,6 +10,7 @@ import { api, type ApiError } from '../lib/api';
 import { ShareButton } from '../components/ShareButton';
 import { suggestNickname } from '../lib/nickname';
 import { btnPrimary, btnSecondary, GameHeader, Notice, Skeleton } from '../components/ui';
+import { StarIcon } from '../components/Stars';
 
 /** Errors of create/join; without a nickname, one tap takes a suggested one and tries again. */
 function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => void }) {
@@ -259,7 +260,9 @@ export function LeaguePage() {
                     {r.position}º
                   </span>
                   <span className="min-w-0 flex-1 font-semibold break-words">{r.nickname}</span>
-                  <span className="font-condensed tabular text-xl font-black">★ {r.stars}</span>
+                  <span className="font-condensed tabular text-xl font-black">
+                    <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {r.stars}
+                  </span>
                 </li>
               ))}
             </ol>

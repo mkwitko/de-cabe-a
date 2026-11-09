@@ -6,6 +6,7 @@ import { api, type ApiError } from '../lib/api';
 import { GAME_NAME } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
+import { TrophyIcon } from '../components/Icons';
 
 export function ProfilePage() {
   const nickname = useParams().nickname ?? '';
@@ -51,7 +52,7 @@ export function ProfilePage() {
             {p.trophies.map((t) => (
               <li key={t.season} className="rounded-xl bg-cover px-4 py-3 text-ink">
                 <span className="font-condensed block text-2xl leading-none font-black">
-                  🏆 {t.position}º
+                  <TrophyIcon className="inline size-[0.85em] align-[-0.1em]" /> {t.position}º
                 </span>
                 <span className="text-sm font-semibold">
                   Temporada {t.season} · {t.theme}
@@ -67,7 +68,9 @@ export function ProfilePage() {
         {p.games.map((g) => (
           <li key={g.mode} className="rounded-xl bg-chalk/[0.06] p-4">
             <span className="block text-sm font-semibold text-chalk-soft">{GAME_NAME[g.mode]}</span>
-            <span className="font-condensed tabular text-2xl font-black">★ {g.stars}</span>
+            <span className="font-condensed tabular text-2xl font-black">
+              <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {g.stars}
+            </span>
             <span className="block text-xs text-chalk-soft">{g.completed} fases</span>
           </li>
         ))}

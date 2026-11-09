@@ -85,7 +85,7 @@ export async function drawResultCard(data: AttemptResponse): Promise<Blob> {
   ctx.fillText(String(attempt.score), 390, -40);
   ctx.font = font(800, 30, true);
   ctx.fillText(
-    `PTS${attempt.durationSec !== null ? ` · ⏱ ${formatClock(attempt.durationSec)}` : ''}`,
+    `PTS${attempt.durationSec !== null ? ` · ${formatClock(attempt.durationSec)}` : ''}`,
     390,
     0,
   );
