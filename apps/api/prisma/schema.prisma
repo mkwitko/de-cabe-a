@@ -575,3 +575,38 @@ model DailyPick {
   @@id([day, gameMode])
   @@index([gameMode, level])
 }
+
+/// Liga de amigos (GROWTH_PLAN.md 2.1): joined by link, weekly ranking of stars, no chat.
+/// A player is an account or a guest session, as in the ranking (`pk`).
+model League {
+  id        String         @id @default(uuid(7))
+  code      String         @unique /// 6 letters in the invite link /liga/CODE
+  name      String
+  createdBy String /// pk of the creator
+  createdAt DateTime       @default(now())
+  members   LeagueMember[]
+  reports   LeagueReport[]
+}
+
+model LeagueMember {
+  leagueId String
+  league   League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  /// userId, or the guest session id; a guest who signs up later is matched through its session
+  pk       String
+  joinedAt DateTime @default(now())
+
+  @@id([leagueId, pk])
+  @@index([pk])
+}
+
+/// Report of a league's name, for the editor (no automatic action).
+model LeagueReport {
+  id        String   @id @default(uuid(7))
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  pk        String
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@unique([leagueId, pk])
+}

@@ -66,6 +66,12 @@ const CareerPage = lazy(() =>
   import('./pages/CareerPage').then((m) => ({ default: m.CareerPage })),
 );
 const DailyPage = lazy(() => import('./pages/DailyPage').then((m) => ({ default: m.DailyPage })));
+const LeaguesPage = lazy(() =>
+  import('./pages/LeaguesPage').then((m) => ({ default: m.LeaguesPage })),
+);
+const LeaguePage = lazy(() =>
+  import('./pages/LeaguesPage').then((m) => ({ default: m.LeaguePage })),
+);
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 export const GAMES = [
@@ -533,6 +539,8 @@ function PublicRoutes() {
           <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
           <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
           <Route path="/d/:date" element={<DailyPage />} />
+          <Route path="/ligas" element={<LeaguesPage />} />
+          <Route path="/liga/:code" element={<LeaguePage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
