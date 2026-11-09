@@ -674,6 +674,8 @@ export const ClientEventName = z.enum([
   'result_shared',
   'game_abandoned',
   'search_no_result',
+  /** Arrival by a shared link: kind = level | league | profile | daily; ref from `?ref=`. */
+  'link_opened',
 ]);
 export const EventsRequest = z.strictObject({
   events: z

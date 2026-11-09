@@ -13,6 +13,17 @@ interface Metrics {
     shareRate: number | null;
   };
   retention: { cohort: number; d1: number | null; d7: number | null };
+  dailyChallenge: { day: string; players: number; started: number; completed: number }[];
+  community: {
+    completers: number;
+    shareOrInviteRate: number | null;
+    linkArrivals: number;
+    linkArrivalCompletionRate: number | null;
+    linksByKind: { kind: string; n: number }[];
+    leaguesCreated: number;
+    leagueJoins: number;
+  };
+  cohorts: { week: string; players: number; d1: number | null; d7: number | null }[];
   actionRejected: { code: string; n: number }[];
   levels: {
     mode: string;
@@ -88,6 +99,78 @@ export function MetricsPage() {
             <Stat label="compartilhamento" value={p(m.totals.shareRate)} />
             <Stat label="retorno D1" value={p(m.retention.d1)} />
             <Stat label="retorno D7" value={p(m.retention.d7)} />
+          </section>
+
+          <section>
+            <h2 className="mb-2 font-bold">Comunidade (métrica norte)</h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+              <Stat
+                label="de quem terminou, compartilhou ou criou liga"
+                value={p(m.community.shareOrInviteRate)}
+              />
+              <Stat label="chegaram por link" value={m.community.linkArrivals} />
+              <Stat
+                label="dos que chegaram por link, terminaram fase"
+                value={p(m.community.linkArrivalCompletionRate)}
+              />
+              <Stat label="ligas criadas" value={m.community.leaguesCreated} />
+              <Stat label="entradas em liga" value={m.community.leagueJoins} />
+            </div>
+            <p className="mt-2 text-sm text-ink/70">
+              Links por tipo:{' '}
+              {m.community.linksByKind.map((l) => `${l.kind} ${l.n}`).join(' · ') || 'nenhum'}
+            </p>
+          </section>
+
+          <section className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h2 className="mb-2 font-bold">Desafio do Dia</h2>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr>
+                    {['Dia', 'Jogadores', 'Iniciadas', 'Concluídas'].map((h) => (
+                      <th key={h} className={th}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {m.dailyChallenge.map((d) => (
+                    <tr key={d.day}>
+                      <td className={td}>{d.day}</td>
+                      <td className={td}>{d.players}</td>
+                      <td className={td}>{d.started}</td>
+                      <td className={td}>{d.completed}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h2 className="mb-2 font-bold">Retorno por semana de entrada</h2>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr>
+                    {['Semana', 'Jogadores', 'D1', 'D7'].map((h) => (
+                      <th key={h} className={th}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {m.cohorts.map((c) => (
+                    <tr key={c.week}>
+                      <td className={td}>{c.week}</td>
+                      <td className={td}>{c.players}</td>
+                      <td className={td}>{p(c.d1)}</td>
+                      <td className={td}>{p(c.d7)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <section>

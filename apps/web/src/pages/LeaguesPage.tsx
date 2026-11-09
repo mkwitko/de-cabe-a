@@ -215,7 +215,7 @@ export function LeaguePage() {
     );
 
   const l = q.data;
-  const invite = `Entra na minha liga "${l.name}" no De Cabeça: ranking semanal de estrelas entre amigos.\ndecabecafc.com.br/liga/${l.code}`;
+  const invite = `Entra na minha liga "${l.name}" no De Cabeça: ranking semanal de estrelas entre amigos.\ndecabecafc.com.br/liga/${l.code}?ref=invite`;
   return (
     <>
       <GameHeader title={l.name} />

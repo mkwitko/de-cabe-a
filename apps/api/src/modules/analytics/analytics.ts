@@ -15,6 +15,7 @@ const ALLOWED: Record<string, readonly string[]> = {
   result_shared: ['mode', 'level', 'method', 'isMobile'],
   game_abandoned: ['mode', 'level', 'attemptsUsed', 'isMobile'],
   search_no_result: ['qLength', 'mode', 'isMobile'],
+  link_opened: ['kind', 'ref', 'isMobile'],
 };
 
 const pick = (name: string, props: Props) =>

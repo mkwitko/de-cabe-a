@@ -204,7 +204,8 @@ export async function present(
   const stars = '★'.repeat(attempt.stars) + '☆'.repeat(3 - attempt.stars);
   let share = null;
   if (done) {
-    const url = `${SHARE_HOST}${GAME_PATH[mode]}/${challenge.publicNumber}`;
+    // `?ref=share` lets the web count who arrives by a shared result (link_opened).
+    const url = `${SHARE_HOST}${GAME_PATH[mode]}/${challenge.publicNumber}?ref=share`;
     // A level played as that day's Desafio do Dia says so: friends get the same level that day.
     const day = civilDate(attempt.startedAt);
     const daily = await prisma.dailyPick.findFirst({

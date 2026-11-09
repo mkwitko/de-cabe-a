@@ -15,6 +15,7 @@ import { isOffensive } from '@decabeca/engine';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
 import { rankRows, weekStart } from '../progression/ranking';
+import { track } from '../analytics/analytics';
 
 export const MAX_MEMBERS = 20;
 /** Leagues one player can be in, so one device cannot spam codes. */
@@ -106,6 +107,7 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
               members: { create: { pk: me(req) } },
             },
           });
+          await track(prisma, req.sessionId, 'league_created', {});
           return reply.code(201).send(await view(league.code, req));
         } catch (err) {
           // A code collision (31^6 codes) retries; anything else is a real error.
@@ -177,6 +179,7 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
         if (league.members.length >= MAX_MEMBERS)
           throw new AppError(409, 'LEAGUE_FULL', `A liga já tem ${MAX_MEMBERS} pessoas.`);
         await prisma.leagueMember.create({ data: { leagueId: league.id, pk: me(req) } });
+        await track(prisma, req.sessionId, 'league_joined', { members: league.members.length + 1 });
       }
       return view(league.code, req);
     },

@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import './index.css';
+import { trackArrival } from './lib/analytics';
+
+trackArrival();
 
 // Error monitoring (Sentry) only when built with VITE_SENTRY_DSN; loaded apart so it costs
 // nothing otherwise. No personal data is sent.
