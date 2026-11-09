@@ -19,6 +19,7 @@ import { AppError } from '../../errors';
 import { newSession, playerAttempts } from '../session/session';
 import { assertNicknameFree, authRequest, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
+import { trophies } from '../progression/seasons';
 
 export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now, secureCookie, auth } = app.deps;
@@ -102,6 +103,7 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
           return { mode, completed: of.length, stars: of.reduce((s, a) => s + a.stars, 0) };
         }),
         achievements: items.filter((x) => x.done).map(({ id, name }) => ({ id, name })),
+        trophies: await trophies(prisma, who.userId ?? who.sessionId, now()),
       };
     },
   );

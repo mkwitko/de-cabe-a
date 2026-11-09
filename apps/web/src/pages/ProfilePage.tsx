@@ -44,6 +44,24 @@ export function ProfilePage() {
         <StarIcon /> {p.totalStars} estrelas
       </p>
 
+      {p.trophies.length > 0 && (
+        <>
+          <h2 className="font-condensed mt-10 text-2xl font-extrabold uppercase">Troféus</h2>
+          <ul className="mt-4 flex flex-wrap gap-3">
+            {p.trophies.map((t) => (
+              <li key={t.season} className="rounded-xl bg-cover px-4 py-3 text-ink">
+                <span className="font-condensed block text-2xl leading-none font-black">
+                  🏆 {t.position}º
+                </span>
+                <span className="text-sm font-semibold">
+                  Temporada {t.season} · {t.theme}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       <h2 className="font-condensed mt-10 text-2xl font-extrabold uppercase">Por jogo</h2>
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {p.games.map((g) => (

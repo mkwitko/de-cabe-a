@@ -10,6 +10,9 @@ import type {
   MeResponse,
   PlayerRef,
   RankingResponse,
+  RankingScope,
+  RoundResponse,
+  SeasonResponse,
   StatsResponse,
   TrackResponse,
 } from '@decabeca/contracts';
@@ -37,11 +40,17 @@ export const useDaily = (date: string) =>
 export const useStats = () =>
   useQuery({ queryKey: ['stats'], queryFn: () => api<StatsResponse>('/v1/me/stats') });
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<MeResponse>('/v1/me') });
-export const useRanking = (scope: 'all' | 'week' | 'timed') =>
+export const useRanking = (scope: RankingScope) =>
   useQuery({
     queryKey: ['ranking', scope],
     queryFn: () => api<RankingResponse>(`/v1/ranking?scope=${scope}`),
   });
+/** Temporadas (2.6): the current season and the player's trophies. */
+export const useSeason = () =>
+  useQuery({ queryKey: ['season'], queryFn: () => api<SeasonResponse>('/v1/season') });
+/** Rodada semanal (2.7). */
+export const useRound = () =>
+  useQuery({ queryKey: ['round'], queryFn: () => api<RoundResponse>('/v1/round') });
 export const useLevelRanking = (mode: GameMode, level: number, enabled: boolean) =>
   useQuery({
     queryKey: ['level-ranking', mode, level],

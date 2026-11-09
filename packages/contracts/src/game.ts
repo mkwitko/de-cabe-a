@@ -561,8 +561,10 @@ export type StatsResponse = z.infer<typeof StatsResponse>;
 
 /** GET /v1/ranking?scope=all|week */
 /** `timed`: stars from levels played against the clock, ties broken by the faster total (ADR-009). */
-export const RankingQuery = z.object({ scope: z.enum(['all', 'week', 'timed']).default('all') });
-const RankingEntry = z.strictObject({
+export const RankingScope = z.enum(['all', 'season', 'week', 'timed']);
+export type RankingScope = z.infer<typeof RankingScope>;
+export const RankingQuery = z.object({ scope: RankingScope.default('all') });
+export const RankingEntry = z.strictObject({
   position: z.number(),
   nickname: z.string(),
   stars: z.number(),
@@ -571,7 +573,7 @@ const RankingEntry = z.strictObject({
   isMe: z.boolean(),
 });
 export const RankingResponse = z.strictObject({
-  scope: z.enum(['all', 'week', 'timed']),
+  scope: RankingScope,
   entries: z.array(RankingEntry),
   me: z.strictObject({
     position: z.number().nullable(),
@@ -724,11 +726,41 @@ export type AchievementsResponse = z.infer<typeof AchievementsResponse>;
 /** PATCH /v1/me/profile: show or hide /perfil/:nickname. */
 export const UpdateProfileRequest = z.strictObject({ publicProfile: z.boolean() });
 /** GET /v1/profiles/:nickname (only when the player made it public). */
+/** Temporadas (GROWTH_PLAN.md 2.6): 4 weeks, a theme, a ranking that starts at zero. */
+export const Season = z.strictObject({
+  number: z.number(),
+  theme: z.string(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+});
+/** A podium place in a finished season; kept forever on the profile. */
+export const Trophy = z.strictObject({
+  season: z.number(),
+  theme: z.string(),
+  position: z.number(),
+});
+export const SeasonResponse = z.strictObject({ current: Season, trophies: z.array(Trophy) });
+export type SeasonResponse = z.infer<typeof SeasonResponse>;
+
+/**
+ * GET /v1/round (GROWTH_PLAN.md 2.7): the week's round is the Desafio do Dia from Monday to
+ * Friday. A day scores the stars of its levels played that same day; the best 3 days count.
+ */
+export const RoundResponse = z.strictObject({
+  weekStart: z.string(),
+  counted: z.number(),
+  days: z.array(z.strictObject({ day: z.string(), open: z.boolean(), stars: z.number() })),
+  me: z.strictObject({ position: z.number().nullable(), total: z.number() }),
+  entries: z.array(RankingEntry),
+});
+export type RoundResponse = z.infer<typeof RoundResponse>;
+
 export const ProfileResponse = z.strictObject({
   nickname: z.string(),
   title: Title,
   totalStars: z.number(),
   games: z.array(z.strictObject({ mode: GameMode, completed: z.number(), stars: z.number() })),
   achievements: z.array(z.strictObject({ id: z.string(), name: z.string() })),
+  trophies: z.array(Trophy),
 });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;

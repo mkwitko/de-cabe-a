@@ -1453,10 +1453,62 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
     expect(items.find((x) => x.id === 'estreia')!.done).toBe(true);
     expect(items.find((x) => x.id === 'fregues')!.progress).toBe(1);
 
+    // Rodada semanal (2.7): Monday to Friday, a day scores its levels started that same day.
+    await prisma.attempt.update({ where: { id: lost.attempt.id }, data: { stars: 2 } });
+    await g.req('PATCH', '/me', { nickname: 'Rodada' });
+    const round = (await g.req('GET', '/round')).json();
+    expect(round.weekStart).toBe('2026-11-02');
+    expect(
+      round.days.map(
+        (d: { day: string; open: boolean; stars: number }) => `${d.day}:${d.open}:${d.stars}`,
+      ),
+    ).toEqual([
+      '2026-11-02:true:0',
+      '2026-11-03:true:0',
+      '2026-11-04:true:0',
+      '2026-11-05:true:2',
+      '2026-11-06:false:0',
+    ]);
+    expect(round.me.total).toBe(2);
+    expect(round.entries.find((e: { isMe: boolean }) => e.isMe)).toMatchObject({
+      nickname: 'Rodada',
+      stars: 2,
+    });
+
     await prisma.dailyPick.create({
       data: { day: new Date('2026-11-01T00:00:00Z'), gameMode: 'IMPOSTOR', level: 1 },
     });
     expect((await g.req('GET', '/daily/hoje')).json().archive).toContain('2026-11-01');
     expect((await g.req('GET', '/daily/2026-11-01')).json().games).toHaveLength(1);
+  });
+});
+
+describe('Temporadas (GROWTH_PLAN.md 2.6)', () => {
+  it('the season ranking starts at zero; a podium place stays as a trophy', async () => {
+    const before = clock;
+    clock = new Date('2026-11-10T15:00:00Z'); // season 1
+    const g = guest();
+    await g.req('PATCH', '/me', { nickname: 'Campeão T1' });
+    const played = await playCareer(g, 2, null, 6);
+    await prisma.attempt.update({ where: { id: played.attempt.id }, data: { stars: 3 } });
+    const season1 = (await g.req('GET', '/ranking?scope=season')).json();
+    // Other tests also finish levels in season 1; 3 stars keeps this player on the podium.
+    expect(season1.me.stars).toBe(3);
+    expect(season1.me.position).toBeLessThanOrEqual(3);
+    expect((await g.req('GET', '/season')).json()).toMatchObject({
+      current: { number: 1, startsAt: '2026-11-09T03:00:00.000Z' },
+      trophies: [],
+    });
+
+    clock = new Date('2026-12-08T15:00:00Z'); // season 2
+    expect((await g.req('GET', '/ranking?scope=season')).json().me.position).toBeNull();
+    const trophy = { season: 1, theme: 'Copa do Mundo', position: season1.me.position };
+    expect((await g.req('GET', '/season')).json()).toMatchObject({
+      current: { number: 2 },
+      trophies: [trophy],
+    });
+    await g.req('PATCH', '/me/profile', { publicProfile: true });
+    expect((await guest().req('GET', '/profiles/campeão t1')).json().trophies).toEqual([trophy]);
+    clock = before;
   });
 });
