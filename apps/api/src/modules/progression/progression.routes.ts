@@ -6,6 +6,7 @@ import {
   LevelRankingResponse,
   RankingQuery,
   RankingResponse,
+  SeasonResponse,
   StatsResponse,
 } from '@decabeca/contracts';
 import { titleFor } from '@decabeca/engine';
@@ -15,6 +16,7 @@ import { AppError } from '../../errors';
 import { playerAttempts } from '../session/session';
 import { ranking, rankRows, weekStart } from './ranking';
 import { playerAchievements } from './achievements';
+import { seasonAt, trophies } from './seasons';
 import type { GameModeCode } from '../challenges/engines';
 
 /** History, stats and ranking, derived from attempts (ADR-007). */
@@ -156,14 +158,26 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
     '/ranking',
     { schema: { querystring: RankingQuery, response: { 200: RankingResponse } } },
     async (req) => {
-      const rows = await rankRows(
-        prisma,
-        req.query.scope === 'week' ? weekStart(now()) : null,
-        req.query.scope === 'timed',
-      );
+      const { scope } = req.query;
+      const since =
+        scope === 'week' ? weekStart(now()) : scope === 'season' ? seasonAt(now()).start : null;
+      const rows = await rankRows(prisma, since, scope === 'timed');
       return { scope: req.query.scope, ...ranking(rows, me(req)) };
     },
   );
+
+  app.get('/season', { schema: { response: { 200: SeasonResponse } } }, async (req) => {
+    const s = seasonAt(now());
+    return {
+      current: {
+        number: s.number,
+        theme: s.theme,
+        startsAt: s.start.toISOString(),
+        endsAt: s.end.toISOString(),
+      },
+      trophies: await trophies(prisma, me(req), now()),
+    };
+  });
 
   app.get(
     '/ranking/levels/:mode/:level',

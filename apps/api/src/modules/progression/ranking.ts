@@ -20,11 +20,15 @@ export function weekStart(now: Date): Date {
   return new Date(Date.parse(`${today}T03:00:00Z`) - dow * 86400_000);
 }
 
-/** `timed`: only levels played against the clock, ties broken by the faster total (ADR-009). */
+/**
+ * `timed`: only levels played against the clock, ties broken by the faster total (ADR-009).
+ * `until` (exclusive) closes a finished season.
+ */
 export async function rankRows(
   prisma: PrismaClient,
   since: Date | null,
   timed = false,
+  until: Date | null = null,
 ): Promise<RankRow[]> {
   const rows = await prisma.$queryRaw<
     { pk: string; nickname: string | null; stars: bigint; score: bigint }[]
@@ -34,6 +38,7 @@ export async function rankRows(
         MIN(EXTRACT(EPOCH FROM LEAST(a."completedAt", COALESCE(a."deadlineAt", a."completedAt")) - a."startedAt")) AS secs
       FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId"
       WHERE a."completedAt" IS NOT NULL AND (${since}::timestamp IS NULL OR a."completedAt" >= ${since}::timestamp)
+        AND (${until}::timestamp IS NULL OR a."completedAt" < ${until}::timestamp)
         AND (${timed} = false OR a.timed)
       GROUP BY 1, 2
     ), totals AS (
