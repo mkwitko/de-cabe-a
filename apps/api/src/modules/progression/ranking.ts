@@ -37,6 +37,7 @@ export async function rankRows(
       SELECT COALESCE(s."userId", s.id) AS pk, a."challengeId", MAX(a.stars) AS stars, MAX(a.score) AS score,
         MIN(EXTRACT(EPOCH FROM LEAST(a."completedAt", COALESCE(a."deadlineAt", a."completedAt")) - a."startedAt")) AS secs
       FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId"
+        JOIN "Challenge" c ON c.id = a."challengeId" AND c."publicNumber" IS NOT NULL
       WHERE a."completedAt" IS NOT NULL AND (${since}::timestamp IS NULL OR a."completedAt" >= ${since}::timestamp)
         AND (${until}::timestamp IS NULL OR a."completedAt" < ${until}::timestamp)
         AND (${timed} = false OR a.timed)

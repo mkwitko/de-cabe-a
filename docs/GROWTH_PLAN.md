@@ -96,6 +96,9 @@ Critério de ordem: impacto por esforço para time de uma pessoa + agente. Cada 
 
 ### Onda 3: ecossistema (3–6 meses, condicionado a D7 e ligas criadas)
 
+Estado (2026-11-09): 3.1 (página do criador + ranking da audiência), 3.2 (Oficina, Grid primeiro), 3.3 (votos, Wilson, listas, estados, denúncia gera revisão), 3.4 (eventos com janela e ranking, criados no admin), 3.5 (selo "apresentado por") e 3.7 (Fantasy histórico) feitos em versão mínima. 3.6 (Clube) não: exige pagamentos, que o PRODUCT.md exclui hoje.
+
+
 | # | Mudança | Condição |
 |---|---|---|
 | 3.1 | **Creator Mode**: `/criador/{nome}` com sessão, modos escolhidos, link rastreável, ranking da audiência, "criador contra audiência" | 10 criadores pequenos/médios testados antes de qualquer abordagem a CazéTV |

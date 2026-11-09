@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/node';
+import { oficinaAdminRoutes } from './modules/oficina/oficina';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import {
   hasZodFastifySchemaValidationErrors,
@@ -128,6 +129,7 @@ export function buildApp(
       await admin.register(reportRoutes);
       await admin.register(levelReportAdminRoutes);
       await admin.register(metricsRoutes);
+      await admin.register(oficinaAdminRoutes);
     },
     { prefix: '/v1/admin' },
   );
