@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { track } from '../lib/analytics';
 import { api, type ApiError } from '../lib/api';
-import { GAME_PATH, useLevelRanking, useMe, useTrack } from '../lib/game';
+import { GAME_PATH, useDaily, useLevelRanking, useMe, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { Stars } from '../components/Stars';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
@@ -69,7 +69,12 @@ export function LevelEnd({
   const trackQ = useTrack(mode);
   const top = useLevelRanking(mode, level, true);
   const me = useMe();
-  const next = trackQ.data?.levels.find((l) => l.level > level && l.state !== 'done');
+  // The track's real next level: never a locked one, and never back into this one. After a
+  // Desafio do Dia level far ahead, that is the player's own place in the track.
+  const next = trackQ.data?.levels.find(
+    (l) => l.level !== level && (l.state === 'open' || l.state === 'in_progress'),
+  );
+  const daily = useDaily('hoje').data?.games.find((g) => g.mode === mode && g.level === level);
   return (
     <section aria-labelledby="level-end" className="flex flex-col gap-6">
       <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
@@ -106,7 +111,11 @@ export function LevelEnd({
         </Link>
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {next ? (
+        {daily ? (
+          <Link to="/d/hoje" className={btnPrimary}>
+            Voltar ao Desafio do Dia
+          </Link>
+        ) : next ? (
           <Link to={`${GAME_PATH[mode]}/${next.level}`} className={btnPrimary}>
             Próxima fase · {next.level}
           </Link>

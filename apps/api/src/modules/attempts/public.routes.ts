@@ -23,6 +23,7 @@ import { accountRoutes } from '../account/account.routes';
 import { levelReportRoutes } from '../reports/level-reports';
 import { careerRoutes } from '../career/career.routes';
 import { dailyRoutes } from '../daily/daily';
+import { civilDate, dateColumn } from '../challenges/civil-date';
 import { getAttempt, startAttempt, submitAction } from './attempts.service';
 
 const GAMES = [
@@ -83,10 +84,25 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
       const prev = best.get(n);
       if (!prev || (a.completedAt && !prev.completedAt) || a.stars > prev.stars) best.set(n, a);
     }
+    // Desafio do Dia levels (today and the archive) open out of order; they never open the next.
+    const daily = new Set(
+      (
+        await prisma.dailyPick.findMany({
+          where: { gameMode: mode, day: { lte: dateColumn(civilDate(now())) } },
+          select: { level: true },
+        })
+      ).map((p) => p.level),
+    );
     let open = true;
     return levels.map((l) => {
       const a = best.get(l.publicNumber!);
-      const state = a?.completedAt ? 'done' : a ? 'in_progress' : open ? 'open' : 'locked';
+      const state = a?.completedAt
+        ? 'done'
+        : a
+          ? 'in_progress'
+          : open || daily.has(l.publicNumber!)
+            ? 'open'
+            : 'locked';
       if (state !== 'done') open = false;
       return {
         level: l.publicNumber!,

@@ -1422,6 +1422,12 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
       data: { level: 4 },
     });
     const g = guest();
+    // The track opens the day level out of order and keeps the one between locked.
+    expect(
+      (await g.req('GET', '/tracks/CAREER_PATH'))
+        .json()
+        .levels.map((l: { level: number; state: string }) => `${l.level}:${l.state}`),
+    ).toEqual(['2:open', '3:locked', '4:open']);
     expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 4 })).statusCode).toBe(
       201,
     );
