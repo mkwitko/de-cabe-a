@@ -1,3 +1,4 @@
+import { isDailyLevel } from '../daily/daily';
 import { awardTraining } from '../career/career.service';
 /**
  * Attempts (ARCHITECTURE.md §4, ADR-007): one attempt per level per player, sequential unlock,
@@ -307,7 +308,9 @@ export async function startAttempt(
   const challenge = versions.find((v) => v.status === 'published') ?? versions[0]!;
   if (challenge.status !== 'published')
     throw new AppError(404, 'LEVEL_NOT_FOUND', 'Fase retirada.');
-  await assertUnlocked(prisma, player, mode, level);
+  // The Desafio do Dia opens its level to everyone, whatever their track (GROWTH_PLAN.md 1.9).
+  if (!(await isDailyLevel(prisma, mode, level, now)))
+    await assertUnlocked(prisma, player, mode, level);
 
   const engine = engineFor(mode);
   const state = engine.createInitialState(engine.validateConfig(challenge.snapshot));
