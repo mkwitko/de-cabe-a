@@ -11,6 +11,7 @@ import {
 } from '@decabeca/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { isOffensive } from '@decabeca/engine';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
 import { rankRows, weekStart } from '../progression/ranking';
@@ -91,6 +92,8 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
     '/leagues',
     { schema: { body: CreateLeagueRequest, response: { 201: LeagueResponse } } },
     async (req, reply) => {
+      if (isOffensive(req.body.name))
+        throw new AppError(400, 'VALIDATION_ERROR', 'Esse nome não pode. Escolha outro.');
       await requireNickname(req);
       await assertRoom(req);
       for (let i = 0; ; i++) {

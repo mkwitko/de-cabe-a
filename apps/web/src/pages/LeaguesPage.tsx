@@ -8,21 +8,49 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LeagueResponse, LeaguesResponse } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { ShareButton } from '../components/ShareButton';
+import { suggestNickname } from '../lib/nickname';
 import { btnPrimary, btnSecondary, GameHeader, Notice, Skeleton } from '../components/ui';
 
-const NeedNickname = ({ error }: { error: ApiError | null }) =>
-  error?.code === 'NICKNAME_REQUIRED' ? (
-    <p role="alert" className="text-sm font-semibold">
-      <Link to="/conta" className="text-cover underline underline-offset-4">
-        Escolha um apelido
-      </Link>{' '}
-      para criar ou entrar em ligas: é o nome que seus amigos veem.
-    </p>
-  ) : error ? (
+/** Errors of create/join; without a nickname, one tap takes a suggested one and tries again. */
+function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => void }) {
+  const qc = useQueryClient();
+  const [suggestion] = useState(suggestNickname);
+  const take = useMutation<unknown, ApiError>({
+    mutationFn: () => api('/v1/me', { method: 'PATCH', json: { nickname: suggestion } }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['me'] });
+      retry();
+    },
+  });
+  if (error?.code === 'NICKNAME_REQUIRED')
+    return (
+      <div role="alert" className="flex flex-col items-start gap-2 text-sm font-semibold">
+        <p>Para entrar em ligas você precisa de um apelido: é o nome que seus amigos veem.</p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => take.mutate()}
+            disabled={take.isPending}
+          >
+            Usar “{suggestion}”
+          </button>
+          <Link
+            to="/conta"
+            className="inline-flex min-h-11 items-center underline underline-offset-4"
+          >
+            Escolher o meu
+          </Link>
+        </div>
+        {take.error && <p className="text-cover">{take.error.message}</p>}
+      </div>
+    );
+  return error ? (
     <p role="alert" className="text-sm font-semibold text-cover">
       {error.message}
     </p>
   ) : null;
+}
 
 export function LeaguesPage() {
   const nav = useNavigate();
@@ -97,7 +125,7 @@ export function LeaguesPage() {
               className="min-h-11 rounded-lg border-2 border-chalk-soft/50 bg-transparent px-3 text-base font-normal"
             />
           </label>
-          <NeedNickname error={create.error} />
+          <NeedNickname error={create.error} retry={() => create.mutate()} />
           <button type="submit" className={`${btnPrimary} self-start`} disabled={create.isPending}>
             Criar e convidar
           </button>
@@ -201,7 +229,7 @@ export function LeaguePage() {
           <p className="max-w-[44ch]">
             Entre para ver o ranking da semana e somar suas estrelas com a turma.
           </p>
-          <NeedNickname error={join.error} />
+          <NeedNickname error={join.error} retry={() => join.mutate()} />
           <button
             type="button"
             className={btnPrimary}

@@ -4,7 +4,7 @@
  * of this device is linked to the account, as before.
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { normalizeName } from '@decabeca/engine';
+import { isOffensive, normalizeName } from '@decabeca/engine';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { APIError, createAuthMiddleware } from 'better-auth/api';
@@ -35,10 +35,9 @@ export const authRequest = new AsyncLocalStorage<{
 }>();
 
 // Small blocklist; the ranking is public. ponytail: extend from the rejection report as needed.
-const BLOCKED = /(porra|caralho|merda|buceta|puta|viado|fdp|pqp|cuzao|nazi|hitler)/;
 export const nicknameKey = (n: string) => normalizeName(n).replace(/\s+/g, '');
 /** Names shown publicly (nicknames, career footballers) pass the same word filter. */
-export const isBlockedName = (n: string) => BLOCKED.test(nicknameKey(n));
+export const isBlockedName = (n: string) => isOffensive(n);
 
 /** Throws when the nickname is invalid or used by another account or another guest. */
 export async function assertNicknameFree(
@@ -47,8 +46,10 @@ export async function assertNicknameFree(
   mine: { sessionId: string; userId: string | null },
 ) {
   const key = nicknameKey(nickname);
-  if (key.length < 3 || BLOCKED.test(key))
-    throw new APIError('BAD_REQUEST', { message: 'Escolha outro apelido.' });
+  if (key.length < 3 || isOffensive(nickname))
+    throw new APIError('BAD_REQUEST', {
+      message: 'Esse apelido não pode. Escolha outro ou peça uma sugestão.',
+    });
   const [user, guest] = await Promise.all([
     prisma.user.findUnique({ where: { nicknameKey: key } }),
     prisma.guestSession.findUnique({ where: { nicknameKey: key } }),
@@ -64,7 +65,7 @@ async function freeNickname(prisma: PrismaClient, name: string) {
   for (let i = 1; ; i++) {
     const candidate = i === 1 ? base : `${base.slice(0, 17)} ${i}`;
     const key = nicknameKey(candidate);
-    if (key.length < 3 || BLOCKED.test(key)) return freeNickname(prisma, 'Jogador');
+    if (key.length < 3 || isOffensive(candidate)) return freeNickname(prisma, 'Jogador');
     const taken =
       (await prisma.user.findUnique({ where: { nicknameKey: key } })) ||
       (await prisma.guestSession.findUnique({ where: { nicknameKey: key } }));
