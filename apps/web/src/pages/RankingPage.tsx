@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useRanking } from '../lib/game';
-import { Skeleton } from '../components/ui';
+import { btnPrimary, Skeleton } from '../components/ui';
 
 export function RankingPage() {
   const [scope, setScope] = useState<'all' | 'week' | 'timed'>('all');
@@ -48,6 +48,18 @@ export function RankingPage() {
           )}
         </p>
       )}
+      <Link
+        to="/ligas"
+        className="flex items-center justify-between gap-4 rounded-xl bg-paper px-5 py-4 text-ink"
+      >
+        <span>
+          <span className="font-condensed block text-2xl leading-none font-black uppercase">
+            Ligas de amigos
+          </span>
+          <span className="text-sm font-semibold">Ranking da semana só com a sua turma.</span>
+        </span>
+        <span className={`${btnPrimary} shrink-0`}>Ver</span>
+      </Link>
       {!data ? (
         <Skeleton className="h-96" />
       ) : data.entries.length === 0 ? (

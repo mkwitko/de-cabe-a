@@ -667,3 +667,38 @@ export const GAME_PATH = {
   CONNECTIONS: '/conexoes',
   MYSTERY_PLAYER: '/craque-misterioso',
 } as const satisfies Record<GameMode, string>;
+
+/** Ligas de amigos (GROWTH_PLAN.md 2.1). */
+export const LeagueName = z
+  .string()
+  .trim()
+  .min(3, 'O nome precisa de 3 a 40 caracteres.')
+  .max(40, 'O nome precisa de 3 a 40 caracteres.');
+export const CreateLeagueRequest = z.strictObject({ name: LeagueName });
+export const ReportLeagueRequest = z.strictObject({ reason: z.string().trim().min(3).max(300) });
+export const LeagueSummary = z.strictObject({
+  code: z.string(),
+  name: z.string(),
+  members: z.number(),
+});
+export const LeaguesResponse = z.strictObject({ leagues: z.array(LeagueSummary) });
+export type LeaguesResponse = z.infer<typeof LeaguesResponse>;
+/** GET /v1/leagues/:code; the weekly ranking only for members. */
+export const LeagueResponse = z.strictObject({
+  code: z.string(),
+  name: z.string(),
+  members: z.number(),
+  maxMembers: z.number(),
+  isMember: z.boolean(),
+  /** Monday 00:00 in Brasília, start of the weekly ranking. */
+  weekStart: z.string(),
+  ranking: z.array(
+    z.strictObject({
+      position: z.number(),
+      nickname: z.string(),
+      stars: z.number(),
+      isMe: z.boolean(),
+    }),
+  ),
+});
+export type LeagueResponse = z.infer<typeof LeagueResponse>;
