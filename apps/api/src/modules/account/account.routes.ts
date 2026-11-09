@@ -2,7 +2,14 @@
  * Nickname and optional account (ADR-007, ADR-008). Guests keep playing without one; an account
  * keeps progress across devices. Sign-in itself is Better Auth, mounted at /v1/auth/*.
  */
-import { MeResponse, UpdateMeRequest } from '@decabeca/contracts';
+import {
+  GameMode,
+  MeResponse,
+  ProfileResponse,
+  UpdateMeRequest,
+  UpdateProfileRequest,
+} from '@decabeca/contracts';
+import { z } from 'zod';
 import { titleFor } from '@decabeca/engine';
 import { APIError } from 'better-auth/api';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -10,7 +17,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { AppError } from '../../errors';
 import { newSession, playerAttempts } from '../session/session';
-import { assertNicknameFree, authRequest } from './auth';
+import { assertNicknameFree, authRequest, nicknameKey } from './auth';
+import { playerAchievements } from '../progression/achievements';
 
 export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now, secureCookie, auth } = app.deps;
@@ -35,10 +43,68 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       account: user ? { email: user.email, emailVerified: user.emailVerified } : null,
       totalStars,
       title: titleFor(totalStars),
+      publicProfile: user?.publicProfile ?? session.publicProfile,
     };
   }
 
   app.get('/me', { schema: { response: { 200: MeResponse } } }, (req) => me(req));
+
+  app.patch(
+    '/me/profile',
+    { schema: { body: UpdateProfileRequest, response: { 200: MeResponse } } },
+    async (req) => {
+      const { publicProfile } = req.body;
+      if (publicProfile && !(await me(req)).nickname)
+        throw new AppError(409, 'NICKNAME_REQUIRED', 'Escolha um apelido antes de abrir o perfil.');
+      if (req.userId)
+        await prisma.user.update({ where: { id: req.userId }, data: { publicProfile } });
+      else
+        await prisma.guestSession.update({ where: { id: req.sessionId }, data: { publicProfile } });
+      return me(req);
+    },
+  );
+
+  /** A public profile; a private or unknown one is the same 404, so names cannot be probed. */
+  app.get(
+    '/profiles/:nickname',
+    {
+      schema: {
+        params: z.object({ nickname: z.string().max(40) }),
+        response: { 200: ProfileResponse },
+      },
+    },
+    async (req) => {
+      const key = nicknameKey(req.params.nickname);
+      const [user, guest] = await Promise.all([
+        prisma.user.findUnique({ where: { nicknameKey: key } }),
+        prisma.guestSession.findUnique({ where: { nicknameKey: key } }),
+      ]);
+      const who = user?.publicProfile
+        ? { sessionId: '', userId: user.id, nickname: user.nickname }
+        : !user && guest?.publicProfile && !guest.userId
+          ? { sessionId: guest.id, userId: null, nickname: guest.nickname! }
+          : null;
+      if (!who) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
+      const [done, items] = await Promise.all([
+        prisma.attempt.findMany({
+          where: { ...playerAttempts(who), completedAt: { not: null } },
+          select: { gameMode: true, stars: true },
+        }),
+        playerAchievements(prisma, who),
+      ]);
+      const totalStars = done.reduce((s, a) => s + a.stars, 0);
+      return {
+        nickname: who.nickname,
+        title: titleFor(totalStars),
+        totalStars,
+        games: GameMode.options.map((mode) => {
+          const of = done.filter((a) => a.gameMode === mode);
+          return { mode, completed: of.length, stars: of.reduce((s, a) => s + a.stars, 0) };
+        }),
+        achievements: items.filter((x) => x.done).map(({ id, name }) => ({ id, name })),
+      };
+    },
+  );
 
   app.patch(
     '/me',

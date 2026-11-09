@@ -1,4 +1,6 @@
+import { Link } from 'react-router';
 import { suggestNickname } from '../lib/nickname';
+import { ShareButton } from '../components/ShareButton';
 import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api, type ApiError } from '../lib/api';
@@ -105,6 +107,48 @@ export function AccountPage() {
               </button>
             </div>
           </form>
+
+          {m.nickname && (
+            <section className="flex flex-col gap-3">
+              <h2 className={h2}>Perfil público</h2>
+              <p className="text-chalk-soft">
+                {m.publicProfile
+                  ? 'Qualquer pessoa com o link vê seu apelido, título, estrelas por jogo e conquistas.'
+                  : 'Desligado: ninguém vê seu perfil. Ligue para mostrar apelido, título, estrelas e conquistas.'}
+              </p>
+              <label className="flex min-h-11 items-center gap-3 font-semibold">
+                <input
+                  type="checkbox"
+                  className="size-5 accent-cover"
+                  checked={m.publicProfile}
+                  disabled={act.isPending}
+                  onChange={(e) =>
+                    act.mutate({
+                      path: '/v1/me/profile',
+                      method: 'PATCH',
+                      json: { publicProfile: e.target.checked },
+                    })
+                  }
+                />
+                Perfil público
+              </label>
+              {m.publicProfile && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <ShareButton
+                    secondary
+                    label="Copiar link do perfil"
+                    text={`${location.origin}/perfil/${encodeURIComponent(m.nickname)}`}
+                  />
+                  <Link
+                    to={`/perfil/${encodeURIComponent(m.nickname)}`}
+                    className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+                  >
+                    Ver como os outros veem
+                  </Link>
+                </div>
+              )}
+            </section>
+          )}
 
           {m.account ? (
             <section className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0">

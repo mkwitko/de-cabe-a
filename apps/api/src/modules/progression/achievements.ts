@@ -4,6 +4,10 @@
  * deleted, so an achievement once earned stays earned.
  */
 import type { AchievementsResponse, GameMode } from '@decabeca/contracts';
+import type { PrismaClient } from '../../generated/prisma/client';
+import { civilDate } from '../challenges/civil-date';
+import { myPks } from '../leagues/leagues';
+import { playerAttempts } from '../session/session';
 
 export interface AchievementInput {
   attempts: {
@@ -150,5 +154,47 @@ export function achievements(input: AchievementInput): Item[] {
   return RULES.map(({ measure, ...r }) => {
     const progress = Math.min(measure(input), r.goal);
     return { ...r, progress, done: progress >= r.goal };
+  });
+}
+
+/** The achievements of a player (an account, or a guest session), from the database. */
+export async function playerAchievements(
+  prisma: PrismaClient,
+  req: { sessionId: string; userId: string | null },
+) {
+  const [done, picks, leagues] = await Promise.all([
+    prisma.attempt.findMany({
+      where: { ...playerAttempts(req), completedAt: { not: null } },
+      select: {
+        gameMode: true,
+        stars: true,
+        score: true,
+        timed: true,
+        startedAt: true,
+        challenge: { select: { publicNumber: true } },
+      },
+    }),
+    // ponytail: every draw (8 rows a day); filter by the player's days when this grows.
+    prisma.dailyPick.findMany(),
+    prisma.league.findMany({
+      where: { members: { some: { pk: { in: await myPks(prisma, req) } } } },
+      select: { _count: { select: { members: true } } },
+    }),
+  ]);
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const drawn = new Set(picks.map((p) => `${day(p.day)}|${p.gameMode}|${p.level}`));
+  const dailyModes = new Map<string, number>();
+  for (const p of picks) dailyModes.set(day(p.day), (dailyModes.get(day(p.day)) ?? 0) + 1);
+  return achievements({
+    attempts: done.map((a) => {
+      // A level counts as that day's Desafio do Dia when started on the day it was drawn.
+      const played = civilDate(a.startedAt);
+      return {
+        ...a,
+        daily: drawn.has(`${played}|${a.gameMode}|${a.challenge.publicNumber}`) ? played : null,
+      };
+    }),
+    dailyModes,
+    biggestLeague: Math.max(0, ...leagues.map((l) => l._count.members)),
   });
 }
