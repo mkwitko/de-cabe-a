@@ -1,5 +1,6 @@
 import { SoundToggle } from './components/SoundToggle';
 import { GameArt } from './components/GameArt';
+import { RouteMeta } from './components/RouteMeta';
 import { StarIcon } from './components/Stars';
 import { DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
@@ -619,6 +620,7 @@ export function App() {
 function PublicRoutes() {
   return (
     <Shell>
+      <RouteMeta />
       <Suspense fallback={<Skeleton className="h-96" />}>
         <Routes>
           <Route path="/" element={<HomeRoute />} />
