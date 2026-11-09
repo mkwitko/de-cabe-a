@@ -5,16 +5,22 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import './index.css';
 import { trackArrival } from './lib/analytics';
+import { initPostHog } from './lib/posthog';
 
+initPostHog();
 trackArrival();
 
-// Error monitoring (Sentry) only when built with VITE_SENTRY_DSN; loaded apart so it costs
-// nothing otherwise. No personal data is sent.
+// Error and performance monitoring (Sentry) only when built with VITE_SENTRY_DSN; loaded apart so
+// it costs nothing otherwise. A sample of page loads and API calls is traced; the API's spans join
+// the same trace (same origin). No personal data is sent.
 if (import.meta.env.VITE_SENTRY_DSN)
   void import('@sentry/react').then((Sentry) =>
     Sentry.init({
       dsn: import.meta.env.VITE_SENTRY_DSN,
       environment: import.meta.env.MODE,
+      integrations: [Sentry.browserTracingIntegration()],
+      tracesSampleRate: 0.1,
+      tracePropagationTargets: [/^\//],
     }),
   );
 

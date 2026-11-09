@@ -26,6 +26,19 @@
 		}
 	}
 
+	# PostHog through our origin, so ad blockers do not drop analytics.
+	handle_path /ingest/static/* {
+		rewrite * /static{uri}
+		reverse_proxy https://us-assets.i.posthog.com {
+			header_up Host us-assets.i.posthog.com
+		}
+	}
+	handle_path /ingest/* {
+		reverse_proxy https://us.i.posthog.com {
+			header_up Host us.i.posthog.com
+		}
+	}
+
 	handle {
 		root * /srv
 		@hashed path /assets/*

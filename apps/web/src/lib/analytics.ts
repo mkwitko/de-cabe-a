@@ -2,6 +2,8 @@
  * Client analytics (ANALYTICS.md §1): only what the server cannot see. Game events
  * (started, answers, completed) are recorded by the API. No text, no identifiers.
  */
+import { capture } from './posthog';
+
 type Name = 'game_viewed' | 'result_shared' | 'game_abandoned' | 'search_no_result' | 'link_opened';
 type Props = Record<string, string | number | boolean | null>;
 
@@ -12,6 +14,7 @@ const payload = (name: Name, props: Props) =>
   });
 
 export function track(name: Name, props: Props = {}) {
+  capture(name, props);
   void fetch('/v1/events', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
