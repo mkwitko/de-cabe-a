@@ -1,13 +1,38 @@
-# HTTPS for the API origin. Players never open this host: the site (Cloudflare Pages) forwards
-# <site>/v1/* here, so web and API share one domain (ADR-010).
-{$API_HOST} {
-	encode gzip
+# The site and the API on one origin. Players reach it through the Cloudflare Tunnel on the VM
+# (cloudflared -> 127.0.0.1:8088), so Cloudflare terminates HTTPS and Caddy speaks plain HTTP.
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options nosniff
-		Referrer-Policy no-referrer
+		Referrer-Policy strict-origin-when-cross-origin
 		Content-Security-Policy "frame-ancestors 'none'"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 		-Server
 	}
-	reverse_proxy api:3000
+
+	# Game API and the server-rendered search pages.
+	@api path /v1/* /jogador/* /jogadores /sitemap.xml /llms.txt /creditos
+	handle @api {
+		reverse_proxy api:3000 {
+			# The player's IP as Cloudflare saw it (per-IP limits); the tunnel is the only way in.
+			header_up X-Forwarded-For {http.request.header.Cf-Connecting-Ip}
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	handle {
+		root * /srv
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@fresh path /sw.js /index.html /manifest.webmanifest
+		header @fresh Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
 }
