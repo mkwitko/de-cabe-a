@@ -23,6 +23,7 @@ import { challengeRoutes } from './modules/challenges/challenges.routes';
 import { reportRoutes } from './modules/admin/reports.routes';
 import { publicRoutes } from './modules/attempts/public.routes';
 import { fetchEntities, type EntityFetcher } from './modules/data-import/wikidata-client';
+import { NO_PUSH, type PushDeps } from './modules/push/push';
 
 export interface AppDeps {
   prisma: PrismaClient;
@@ -35,6 +36,8 @@ export interface AppDeps {
   secureCookie: boolean;
   /** Per-minute limits (ARCHITECTURE.md §8, API_SPEC.md). */
   limits: { sessionsPerIp: number; perSession: number; search: number; actions: number };
+  /** Browser push (GROWTH_PLAN.md 2.9); off without VAPID keys. */
+  push: PushDeps;
   /** Better Auth (ADR-008), built from `authOptions`. */
   auth: Auth;
 }
@@ -74,6 +77,7 @@ export function buildApp(
     fetchEntities,
     now: () => new Date(),
     random: Math.random,
+    push: NO_PUSH,
     secureCookie: process.env.NODE_ENV === 'production',
     limits: { sessionsPerIp: 20, perSession: 300, search: 60, actions: 120 },
     ...rest,

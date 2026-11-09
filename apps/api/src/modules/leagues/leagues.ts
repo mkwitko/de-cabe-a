@@ -37,7 +37,7 @@ export async function myPks(prisma: PrismaClient, req: Req) {
 }
 
 /** A member's ranking pk: a guest session that signed up since counts as its account. */
-async function effectivePks(prisma: PrismaClient, pks: string[]) {
+export async function effectivePks(prisma: PrismaClient, pks: string[]) {
   const sessions = await prisma.guestSession.findMany({
     where: { id: { in: pks } },
     select: { id: true, userId: true },

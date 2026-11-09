@@ -625,3 +625,22 @@ model LeagueReport {
 
   @@unique([leagueId, pk])
 }
+
+/// Notificações opt-in (GROWTH_PLAN.md 2.9): one browser push subscription per device.
+model PushSubscription {
+  endpoint  String   @id
+  pk        String /// account id, or guest session id
+  p256dh    String
+  auth      String
+  daily     Boolean  @default(true) /// new Desafio do Dia
+  league    Boolean  @default(true) /// a league's week closed
+  createdAt DateTime @default(now())
+
+  @@index([pk])
+}
+
+/// A push batch already sent ("daily:2026-11-10"), so a restart never sends it twice.
+model PushSend {
+  key       String   @id
+  createdAt DateTime @default(now())
+}

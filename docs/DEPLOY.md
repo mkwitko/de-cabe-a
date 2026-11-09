@@ -46,6 +46,13 @@ Google Cloud Console → APIs e serviços → Credenciais → ID do cliente OAut
 2. Criar uma API key só de envio → `RESEND_API_KEY`; `EMAIL_FROM=De Cabeça <nao-responda@decabecafc.com.br>`.
 3. Reiniciar a API e testar "Esqueci a senha" na página Conta.
 
+## 5b. Notificações (push)
+
+1. Gerar o par de chaves uma vez: `pnpm --filter @decabeca/api exec web-push generate-vapid-keys`.
+2. No `.env` da VM: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT=mailto:contato@decabecafc.com.br`. Não trocar as chaves depois: inscrições antigas param de funcionar.
+3. A API manda às 9h (Brasília) o Desafio do Dia e, às segundas, o fechamento da semana das ligas. Cada lote é registrado em `PushSend` e sai uma vez só.
+4. Rodar `scripts/research/publish-draft.ts` depois da migração para criar as fases do Draft.
+
 ## 6. Backup
 
 1. Criar o bucket `decabeca-backups` no Cloudflare R2 e um token S3; configurar o `rclone` na VM com um remote chamado `r2`.

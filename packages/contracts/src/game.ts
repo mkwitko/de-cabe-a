@@ -825,3 +825,14 @@ export const ReactionsResponse = z.strictObject({
   mine: ReactionKind.nullable(),
 });
 export type ReactionsResponse = z.infer<typeof ReactionsResponse>;
+
+/** Notificações opt-in (GROWTH_PLAN.md 2.9); publicKey null when the server has push off. */
+export const PushKeyResponse = z.strictObject({ publicKey: z.string().nullable() });
+export type PushKeyResponse = z.infer<typeof PushKeyResponse>;
+export const PushSubscribeRequest = z.strictObject({
+  endpoint: z.url().max(1000),
+  keys: z.strictObject({ p256dh: z.string().max(200), auth: z.string().max(100) }),
+  daily: z.boolean(),
+  league: z.boolean(),
+});
+export const PushUnsubscribeRequest = z.strictObject({ endpoint: z.url().max(1000) });

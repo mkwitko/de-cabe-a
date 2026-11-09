@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { suggestNickname } from '../lib/nickname';
 import { ShareButton } from '../components/ShareButton';
+import { Notifications } from '../components/Notifications';
 import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api, type ApiError } from '../lib/api';
@@ -149,6 +150,8 @@ export function AccountPage() {
               )}
             </section>
           )}
+
+          <Notifications />
 
           {m.account ? (
             <section className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0">
