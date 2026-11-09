@@ -76,6 +76,7 @@ export function ChallengesPage() {
             <option value="MISSING_XI">Escalação</option>
             <option value="MYSTERY_PLAYER">Craque Misterioso</option>
             <option value="CONNECTIONS">Conexões</option>
+            <option value="DRAFT">Draft</option>
           </select>
           <span className="text-sm">{published} fases publicadas</span>
         </div>

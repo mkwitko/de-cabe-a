@@ -9,6 +9,7 @@ export const GameMode = z.enum([
   'MISSING_XI',
   'MYSTERY_PLAYER',
   'CONNECTIONS',
+  'DRAFT',
 ]);
 export type GameMode = z.infer<typeof GameMode>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
@@ -347,6 +348,41 @@ export const AttemptSummary = z.strictObject({
 });
 export type AttemptSummary = z.infer<typeof AttemptSummary>;
 
+/** Draft (GROWTH_PLAN.md 2.4): a 4-3-3 built one slot per round from real matches. */
+const DraftMatch = z.strictObject({
+  competition: z.string(),
+  season: z.string(),
+  stage: z.string().nullable(),
+  team: z.string(),
+  opponent: z.string(),
+  teamScore: z.number().nullable(),
+  opponentScore: z.number().nullable(),
+});
+const DraftRound = {
+  slot: PositionGroup,
+  match: DraftMatch,
+  players: z.array(ImpostorPlayer),
+};
+export const DraftView = z.strictObject({
+  status: z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']),
+  round: z.number(),
+  totalRounds: z.number(),
+  rounds: z.array(
+    z.strictObject({
+      ...DraftRound,
+      picked: z.string(),
+      answerId: z.string(),
+      correct: z.boolean(),
+    }),
+  ),
+  current: z.strictObject(DraftRound).nullable(),
+});
+export type DraftView = z.infer<typeof DraftView>;
+export const DraftReveal = z.strictObject({
+  rounds: z.array(z.strictObject({ ...DraftRound, answerId: z.string() })),
+});
+export type DraftReveal = z.infer<typeof DraftReveal>;
+
 const GameEvent = z.union([
   z.strictObject({ type: z.literal('correct'), cellIndex: z.number().optional() }),
   z.strictObject({
@@ -364,6 +400,12 @@ const GameEvent = z.union([
     impostorId: z.string(),
   }),
   z.strictObject({ type: z.literal('ended') }),
+  // Draft: the round's starter is shown once the round is played.
+  z.strictObject({
+    type: z.enum(['correct', 'wrong']),
+    round: z.number(),
+    answerId: z.string(),
+  }),
   // Escalação: a hidden slot found, or a wrong guess.
   z.strictObject({ type: z.literal('found'), slot: z.number() }),
   z.strictObject({ type: z.literal('wrong'), wrongLeft: z.number() }),
@@ -400,6 +442,7 @@ export const AttemptResponse = z.strictObject({
     MissingXiView,
     MysteryView,
     ConnectionsView,
+    DraftView,
   ]),
   reveal: z
     .union([
@@ -411,6 +454,7 @@ export const AttemptResponse = z.strictObject({
       MissingXiReveal,
       MysteryReveal,
       ConnectionsReveal,
+      DraftReveal,
     ])
     .nullable(),
   /** `url` is the level's page without the scheme, e.g. decabecafc.com.br/career-path/12. */
@@ -556,6 +600,12 @@ export const StatsResponse = z.strictObject({
     threeStars: z.number(),
     perfect: z.number(),
   }),
+  DRAFT: z.strictObject({
+    completed: z.number(),
+    stars: z.number(),
+    threeStars: z.number(),
+    perfect: z.number(),
+  }),
 });
 export type StatsResponse = z.infer<typeof StatsResponse>;
 
@@ -669,6 +719,7 @@ export const GAME_PATH = {
   HIGHER_LOWER: '/mais-ou-menos',
   MISSING_XI: '/escalacao',
   CONNECTIONS: '/conexoes',
+  DRAFT: '/draft',
   MYSTERY_PLAYER: '/craque-misterioso',
 } as const satisfies Record<GameMode, string>;
 

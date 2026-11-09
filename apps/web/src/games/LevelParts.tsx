@@ -213,6 +213,12 @@ const REASONS: Record<GameMode, [string, string][]> = {
     ['club_missing', 'Clube faltando ou que ele não jogou'],
     ['other', 'Outra coisa'],
   ],
+  DRAFT: [
+    ['club_missing', 'O certo não foi titular nesse jogo'],
+    ['answer_refused', 'Outra opção também foi titular nesse jogo'],
+    ['position', 'Posição errada'],
+    ['other', 'Outra coisa'],
+  ],
   CONNECTIONS: [
     ['club_missing', 'Um jogador não pertence ao grupo'],
     ['wrong_stats', 'Jogador cabe em dois grupos'],

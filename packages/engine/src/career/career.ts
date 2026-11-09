@@ -18,6 +18,7 @@ export const TRAINS: Record<string, Attribute> = {
   MISSING_XI: 'vision',
   MYSTERY_PLAYER: 'finishing',
   CONNECTIONS: 'passing',
+  DRAFT: 'vision',
 };
 
 /** Stars that count as training per day; the rest still count for ranking and titles. */

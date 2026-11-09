@@ -11,6 +11,7 @@ import {
   validateChallenge,
 } from '../modules/challenges/challenges.service';
 import { countryIds, verifiedClubs, verifiedPlayer } from './factory';
+import { DRAFT_SLOTS } from '@decabeca/engine';
 
 const url = process.env.DATABASE_URL;
 if (!url?.includes('e2e'))
@@ -206,5 +207,48 @@ await live({
   },
   createdBy: 'e2e',
 });
+// Draft level 1: 11 matches, one per slot of the 4-3-3. The starter is "Craque L2C2 1..8" then
+// "Craque L2C3 1..3"; the wrong options come from other Grid cells (e2e/draft.spec.ts).
+const draftAnswers = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `Craque L2C2 ${i}`);
+draftAnswers.push('Craque L2C3 1', 'Craque L2C3 2', 'Craque L2C3 3');
+const decoyNames = ['L3C1', 'L3C2', 'L3C3', 'L2C1', 'L1C2'].flatMap((cell) =>
+  [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `Craque ${cell} ${i}`),
+);
+const SLOT_CODE = { GK: 'GK', DF: 'CB', MF: 'CM', FW: 'CF' } as const;
+const draftRounds = [];
+for (const [i, slot] of DRAFT_SLOTS.entries()) {
+  const playerId = await byName(draftAnswers[i]!);
+  const m = await prisma.match.create({
+    data: {
+      source: 'wikipedia',
+      sourceRef: `wikipedia:en:e2e draft ${i}`,
+      competition: 'FIFA World Cup',
+      season: String(1970 + i * 4),
+      stage: 'Final',
+      homeTeam: 'Brazil',
+      awayTeam: 'Italy',
+      homeScore: 1,
+      awayScore: 0,
+      lineups: {
+        create: [
+          {
+            side: 'home',
+            playerName: draftAnswers[i]!,
+            position: SLOT_CODE[slot],
+            starter: true,
+            playerId,
+          },
+        ],
+      },
+    },
+  });
+  draftRounds.push({
+    matchId: m.id,
+    side: 'home' as const,
+    playerId,
+    decoyIds: await Promise.all(decoyNames.slice(i * 3, i * 3 + 3).map(byName)),
+  });
+}
+await live({ mode: 'DRAFT', params: { rounds: draftRounds }, createdBy: 'e2e' });
 console.log('e2e seed ready');
 await prisma.$disconnect();

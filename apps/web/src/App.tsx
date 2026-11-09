@@ -53,6 +53,9 @@ const MysteryPlayerPage = lazy(() =>
     default: m.MysteryPlayerPage,
   })),
 );
+const DraftPage = lazy(() =>
+  import('./games/draft/DraftPage').then((m) => ({ default: m.DraftPage })),
+);
 const ConnectionsPage = lazy(() =>
   import('./games/connections/ConnectionsPage').then((m) => ({ default: m.ConnectionsPage })),
 );
@@ -172,6 +175,18 @@ export const GAMES = [
       'Toque em 4 jogadores que você acha que têm algo em comum e confirme.',
       'Grupos: mesmo clube, mesma seleção ou titulares da mesma final. Cada jogador está em um grupo só.',
       '4 erros encerram a fase. Ache os 4 grupos com até 1 erro para 3 estrelas.',
+    ],
+  },
+  {
+    slot: '09',
+    mode: 'DRAFT',
+    name: 'Draft',
+    path: '/draft',
+    rule: 'Monte um 4-3-3 com titulares de jogos de verdade, uma posição por rodada.',
+    howTo: [
+      'Cada rodada mostra um jogo de verdade, um time e uma posição.',
+      'Das 4 opções, só uma foi titular nesse jogo. As outras jogaram pelo mesmo time em outros jogos.',
+      'São 11 rodadas, uma por posição. Acerte 10 ou 11 para 3 estrelas.',
     ],
   },
 ] as const;
@@ -536,6 +551,8 @@ function PublicRoutes() {
           <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
           <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
           <Route path="/craque-misterioso/:level" element={<LevelRoute mode="MYSTERY_PLAYER" />} />
+          <Route path="/draft" element={<TrackPage mode="DRAFT" />} />
+          <Route path="/draft/:level" element={<LevelRoute mode="DRAFT" />} />
           <Route path="/conexoes" element={<TrackPage mode="CONNECTIONS" />} />
           <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
           <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
@@ -577,6 +594,8 @@ function LevelRoute({ mode }: { mode: GameMode }) {
           <TimelinePage level={level} timed={timed} />
         ) : mode === 'MYSTERY_PLAYER' ? (
           <MysteryPlayerPage level={level} timed={timed} />
+        ) : mode === 'DRAFT' ? (
+          <DraftPage level={level} timed={timed} />
         ) : mode === 'CONNECTIONS' ? (
           <ConnectionsPage level={level} timed={timed} />
         ) : mode === 'MISSING_XI' ? (

@@ -8,6 +8,7 @@ export const ENGINE_IDS = [
   'missing-xi',
   'mystery-player',
   'connections',
+  'draft',
 ] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 export { normalizeName } from './text/normalize';
@@ -23,5 +24,6 @@ export * from './higher-lower/engine';
 export * from './missing-xi/engine';
 export * from './mystery-player/engine';
 export * from './connections/engine';
+export * from './draft/engine';
 export * from './stars';
 export * from './career/career';

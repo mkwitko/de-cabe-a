@@ -200,6 +200,7 @@ enum GameModeCode {
   MISSING_XI
   MYSTERY_PLAYER
   CONNECTIONS
+  DRAFT
 }
 
 enum ChallengeStatus {

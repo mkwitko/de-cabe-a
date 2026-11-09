@@ -3,7 +3,7 @@
  * the player's finished levels, checked on the server and never stored: attempts are never
  * deleted, so an achievement once earned stays earned.
  */
-import type { AchievementsResponse, GameMode } from '@decabeca/contracts';
+import { GameMode, type AchievementsResponse } from '@decabeca/contracts';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { civilDate } from '../challenges/civil-date';
 import { myPks } from '../leagues/leagues';
@@ -68,8 +68,8 @@ const RULES: Rule[] = [
     id: 'oito-jogos',
     category: 'progressao',
     name: 'Rodou o Brasil',
-    description: 'Termine uma fase de cada um dos 8 jogos.',
-    goal: 8,
+    description: `Termine uma fase de cada um dos ${GameMode.options.length} jogos.`,
+    goal: GameMode.options.length,
     measure: (i) => new Set(i.attempts.map((a) => a.gameMode)).size,
   },
   {

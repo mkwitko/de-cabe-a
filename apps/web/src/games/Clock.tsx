@@ -14,6 +14,7 @@ export const TIME_LIMIT_SEC: Record<GameMode, number> = {
   HIGHER_LOWER: 60,
   MISSING_XI: 120,
   CONNECTIONS: 120,
+  DRAFT: 120,
   MYSTERY_PLAYER: 120,
 };
 export const formatClock = (sec: number) =>
