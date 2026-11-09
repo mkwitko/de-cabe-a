@@ -87,6 +87,7 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
     const xi = of('MISSING_XI');
     const mp = of('MYSTERY_PLAYER');
     const cn = of('CONNECTIONS');
+    const dr = of('DRAFT');
     const sum = (xs: typeof done) => xs.reduce((s, a) => s + a.stars, 0);
     const distribution: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0 };
     for (const a of cp.filter((x) => x.status === 'WON')) distribution[String(7 - a.score / 10)]!++;
@@ -150,6 +151,12 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
         stars: sum(cn),
         threeStars: cn.filter((a) => a.stars === 3).length,
         perfect: cn.filter((a) => a.score === 44).length,
+      },
+      DRAFT: {
+        completed: dr.length,
+        stars: sum(dr),
+        threeStars: dr.filter((a) => a.stars === 3).length,
+        perfect: dr.filter((a) => a.score === 11).length,
       },
     };
   });

@@ -8,6 +8,7 @@ import { buildTimelineSnapshot, TimelineParams } from './timeline-snapshot';
  * validate -> publish (becomes the next level of its game's track) -> retire.
  */
 import { buildImpostorSnapshot, ImpostorParams } from './impostor-snapshot';
+import { buildDraftSnapshot, DraftParams } from './draft-snapshot';
 import {
   buildTrajectory,
   careerPath,
@@ -135,6 +136,7 @@ export interface CreateChallengeInput {
     | { playerId: string }
     | GridParams
     | ImpostorParams
+    | DraftParams
     | TimelineParams
     | HigherLowerParams
     | MissingXiParams
@@ -174,6 +176,11 @@ function usages(
     return (snapshot.rounds as { playerId: string }[]).map((r) => ({
       playerId: r.playerId,
       role: 'timeline',
+    }));
+  if (mode === 'DRAFT')
+    return (snapshot.rounds as { answerId: string }[]).map((r) => ({
+      playerId: r.answerId,
+      role: 'draft',
     }));
   if (mode === 'IMPOSTOR')
     return (snapshot.rounds as { impostorId: string }[]).map((r) => ({
@@ -252,6 +259,16 @@ export async function buildSnapshot(
         reasons: built.reasons,
       });
     const config = ENGINES.TIMELINE.validateConfig(built.config);
+    return { config, difficultyTier: config.difficultyTier };
+  }
+  if (input.mode === 'DRAFT') {
+    const params = DraftParams.parse(input.params);
+    const built = await buildDraftSnapshot(prisma, params, input.difficultyTier);
+    if (!built.eligible)
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase do Draft não elegível.', {
+        reasons: built.reasons,
+      });
+    const config = ENGINES.DRAFT.validateConfig(built.config);
     return { config, difficultyTier: config.difficultyTier };
   }
   if (input.mode === 'IMPOSTOR') {

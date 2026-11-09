@@ -102,7 +102,7 @@ describe('Perfil público (GROWTH_PLAN.md 2.2)', () => {
     // Any spelling of the nickname finds it, as in the ranking.
     const profile = (await visitor.req('GET', '/profiles/galinho10')).json();
     expect(profile).toMatchObject({ nickname: 'Galinho 10', totalStars: 0, achievements: [] });
-    expect(profile.games).toHaveLength(8);
+    expect(profile.games).toHaveLength(9);
 
     await zico.req('PATCH', '/me/profile', { publicProfile: false });
     expect((await visitor.req('GET', '/profiles/Galinho%2010')).statusCode).toBe(404);

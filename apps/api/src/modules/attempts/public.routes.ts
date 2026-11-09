@@ -37,6 +37,7 @@ const GAMES = [
   { mode: 'MISSING_XI', name: 'Escalação' },
   { mode: 'MYSTERY_PLAYER', name: 'Craque Misterioso' },
   { mode: 'CONNECTIONS', name: 'Conexões' },
+  { mode: 'DRAFT', name: 'Draft' },
 ] as const;
 
 /** Public game routes; every request runs with a guest session (created on first visit). */

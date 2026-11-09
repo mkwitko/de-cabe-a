@@ -19,13 +19,13 @@ import { useGameTracking } from '../../lib/useGameTracking';
 import { Countdown } from '../Clock';
 import { LevelEnd, LevelError } from '../LevelParts';
 
-const COMPETITION_PT: Record<string, string> = {
+export const COMPETITION_PT: Record<string, string> = {
   'FIFA World Cup': 'Copa do Mundo',
   'UEFA Champions League': 'Liga dos Campeões',
   'Copa Libertadores': 'Libertadores',
   'Copa América': 'Copa América',
 };
-const STAGE_PT: Record<string, string> = {
+export const STAGE_PT: Record<string, string> = {
   Final: 'Final',
   'Semi-finals': 'Semifinal',
   'Quarter-finals': 'Quartas de final',

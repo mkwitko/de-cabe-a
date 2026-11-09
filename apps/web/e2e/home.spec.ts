@@ -186,3 +186,29 @@ test('Conexões: a right group locks in, a wrong one costs a mistake', async ({ 
   await page.getByRole('button', { name: 'Desistir e ver os grupos' }).click();
   await expect(page.getByRole('heading', { name: '1 de 4 grupos desta vez' })).toBeVisible();
 });
+
+test('Draft: pick the starter of each match, the XI fills a 4-3-3 in under 2 minutes', async ({
+  page,
+}) => {
+  const started = Date.now();
+  await page.goto('/draft/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await expect(page.getByRole('heading', { name: 'Goleiro titular de Brasil?' })).toBeVisible();
+  // Seed (e2e-seed.ts): the starters are "Craque L2C2 1..8", then "Craque L2C3 1..3".
+  const answers = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `Craque L2C2 ${i}`);
+  answers.push('Craque L2C3 1', 'Craque L2C3 2', 'Craque L2C3 3');
+  for (const [i, answer] of answers.entries()) {
+    const options = page.getByRole('button', { name: /^Craque / });
+    // Round 2 goes wrong on purpose: any option that is not the starter.
+    const pick =
+      i === 1
+        ? options.filter({ hasNotText: answer }).first()
+        : page.getByRole('button', { name: answer, exact: true });
+    await pick.click();
+    await expect(page.getByText(i === 1 ? 'Não foi ele.' : 'Titular certo!').first()).toBeVisible();
+    if (i < 10) await page.getByRole('button', { name: 'Próxima posição' }).click();
+  }
+  await expect(page.getByRole('heading', { name: 'Que memória: 10 de 11' })).toBeVisible();
+  await expect(page.getByRole('img', { name: '3 de 3 estrelas' }).first()).toBeVisible();
+  expect(Date.now() - started).toBeLessThan(120_000);
+});

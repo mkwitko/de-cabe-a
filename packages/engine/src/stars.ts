@@ -8,7 +8,8 @@ export function starsFor(
     | 'higher-lower'
     | 'missing-xi'
     | 'mystery-player'
-    | 'connections',
+    | 'connections'
+    | 'draft',
   score: number,
   opts: { hintsUsed?: number } = {},
 ): 0 | 1 | 2 | 3 {
@@ -16,6 +17,8 @@ export function starsFor(
     // score = (7 - attempts) * 10: 1–2 attempts -> 3, 3–4 -> 2, 5–6 -> 1, lost -> 0
     return score >= 50 ? 3 : score >= 30 ? 2 : score >= 10 ? 1 : 0;
   }
+  // Draft: right picks out of 11.
+  if (engine === 'draft') return score >= 10 ? 3 : score >= 7 ? 2 : score >= 4 ? 1 : 0;
   // Conexões: 10 per group + mistakes left when all four are found.
   if (engine === 'connections') return score >= 43 ? 3 : score >= 40 ? 2 : score >= 20 ? 1 : 0;
   // Craque Misterioso: score = 9 - guesses (8 = first guess).

@@ -72,6 +72,7 @@ export function StatsPage() {
   const xi = data.MISSING_XI;
   const mysStats = data.MYSTERY_PLAYER;
   const conStats = data.CONNECTIONS;
+  const dr = data.DRAFT;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
   const next = data.title.next;
   const rank = (n: number | null) =>
@@ -308,6 +309,24 @@ export function StatsPage() {
             </Figure>
             <Figure label="fases com 3 estrelas">{conStats.threeStars}</Figure>
             <Figure label="sem erros">{conStats.perfect}</Figure>
+          </dl>
+        </section>
+
+        <section
+          aria-labelledby="draft-stats"
+          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        >
+          <h2 id="draft-stats" className="font-condensed text-3xl font-black uppercase">
+            Draft
+          </h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <Figure label="fases jogadas">{dr.completed}</Figure>
+            <Figure label="estrelas">
+              <StarIcon className="size-7 text-cover" />
+              {dr.stars}
+            </Figure>
+            <Figure label="fases com 3 estrelas">{dr.threeStars}</Figure>
+            <Figure label="11 de 11">{dr.perfect}</Figure>
           </dl>
         </section>
       </div>

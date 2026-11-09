@@ -27,6 +27,7 @@ export const GAME_NAME = {
   HIGHER_LOWER: 'Mais ou Menos',
   MISSING_XI: 'Escalação',
   CONNECTIONS: 'Conexões',
+  DRAFT: 'Draft',
   MYSTERY_PLAYER: 'Craque Misterioso',
 } as const;
 

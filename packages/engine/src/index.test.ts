@@ -12,6 +12,7 @@ describe('engine package', () => {
       'missing-xi',
       'mystery-player',
       'connections',
+      'draft',
     ]);
   });
 });

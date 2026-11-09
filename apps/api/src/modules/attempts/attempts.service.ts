@@ -14,6 +14,8 @@ import type {
   HigherLowerView,
   ImpostorReveal,
   ImpostorView,
+  DraftReveal,
+  DraftView,
   MissingXiReveal,
   MissingXiView,
   MysteryReveal,
@@ -47,6 +49,7 @@ const NAMES = {
   MISSING_XI: 'Escalação',
   MYSTERY_PLAYER: 'Craque Misterioso',
   CONNECTIONS: 'Conexões',
+  DRAFT: 'Draft',
 } as const;
 export const SHARE_HOST = 'decabecafc.com.br';
 
@@ -103,6 +106,9 @@ export async function present(
     // Timeline views carry names, ids and years frozen in the snapshot: no lookups needed.
     view = { ...(engine.toPublicView(state, config) as TimelineView), status: attempt.status };
     if (done) reveal = engine.toRevealView(state, config) as TimelineReveal;
+  } else if (challenge.gameMode === 'DRAFT') {
+    view = { ...(engine.toPublicView(state, config) as DraftView), status: attempt.status };
+    if (done) reveal = engine.toRevealView(state, config) as DraftReveal;
   } else if (challenge.gameMode === 'IMPOSTOR') {
     // Impostor views carry only names and ids frozen in the snapshot: no lookups needed.
     view = { ...(engine.toPublicView(state, config) as ImpostorView), status: attempt.status };
@@ -276,6 +282,7 @@ export const TIME_LIMIT_SEC: Record<GameModeCode, number> = {
   MISSING_XI: 120,
   MYSTERY_PLAYER: 120,
   CONNECTIONS: 120,
+  DRAFT: 120,
 };
 /** Network slack before an action counts as late. */
 const GRACE_MS = 2000;
@@ -482,7 +489,7 @@ export async function submitAction(
     const attemptsUsed =
       a.challenge.gameMode === 'FOOTBALL_GRID'
         ? (out.state as { attemptsUsed: number }).attemptsUsed
-        : a.challenge.gameMode === 'IMPOSTOR'
+        : a.challenge.gameMode === 'IMPOSTOR' || a.challenge.gameMode === 'DRAFT'
           ? (out.state as { picks: string[] }).picks.length
           : a.challenge.gameMode === 'TIMELINE'
             ? (out.state as { answers: string[][] }).answers.length

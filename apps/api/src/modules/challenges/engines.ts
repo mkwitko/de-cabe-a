@@ -1,6 +1,7 @@
 import {
   careerPath,
   connections,
+  draft,
   footballGrid,
   higherLower,
   impostor,
@@ -18,7 +19,8 @@ export type GameModeCode =
   | 'HIGHER_LOWER'
   | 'MISSING_XI'
   | 'MYSTERY_PLAYER'
-  | 'CONNECTIONS';
+  | 'CONNECTIONS'
+  | 'DRAFT';
 
 /** Engine registry (ADR-005): one literal object, keyed by game mode. */
 export const ENGINES = {
@@ -30,6 +32,7 @@ export const ENGINES = {
   MISSING_XI: missingXi,
   MYSTERY_PLAYER: mysteryPlayer,
   CONNECTIONS: connections,
+  DRAFT: draft,
 } as const;
 
 /** Untyped access for the generic attempt flow; per-game presenters keep the types. */
