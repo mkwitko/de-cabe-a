@@ -657,3 +657,19 @@ model FantasySquad {
   @@id([pk, week])
   @@index([week])
 }
+
+/// Modo Copa: one World Cup run (7 matches of questions about real World Cup starters). The
+/// state (tournament, current question with its answer, the XI so far) never leaves the server
+/// whole; the player sees the question's options only.
+model CopaRun {
+  id         String   @id @default(uuid(7))
+  pk         String
+  difficulty String /// facil | normal | dificil
+  state      Json
+  status     String   @default("playing") /// playing | over
+  finish     String? /// Grupos | Oitavas | Quartas | Semifinal | Vice | Campeão
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([pk, status])
+}

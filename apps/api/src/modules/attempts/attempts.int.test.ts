@@ -1657,3 +1657,80 @@ describe('Fantasy de conhecimento', () => {
     }
   });
 });
+
+describe('Copa dos Sonhos', () => {
+  it('drafts an XI from World Cup sides and plays a simulated World Cup to the end', async () => {
+    const POS = ['GK', 'CB', 'CB', 'CB', 'CB', 'CM', 'CM', 'CM', 'CF', 'CF', 'CF'];
+    const TEAMS = ['Brazil', 'Italy', 'France', 'Spain', 'Uruguay', 'England', 'Mexico', 'Chile'];
+    const ids: Record<string, string[]> = {};
+    for (const t of TEAMS) {
+      ids[t] = [];
+      for (let i = 0; i < POS.length; i++)
+        ids[t]!.push(
+          (
+            await verifiedPlayer(prisma, {
+              name: `${t} Craque ${i}`,
+              clubIds: [],
+              nationalityId: countries.BR!,
+            })
+          ).id,
+        );
+    }
+    for (let m = 0; m < TEAMS.length; m += 2) {
+      const [home, away] = [TEAMS[m]!, TEAMS[m + 1]!];
+      await prisma.match.create({
+        data: {
+          source: 'wikipedia',
+          sourceRef: `test:sonhos-${m}`,
+          competition: 'FIFA World Cup',
+          season: String(1970 + m * 4),
+          stage: m === 0 ? 'Final' : 'Quarter-finals',
+          homeTeam: home,
+          awayTeam: away,
+          homeScore: 2,
+          awayScore: 1,
+          lineups: {
+            create: [home, away].flatMap((team, s) =>
+              POS.map((position, i) => ({
+                side: s ? 'away' : 'home',
+                playerName: `${team} Craque ${i}`,
+                playerId: ids[team]![i]!,
+                position,
+                starter: true,
+              })),
+            ),
+          },
+        },
+      });
+    }
+    const g = guest();
+    expect((await g.req('GET', '/copa')).json()).toMatchObject({ run: null, record: { runs: 0 } });
+    const started = await g.req('POST', '/copa', { formation: '4-3-3', difficulty: 'raiz' });
+    expect(started.statusCode, started.body).toBe(201);
+    let run = started.json().run;
+    expect(run.draft).toMatchObject({ round: 1, slot: 'GK' });
+    expect(run.draft.options.length).toBeGreaterThanOrEqual(2);
+    expect(run.draft.options[0].overall).toBeNull(); // Raiz hides the ratings
+    expect((await g.req('POST', '/copa/pick', { playerId: 'not-an-option' })).statusCode).toBe(400);
+    for (let i = 0; i < 11; i++) {
+      const res = await g.req('POST', '/copa/pick', { playerId: run.draft.options[0].id });
+      expect(res.statusCode, res.body).toBe(200);
+      run = res.json().run;
+    }
+    expect(run.phase).toBe('group');
+    expect(run.xi).toHaveLength(11);
+    expect(run.next.stage).toBe('Grupos · jogo 1');
+    while (run.phase !== 'over') {
+      const res = await g.req('POST', '/copa/play', { tactic: 'ofensivo' });
+      expect(res.statusCode, res.body).toBe(200);
+      run = res.json().run;
+      const m = run.matches.at(-1);
+      expect(m.events.filter((e: { side: string }) => e.side === 'mine')).toHaveLength(m.goalsFor);
+    }
+    expect(['Grupos', 'Oitavas', 'Quartas', 'Semifinal', 'Vice', 'Campeão']).toContain(run.finish);
+    expect(run.xi[0].overall).toEqual(expect.any(Number)); // revealed at the end
+    expect(run.group).toHaveLength(4);
+    const after = (await g.req('GET', '/copa')).json();
+    expect(after.record.runs).toBe(1);
+  });
+});

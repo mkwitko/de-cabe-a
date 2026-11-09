@@ -869,3 +869,83 @@ export const FantasyResponse = z.strictObject({
   entries: z.array(RankingEntry),
 });
 export type FantasyResponse = z.infer<typeof FantasyResponse>;
+
+/** Copa dos Sonhos: draft an XI from the great World Cup sides and win a simulated World Cup. */
+export const CopaDifficulty = z.enum(['olheiro', 'raiz']);
+export const CopaFormation = z.enum(['4-3-3', '4-4-2', '3-5-2']);
+export const CopaTactic = z.enum(['retranca', 'equilibrado', 'ofensivo']);
+export const CopaFinish = z.enum(['Grupos', 'Oitavas', 'Quartas', 'Semifinal', 'Vice', 'Campeão']);
+const CopaSlot = z.enum(['GK', 'DF', 'MF', 'FW']);
+export const StartCopaRequest = z.strictObject({
+  formation: CopaFormation,
+  difficulty: CopaDifficulty,
+});
+export const CopaPickRequest = z.strictObject({ playerId: z.string().min(1).max(64) });
+export const CopaPlayRequest = z.strictObject({ tactic: CopaTactic });
+const CopaPlayer = z.strictObject({
+  id: z.string(),
+  name: z.string(),
+  slot: CopaSlot,
+  /** The World Cup side he comes from. */
+  team: z.string(),
+  season: z.string(),
+  /** Hidden (null) in Raiz until the Copa ends. */
+  overall: z.number().nullable(),
+  facts: z
+    .strictObject({ cups: z.number(), starts: z.number(), finals: z.number(), titles: z.number() })
+    .nullable(),
+});
+const CopaSide = z.strictObject({
+  team: z.string(),
+  season: z.string(),
+  champion: z.boolean(),
+  strength: z.number().nullable(),
+  stars: z.array(z.string()),
+});
+const CopaMatch = z.strictObject({
+  stage: z.string(),
+  opponent: CopaSide,
+  tactic: CopaTactic,
+  goalsFor: z.number(),
+  goalsAgainst: z.number(),
+  events: z.array(
+    z.strictObject({ minute: z.number(), side: z.enum(['mine', 'theirs']), name: z.string() }),
+  ),
+  extraTime: z.boolean(),
+  penalties: z.strictObject({ mine: z.number(), theirs: z.number() }).nullable(),
+});
+export const CopaRunView = z.strictObject({
+  id: z.string(),
+  formation: CopaFormation,
+  difficulty: CopaDifficulty,
+  phase: z.enum(['draft', 'group', 'knockout', 'over']),
+  /** Draft: the slot being filled and its 4 candidates. */
+  draft: z
+    .strictObject({ round: z.number(), slot: CopaSlot, options: z.array(CopaPlayer) })
+    .nullable(),
+  xi: z.array(CopaPlayer),
+  chemistry: z.strictObject({
+    value: z.number(),
+    links: z.array(z.strictObject({ a: z.string(), b: z.string(), why: z.string() })),
+  }),
+  strength: z.number().nullable(),
+  next: z.strictObject({ stage: z.string(), opponent: CopaSide }).nullable(),
+  group: z.array(
+    z.strictObject({
+      team: z.string(),
+      season: z.string().nullable(),
+      played: z.number(),
+      points: z.number(),
+      gf: z.number(),
+      ga: z.number(),
+    }),
+  ),
+  matches: z.array(CopaMatch),
+  finish: CopaFinish.nullable(),
+});
+export const CopaResponse = z.strictObject({
+  run: CopaRunView.nullable(),
+  record: z.strictObject({ best: CopaFinish.nullable(), titles: z.number(), runs: z.number() }),
+});
+export type CopaRunView = z.infer<typeof CopaRunView>;
+export type CopaResponse = z.infer<typeof CopaResponse>;

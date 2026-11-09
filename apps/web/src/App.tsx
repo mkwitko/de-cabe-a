@@ -73,6 +73,7 @@ const HigherLowerPage = lazy(() =>
 const CareerPage = lazy(() =>
   import('./pages/CareerPage').then((m) => ({ default: m.CareerPage })),
 );
+const CopaPage = lazy(() => import('./pages/CopaPage').then((m) => ({ default: m.CopaPage })));
 const DailyPage = lazy(() => import('./pages/DailyPage').then((m) => ({ default: m.DailyPage })));
 const LeaguesPage = lazy(() =>
   import('./pages/LeaguesPage').then((m) => ({ default: m.LeaguesPage })),
@@ -448,6 +449,22 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         </span>
       </Link>
 
+      <Link
+        to="/copa"
+        className="mt-6 flex flex-col gap-2 rounded-2xl border-2 border-cover p-5 transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+      >
+        <span>
+          <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
+            Copa dos Sonhos
+          </span>
+          <span className="mt-1.5 block font-semibold text-chalk-soft">
+            Monte um time com craques de todas as Copas e tente ser campeão contra seleções
+            históricas.
+          </span>
+        </span>
+        <span className={`${btnPrimary} self-start sm:self-center`}>Montar time</span>
+      </Link>
+
       {resume && (
         <Link
           to={`${GAME_PATH[resume.mode]}/${resume.nextLevel}`}
@@ -656,6 +673,7 @@ function PublicRoutes() {
           <Route path="/privacidade" element={<PrivacyPage />} />
           <Route path="/como-jogar" element={<HowToPlayPage />} />
           <Route path="/carreira" element={<CareerPage />} />
+          <Route path="/copa" element={<CopaPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
