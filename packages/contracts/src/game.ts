@@ -838,3 +838,26 @@ export const PushSubscribeRequest = z.strictObject({
   league: z.boolean(),
 });
 export const PushUnsubscribeRequest = z.strictObject({ endpoint: z.url().max(1000) });
+
+/** Fantasy de conhecimento: 5 real players for the week; points when they are in a level you finish. */
+export const FANTASY_SIZE = 5;
+export const SaveSquadRequest = z.strictObject({
+  playerIds: z.array(z.string()).length(FANTASY_SIZE),
+});
+export const FantasyResponse = z.strictObject({
+  weekStart: z.string(),
+  squad: z
+    .array(
+      z.strictObject({
+        id: z.string(),
+        name: z.string(),
+        position: PositionGroup.nullable(),
+        points: z.number(),
+      }),
+    )
+    .nullable(),
+  total: z.number(),
+  me: z.strictObject({ position: z.number().nullable() }),
+  entries: z.array(RankingEntry),
+});
+export type FantasyResponse = z.infer<typeof FantasyResponse>;

@@ -215,3 +215,23 @@ test('Draft: pick the starter of each match, the XI fills a 4-3-3 in under 2 min
   await expect(page.getByRole('img', { name: '3 de 3 estrelas' }).first()).toBeVisible();
   expect(Date.now() - started).toBeLessThan(120_000);
 });
+
+test('Fantasy: pick 5 players, at most 2 per position, then the squad is locked', async ({
+  page,
+}) => {
+  await page.goto('/fantasy');
+  const search = page.getByRole('combobox', { name: 'Escale um jogador' });
+  for (const [q, name] of [
+    ['Craque L1C1 3', 'Craque L1C1 3'],
+    ['Craque L1C1 4', 'Craque L1C1 4'],
+    ['Craque L3C1 3', 'Craque L3C1 3'],
+    ['Craque L3C1 4', 'Craque L3C1 4'],
+    ['Kak', 'Kaká'],
+  ] as const) {
+    await search.fill(q);
+    await page.getByRole('option', { name }).first().click();
+  }
+  await page.getByRole('button', { name: 'Fechar escalação da semana' }).click();
+  await expect(page.getByRole('heading', { name: 'Seu esquadrão · 0 pts' })).toBeVisible();
+  await expect(page.getByText('Escalação fechada até domingo.')).toBeVisible();
+});

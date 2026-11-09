@@ -81,6 +81,22 @@ export function RankingPage() {
         </p>
       )}
       <Link
+        to="/fantasy"
+        className="flex items-center justify-between gap-4 rounded-xl bg-cover px-5 py-4 text-ink"
+      >
+        <span>
+          <span className="font-condensed block text-2xl leading-none font-black uppercase">
+            Fantasy da semana
+          </span>
+          <span className="text-sm font-semibold">
+            Escale 5 jogadores; eles pontuam quando aparecem nas suas fases.
+          </span>
+        </span>
+        <span className="font-condensed shrink-0 rounded-lg bg-ink px-5 py-3 text-lg font-extrabold text-paper uppercase">
+          Escalar
+        </span>
+      </Link>
+      <Link
         to="/ligas"
         className="flex items-center justify-between gap-4 rounded-xl bg-paper px-5 py-4 text-ink"
       >

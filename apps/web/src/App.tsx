@@ -56,6 +56,9 @@ const MysteryPlayerPage = lazy(() =>
 const DraftPage = lazy(() =>
   import('./games/draft/DraftPage').then((m) => ({ default: m.DraftPage })),
 );
+const FantasyPage = lazy(() =>
+  import('./pages/FantasyPage').then((m) => ({ default: m.FantasyPage })),
+);
 const ConnectionsPage = lazy(() =>
   import('./games/connections/ConnectionsPage').then((m) => ({ default: m.ConnectionsPage })),
 );
@@ -438,14 +441,14 @@ const NAV = [
     to: '/',
     label: 'Jogos',
     Icon: GamesIcon,
-    match: (p: string) => !/^\/(d|ranking|ligas?|stats|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) => !/^\/(d|ranking|ligas?|fantasy|stats|history|conta|perfil)(\/|$)/.test(p),
   },
   { to: '/d/hoje', label: 'Desafio', Icon: DailyIcon, match: (p: string) => /^\/d(\/|$)/.test(p) },
   {
     to: '/ranking',
     label: 'Ranking',
     Icon: RankingIcon,
-    match: (p: string) => /^\/(ranking|ligas?)(\/|$)/.test(p),
+    match: (p: string) => /^\/(ranking|ligas?|fantasy)(\/|$)/.test(p),
   },
   {
     to: '/stats',
@@ -554,6 +557,7 @@ function PublicRoutes() {
           <Route path="/ligas" element={<LeaguesPage />} />
           <Route path="/liga/:code" element={<LeaguePage />} />
           <Route path="/ranking" element={<RankingPage />} />
+          <Route path="/fantasy" element={<FantasyPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/conta" element={<AccountPage />} />

@@ -23,6 +23,7 @@ import { accountRoutes } from '../account/account.routes';
 import { levelReportRoutes } from '../reports/level-reports';
 import { reactionRoutes } from '../reports/reactions';
 import { pushRoutes } from '../push/push';
+import { fantasyRoutes } from '../fantasy/fantasy';
 import { careerRoutes } from '../career/career.routes';
 import { dailyRoutes } from '../daily/daily';
 import { leagueRoutes } from '../leagues/leagues';
@@ -61,6 +62,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(levelReportRoutes);
   await app.register(reactionRoutes);
   await app.register(pushRoutes);
+  await app.register(fantasyRoutes);
   await app.register(careerRoutes);
   await app.register(dailyRoutes);
   await app.register(leagueRoutes);

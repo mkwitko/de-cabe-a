@@ -20,6 +20,7 @@ const ROUTES = [
   '/history',
   '/d/hoje',
   '/ligas',
+  '/fantasy',
 ];
 
 test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true });
