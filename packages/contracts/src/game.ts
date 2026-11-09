@@ -413,7 +413,8 @@ export const AttemptResponse = z.strictObject({
       ConnectionsReveal,
     ])
     .nullable(),
-  share: z.strictObject({ text: z.string() }).nullable(),
+  /** `url` is the level's page without the scheme, e.g. decabecafc.com.br/career-path/12. */
+  share: z.strictObject({ text: z.string(), url: z.string() }).nullable(),
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
 
@@ -654,3 +655,15 @@ export const DailyResponse = z.strictObject({
   archive: z.array(z.string()),
 });
 export type DailyResponse = z.infer<typeof DailyResponse>;
+
+/** Web path of each game's track; a level is `${GAME_PATH[mode]}/${level}`. */
+export const GAME_PATH = {
+  CAREER_PATH: '/career-path',
+  FOOTBALL_GRID: '/grid',
+  IMPOSTOR: '/impostor',
+  TIMELINE: '/linha-do-tempo',
+  HIGHER_LOWER: '/mais-ou-menos',
+  MISSING_XI: '/escalacao',
+  CONNECTIONS: '/conexoes',
+  MYSTERY_PLAYER: '/craque-misterioso',
+} as const satisfies Record<GameMode, string>;

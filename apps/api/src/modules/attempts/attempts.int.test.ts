@@ -287,7 +287,7 @@ describe('levels (ADR-007)', () => {
       reveal: { answer: { id: answerId, name: 'Ronaldo' } },
     });
     expect(right.json().share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafc.com.br',
+      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1',
     );
     expect((await g.act(start.attempt.id, { kind: 'skip' })).json().error.code).toBe(
       'GAME_ALREADY_COMPLETED',
@@ -327,7 +327,7 @@ describe('levels (ADR-007)', () => {
     const lost = await playCareer(g, 1, null, 6);
     expect(lost.attempt).toMatchObject({ status: 'LOST', stars: 0 });
     expect(lost.share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br',
+      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1',
     );
     expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 2 })).statusCode).toBe(
       201,
@@ -525,7 +525,7 @@ describe('Football Grid', () => {
     });
     expect(end.json().reveal.cells[4].validAnswers).toBeGreaterThanOrEqual(8);
     expect(end.json().share.text).toBe(
-      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br',
+      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/grid/1',
     );
   });
 
@@ -1438,6 +1438,12 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
       .json()
       .games.find((x: { mode: string }) => x.mode === 'CAREER_PATH');
     expect(career).toMatchObject({ level: 4, state: 'in_progress' });
+    // The share says it was the Desafio do Dia and links to the level itself.
+    const lost = await playCareer(g, 4, null, 6);
+    expect(lost.share.url).toBe('decabecafc.com.br/career-path/4');
+    expect(lost.share.text).toContain(
+      `Desafio do Dia ${today.slice(8)}/${today.slice(5, 7)} · Career Path · Fase 4`,
+    );
 
     await prisma.dailyPick.create({
       data: { day: new Date('2026-11-01T00:00:00Z'), gameMode: 'IMPOSTOR', level: 1 },

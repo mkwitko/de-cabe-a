@@ -15,16 +15,7 @@ import type {
 } from '@decabeca/contracts';
 import { api } from './api';
 
-export const GAME_PATH = {
-  CAREER_PATH: '/career-path',
-  FOOTBALL_GRID: '/grid',
-  IMPOSTOR: '/impostor',
-  TIMELINE: '/linha-do-tempo',
-  HIGHER_LOWER: '/mais-ou-menos',
-  MISSING_XI: '/escalacao',
-  CONNECTIONS: '/conexoes',
-  MYSTERY_PLAYER: '/craque-misterioso',
-} as const;
+export { GAME_PATH } from '@decabeca/contracts';
 export const GAME_NAME = {
   CAREER_PATH: 'Career Path',
   FOOTBALL_GRID: 'Football Grid',
