@@ -42,6 +42,15 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   ).toHaveCount(7);
   await expect(page.getByRole('link', { name: 'Próxima fase · 2' })).toBeVisible();
 
+  // Reações (2.5): react, then tap again to undo
+  const craque = page.getByRole('button', { name: /^Craque!/ });
+  await craque.click();
+  await expect(craque).toHaveAttribute('aria-pressed', 'true');
+  await expect(craque).toContainText('1');
+  await craque.click();
+  await expect(craque).toHaveAttribute('aria-pressed', 'false');
+  await expect(craque).toContainText('0');
+
   // 5. Copy result: 3/6 and stars, no player name
   await page.getByRole('button', { name: 'Copiar resultado' }).click();
   await expect(page.getByRole('button', { name: 'Copiado!' })).toBeVisible();
