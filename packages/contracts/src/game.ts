@@ -844,8 +844,16 @@ export const FANTASY_SIZE = 5;
 export const SaveSquadRequest = z.strictObject({
   playerIds: z.array(z.string()).length(FANTASY_SIZE),
 });
+/** Fantasy histórico (GROWTH_PLAN.md 3.7): the week's World Cup; only its players can be picked. */
+export const FantasyCup = z.strictObject({
+  season: z.string(),
+  players: z.array(
+    z.strictObject({ id: z.string(), name: z.string(), position: PositionGroup.nullable() }),
+  ),
+});
 export const FantasyResponse = z.strictObject({
   weekStart: z.string(),
+  cup: FantasyCup.nullable(),
   squad: z
     .array(
       z.strictObject({
