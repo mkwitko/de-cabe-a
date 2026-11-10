@@ -6,7 +6,8 @@ import { RARITY_ORDER, levelRarity, rank } from './rarity';
 import { effectivePks } from '../leagues/leagues';
 import { ownedPks } from './owned-pks';
 import { streakDays } from './streak';
-import { statSpells, stickerPhoto, stickerStats } from '../knowledge/player-card';
+import { stickerPhoto } from '../knowledge/player-card';
+import { cardNumbers, cardSpells, nationalRecords } from './nota';
 
 type Rounds<T> = { rounds?: T[] };
 
@@ -87,11 +88,12 @@ export async function awardSticker(
   if (!playerId) return null;
 
   const pk = player.userId ?? player.sessionId;
-  const [footballer, active, streak] = await Promise.all([
+  const [footballer, national, active, streak] = await Promise.all([
     prisma.player.findUniqueOrThrow({
       where: { id: playerId },
-      include: { nationality: true, spells: statSpells },
+      include: { nationality: true, spells: cardSpells },
     }),
+    nationalRecords(prisma, [playerId]),
     prisma.careerSpell.count({ where: { playerId, endDate: null } }),
     effectivePks(prisma, [pk]).then((pks) => streakDays(prisma, pks, now)),
   ]);
@@ -118,7 +120,7 @@ export async function awardSticker(
     positionGroup: footballer.primaryPositionGroup,
     nationality: footballer.nationality.name,
     nationalityCode: footballer.nationality.isoCode,
-    ...stickerStats(footballer.spells),
+    ...cardNumbers(footballer, national.get(playerId), now.getUTCFullYear()),
     ...stickerPhoto(footballer),
     rarity: s.rarity,
     mode: s.mode,

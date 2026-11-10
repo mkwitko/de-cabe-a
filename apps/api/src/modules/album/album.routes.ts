@@ -1,4 +1,5 @@
-import { statSpells, stickerPhoto, stickerStats } from '../knowledge/player-card';
+import { stickerPhoto } from '../knowledge/player-card';
+import { cardNumbers, cardSpells, nationalRecords } from './nota';
 import {
   AlbumResponse,
   ProfileAlbumResponse,
@@ -16,16 +17,17 @@ import { RARITY_ORDER, rank } from './rarity';
 import { applyRoundUpgrades } from './round-upgrade';
 
 /** Best sticker per footballer across the pks, best first, then oldest. */
-async function bestStickers(prisma: PrismaClient, pks: string[]) {
+async function bestStickers(prisma: PrismaClient, pks: string[], now: Date) {
   const rows = await prisma.sticker.findMany({
     where: { pk: { in: pks } },
-    include: { player: { include: { nationality: true, spells: statSpells } } },
+    include: { player: { include: { nationality: true, spells: cardSpells } } },
   });
   const best = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
     const cur = best.get(r.playerId);
     if (!cur || rank(r.rarity) > rank(cur.rarity)) best.set(r.playerId, r);
   }
+  const national = await nationalRecords(prisma, [...best.keys()]);
   return [...best.values()]
     .sort((a, b) => rank(b.rarity) - rank(a.rarity) || +a.earnedAt - +b.earnedAt)
     .map((r) => ({
@@ -34,7 +36,7 @@ async function bestStickers(prisma: PrismaClient, pks: string[]) {
       positionGroup: r.player.primaryPositionGroup,
       nationality: r.player.nationality.name,
       nationalityCode: r.player.nationality.isoCode,
-      ...stickerStats(r.player.spells),
+      ...cardNumbers(r.player, national.get(r.playerId), now.getUTCFullYear()),
       ...stickerPhoto(r.player),
       rarity: r.rarity,
       mode: r.mode,
@@ -62,7 +64,7 @@ export const albumRoutes: FastifyPluginAsyncZod = async (app) => {
   async function album(pks: string[]) {
     await applyRoundUpgrades(prisma, pks, now());
     const [stickers, total, promotions] = await Promise.all([
-      bestStickers(prisma, pks),
+      bestStickers(prisma, pks, now()),
       prisma.player.count({ where: { verificationStatus: 'verified' } }),
       openPromotions(pks),
     ]);
@@ -131,7 +133,7 @@ export const albumRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const owner = await publicProfileOwner(prisma, req.params.nickname);
       if (!owner) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
-      const stickers = await bestStickers(prisma, owner.pks);
+      const stickers = await bestStickers(prisma, owner.pks, now());
       return { showcase: stickers.slice(0, 6), owned: stickers.length };
     },
   );

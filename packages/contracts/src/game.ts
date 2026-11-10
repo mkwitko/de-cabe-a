@@ -454,6 +454,14 @@ export const Sticker = z.strictObject({
   clubs: z.number().int().optional(),
   games: z.number().int().nullable().optional(),
   goals: z.number().int().nullable().optional(),
+  /** Years from the first professional spell to the last (or now), when dated. */
+  seasons: z.number().int().nullable().optional(),
+  /** National-team starts in the line-ups we hold (World Cup, Copa América); null when none. */
+  nationalGames: z.number().int().nullable().optional(),
+  /** League games at big clubs (0 when he never played for one, null when unknown). */
+  bigClubGames: z.number().int().nullable().optional(),
+  /** "Nota De Cabeça", 50–99, from real data only (apps/api/src/modules/album/nota.ts). */
+  rating: z.number().int().min(50).max(99).optional(),
   /** Wikimedia Commons portrait, when the player has a freely licensed photo. */
   photo: z.string().nullable(),
   /** "Foto: author · licence" (CC licences require the credit where the photo shows). */

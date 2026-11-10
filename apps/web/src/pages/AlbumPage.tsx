@@ -62,6 +62,12 @@ export function AlbumPage() {
           </li>
         ))}
       </ul>
+      {a.owned > 0 && (
+        <p className="mt-3 max-w-[60ch] text-sm text-chalk-soft">
+          Nota De Cabeça: de 50 a 99, feita só com dados reais (fama, jogos e gols na carreira,
+          seleção, Copas ganhas e passagem por clube grande).
+        </p>
+      )}
 
       {a.owned === 0 && (
         <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -124,9 +130,13 @@ export function AlbumPage() {
                       aria-pressed={picked?.playerId === s.playerId}
                       aria-label={`Promover ${s.name}`}
                       onClick={() => setPicked(s)}
-                      className={`block h-full w-full rounded-lg text-left ${picked?.playerId === s.playerId ? 'outline-4 outline-gold' : ''}`}
+                      className="block h-full w-full text-left"
                     >
-                      <StickerCard sticker={s} size="sm" />
+                      <StickerCard
+                        sticker={s}
+                        size="sm"
+                        selected={picked?.playerId === s.playerId}
+                      />
                     </button>
                   ) : (
                     <StickerCard sticker={s} size="sm" />

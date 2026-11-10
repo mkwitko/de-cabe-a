@@ -1,20 +1,10 @@
 import { useState, type Ref } from 'react';
 import type { Sticker } from '@decabeca/contracts';
 import { RARITY_STYLE } from './rarity';
+import { Flag } from './Flag';
 import { POSITION_LABEL } from '../lib/format';
 
 export const POSITION = { GK: 'GOL', DF: 'DEF', MF: 'MEI', FW: 'ATA' } as const;
-
-/** "BR" → 🇧🇷 (regional indicators); null for anything that is not two letters. */
-const flag = (code?: string) =>
-  code && /^[a-z]{2}$/i.test(code)
-    ? String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)))
-    : null;
-
-const initials = (name: string) => {
-  const w = name.split(/\s+/).filter(Boolean);
-  return ((w[0]?.[0] ?? '') + (w.length > 1 ? (w.at(-1)?.[0] ?? '') : '')).toUpperCase();
-};
 
 /** Holo layers follow the pointer (Lenda); skipped with reduced motion. */
 const follow = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -24,44 +14,61 @@ const follow = (e: React.PointerEvent<HTMLDivElement>) => {
   e.currentTarget.style.setProperty('--py', String((e.clientY - r.top) / r.height));
 };
 
+const num = (n: number | null | undefined) => (n == null ? '—' : String(n));
+
+/** Shield inner frame (viewBox of the card, 300×400): the same outline as the mask, inset. */
+const FRAME =
+  'M24 0H128L150 9 172 0H276C280 12 288 18 300 20V318C300 336 290 346 272 354L150 400 28 354C10 346 0 336 0 318V20C12 18 20 12 24 0Z';
+
 /**
- * The sticker as a player card: a crest-shaped shield in the rarity finish, the portrait cut
- * large in the upper half, position and flag in the top-left column, the name band, and a
- * bottom row of real numbers (clubs, league games, goals) or, without them, who the player is.
- * Fills its parent (which sets the 3:4 box); type scales with the card's width (container
- * units), `size` only adds the hero rim. The reveal moves `stripRef` and hides the name until
- * it is announced (`showName={false}`).
+ * The sticker as a player card: a notched shield with a fine metal rim around a textured face
+ * in the rarity's finish; the portrait large in the upper 60%, faded into the face; the Nota De
+ * Cabeça, position and flag in the top-left column; the name across the card; and a 2×3 grid of
+ * real numbers (JOG, GOL, CLU | TEM, SEL, GDE), "—" when unknown. Fills its parent (which sets
+ * the 3:4 box); everything scales with the card's width (container units). Small cards (album)
+ * keep rating, position, flag, photo and name. The reveal moves `stripRef` and hides the name
+ * until it is announced (`showName={false}`); `selected` draws an outline around the shield.
  */
 export function StickerCard({
   sticker,
   size,
   showName = true,
   stripRef,
+  selected = false,
 }: {
   sticker: Sticker;
   size: 'sm' | 'lg';
   showName?: boolean;
   stripRef?: Ref<HTMLDivElement>;
+  selected?: boolean;
 }) {
   const style = RARITY_STYLE[sticker.rarity];
   const pos = sticker.positionGroup;
-  const stats: [string, string][] =
-    sticker.clubs !== undefined
-      ? [
-          ['Clubes', String(sticker.clubs)],
-          ['Jogos', sticker.games == null ? '—' : String(sticker.games)],
-          ['Gols', sticker.goals == null ? '—' : String(sticker.goals)],
-        ]
-      : [['País', sticker.nationality]];
-  const f = flag(sticker.nationalityCode);
   const [broken, setBroken] = useState(false);
+  const attrs: [string, string, string][] = [
+    ['JOG', 'Jogos na carreira (ligas)', num(sticker.games)],
+    ['GOL', 'Gols na carreira (ligas)', num(sticker.goals)],
+    ['CLU', 'Clubes', num(sticker.clubs)],
+    ['TEM', 'Temporadas', num(sticker.seasons)],
+    ['SEL', 'Jogos pela seleção (Copa do Mundo e Copa América)', num(sticker.nationalGames)],
+    ['GDE', 'Jogos em clubes grandes', num(sticker.bigClubGames)],
+  ];
   return (
     <div
-      className={`pcard ${size === 'lg' ? 'pcard-lg' : ''} ${style.className}`}
+      className={`pcard ${size === 'lg' ? 'pcard-lg' : ''} ${selected ? 'pcard-selected' : ''} ${style.className}`}
       onPointerMove={style.className.includes('holo-rainbow') ? follow : undefined}
     >
-      <div className="pcard-shield">
+      <div className="pcard-rim">
         <div className="pcard-face">
+          <div aria-hidden="true" className="pcard-glow" />
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 300 400"
+            preserveAspectRatio="none"
+            className="pcard-frame"
+          >
+            <path d={FRAME} transform="translate(150 196) scale(.9 .92) translate(-150 -200)" />
+          </svg>
           {sticker.photo && !broken ? (
             // the credit rides on title and alt text, as the CC licences ask where the photo shows
             <img
@@ -75,34 +82,53 @@ export function StickerCard({
               className="pcard-photo"
             />
           ) : (
-            <span aria-hidden="true" className="pcard-initials font-condensed">
-              {initials(sticker.name)}
-            </span>
+            <svg aria-hidden="true" viewBox="0 0 100 100" className="pcard-photo pcard-silhouette">
+              <path d="M50 14c-11 0-18 9-18 21 0 9 4 17 10 21v6c-15 3-29 10-33 24-1 4 0 14 0 14h82s1-10 0-14c-4-14-18-21-33-24v-6c6-4 10-12 10-21 0-12-7-21-18-21z" />
+            </svg>
           )}
-          <div className="pcard-col">
+          <div className="pcard-head">
+            {sticker.rating !== undefined && (
+              <abbr
+                title="Nota De Cabeça"
+                aria-label={`Nota De Cabeça ${sticker.rating}`}
+                className="pcard-rating font-condensed tabular no-underline"
+              >
+                {sticker.rating}
+              </abbr>
+            )}
             {pos && (
               <abbr title={POSITION_LABEL[pos]} className="pcard-pos font-condensed no-underline">
                 {POSITION[pos]}
               </abbr>
             )}
-            {f && (
-              <span role="img" aria-label={sticker.nationality} className="pcard-flag">
-                {f}
-              </span>
-            )}
+            <Flag
+              code={sticker.nationalityCode}
+              name={sticker.nationality}
+              className="pcard-flag"
+            />
           </div>
-          <p className={`pcard-name font-condensed ${showName ? '' : 'opacity-0'}`}>
+          <p
+            className={`pcard-name font-condensed ${showName ? '' : 'opacity-0'}`}
+            style={{ '--nl': Math.max(8, sticker.name.length) } as React.CSSProperties}
+          >
             {sticker.name}
           </p>
-          <dl className={`pcard-stats ${sticker.clubs === undefined ? 'pcard-stats-words' : ''}`}>
-            {stats.map(([k, v]) => (
+          <dl className="pcard-attrs">
+            {attrs.map(([k, label, v]) => (
               <div key={k}>
-                <dt>{k}</dt>
                 <dd className="font-condensed tabular">{v}</dd>
+                <dt>
+                  <abbr title={label} className="no-underline">
+                    {k}
+                  </abbr>
+                </dt>
               </div>
             ))}
           </dl>
-          <span className="pcard-tier">{style.label}</span>
+          <span aria-hidden="true" className="pcard-brand font-condensed">
+            De Cabeça
+          </span>
+          <span className="sr-only">{style.label}</span>
           <div ref={stripRef} aria-hidden="true" className="holo" />
         </div>
       </div>

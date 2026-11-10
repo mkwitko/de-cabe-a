@@ -95,6 +95,23 @@ describe('award sticker', () => {
       where: { playerId: answerId },
       data: { appearances: 30, goals: 20 },
     });
+    // one World Cup final started and won: 1 national-team game, 1 title
+    await prisma.match.create({
+      data: {
+        source: 'test',
+        sourceRef: 'test:wc-final',
+        competition: 'FIFA World Cup',
+        season: '2002',
+        stage: 'Final',
+        homeTeam: 'Brazil',
+        awayTeam: 'Germany',
+        homeScore: 2,
+        awayScore: 0,
+        lineups: {
+          create: { side: 'home', playerName: 'Ronaldo', playerId: answerId, starter: true },
+        },
+      },
+    });
     const g = await startLevel();
     const res = await g.act({ kind: 'guess', playerId: answerId });
     expect(res.sticker).toMatchObject({
@@ -110,6 +127,11 @@ describe('award sticker', () => {
         clubs: 4,
         games: 120,
         goals: 80,
+        seasons: 9,
+        nationalGames: 1,
+        bigClubGames: 90, // Cruzeiro, Barcelona, Real Madrid
+        // T1 78 + 1.2 games + 1.33 goals + 0.25 national + 2 title + 3 big club = 85.8
+        rating: 86,
       },
     });
     expect(await stickers()).toHaveLength(1);

@@ -17,17 +17,11 @@ export const stickerPhoto = (p: {
 }) =>
   p.photoFile
     ? {
-        photo: commons(p.photoFile, 320),
+        photo: commons(p.photoFile, 480),
         photoCredit:
           `Foto: ${p.photoAuthor ?? 'Wikimedia Commons'} · ${p.photoLicense ?? ''}`.trim(),
       }
     : { photo: null, photoCredit: null };
-
-/** Prisma include for `stickerStats`: the professional spells that count. */
-export const statSpells = {
-  where: { verificationStatus: { not: 'rejected' }, spellType: { not: 'youth' } },
-  select: { clubId: true, appearances: true, goals: true },
-} as const;
 
 /** Sticker stat row: distinct clubs; games/goals only when every spell has them (no partial sums). */
 export const stickerStats = (
