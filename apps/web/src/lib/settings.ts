@@ -7,18 +7,12 @@
 import { useSyncExternalStore } from 'react';
 
 export const TRACKS = [
-  {
-    id: 'torcida-organizada',
-    name: 'Torcida organizada',
-    about: 'Torcida brasileira cantando no estádio',
-  },
   { id: 'hinchada', name: 'Hinchada', about: 'Torcida argentina, cantos e festa na rua' },
   { id: 'murga', name: 'Murga', about: 'Bombos e redoblantes de Buenos Aires' },
-  { id: 'maracana', name: 'Maracanã', about: 'Estádio lotado rugindo no Rio' },
   { id: 'batucada', name: 'Batucada', about: 'Surdo, caixa e repique' },
 ] as const;
 export type TrackId = (typeof TRACKS)[number]['id'];
-/** `auto`: Torcida organizada between levels, Batucada inside one. A saved track that no longer exists falls back to `auto`. */
+/** `auto`: Murga between levels, Batucada inside one. A saved track that no longer exists falls back to `auto`. */
 export type TrackChoice = 'auto' | TrackId;
 
 export type Settings = {

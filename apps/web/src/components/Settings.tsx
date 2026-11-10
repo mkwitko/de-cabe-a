@@ -131,7 +131,7 @@ function TrackList() {
     {
       id: 'auto' as const,
       name: 'Automática',
-      about: 'Torcida organizada fora do jogo, Batucada na fase',
+      about: 'Murga fora do jogo, Batucada na fase',
     },
     ...TRACKS,
   ];

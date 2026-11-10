@@ -201,13 +201,11 @@ export function PrivacyPage() {
               </li>
               <li>
                 <strong>Música e efeitos sonoros</strong>: as faixas Batucada (&quot;Batucada
-                rehearsal in Chile&quot;), de felix.blume; Torcida organizada
-                (&quot;TRATADA190127_0785 torcida organizada sao jose 1.wav&quot;), de Bruna32U;
-                Hinchada (&quot;Explosions, football&apos;s chants in street celebration (in the
-                Boca Juniors fan national day)&quot;), de bienvenido69; Murga
-                (&quot;080519-003.wav&quot;), de cabro; e Maracanã (&quot;Maraca_04.aif&quot;), de
-                _vk. Todas em CC0 (domínio público) no Freesound, cortadas e com volume igualado por
-                nós. Os sons de torcida dos pacotes de cosméticos são recortes de gravações CC0 de
+                rehearsal in Chile&quot;), de felix.blume; Hinchada (&quot;Explosions,
+                football&apos;s chants in street celebration (in the Boca Juniors fan national
+                day)&quot;), de bienvenido69; e Murga (&quot;080519-003.wav&quot;), de cabro. Todas
+                em CC0 (domínio público) no Freesound, cortadas e com volume igualado por nós. Os
+                sons de torcida dos pacotes de cosméticos são recortes de gravações CC0 de
                 felix.blume e speedyrce. Os efeitos sonoros são sintetizados no seu aparelho.
               </li>
               <li>

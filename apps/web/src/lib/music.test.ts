@@ -44,8 +44,8 @@ describe('sceneFor / trackFor', () => {
     expect(sceneFor('/')).toBe('menu');
     expect(sceneFor('/conta')).toBe('menu');
   });
-  it('auto picks the torcida between levels and batucada inside one; a fixed choice stays', () => {
-    expect(trackFor('auto', 'menu')).toBe('torcida-organizada');
+  it('auto picks the murga between levels and batucada inside one; a fixed choice stays', () => {
+    expect(trackFor('auto', 'menu')).toBe('murga');
     expect(trackFor('auto', 'level')).toBe('batucada');
     expect(trackFor('murga', 'level')).toBe('murga');
   });
