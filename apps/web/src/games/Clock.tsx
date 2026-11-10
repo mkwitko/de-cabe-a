@@ -4,6 +4,7 @@ import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { useTrack } from '../lib/game';
 import { isPageLaunched } from '../lib/launch';
 import { play } from '../lib/sound';
+import { updateSettings, useSettings } from '../lib/settings';
 import { GameHeader, Skeleton } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 
@@ -40,9 +41,12 @@ export function ModeGate({
 }) {
   const track = useTrack(mode);
   const [timed, setTimed] = useState<boolean | null>(null);
+  const { clock } = useSettings();
   if (!track.data) return <Skeleton className="h-64" />;
   const state = track.data.levels.find((l) => l.level === level)?.state;
   if (timed !== null || state !== 'open') return children(timed ?? false);
+  // remembered from the first pick; changed in Ajustes › No jogo
+  if (clock !== 'ask') return children(clock === 'timed');
   const ranked = isPageLaunched('ranking');
   const options = [
     {
@@ -66,6 +70,7 @@ export function ModeGate({
             key={String(o.timed)}
             onClick={() => {
               play('whistle');
+              updateSettings({ clock: o.timed ? 'timed' : 'free' });
               setTimed(o.timed);
             }}
             className={`flex min-h-40 flex-col gap-3 rounded-xl p-5 text-left transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 ${o.timed ? 'bg-cover text-ink' : 'border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] text-chalk'}`}
@@ -76,7 +81,7 @@ export function ModeGate({
         ))}
       </div>
       <p className="text-sm text-chalk-soft">
-        Uma tentativa por fase: a escolha vale até o fim.
+        A escolha fica lembrada para as próximas fases; troque quando quiser em Ajustes.
         {ranked && (
           <>
             {' '}

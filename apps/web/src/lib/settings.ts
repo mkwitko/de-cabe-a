@@ -23,6 +23,8 @@ export type Settings = {
   track: TrackChoice;
   /** null follows the system (`prefers-reduced-motion`). */
   reduceMotion: boolean | null;
+  /** How new levels start: 'ask' shows the picker once, then the choice is remembered. */
+  clock: 'ask' | 'free' | 'timed';
 };
 
 export const DEFAULTS: Settings = {
@@ -32,6 +34,7 @@ export const DEFAULTS: Settings = {
   sfxVolume: 0.8,
   track: 'auto',
   reduceMotion: null,
+  clock: 'ask',
 };
 
 const KEY = 'dc_settings';
@@ -55,6 +58,7 @@ export function readSettings(store: Pick<Storage, 'getItem'>): Settings {
       sfxVolume: clamp(saved.sfxVolume, DEFAULTS.sfxVolume),
       track: isTrack(saved.track) ? saved.track : DEFAULTS.track,
       reduceMotion: typeof saved.reduceMotion === 'boolean' ? saved.reduceMotion : null,
+      clock: saved.clock === 'free' || saved.clock === 'timed' ? saved.clock : 'ask',
     };
   return {
     ...DEFAULTS,

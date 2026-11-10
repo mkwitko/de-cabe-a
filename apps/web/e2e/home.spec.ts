@@ -107,7 +107,8 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
 
   // 8. Grid level 1: one right, one wrong, finish, examples shown
   await page.goto('/grid/1');
-  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  // the clock choice from level 1 is remembered: no picker again
+  await expect(page.getByRole('button', { name: /No seu tempo/ })).toHaveCount(0);
   await page.getByRole('gridcell', { name: 'Flamengo e Milan: vazia' }).click();
   await page
     .getByRole('combobox', { name: 'Quem cumpre os dois critérios?' })
