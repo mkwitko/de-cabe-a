@@ -1,4 +1,4 @@
-import { stickerPhoto } from '../knowledge/player-card';
+import { statSpells, stickerPhoto, stickerStats } from '../knowledge/player-card';
 import {
   AlbumResponse,
   ProfileAlbumResponse,
@@ -19,7 +19,7 @@ import { applyRoundUpgrades } from './round-upgrade';
 async function bestStickers(prisma: PrismaClient, pks: string[]) {
   const rows = await prisma.sticker.findMany({
     where: { pk: { in: pks } },
-    include: { player: { include: { nationality: true } } },
+    include: { player: { include: { nationality: true, spells: statSpells } } },
   });
   const best = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
@@ -33,6 +33,8 @@ async function bestStickers(prisma: PrismaClient, pks: string[]) {
       name: r.player.canonicalName,
       positionGroup: r.player.primaryPositionGroup,
       nationality: r.player.nationality.name,
+      nationalityCode: r.player.nationality.isoCode,
+      ...stickerStats(r.player.spells),
       ...stickerPhoto(r.player),
       rarity: r.rarity,
       mode: r.mode,

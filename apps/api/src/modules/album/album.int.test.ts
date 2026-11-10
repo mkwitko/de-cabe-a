@@ -91,6 +91,10 @@ describe('award sticker', () => {
       where: { id: answerId },
       data: { photoFile: 'Ronaldo 2002.jpg', photoAuthor: 'Fulano', photoLicense: 'CC BY-SA 4.0' },
     });
+    await prisma.careerSpell.updateMany({
+      where: { playerId: answerId },
+      data: { appearances: 30, goals: 20 },
+    });
     const g = await startLevel();
     const res = await g.act({ kind: 'guess', playerId: answerId });
     expect(res.sticker).toMatchObject({
@@ -102,6 +106,10 @@ describe('award sticker', () => {
         mode: 'CAREER_PATH',
         photo: expect.stringContaining('Ronaldo%202002.jpg'),
         photoCredit: 'Foto: Fulano · CC BY-SA 4.0',
+        nationalityCode: 'BR',
+        clubs: 4,
+        games: 120,
+        goals: 80,
       },
     });
     expect(await stickers()).toHaveLength(1);
@@ -207,6 +215,7 @@ describe('album routes', () => {
       'bronze',
     ]);
     expect(res.byRarity).toMatchObject({ lenda: 1, ouro: 1, bronze: 1, prata: 0 });
+    expect(res.stickers[0]).toMatchObject({ nationalityCode: 'BR', clubs: expect.any(Number) });
   });
 
   it('album follows linked guest', async () => {
