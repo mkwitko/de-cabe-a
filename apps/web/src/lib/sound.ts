@@ -3,13 +3,18 @@
  * play on the bus. The choice stays on the device. The audio context starts on the first sound
  * after a tap (browsers only allow audio after a user gesture).
  */
-const KEY = 'dc_sound';
+const KEY = 'dc_sfx';
+const LEGACY_KEY = 'dc_sound';
 let ctx: AudioContext | null = null;
 const listeners = new Set<(on: boolean) => void>();
 
+/** Efeitos preference. The old single `dc_sound` key becomes Efeitos so existing choices stay. */
+export function readSfx(store: Pick<Storage, 'getItem'>): boolean {
+  return (store.getItem(KEY) ?? store.getItem(LEGACY_KEY)) === 'on';
+}
 export function soundOn(): boolean {
   try {
-    return localStorage.getItem(KEY) === 'on';
+    return readSfx(localStorage);
   } catch {
     return false;
   }
@@ -90,7 +95,9 @@ export type Sound =
   | 'tick'
   | 'shimmer'
   | 'rarity'
-  | 'rip';
+  | 'rip'
+  | 'star'
+  | 'promote';
 
 /** Returns a stop function for 'crowd' only (the broadcast's Pular cuts the roar). */
 export function play(sound: Sound): (() => void) | void {
@@ -141,6 +148,17 @@ export function play(sound: Sound): (() => void) | void {
     } else if (sound === 'rip') {
       // Paper tearing: a short bright burst.
       noise(0, 0.22, 0.1, 3800);
+    } else if (sound === 'star') {
+      // One earned star: a bright two-note ping.
+      tone(988, 0, 0.18, 'triangle', 0.12);
+      tone(1319, 0.09, 0.4, 'sine', 0.1);
+    } else if (sound === 'promote') {
+      // Promotion to a new title: rising fanfare over a short roar.
+      [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+        tone(f, i * 0.09, 0.4, 'triangle', 0.13),
+      );
+      tone(1046.5, 0.5, 0.9, 'sine', 0.1);
+      noise(0.2, 1.4, 0.07, 1000);
     } else if (sound === 'rarity') {
       tone(392, 0, 0.5, 'triangle', 0.15);
       tone(587, 0.12, 0.7, 'triangle', 0.15);
