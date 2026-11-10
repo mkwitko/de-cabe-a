@@ -52,6 +52,14 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await page.goto('/album');
   await expect(page.getByText('Ronaldo').first()).toBeVisible();
 
+  // Perfil is the member card: Career Path only, no ranking or other games.
+  await page.goto('/stats');
+  await expect(page.getByRole('heading', { name: 'Escada de títulos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^(Grid|Impostor|Draft)$/ })).toHaveCount(0);
+  await expect(page.getByText('no ranking geral')).toHaveCount(0);
+  await expect(page.getByText('Ronaldo').first()).toBeVisible();
+
   // How to play sends the player to their next level, not back to level 1.
   await page.goto('/como-jogar');
   await expect(page.getByRole('link', { name: 'Jogar a fase 2' })).toBeVisible();

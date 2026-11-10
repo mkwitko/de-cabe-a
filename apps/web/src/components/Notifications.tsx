@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { PushKeyResponse } from '@decabeca/contracts';
 import { api } from '../lib/api';
+import { isPageLaunched } from '../lib/launch';
 
 type Prefs = { daily: boolean; league: boolean };
 const KEY = 'dc_push';
@@ -36,11 +37,19 @@ const toBytes = (b64: string) => {
   return Uint8Array.from(s, (c) => c.charCodeAt(0));
 };
 
+/** Each kind follows its page: no Desafio do Dia, no morning alert (lib/launch.ts). */
+const KINDS = (
+  [
+    ['daily', 'Desafio do Dia novo (de manhã)', 'daily'],
+    ['league', 'Fechamento da semana nas suas ligas (segunda)', 'leagues'],
+  ] as const
+).filter(([, , page]) => isPageLaunched(page));
+
 export function Notifications() {
   const key = useQuery({
     queryKey: ['push-key'],
     queryFn: () => api<PushKeyResponse>('/v1/push/key'),
-    enabled: supported(),
+    enabled: supported() && KINDS.length > 0,
   });
   const [prefs, setPrefs] = useState<Prefs>({ daily: false, league: false });
   const [busy, setBusy] = useState(false);
@@ -57,7 +66,7 @@ export function Notifications() {
     });
   }, []);
 
-  if (!supported() || !key.data?.publicKey) return null;
+  if (!KINDS.length || !supported() || !key.data?.publicKey) return null;
   const publicKey = key.data.publicKey;
 
   async function change(next: Prefs) {
@@ -107,12 +116,7 @@ export function Notifications() {
       <p className="text-chalk-soft">
         Só neste aparelho, só o que você marcar. Dá para desligar quando quiser.
       </p>
-      {(
-        [
-          ['daily', 'Desafio do Dia novo (de manhã)'],
-          ['league', 'Fechamento da semana nas suas ligas (segunda)'],
-        ] as const
-      ).map(([k, label]) => (
+      {KINDS.map(([k, label]) => (
         <label key={k} className="flex min-h-11 items-center gap-3 font-semibold">
           <input
             type="checkbox"

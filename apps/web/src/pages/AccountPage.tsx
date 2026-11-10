@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from 'react-router';
-import { titleTone } from '../lib/format';
+import { titleFrame, titleTone } from '../lib/format';
+import { isPageLaunched } from '../lib/launch';
 import { TitleBadge } from '../components/TitleBadge';
 import { suggestNickname } from '../lib/nickname';
 import { ShareButton } from '../components/ShareButton';
@@ -69,7 +70,10 @@ export function AccountPage() {
       <h1 className="font-condensed text-4xl font-black uppercase">Conta</h1>
       <div className="grid gap-12 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start md:gap-14">
         {/* The player's own sticker: what the ranking shows about you. */}
-        <aside className="w-64 max-w-full -rotate-2 justify-self-center rounded-[12px] md:justify-self-start bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] md:sticky md:top-6">
+        <aside
+          style={{ background: titleFrame(m.title.name) }}
+          className="w-64 max-w-full -rotate-2 justify-self-center rounded-[12px] md:justify-self-start p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] md:sticky md:top-6"
+        >
           <div className="obj-dark flex flex-col items-center rounded-[6px] bg-pitch-deep px-4 pt-6 pb-5 text-center text-chalk">
             <span
               className="font-condensed grid size-24 place-items-center rounded-full border-4 text-4xl font-black text-ink"
@@ -94,7 +98,13 @@ export function AccountPage() {
 
         <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-8">
           <form className={card} onSubmit={(e) => submit(e, '/v1/me', 'PATCH', { nickname })}>
-            <h2 className={h2}>{m.nickname ? 'Trocar apelido' : 'Apelido no ranking'}</h2>
+            <h2 className={h2}>
+              {m.nickname
+                ? 'Trocar apelido'
+                : isPageLaunched('ranking')
+                  ? 'Apelido no ranking'
+                  : 'Escolha um apelido'}
+            </h2>
             <Field
               label="Apelido público"
               value={nickname}

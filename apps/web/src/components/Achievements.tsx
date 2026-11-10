@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { AchievementsResponse } from '@decabeca/contracts';
 import { api } from '../lib/api';
+import { achievementOpen } from '../lib/launch';
 import { Skeleton } from './ui';
 
 const GROUPS = [
@@ -20,7 +21,8 @@ export function Achievements() {
     queryFn: () => api<AchievementsResponse>('/v1/me/achievements'),
   });
   if (!data) return <Skeleton className="h-64" />;
-  const earned = data.items.filter((x) => x.done).length;
+  const items = data.items.filter((x) => achievementOpen(x.id));
+  const earned = items.filter((x) => x.done).length;
   return (
     <section aria-labelledby="conquistas" className="flex flex-col gap-6">
       <div className="flex items-baseline justify-between gap-4">
@@ -28,14 +30,14 @@ export function Achievements() {
           Conquistas
         </h2>
         <span className="font-condensed tabular text-xl font-black">
-          {earned}/{data.items.length}
+          {earned}/{items.length}
         </span>
       </div>
-      {GROUPS.map(([key, label]) => (
+      {GROUPS.filter(([key]) => items.some((x) => x.category === key)).map(([key, label]) => (
         <div key={key} className="flex flex-col gap-3">
           <h3 className="text-xs font-bold tracking-wide text-chalk-soft uppercase">{label}</h3>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {data.items
+            {items
               .filter((x) => x.category === key)
               .map((x) => (
                 <li

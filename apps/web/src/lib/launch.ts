@@ -3,7 +3,7 @@
  * Everything else stays in the code, its routes show "Em breve"; reopening is editing these lists.
  * `VITE_LAUNCH_ALL=1` opens everything (the e2e stack, which still tests the closed modes).
  */
-import { GAME_PATH, type GameMode } from '@decabeca/contracts';
+import { GAME_PATH, GameMode } from '@decabeca/contracts';
 
 export const LAUNCH_ALL = import.meta.env.VITE_LAUNCH_ALL === '1';
 
@@ -39,3 +39,17 @@ export function closedRoute(pathname: string, all = LAUNCH_ALL): Closed | null {
   const page = GATED_PAGES.find((p) => p.re.test(pathname));
   return page && !isPageLaunched(page.key, all) ? { name: page.name } : null;
 }
+
+/** Achievements tied to a game or page; they show only while it is open. Others always show. */
+const GATE: Record<string, (all: boolean) => boolean> = {
+  'oito-jogos': (all) => GameMode.options.every((m) => isModeLaunched(m, all)),
+  'grid-perfeito': (all) => isModeLaunched('FOOTBALL_GRID', all),
+  detetive: (all) => isModeLaunched('IMPOSTOR', all),
+  prancheta: (all) => isModeLaunched('MISSING_XI', all),
+  'conexao-total': (all) => isModeLaunched('CONNECTIONS', all),
+  relogio: (all) => isPageLaunched('ranking', all), // the clock is offered only with the ranking
+  'dia-completo': (all) => isPageLaunched('daily', all),
+  fregues: (all) => isPageLaunched('daily', all),
+  resenha: (all) => isPageLaunched('leagues', all),
+};
+export const achievementOpen = (id: string, all = LAUNCH_ALL) => GATE[id]?.(all) ?? true;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { closedRoute, isModeLaunched, isPageLaunched } from './launch';
+import { achievementOpen, closedRoute, isModeLaunched, isPageLaunched } from './launch';
 
 describe('launch', () => {
   it('opens Career Path and its levels, closes the other modes', () => {
@@ -25,5 +25,13 @@ describe('launch', () => {
     expect(closedRoute('/d/hoje', true)).toBeNull();
     expect(isModeLaunched('IMPOSTOR', true)).toBe(true);
     expect(isPageLaunched('ranking', true)).toBe(true);
+  });
+
+  it('hides achievements of closed games and pages, keeps the rest', () => {
+    for (const id of ['estreia', 'titular', 'lenda', 'faro-de-gol'])
+      expect(achievementOpen(id, false)).toBe(true);
+    for (const id of ['oito-jogos', 'grid-perfeito', 'relogio', 'fregues', 'resenha'])
+      expect(achievementOpen(id, false)).toBe(false);
+    expect(achievementOpen('resenha', true)).toBe(true);
   });
 });
