@@ -175,8 +175,10 @@ export function PrivacyPage() {
                 <strong>Dados de carreira</strong>: Wikidata (CC0) e Wikipédia (CC BY-SA).
               </li>
               <li>
-                <strong>Música e efeitos sonoros</strong>:{' '}
-                <Fill>faixas, autores e licenças, ao incluir a trilha</Fill>.
+                <strong>Música e efeitos sonoros</strong>: músicas de menu (&quot;Heavenly
+                Loop&quot;, de isaiah658) e de fase (&quot;Determined Pursuit&quot;, de Emma_MA),
+                ambas em CC0 (domínio público) no OpenGameArt. Os efeitos sonoros são sintetizados
+                no seu aparelho.
               </li>
               <li>
                 Não usamos escudos de clubes. O De Cabeça F.C. não tem ligação com clubes,

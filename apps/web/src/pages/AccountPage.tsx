@@ -11,7 +11,7 @@ import { useAccount, useMe } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { AccountData } from '../components/AccountData';
-import { HapticsToggle, SoundToggle } from '../components/SoundToggle';
+import { HapticsToggle, MusicToggle, SoundToggle } from '../components/SoundToggle';
 import { ThemeChoices } from '../components/ThemeToggle';
 
 const input =
@@ -163,8 +163,10 @@ export function AccountPage() {
           <section className={card}>
             <h2 className={h2}>Preferências</h2>
             <p className="text-chalk-soft">
-              Apito, torcida, o "uhh" do erro e a vibração. Fica guardado só neste aparelho.
+              Música de fundo, apito, torcida, o "uhh" do erro e a vibração. Fica guardado só neste
+              aparelho.
             </p>
+            <MusicToggle withLabel />
             <SoundToggle withLabel />
             <HapticsToggle />
           </section>

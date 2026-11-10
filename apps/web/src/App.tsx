@@ -1,4 +1,5 @@
-import { SoundToggle } from './components/SoundToggle';
+import { MusicToggle, SoundOffer, SoundToggle } from './components/SoundToggle';
+import { sceneFor, setScene } from './lib/music';
 import { ThemeToggle } from './components/ThemeToggle';
 import { CareerPathCard } from './components/CareerPathCard';
 import { MiniCover } from './components/ModeCover';
@@ -6,7 +7,7 @@ import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
 import { ComingSoonPage, SoonStamp } from './pages/ComingSoonPage';
@@ -401,6 +402,7 @@ function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const { pathname } = useLocation();
   const home = pathname === '/';
+  useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       <nav
@@ -442,6 +444,9 @@ function Shell({ children }: { children: ReactNode }) {
             );
           })}
           <li className="hidden sm:block">
+            <MusicToggle />
+          </li>
+          <li className="hidden sm:block">
             <SoundToggle />
           </li>
           <li className="hidden sm:block">
@@ -455,6 +460,7 @@ function Shell({ children }: { children: ReactNode }) {
         </p>
       )}
       <main className={home ? 'pt-6 sm:pt-4' : ''}>{children}</main>
+      <SoundOffer />
     </div>
   );
 }
