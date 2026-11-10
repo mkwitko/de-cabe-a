@@ -182,23 +182,51 @@ export function AlbumPage() {
   useLayoutEffect(() => {
     if (flip) setP(p.current);
   }, [flip]);
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-
-  const run = (f: Flip, to: 0 | 1, ease: (t: number) => number) => {
+  const anims = useRef<Animation[]>([]);
+  const stop = () => {
     cancelAnimationFrame(raf.current);
+    for (const a of anims.current) a.cancel();
+    anims.current = [];
+  };
+  useEffect(() => stop, []);
+
+  // A turn the hand lets go of plays as Web Animations of transform and opacity, sampled from the
+  // same curve the drag follows: the compositor runs them, so no frame waits on the main thread.
+  const run = (f: Flip, to: 0 | 1, ease: (t: number) => number) => {
+    stop();
     const from = p.current;
     const ms = Math.max(160, TURN_MS * Math.abs(to - from));
-    const t0 = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - t0) / ms);
-      setP(from + (to - from) * ease(t));
-      if (t < 1) raf.current = requestAnimationFrame(tick);
-      else {
-        setAt(toAt(to ? f.b : f.a));
-        setFlip(null);
-      }
-    };
-    raf.current = requestAnimationFrame(tick);
+    // the leaf mounts with this render; start once it is in the page
+    raf.current = requestAnimationFrame(() => {
+      const b = book.current;
+      if (!b) return;
+      const ps = Array.from({ length: 25 }, (_, i) => from + (to - from) * ease(i / 24));
+      const play = (sel: string, frame: (p: number, lift: number) => Keyframe) => {
+        for (const el of sel ? b.querySelectorAll<HTMLElement>(sel) : [b])
+          anims.current.push(
+            el.animate(
+              ps.map((v) => frame(v, Math.sin(v * Math.PI))),
+              { duration: ms, fill: 'forwards' },
+            ),
+          );
+      };
+      play('.album-leaf', (v) => ({ transform: `rotateY(${v * -180}deg)` }));
+      play('.album-face-front .album-shade', (v) => ({ opacity: Math.min(1, v * 2) }));
+      play('.album-face-back .album-shade', (v) => ({ opacity: Math.min(1, (1 - v) * 2) }));
+      play('.album-gloss', (_, lift) => ({ opacity: lift }));
+      play('.album-gloss', (v) => ({ backgroundPosition: `${100 - v * 100}% 0` }));
+      play('.album-cast', (_, lift) => ({ opacity: lift * 0.9 }));
+      if (b.hasAttribute('data-opening')) play('', (v) => ({ translate: `${(v - 1) * 25}% 0` }));
+      void anims.current[0]?.finished.then(
+        () => {
+          setP(to);
+          stop();
+          setAt(toAt(to ? f.b : f.a));
+          setFlip(null);
+        },
+        () => {},
+      );
+    });
   };
 
   const go = (to: number) => {
