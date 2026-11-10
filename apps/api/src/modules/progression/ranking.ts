@@ -1,6 +1,6 @@
 /**
- * Community ranking (ADR-007). A player is an account (all its sessions) or a guest session.
- * Stars and score count the best attempt per level; only players with a nickname are listed.
+ * Community ranking (ADR-007). Only accounts are ranked (all their sessions); a guest plays but
+ * enters the ranking once signed in. Stars and score count the best attempt per level.
  */
 import { titleFor } from '@decabeca/engine';
 import type { PrismaClient } from '../../generated/prisma/client';
@@ -38,17 +38,15 @@ export async function rankRows(
         MIN(EXTRACT(EPOCH FROM LEAST(a."completedAt", COALESCE(a."deadlineAt", a."completedAt")) - a."startedAt")) AS secs
       FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId"
         JOIN "Challenge" c ON c.id = a."challengeId" AND c."publicNumber" IS NOT NULL
-      WHERE a."completedAt" IS NOT NULL AND (${since}::timestamp IS NULL OR a."completedAt" >= ${since}::timestamp)
+      WHERE a."completedAt" IS NOT NULL AND s."userId" IS NOT NULL AND (${since}::timestamp IS NULL OR a."completedAt" >= ${since}::timestamp)
         AND (${until}::timestamp IS NULL OR a."completedAt" < ${until}::timestamp)
         AND (${timed} = false OR a.timed)
       GROUP BY 1, 2
     ), totals AS (
       SELECT pk, SUM(stars) AS stars, SUM(score) AS score, SUM(secs) AS secs FROM best GROUP BY pk
     )
-    SELECT t.pk, COALESCE(u.nickname, g.nickname) AS nickname, t.stars, t.score
-    FROM totals t
-    LEFT JOIN "User" u ON u.id = t.pk
-    LEFT JOIN "GuestSession" g ON g.id = t.pk
+    SELECT t.pk, u.nickname, t.stars, t.score
+    FROM totals t JOIN "User" u ON u.id = t.pk
     ORDER BY t.stars DESC, CASE WHEN ${timed} THEN t.secs END ASC, t.score DESC, t.pk`;
   return rows.map((r) => ({
     pk: r.pk,

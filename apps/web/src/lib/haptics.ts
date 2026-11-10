@@ -30,8 +30,11 @@ export const onHapticsChange = (l: (on: boolean) => void) => {
   return () => void listeners.delete(l);
 };
 
+/** Browsers refuse (and log) a vibration before the first tap on the page: skip it until then. */
 export function buzz(pattern: number | number[]) {
-  if (hapticsSupported() && hapticsOn()) navigator.vibrate?.(pattern);
+  if (!hapticsSupported() || !hapticsOn()) return;
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+  navigator.vibrate?.(pattern);
 }
 
 const RIGHT = new Set(['correct', 'found', 'group_found', 'won']);

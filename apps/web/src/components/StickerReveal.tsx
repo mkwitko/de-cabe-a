@@ -5,8 +5,22 @@ import { play } from '../lib/sound';
 import { Lamps, reducedMotion } from './Broadcast';
 import { RARITY_ORDER, RARITY_STYLE } from './rarity';
 import { StickerCard } from './StickerCard';
+import { Moment } from './Moment';
 
-/** Rarity colour and name first (with its sound), then the card spins in, then the name. */
+/** From Destaque da Rodada up, a pack tears open in the rarity colour before the card. */
+const RARE = RARITY_ORDER.indexOf('destaque_rodada');
+
+/** The rarity's colours for the pack (its --rc; Lenda's rainbow rim): Lottie cannot read CSS vars. */
+const packColors = (r: StickerAward['sticker']['rarity']) =>
+  r === 'lenda'
+    ? ['#c08aff', '#ff8a8a', '#ffe08a', '#9dffb0', '#8ad8ff']
+    : [/--rc:(#[0-9a-f]{6})/i.exec(RARITY_STYLE[r].className)?.[1] ?? '#f5c400'];
+
+/**
+ * Rarity colour and name first (with its sound), then the card spins in, then the name. A hero
+ * moment sized to the viewport: the card about 44% of the screen height (60% of a phone's
+ * width) over a light in the rarity colour, then the name and the Nota De Cabeça in big type.
+ */
 export function StickerReveal({
   award,
   onDone,
@@ -19,37 +33,26 @@ export function StickerReveal({
   const { sticker, upgradedFrom, isNew } = award;
   const style = RARITY_STYLE[sticker.rarity];
   const level = RARITY_ORDER.indexOf(sticker.rarity);
-  const [lamps, setLamps] = useState(0);
-  const [phase, setPhase] = useState<'idle' | 'rarity' | 'card' | 'named'>('idle');
+  const rare = level >= RARE && !short;
+  const [phase, setPhase] = useState<'rarity' | 'card' | 'named'>('rarity');
   const stage = useRef<HTMLDivElement>(null);
   const strip = useRef<HTMLDivElement>(null);
   const tilt = useRef<HTMLDivElement>(null);
 
+  // Straight on from the broadcast, under the same lit floodlights: the rarity is called at once,
+  // the card spins in, then his name lands. Rarer stickers hold the suspense a little longer.
   useEffect(() => {
     const quick = short || reducedMotion();
     const timers: number[] = [];
     const at = (ms: number, fn: () => void) => void timers.push(window.setTimeout(fn, ms));
-    // From "Destaque da Rodada" up, the lamps open the reveal; higher levels hold longer.
-    const intro = !quick && level >= 4 ? 1000 : 0;
-    const hold = quick ? 0 : level * 120;
-    if (intro)
-      [250, 550, 850].forEach((ms, i) =>
-        at(ms, () => {
-          setLamps(i + 1);
-          play('clunk');
-          buzz(15);
-        }),
-      );
-    const t0 = quick ? 100 : intro + 250;
-    at(t0, () => {
-      setPhase('rarity');
-      play('rarity');
-    });
-    at(t0 + (quick ? 200 : 850 + hold), () => {
+    // a rare pack needs its 0.8 s to shiver and tear before the card spins in
+    const hold = quick ? 0 : level >= RARE ? 250 + level * 60 : level * 80;
+    play('rarity');
+    at(quick ? 150 : 350 + hold, () => {
       setPhase('card');
       play('shimmer');
     });
-    at(t0 + (quick ? 700 : 2150 + hold), () => {
+    at(quick ? 650 : 1500 + hold, () => {
       setPhase('named');
       play('stamp');
       if (!reducedMotion()) buzz(30);
@@ -64,7 +67,7 @@ export function StickerReveal({
     const x = (e.clientX - r.left) / r.width;
     const y = (e.clientY - r.top) / r.height;
     tilt.current.style.transform = `rotateY(${(x - 0.5) * 28}deg) rotateX(${(0.5 - y) * 24}deg)`;
-    if (follow && strip.current) strip.current.style.transform = `translateX(${(x - 0.5) * 60}%)`;
+    if (follow && strip.current) strip.current.style.setProperty('--hx', String(0.2 + x * 0.6));
   };
 
   const revealed = phase === 'card' || phase === 'named';
@@ -75,37 +78,68 @@ export function StickerReveal({
       onPointerMove={onMove}
       role="dialog"
       aria-label="Figurinha nova"
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
+      className={`screen-overlay fixed inset-0 z-50 flex flex-col items-center justify-center gap-[clamp(0.75rem,2.5vh,1.75rem)] overflow-hidden pb-24 bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
     >
-      <Lamps on={lamps} />
-      {phase !== 'idle' && !short && !reducedMotion() && (
+      <Lamps on={3} />
+      {/* the rarity's light behind the card */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute top-[44%] left-1/2 aspect-square w-[max(120vmin,560px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--rc)_70%,transparent),color-mix(in_srgb,var(--rc)_22%,transparent)_45%,transparent)] transition-opacity duration-700 ${revealed ? 'opacity-100' : 'opacity-0'}`}
+      />
+      {!short && !reducedMotion() && (
         <div
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 h-[120%] w-1.5 bg-[linear-gradient(transparent,#fff7d1,transparent)] opacity-0 motion-safe:animate-[beam_700ms_ease-out_forwards]"
         />
       )}
-      <p
-        className={`text-center text-sm font-black tracking-[0.4em] text-(--rc) uppercase transition-opacity duration-500 motion-reduce:duration-200 ${phase === 'idle' ? 'opacity-0' : 'opacity-100'}`}
-      >
+      <p className="relative text-center text-sm font-black tracking-[0.4em] text-(--rc) uppercase sm:text-base motion-safe:animate-[fade-in_300ms_both]">
         {isNew ? 'Figurinha ' : upgradedFrom ? 'Upgrade · ' : ''}
         {style.label}
       </p>
-      <div className="[perspective:900px]">
+      <div className="relative [perspective:900px]">
+        {rare && (
+          <Moment
+            art="packBurst"
+            colors={packColors(sticker.rarity)}
+            className="absolute top-1/2 left-1/2 aspect-square w-[min(150vw,600px)] -translate-x-1/2 -translate-y-1/2"
+          />
+        )}
         <div
           ref={tilt}
-          className={`relative aspect-[3/4] w-[min(64vw,250px)] [transform-style:preserve-3d] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
+          className={`relative aspect-[3/4] w-[min(62vw,33vh)] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
           style={{ '--d': `${dur}ms` } as React.CSSProperties}
         >
           <StickerCard sticker={sticker} size="lg" showName={phase === 'named'} stripRef={strip} />
         </div>
       </div>
+      <div
+        className={`relative flex flex-col items-center gap-1 px-5 text-center transition-[opacity,transform] duration-500 ease-out ${phase === 'named' ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
+      >
+        <p className="font-condensed max-w-[18ch] text-[clamp(2.25rem,6.5vh,4.5rem)] leading-[0.9] font-black text-balance uppercase">
+          {sticker.name}
+        </p>
+        {sticker.rating !== undefined && (
+          <p className="font-condensed flex items-baseline gap-2 text-sm font-extrabold tracking-[0.2em] text-white/75 uppercase sm:text-base">
+            Nota De Cabeça
+            <span className="tabular text-[clamp(1.75rem,4.5vh,3rem)] leading-none font-black tracking-normal text-(--rc)">
+              {sticker.rating}
+            </span>
+          </p>
+        )}
+      </div>
       <p aria-live="polite" className="sr-only">
-        {phase === 'named' ? `Figurinha ${style.label}: ${sticker.name}` : ''}
+        {phase === 'named'
+          ? `Figurinha ${style.label}: ${sticker.name}${sticker.rating === undefined ? '' : `, Nota De Cabeça ${sticker.rating}`}`
+          : ''}
       </p>
       <button
         type="button"
         onClick={onDone}
-        className="absolute right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] min-h-11 rounded-full border-2 border-white/60 px-5 font-extrabold text-white"
+        className={
+          phase === 'named'
+            ? 'font-condensed absolute inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] mx-auto min-h-14 max-w-md rounded-xl bg-cover text-xl font-black tracking-wide text-ink uppercase shadow-[0_10px_24px_-8px_rgb(0_0_0/0.7)] motion-safe:animate-[fade-in_300ms_both]'
+            : 'absolute right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] min-h-11 rounded-full border-2 border-white/60 px-5 font-extrabold text-white'
+        }
       >
         {phase === 'named' ? 'Continuar' : 'Pular'}
       </button>

@@ -28,6 +28,10 @@ const ROUTES = [
 ];
 
 test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true });
+// The first-run welcome would cover a fresh browser's first screen; launch.spec covers it.
+test.beforeEach(({ context }) =>
+  context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
+);
 
 for (const route of ROUTES)
   test(`phone: ${route} fits, no errors, big tap targets`, async ({ page }) => {
@@ -64,6 +68,7 @@ for (const route of ROUTES)
 test('album shows the sticker won in a level', async ({ page }) => {
   await page.goto('/career-path/1');
   await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
@@ -74,4 +79,15 @@ test('album shows the sticker won in a level', async ({ page }) => {
   await page.goto('/album');
   await expect(page.getByText(/^1 de \d+/)).toBeVisible();
   await expect(page.getByText(/ronaldo/i).first()).toBeVisible();
+  // open the book, find the sticker on its page and take it out
+  const turning = page.locator('[data-turning]');
+  await page.getByRole('button', { name: 'Abrir o álbum' }).click();
+  await expect(turning).toHaveCount(0);
+  await page.getByRole('button', { name: /^Atacantes/ }).click();
+  await expect(turning).toHaveCount(0);
+  await page.getByRole('button', { name: /Ronaldo.*Ver figurinha/ }).click();
+  const detail = page.getByRole('dialog', { name: /Ronaldo/ });
+  await expect(detail.getByRole('button', { name: 'Ver a carreira' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(detail).toHaveCount(0);
 });

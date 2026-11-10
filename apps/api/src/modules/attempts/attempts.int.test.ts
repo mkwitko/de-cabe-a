@@ -57,6 +57,18 @@ function guest() {
     act(attemptId: string, input: object, key = randomUUID()) {
       return this.req('POST', `/attempts/${attemptId}/actions`, { idempotencyKey: key, input });
     },
+    /**
+     * Links this device to a new account, as a sign-up does (only accounts are ranked); its guest
+     * progress comes along. Direct, so the sign-up rate limit stays out of these tests.
+     */
+    async signUp(nickname: string) {
+      expect((await this.req('PATCH', '/me', { nickname })).statusCode).toBe(200);
+      const s = await prisma.guestSession.findFirstOrThrow({ where: { nickname } });
+      const user = await prisma.user.create({
+        data: { email: `${randomUUID()}@example.com`, nickname, nicknameKey: s.nicknameKey! },
+      });
+      await prisma.guestSession.update({ where: { id: s.id }, data: { userId: user.id } });
+    },
   };
 }
 
@@ -210,6 +222,9 @@ describe('levels (ADR-007)', () => {
         .json()
         .levels.map((l: { state: string }) => l.state),
     ).toEqual(['open', 'locked', 'locked']);
+    // Opened but untouched: still "Jogar", not "Continuar".
+    await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1 });
+    expect((await g.req('GET', '/tracks/CAREER_PATH')).json().levels[0].state).toBe('open');
     expect((await g.req('GET', '/games')).json().games[0]).toEqual({
       mode: 'CAREER_PATH',
       name: 'Career Path',
@@ -288,7 +303,7 @@ describe('levels (ADR-007)', () => {
       reveal: { answer: { id: answerId, name: 'Ronaldo' } },
     });
     expect(right.json().share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1?ref=share',
+      'De Cabeça F.C. · Career Path · Fase 1 · 3/6\n⬛⬛🟩 ★★☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1?ref=share',
     );
     expect((await g.act(start.attempt.id, { kind: 'skip' })).json().error.code).toBe(
       'GAME_ALREADY_COMPLETED',
@@ -318,7 +333,7 @@ describe('levels (ADR-007)', () => {
     const stats = (await g.req('GET', '/me/stats')).json();
     expect(stats).toMatchObject({
       totalStars: 2,
-      title: { name: 'Reserva', next: { name: 'Titular', missing: 13 } },
+      title: { name: 'Peneira', next: { name: 'Base', missing: 8 } },
       CAREER_PATH: { completed: 1, won: 1, stars: 2, threeStars: 0, distribution: { '3': 1 } },
     });
   });
@@ -328,7 +343,7 @@ describe('levels (ADR-007)', () => {
     const lost = await playCareer(g, 1, null, 6);
     expect(lost.attempt).toMatchObject({ status: 'LOST', stars: 0 });
     expect(lost.share.text).toBe(
-      'De Cabeça · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1?ref=share',
+      'De Cabeça F.C. · Career Path · Fase 1 · X/6\n⬛⬛⬛⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/career-path/1?ref=share',
     );
     expect((await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 2 })).statusCode).toBe(
       201,
@@ -387,8 +402,8 @@ describe('player search', () => {
   });
   it('orders by notability; every result says who it is (main club · birth year · position)', async () => {
     expect((await search('ze rob')).json().players).toEqual([
-      { id: ids.ze, name: 'Zé Roberto', disambiguation: 'Palmeiras · 1974 · meia' },
-      { id: ids.ze2, name: 'Zé Roberto', disambiguation: 'Vasco · 1980 · meia' },
+      { id: ids.ze, name: 'Zé Roberto', disambiguation: 'Palmeiras · nasc. 1974 · meia' },
+      { id: ids.ze2, name: 'Zé Roberto', disambiguation: 'Vasco · nasc. 1980 · meia' },
     ]);
   });
   it('finds a player by the name fans use when the canonical one is the full name (Dida)', async () => {
@@ -526,7 +541,7 @@ describe('Football Grid', () => {
     });
     expect(end.json().reveal.cells[4].validAnswers).toBeGreaterThanOrEqual(8);
     expect(end.json().share.text).toBe(
-      'De Cabeça · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/grid/1?ref=share',
+      'De Cabeça F.C. · Grid · Fase 1 · 1/9\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛ ☆☆☆ ⏱ 0:00\ndecabecafc.com.br/grid/1?ref=share',
     );
   });
 
@@ -645,10 +660,10 @@ describe('ranking, nickname and accounts', () => {
     await playCareer(mid, 1, answerId, 3); // 4th attempt: 2 stars, 30 points
   });
 
-  it('only players with a nickname are listed; nicknames are unique', async () => {
+  it('guests are not ranked, even with a nickname; nicknames are unique', async () => {
     expect((await ace.req('GET', '/ranking')).json().me).toEqual({
       position: null,
-      stars: 6,
+      stars: 0,
       nickname: null,
     });
     expect((await ace.req('PATCH', '/me', { nickname: 'Fenômeno' })).json()).toMatchObject({
@@ -662,36 +677,10 @@ describe('ranking, nickname and accounts', () => {
     expect((await mid.req('PATCH', '/me', { nickname: 'x' })).statusCode).toBe(400);
     await mid.req('PATCH', '/me', { nickname: 'Meio Campo' });
     const all = (await mid.req('GET', '/ranking')).json();
-    expect(all.entries.slice(0, 2)).toEqual([
-      { position: 1, nickname: 'Fenômeno', stars: 6, score: 120, title: 'Reserva', isMe: false },
-      { position: 2, nickname: 'Meio Campo', stars: 2, score: 30, title: 'Reserva', isMe: true },
-    ]);
-    expect(all.me.position).toBe(2);
-    expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: 2, week: 2 });
-  });
-
-  it('the weekly ranking only counts levels finished since Monday', async () => {
-    clock = new Date('2026-11-10T15:00:00Z'); // next Tuesday
-    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([]);
-    await playCareer(mid, 2, decoyId, 0);
-    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([
-      expect.objectContaining({ position: 1, nickname: 'Meio Campo', stars: 3 }),
-    ]);
-    clock = new Date('2026-11-05T15:00:00Z');
-  });
-
-  it('level ranking lists the best results of one level', async () => {
-    const top = (await mid.req('GET', '/ranking/levels/CAREER_PATH/1')).json().entries;
-    expect(
-      top.map((e: { nickname: string; score: number; isMe: boolean }) => [
-        e.nickname,
-        e.score,
-        e.isMe,
-      ]),
-    ).toEqual([
-      ['Fenômeno', 60, false],
-      ['Meio Campo', 30, true],
-    ]);
+    expect(all.entries).toEqual([]);
+    expect(all.me.position).toBeNull();
+    expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: null, week: null });
+    expect((await mid.req('GET', '/ranking/levels/CAREER_PATH/1')).json().entries).toEqual([]);
   });
 
   it('sign-up keeps guest progress; sign-in on another device sees it; wrong password is 401', async () => {
@@ -758,6 +747,41 @@ describe('ranking, nickname and accounts', () => {
 
     const out = await phone.req('POST', '/auth/logout');
     expect(out.json()).toMatchObject({ nickname: null, account: null, totalStars: 0 });
+  });
+
+  it('an account enters the ranking with its guest progress', async () => {
+    await mid.signUp('Meio Campo');
+    const all = (await mid.req('GET', '/ranking')).json();
+    expect(all.entries.slice(0, 2)).toEqual([
+      { position: 1, nickname: 'Fenômeno', stars: 6, score: 120, title: 'Peneira', isMe: false },
+      { position: 2, nickname: 'Meio Campo', stars: 2, score: 30, title: 'Peneira', isMe: true },
+    ]);
+    expect(all.me.position).toBe(2);
+    expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: 2, week: 2 });
+  });
+
+  it('the weekly ranking only counts levels finished since Monday', async () => {
+    clock = new Date('2026-11-10T15:00:00Z'); // next Tuesday
+    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([]);
+    await playCareer(mid, 2, decoyId, 0);
+    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([
+      expect.objectContaining({ position: 1, nickname: 'Meio Campo', stars: 3 }),
+    ]);
+    clock = new Date('2026-11-05T15:00:00Z');
+  });
+
+  it('level ranking lists the best results of one level', async () => {
+    const top = (await mid.req('GET', '/ranking/levels/CAREER_PATH/1')).json().entries;
+    expect(
+      top.map((e: { nickname: string; score: number; isMe: boolean }) => [
+        e.nickname,
+        e.score,
+        e.isMe,
+      ]),
+    ).toEqual([
+      ['Fenômeno', 60, false],
+      ['Meio Campo', 30, true],
+    ]);
   });
 
   it('sign-up refuses a nickname in use', async () => {
@@ -920,14 +944,16 @@ describe('search pages (SEO)', () => {
     expect(page.statusCode).toBe(200);
     expect(page.headers['content-type']).toContain('text/html');
     expect(page.body).toContain(
-      '<title>Carreira de Ronaldo: clubes, jogos e gols | De Cabeça</title>',
+      '<title>Carreira de Ronaldo: clubes, jogos e gols | De Cabeça F.C.</title>',
     );
     expect(page.body).toContain('Ronaldo é um atacante brasileiro');
     expect(page.body).toContain('"@type":"Person"');
     expect(page.body).toContain('<link rel="canonical" href="http://localhost:5173/jogador/');
     expect((await app.inject({ method: 'GET', url: '/jogador/ninguem-q1' })).statusCode).toBe(404);
     expect((await app.inject({ method: 'GET', url: '/jogadores' })).body).toContain(path!);
-    expect((await app.inject({ method: 'GET', url: '/llms.txt' })).body).toContain('# De Cabeça');
+    expect((await app.inject({ method: 'GET', url: '/llms.txt' })).body).toContain(
+      '# De Cabeça F.C.',
+    );
   });
 });
 
@@ -1282,7 +1308,7 @@ describe('timed mode (ADR-009)', () => {
 
     // Timed win in time: listed in the timed ranking, not the untimed one.
     const r = guest();
-    await r.req('PATCH', '/me', { nickname: 'Relampago' });
+    await r.signUp('Relampago');
     clock = start;
     const fast = (
       await r.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1, timed: true })
@@ -1340,6 +1366,7 @@ describe('replace in place', () => {
     });
     const g = guest();
     const mine = (await g.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 })).json();
+    expect((await g.act(mine.attempt.id, { kind: 'hint', cellIndex: 0 })).statusCode).toBe(200);
     const draft = (
       await adminPost(`/challenges/${old.id}/retire`, {
         reason: 'Posição corrigida',
@@ -1456,7 +1483,7 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
 
     // Rodada semanal (2.7): Monday to Friday, a day scores its levels started that same day.
     await prisma.attempt.update({ where: { id: lost.attempt.id }, data: { stars: 2 } });
-    await g.req('PATCH', '/me', { nickname: 'Rodada' });
+    await g.signUp('Rodada');
     const round = (await g.req('GET', '/round')).json();
     expect(round.weekStart).toBe('2026-11-02');
     expect(
@@ -1489,7 +1516,7 @@ describe('Temporadas (GROWTH_PLAN.md 2.6)', () => {
     const before = clock;
     clock = new Date('2026-11-10T15:00:00Z'); // season 1
     const g = guest();
-    await g.req('PATCH', '/me', { nickname: 'Campeão T1' });
+    await g.signUp('Campeão T1');
     const played = await playCareer(g, 2, null, 6);
     await prisma.attempt.update({ where: { id: played.attempt.id }, data: { stars: 3 } });
     const season1 = (await g.req('GET', '/ranking?scope=season')).json();
@@ -1589,7 +1616,7 @@ describe('Fantasy de conhecimento', () => {
       .slice(0, 4)
       .map((p) => p.id);
     const g = guest();
-    await g.req('PATCH', '/me', { nickname: 'Fantasista' });
+    await g.signUp('Fantasista');
     expect((await g.req('GET', '/fantasy')).json()).toMatchObject({ squad: null, total: 0 });
     expect(
       (await g.req('POST', '/fantasy', { playerIds: [answer, answer, ...others.slice(0, 3)] }))

@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
+// The first-run welcome would cover a fresh browser's first screen; launch.spec covers it.
+test.beforeEach(({ context }) =>
+  context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
+);
+
 /** Skip the end-of-level ceremony: the broadcast, then the sticker when the level awards one. */
 async function skipCeremony(page: Page, { sticker = true } = {}) {
   const pular = (name: string) =>
@@ -10,22 +15,23 @@ async function skipCeremony(page: Page, { sticker = true } = {}) {
 
 /** Main flow (TEST_STRATEGY.md §3, adapted to the level tracks of ADR-007). One guest across the journey. */
 
-test('guest plays level 1 of each game, gets stars, joins the ranking, sees stats', async ({
+test('guest plays level 1 of each game, gets stars, signs up to join the ranking, sees stats', async ({
   page,
   context,
 }) => {
-  // 1. Home without sign-up shows both games
+  // 1. Home without sign-up: the brand and Career Path (the other modes are closed to the public)
   await page.goto('/');
-  await expect(page).toHaveTitle('De Cabeça · Minijogos de futebol');
-  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça' })).toBeVisible();
+  await expect(page).toHaveTitle('De Cabeça F.C. · Minijogos de futebol');
+  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Football Grid' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2
-  await page.getByRole('link', { name: 'Começar' }).first().click();
+  await page.getByRole('link', { name: 'Jogar fase 1' }).click();
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
   // Mode chosen once, before the level starts (ADR-009).
   await page.getByRole('button', { name: /No seu tempo/ }).click();
+  // First run: the 3-step tutorial lays over level 1; it can be skipped and does not come back.
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
   const revealed = page.getByRole('list', { name: 'Clubes revelados' }).getByRole('listitem');
   await expect(revealed.first()).toContainText('Cruzeiro');
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('Romar');
@@ -44,8 +50,12 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
-  await expect(page.getByRole('heading', { name: 'Acertou em 3 de 6!' })).toBeVisible();
+  // The broadcast's star is the player; the verdict heads the end screen.
+  await expect(
+    page.getByRole('dialog', { name: 'Resultado' }).getByRole('heading', { name: /Ronaldo/ }),
+  ).toBeVisible();
   await skipCeremony(page);
+  await expect(page.getByRole('heading', { name: 'Acertou em 3 de 6!' })).toBeVisible();
   await expect(page.getByRole('img', { name: '2 de 3 estrelas' }).first()).toBeVisible();
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
@@ -70,17 +80,27 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   expect(clip).not.toContain('Ronaldo');
 
   // 6. Track page: level 1 done with stars, level 2 open
-  await page.getByRole('link', { name: 'Voltar às fases' }).click();
+  await page.getByRole('link', { name: 'Voltar às fases' }).first().click();
   await expect(page.getByRole('link', { name: /Fase 1, .*2 estrelas/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Fase 2, .*jogar/ })).toBeVisible();
 
-  // 7. Nickname puts the guest in the ranking
+  // 7. A nickname alone does not rank a guest; an account does, with the guest's stars
   await page.getByRole('link', { name: 'Perfil', exact: true }).click();
   await page.getByRole('link', { name: 'Conta, apelido e preferências' }).click();
   await page.getByLabel('Apelido público').fill('Camisa 10');
   await page.getByRole('button', { name: 'Salvar apelido' }).click();
   await expect(page.getByText('Camisa 10', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ranking', exact: true }).click();
+  await expect(page.getByText(/Só quem tem conta entra no ranking/)).toBeVisible();
+  await page.getByRole('link', { name: 'Entre ou crie a sua' }).click();
+  await page
+    .getByRole('group', { name: 'Escolha' })
+    .getByRole('button', { name: 'Criar conta' })
+    .click();
+  await page.getByLabel('E-mail').fill(`camisa10-${Date.now()}@example.com`);
+  await page.getByLabel('Senha').fill('segredo-123');
+  await page.locator('form').getByRole('button', { name: 'Criar conta' }).click();
+  await expect(page).toHaveURL(/\/ranking$/);
   await expect(
     page.getByRole('listitem').filter({ hasText: 'Camisa 10' }).getByLabel('2 estrelas'),
   ).toBeVisible();
@@ -109,8 +129,10 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
 
   // 9. Stats: title and stars; history lists both levels
   await page.getByRole('link', { name: 'Perfil', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Reserva' })).toBeVisible();
-  await expect(page.getByText('2 estrelas', { exact: true })).toBeVisible();
+  // The member card: nickname as the heading, the title in its tab; 2 stars leave 8 to Base.
+  await expect(page.getByRole('heading', { name: 'Camisa 10' })).toBeVisible();
+  await expect(page.getByText('Título: Peneira')).toBeVisible();
+  await expect(page.getByText('Faltam 8 estrelas para Base.')).toBeVisible();
   await page.getByRole('link', { name: 'Ver histórico de partidas' }).click();
   await expect(page.locator('main li')).toHaveCount(2);
 
@@ -123,8 +145,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
 test('Modo Carreira: create a footballer, train him with a level, play a match', async ({
   page,
 }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: /Crie seu craque/ }).click();
+  await page.goto('/carreira');
   await page.getByLabel('Nome do craque').fill('Craque do Teste');
   await page.getByRole('button', { name: 'Atacante' }).click();
   await page.getByLabel('Clube').selectOption({ label: 'Sub-20 do Flamengo' });
@@ -135,11 +156,12 @@ test('Modo Carreira: create a footballer, train him with a level, play a match',
   // Win Career Path level 1 at the first guess: 3 stars = 3 training points = one match.
   await page.goto('/career-path/1');
   await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
-  await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
   await skipCeremony(page);
+  await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
   await page.getByRole('link', { name: /de treino para o seu craque/ }).click();
 
   await page.getByRole('button', { name: 'Jogar a partida' }).click();

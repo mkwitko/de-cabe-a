@@ -1,9 +1,14 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { useStats } from '../lib/game';
-import { TITLE_LADDER } from '../lib/format';
+import { GameMode, type StatsResponse } from '@decabeca/contracts';
+import { useAlbum, useMe, useStats } from '../lib/game';
+import { isModeLaunched, isPageLaunched } from '../lib/launch';
+import { SignInButton } from '../components/SignInButton';
+import { MemberCard } from '../components/MemberCard';
+import { TitleLadder } from '../components/TitleLadder';
+import { bestFirst, Showcase } from '../components/Showcase';
 import { StarIcon } from '../components/Stars';
-import { Skeleton } from '../components/ui';
+import { btnPrimary, Skeleton } from '../components/ui';
 import { Achievements } from '../components/Achievements';
 
 /** A number that counts up when it enters; the final value stays in the DOM for assistive tech. */
@@ -40,7 +45,7 @@ function Figure({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** One game's printed sheet (súmula): ink header band, perforated edge, figures on paper. */
+/** One game's printed sheet (súmula): ink header band, figures on paper. Closed games only. */
 function Sheet({
   id,
   title,
@@ -87,59 +92,132 @@ const Stars_ = ({ n }: { n: number }) => (
   </>
 );
 const link = 'font-bold text-ink underline underline-offset-4';
+const chalkLink =
+  'inline-flex min-h-11 items-center font-semibold text-chalk underline underline-offset-4';
 
-/** Reserva → Titular → Craque → Lenda, filled up to the player's stars. */
-function TitleLadder({ total, current }: { total: number; current: string }) {
+/** Vitrine: the album's best stickers on the glass shelf, with the way into the album. */
+function AlbumShowcase() {
+  const { data } = useAlbum();
   return (
-    <ol className="grid grid-cols-4" aria-label="Escada de títulos">
-      {TITLE_LADDER.map((t, i) => {
-        const reached = total >= t.min;
-        const next = TITLE_LADDER[i + 1];
-        const fill = next ? Math.min(1, Math.max(0, (total - t.min) / (next.min - t.min))) : 0;
-        return (
-          <li key={t.name} className="flex flex-col gap-2">
-            <div className="flex items-center">
-              <span
-                className={`grid size-9 shrink-0 place-items-center rounded-full border-2 ${
-                  reached
-                    ? 'border-cover bg-cover text-ink'
-                    : 'border-dashed border-chalk-soft/60 text-chalk-soft'
-                }`}
-              >
-                <StarIcon className="size-4" />
-              </span>
-              {next && (
-                <span className="mx-1 h-1.5 flex-1 overflow-hidden rounded-full bg-chalk/15">
-                  <span
-                    className="block h-full rounded-full bg-cover"
-                    style={{ width: `${fill * 100}%` }}
-                  />
-                </span>
-              )}
-            </div>
-            <span
-              className={`font-condensed text-lg leading-none font-extrabold uppercase ${t.name === current ? 'text-cover' : reached ? '' : 'text-chalk-soft'}`}
-            >
-              {t.name}
-              {t.name === current && <span className="sr-only"> (seu título)</span>}
+    <section aria-labelledby="vitrine" className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+        <h2 id="vitrine" className="font-condensed text-3xl font-extrabold uppercase">
+          Vitrine
+        </h2>
+        {data && (
+          <Link to="/album" className={`${chalkLink} gap-1.5`}>
+            Abrir o álbum
+            <span className="tabular font-medium text-chalk-soft">
+              · {data.owned} de {data.total}
             </span>
-            <span className="tabular text-sm text-chalk-soft">{t.min} estrelas</span>
-          </li>
-        );
-      })}
-    </ol>
+          </Link>
+        )}
+      </div>
+      {!data ? (
+        <Skeleton className="h-64" />
+      ) : data.stickers.length ? (
+        <Showcase stickers={bestFirst(data.stickers)} cols="grid-cols-3 lg:grid-cols-6" />
+      ) : (
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border-2 border-dashed border-chalk-soft/50 p-4">
+          <p className="min-w-0 flex-1 basis-48 text-sm text-chalk-soft">
+            A vitrine está vazia. Cada jogador que você acerta vira figurinha, e as melhores ficam
+            expostas aqui.
+          </p>
+          <Link to="/" className={`${btnPrimary} shrink-0`}>
+            Jogar
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Career Path, compact: two figures and the attempt spread as a small bar chart. */
+function CareerSheet({ cp }: { cp: StatsResponse['CAREER_PATH'] }) {
+  const bars = Object.entries(cp.distribution);
+  const maxBar = Math.max(1, ...bars.map(([, c]) => c));
+  const figures: [string, ReactNode][] = [
+    ['de acerto', cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—'],
+    ['fases com 3 estrelas', cp.threeStars],
+  ];
+  return (
+    <section
+      aria-labelledby="cp-stats"
+      className="sheet-in overflow-hidden rounded-lg bg-paper text-ink shadow-[0_12px_26px_-12px_rgb(0_0_0/0.55)]"
+    >
+      <h2
+        id="cp-stats"
+        className="font-condensed bg-ink px-4 py-2 text-xl font-black text-paper uppercase [border-bottom:6px_double_var(--color-cover)]"
+      >
+        Career Path
+      </h2>
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-end gap-6 p-4 sm:gap-10 sm:px-5">
+        <dl className="flex flex-col gap-4">
+          {figures.map(([label, v]) => (
+            <div key={label} className="flex flex-col-reverse">
+              <dt className="max-w-[10ch] text-xs leading-tight font-semibold text-ink/70">
+                {label}
+              </dt>
+              <dd className="font-condensed tabular text-4xl leading-none font-black">
+                {typeof v === 'number' ? <Count n={v} /> : v}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <figure className="flex min-w-0 flex-col gap-1.5">
+          <figcaption className="text-xs font-semibold text-ink/70">
+            Acertou na tentativa
+          </figcaption>
+          <ol className="grid grid-cols-6 items-end gap-1.5">
+            {bars.map(([n, count]) => (
+              <li
+                key={n}
+                aria-label={`${n}ª tentativa: ${count}`}
+                className="flex flex-col items-center gap-0.5"
+              >
+                <span aria-hidden="true" className="font-condensed tabular text-sm font-bold">
+                  {count}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="flex h-16 w-full max-w-10 items-end overflow-hidden rounded-sm bg-ink/[0.07]"
+                >
+                  {count > 0 && (
+                    <span
+                      className={`block w-full ${n === '1' ? 'bg-cover' : 'bg-ink'}`}
+                      style={{ height: `${(count / maxBar) * 100}%` }}
+                    />
+                  )}
+                </span>
+                <span aria-hidden="true" className="font-condensed tabular text-sm font-black">
+                  {n}ª
+                </span>
+              </li>
+            ))}
+          </ol>
+        </figure>
+      </div>
+    </section>
   );
 }
 
 export function StatsPage() {
   const { data } = useStats();
+  const me = useMe().data;
+  const album = useAlbum().data;
   if (!data) return <Skeleton className="h-96" />;
-  const cp = data.CAREER_PATH;
   const grid = data.FOOTBALL_GRID;
-  const maxBar = Math.max(1, ...Object.values(cp.distribution));
-  const next = data.title.next;
+  const levels = GameMode.options
+    .filter((m) => isModeLaunched(m))
+    .reduce((n, m) => n + data[m].completed, 0);
+  const ranking = isPageLaunched('ranking');
+  const guest = !!me && !me.account;
   const rank = (n: number | null) =>
-    n ? `${n}º` : <span className="text-2xl text-chalk-soft">sem posição</span>;
+    n ? (
+      `${n}º`
+    ) : (
+      <span className="text-2xl text-chalk-soft">{guest ? 'só com conta' : 'sem posição'}</span>
+    );
   const std = (
     g: { completed: number; stars: number; threeStars: number },
     last: [string, number],
@@ -150,181 +228,153 @@ export function StatsPage() {
       ['fases com 3 estrelas', g.threeStars],
       last,
     ] as [string, ReactNode][];
-  return (
-    <div className="flex flex-col gap-14">
-      <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="w-fit max-w-full -rotate-2 rounded-[12px] bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)]">
-          <div className="rounded-[6px] bg-cover px-6 pt-5 pb-4 text-ink">
-            <h1 className="font-condensed text-[clamp(3.5rem,15vw,4.75rem)] leading-[0.85] font-black uppercase">
-              {data.title.name}
-            </h1>
-            <p className="mt-3 flex items-center gap-1.5 text-lg font-bold">
-              <StarIcon className="size-5" />
-              <span className="tabular">{data.totalStars}</span> estrelas
-            </p>
-          </div>
-        </div>
+  // The other games' sheets, only while their game is open (lib/launch.ts).
+  const others: [GameMode, string, string, [string, ReactNode][], ReactNode?][] = [
+    [
+      'FOOTBALL_GRID',
+      'grid-stats',
+      'Grid',
+      [
+        ['fases jogadas', grid.completed],
+        ['células por grid', grid.completed ? grid.avgScore.toLocaleString('pt-BR') : '—'],
+        ['estrelas', <Stars_ key="s" n={grid.stars} />],
+        ['álbuns completos', grid.perfect],
+      ],
+      grid.completed === 0 && (
+        <p className="rounded-lg bg-ink/[0.07] px-4 py-3 text-sm text-ink/75">
+          Nenhum grid jogado ainda.{' '}
+          <Link to="/grid" className={link}>
+            Ver as fases do Grid
+          </Link>
+        </p>
+      ),
+    ],
+    [
+      'IMPOSTOR',
+      'impostor-stats',
+      'Impostor',
+      std(data.IMPOSTOR, ['5 de 5', data.IMPOSTOR.perfect]),
+    ],
+    [
+      'TIMELINE',
+      'timeline-stats',
+      'Linha do tempo',
+      std(data.TIMELINE, ['5 de 5', data.TIMELINE.perfect]),
+    ],
+    [
+      'HIGHER_LOWER',
+      'hl-stats',
+      'Mais ou Menos',
+      std(data.HIGHER_LOWER, ['5 de 5', data.HIGHER_LOWER.perfect]),
+    ],
+    [
+      'MISSING_XI',
+      'xi-stats',
+      'Escalação',
+      std(data.MISSING_XI, ['escalações completas', data.MISSING_XI.perfect]),
+    ],
+    [
+      'MYSTERY_PLAYER',
+      'mys-stats',
+      'Craque Misterioso',
+      std(data.MYSTERY_PLAYER, ['de primeira', data.MYSTERY_PLAYER.perfect]),
+    ],
+    [
+      'CONNECTIONS',
+      'con-stats',
+      'Conexões',
+      std(data.CONNECTIONS, ['sem erros', data.CONNECTIONS.perfect]),
+    ],
+    ['DRAFT', 'draft-stats', 'Draft', std(data.DRAFT, ['11 de 11', data.DRAFT.perfect])],
+  ];
+  const open = others.filter(([m]) => isModeLaunched(m));
 
-        <div className="flex flex-col gap-6">
-          <TitleLadder total={data.totalStars} current={data.title.name} />
-          <p className="font-semibold">
-            {next
-              ? `Faltam ${next.missing} estrelas para ${next.name}.`
-              : 'Lenda. Não tem título acima.'}
-          </p>
-          <dl className="grid grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5 [&_dt]:text-chalk-soft">
-            <Figure label="no ranking geral">{rank(data.rank.all)}</Figure>
-            <Figure label="no ranking da semana">{rank(data.rank.week)}</Figure>
-          </dl>
-          <p className="-mt-2 text-sm text-chalk-soft">
-            {!data.rank.all || !data.rank.week ? (
-              <>
-                Sem posição?{' '}
-                <Link to="/conta" className="text-chalk underline underline-offset-4">
-                  Escolha um apelido
-                </Link>{' '}
-                e termine uma fase.{' '}
-              </>
-            ) : null}
-            <Link to="/ranking" className="text-chalk underline underline-offset-4">
-              Ver ranking
-            </Link>{' '}
-            ·{' '}
-            <Link to="/conta" className="text-chalk underline underline-offset-4">
+  return (
+    <div className="flex flex-col gap-12">
+      <div aria-hidden="true" className="scene-art room-dim" />
+      {/*
+        Phone: card, rail, Career Path, vitrine, medals (the vitrine starts inside two screens).
+        Wide: card | rail + Career Path, then vitrine | medals.
+      */}
+      <div className="grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-12">
+        <div className="flex flex-col items-center gap-4 lg:col-span-5 lg:row-start-1 lg:items-stretch">
+          <MemberCard
+            name={me?.nickname ?? 'Convidado'}
+            title={data.title.name}
+            stars={data.totalStars}
+            levels={levels}
+            stickers={album?.owned}
+            guest={guest}
+            className="max-w-lg"
+          />
+          {guest && (
+            <section
+              aria-labelledby="save-progress"
+              className="flex w-full max-w-lg flex-wrap items-center justify-between gap-x-5 gap-y-3 rounded-xl border-2 border-dashed border-cover/50 bg-pitch-deep/70 p-4"
+            >
+              <div className="min-w-0 flex-1 basis-52">
+                <h2 id="save-progress" className="font-condensed text-xl font-extrabold uppercase">
+                  Salve seu progresso
+                </h2>
+                <p className="text-sm text-chalk-soft">
+                  Suas estrelas e figurinhas estão só neste aparelho. Entre e leve tudo para
+                  qualquer outro{ranking ? '; com conta, você também entra no ranking' : ''}.
+                </p>
+              </div>
+              <SignInButton />
+            </section>
+          )}
+          {ranking && (
+            <dl className="grid w-full max-w-lg grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5 [&_dt]:text-chalk-soft">
+              <Figure label="no ranking geral">{rank(data.rank.all)}</Figure>
+              <Figure label="no ranking da semana">{rank(data.rank.week)}</Figure>
+            </dl>
+          )}
+          <nav
+            aria-label="Mais do perfil"
+            className="flex w-full max-w-lg flex-wrap gap-x-6 text-sm"
+          >
+            <Link to="/conta" className={chalkLink}>
               Conta, apelido e preferências
             </Link>
-          </p>
+            <Link to="/history" className={chalkLink}>
+              Ver histórico de partidas
+            </Link>
+            {ranking && (
+              <Link to="/ranking" className={chalkLink}>
+                Ver ranking
+              </Link>
+            )}
+            {me?.nickname && me.publicProfile && (
+              <Link to={`/perfil/${encodeURIComponent(me.nickname)}`} className={chalkLink}>
+                Perfil público
+              </Link>
+            )}
+          </nav>
         </div>
-      </section>
 
-      <Achievements />
+        <div className="flex flex-col gap-8 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1">
+          <TitleLadder total={data.totalStars} />
+          <CareerSheet cp={data.CAREER_PATH} />
+        </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <Sheet
-          i={0}
-          id="cp-stats"
-          title="Career Path"
-          figures={[
-            ['fases jogadas', cp.completed],
-            ['de acerto', cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—'],
-            ['estrelas', <Stars_ key="s" n={cp.stars} />],
-            ['fases com 3 estrelas', cp.threeStars],
-          ]}
-        >
-          <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold text-ink/70">Acertou na tentativa…</h3>
-            <ol className="flex flex-col gap-1.5">
-              {Object.entries(cp.distribution).map(([n, count]) => (
-                <li key={n} className="flex items-center gap-3">
-                  <span className="font-condensed tabular w-6 text-right text-lg font-black">
-                    {n}ª
-                  </span>
-                  <span className="h-6 flex-1 rounded-sm border border-dashed border-ink/30">
-                    {count > 0 && (
-                      <span
-                        className="block h-full rounded-sm bg-ink"
-                        style={{ width: `${(count / maxBar) * 100}%` }}
-                      />
-                    )}
-                  </span>
-                  <span
-                    className={`font-condensed tabular w-8 text-right font-bold ${count ? '' : 'text-ink/60'}`}
-                  >
-                    {count}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </Sheet>
-
-        <Sheet
-          i={1}
-          id="grid-stats"
-          title="Grid"
-          figures={[
-            ['fases jogadas', grid.completed],
-            ['células por grid', grid.completed ? grid.avgScore.toLocaleString('pt-BR') : '—'],
-            ['estrelas', <Stars_ key="s" n={grid.stars} />],
-            ['álbuns completos', grid.perfect],
-          ]}
-        >
-          {grid.completed === 0 && (
-            <p className="rounded-lg bg-ink/[0.07] px-4 py-3 text-sm text-ink/75">
-              Nenhum grid jogado ainda.{' '}
-              <Link to="/grid" className={link}>
-                Ver as fases do Grid
-              </Link>
-            </p>
-          )}
-        </Sheet>
-
-        <Sheet
-          i={2}
-          id="impostor-stats"
-          title="Impostor"
-          figures={std(data.IMPOSTOR, ['5 de 5', data.IMPOSTOR.perfect])}
-        >
-          {data.IMPOSTOR.completed === 0 && (
-            <p className="rounded-lg bg-ink/[0.07] px-4 py-3 text-sm text-ink/75">
-              Nenhum impostor caçado ainda.{' '}
-              <Link to="/impostor" className={link}>
-                Ver as fases do Impostor
-              </Link>
-            </p>
-          )}
-        </Sheet>
-
-        <Sheet
-          i={3}
-          id="timeline-stats"
-          title="Linha do tempo"
-          figures={std(data.TIMELINE, ['5 de 5', data.TIMELINE.perfect])}
-        />
-        <Sheet
-          i={4}
-          id="hl-stats"
-          title="Mais ou Menos"
-          figures={std(data.HIGHER_LOWER, ['5 de 5', data.HIGHER_LOWER.perfect])}
-        />
-        <Sheet
-          i={5}
-          id="xi-stats"
-          title="Escalação"
-          figures={std(data.MISSING_XI, ['escalações completas', data.MISSING_XI.perfect])}
-        />
-        <Sheet
-          i={6}
-          id="mys-stats"
-          title="Craque Misterioso"
-          figures={std(data.MYSTERY_PLAYER, ['de primeira', data.MYSTERY_PLAYER.perfect])}
-        />
-        <Sheet
-          i={7}
-          id="con-stats"
-          title="Conexões"
-          figures={std(data.CONNECTIONS, ['sem erros', data.CONNECTIONS.perfect])}
-        />
-        <Sheet
-          i={8}
-          id="draft-stats"
-          title="Draft"
-          figures={std(data.DRAFT, ['11 de 11', data.DRAFT.perfect])}
-        />
+        <div className="lg:col-span-7 lg:col-start-6 lg:row-start-3">
+          <AlbumShowcase />
+        </div>
+        <div className="lg:col-span-5 lg:col-start-1 lg:row-span-2 lg:row-start-2">
+          <Achievements />
+        </div>
       </div>
 
-      <Link
-        to="/album"
-        className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4"
-      >
-        Meu álbum
-      </Link>
-      <Link
-        to="/history"
-        className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4"
-      >
-        Ver histórico de partidas
-      </Link>
+      {open.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {open.map(([, id, title, figures, extra], i) => (
+            <Sheet key={id} i={i + 1} id={id} title={title} figures={figures}>
+              {extra}
+            </Sheet>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

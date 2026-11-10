@@ -408,7 +408,7 @@ function Vote({ id, myVote }: { id: string; myVote: boolean | null }) {
           </button>
         ))}
       </div>
-      {vote.error && <p className="text-sm text-cover">{vote.error.message}</p>}
+      {vote.error && <p className="text-sm text-gold">{vote.error.message}</p>}
       <button
         type="button"
         disabled={reported}
@@ -496,7 +496,7 @@ export function CreatorPage() {
   });
   const share = useMemo(
     () =>
-      `Joga os meus desafios no De Cabeça e vê se você me supera:\ndecabecafc.com.br/criador/${encodeURIComponent(nickname)}?ref=creator`,
+      `Joga os meus desafios no De Cabeça F.C. e vê se você me supera:\ndecabecafc.com.br/criador/${encodeURIComponent(nickname)}?ref=creator`,
     [nickname],
   );
   if (q.isPending) return <Skeleton className="h-96" />;

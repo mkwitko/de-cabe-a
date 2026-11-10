@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countryName, durationLabel, hintMask, statsLabel, yearsLabel } from './format';
+import { countryName, durationLabel, hintMask, promotedTo, statsLabel, yearsLabel } from './format';
 
 describe('pt-BR career formatting', () => {
   it('formats years', () => {
@@ -25,5 +25,12 @@ describe('pt-BR career formatting', () => {
   });
   it('masks a hinted name', () => {
     expect(hintMask('Z', [2, 7])).toBe('Z_ _______');
+  });
+  it('detects a promotion caused by this level', () => {
+    expect(promotedTo(10, 3)).toBe('Base');
+    expect(promotedTo(12, 2)).toBeNull();
+    expect(promotedTo(905, 3)).toBeNull();
+    expect(promotedTo(900, 1)).toBe('Rei da Bola');
+    expect(promotedTo(5, 0)).toBeNull();
   });
 });

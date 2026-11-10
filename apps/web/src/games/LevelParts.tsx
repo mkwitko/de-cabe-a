@@ -4,19 +4,39 @@ import { formatClock } from './Clock';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import type { AttemptResponse, GameMode } from '@decabeca/contracts';
+import type { AttemptResponse, GameMode, PlayerRef } from '@decabeca/contracts';
 import { track } from '../lib/analytics';
 import { api, type ApiError } from '../lib/api';
-import { GAME_PATH, useDaily, useLevelRanking, useMe, useTrack } from '../lib/game';
+import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
+import { InstallInvite } from '../components/InstallApp';
 import { Reactions } from '../components/Reactions';
-import { Stars } from '../components/Stars';
-import { Broadcast } from '../components/Broadcast';
+import { Stars, StarIcon } from '../components/Stars';
+import { Broadcast, type Hero } from '../components/Broadcast';
 import { StickerReveal } from '../components/StickerReveal';
 import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
+import { TitleBadge } from '../components/TitleBadge';
+import { GoalLoop, preloadLottie } from '../components/Moment';
+import { signInHref } from '../components/SignInButton';
+import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
+import { isPageLaunched } from '../lib/launch';
+import { nextLevel } from '../lib/track';
+import { StickerCard } from '../components/StickerCard';
+import { RARITY_STYLE } from '../components/rarity';
+import { Nudge } from '../components/Nudge';
+import {
+  LEVEL_ENDED,
+  levelMoment,
+  levelsDone,
+  loadNudges,
+  saveNudges,
+  shown,
+  welcomed,
+  type Moment,
+} from '../lib/nudges';
 
 export function LevelError({
   error,
@@ -27,37 +47,56 @@ export function LevelError({
   mode: GameMode;
   retry: () => void;
 }) {
+  // The player's real next level: a locked or missing link leads there, not to a dead end.
+  const next = nextLevel(useTrack(mode).data);
+  const go = next ? (
+    <Link to={`${GAME_PATH[mode]}/${next.level}`} className={btnPrimary}>
+      {next.inProgress ? 'Continuar' : 'Jogar'} fase {next.level}
+    </Link>
+  ) : null;
   const back = (
-    <Link to={GAME_PATH[mode]} className={btnPrimary}>
-      Ver fases
+    <Link to={GAME_PATH[mode]} className={go ? btnSecondary : btnPrimary}>
+      Ver as fases
     </Link>
   );
   if (error.code === 'LEVEL_LOCKED')
     return (
       <Notice
-        title="Essa fase ainda não chegou"
+        title="Essa fase ainda está trancada"
         action={
           <div className="flex flex-wrap gap-3">
-            <Link to="/d/hoje" className={btnPrimary}>
-              Desafio do Dia
-            </Link>
-            <Link to={GAME_PATH[mode]} className={btnSecondary}>
-              Ir para a trilha
-            </Link>
+            {go}
+            {isPageLaunched('daily') && (
+              <Link to="/d/hoje" className={btnSecondary}>
+                Desafio do Dia
+              </Link>
+            )}
+            {back}
           </div>
         }
       >
-        Ela abre quando você terminar as anteriores. O Desafio do Dia está aberto para todo mundo.
+        Ela abre quando você terminar as anteriores
+        {next ? `. A sua vez é a fase ${next.level}.` : '.'}
       </Notice>
     );
   if (error.code === 'LEVEL_NOT_FOUND')
     return (
-      <Notice title="Fase não encontrada" action={back}>
-        Essa fase não existe (ainda).
+      <Notice
+        art={<GoalLoop />}
+        title="Fase não encontrada"
+        action={
+          <div className="flex flex-wrap gap-3">
+            {go}
+            {back}
+          </div>
+        }
+      >
+        Essa fase não existe (ainda). As fases novas entram na trilha.
       </Notice>
     );
   return (
     <Notice
+      art={<GoalLoop />}
       title="Deu ruim na conexão"
       action={
         <button className={btnPrimary} onClick={retry}>
@@ -65,45 +104,243 @@ export function LevelError({
         </button>
       }
     >
-      {error.message}
+      A fase não carregou. Confira a internet e tente de novo.
     </Notice>
   );
 }
 
+/** The sticker this level put in the album, as the small shield card, linking to the album. */
+function StickerWon({
+  award,
+  onPaper = false,
+}: {
+  award: NonNullable<AttemptResponse['sticker']>;
+  /** Pasted on the passport page: ink on paper, no card. */
+  onPaper?: boolean;
+}) {
+  const { sticker, isNew, upgradedFrom } = award;
+  const style = RARITY_STYLE[sticker.rarity];
+  return (
+    <Link
+      to="/album"
+      className={`group flex items-center gap-3 transition-colors duration-150 ${onPaper ? 'rounded-lg p-1.5 hover:bg-[#1d2a4f]/[0.06]' : 'rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3 hover:bg-chalk/[0.09]'}`}
+    >
+      <span
+        aria-hidden="true"
+        className="aspect-[3/4] w-16 shrink-0 -rotate-3 transition-transform duration-200 ease-out-expo group-hover:rotate-0"
+      >
+        <StickerCard sticker={sticker} size="sm" />
+      </span>
+      <span className="flex min-w-0 flex-col gap-1">
+        {/* wraps rather than clipping a long name on a phone ("Neym…") */}
+        <span className="font-condensed text-base leading-[0.95] font-extrabold break-words uppercase sm:text-lg">
+          {sticker.name}
+        </span>
+        <span
+          className={`text-xs leading-tight font-semibold ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+        >
+          {isNew
+            ? `${style.label} · nova`
+            : upgradedFrom
+              ? `Subiu para ${style.label}`
+              : `${style.label} · já colada`}
+        </span>
+        <span
+          className={`mt-0.5 text-sm font-bold underline underline-offset-4 ${onPaper ? 'text-[#7a2633]' : 'text-gold'}`}
+        >
+          Ver no álbum
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+/** Where the player stands on the title ladder after this level. */
+function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: boolean }) {
+  const i = TITLE_LADDER.findLastIndex((t) => total >= t.min);
+  const cur = TITLE_LADDER[i]!;
+  const next = TITLE_LADDER[i + 1];
+  const pct = next ? ((total - cur.min) / (next.min - cur.min)) * 100 : 100;
+  return (
+    <div
+      className={`flex min-w-0 flex-col justify-center gap-1.5 ${onPaper ? 'p-1.5' : 'rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3'}`}
+    >
+      <p className="flex items-center gap-2">
+        <TitleBadge name={cur.name} className="size-7 shrink-0" />
+        <span className="font-condensed min-w-0 text-lg leading-none font-extrabold uppercase">
+          {cur.name}
+        </span>
+      </p>
+      <div
+        className={`h-2 overflow-hidden rounded-full ${onPaper ? 'bg-[#1d2a4f]/15' : 'bg-chalk/15'}`}
+        role="progressbar"
+        aria-label={next ? `Estrelas até ${next.name}` : 'Título máximo'}
+        aria-valuemin={cur.min}
+        aria-valuemax={next?.min ?? total}
+        aria-valuenow={total}
+      >
+        <div
+          className={`h-full rounded-full transition-[width] duration-700 ease-out-expo ${onPaper ? 'bg-[#1d2a4f]' : 'bg-cover'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p
+        className={`text-sm leading-tight font-semibold ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+      >
+        <StarIcon
+          className={`inline size-[0.85em] align-[-0.08em] ${onPaper ? 'text-[#1d2a4f]' : 'text-gold'}`}
+        />{' '}
+        <span className={`tabular font-bold ${onPaper ? 'text-[#1d2a4f]' : 'text-chalk'}`}>
+          {total}
+        </span>
+        {next ? ` · faltam ${next.min - total} para ${next.name}` : ' · título máximo'}
+      </p>
+    </div>
+  );
+}
+
+const PAGE =
+  'rounded-[8px] bg-[#f3ead2] text-[#1d2a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)]';
+const quietLink =
+  'inline-flex min-h-11 items-center gap-2 text-sm font-bold text-chalk-soft underline-offset-4 hover:text-chalk hover:underline';
+
+function Points({ data }: { data: AttemptResponse }) {
+  return (
+    <p className="font-condensed tabular text-right leading-none font-black uppercase">
+      <span className="text-3xl">{data.attempt.score}</span>
+      <span className="ml-1 text-base">pts</span>
+      {data.attempt.durationSec !== null && (
+        <span className="mt-1 block text-sm font-bold normal-case">
+          <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
+          {formatClock(data.attempt.durationSec)}
+          {data.attempt.timed ? ' · contra o relógio' : ''}
+        </span>
+      )}
+    </p>
+  );
+}
+
+/** The way on, as a boarding pass: a stub with the level number, then the action and its arrow. */
+function Ticket({ to, label, stub }: { to: string; label: string; stub: number | null }) {
+  return (
+    <Link
+      to={to}
+      className="group flex min-h-20 items-stretch overflow-hidden rounded-xl bg-cover text-ink shadow-[0_14px_28px_-12px_rgb(0_0_0/0.55)] transition-[transform,box-shadow] duration-200 ease-out-expo hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-12px_rgb(0_0_0/0.6)] active:translate-y-0 motion-reduce:transform-none"
+    >
+      {stub !== null && (
+        <span
+          aria-hidden="true"
+          className="font-condensed flex w-16 shrink-0 flex-col items-center justify-center border-r-2 border-dashed border-ink/35 leading-none font-black uppercase sm:w-24"
+        >
+          <span className="text-xs tracking-[0.2em]">Fase</span>
+          <span className="tabular text-4xl sm:text-5xl">{stub}</span>
+        </span>
+      )}
+      <span className="font-condensed flex flex-1 items-center justify-between gap-3 px-4 text-xl leading-none font-black uppercase sm:px-5 sm:text-3xl">
+        {label}
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className="size-8 shrink-0 fill-none stroke-current stroke-[2.5] [stroke-linecap:round] [stroke-linejoin:round] motion-safe:animate-[nudge-x_1.6s_var(--ease-out-expo)_infinite]"
+        >
+          <path d="M5 12h13M13 6l6 6-6 6" />
+        </svg>
+      </span>
+    </Link>
+  );
+}
+
 /**
- * End of a level: the result pasted as one album sticker (verdict, answer, stars, points),
- * then the next step, sharing and the level's top 10.
+ * End of a level, one screen: the result pasted as an album sticker (verdict, answer, stars,
+ * points), the sticker won and the title progress, then "Próxima fase" (shares secondary). Reactions
+ * and the level's top 10 only while the ranking is open.
  */
 export function LevelEnd({
   data,
   headline,
   detail,
+  answer,
+  starRule,
+  passport,
 }: {
   data: AttemptResponse;
   headline: string;
   detail: ReactNode;
+  /** How the mode earns its stars, printed under them ("Até 2 tentativas: 3 estrelas…"). */
+  starRule?: string;
+  /** The finished passport (Career Path): the end screen becomes its open spread, the verdict
+   * stamped on the left page beside it. */
+  passport?: ReactNode;
+  /** The player the level was about (single-answer modes): the broadcast's star. */
+  answer?: PlayerRef;
 }) {
   const { mode, level, stars, score } = data.attempt;
+  // Only the moment a level ends gets the ceremony and the promotion; reopening an old one does not.
+  const [justFinished] = useState(() => recentCompletion(data.attempt.completedAt));
   // Broadcast, then the sticker (if any), then the usual end screen. Losses skip both.
   const [stage, setStage] = useState<'broadcast' | 'sticker' | 'end'>(
-    stars > 0 && recentCompletion(data.attempt.completedAt) ? 'broadcast' : 'end',
+    stars > 0 && justFinished ? 'broadcast' : 'end',
   );
+  // His Wikimedia Commons portrait, credited: the sticker's (larger) first, else the answer's.
+  const [hero] = useState<Hero | undefined>(() => {
+    if (!answer) return undefined;
+    const s = data.sticker?.sticker.playerId === answer.id ? data.sticker.sticker : null;
+    return s?.photo
+      ? { name: answer.name, photo: s.photo, credit: s.photoCredit }
+      : { name: answer.name, photo: answer.photo ?? null, credit: answer.photoCredit ?? null };
+  });
   const today = new Date().toLocaleDateString('en-CA');
   const [short] = useState(() => ceremonyLength(mode, today) === 'short');
   useEffect(() => {
     if (stage === 'broadcast') markCeremony(mode, today);
   }, [stage, mode, today]);
+  // the broadcast's moments (three stars, a promotion, a rare pack) play without a wait
+  useEffect(() => {
+    if (stage === 'broadcast' && !short) preloadLottie();
+  }, [stage, short]);
   /** Oficina levels (no track number) have no next level, track ranking or training. */
   const oficina = level === 0;
   const trackQ = useTrack(mode);
-  const top = useLevelRanking(mode, level, true);
+  const top = useLevelRanking(mode, level, !oficina && isPageLaunched('ranking'));
   const me = useMe();
   // The track's real next level: never a locked one, and never back into this one. After a
   // Desafio do Dia level far ahead, that is the player's own place in the track.
   const next = trackQ.data?.levels.find(
     (l) => l.level !== level && (l.state === 'open' || l.state === 'in_progress'),
   );
-  const daily = useDaily('hoje').data?.games.find((g) => g.mode === mode && g.level === level);
+  // Stats are invalidated when the level closes; once refetched, totalStars includes these stars.
+  const stats = useStats();
+  const promoted =
+    justFinished && !oficina && stats.data && !stats.isFetching
+      ? promotedTo(stats.data.totalStars, stars)
+      : null;
+  // "Crie sua conta" at a guest's milestone (first sticker, first promotion, 5th level), once each.
+  const [nudge, setNudge] = useState<Moment | null>(null);
+  const nudgeChecked = useRef(false);
+  useEffect(() => {
+    if (stage === 'end') dispatchEvent(new Event(LEVEL_ENDED));
+  }, [stage]);
+  useEffect(() => {
+    if (nudgeChecked.current || stage !== 'end' || !me.data || !stats.data || stats.isFetching)
+      return;
+    nudgeChecked.current = true;
+    if (!justFinished || oficina || me.data.account || !welcomed()) return;
+    const s = loadNudges();
+    const now = Date.now();
+    const m = levelMoment(
+      s,
+      { promoted: !!promoted, sticker: !!data.sticker, levelsDone: levelsDone(stats.data) },
+      now,
+    );
+    if (m) {
+      saveNudges(shown(s, m, now));
+      setNudge(m);
+    }
+  }, [stage, me.data, stats.data, stats.isFetching, justFinished, oficina, promoted, data.sticker]);
+  const dailyQ = useDaily('hoje');
+  const daily = isPageLaunched('daily')
+    ? dailyQ.data?.games.find((g) => g.mode === mode && g.level === level)
+    : undefined;
   if (stage === 'broadcast')
     return (
       <Broadcast
@@ -112,83 +349,236 @@ export function LevelEnd({
         headline={headline}
         detail={detail}
         short={short}
+        promoted={promoted}
+        hero={hero}
         onDone={() => setStage(data.sticker ? 'sticker' : 'end')}
       />
     );
   if (stage === 'sticker' && data.sticker)
     return <StickerReveal award={data.sticker} short={short} onDone={() => setStage('end')} />;
+  const award = data.sticker;
+  const total = stats.data?.totalStars;
+  const social = !oficina && isPageLaunched('ranking');
+  const primary = oficina
+    ? { to: '/oficina', label: 'Mais desafios da Oficina', stub: null }
+    : daily
+      ? { to: '/d/hoje', label: 'Voltar ao Desafio do Dia', stub: null }
+      : next
+        ? {
+            to: `${GAME_PATH[mode]}/${next.level}`,
+            label: `Próxima fase\u00a0·\u00a0${next.level}`,
+            stub: next.level,
+          }
+        : { to: GAME_PATH[mode], label: 'Ver as fases', stub: null };
   return (
-    <section aria-labelledby="level-end" className="flex flex-col gap-6">
-      <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
-        <div className="rounded-[6px] bg-cover px-5 pt-5 pb-4 text-ink">
-          <h2
-            id="level-end"
-            className="font-condensed text-4xl leading-[0.92] font-black text-balance uppercase sm:text-5xl"
-          >
-            {headline}
-          </h2>
-          <div className="mt-3 text-lg leading-snug font-semibold">{detail}</div>
-          {data.attempt.durationSec !== null && (
-            <p className="mt-2 text-base font-semibold">
-              <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
-              {formatClock(data.attempt.durationSec)}
-              {data.attempt.timed ? ' · contra o relógio' : ''}
+    <section aria-labelledby="level-end" className="flex flex-col gap-5">
+      {passport ? (
+        <>
+          <div className="rounded-[18px] p-2 shadow-[0_30px_60px_-20px_rgb(0_0_0/0.7)] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] sm:p-3">
+            <div className="grid gap-2 lg:grid-cols-2 lg:gap-1">
+              <div className={`${PAGE} flex flex-col gap-4 p-4 sm:p-6 lg:rounded-r-[4px]`}>
+                <p
+                  aria-hidden="true"
+                  className="flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
+                >
+                  <span>Visto de entrada</span>
+                  <span>Fase {level}</span>
+                </p>
+                {/* The verdict, stamped onto the page like an official entry stamp; on the wide
+                    spread it and the promotion hold the middle of the page, not its top. */}
+                <div className="flex flex-col gap-4 lg:flex-1 lg:justify-center lg:gap-6">
+                  <div
+                    className="stamp-hit relative max-w-full self-start rounded-[10px] border-[3px] border-current px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6"
+                    style={
+                      {
+                        color: stars > 0 ? '#1d3f7a' : '#a3242f',
+                        '--rot': '-2deg',
+                        transform: 'rotate(-2deg)',
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-[5px] rounded-[6px] border-[1.5px] border-current opacity-70"
+                    />
+                    <h2
+                      id="level-end"
+                      className="font-condensed text-4xl leading-[0.9] font-black text-balance uppercase sm:text-5xl xl:text-7xl"
+                    >
+                      {headline}
+                    </h2>
+                    <div className="mt-2 leading-snug font-semibold text-[#1d2a4f] sm:text-lg">
+                      {detail}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-current/25 pt-3">
+                      <Stars n={stars} size="size-8 sm:size-9 xl:size-11" onCover animate />
+                      <Points data={data} />
+                    </div>
+                  </div>
+                  {starRule && (
+                    <p className="text-sm font-semibold text-[#6d5c3a] max-lg:hidden">{starRule}</p>
+                  )}
+                  {promoted && (
+                    <p
+                      className="flex items-center gap-2 self-start rounded-lg px-3 py-1.5 text-ink sm:gap-3 sm:px-4 sm:py-2"
+                      style={{ background: titleTone(promoted) }}
+                    >
+                      <TitleBadge name={promoted} className="size-7 sm:size-9" />
+                      <span className="font-condensed text-lg leading-none font-black uppercase sm:text-2xl">
+                        Promovido a {promoted}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <div className="lg:order-last">
+                  <Ticket to={primary.to} stub={primary.stub} label={primary.label} />
+                </div>
+                {!oficina && (award || total !== undefined) && (
+                  <div
+                    className={`grid gap-3 border-t border-[#c9b98f] pt-3 ${award && total !== undefined ? 'min-[400px]:grid-cols-2' : ''}`}
+                  >
+                    {award && <StickerWon award={award} onPaper />}
+                    {total !== undefined && <TitleProgress total={total} onPaper />}
+                  </div>
+                )}
+                {/* on a phone the star rule waits under the way on, which stays in the first screen */}
+                {starRule && (
+                  <p className="text-sm font-semibold text-[#6d5c3a] lg:hidden">{starRule}</p>
+                )}
+              </div>
+              <div className="h-[28rem] sm:h-[34rem] lg:h-auto lg:min-h-[max(30rem,calc(100dvh-14rem))]">
+                {passport}
+              </div>
+            </div>
+          </div>
+          {/* Second things, quietly: share, and keep the progress. */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            {data.share && (
+              <>
+                <ShareButton
+                  className={quietLink}
+                  label="Copiar resultado"
+                  text={data.share.text}
+                  onShared={(method) => track('result_shared', { mode, level, method })}
+                />
+                <ResultCardButton
+                  className={quietLink}
+                  data={data}
+                  onShared={() => track('result_shared', { mode, level, method: 'image' })}
+                />
+              </>
+            )}
+          </div>
+          {/* One invitation at a time: the account nudge wins over the install card. */}
+          {nudge ? <Nudge moment={nudge} onDone={() => setNudge(null)} /> : <InstallInvite />}
+        </>
+      ) : (
+        <>
+          <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
+            <div className="rounded-[6px] bg-cover px-4 pt-4 pb-3 text-ink sm:px-5 sm:pt-5">
+              <h2
+                id="level-end"
+                className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-5xl"
+              >
+                {headline}
+              </h2>
+              <div className="mt-2 leading-snug font-semibold sm:text-lg">{detail}</div>
+              <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
+                <Stars n={stars} size="size-8 sm:size-9" onCover animate />
+                <p className="font-condensed tabular text-right leading-none font-black uppercase">
+                  <span className="text-3xl">{score}</span>
+                  <span className="ml-1 text-base">pts</span>
+                  {data.attempt.durationSec !== null && (
+                    <span className="mt-1 block text-sm font-bold normal-case">
+                      <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
+                      {formatClock(data.attempt.durationSec)}
+                      {data.attempt.timed ? ' · contra o relógio' : ''}
+                    </span>
+                  )}
+                </p>
+              </div>
+              {starRule && <p className="mt-2 text-sm font-semibold text-ink/75">{starRule}</p>}
+            </div>
+          </div>
+
+          {promoted && (
+            <p
+              className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-ink"
+              style={{ background: titleTone(promoted) }}
+            >
+              <TitleBadge name={promoted} className="size-10" />
+              <span className="font-condensed text-2xl leading-none font-black uppercase">
+                Promovido a {promoted}
+              </span>
             </p>
           )}
-          <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
-            <Stars n={stars} size="size-9" onCover animate />
-            <p className="font-condensed tabular text-right leading-none font-black uppercase">
-              <span className="text-3xl">{score}</span>
-              <span className="ml-1 text-base">pts</span>
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {stars > 0 && !oficina && (
+          {!oficina && (award || total !== undefined) && (
+            <div
+              className={`grid gap-3 ${award && total !== undefined ? 'min-[400px]:grid-cols-2' : ''}`}
+            >
+              {award && <StickerWon award={award} />}
+              {total !== undefined && <TitleProgress total={total} />}
+            </div>
+          )}
+
+          {/* Both shares share a row at every width, so neither falls under the phone's bottom bar. */}
+          <div className="grid grid-cols-2 gap-3">
+            {oficina ? (
+              <Link to="/oficina" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
+                Mais desafios da Oficina
+              </Link>
+            ) : daily ? (
+              <Link to="/d/hoje" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
+                Voltar ao Desafio do Dia
+              </Link>
+            ) : next ? (
+              <Link
+                to={`${GAME_PATH[mode]}/${next.level}`}
+                className={`${btnPrimary} min-h-14 text-xl col-span-2`}
+              >
+                Próxima fase · {next.level}
+              </Link>
+            ) : (
+              <Link to={GAME_PATH[mode]} className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
+                Ver as fases
+              </Link>
+            )}
+            {data.share && (
+              <>
+                <ShareButton
+                  secondary
+                  label={
+                    <>
+                      Copiar<span className="max-sm:sr-only"> resultado</span>
+                    </>
+                  }
+                  text={data.share.text}
+                  onShared={(method) => track('result_shared', { mode, level, method })}
+                />
+                <ResultCardButton
+                  data={data}
+                  onShared={() => track('result_shared', { mode, level, method: 'image' })}
+                />
+              </>
+            )}
+          </div>
+
+          {nudge && <Nudge moment={nudge} onDone={() => setNudge(null)} />}
+        </>
+      )}
+      {stars > 0 && !oficina && isPageLaunched('career') && (
         <Link
           to="/carreira"
-          className="-mt-2 text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
+          className="text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
         >
           +{stars} de treino para o seu craque no Modo Carreira
         </Link>
       )}
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {oficina ? (
-          <Link to="/oficina" className={btnPrimary}>
-            Mais desafios da Oficina
-          </Link>
-        ) : daily ? (
-          <Link to="/d/hoje" className={btnPrimary}>
-            Voltar ao Desafio do Dia
-          </Link>
-        ) : next ? (
-          <Link to={`${GAME_PATH[mode]}/${next.level}`} className={btnPrimary}>
-            Próxima fase · {next.level}
-          </Link>
-        ) : (
-          <Link to={GAME_PATH[mode]} className={btnPrimary}>
-            Ver fases
-          </Link>
-        )}
-        {data.share && (
-          <>
-            <ShareButton
-              secondary
-              text={data.share.text}
-              onShared={(method) => track('result_shared', { mode, level, method })}
-            />
-            <ResultCardButton
-              data={data}
-              onShared={() => track('result_shared', { mode, level, method: 'image' })}
-            />
-          </>
-        )}
-      </div>
 
-      {!oficina && <Reactions mode={mode} level={level} />}
+      {social && <Reactions mode={mode} level={level} />}
 
-      {!oficina && (
+      {social && (
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="font-condensed text-xl font-extrabold uppercase">Top 10 da fase</h3>
@@ -199,12 +589,15 @@ export function LevelEnd({
               Voltar às fases
             </Link>
           </div>
-          {me.data && !me.data.nickname && (
+          {me.data && !me.data.account && (
             <p className="text-sm text-chalk-soft">
-              <Link to="/conta" className="text-chalk underline underline-offset-4">
-                Escolha um apelido
+              <Link
+                to={signInHref(location.pathname)}
+                className="text-chalk underline underline-offset-4"
+              >
+                Entre na sua conta
               </Link>{' '}
-              para aparecer aqui.
+              para aparecer aqui. Só quem tem conta entra no ranking.
             </p>
           )}
           {top.data?.entries.length ? (
@@ -227,7 +620,7 @@ export function LevelEnd({
             </ol>
           ) : (
             <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
-              Ninguém com apelido terminou essa fase ainda. O lugar 1 está vago.
+              Ninguém com conta terminou essa fase ainda. O lugar 1 está vago.
             </p>
           )}
         </div>

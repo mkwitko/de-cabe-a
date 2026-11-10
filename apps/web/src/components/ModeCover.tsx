@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { GameMode } from '@decabeca/contracts';
-import { GameArt } from './GameArt';
+import { GameArt, type CoverMode } from './GameArt';
 
 type Cover = {
   /** The material the whole cover is made of. */
@@ -13,18 +12,11 @@ type Cover = {
   extra?: ReactNode;
 };
 
-const grain = 'radial-gradient(rgb(0 0 0/0.28) 0.8px, transparent 1.2px) 0 0/5px 5px';
 const lines = (c: string, step: string) =>
   `repeating-linear-gradient(0deg, ${c} 0 1px, transparent 1px ${step})`;
 
-/** One real object per game: passport, chalkboard, newspaper, sealed pack, stadium screen... */
-const COVERS: Record<GameMode, Cover> = {
-  CAREER_PATH: {
-    shell: { background: `${grain}, #5b2b1d` },
-    frame: 'border-2 border-[#d9b45a] shadow-[inset_0_0_0_4px_#5b2b1d,inset_0_0_0_5px_#d9b45a80]',
-    ink: 'text-[#e3c473] [text-shadow:0_-1px_0_#0006,0_1px_0_#fff3]',
-    caption: 'Passaporte',
-  },
+/** One real object per game: chalkboard, newspaper, sealed pack, stadium screen... */
+const COVERS: Record<CoverMode, Cover> = {
   FOOTBALL_GRID: {
     shell: { background: 'radial-gradient(120% 90% at 30% 20%, #34493f, #1f2d26)' },
     frame: 'border-[10px] border-[#8a5a33] shadow-[inset_0_0_0_1px_#0006,0_2px_0_#0005]',
@@ -107,12 +99,26 @@ const COVERS: Record<GameMode, Cover> = {
 };
 
 /** The illustration mounted on the mode's object, plus its name; the art slides a little as the card moves. */
-export function ModeCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
+export function ModeCover({
+  mode,
+  name,
+  compact = false,
+  heading: H = 'h3',
+  headingId,
+}: {
+  mode: CoverMode;
+  name: ReactNode;
+  /** The name's heading level where the cover leads its own card. */
+  heading?: 'h2' | 'h3';
+  headingId?: string;
+  /** Shorter cover for cards that carry more below it. */
+  compact?: boolean;
+}) {
   const c = COVERS[mode];
   return (
     <div
       style={c.shell}
-      className="relative flex flex-1 flex-col justify-between gap-3 overflow-hidden px-5 pt-7 pb-6"
+      className={`obj-dark relative flex flex-1 flex-col justify-between overflow-hidden px-5 ${compact ? 'gap-2 pt-4 pb-4' : 'gap-3 pt-7 pb-6'}`}
     >
       {c.extra}
       <p className={`font-condensed text-xs font-bold tracking-[0.2em] uppercase ${c.ink}`}>
@@ -122,13 +128,17 @@ export function ModeCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
         data-art
         className={`mx-auto w-full max-w-sm bg-pitch-deep px-3 py-2 will-change-transform ${c.frame}`}
       >
-        <GameArt mode={mode} className="mx-auto h-auto max-h-36 sm:max-h-44 w-full" />
+        <GameArt
+          mode={mode}
+          className={`mx-auto h-auto w-full ${compact ? 'max-h-20 sm:max-h-28' : 'max-h-36 sm:max-h-44'}`}
+        />
       </div>
-      <h3
-        className={`font-condensed text-4xl leading-[0.9] font-black uppercase sm:text-6xl ${c.ink}`}
+      <H
+        id={headingId}
+        className={`font-condensed leading-[0.9] font-black uppercase ${compact ? 'text-4xl sm:text-5xl' : 'text-4xl sm:text-6xl'} ${c.ink}`}
       >
         {name}
-      </h3>
+      </H>
     </div>
   );
 }

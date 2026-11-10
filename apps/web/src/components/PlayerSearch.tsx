@@ -18,7 +18,8 @@ interface Props {
   disabled?: boolean;
   autoFocus?: boolean;
   selected?: PlayerRef | null;
-  /** Open the suggestions above the input (docked at the bottom of the screen). */
+  /** Open the suggestions above the input (docked at the bottom of the screen; on phones the
+   * nearest positioned ancestor, the docked form, sets the list's width). */
   dropUp?: boolean;
 }
 
@@ -105,7 +106,8 @@ export function PlayerSearch({
   const showList = open && (results.length > 0 || status === 'empty');
 
   return (
-    <div className="relative">
+    // Docked on a phone, the list anchors to the whole guess box, not the narrow input beside Chutar.
+    <div className={dropUp ? 'max-sm:static sm:relative' : 'relative'}>
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
@@ -154,7 +156,7 @@ export function PlayerSearch({
         role="listbox"
         aria-label="Jogadores"
         hidden={!showList}
-        className={`absolute inset-x-0 z-30 max-h-[min(26rem,60dvh)] ${dropUp ? 'bottom-full mb-1 lg:top-full lg:bottom-auto lg:mt-1 lg:mb-0' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
+        className={`absolute inset-x-0 z-30 max-h-[min(26rem,60dvh)] ${dropUp ? 'bottom-full mb-1 max-sm:mx-3' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
       >
         {results.map((p, i) => (
           <li
@@ -214,7 +216,7 @@ export function PlayerSearch({
       </ul>
       <PlayerCardDialog playerId={cardId} onClose={() => setCardId(null)} />
       {status === 'error' && (
-        <p role="alert" className="mt-1 text-sm text-cover">
+        <p role="alert" className="mt-1 text-sm text-gold">
           Não deu para buscar agora. Confira a conexão.
         </p>
       )}

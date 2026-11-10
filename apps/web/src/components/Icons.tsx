@@ -31,6 +31,14 @@ export const GamesIcon = (p: { className?: string }) => (
   </Icon>
 );
 
+/** Álbum: an open album with a sticker on the right page. */
+export const AlbumIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5c-3.5-.5-6.5 0-8.5 1.5zM12 6.5v13" />
+    <rect x="14.5" y="9" width="3.5" height="4.5" rx="0.8" strokeDasharray="2 1.5" />
+  </Icon>
+);
+
 /** Desafio do Dia: a calendar page. */
 export const DailyIcon = (p: { className?: string }) => (
   <Icon {...p}>
@@ -68,5 +76,18 @@ export const TrophyIcon = (p: { className?: string }) => (
     <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
     <path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5" />
     <path d="M12 14v3.5M8.5 20.5h7l-.8-3h-5.4z" />
+  </Icon>
+);
+
+export const CheckIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+);
+
+export const LockIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <rect x="5" y="11" width="14" height="9.5" rx="2" />
+    <path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
   </Icon>
 );

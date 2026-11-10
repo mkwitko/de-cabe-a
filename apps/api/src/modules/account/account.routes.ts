@@ -17,8 +17,9 @@ import type { PrismaClient } from '../../generated/prisma/client';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { AppError } from '../../errors';
-import { newSession, playerAttempts } from '../session/session';
-import { assertNicknameFree, authRequest, nicknameKey } from './auth';
+import { COOKIE, newSession, playerAttempts } from '../session/session';
+import { deleteData, exportData } from './account.data';
+import { assertNicknameFree, authRequest, isLiveSignIn, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
 import { trophies } from '../progression/seasons';
 
@@ -80,6 +81,29 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 
   app.get('/me', { schema: { response: { 200: MeResponse } } }, (req) => me(req));
+
+  /** LGPD: everything held about this player, as a JSON download. */
+  app.get('/me/export', async (req, reply) => {
+    const data = await exportData(prisma, req, now());
+    return reply
+      .header('content-type', 'application/json; charset=utf-8')
+      .header('content-disposition', 'attachment; filename="de-cabeca-meus-dados.json"')
+      .header('cache-control', 'no-store')
+      .send(JSON.stringify(data, null, 2));
+  });
+
+  /** LGPD: erases the player's data in one transaction and ends the session (cookies expire). */
+  app.delete('/me', async (req, reply) => {
+    // The device link lives for 400 days; erasing an account also needs a live sign-in.
+    if (req.userId && !(await isLiveSignIn(auth, req)))
+      throw new AppError(401, 'UNAUTHORIZED', 'Entre na sua conta de novo para excluir os dados.');
+    await deleteData(prisma, req);
+    const gone = `Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secureCookie ? '; Secure' : ''}`;
+    reply.header('set-cookie', `${COOKIE}=; ${gone}`);
+    for (const name of ['better-auth.session_token', 'better-auth.session_data'])
+      reply.header('set-cookie', `${secureCookie ? '__Secure-' : ''}${name}=; ${gone}`);
+    return reply.status(204).send();
+  });
 
   app.patch(
     '/me/profile',

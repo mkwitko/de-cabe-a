@@ -52,37 +52,10 @@ const q = (x: number, y: number, size = 16) => (
   </text>
 );
 
-const ART: Record<GameMode, ReactNode> = {
-  CAREER_PATH: (
-    <>
-      <path
-        d="M30 86 C60 86 60 40 100 40 S140 86 170 70"
-        fill="none"
-        stroke={CHALK}
-        strokeWidth={3}
-        strokeDasharray="2 7"
-        strokeLinecap="round"
-      />
-      {[
-        [30, 86, COVER],
-        [78, 48, PAPER],
-        [122, 52, PAPER],
-        [170, 70, PAPER],
-      ].map(([x, y, f], i) => (
-        <g key={i}>
-          <circle cx={x} cy={y} r={15} fill={f as string} stroke={INK} strokeWidth={2.5} />
-          {i < 3 && (
-            <path
-              d={`M${(x as number) - 8} ${(y as number) - 4} h16 M${(x as number) - 8} ${(y as number) + 4} h16`}
-              stroke={INK}
-              strokeWidth={2.5}
-            />
-          )}
-        </g>
-      ))}
-      {q(170, 76)}
-    </>
-  ),
+/** Career Path has no cover art: its passport is drawn by CareerPathCard. */
+export type CoverMode = Exclude<GameMode, 'CAREER_PATH'>;
+
+const ART: Record<CoverMode, ReactNode> = {
   FOOTBALL_GRID: (
     <>
       {[0, 1, 2].flatMap((r) =>
@@ -327,7 +300,7 @@ const ART: Record<GameMode, ReactNode> = {
   ),
 };
 
-export function GameArt({ mode, className = '' }: { mode: GameMode; className?: string }) {
+export function GameArt({ mode, className = '' }: { mode: CoverMode; className?: string }) {
   return (
     <svg viewBox="0 0 200 120" aria-hidden="true" className={className}>
       {ART[mode]}

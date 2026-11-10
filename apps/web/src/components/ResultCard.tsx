@@ -31,7 +31,7 @@ export async function drawResultCard(data: AttemptResponse): Promise<Blob> {
   }
   // First line of the share text, without the brand: "Desafio do Dia 09/11 · Grid · Fase 3 · 7/9".
   const lines = (share?.text ?? '').split('\n');
-  const title = (lines[0] ?? '').replace(/^De Cabeça · /, '');
+  const title = (lines[0] ?? '').replace(/^De Cabeça(?: F\.C\.)? · /, '');
   // The emoji board, without the stars/time suffix the server appends to its last row.
   const board = lines.slice(1, -1).map((l) => l.replace(/ [★☆]{3}.*$/, ''));
 
@@ -112,9 +112,11 @@ export async function drawResultCard(data: AttemptResponse): Promise<Blob> {
 export function ResultCardButton({
   data,
   onShared,
+  className = btnSecondary,
 }: {
   data: AttemptResponse;
   onShared?: () => void;
+  className?: string;
 }) {
   const [busy, setBusy] = useState(false);
   async function go() {
@@ -131,9 +133,17 @@ export function ResultCardButton({
     }
   }
   return (
-    <button type="button" className={btnSecondary} onClick={() => void go()} disabled={busy}>
+    <button type="button" className={className} onClick={() => void go()} disabled={busy}>
       <Icon name="share" />
-      {busy ? 'Gerando…' : 'Imagem do resultado'}
+      <span>
+        {busy ? (
+          'Gerando…'
+        ) : (
+          <>
+            Imagem<span className="max-sm:sr-only"> do resultado</span>
+          </>
+        )}
+      </span>
     </button>
   );
 }

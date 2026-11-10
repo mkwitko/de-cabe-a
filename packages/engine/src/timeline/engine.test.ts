@@ -42,7 +42,7 @@ describe('timeline engine', () => {
     expect(timeline.score(s, cfg)).toBe(4);
     expect(starsFor('timeline', 4)).toBe(2);
     expect(timeline.buildShareText(s, cfg, { label: 'Linha do tempo · Fase 1', url: 'x.br' })).toBe(
-      'De Cabeça · Linha do tempo · Fase 1 · 4/5\n✅❌✅✅✅\nx.br',
+      'De Cabeça F.C. · Linha do tempo · Fase 1 · 4/5\n✅❌✅✅✅\nx.br',
     );
   });
 

@@ -126,6 +126,6 @@ export const mysteryPlayer: GameEngine<MysteryConfig, MysteryState, MysteryInput
         .join('');
     const result =
       state.status === 'WON' ? `${state.guesses.length}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
-    return `De Cabeça · ${meta.label} · ${result}\n${state.guesses.map((g) => row(g.feedback)).join('\n')}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${result}\n${state.guesses.map((g) => row(g.feedback)).join('\n')}\n${meta.url}`;
   },
 };

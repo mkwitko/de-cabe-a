@@ -1,18 +1,24 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/archivo/wdth.css';
 
-/* Album world: a printed sticker-album page. Pitch green owns the page; stickers are paper. */
+/*
+ * Album world: a printed sticker-album page. The field (pitch) owns the page; stickers are paper.
+ * One theme, the night match: dark pitch, chalk text, cover yellow.
+ * chalk = text on the field, chalk-soft = secondary text on the field.
+ */
 @theme {
   --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --color-pitch: oklch(0.46 0.12 152);
-  --color-pitch-deep: oklch(0.38 0.1 152);
-  --color-chalk: oklch(0.98 0.012 150);
-  --color-chalk-soft: oklch(0.9 0.035 150);
-  --color-paper: oklch(0.985 0.006 100);
-  --color-cover: oklch(0.88 0.165 95);
+  --color-pitch: oklch(0.22 0.045 155);
+  --color-pitch-deep: oklch(0.17 0.035 155);
+  --color-chalk: oklch(0.95 0.015 150);
+  --color-chalk-soft: oklch(0.8 0.04 150);
+  --color-paper: oklch(0.93 0.008 100);
+  --color-cover: oklch(0.84 0.15 95);
   --color-ink: oklch(0.27 0.07 152);
   --color-stamp: oklch(0.9 0.16 95);
+  /* yellow used as text/outline on the field */
+  --color-gold: oklch(0.84 0.15 95);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -21,18 +27,11 @@
 
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: dark;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-pitch: oklch(0.22 0.045 155);
-      --color-pitch-deep: oklch(0.17 0.035 155);
-      --color-chalk: oklch(0.95 0.015 150);
-      --color-chalk-soft: oklch(0.8 0.04 150);
-      --color-paper: oklch(0.93 0.008 100);
-      --color-cover: oklch(0.84 0.15 95);
-    }
+  /* objects (scoreboard, chalkboard, TV) set chalk text on their own night materials */
+  .obj-dark {
+    color: var(--color-chalk);
   }
 
   /* No orphan word under a paragraph; headings balance. */
@@ -57,6 +56,11 @@
     scrollbar-color: var(--color-chalk-soft) var(--color-pitch-deep);
     /* Same centre with or without a scrollbar: the shell never shifts between pages. */
     scrollbar-gutter: stable;
+  }
+  /* A full-screen overlay (broadcast, sticker reveal) owns the whole screen: no page scrollbar. */
+  html:has(.screen-overlay) {
+    overflow: hidden;
+    scrollbar-gutter: auto;
   }
 
   body {
@@ -102,7 +106,7 @@
   }
 
   :focus-visible {
-    outline: 3px solid var(--color-cover);
+    outline: 3px solid var(--color-gold);
     outline-offset: 3px;
   }
 }
@@ -192,6 +196,30 @@
     transform: none;
   }
 }
+/* An arrow leaning toward where the action goes. */
+/* a new title badge spins in on its vertical axis (Broadcast) */
+@keyframes badge-spin {
+  from {
+    opacity: 0;
+    transform: perspective(240px) rotateY(-540deg) scale(0.3);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    transform: perspective(240px) rotateY(0) scale(1);
+  }
+}
+@keyframes nudge-x {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: translateX(4px);
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -216,10 +244,10 @@
 }
 @keyframes sheen-move {
   from {
-    transform: translateX(-30%);
+    background-position-x: 20%;
   }
   to {
-    transform: translateX(30%);
+    background-position-x: 80%;
   }
 }
 /* The sheen strip is wider than the card so pointer tilt only moves it sideways. */
@@ -279,14 +307,35 @@
     opacity: 0;
   }
 }
+/* The stamp's impact: the keyframes carry the thump, the curve never overshoots. */
 .stamp-hit {
-  animation: stamp-hit 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation: stamp-hit 420ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .passport-shake {
   animation: passport-shake 320ms linear;
 }
 .passport-cover {
   transition: transform 1100ms cubic-bezier(0.6, 0.05, 0.25, 1);
+}
+/* The trail turns a spread: the new pages swing in from the side they come from. */
+@keyframes page-turn {
+  from {
+    opacity: 0.2;
+    transform: perspective(1600px) rotateY(var(--turn-from)) translateX(var(--turn-x));
+  }
+}
+.page-turn-next,
+.page-turn-prev {
+  transform-origin: center;
+  animation: page-turn 420ms var(--ease-out-expo) both;
+}
+.page-turn-next {
+  --turn-from: -14deg;
+  --turn-x: 3rem;
+}
+.page-turn-prev {
+  --turn-from: 14deg;
+  --turn-x: -3rem;
 }
 @media (prefers-reduced-motion: reduce) {
   .stamp-hit {
@@ -297,6 +346,10 @@
   }
   .passport-cover {
     display: none;
+  }
+  .page-turn-next,
+  .page-turn-prev {
+    animation: stamp-fade 200ms ease-out both;
   }
 }
 
@@ -328,7 +381,7 @@
   }
 }
 .magnet-snap {
-  animation: magnet-snap 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation: magnet-snap 380ms var(--ease-out-expo) both;
 }
 .chalk-draw {
   animation: chalk-draw 450ms 150ms var(--ease-out-expo) both;
@@ -699,4 +752,2210 @@
   background:
     repeating-linear-gradient(0deg, transparent 0 31px, rgb(40 90 160 / 0.12) 31px 32px),
     var(--color-paper);
+}
+
+/*
+ * Home, "Vestiário à noite": a locker room under one floodlight. The art
+ * is ours (public/img/vestiario-night.webp); the passport, stickers, ticket and posters sit in it.
+ * Entry once per tab: light on, cover opens, stickers slide out, ticket lands, last stamp thumps.
+ */
+:root {
+  --scene-art: url('/img/vestiario-night.webp');
+}
+.scene {
+  --px: 0;
+  --py: 0;
+  --leather:
+    radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
+    radial-gradient(circle at 30% 15%, #7a2633, #5b1a24 55%, #3d1018);
+}
+.scene-art {
+  position: fixed;
+  inset: -2%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    var(--scene-art) center 40% / cover no-repeat,
+    #0d120f;
+  transform: translate3d(calc(var(--px) * -10px), calc(var(--py) * -6px), 0);
+  transition: transform 900ms var(--ease-out-expo);
+}
+/* the floor fades to the ground colour so whatever scrolls below the bench stays legible */
+.scene-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 70%,
+    color-mix(in oklch, var(--color-pitch-deep) 85%, transparent)
+  );
+}
+/* the light's own glow on top of the painted one; it flickers on with the lamp */
+.scene-cone {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 38% 62% at 50% 4%, rgb(255 214 150 / 0.22), transparent 70%);
+  mix-blend-mode: screen;
+}
+.scene-dust {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  width: min(44vw, 34rem);
+  height: 62%;
+  translate: -50% 0;
+  opacity: 0.8;
+  mix-blend-mode: screen;
+  animation: scene-fade 1.6s ease-out backwards;
+}
+.scene-dark {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: #050806;
+  opacity: 0;
+  animation: lights-on 900ms linear backwards;
+}
+@keyframes lights-on {
+  0%,
+  30% {
+    opacity: 0.9;
+  }
+  36% {
+    opacity: 0.25;
+  }
+  44% {
+    opacity: 0.8;
+  }
+  52% {
+    opacity: 0.1;
+  }
+  60% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes scene-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The stage: on wide screens the passport rests on the bench line of the art. */
+.scene-stage {
+  padding-top: 0.5rem;
+}
+.scene-stage:has(.fan) {
+  padding-top: 3.75rem;
+}
+/* the header reads over the lamp: a soft band of shade along the top */
+.scene-art::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 9rem;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--color-pitch-deep) 70%, transparent),
+    transparent
+  );
+}
+.scene-tilt {
+  transform: perspective(1800px) rotateY(calc(var(--px) * 3deg)) rotateX(calc(var(--py) * -2deg));
+  transition: transform 900ms var(--ease-out-expo);
+}
+.book {
+  filter: drop-shadow(0 26px 22px rgb(0 0 0 / 0.55));
+}
+.leaf {
+  background: var(--leather);
+  box-shadow: inset 0 -14px 18px -12px rgb(0 0 0 / 0.6);
+  animation: leaf-in 1s 0.55s linear backwards;
+}
+.leaf-tool {
+  position: absolute;
+  inset: 0.6rem;
+  border: 1px solid rgb(231 194 106 / 0.4);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.page {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 27px, #c9b98f55 27px 28px),
+    radial-gradient(circle at 50% 40%, #f8f1dc, #f3ead2 60%, #e2d5b3);
+  box-shadow: inset 0 16px 18px -14px rgb(60 40 10 / 0.45);
+}
+.cover-front {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--leather);
+  transform-origin: 50% 0;
+  --axis: 1, 0, 0;
+  --swing: 180deg;
+  opacity: 0;
+  visibility: hidden;
+  animation: cover-open 1s 0.55s cubic-bezier(0.55, 0, 0.25, 1) backwards;
+}
+.cover-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #e7c26a;
+  text-shadow:
+    0 -1px 0 #0007,
+    0 1px 0 #fff3;
+  backface-visibility: hidden;
+  border: 1px solid rgb(231 194 106 / 0.4);
+  border-radius: inherit;
+}
+@keyframes cover-open {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    transform: perspective(1400px) rotate3d(var(--axis), 0deg);
+  }
+  80% {
+    opacity: 1;
+    visibility: visible;
+    transform: perspective(1400px) rotate3d(var(--axis), var(--swing));
+  }
+  100% {
+    opacity: 0;
+    visibility: visible;
+    transform: perspective(1400px) rotate3d(var(--axis), var(--swing));
+  }
+}
+/* the inside of the cover shows once the cover has swung past upright */
+@keyframes leaf-in {
+  0%,
+  45% {
+    opacity: 0;
+  }
+  46%,
+  100% {
+    opacity: 1;
+  }
+}
+/* stickers: on a phone a small fan peeking over the cover; wide, fanned out to its left */
+.fan {
+  position: absolute;
+  z-index: -1;
+  right: 2.5rem;
+  top: -3.5rem;
+  width: 7rem;
+  height: 9.4rem;
+  /* same sticker size everywhere; the phone shows the fan at half scale */
+  scale: 0.55;
+  transform-origin: 100% 0;
+}
+.fan-card {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  --k: calc(var(--i) - (var(--n) - 1) / 2);
+  rotate: calc(var(--k) * 11deg);
+  translate: calc(var(--k) * 2.6rem) 0;
+  animation: fan-out 600ms calc(1.35s + var(--i) * 70ms) var(--ease-out-expo) backwards;
+}
+@keyframes fan-out {
+  from {
+    rotate: 0deg;
+    translate: 0 2.5rem;
+    opacity: 0;
+  }
+}
+.ticket {
+  rotate: -1.5deg;
+  margin-top: -1.75rem;
+  animation: ticket-in 650ms 1.2s var(--ease-out-expo) backwards;
+}
+@keyframes ticket-in {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+    rotate: 6deg;
+  }
+}
+/* scoped: the passport's own .stamp-hit (trail, end screen) keeps its keyframes and no delay */
+.scene .stamp-hit {
+  animation: scene-stamp-hit 520ms 1.75s cubic-bezier(0.3, 0, 0.2, 1) backwards;
+}
+@keyframes scene-stamp-hit {
+  0% {
+    opacity: 0;
+    scale: 1.9;
+  }
+  60% {
+    opacity: 1;
+    scale: 0.9;
+  }
+  100% {
+    scale: 1;
+  }
+}
+/*
+ * The closed modes: premiere posters taped to the wall. Each prints its mode's art full-bleed under
+ * its own light (--h, the hue), halftone in the shadows, the name in condensed type over a dark
+ * foot, the stamp-yellow "Em breve" strip, the votes as a sticker. Paper: folds, grain, worn edges,
+ * a chipped corner, two strips of tape. Sizes follow the sheet (container units), so the type
+ * keeps the poster's proportions at every width. Hover or focus: the poster lifts and straightens.
+ */
+.posters {
+  --edge: 1rem;
+  margin-inline: -1rem;
+}
+@media (width >= 40rem) {
+  .posters {
+    --edge: 2rem;
+    margin-inline: -2rem;
+  }
+}
+.posters > div:first-child {
+  padding-inline: var(--edge);
+}
+.poster-row {
+  --gap: 0.875rem;
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--edge);
+  padding: 1.25rem var(--edge) 1.75rem;
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 var(--edge),
+    #000 calc(100% - var(--edge)),
+    transparent
+  );
+}
+.poster-row::-webkit-scrollbar {
+  display: none;
+}
+.poster {
+  --tilt: 0deg;
+  position: relative;
+  flex: 0 0 calc((100% - 0.3 * var(--gap)) / 1.3);
+  aspect-ratio: 2 / 3;
+  scroll-snap-align: start;
+  rotate: var(--tilt);
+  filter: drop-shadow(0 16px 14px rgb(0 0 0 / 0.55)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.5));
+  transition:
+    rotate 420ms var(--ease-out-expo),
+    translate 420ms var(--ease-out-expo);
+}
+/* two strips of tape across the top corners */
+.poster::before,
+.poster::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  top: -0.55rem;
+  width: 26%;
+  height: 1.35rem;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.08), transparent 12% 88%, rgb(0 0 0 / 0.08)),
+    rgb(236 228 200 / 0.62);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  backdrop-filter: blur(1px);
+}
+.poster::before {
+  left: -4%;
+  rotate: -32deg;
+}
+.poster::after {
+  right: -4%;
+  rotate: 28deg;
+}
+.poster-sheet {
+  container-type: inline-size;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  color: var(--color-chalk);
+  cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 0.9rem), calc(100% - 0.6rem) 100%, 0 100%);
+  background:
+    radial-gradient(85% 50% at 50% 34%, oklch(0.6 0.15 var(--h) / 0.9), transparent 72%),
+    linear-gradient(180deg, oklch(0.36 0.1 var(--h)), oklch(0.15 0.05 var(--h)) 80%);
+}
+.poster-sheet:focus-visible {
+  outline: none;
+}
+/* the light from above, the halftone in the shade, the dark foot the title prints on */
+.poster-sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(rgb(0 0 0 / 0.28) 0.8px, transparent 1.3px) 0 0 / 4px 4px,
+    linear-gradient(180deg, transparent 42%, rgb(0 0 0 / 0.82) 76%),
+    radial-gradient(110% 55% at 50% -12%, rgb(255 236 200 / 0.3), transparent 62%);
+  transition: opacity 420ms var(--ease-out-expo);
+}
+/* the paper over the print: two folds, grain and edges worn by the hands that pasted it */
+.poster-sheet::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      transparent calc(50% - 1px),
+      rgb(255 255 255 / 0.1) 50%,
+      rgb(0 0 0 / 0.2) calc(50% + 1px),
+      transparent calc(50% + 4px)
+    ),
+    linear-gradient(
+      180deg,
+      transparent calc(48% - 1px),
+      rgb(255 255 255 / 0.08) 48%,
+      rgb(0 0 0 / 0.16) calc(48% + 1px),
+      transparent calc(48% + 4px)
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  box-shadow:
+    inset 0 0 0 1px rgb(255 245 220 / 0.12),
+    inset 0 0 2.5rem rgb(0 0 0 / 0.45);
+}
+.poster-art {
+  position: absolute;
+  inset: 0 0 34%;
+  overflow: hidden;
+}
+.poster-art svg {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: 165%;
+  max-width: none;
+  translate: -50% -50%;
+  filter: drop-shadow(0 0.5rem 0.6rem rgb(0 0 0 / 0.55));
+  transition: scale 600ms var(--ease-out-expo);
+}
+.poster-name,
+.poster-hook,
+.poster-strip {
+  position: relative;
+  z-index: 2;
+}
+.poster-name {
+  padding-inline: 7cqi;
+  font-size: 15cqi;
+  font-weight: 900;
+  line-height: 0.86;
+  text-transform: uppercase;
+  text-wrap: balance;
+  text-shadow: 0 0.2rem 0.5rem rgb(0 0 0 / 0.6);
+}
+.poster-hook {
+  margin-top: 2.5cqi;
+  padding-inline: 7cqi;
+  font-size: max(0.875rem, 6cqi);
+  font-weight: 600;
+  line-height: 1.2;
+  color: color-mix(in oklch, var(--color-chalk) 88%, transparent);
+}
+.poster-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5cqi;
+  padding: 2.6cqi 7cqi 3.4cqi;
+  background: var(--color-stamp);
+  color: var(--color-ink);
+  font-size: max(0.875rem, 6.6cqi);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: 0 -0.15rem 0.5rem rgb(0 0 0 / 0.4);
+}
+/* the votes, a round sticker slapped on the top right; the player's own pick is cover yellow */
+.poster-votes {
+  position: absolute;
+  z-index: 3;
+  top: 6cqi;
+  right: 5cqi;
+  display: grid;
+  place-content: center;
+  min-width: 23cqi;
+  min-height: 23cqi;
+  padding: 2cqi;
+  border: 0.15rem solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: max(0.75rem, 4.4cqi);
+  font-weight: 900;
+  line-height: 1.05;
+  text-align: center;
+  text-transform: uppercase;
+  rotate: 9deg;
+  box-shadow: 0 0.2rem 0.4rem rgb(0 0 0 / 0.5);
+}
+.poster-votes.is-mine {
+  background: var(--color-cover);
+}
+/* the leader's ribbon across the top left corner */
+.poster-ribbon {
+  position: absolute;
+  z-index: 3;
+  top: 9cqi;
+  left: -15cqi;
+  width: 62cqi;
+  padding: 1.4cqi 0;
+  background: var(--color-cover);
+  color: var(--color-ink);
+  font-size: max(0.75rem, 4.6cqi);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  rotate: -40deg;
+  box-shadow: 0 0.2rem 0.4rem rgb(0 0 0 / 0.5);
+}
+.poster:has(.poster-sheet:is(:hover, :focus-visible)) {
+  rotate: 0deg;
+  translate: 0 -0.5rem;
+}
+.poster:has(.poster-sheet:is(:hover, :focus-visible)) .poster-art svg {
+  scale: 1.06;
+}
+.poster:has(.poster-sheet:focus-visible) {
+  outline: 3px solid var(--color-cover);
+  outline-offset: 5px;
+}
+.poster:has(.poster-sheet:active) {
+  translate: 0 -0.15rem;
+}
+@media (width >= 64rem) {
+  .scene {
+    /* the strip of floor the art leaves below the bench line */
+    --floor: max(2rem, calc(50svh - 0.16 * max(100svh, 56.25vw) - 1.5rem));
+  }
+  .posters {
+    --edge: 1.5rem;
+    --w: min(calc(100vw - 4rem), 100rem);
+    width: var(--w);
+    margin-inline: calc((100% - var(--w)) / 2);
+  }
+  .poster {
+    flex-basis: calc((100% - 3.35 * var(--gap)) / 4.35);
+  }
+}
+@media (width >= 96rem) {
+  .poster {
+    flex-basis: calc((100% - 4.35 * var(--gap)) / 5.35);
+  }
+}
+@media (width >= 64rem) {
+  .scene-stage,
+  .scene-stage:has(.fan) {
+    /* the stage ends on the bench line; the posters hang from the floor strip below it */
+    min-height: calc(100svh - 5.5rem - var(--floor));
+    padding-top: 2rem;
+    padding-bottom: 0;
+  }
+  .book {
+    transform: perspective(1600px) rotateX(10deg);
+    transform-origin: 50% 100%;
+  }
+  .leaf {
+    box-shadow: inset -18px 0 22px -14px rgb(0 0 0 / 0.65);
+  }
+  .page {
+    box-shadow: inset 20px 0 22px -16px rgb(60 40 10 / 0.5);
+  }
+  .cover-front {
+    transform-origin: 0 50%;
+    --axis: 0, 1, 0;
+    --swing: -180deg;
+  }
+  .fan {
+    right: auto;
+    left: 2.5rem;
+    top: -6.25rem;
+    scale: 1;
+  }
+  .fan-card {
+    rotate: calc(-12deg + var(--i) * 7deg);
+    translate: calc(var(--i) * 3.4rem) calc(var(--i) * 0.15rem);
+  }
+  .ticket {
+    margin-top: 0;
+    rotate: 2.5deg;
+    translate: calc(var(--px) * 8px) calc(var(--py) * 5px);
+    transition: translate 900ms var(--ease-out-expo);
+  }
+}
+.scene[data-still] :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit, .scene-dust) {
+    animation: none;
+  }
+  .scene-art,
+  .scene-tilt,
+  .poster,
+  .poster-art svg {
+    transition: none;
+  }
+}
+/* ==== Sticker player card (StickerCard.tsx) ====
+ * A notched shield: a fine metal rim (--rim) with a dark bezel line around a textured face
+ * (--face, layers blended by --blend), the portrait large in the upper 60% faded into the face
+ * over a soft backlight (--glow), the inner frame line (--line) it bleeds past, the rating
+ * column, the name, a 2×3 grid of numbers and the brand mark. --ink is the text colour.
+ * All sizes are container units of the card; small cards (album, ~95px) drop the grid. */
+.pcard {
+  --shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cpath d='M24 0H128L150 9 172 0H276C280 12 288 18 300 20V318C300 336 290 346 272 354L150 400 28 354C10 346 0 336 0 318V20C12 18 20 12 24 0Z'/%3E%3C/svg%3E");
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.45));
+}
+.pcard-lg {
+  filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55)) drop-shadow(0 3px 4px rgb(0 0 0 / 0.4));
+  /* its own layer: without it Chromium paints stale, pixelated copies of the masked card around
+     the shield once the reveal's tilt has moved it (seen on phones) */
+  will-change: filter;
+}
+.pcard-rim,
+.pcard-face,
+.pcard-selected::before {
+  mask: var(--shield) center / 100% 100% no-repeat;
+}
+/* selected in the album: a cover-yellow outline that follows the shield */
+.pcard-selected::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  background: var(--color-cover);
+}
+.pcard-rim {
+  position: relative;
+  height: 100%;
+  background: var(--rim);
+}
+/* the dark bezel between rim and face */
+.pcard-rim::before {
+  content: '';
+  position: absolute;
+  inset: 1.6cqw;
+  background: rgb(0 0 0 / 0.55);
+  mask: var(--shield) center / 100% 100% no-repeat;
+}
+.pcard-face {
+  position: absolute;
+  inset: 2.3cqw;
+  overflow: hidden;
+  background: var(--face);
+  background-size: 100% 100%;
+  background-blend-mode: var(--blend, normal);
+  color: var(--ink);
+}
+.pcard-glow {
+  position: absolute;
+  inset: 0 0 30% 10%;
+  background: radial-gradient(50% 55% at 60% 45%, var(--glow), transparent 75%);
+}
+.pcard-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.pcard-frame path {
+  vector-effect: non-scaling-stroke;
+}
+.pcard-photo {
+  position: absolute;
+  top: 2%;
+  left: 20%;
+  width: 84%;
+  height: 60%;
+  object-fit: cover;
+  object-position: 50% 15%;
+  filter: saturate(1.06) contrast(1.04);
+  -webkit-mask-image:
+    radial-gradient(62% 64% at 54% 40%, #000 52%, transparent 100%),
+    linear-gradient(#000 60%, transparent 97%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(62% 64% at 54% 40%, #000 52%, transparent 100%),
+    linear-gradient(#000 60%, transparent 97%);
+  mask-composite: intersect;
+}
+.pcard-silhouette {
+  fill: currentColor;
+  opacity: 0.2;
+  top: 10%;
+  height: 54%;
+}
+.pcard-head {
+  position: absolute;
+  top: 9%;
+  left: 7%;
+  width: 22%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6cqw;
+}
+.pcard-rating {
+  font-size: max(16px, 21cqw);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.03em;
+  text-shadow: var(--emboss);
+}
+.pcard-pos {
+  font-size: max(9px, 8.4cqw);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding-bottom: 1.6cqw;
+  border-bottom: 1px solid var(--line);
+}
+.pcard-flag {
+  width: max(14px, 12cqw);
+  aspect-ratio: 3 / 2;
+  border-radius: 1px;
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 0.35),
+    0 1px 2px rgb(0 0 0 / 0.35);
+}
+.flag-badge {
+  display: grid;
+  place-items: center;
+  font-size: max(7px, 5cqw);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  outline: 1px solid var(--line);
+}
+.pcard-name {
+  position: absolute;
+  top: 62.5%;
+  left: 6%;
+  right: 6%;
+  font-size: min(12.5cqw, calc(155cqw / var(--nl)));
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: var(--emboss);
+  transition: opacity 400ms;
+}
+/* a hairline under the name that fades out at both ends */
+.pcard-name::after {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 1.8cqw 10% 0;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+}
+.pcard-attrs {
+  position: absolute;
+  top: 73.6%;
+  left: 19%;
+  right: 19%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 9cqw;
+  row-gap: 0;
+  /* the thin vertical rule between the two columns */
+  background: linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat;
+}
+.pcard-attrs > div {
+  display: flex;
+  align-items: baseline;
+  gap: 1.6cqw;
+  min-width: 0;
+}
+.pcard-attrs dd {
+  min-width: 2.2ch;
+  font-size: 6.2cqw;
+  font-weight: 900;
+  line-height: 1.08;
+  text-align: right;
+}
+.pcard-attrs dt {
+  font-size: 4.4cqw;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+.pcard-brand {
+  position: absolute;
+  top: 92.6%;
+  left: 0;
+  right: 0;
+  font-size: 3cqw;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+/* The light stays inside the face: the strip is a 300%-wide background that slides (--hx, 0–1)
+ * rather than a 300%-wide layer, and the face isolates the blend, so a tilted card never paints
+ * blended copies outside the shield (seen on phones under the reveal's 3D tilt). */
+.pcard-face {
+  isolation: isolate;
+}
+.pcard .holo {
+  position: absolute;
+  inset: 0;
+  background-image: var(--holo);
+  background-size: 300% 100%;
+  background-position: calc(var(--hx, 0.5) * 100%) 0;
+  opacity: 0.8;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+/* Lenda: the foil slides and shifts hue with the pointer (set on the card by StickerCard) */
+.pcard.holo-rainbow .holo {
+  --hx: calc(0.3 + var(--px, 0.5) * 0.4);
+  opacity: 0.4;
+  filter: hue-rotate(calc((var(--py, 0.5) - 0.5) * 160deg));
+}
+/* album size: rating, position, flag, portrait and a bigger name; no grid, no brand */
+@container (width < 150px) {
+  .pcard-attrs,
+  .pcard-brand {
+    display: none;
+  }
+  .pcard-photo {
+    height: 66%;
+  }
+  .pcard-head {
+    top: 10%;
+    left: 5%;
+    gap: 2cqw;
+  }
+  .pcard-rating {
+    font-size: max(18px, 24cqw);
+  }
+  .pcard-name {
+    top: 69%;
+    left: 8%;
+    right: 8%;
+    font-size: max(9px, min(15cqw, calc(175cqw / var(--nl))));
+  }
+  .pcard-name::after {
+    display: none;
+  }
+}
+/* thumbnails (the corner sticker on the result card): just the shield, portrait and rating */
+@container (width < 72px) {
+  .pcard-name,
+  .pcard-pos,
+  .pcard-flag {
+    display: none;
+  }
+}
+
+/* textures, drawn: brushed metal streaks, marble veins (dark, light, gold) and grain */
+:root {
+  --tx-brushed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .55' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .55'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  --tx-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='turbulence' baseFrequency='.006 .011' numOctaves='5' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .06 -5 0 0 0 .9'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  --tx-veins-gold: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='turbulence' baseFrequency='.005 .009' numOctaves='5' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .78 0 0 0 0 .58 0 0 0 0 .2 -7 0 0 0 1'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  --tx-veins-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='turbulence' baseFrequency='.007 .012' numOctaves='5' seed='21'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -6 0 0 0 .85'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  --tx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .35'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+/* the eight finishes (--rc, the label colour, is set in rarity.ts); --edge thumbnail frame */
+.rar-bronze {
+  --edge: #e8d6c4;
+  --rim: linear-gradient(150deg, #f6cfa8, #8b4d22 28%, #eab07f 48%, #5a2c0f 72%, #cf9262);
+  --face:
+    var(--tx-brushed),
+    linear-gradient(118deg, transparent 58%, rgb(255 222 190 / 0.16) 58% 66%, transparent 66%),
+    linear-gradient(118deg, transparent 72%, rgb(70 25 0 / 0.22) 72%),
+    radial-gradient(110% 75% at 68% 20%, #e3a676, #a8643a 48%, #5e2f12);
+  --blend: overlay, normal, normal, normal;
+  --ink: #2a1206;
+  --line: rgb(60 22 4 / 0.45);
+  --glow: rgb(255 220 180 / 0.6);
+  --emboss: 0 1px 0 rgb(255 220 190 / 0.35);
+  --holo: none;
+}
+.rar-prata {
+  --edge: #f4f6f9;
+  --rim: linear-gradient(150deg, #ffffff, #7d8a9c 28%, #f1f4f8 48%, #5f6b7c 72%, #dfe5ec);
+  --face:
+    var(--tx-brushed),
+    linear-gradient(118deg, transparent 54%, rgb(255 255 255 / 0.45) 54% 61%, transparent 61%),
+    linear-gradient(118deg, transparent 70%, rgb(40 55 75 / 0.16) 70%),
+    linear-gradient(165deg, #f8fafc, #c9d2dd 40%, #95a2b3 78%, #6f7c8e);
+  --blend: overlay, normal, normal, normal;
+  --ink: #111923;
+  --line: rgb(20 32 48 / 0.35);
+  --glow: rgb(255 255 255 / 0.75);
+  --emboss: 0 1px 0 rgb(255 255 255 / 0.6);
+  --holo: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.55) 48%, transparent 60%);
+}
+.rar-ouro {
+  --edge: #fffdf4;
+  --rim: linear-gradient(150deg, #fff6c4, #a87400 28%, #ffe58a 48%, #7a5200 72%, #f2c94c);
+  --face:
+    var(--tx-grain),
+    conic-gradient(
+      from 200deg at 62% 34%,
+      rgb(255 255 255 / 0.2) 0 28deg,
+      transparent 28deg 64deg,
+      rgb(255 255 255 / 0.12) 64deg 96deg,
+      transparent 96deg 150deg,
+      rgb(130 80 0 / 0.14) 150deg 210deg,
+      transparent 210deg 290deg,
+      rgb(255 255 255 / 0.1) 290deg 330deg,
+      transparent 330deg
+    ),
+    radial-gradient(115% 80% at 65% 18%, #fff0a6, #f3c623 45%, #c08a00 85%, #9a6a00);
+  --blend: overlay, normal, normal;
+  --ink: #2a1b00;
+  --line: rgb(80 52 0 / 0.4);
+  --glow: rgb(255 248 210 / 0.7);
+  --emboss: 0 1px 0 rgb(255 245 200 / 0.5);
+  --holo: none;
+}
+.rar-ouro-brilhante {
+  --edge: #fffdf4;
+  --rim: linear-gradient(150deg, #fffbe6, #c48c00 25%, #fff3b0 45%, #8f6200 70%, #ffe27a);
+  --face:
+    repeating-linear-gradient(60deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 7cqw),
+    repeating-linear-gradient(-60deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 7cqw),
+    radial-gradient(60% 45% at 62% 30%, rgb(255 255 240 / 0.9), transparent 70%),
+    radial-gradient(120% 85% at 62% 18%, #fff3a0, #f5b800 40%, #d27f00 78%, #8e4f00);
+  --blend: normal;
+  --ink: #2a1800;
+  --line: rgb(90 55 0 / 0.42);
+  --glow: rgb(255 255 230 / 0.8);
+  --emboss: 0 1px 0 rgb(255 250 210 / 0.6);
+  --holo: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.85) 47%, transparent 60%);
+}
+.rar-destaque {
+  --edge: #c99a00;
+  --rim: linear-gradient(150deg, #ffe27a, #6e4f00 28%, #f2c200 48%, #3b2a00 72%, #d6a800);
+  --face:
+    var(--tx-grain),
+    linear-gradient(
+      56deg,
+      transparent 74%,
+      #f2c200 74% 75%,
+      transparent 75% 78%,
+      rgb(242 194 0 / 0.45) 78% 78.6%,
+      transparent 78.6%
+    ),
+    linear-gradient(56deg, transparent 82%, rgb(242 194 0 / 0.12) 82%),
+    radial-gradient(70% 50% at 62% 28%, rgb(255 210 80 / 0.22), transparent 70%),
+    repeating-linear-gradient(45deg, #181818 0 2px, #0c0c0c 2px 4px);
+  --blend: overlay, normal, normal, normal, normal;
+  --ink: #f6cd3c;
+  --line: rgb(242 194 0 / 0.45);
+  --glow: rgb(255 214 90 / 0.3);
+  --emboss: 0 2px 3px rgb(0 0 0 / 0.7);
+  --holo: linear-gradient(115deg, transparent 30%, rgb(245 196 0 / 0.35) 48%, transparent 62%);
+}
+.rar-selecao {
+  --edge: #c9d1dc;
+  --rim: linear-gradient(150deg, #ffffff, #7f8ea6 28%, #eef2f8 48%, #4d5a70 72%, #cfd8e6);
+  --face:
+    var(--tx-grain),
+    repeating-conic-gradient(
+      from 0deg at 62% 30%,
+      rgb(170 205 255 / 0.12) 0 5deg,
+      transparent 5deg 13deg
+    ),
+    radial-gradient(60% 45% at 62% 30%, #6aa6ff, transparent 72%),
+    linear-gradient(172deg, #2459cc, #0c2a7e 55%, #04103a);
+  --blend: overlay, normal, normal, normal;
+  --ink: #f3f7ff;
+  --line: rgb(200 220 255 / 0.45);
+  --glow: rgb(150 195 255 / 0.55);
+  --emboss: 0 2px 3px rgb(0 10 50 / 0.6);
+  --holo: linear-gradient(115deg, transparent 30%, rgb(200 220 255 / 0.45) 48%, transparent 62%);
+}
+.rar-idolo {
+  --edge: #b8964a;
+  --rim: linear-gradient(150deg, #fbe7a8, #8a6420 28%, #f3d27a 48%, #5e4210 72%, #d7b25e);
+  --face:
+    var(--tx-veins-gold), var(--tx-veins),
+    radial-gradient(120% 85% at 62% 20%, #fffbf1, #f2e6c9 50%, #dcc69a 85%, #c9ad78);
+  --blend: normal, soft-light, normal;
+  --ink: #3a2606;
+  --line: rgb(150 110 40 / 0.55);
+  --glow: rgb(255 252 240 / 0.85);
+  --emboss: 0 1px 0 rgb(255 255 255 / 0.7);
+  --holo: linear-gradient(115deg, transparent 30%, rgb(255 250 230 / 0.6) 48%, transparent 62%);
+}
+.rar-lenda {
+  --edge: #ffffff;
+  --rim: conic-gradient(from 200deg, #ffb3c7, #ffe9a3, #b5ffd0, #a8e4ff, #d2b0ff, #ffb3c7);
+  --face:
+    var(--tx-veins-light),
+    conic-gradient(
+      from calc(var(--px, 0.5) * 360deg) at 30% 80%,
+      rgb(255 120 180 / 0.22),
+      rgb(255 230 120 / 0.18),
+      rgb(120 255 190 / 0.2),
+      rgb(120 200 255 / 0.22),
+      rgb(200 140 255 / 0.22),
+      rgb(255 120 180 / 0.22)
+    ),
+    radial-gradient(60% 45% at 62% 30%, rgb(170 110 255 / 0.6), transparent 72%),
+    linear-gradient(168deg, #3d1690, #1e0752 55%, #0a0222);
+  --blend: soft-light, screen, normal, normal;
+  --ink: #ffffff;
+  --line: rgb(230 210 255 / 0.5);
+  --glow: rgb(200 160 255 / 0.55);
+  --emboss: 0 2px 4px rgb(20 0 60 / 0.7);
+  --holo: linear-gradient(115deg, #ff6b6b, #ffd36b, #8bff9c, #6bd6ff, #b06bff, #ff6b6b);
+}
+/* ==== end sticker player card ==== */
+
+/* ==== Como jogar: the three step drawings move on a 6 s loop (HowToPlayPage). Still under
+ * reduced motion: the drawings as printed. ==== */
+@media (prefers-reduced-motion: no-preference) {
+  .htp-stamp {
+    animation: htp-stamp 6s var(--d, 0s) cubic-bezier(0.3, 0, 0.2, 1) infinite backwards;
+  }
+  .htp-key {
+    animation: htp-key 6s calc(0.3s + var(--i) * 170ms) steps(1) infinite backwards;
+  }
+  .htp-pick {
+    animation: htp-pick 6s var(--ease-out-expo) infinite;
+  }
+  .htp-stars svg {
+    animation: htp-star 6s var(--ease-out-expo) infinite backwards;
+  }
+  .htp-stars svg:nth-child(2) {
+    animation-delay: 0.35s;
+  }
+  .htp-stars svg:nth-child(3) {
+    animation-delay: 0.7s;
+  }
+  .htp-sticker {
+    animation: htp-pick 6s 0.2s var(--ease-out-expo) infinite backwards;
+  }
+}
+@keyframes htp-stamp {
+  0% {
+    opacity: 0;
+    scale: 1.8;
+  }
+  5% {
+    opacity: 1;
+    scale: 0.94;
+  }
+  8%,
+  88% {
+    opacity: 1;
+    scale: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}
+@keyframes htp-key {
+  0% {
+    opacity: 0;
+  }
+  1%,
+  85% {
+    opacity: 1;
+  }
+  86%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes htp-pick {
+  0%,
+  28% {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  34%,
+  86% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  92%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+@keyframes htp-star {
+  0% {
+    opacity: 0.25;
+    scale: 0.6;
+  }
+  5% {
+    opacity: 1;
+    scale: 1.25;
+  }
+  9%,
+  88% {
+    opacity: 1;
+    scale: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.25;
+    scale: 0.6;
+  }
+}
+
+/*
+ * Secondary rooms (album, stats, conta): the same locker room, out of the light. The art stays
+ * behind, dimmed, so the album, the member card and the club desk sit in the house.
+ */
+.room-dim {
+  filter: brightness(0.4) saturate(0.85) blur(2px);
+}
+
+/* ── Album: a Panini book ────────────────────────────────────────────────────────────────── */
+/*
+ * Cream printed pages with a halftone, a yellow cover, a spine and a page stack at the edges.
+ * The turning leaf reads one progress value from the book: --p (0 → 1) and --m = sin(πp), the
+ * lift (gloss, shade and the shadow it casts peak mid-turn). Wide: the stage takes the viewport
+ * height and the spread keeps ~1.56:1 inside it; phones: one page, natural height.
+ */
+.album-stage {
+  position: relative;
+  width: 100%;
+}
+.album-book {
+  --p: 0;
+  --m: 0;
+  --ink-page: #1d2a4f;
+  position: relative;
+  display: grid;
+  perspective: 1800px;
+  perspective-origin: 0 50%;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.album-half {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.album-half > .album-side {
+  flex: 1;
+}
+/* phones: every layer in the same cell, the leaf over the page it reveals */
+.album-book:not([data-wide]) > * {
+  grid-area: 1 / 1;
+}
+.album-side {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 1rem 1rem 2.25rem;
+}
+.album-paper {
+  background:
+    radial-gradient(rgb(29 42 79 / 0.07) 1px, transparent 1.3px) 0 0 / 6px 6px,
+    radial-gradient(circle at 50% 35%, #fbf6e8, #f3ead2 65%, #e6d9b8);
+  color: var(--ink-page);
+}
+/* inner shade at the spine, the page stack peeking at the outer edge, the book's shadow */
+.album-side-left {
+  border-radius: 14px 3px 3px 14px;
+  box-shadow:
+    inset -30px 0 34px -22px rgb(0 0 0 / 0.5),
+    -3px 1px 0 #e7dcc1,
+    -6px 2px 0 #cbbd9b,
+    0 34px 50px -26px rgb(0 0 0 / 0.8);
+}
+.album-side-right {
+  border-radius: 3px 14px 14px 3px;
+  box-shadow:
+    inset 30px 0 34px -22px rgb(0 0 0 / 0.5),
+    3px 1px 0 #e7dcc1,
+    6px 2px 0 #cbbd9b,
+    0 34px 50px -26px rgb(0 0 0 / 0.8);
+}
+.album-side-single {
+  min-height: 36rem;
+  border-radius: 4px 14px 14px 4px;
+  box-shadow:
+    inset 20px 0 22px -16px rgb(0 0 0 / 0.5),
+    3px 1px 0 #e7dcc1,
+    6px 2px 0 #cbbd9b,
+    0 30px 44px -24px rgb(0 0 0 / 0.8);
+}
+.album-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 4px double rgb(29 42 79 / 0.4);
+  padding-bottom: 0.5rem;
+}
+.album-pos {
+  margin-right: 0.5em;
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+  background: var(--ink-page);
+  color: #f6eedb;
+}
+.album-folio {
+  position: absolute;
+  bottom: 0.6rem;
+  font-size: 1rem;
+  font-weight: 900;
+  color: rgb(29 42 79 / 0.6);
+}
+.album-side-left .album-folio {
+  left: 1.1rem;
+}
+.album-side-right .album-folio,
+.album-side-single .album-folio {
+  right: 1.1rem;
+}
+.album-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem 0.6rem;
+  margin-top: 0.85rem;
+}
+.album-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+.album-slot,
+.album-stuck {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+.album-slot {
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgb(29 42 79 / 0.3);
+  border-radius: 8px;
+  background: rgb(29 42 79 / 0.05);
+  color: rgb(29 42 79 / 0.55);
+}
+/* a pasted sticker sits a little crooked, like a thumb put it there, under a glossy film */
+.album-stuck {
+  display: block;
+  rotate: var(--tilt, 0deg);
+  filter: drop-shadow(0 7px 6px rgb(0 0 0 / 0.22));
+  cursor: pointer;
+  transition:
+    rotate 300ms var(--ease-out-expo),
+    scale 300ms var(--ease-out-expo);
+}
+.album-stuck:hover {
+  rotate: 0deg;
+  scale: 1.04;
+}
+.album-stuck .pcard-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    rgb(255 255 255 / 0.34),
+    rgb(255 255 255 / 0) 26%,
+    rgb(255 255 255 / 0) 62%,
+    rgb(255 255 255 / 0.16) 72%,
+    rgb(255 255 255 / 0) 80%
+  );
+  mix-blend-mode: screen;
+}
+
+/* the cover: album yellow, a green band across it, the best stickers fanned out */
+.album-cover {
+  container-type: inline-size;
+  overflow: hidden;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1.75rem;
+  border-radius: 4px 16px 16px 4px;
+  background:
+    radial-gradient(rgb(0 0 0 / 0.09) 1px, transparent 1.4px) 0 0 / 5px 5px,
+    var(--color-cover);
+  color: var(--color-ink);
+  box-shadow:
+    inset 14px 0 16px -10px rgb(0 0 0 / 0.45),
+    inset 0 0 0 3px rgb(255 255 255 / 0.25),
+    0 34px 50px -26px rgb(0 0 0 / 0.8);
+}
+.album-cover-fan {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 9rem;
+  align-items: center;
+  justify-content: center;
+}
+/* the green band runs behind the stickers only, the type stays on the yellow */
+.album-cover-fan::before {
+  content: '';
+  position: absolute;
+  inset: 24% -40%;
+  rotate: -9deg;
+  background: var(--color-pitch);
+  box-shadow: inset 0 0 0 3px color-mix(in oklch, var(--color-pitch) 70%, white);
+}
+.album-cover-fan > div {
+  position: relative;
+  width: min(30%, 11rem);
+  aspect-ratio: 3 / 4;
+  margin-inline: -3%;
+  rotate: calc(var(--i) * 11deg);
+  translate: 0 calc(var(--i) * var(--i) * 10%);
+}
+
+/* inside cover: the index with dotted leaders, like a printed contents page */
+.album-index-row {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  text-align: left;
+}
+.album-index-row:hover {
+  color: #3b4f8a;
+}
+.album-leader {
+  flex: 1;
+  translate: 0 -0.3em;
+  border-bottom: 2px dotted rgb(29 42 79 / 0.35);
+}
+
+/* group tabs: yellow index tabs standing on the top edge of the book */
+.album-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-bottom: -1.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-inline: 0.5rem;
+}
+.album-tab {
+  flex: none;
+  min-height: 2.75rem;
+  border-radius: 10px 10px 0 0;
+  padding: 0.35rem 0.9rem 0.2rem;
+  background: color-mix(in oklch, var(--color-cover) 82%, black);
+  color: var(--color-ink);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-stretch: 68%;
+  text-transform: uppercase;
+  box-shadow: inset 0 -8px 10px -8px rgb(0 0 0 / 0.45);
+  transition: background-color 160ms ease-out;
+}
+.album-tab:hover {
+  background: var(--color-cover);
+}
+.album-tab-on {
+  background: #f6eedb;
+  box-shadow: none;
+}
+
+/* the turning leaf */
+.album-leaf {
+  z-index: 3;
+  transform: rotateY(calc(var(--p) * -180deg));
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.album-leaf-single {
+  position: relative;
+}
+.album-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.album-face > .album-side {
+  flex: 1;
+}
+.album-face-back {
+  transform: rotateY(180deg);
+}
+.album-shade,
+.album-gloss,
+.album-cast {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+/* the page darkens as it turns away from the light, its back lightens as it lands */
+.album-face-front .album-shade {
+  background: linear-gradient(to right, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
+  opacity: min(1, calc(var(--p) * 2));
+}
+.album-face-back .album-shade {
+  background: linear-gradient(to left, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
+  opacity: min(1, calc((1 - var(--p)) * 2));
+}
+/* a band of light slides across the lifted page */
+.album-gloss {
+  z-index: 6;
+  background: linear-gradient(
+    100deg,
+    transparent 36%,
+    rgb(255 255 255 / 0.6) 49%,
+    rgb(255 255 255 / 0.15) 54%,
+    transparent 64%
+  );
+  background-size: 300% 100%;
+  background-position: calc(100% - var(--p) * 100%) 0;
+  opacity: var(--m);
+  mix-blend-mode: soft-light;
+}
+/* the shadow the leaf throws on the pages beneath, strongest mid-turn */
+.album-cast {
+  z-index: 2;
+  opacity: calc(var(--m) * 0.9);
+}
+.album-cast-left {
+  background: linear-gradient(to left, rgb(0 0 0 / 0.5), transparent 60%);
+}
+.album-cast-right {
+  background: linear-gradient(to right, rgb(0 0 0 / 0.5), transparent 60%);
+}
+.album-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  width: 30px;
+  translate: -50% 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(0 0 0 / 0.22) 42%,
+    rgb(0 0 0 / 0.38) 50%,
+    rgb(0 0 0 / 0.22) 58%,
+    transparent
+  );
+}
+
+/* the page corner: a curled-up flap that grows under the pointer and peeks once on arrival */
+.album-corner {
+  position: absolute;
+  bottom: 0;
+  z-index: 20;
+  width: 3.5rem;
+  height: 3.5rem;
+  cursor: pointer;
+}
+.album-corner::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: linear-gradient(var(--fold), transparent 50%, #c9bb98 50%, #fff8e8 64%, #d9ccab);
+  filter: drop-shadow(-2px -2px 3px rgb(0 0 0 / 0.25));
+  transition:
+    width 260ms var(--ease-out-expo),
+    height 260ms var(--ease-out-expo);
+  animation: corner-peek 1400ms 600ms var(--ease-out-expo) both;
+}
+.album-corner:hover::before {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.album-corner-next {
+  right: 0;
+  --fold: 135deg;
+}
+.album-corner-next::before {
+  right: 0;
+  border-bottom-right-radius: 14px;
+}
+.album-corner-prev {
+  left: 0;
+  --fold: 225deg;
+}
+.album-corner-prev::before {
+  left: 0;
+  border-bottom-left-radius: 14px;
+  filter: drop-shadow(2px -2px 3px rgb(0 0 0 / 0.25));
+}
+@keyframes corner-peek {
+  35% {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+}
+.album-fade {
+  animation: stamp-fade 260ms ease-out both;
+}
+
+@media (min-width: 1024px) {
+  /* the spread fills the screen: the stage takes the height left under the header */
+  .album-stage {
+    container-type: size;
+    display: grid;
+    aspect-ratio: 1.7;
+    max-height: clamp(30rem, calc(100dvh - 19.5rem), 62rem);
+    place-items: center;
+  }
+  /* a spread of two pages a little taller than wide: a 4 × 3 grid of stickers fills each */
+  .album-book[data-wide] {
+    width: min(100cqw, 170cqh);
+    height: min(100cqh, 58.8cqw);
+    grid-template-columns: 1fr 1fr;
+    perspective: 3200px;
+    perspective-origin: 50% 50%;
+  }
+  /* shut, the cover lies centred; it slides back as it swings open */
+  .album-book[data-closed] {
+    translate: -25% 0;
+  }
+  .album-book[data-opening] {
+    translate: calc((var(--p) - 1) * 25%) 0;
+  }
+  .album-leaf-wide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 50%;
+  }
+  .album-book[data-wide] .album-side {
+    padding: clamp(1rem, 2.6cqh, 1.75rem) clamp(1rem, 2.2cqw, 2rem) 2.5rem;
+  }
+  .album-book[data-wide] .album-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: clamp(0.5rem, 2cqh, 1.4rem) clamp(0.5rem, 1.6cqw, 1.25rem);
+    margin-top: clamp(0.6rem, 2cqh, 1.25rem);
+  }
+  .album-book[data-wide] .album-cell {
+    container-type: size;
+    min-height: 0;
+  }
+  .album-book[data-wide] .album-slot,
+  .album-book[data-wide] .album-stuck {
+    width: min(100cqw, 75cqh);
+  }
+  .album-cover {
+    padding: 2.5rem 2.25rem;
+  }
+}
+
+/* ── Sticker in focus (StickerDetail) ── */
+.sd {
+  width: min(64rem, calc(100% - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  overflow-y: auto;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 20px;
+  padding: 0;
+  background: radial-gradient(
+    circle at 22% 30%,
+    color-mix(in oklch, var(--color-pitch) 88%, white),
+    var(--color-pitch-deep) 72%
+  );
+  box-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.8);
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.sd[open] {
+  animation: sd-in 380ms var(--ease-out-expo);
+}
+.sd::backdrop {
+  background: rgb(4 10 7 / 0.74);
+  backdrop-filter: blur(3px);
+}
+.sd-body {
+  position: relative;
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+.sd-stage {
+  display: grid;
+  place-items: center;
+  perspective: 900px;
+}
+.sd-card {
+  position: relative;
+  width: min(62%, 15rem);
+  aspect-ratio: 3 / 4;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 180ms ease-out;
+}
+.sd[open] .sd-card {
+  animation: sd-card 640ms var(--ease-out-expo);
+}
+.sd-card .pcard-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at calc(var(--px, 0.3) * 100%) calc(var(--py, 0.2) * 100%),
+    rgb(255 255 255 / 0.4),
+    transparent 50%
+  );
+  mix-blend-mode: soft-light;
+}
+.sd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.75rem 1.5rem;
+}
+.sd-facts dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-chalk-soft);
+}
+.sd-facts dd {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.sd-attrs {
+  display: grid;
+  column-gap: 1.75rem;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+}
+.sd-attrs > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  padding: 0.5rem 0;
+}
+.sd-attrs dt {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.sd-attrs abbr {
+  flex: none;
+  width: 2.6rem;
+  font-size: 1.1rem;
+  color: var(--color-cover);
+}
+.sd-attrs dt span {
+  font-size: 0.85rem;
+  line-height: 1.25;
+  color: var(--color-chalk-soft);
+}
+.sd-attrs dd {
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+@keyframes sd-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+}
+@keyframes sd-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sd-card {
+  from {
+    opacity: 0;
+    transform: rotateY(-28deg) rotateZ(-5deg) scale(0.86);
+  }
+}
+@media (min-width: 768px) {
+  .sd-body {
+    grid-template-columns: minmax(16rem, 23rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 2.5rem;
+    padding: 2rem 2.25rem;
+  }
+  .sd-card {
+    width: 100%;
+  }
+  .sd-attrs {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+/* phones: a bottom sheet */
+@media (max-width: 767px) {
+  .sd {
+    width: 100%;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sd[open] {
+    animation: sd-sheet 380ms var(--ease-out-expo);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .album-stuck,
+  .sd-card {
+    transition: none;
+  }
+  .album-corner::before {
+    animation: none;
+  }
+  .sd[open],
+  .sd[open] .sd-card {
+    animation: stamp-fade 200ms ease-out both;
+  }
+}
+/* ── end Album ── */
+
+/* Stats: the trophy rail. One brass rail on a dark shelf, a plaque per title; the current one is lit. */
+.trophy-shelf {
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.18));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    inset 0 -6px 0 rgb(60 38 20 / 0.55);
+}
+@media (max-width: 639px) {
+  .trophy-shelf {
+    border-radius: 0;
+  }
+}
+.trophy-rail {
+  position: relative;
+  scrollbar-width: none;
+}
+.trophy-rail::before {
+  content: '';
+  position: absolute;
+  top: calc(0.75rem + 2.25rem - 2px);
+  left: 2rem;
+  width: max(calc(100% - 4rem), calc(10 * 4.25rem - 2rem));
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #e7c26a, #8a6a2c);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.5);
+}
+/* The member card's field: a faint printed guilloche, like a club card. */
+.member-field {
+  background-image:
+    repeating-linear-gradient(-35deg, rgb(0 0 0 / 0.045) 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse 80% 90% at 85% 10%, rgb(255 255 255 / 0.35), transparent 60%);
+}
+.trophy-plaque {
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow:
+    0 6px 10px -4px rgb(0 0 0 / 0.6),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+.trophy-lit {
+  background: radial-gradient(ellipse 120% 90% at 50% 38%, rgb(255 214 150 / 0.3), transparent 70%);
+}
+
+/* Conta: the club's membership desk, a wooden counter with paper slips on it. */
+.desk {
+  border-radius: 18px;
+  padding: 1rem;
+  background:
+    repeating-linear-gradient(
+      92deg,
+      rgb(0 0 0 / 0.06) 0 2px,
+      transparent 2px 9px,
+      rgb(255 255 255 / 0.03) 9px 10px,
+      transparent 10px 17px
+    ),
+    linear-gradient(180deg, #5a3a22, #3f2716);
+  box-shadow:
+    0 30px 50px -24px rgb(0 0 0 / 0.75),
+    inset 0 2px 0 rgb(255 255 255 / 0.08);
+}
+/* Entrar: the ticket gate. A dark stub with the club's offer, a paper slip with the form, a
+   perforated tear line between them with a notch bitten out at each end. */
+.gate {
+  box-shadow:
+    0 34px 60px -24px rgb(0 0 0 / 0.8),
+    0 3px 6px rgb(0 0 0 / 0.35);
+}
+.gate-stub {
+  background:
+    repeating-linear-gradient(-35deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 8px),
+    radial-gradient(ellipse 90% 70% at 15% 0%, rgb(255 214 150 / 0.14), transparent 65%),
+    var(--color-pitch-deep);
+}
+.gate-slip {
+  background-image: radial-gradient(
+    ellipse 80% 60% at 100% 0%,
+    rgb(255 255 255 / 0.6),
+    transparent 70%
+  );
+}
+.gate-slip::before,
+.gate-slip::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--color-pitch-deep) 92%, black);
+}
+/* phones: the tear runs across, notches left and right */
+.gate-slip {
+  border-top: 3px dashed color-mix(in oklch, var(--color-ink) 30%, transparent);
+}
+.gate-slip::before {
+  top: -14px;
+  left: -13px;
+}
+.gate-slip::after {
+  top: -14px;
+  right: -13px;
+}
+@media (min-width: 768px) {
+  .gate-slip {
+    border-top: 0;
+    border-left: 3px dashed color-mix(in oklch, var(--color-ink) 30%, transparent);
+  }
+  .gate-slip::before {
+    top: -13px;
+    left: -14px;
+  }
+  .gate-slip::after {
+    top: auto;
+    right: auto;
+    bottom: -13px;
+    left: -14px;
+  }
+}
+.form-slip {
+  border-radius: 6px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: 0 10px 18px -10px rgb(0 0 0 / 0.6);
+}
+/* ── Career Path level: the locker room ──────────────────────────────────────────────────── */
+/*
+ * The level happens in the home's locker room (.scene-art), at night: the passport open on the
+ * bench under the lamp. On phones the room stays faint behind the one-handed layout; from lg the
+ * passport lies open as a spread (inside cover with clues and tries, visa page with stamps) and
+ * the guess dock sits on the bench edge at the bottom of the scene.
+ */
+.cp-room {
+  --scene-art: url('/img/vestiario-night.webp');
+  --scene-night: 1;
+  --px: 0;
+  --py: 0;
+  /* phones: the room in shadow behind the passport, the pitch lines hidden under it */
+  filter: brightness(0.42) saturate(0.85);
+}
+.cp-leaf {
+  background:
+    radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
+    radial-gradient(circle at 70% 15%, #7a2633, #5b1a24 55%, #3d1018);
+  box-shadow: inset -16px 0 20px -12px rgb(0 0 0 / 0.55);
+  color: #e7c26a;
+}
+@media (min-width: 64rem) {
+  .cp-room {
+    filter: none;
+  }
+  .cp-frame[data-spread] {
+    max-width: none;
+    display: grid;
+    place-items: center;
+    container-type: size;
+  }
+  /* a passport spread is about 1.7:1; it takes the stage, bounded by both axes */
+  .cp-frame[data-spread] .cp-book {
+    position: relative;
+    inset: auto;
+    width: min(100cqw, 170cqh);
+    height: min(100cqh, 58.8cqw);
+    filter: drop-shadow(0 30px 26px rgb(0 0 0 / 0.6));
+    transition: translate 1100ms cubic-bezier(0.6, 0.05, 0.25, 1);
+  }
+  /* shut, the cover lies centred on the bench; it slides left as it swings open */
+  .cp-frame[data-spread]:not([data-open]) .cp-book {
+    translate: -25% 0;
+  }
+  .cp-frame[data-spread] .cp-leaf {
+    position: absolute;
+    inset: 0 50% 0 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px 6px 6px 14px;
+    padding: clamp(1.5rem, 5cqh, 3rem);
+    transition: opacity 0s 500ms;
+  }
+  .cp-frame[data-spread]:not([data-open]) .cp-leaf {
+    opacity: 0;
+    transition: none;
+  }
+  .cp-frame[data-spread] .cp-right {
+    left: 50%;
+  }
+  /* the dock sits under the book here, so the stamps take the whole page */
+  .cp-frame[data-spread] .cp-right ol {
+    bottom: 0.625rem;
+  }
+  .cp-frame[data-spread] .cp-brand {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-frame[data-spread] .cp-book {
+    transition: none;
+  }
+}
+/* ── end Career Path level ───────────────────────────────────────────────────────────────── */
+
+/* ── Header, tab bar and Ajustes: the stadium scoreboard ─────────────────────────────────── */
+@layer components {
+  /* Black glass with a fine LED grid, lit from above; a gold hairline is the floodlight's edge. */
+  .scoreboard {
+    background:
+      radial-gradient(rgb(255 255 255 / 0.045) 0.7px, transparent 1.1px) 0 0 / 4px 4px,
+      linear-gradient(180deg, oklch(0.2 0.03 155), oklch(0.13 0.022 155));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      inset 0 -1px 0 rgb(0 0 0 / 0.45);
+  }
+  .floodlit {
+    position: relative;
+  }
+  .floodlit::before {
+    content: '';
+    position: absolute;
+    inset-inline: 8%;
+    top: 0;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--color-cover) 70%, transparent) 50%,
+      transparent
+    );
+  }
+  /* The active place: the bar on its edge and the light it throws onto the tab. */
+  .tab-lit {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--color-cover) 16%, transparent),
+      transparent 75%
+    );
+  }
+  @media (width >= 40rem) {
+    .tab-lit {
+      background: linear-gradient(
+        0deg,
+        color-mix(in oklch, var(--color-cover) 14%, transparent),
+        transparent 80%
+      );
+    }
+  }
+}
+
+/* Ajustes: a sheet from the bottom on phones, a panel under the header from 640px. */
+.settings-sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(88dvh, 46rem);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-top: 1px solid color-mix(in oklch, var(--color-cover) 45%, transparent);
+  border-radius: 18px 18px 0 0;
+  background: var(--color-pitch-deep);
+  box-shadow: 0 -24px 60px -20px rgb(0 0 0 / 0.75);
+}
+.settings-sheet[open] {
+  animation: sheet-up 420ms var(--ease-out-expo);
+}
+@media (width >= 40rem) {
+  .settings-sheet {
+    margin: 5.5rem max(2rem, calc((100vw - 80rem) / 2 + 2rem)) auto auto;
+    width: 26rem;
+    max-height: calc(100dvh - 7rem);
+    border: 1px solid color-mix(in oklch, var(--color-chalk) 12%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 28px 60px -18px rgb(0 0 0 / 0.75);
+  }
+  .settings-sheet[open] {
+    transform-origin: top right;
+    animation: panel-drop 280ms var(--ease-out-expo);
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes panel-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+
+/* Volume fader: the lit part is the level (--v); a 44px target around a 6px rail. */
+.fader {
+  appearance: none;
+  height: 2.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+.fader:disabled {
+  cursor: not-allowed;
+}
+.fader::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-cover) var(--v),
+    color-mix(in oklch, var(--color-chalk) 16%, transparent) var(--v)
+  );
+}
+.fader::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-cover) var(--v),
+    color-mix(in oklch, var(--color-chalk) 16%, transparent) var(--v)
+  );
+}
+.fader::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border: 3px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-chalk);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+.fader::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-chalk);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+/* Ajustes › Reduzir animações: every animation and transition ends at once. */
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* A closed mode (ModeDialog): a bottom sheet on phones, a centred two-column panel from 768px. */
+.mode-sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(92dvh, 52rem);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-top: 1px solid color-mix(in oklch, var(--color-cover) 45%, transparent);
+  border-radius: 18px 18px 0 0;
+  background: var(--color-pitch-deep);
+  box-shadow: 0 -24px 60px -20px rgb(0 0 0 / 0.75);
+}
+.mode-sheet[open] {
+  animation: sheet-up 420ms var(--ease-out-expo);
+}
+@media (width >= 48rem) {
+  .mode-sheet {
+    margin: auto;
+    width: min(60rem, calc(100vw - 4rem));
+    max-height: calc(100dvh - 4rem);
+    border: 1px solid color-mix(in oklch, var(--color-chalk) 12%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 28px 60px -18px rgb(0 0 0 / 0.75);
+  }
+  .mode-sheet[open] {
+    animation: panel-drop 280ms var(--ease-out-expo);
+  }
+}
+/* each mode's share of the votes, as a faint bar behind its row */
+.vote-row {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-cover) calc(var(--share) * 100%),
+    color-mix(in oklch, var(--color-chalk) 8%, transparent) 0
+  );
+  background-size: calc(100% - 2.5rem) 3px;
+  background-position: 2.5rem 100%;
+  background-repeat: no-repeat;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mode-sheet[open] {
+    animation: none;
+  }
+}
+
+/* ── First run: the welcome to the club, in the locker room ──────────────────────────────── */
+.welcome {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  background: var(--color-pitch-deep);
+}
+.welcome::backdrop {
+  background: var(--color-pitch-deep);
+}
+/* the locker room under its floodlight, out of focus behind the choices */
+.welcome-art {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 0%, rgb(255 214 150 / 0.2), transparent 70%),
+    linear-gradient(
+      180deg,
+      transparent 30%,
+      color-mix(in oklch, var(--color-pitch-deep) 92%, transparent) 85%
+    ),
+    var(--scene-art) center 40% / cover no-repeat,
+    #0d120f;
+  filter: brightness(0.55) saturate(0.9);
+}
+.welcome-body {
+  position: relative;
+  display: flex;
+  min-height: 100%;
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vh, 2.75rem);
+  padding: max(1.5rem, env(safe-area-inset-top)) 1rem max(1.5rem, env(safe-area-inset-bottom));
+}
+@media (width >= 40rem) {
+  .welcome-body {
+    padding-inline: 2rem;
+  }
+}
+.welcome-panel {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    0 34px 60px -24px rgb(0 0 0 / 0.8),
+    0 3px 6px rgb(0 0 0 / 0.35);
+}
+.welcome-card {
+  width: min(100%, 17rem);
+}
+@media (width >= 40rem) {
+  .welcome-card {
+    width: min(100%, 24rem);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* the one moment: the floodlight comes up, the choices rise into it, the card is pasted last */
+  .welcome[open] .welcome-art {
+    animation: welcome-light 1100ms var(--ease-out-expo) both;
+  }
+  .welcome[open] .welcome-body > * {
+    animation: welcome-rise 600ms var(--ease-out-expo) both;
+  }
+  .welcome[open] .welcome-body > :nth-child(2) {
+    animation-delay: 120ms;
+  }
+  .welcome[open] .welcome-card {
+    animation: welcome-paste 520ms 380ms var(--ease-out-expo) both;
+  }
+}
+@keyframes welcome-light {
+  from {
+    filter: brightness(0.15) saturate(0.6);
+  }
+}
+@keyframes welcome-rise {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+@keyframes welcome-paste {
+  from {
+    opacity: 0;
+    scale: 1.08;
+    rotate: 3deg;
+  }
 }

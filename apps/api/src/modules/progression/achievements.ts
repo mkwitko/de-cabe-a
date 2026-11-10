@@ -43,7 +43,8 @@ const RULES: Rule[] = [
   {
     id: 'titular',
     category: 'progressao',
-    name: 'Titular',
+    // Not "Titular": that is a title at 50 stars.
+    name: 'Bola cheia',
     description: 'Junte 50 estrelas.',
     goal: 50,
     measure: stars,
@@ -59,7 +60,8 @@ const RULES: Rule[] = [
   {
     id: 'lenda',
     category: 'progressao',
-    name: 'Lenda',
+    // Not "Lenda": that is a title at 400 stars now.
+    name: 'Mil estrelas',
     description: 'Junte 1.000 estrelas.',
     goal: 1000,
     measure: stars,

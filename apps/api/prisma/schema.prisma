@@ -349,6 +349,7 @@ model User {
   sessions     GuestSession[]
   authSessions AuthSession[]
   accounts     Account[]
+  modeVote     ModeVote?
 }
 
 /// Better Auth session (sign-in state). Game progress stays on GuestSession (ADR-004).
@@ -774,4 +775,14 @@ model RoundCheck {
   monday DateTime @db.Date
 
   @@id([pk, monday])
+}
+
+/// The closed mode an account wants opened next (one current vote per account; voting again moves it).
+model ModeVote {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mode      String /// VotableMode in @decabeca/contracts
+  updatedAt DateTime @updatedAt
+
+  @@index([mode])
 }

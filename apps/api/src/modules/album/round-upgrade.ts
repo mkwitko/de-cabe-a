@@ -37,9 +37,9 @@ export async function applyRoundUpgrades(prisma: PrismaClient, pks: string[], no
   const byId = new Map(challenges.map((c) => [c.id, c]));
   const topByMonday = new Map<string, boolean>();
   for (const monday of new Set(open.map((r) => r.monday))) {
-    const ranked = (await roundRows(prisma, monday)).sort(
-      (a, b) => b.stars - a.stars || b.score - a.score || a.pk.localeCompare(b.pk),
-    );
+    const ranked = (await roundRows(prisma, monday))
+      .filter((r) => r.account)
+      .sort((a, b) => b.stars - a.stars || b.score - a.score || a.pk.localeCompare(b.pk));
     topByMonday.set(
       monday,
       ranked.slice(0, TOP).some((r) => pks.includes(r.pk)),

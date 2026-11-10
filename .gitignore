@@ -17,3 +17,6 @@ apps/api/src/generated/
 content.sql.gz
 backups/
 .superpowers/
+scripts/research/.cache/
+# holds the VAPID private key, local only
+deploy/SETUP-PUSH.md

@@ -83,7 +83,7 @@ describe('missing-xi engine', () => {
     s = missingXi.submit(s, { kind: 'give_up' }, cfg).state;
     expect(missingXi.isCompleted(s)).toBe(true);
     expect(missingXi.buildShareText(s, cfg, { label: 'Escalação 1', url: 'u' })).toBe(
-      'De Cabeça · Escalação 1 · 1/8\n🟩⬛⬛⬛⬛⬛⬛⬛\nu',
+      'De Cabeça F.C. · Escalação 1 · 1/8\n🟩⬛⬛⬛⬛⬛⬛⬛\nu',
     );
   });
 

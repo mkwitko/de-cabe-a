@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { titleFor } from '@decabeca/engine';
 import { achievements, type AchievementInput } from './achievements';
 
 const a = (over: Partial<AchievementInput['attempts'][number]> = {}) => ({
@@ -39,5 +40,11 @@ describe('achievements (GROWTH_PLAN.md 2.3)', () => {
     expect(byId.relogio!.progress).toBe(0);
     expect(byId.resenha).toMatchObject({ progress: 3, done: false });
     expect(byId.fregues!.progress).toBe(1);
+  });
+
+  it('no achievement shares its name with a title', () => {
+    const titles = new Set(Array.from({ length: 1001 }, (_, n) => titleFor(n).name));
+    const empty = { attempts: [], dailyModes: new Map(), biggestLeague: 0 };
+    expect(achievements(empty).filter((x) => titles.has(x.name))).toEqual([]);
   });
 });

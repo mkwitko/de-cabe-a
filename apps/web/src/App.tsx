@@ -1,24 +1,22 @@
-import { SoundToggle } from './components/SoundToggle';
-import { HomeCarousel } from './components/HomeCarousel';
+import { SettingsButton, SettingsDialog } from './components/Settings';
+import { sceneFor, setScene } from './lib/music';
+import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
-import { StarIcon } from './components/Stars';
-import { DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
-import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
-import {
-  lazy,
-  Suspense,
-  useRef,
-  type CSSProperties,
-  type PointerEvent,
-  type ReactNode,
-} from 'react';
+import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
+import { AD_SLOTS, AdSlot } from './components/AdSlot';
+import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
+import { FirstRun } from './components/Welcome';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
-import type { GamesResponse } from '@decabeca/contracts';
-import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
-import type { GameMode } from '@decabeca/contracts';
+import { Crest } from './components/Crest';
+import { SignInButton } from './components/SignInButton';
+import { ComingSoonPage } from './pages/ComingSoonPage';
+import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/launch';
+import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
+import type { GameMode, VotableMode } from '@decabeca/contracts';
 import { TrackPage } from './pages/TrackPage';
 import { ModeGate } from './games/Clock';
-import { btnPrimary, btnSecondary, Skeleton, useOnline } from './components/ui';
+import { btnSecondary, Skeleton, useOnline } from './components/ui';
 
 const AdminApp = lazy(() => import('./admin/AdminApp'));
 // Each screen loads on demand: the first visit downloads only the shell and the home.
@@ -34,6 +32,10 @@ const HistoryPage = lazy(() =>
 );
 const RankingPage = lazy(() =>
   import('./pages/RankingPage').then((m) => ({ default: m.RankingPage })),
+);
+const TermsPage = lazy(() => import('./pages/TermsPage').then((m) => ({ default: m.TermsPage })));
+const CookiesPage = lazy(() =>
+  import('./pages/CookiesPage').then((m) => ({ default: m.CookiesPage })),
 );
 const PrivacyPage = lazy(() =>
   import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
@@ -213,187 +215,148 @@ export const GAMES = [
   },
 ] as const;
 
-/** Brand sticker: tilts and catches the light under the pointer (off with reduced motion). */
-function BrandSticker() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  function onMove(e: PointerEvent<HTMLDivElement>) {
-    const el = ref.current;
-    if (!el || e.pointerType !== 'mouse') return;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty('--mx', String((e.clientX - r.left) / r.width));
-    el.style.setProperty('--my', String((e.clientY - r.top) / r.height));
-  }
-
-  function onLeave() {
-    ref.current?.style.setProperty('--mx', '0.5');
-    ref.current?.style.setProperty('--my', '0.5');
-  }
-
-  return (
-    <div
-      ref={ref}
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
-      style={{ '--mx': 0.5, '--my': 0.5 } as CSSProperties}
-      className="group relative w-fit max-w-full shrink-0 -rotate-2 rounded-[10px] bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] transition-transform duration-500 ease-out-expo motion-safe:[transform:perspective(900px)_rotate(-2deg)_rotateX(calc((0.5-var(--my))*10deg))_rotateY(calc((var(--mx)-0.5)*12deg))]"
-    >
-      <div className="relative overflow-hidden rounded-[5px] bg-cover px-5 pt-4 pb-5 text-ink">
-        <h1 className="font-condensed text-[clamp(3rem,14vw,5.5rem)] leading-[0.85] font-black tracking-[-0.02em] whitespace-nowrap uppercase">
-          De Cabeça
-        </h1>
-        <p className="mt-3 text-sm font-semibold">Minijogos de futebol</p>
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 mix-blend-soft-light transition-opacity duration-500 group-hover:opacity-100 motion-reduce:hidden"
-          style={{
-            background:
-              'radial-gradient(circle at calc(var(--mx)*100%) calc(var(--my)*100%), rgb(255 255 255 / 0.9), transparent 55%)',
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-export function Home({ games }: { games?: GamesResponse | undefined }) {
-  // The game with the most progress that still has a level to play: one tap back into it.
-  const resume = games?.games
-    .filter((g) => g.completed > 0 && g.nextLevel)
-    .sort((a, b) => b.completed - a.completed)[0];
-  return (
-    <>
-      <header className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-10">
-        <BrandSticker />
-        <p className="max-w-[34ch] text-lg leading-snug font-medium text-chalk sm:pb-3 sm:text-xl">
-          Pra quem sabe a escalação de cor. Fase por fase, estrela por estrela, até virar lenda.
-        </p>
-      </header>
-
-      <Link
-        to="/d/hoje"
-        className="mt-10 flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:p-6"
-      >
-        <span className="flex min-w-0 flex-col">
-          <span className="font-condensed text-3xl leading-none font-black uppercase sm:text-4xl">
-            Desafio do Dia
-          </span>
-          <span className="mt-1.5 font-semibold">
-            Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
-          </span>
-        </span>
-        <span className={`${btnPrimary} shrink-0`}>Jogar</span>
-      </Link>
-
-      {/* Modo Carreira: the stars from every game train the player's own footballer. */}
-      <Link
-        to="/carreira"
-        className="mt-6 flex flex-col gap-2 rounded-2xl bg-cover p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-      >
-        <span>
-          <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
-            Modo Carreira
-          </span>
-          <span className="mt-1.5 block font-semibold">
-            Crie seu craque e leve ele da base à Europa. Cada estrela que você ganha nos jogos vira
-            treino.
-          </span>
-        </span>
-        <span className="font-condensed self-start rounded-lg bg-ink px-5 py-3 text-lg font-extrabold text-paper uppercase sm:self-center">
-          Jogar
-        </span>
-      </Link>
-
-      <Link
-        to="/copa"
-        className="mt-6 flex flex-col gap-2 rounded-2xl border-2 border-cover p-5 transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-      >
-        <span>
-          <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
-            Copa dos Sonhos
-          </span>
-          <span className="mt-1.5 block font-semibold text-chalk-soft">
-            Monte um time com craques de todas as Copas e tente ser campeão contra seleções
-            históricas.
-          </span>
-        </span>
-        <span className={`${btnPrimary} self-start sm:self-center`}>Montar time</span>
-      </Link>
-
-      <Link
-        to="/oficina"
-        className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
-      >
-        <span className="flex min-w-0 flex-col">
-          <span className="font-condensed text-2xl font-black uppercase">Oficina</span>
-          <span className="text-sm font-semibold text-chalk-soft">
-            Grids da comunidade, eventos e o seu próprio desafio
-          </span>
-        </span>
-        <span className={`${btnSecondary} shrink-0`}>Abrir</span>
-      </Link>
-
-      {resume && (
-        <Link
-          to={`${GAME_PATH[resume.mode]}/${resume.nextLevel}`}
-          className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
-        >
-          <span className="flex min-w-0 flex-col">
-            <span className="font-condensed truncate text-2xl font-black uppercase">
-              {resume.name} · Fase {resume.nextLevel}
-            </span>
-            <span className="text-sm font-semibold text-chalk-soft">Continuar de onde parei</span>
-          </span>
-          <span className={`${btnPrimary} shrink-0`}>Jogar</span>
-        </Link>
-      )}
-
-      <HomeCarousel catalog={GAMES} games={games} />
-    </>
-  );
-}
-
-/** The player's standing at a glance: title, stars, ranking and what the next title needs. */
-function PlayerStrip() {
-  const { data } = useStats();
-  if (!data) return null;
+/** Entrar for guests, the initial as an avatar once signed in (to the profile). */
+function AccountLink() {
+  const { data: me } = useMe();
+  if (!me?.account)
+    return (
+      <SignInButton
+        className={`${btnSecondary} min-h-10 shrink-0 border-cover/70 px-3 text-base text-cover hover:border-cover sm:px-4 sm:text-lg`}
+      />
+    );
+  const who = me.nickname ?? me.account.email;
   return (
     <Link
       to="/stats"
-      className="mt-8 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-1 rounded-xl bg-chalk/[0.06] p-4 hover:bg-chalk/[0.09] sm:grid-cols-[auto_auto_auto_1fr] sm:gap-x-8"
+      aria-label="Meu perfil"
+      className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase ring-2 ring-cover/30 ring-offset-2 ring-offset-pitch-deep"
     >
-      <span className="font-condensed row-span-2 text-4xl leading-none font-black text-cover uppercase sm:row-span-1">
-        {data.title.name}
-      </span>
-      <span className="font-condensed tabular text-xl font-bold">
-        <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {data.totalStars} estrelas
-      </span>
-      <span className="font-condensed tabular text-xl font-bold">
-        {data.rank.all ? `${data.rank.all}º no ranking` : 'Fora do ranking'}
-      </span>
-      <span className="col-span-2 text-sm text-chalk-soft sm:col-span-1 sm:text-right">
-        {data.title.next
-          ? `Faltam ${data.title.next.missing} estrelas para ${data.title.next.name}`
-          : 'Título máximo. Lenda!'}
-      </span>
+      {who?.[0] ?? '?'}
     </Link>
   );
 }
 
+/** Crest, name and tagline; the page heading on the home, a link home everywhere else. */
+function Brand({ home }: { home: boolean }) {
+  const H = home ? 'h1' : 'span';
+  return (
+    <Link
+      to="/"
+      className="flex min-h-11 min-w-0 items-center gap-2.5"
+      aria-label={home ? undefined : 'De Cabeça F.C., início'}
+    >
+      <Crest className="h-9 w-8 shrink-0 drop-shadow-[0_2px_3px_rgb(0_0_0/0.5)]" />
+      <div className="min-w-0">
+        <H className="font-condensed block text-lg leading-[0.95] font-black whitespace-nowrap uppercase min-[400px]:text-xl lg:text-2xl">
+          De Cabeça F.C.
+        </H>
+        <span className="mt-0.5 hidden text-xs leading-tight font-semibold whitespace-nowrap text-chalk-soft min-[400px]:block">
+          Minijogos de futebol
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+/** Pages that are still closed; they get a poster next to the closed modes and do not open. */
+const SOON_EXTRA: {
+  name: string;
+  page: 'career' | 'copa' | 'oficina';
+  rule: string;
+  howTo: string[];
+}[] = [
+  {
+    name: 'Modo Carreira',
+    page: 'career',
+    rule: 'Seu próprio jogador, da base à Europa. Quem treina ele é você: as estrelas que você ganha nos jogos viram evolução.',
+    howTo: [
+      'Crie seu craque: nome e posição.',
+      'Cada estrela ganha nos jogos vira treino para os atributos dele.',
+      'Jogue a temporada e suba da base até a Europa.',
+    ],
+  },
+  {
+    name: 'Copa dos Sonhos',
+    page: 'copa',
+    rule: 'Monte um XI com craques das grandes seleções e dispute uma Copa contra as lendas. As notas vêm da história de cada um em Copas.',
+    howTo: [
+      'Em cada posição, escolha 1 de 4 craques das grandes seleções.',
+      'Quem jogou junto de verdade dá entrosamento ao time.',
+      'Escolha a tática de cada jogo e dispute a Copa contra seleções lendárias.',
+    ],
+  },
+  {
+    name: 'Oficina',
+    page: 'oficina',
+    rule: 'Monte o seu próprio Football Grid com os nossos dados e desafie a galera.',
+    howTo: [
+      'Escolha as linhas e colunas: clubes, seleções ou posições.',
+      'O servidor confere: cada cruzamento precisa de pelo menos 8 respostas certas.',
+      'Aprovada por um editor, sua grade entra na Oficina para a galera jogar e votar.',
+    ],
+  },
+];
+
+/** The hook on each closed mode's poster: what the mode is, in a few words. */
+const PITCH: Record<VotableMode, string> = {
+  FOOTBALL_GRID: 'Um craque por cruzamento',
+  IMPOSTOR: 'Ache quem nunca jogou lá',
+  TIMELINE: 'Os clubes na ordem certa',
+  HIGHER_LOWER: 'Quem fez mais pelo clube?',
+  MISSING_XI: 'O XI de uma final de Copa',
+  MYSTERY_PLAYER: 'Cada palpite dá uma pista',
+  CONNECTIONS: '16 nomes, 4 grupos',
+  DRAFT: 'Um 4-3-3 de titulares reais',
+  career: 'Seu craque, da base à Europa',
+  copa: 'Um XI de lendas na Copa',
+  oficina: 'Crie seu próprio Grid',
+};
+
+/**
+ * The home is one scene: the Career Path passport open on the locker-room bench, the next-level
+ * ticket clipped to it, and the closed modes as premiere posters on the wall; each opens to what
+ * the mode is and a vote for the one that opens next.
+ */
+export function Home() {
+  const modes: Locker[] = GAMES.flatMap((g) =>
+    g.mode === 'CAREER_PATH' || isModeLaunched(g.mode)
+      ? []
+      : [
+          {
+            key: g.mode,
+            name: g.name,
+            rule: g.rule,
+            pitch: PITCH[g.mode],
+            howTo: g.howTo,
+          },
+        ],
+  );
+  const extra: Locker[] = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x) => ({
+    key: x.page,
+    name: x.name,
+    rule: x.rule,
+    pitch: PITCH[x.page],
+    howTo: x.howTo,
+  }));
+  return <LockerRoom lockers={[...modes, ...extra]} />;
+}
+
 function HomeRoute() {
-  const { data } = useGames();
   return (
     <>
-      <Home games={data} />
-      <PlayerStrip />
+      <Home />
       <div className="mt-10">
         <AdSlot slot={AD_SLOTS.home} />
       </div>
       <p className="mt-10 text-center text-sm text-chalk-soft">
-        <Link to="/privacidade" className="underline underline-offset-4 hover:text-chalk">
-          Privacidade
-        </Link>
-        {' · '}
+        {isPageLaunched('daily') && (
+          <>
+            <Link to="/d/hoje" className="underline underline-offset-4 hover:text-chalk">
+              Desafio do Dia
+            </Link>
+            {' · '}
+          </>
+        )}
         <Link to="/como-jogar" className="underline underline-offset-4 hover:text-chalk">
           Como jogar
         </Link>
@@ -407,11 +370,11 @@ function HomeRoute() {
 }
 
 /**
- * Four places, each the home of a few pages: Jogos (home, tracks, levels, Modo Carreira),
- * Desafio (Desafio do Dia and its round), Ranking (ranking, seasons, leagues), Perfil (stats,
- * history, account and preferences, public profiles).
+ * Four places when everything is open, each the home of a few pages: Jogos (home, tracks, levels,
+ * Modo Carreira), Desafio, Ranking (ranking, seasons, leagues), Perfil (stats, history, account,
+ * public profiles). At launch only three: Jogar, Álbum, Perfil.
  */
-const NAV = [
+const NAV_ALL = [
   {
     to: '/',
     label: 'Jogos',
@@ -434,55 +397,84 @@ const NAV = [
   },
 ] as const;
 
+const NAV_LAUNCH = [
+  {
+    to: '/',
+    label: 'Jogar',
+    Icon: GamesIcon,
+    match: (p: string) => !/^\/(album|stats|history|conta|perfil)(\/|$)/.test(p),
+  },
+  { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },
+  {
+    to: '/stats',
+    label: 'Perfil',
+    Icon: ProfileIcon,
+    match: (p: string) => /^\/(stats|history|conta|perfil)(\/|$)/.test(p),
+  },
+] as const;
+
+const NAV = LAUNCH_ALL ? NAV_ALL : NAV_LAUNCH;
+
 function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const { pathname } = useLocation();
   const home = pathname === '/';
+  const level = sceneFor(pathname) === 'level';
+  useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
-      <nav
-        aria-label="Principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none"
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
+      {/* The scoreboard strip, the same 56px on every route: crest, places, Ajustes, Entrar.
+          On the phone the places are the bottom bar; inside a level the game owns the phone
+          screen (its height is measured without this strip), so only the bottom bar stays. */}
+      <header
+        className={`scoreboard floodlit mb-3 h-14 items-center gap-3 rounded-2xl border border-chalk/10 pr-1.5 pl-3 shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)] sm:flex sm:gap-4 sm:pl-4 lg:gap-6 ${level ? 'max-sm:contents' : 'flex'}`}
       >
-        <ul className="mx-auto grid h-16 max-w-xl grid-cols-4 sm:flex sm:h-auto sm:max-w-7xl sm:items-center sm:justify-end sm:gap-7">
-          {!home && (
-            <li className="mr-auto hidden sm:block">
-              <Link to="/" className="font-condensed text-2xl font-black uppercase">
-                De Cabeça
-              </Link>
-            </li>
-          )}
-          {NAV.map(({ to, label, Icon, match }) => {
-            const active = match(pathname);
-            return (
-              <li key={to} className="flex">
-                <Link
-                  to={to}
-                  aria-current={active ? 'page' : undefined}
-                  className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-lg sm:font-extrabold sm:uppercase ${active ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`}
-                >
-                  {/* active marker: a short cover bar on top of the phone tab, under the word on wide screens */}
-                  <span
-                    aria-hidden="true"
-                    className={`absolute top-0 h-[3px] w-8 rounded-b-full bg-cover transition-opacity duration-150 sm:top-auto sm:bottom-0 sm:w-full sm:rounded-full ${active ? 'opacity-100' : 'opacity-0'}`}
-                  />
-                  <Icon className="size-[22px] sm:hidden" />
-                  {label}
-                </Link>
-              </li>
-            );
-          })}
-          <li className="hidden sm:block">
-            <SoundToggle />
-          </li>
-        </ul>
-      </nav>
+        <div className={`min-w-0 ${level ? 'max-sm:hidden' : ''}`}>
+          <Brand home={home} />
+        </div>
+        <nav
+          aria-label="Principal"
+          className="scoreboard floodlit fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:static sm:mx-auto sm:self-stretch sm:bg-none sm:pb-0 sm:shadow-none sm:before:hidden"
+        >
+          <ul
+            className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}
+          >
+            {NAV.map(({ to, label, Icon, match }) => {
+              const active = match(pathname);
+              return (
+                <li key={to} className="flex">
+                  <Link
+                    to={to}
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:flex-row sm:gap-2 sm:px-3 sm:text-base sm:font-extrabold sm:uppercase lg:px-4 lg:text-lg ${active ? 'tab-lit text-gold' : 'text-chalk-soft hover:text-chalk'}`}
+                  >
+                    {/* the lit bar: the phone tab's top edge, the strip's floor on wide screens */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute top-0 h-[3px] w-10 rounded-b-full bg-cover transition-[opacity,scale] duration-200 ease-[var(--ease-out-expo)] sm:top-auto sm:bottom-0 sm:w-[calc(100%-1rem)] sm:rounded-t-full sm:rounded-b-none ${active ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0'}`}
+                    />
+                    <Icon className="size-[22px] sm:size-5" />
+                    {label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div
+          className={`ml-auto flex shrink-0 items-center gap-1 sm:ml-0 sm:gap-2 ${level ? 'max-sm:hidden' : ''}`}
+        >
+          <SettingsButton />
+          <AccountLink />
+        </div>
+      </header>
+      <SettingsDialog />
       {!online && (
         <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
           Sem conexão. As jogadas voltam quando a internet voltar.
         </p>
       )}
-      <main className={home ? 'pt-6 sm:pt-4' : ''}>{children}</main>
+      <main>{children}</main>
     </div>
   );
 }
@@ -504,55 +496,67 @@ export function App() {
 }
 
 function PublicRoutes() {
+  const closed = closedRoute(useLocation().pathname);
   return (
     <Shell>
       <RouteMeta />
       <Suspense fallback={<Skeleton className="h-96" />}>
-        <Routes>
-          <Route path="/" element={<HomeRoute />} />
-          <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
-          <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
-          <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
-          <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
-          <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
-          <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
-          <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
-          <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
-          <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
-          <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
-          <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
-          <Route path="/craque-misterioso/:level" element={<LevelRoute mode="MYSTERY_PLAYER" />} />
-          <Route path="/draft" element={<TrackPage mode="DRAFT" />} />
-          <Route path="/draft/:level" element={<LevelRoute mode="DRAFT" />} />
-          <Route path="/conexoes" element={<TrackPage mode="CONNECTIONS" />} />
-          <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
-          <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
-          <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
-          <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
-          <Route path="/d/:date" element={<DailyPage />} />
-          <Route path="/perfil/:nickname" element={<ProfilePage />} />
-          <Route path="/ligas" element={<LeaguesPage />} />
-          <Route path="/liga/:code" element={<LeaguePage />} />
-          <Route path="/ranking" element={<RankingPage />} />
-          <Route path="/fantasy" element={<FantasyPage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/stats" element={<StatsPage />} />
-          <Route path="/album" element={<AlbumPage />} />
-          <Route path="/conta" element={<AccountPage />} />
-          <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
-          <Route path="/privacidade" element={<PrivacyPage />} />
-          <Route path="/como-jogar" element={<HowToPlayPage />} />
-          <Route path="/carreira" element={<CareerPage />} />
-          <Route path="/copa" element={<CopaPage />} />
-          <Route path="/oficina" element={<OficinaPage />} />
-          <Route path="/oficina/criar" element={<OficinaCreatePage />} />
-          <Route path="/oficina/:id" element={<OficinaLevelPage />} />
-          <Route path="/criador/:nickname" element={<CreatorPage />} />
-          <Route path="/eventos/:slug" element={<EventPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {closed ? (
+          <ComingSoonPage closed={closed} />
+        ) : (
+          <Routes>
+            <Route path="/" element={<HomeRoute />} />
+            <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
+            <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
+            <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
+            <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
+            <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
+            <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
+            <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
+            <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
+            <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
+            <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
+            <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
+            <Route
+              path="/craque-misterioso/:level"
+              element={<LevelRoute mode="MYSTERY_PLAYER" />}
+            />
+            <Route path="/draft" element={<TrackPage mode="DRAFT" />} />
+            <Route path="/draft/:level" element={<LevelRoute mode="DRAFT" />} />
+            <Route path="/conexoes" element={<TrackPage mode="CONNECTIONS" />} />
+            <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
+            <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
+            <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
+            <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
+            <Route path="/d/:date" element={<DailyPage />} />
+            <Route path="/perfil/:nickname" element={<ProfilePage />} />
+            <Route path="/ligas" element={<LeaguesPage />} />
+            <Route path="/liga/:code" element={<LeaguePage />} />
+            <Route path="/ranking" element={<RankingPage />} />
+            <Route path="/fantasy" element={<FantasyPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/stats" element={<StatsPage />} />
+            <Route path="/album" element={<AlbumPage />} />
+            <Route path="/conta" element={<AccountPage />} />
+            <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
+            <Route path="/privacidade" element={<PrivacyPage />} />
+            <Route path="/termos" element={<TermsPage />} />
+            <Route path="/cookies" element={<CookiesPage />} />
+            <Route path="/como-jogar" element={<HowToPlayPage />} />
+            <Route path="/carreira" element={<CareerPage />} />
+            <Route path="/copa" element={<CopaPage />} />
+            <Route path="/oficina" element={<OficinaPage />} />
+            <Route path="/oficina/criar" element={<OficinaCreatePage />} />
+            <Route path="/oficina/:id" element={<OficinaLevelPage />} />
+            <Route path="/criador/:nickname" element={<CreatorPage />} />
+            <Route path="/eventos/:slug" element={<EventPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        )}
       </Suspense>
-      <AdConsentBanner />
+      <LegalLinks />
+      <ConsentBanner />
+      <FirstRun />
     </Shell>
   );
 }

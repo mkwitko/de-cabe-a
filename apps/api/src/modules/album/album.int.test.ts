@@ -91,6 +91,27 @@ describe('award sticker', () => {
       where: { id: answerId },
       data: { photoFile: 'Ronaldo 2002.jpg', photoAuthor: 'Fulano', photoLicense: 'CC BY-SA 4.0' },
     });
+    await prisma.careerSpell.updateMany({
+      where: { playerId: answerId },
+      data: { appearances: 30, goals: 20 },
+    });
+    // one World Cup final started and won: 1 national-team game, 1 title
+    await prisma.match.create({
+      data: {
+        source: 'test',
+        sourceRef: 'test:wc-final',
+        competition: 'FIFA World Cup',
+        season: '2002',
+        stage: 'Final',
+        homeTeam: 'Brazil',
+        awayTeam: 'Germany',
+        homeScore: 2,
+        awayScore: 0,
+        lineups: {
+          create: { side: 'home', playerName: 'Ronaldo', playerId: answerId, starter: true },
+        },
+      },
+    });
     const g = await startLevel();
     const res = await g.act({ kind: 'guess', playerId: answerId });
     expect(res.sticker).toMatchObject({
@@ -102,6 +123,15 @@ describe('award sticker', () => {
         mode: 'CAREER_PATH',
         photo: expect.stringContaining('Ronaldo%202002.jpg'),
         photoCredit: 'Foto: Fulano · CC BY-SA 4.0',
+        nationalityCode: 'BR',
+        clubs: 4,
+        games: 120,
+        goals: 80,
+        seasons: 9,
+        nationalGames: 1,
+        bigClubGames: 90, // Cruzeiro, Barcelona, Real Madrid
+        // T1 78 + 1.2 games + 1.33 goals + 0.25 national + 2 title + 3 big club = 85.8
+        rating: 86,
       },
     });
     expect(await stickers()).toHaveLength(1);
@@ -207,6 +237,7 @@ describe('album routes', () => {
       'bronze',
     ]);
     expect(res.byRarity).toMatchObject({ lenda: 1, ouro: 1, bronze: 1, prata: 0 });
+    expect(res.stickers[0]).toMatchObject({ nationalityCode: 'BR', clubs: expect.any(Number) });
   });
 
   it('album follows linked guest', async () => {
@@ -241,9 +272,18 @@ describe('album routes', () => {
     expect(res.owned).toBe(8);
   });
 
+  /** Links a device's guest session to a new account (only accounts are ranked). */
+  async function asAccount(sessionId: string, nickname = `Conta ${randomUUID().slice(0, 8)}`) {
+    const user = await prisma.user.create({
+      data: { email: `${randomUUID()}@t.test`, nickname, nicknameKey: randomUUID() },
+    });
+    await prisma.guestSession.update({ where: { id: sessionId }, data: { userId: user.id } });
+  }
+
   /** Two bronze stickers in the closed week of 2026-10-26; only `daily` comes from the drawn level. */
   async function closedRound(earnedAt: { daily: string; other: string }) {
     const g = await startLevel();
+    await asAccount(g.sessionId);
     await giveStickers(g.sessionId, ['bronze', 'bronze']);
     const [daily, other] = await prisma.sticker.findMany({ orderBy: { earnedAt: 'asc' } });
     const { challengeId } = await prisma.attempt.findUniqueOrThrow({ where: { id: g.attemptId } });
@@ -338,10 +378,10 @@ describe('Seleção da Temporada', () => {
   /** A nicknamed player with 3 stars in season 1, now in season 2. */
   async function podiumPlayer() {
     const g = await startLevel();
-    await prisma.guestSession.update({
-      where: { id: g.sessionId },
-      data: { nickname: 'Pódio', nicknameKey: randomUUID() },
+    const user = await prisma.user.create({
+      data: { email: `${randomUUID()}@t.test`, nickname: 'Pódio', nicknameKey: randomUUID() },
     });
+    await prisma.guestSession.update({ where: { id: g.sessionId }, data: { userId: user.id } });
     await prisma.attempt.update({
       where: { id: g.attemptId },
       data: { completedAt: new Date('2026-11-10T15:00:00Z'), stars: 3 },

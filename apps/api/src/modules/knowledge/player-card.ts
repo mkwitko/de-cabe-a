@@ -17,11 +17,26 @@ export const stickerPhoto = (p: {
 }) =>
   p.photoFile
     ? {
-        photo: commons(p.photoFile, 320),
+        photo: commons(p.photoFile, 480),
         photoCredit:
           `Foto: ${p.photoAuthor ?? 'Wikimedia Commons'} · ${p.photoLicense ?? ''}`.trim(),
       }
     : { photo: null, photoCredit: null };
+
+/** Sticker stat row: distinct clubs; games/goals only when every spell has them (no partial sums). */
+export const stickerStats = (
+  spells: { clubId: string; appearances: number | null; goals: number | null }[],
+) => {
+  const sum = (k: 'appearances' | 'goals') =>
+    spells.length && spells.every((s) => s[k] !== null)
+      ? spells.reduce((n, s) => n + s[k]!, 0)
+      : null;
+  return {
+    clubs: new Set(spells.map((s) => s.clubId)).size,
+    games: sum('appearances'),
+    goals: sum('goals'),
+  };
+};
 
 export const photoThumb = (file: string | null) => (file ? commons(file, 96) : null);
 

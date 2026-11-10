@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { useTrack } from '../lib/game';
+import { isPageLaunched } from '../lib/launch';
 import { play } from '../lib/sound';
 import { GameHeader, Skeleton } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
@@ -23,7 +24,8 @@ export const formatClock = (sec: number) =>
 
 /**
  * Before a level starts: with or without the clock (ADR-009). Levels already started or finished
- * skip it, since the mode is chosen once.
+ * skip it, since the mode is chosen once. While the ranking is closed (launch) the clock has no
+ * ranking to count for, so there is no choice: the level starts in the player's own time.
  */
 export function ModeGate({
   mode,
@@ -38,6 +40,7 @@ export function ModeGate({
 }) {
   const track = useTrack(mode);
   const [timed, setTimed] = useState<boolean | null>(null);
+  if (!isPageLaunched('ranking')) return children(false);
   if (!track.data) return <Skeleton className="h-64" />;
   const state = track.data.levels.find((l) => l.level === level)?.state;
   if (timed !== null || state !== 'open') return children(timed ?? false);

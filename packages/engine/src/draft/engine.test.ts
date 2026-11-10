@@ -30,7 +30,7 @@ describe('draft engine', () => {
     expect(draft.isCompleted(s)).toBe(true);
     expect(draft.score(s, config)).toBe(9);
     expect(draft.buildShareText(s, config, { label: 'Draft · Fase 1', url: 'u' })).toBe(
-      'De Cabeça · Draft · Fase 1 · 9/11\n🟩🟥🟥\n🟩🟩🟩\n🟩🟩🟩🟩\n🟩\nu',
+      'De Cabeça F.C. · Draft · Fase 1 · 9/11\n🟩🟥🟥\n🟩🟩🟩\n🟩🟩🟩🟩\n🟩\nu',
     );
     expect(() => draft.submit(s, { kind: 'pick', playerId: 'a0' }, config)).toThrow();
   });

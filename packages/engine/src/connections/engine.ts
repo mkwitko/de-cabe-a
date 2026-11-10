@@ -124,6 +124,6 @@ export const connections: GameEngine<
     const rows = state.found.map((g) => colors[g]!.repeat(4));
     const result =
       state.status === 'WON' ? `4/4 · ${state.misses.length} erros` : `${state.found.length}/4`;
-    return `De Cabeça · ${meta.label} · ${result}\n${rows.join('\n')}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${result}\n${rows.join('\n')}\n${meta.url}`;
   },
 };

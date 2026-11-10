@@ -37,7 +37,7 @@ function CupList({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="min-h-11 rounded-lg border-2 border-white/40 bg-transparent px-3 text-base font-normal"
+          className="min-h-11 rounded-lg border-2 border-chalk/40 bg-transparent px-3 text-base font-normal"
         />
       </label>
       <div className="flex max-h-80 flex-col gap-4 overflow-y-auto pr-1">
@@ -45,13 +45,13 @@ function CupList({
           const group = shown.filter((p) => p.position === pos);
           return group.length ? (
             <section key={pos} aria-label={POS[pos]}>
-              <h3 className="text-sm font-semibold text-white/80">{POS[pos]}</h3>
+              <h3 className="text-sm font-semibold text-chalk/80">{POS[pos]}</h3>
               <ul className="mt-1 flex flex-wrap gap-2">
                 {group.map((p) => (
                   <li key={p.id}>
                     <button
                       type="button"
-                      className="min-h-11 rounded-lg bg-white/10 px-3 text-left font-semibold hover:bg-white/20"
+                      className="min-h-11 rounded-lg bg-chalk/10 px-3 text-left font-semibold hover:bg-chalk/20"
                       onClick={() => onSelect(p)}
                     >
                       {p.name}
@@ -62,7 +62,7 @@ function CupList({
             </section>
           ) : null;
         })}
-        {!shown.length && <p className="text-sm text-white/80">Ninguém com esse nome.</p>}
+        {!shown.length && <p className="text-sm text-chalk/80">Ninguém com esse nome.</p>}
       </div>
     </div>
   );
@@ -102,7 +102,7 @@ function Picker({ cup, onSaved }: { cup: Cup | null; onSaved: (d: FantasyRespons
               return (
                 <li
                   key={i}
-                  className={`flex min-h-14 items-center justify-between gap-3 rounded-xl px-4 ${p ? 'bg-paper text-ink shadow-[0_3px_0_rgb(0_0_0/0.35)]' : 'border-2 border-dashed border-white/60 text-white'}`}
+                  className={`flex min-h-14 items-center justify-between gap-3 rounded-xl px-4 ${p ? 'bg-paper text-ink shadow-[0_3px_0_rgb(0_0_0/0.35)]' : 'border-2 border-dashed border-chalk/60 text-chalk'}`}
                 >
                   <span className="font-condensed truncate text-lg font-black uppercase sm:text-xl">
                     {p ? p.name : `Vaga ${i + 1}`}
@@ -123,7 +123,7 @@ function Picker({ cup, onSaved }: { cup: Cup | null; onSaved: (d: FantasyRespons
         </PerspectivePitch>
       </div>
       <div className="flex flex-col gap-4">
-        <p className="text-white/85">
+        <p className="text-chalk/85">
           No máximo 2 da mesma posição. Depois de fechar, a escalação vale até domingo: só conta
           fase que você começar depois disso.
         </p>
@@ -191,7 +191,7 @@ export function FantasyPage() {
                   </ul>
                 </PerspectivePitch>
               </div>
-              <p className="mt-4 text-sm text-white/85">
+              <p className="mt-4 text-sm text-chalk/85">
                 Escalação fechada até domingo. Jogue fases para seus jogadores pontuarem.
               </p>
               <Link to="/" className={`${btnSecondary} mt-4`}>
@@ -207,7 +207,7 @@ export function FantasyPage() {
                   {d.entries.slice(0, 20).map((e) => (
                     <li
                       key={e.position}
-                      className={`flex min-h-11 items-center gap-3 border-b border-white/15 px-2 last:border-b-0 ${e.isMe ? 'rounded-md border-transparent bg-cover text-ink' : ''}`}
+                      className={`flex min-h-11 items-center gap-3 border-b border-chalk/15 px-2 last:border-b-0 ${e.isMe ? 'rounded-md border-transparent bg-cover text-ink' : ''}`}
                     >
                       <span className="font-condensed tabular w-6 text-right text-lg font-black">
                         {e.position}
@@ -218,9 +218,9 @@ export function FantasyPage() {
                   ))}
                 </ol>
               ) : (
-                <p className="mt-3 text-sm text-white/85">
+                <p className="mt-3 text-sm text-chalk/85">
                   Ninguém com apelido pontuou ainda.{' '}
-                  <Link to="/conta" className="text-white underline underline-offset-4">
+                  <Link to="/conta" className="text-chalk underline underline-offset-4">
                     Escolha um apelido
                   </Link>{' '}
                   para aparecer aqui.

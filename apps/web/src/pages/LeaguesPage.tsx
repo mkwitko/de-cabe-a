@@ -11,6 +11,8 @@ import { ShareButton } from '../components/ShareButton';
 import { suggestNickname } from '../lib/nickname';
 import { btnPrimary, btnSecondary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { StarIcon } from '../components/Stars';
+import { signInHref } from '../components/SignInButton';
+import { useMe } from '../lib/game';
 
 /** Errors of create/join; without a nickname, one tap takes a suggested one and tries again. */
 function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => void }) {
@@ -43,11 +45,11 @@ function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => v
             Escolher o meu
           </Link>
         </div>
-        {take.error && <p className="text-cover">{take.error.message}</p>}
+        {take.error && <p className="text-gold">{take.error.message}</p>}
       </div>
     );
   return error ? (
-    <p role="alert" className="text-sm font-semibold text-cover">
+    <p role="alert" className="text-sm font-semibold text-gold">
       {error.message}
     </p>
   ) : null;
@@ -160,6 +162,7 @@ export function LeaguePage() {
   const code = (useParams().code ?? '').toUpperCase();
   const nav = useNavigate();
   const qc = useQueryClient();
+  const me = useMe();
   const key = ['league', code];
   const q = useQuery<LeagueResponse, ApiError>({
     queryKey: key,
@@ -218,7 +221,8 @@ export function LeaguePage() {
     );
 
   const l = q.data;
-  const invite = `Entra na minha liga "${l.name}" no De Cabeça: ranking semanal de estrelas entre amigos.\ndecabecafc.com.br/liga/${l.code}?ref=invite`;
+  const guest = !me.data?.account;
+  const invite = `Entra na minha liga "${l.name}" no De Cabeça F.C.: ranking semanal de estrelas entre amigos.\ndecabecafc.com.br/liga/${l.code}?ref=invite`;
   return (
     <>
       <GameHeader title={l.name} />
@@ -262,7 +266,17 @@ export function LeaguePage() {
             <h2 id="semana" className="font-condensed text-2xl font-extrabold uppercase">
               Ranking da semana
             </h2>
-            <p className="text-sm text-chalk-soft">Estrelas desde segunda, 00h de Brasília.</p>
+            <p className="text-sm text-chalk-soft">
+              Estrelas desde segunda, 00h de Brasília. Só quem tem conta aparece.
+            </p>
+            {guest && (
+              <p className="mt-2 text-sm">
+                <Link to={signInHref(`/liga/${l.code}`)} className="underline underline-offset-4">
+                  Entre na sua conta
+                </Link>{' '}
+                para somar suas estrelas com a turma.
+              </p>
+            )}
             <ol className="mt-4 flex flex-col overflow-hidden rounded-lg bg-paper text-ink shadow-[0_10px_22px_-12px_rgb(0_0_0/0.55)]">
               {l.ranking.map((r) => (
                 <li

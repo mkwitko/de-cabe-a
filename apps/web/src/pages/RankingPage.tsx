@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { RankingScope } from '@decabeca/contracts';
-import { useRanking, useSeason } from '../lib/game';
+import { useMe, useRanking, useSeason } from '../lib/game';
+import { signInHref } from '../components/SignInButton';
 import { btnPrimary, Skeleton } from '../components/ui';
 import { TrophyIcon } from '../components/Icons';
 import { StarIcon } from '../components/Stars';
@@ -10,6 +11,7 @@ export function RankingPage() {
   const [scope, setScope] = useState<RankingScope>('all');
   const { data } = useRanking(scope);
   const season = useSeason().data;
+  const account = !!useMe().data?.account;
   const daysLeft = season
     ? Math.max(1, Math.ceil((Date.parse(season.current.endsAt) - Date.now()) / 86400_000))
     : 0;
@@ -61,22 +63,21 @@ export function RankingPage() {
       )}
       {data && (
         <p className="text-chalk-soft">
-          {data.me.nickname ? (
-            data.me.position ? (
-              <>
-                Você é o <strong className="text-chalk">{data.me.position}º</strong> com{' '}
-                {data.me.stars} estrelas.
-              </>
-            ) : (
-              'Termine uma fase para entrar no ranking.'
-            )
-          ) : (
+          {!account ? (
             <>
-              <Link to="/conta" className="text-chalk underline underline-offset-4">
-                Escolha um apelido
-              </Link>{' '}
-              para aparecer no ranking{data.me.stars ? ` com suas ${data.me.stars} estrelas` : ''}.
+              Só quem tem conta entra no ranking.{' '}
+              <Link to={signInHref('/ranking')} className="text-chalk underline underline-offset-4">
+                Entre ou crie a sua
+              </Link>
+              : suas estrelas deste aparelho vão junto.
             </>
+          ) : data.me.position ? (
+            <>
+              Você é o <strong className="text-chalk">{data.me.position}º</strong> com{' '}
+              {data.me.stars} estrelas.
+            </>
+          ) : (
+            'Termine uma fase para entrar no ranking.'
           )}
         </p>
       )}
@@ -112,7 +113,7 @@ export function RankingPage() {
         <Skeleton className="h-96" />
       ) : (
         /* stadium scoreboard: dark LED panel, scanlines, amber condensed digits, row lines */
-        <div className="flex flex-col gap-4 rounded-xl border-[6px] border-[#2a2f33] bg-[#0b0d0e] p-3 text-[#f5e27a] shadow-[inset_0_0_30px_#000a,0_10px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,#0004_0_1px,transparent_1px_3px)] sm:p-5">
+        <div className="obj-dark flex flex-col gap-4 rounded-xl border-[6px] border-[#2a2f33] bg-[#0b0d0e] p-3 text-[#f5e27a] shadow-[inset_0_0_30px_#000a,0_10px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,#0004_0_1px,transparent_1px_3px)] sm:p-5">
           <p className="font-condensed flex items-center justify-between gap-3 border-b-2 border-[#f5e27a]/40 pb-2 text-sm font-bold tracking-[0.2em] uppercase">
             <span>
               {data.entries.length} {data.entries.length === 1 ? 'jogador' : 'jogadores'}
@@ -133,7 +134,7 @@ export function RankingPage() {
                 ? `Ninguém pontuou ${scope === 'week' ? 'esta semana' : 'nesta temporada'} ainda. É a sua chance.`
                 : scope === 'timed'
                   ? 'Ninguém jogou contra o relógio ainda. Escolha esse modo ao abrir uma fase.'
-                  : 'Ninguém no ranking ainda. Termine uma fase e escolha um apelido para ser o primeiro.'}
+                  : 'Ninguém no ranking ainda. Termine uma fase com a sua conta e seja o primeiro.'}
             </p>
           ) : (
             <>

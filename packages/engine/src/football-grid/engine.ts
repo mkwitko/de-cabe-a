@@ -194,7 +194,7 @@ export const footballGrid: GameEngine<
     );
     const n = state.hints.length;
     const hints = n ? ` · ${n} ${n === 1 ? 'dica' : 'dicas'}` : '';
-    return `De Cabeça · ${meta.label} · ${filled(state)}/${config.maxAttempts}${hints}\n${rows.join('\n')}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${filled(state)}/${config.maxAttempts}${hints}\n${rows.join('\n')}\n${meta.url}`;
   },
 };
 

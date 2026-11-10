@@ -7,7 +7,7 @@ import { useLocation } from 'react-router';
 
 const SITE = 'https://decabecafc.com.br';
 const DEFAULT = {
-  title: 'De Cabeça · Minijogos de futebol',
+  title: 'De Cabeça F.C. · Minijogos de futebol',
   description:
     'Minijogos de futebol: adivinhe o jogador pela carreira, complete a grade, monte a escalação. Fase por fase, estrela por estrela, até virar lenda.',
 };
@@ -74,7 +74,7 @@ const PAGES: Record<string, Meta> = {
   },
   '/como-jogar': {
     title: 'Como jogar',
-    description: 'As regras de cada um dos jogos do De Cabeça, em três passos cada.',
+    description: 'As regras de cada um dos jogos do De Cabeça F.C., em três passos cada.',
   },
   '/carreira': {
     title: 'Modo Carreira',
@@ -98,6 +98,8 @@ const PAGES: Record<string, Meta> = {
     description: 'Desafios por tempo limitado, com ranking próprio.',
   },
   '/privacidade': { title: 'Privacidade', description: DEFAULT.description },
+  '/termos': { title: 'Termos de uso', description: DEFAULT.description },
+  '/cookies': { title: 'Cookies', description: DEFAULT.description },
 };
 
 function set(selector: string, attr: string, value: string, create: () => HTMLElement) {
@@ -115,8 +117,8 @@ export function RouteMeta() {
     document.title = !meta
       ? DEFAULT.title
       : level && GAMES[base]
-        ? `${meta.title.split(':')[0]} · Fase ${level} · De Cabeça`
-        : `${meta.title} · De Cabeça`;
+        ? `${meta.title.split(':')[0]} · Fase ${level} · De Cabeça F.C.`
+        : `${meta.title} · De Cabeça F.C.`;
     set('meta[name="description"]', 'content', meta?.description ?? DEFAULT.description, () =>
       Object.assign(document.createElement('meta'), { name: 'description' }),
     );

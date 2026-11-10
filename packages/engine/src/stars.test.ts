@@ -36,15 +36,22 @@ describe('starsFor with hints', () => {
 
 describe('titleFor', () => {
   it.each([
-    [0, 'Reserva'],
-    [14, 'Reserva'],
-    [15, 'Titular'],
-    [59, 'Titular'],
-    [60, 'Craque'],
-    [150, 'Lenda'],
+    [0, 'Peneira'],
+    [9, 'Peneira'],
+    [10, 'Base'],
+    [25, 'Reserva'],
+    [50, 'Titular'],
+    [99, 'Titular'],
+    [100, 'Capitão'],
+    [175, 'Craque'],
+    [275, 'Ídolo'],
+    [400, 'Lenda'],
+    [600, 'Imortal'],
+    [900, 'Rei da Bola'],
+    [1200, 'Rei da Bola'],
   ])('%i stars -> %s', (stars, title) => expect(titleFor(stars).name).toBe(title));
   it('says how many stars to the next title', () => {
-    expect(titleFor(10)).toEqual({ name: 'Reserva', next: { name: 'Titular', missing: 5 } });
-    expect(titleFor(200).next).toBeNull();
+    expect(titleFor(4)).toEqual({ name: 'Peneira', next: { name: 'Base', missing: 6 } });
+    expect(titleFor(900).next).toBeNull();
   });
 });

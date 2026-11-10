@@ -134,6 +134,6 @@ export const missingXi: GameEngine<
       .filter((s) => s.hidden)
       .map((s) => (state.found.includes(s.playerId!) ? '🟩' : '⬛'))
       .join('');
-    return `De Cabeça · ${meta.label} · ${state.found.length}/${hiddenCount(config)}\n${marks}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${state.found.length}/${hiddenCount(config)}\n${marks}\n${meta.url}`;
   },
 };

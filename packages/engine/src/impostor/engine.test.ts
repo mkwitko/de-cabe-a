@@ -37,7 +37,7 @@ describe('impostor engine', () => {
     expect(starsFor('impostor', 3)).toBe(1);
     expect(starsFor('impostor', 2)).toBe(0);
     expect(impostor.buildShareText(s, cfg, { label: 'Impostor · Fase 1', url: 'x.br' })).toBe(
-      'De Cabeça · Impostor · Fase 1 · 4/5\n✅❌✅✅✅\nx.br',
+      'De Cabeça F.C. · Impostor · Fase 1 · 4/5\n✅❌✅✅✅\nx.br',
     );
   });
 

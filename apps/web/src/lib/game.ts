@@ -2,6 +2,7 @@ import { play } from './sound';
 import { hapticForAction } from './haptics';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AlbumResponse,
   AttemptResponse,
   GameMode,
   DailyResponse,
@@ -9,6 +10,8 @@ import type {
   HistoryResponse,
   LevelRankingResponse,
   MeResponse,
+  ModeVotesResponse,
+  VotableMode,
   PlayerRef,
   RankingResponse,
   RankingScope,
@@ -41,6 +44,8 @@ export const useDaily = (date: string) =>
   useQuery({ queryKey: ['daily', date], queryFn: () => api<DailyResponse>(`/v1/daily/${date}`) });
 export const useStats = () =>
   useQuery({ queryKey: ['stats'], queryFn: () => api<StatsResponse>('/v1/me/stats') });
+export const useAlbum = () =>
+  useQuery({ queryKey: ['album'], queryFn: () => api<AlbumResponse>('/v1/me/album') });
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<MeResponse>('/v1/me') });
 export const useRanking = (scope: RankingScope) =>
   useQuery({
@@ -119,6 +124,27 @@ export async function searchPlayers(q: string, signal: AbortSignal): Promise<Pla
   return (
     await api<{ players: PlayerRef[] }>(`/v1/players/search?q=${encodeURIComponent(q)}`, { signal })
   ).players;
+}
+
+/** Votes for the closed modes: counts for everyone, the vote of the signed-in account. */
+export const useModeVotes = () =>
+  useQuery({
+    queryKey: ['mode-votes'],
+    queryFn: () => api<ModeVotesResponse>('/v1/mode-votes'),
+    staleTime: 15_000,
+  });
+
+/** Vote (a mode) or withdraw (null); one current vote per account, a new one moves it. */
+export function useModeVote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (mode: VotableMode | null) =>
+      api<ModeVotesResponse>('/v1/mode-votes', {
+        method: mode ? 'PUT' : 'DELETE',
+        ...(mode ? { json: { mode } } : {}),
+      }),
+    onSuccess: (data) => qc.setQueryData(['mode-votes'], data),
+  });
 }
 
 /** Account and nickname actions; everything that depends on the player refreshes after. */

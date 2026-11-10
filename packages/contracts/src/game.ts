@@ -448,6 +448,20 @@ export const Sticker = z.strictObject({
   name: z.string(),
   positionGroup: z.enum(['GK', 'DF', 'MF', 'FW']).nullable(),
   nationality: z.string(),
+  /** ISO 3166 alpha-2 ("BR"), for the flag. */
+  nationalityCode: z.string().optional(),
+  /** Real career numbers (professional spells): clubs, and league games/goals summed only when every spell has them. */
+  clubs: z.number().int().optional(),
+  games: z.number().int().nullable().optional(),
+  goals: z.number().int().nullable().optional(),
+  /** Years from the first professional spell to the last (or now), when dated. */
+  seasons: z.number().int().nullable().optional(),
+  /** National-team starts in the line-ups we hold (World Cup, Copa América); null when none. */
+  nationalGames: z.number().int().nullable().optional(),
+  /** League games at big clubs (0 when he never played for one, null when unknown). */
+  bigClubGames: z.number().int().nullable().optional(),
+  /** "Nota De Cabeça", 50–99, from real data only (apps/api/src/modules/album/nota.ts). */
+  rating: z.number().int().min(50).max(99).optional(),
   /** Wikimedia Commons portrait, when the player has a freely licensed photo. */
   photo: z.string().nullable(),
   /** "Foto: author · licence" (CC licences require the credit where the photo shows). */

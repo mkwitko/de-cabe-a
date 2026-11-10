@@ -133,6 +133,6 @@ export const draft: GameEngine<DraftConfig, DraftState, DraftInput, DraftEvent> 
   buildShareText(state, config, meta) {
     const mark = (i: number) => (state.picks[i] === config.rounds[i]!.answerId ? '🟩' : '🟥');
     const lines = [[8, 9, 10], [5, 6, 7], [1, 2, 3, 4], [0]].map((line) => line.map(mark).join(''));
-    return `De Cabeça · ${meta.label} · ${right(state, config)}/${config.rounds.length}\n${lines.join('\n')}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${right(state, config)}/${config.rounds.length}\n${lines.join('\n')}\n${meta.url}`;
   },
 };

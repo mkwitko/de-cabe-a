@@ -96,19 +96,15 @@ export const fantasyRoutes: FastifyPluginAsyncZod = async (app) => {
       pk: s.pk,
       total: [...(points.get(s.pk)?.values() ?? [])].reduce((a, b) => a + b, 0),
     }));
-    // ponytail: two lookups for every squad of the week; one query when squads number thousands.
-    const [users, guests] = await Promise.all([
-      prisma.user.findMany({
-        where: { id: { in: totals.map((t) => t.pk) } },
-        select: { id: true, nickname: true },
-      }),
-      prisma.guestSession.findMany({
-        where: { id: { in: totals.map((t) => t.pk) } },
-        select: { id: true, nickname: true },
-      }),
-    ]);
-    const names = new Map([...users, ...guests].map((p) => [p.id, p.nickname]));
+    // Only accounts are ranked. ponytail: one lookup for every squad of the week; a join when
+    // squads number thousands.
+    const users = await prisma.user.findMany({
+      where: { id: { in: totals.map((t) => t.pk) } },
+      select: { id: true, nickname: true },
+    });
+    const names = new Map(users.map((p) => [p.id, p.nickname]));
     const rows = totals
+      .filter((t) => names.has(t.pk))
       .map((t) => ({ pk: t.pk, nickname: names.get(t.pk) ?? null, stars: t.total, score: 0 }))
       .sort((a, b) => b.stars - a.stars || a.pk.localeCompare(b.pk));
     const r = ranking(rows, me);

@@ -240,14 +240,14 @@ describe('careerPath.buildShareText (CAREER_PATH.md §12)', () => {
   it('win in 3: one square per attempt, no spoilers', () => {
     const { state } = play(config(), [wrong(1), skip, right]);
     expect(careerPath.buildShareText(state, config(), meta)).toBe(
-      'De Cabeça · Career Path #123 · 3/6\n⬛⬛🟩\ndecabeca.app/c/123',
+      'De Cabeça F.C. · Career Path #123 · 3/6\n⬛⬛🟩\ndecabeca.app/c/123',
     );
   });
 
   it('loss: X/6 and six black squares', () => {
     const { state } = play(config(), [skip, skip, skip, skip, skip, skip]);
     const text = careerPath.buildShareText(state, config(), meta);
-    expect(text).toBe('De Cabeça · Career Path #123 · X/6\n⬛⬛⬛⬛⬛⬛\ndecabeca.app/c/123');
+    expect(text).toBe('De Cabeça F.C. · Career Path #123 · X/6\n⬛⬛⬛⬛⬛⬛\ndecabeca.app/c/123');
     expect(text).not.toContain('Clube');
   });
 });
