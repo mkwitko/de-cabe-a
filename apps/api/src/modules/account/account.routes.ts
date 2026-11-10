@@ -94,6 +94,18 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /** LGPD: erases the player's data in one transaction and ends the session (cookies expire). */
   app.delete('/me', async (req, reply) => {
+    // The device link lives for 400 days; erasing an account also needs a live sign-in.
+    if (req.userId) {
+      const live = await auth.api
+        .getSession({ headers: fromNodeHeaders(req.headers) })
+        .catch(() => null);
+      if (live?.user.id !== req.userId)
+        throw new AppError(
+          401,
+          'SIGN_IN_REQUIRED',
+          'Entre na sua conta de novo para excluir os dados.',
+        );
+    }
     await deleteData(prisma, req);
     const gone = `Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secureCookie ? '; Secure' : ''}`;
     reply.header('set-cookie', `${COOKIE}=; ${gone}`);

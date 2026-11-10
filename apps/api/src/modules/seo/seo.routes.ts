@@ -355,7 +355,7 @@ ${letters
           path: '/creditos',
           title: 'Créditos | De Cabeça F.C.',
           description:
-            'Autores e licenças das fotos (Wikimedia Commons) e das escalações (Wikipédia) usadas no De Cabeça F.C..',
+            'Autores e licenças das fotos (Wikimedia Commons) e das escalações (Wikipédia) usadas no De Cabeça F.C.',
           body,
           noindex: true,
         }),

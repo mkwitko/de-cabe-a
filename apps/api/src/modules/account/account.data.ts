@@ -23,6 +23,8 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
   const bySession = { where: { sessionId: { in: sids } } };
   const [
     user,
+    authSessions,
+    signInMethods,
     attempts,
     careers,
     memberships,
@@ -39,6 +41,19 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     pushSubscriptions,
   ] = await Promise.all([
     who.userId ? prisma.user.findUnique({ where: { id: who.userId } }) : null,
+    who.userId
+      ? prisma.authSession.findMany({
+          where: { userId: who.userId },
+          select: { ipAddress: true, userAgent: true, createdAt: true, expiresAt: true },
+        })
+      : [],
+    // How the account signs in, never the tokens or the password hash.
+    who.userId
+      ? prisma.account.findMany({
+          where: { userId: who.userId },
+          select: { providerId: true, createdAt: true },
+        })
+      : [],
     prisma.attempt.findMany({
       ...bySession,
       include: {
@@ -69,8 +84,11 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
       email: user.email,
       emailVerified: user.emailVerified,
       nickname: user.nickname,
+      image: user.image,
       publicProfile: user.publicProfile,
       createdAt: user.createdAt,
+      signInMethods,
+      signIns: authSessions,
     },
     sessions: sessions.map((s) => ({
       id: s.id,
@@ -107,9 +125,10 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
 
 /** Erases or anonymises everything of the player in one transaction. */
 export async function deleteData(prisma: PrismaClient, who: Who) {
-  const { sids, pks } = await owner(prisma, who);
-  const byPk = { where: { pk: { in: pks } } };
   await prisma.$transaction(async (tx) => {
+    // Resolved inside the transaction, so a session linked meanwhile is not left behind.
+    const { sids, pks } = await owner(tx, who);
+    const byPk = { where: { pk: { in: pks } } };
     await tx.attemptAction.deleteMany({ where: { attempt: { sessionId: { in: sids } } } });
     await tx.attempt.deleteMany({ where: { sessionId: { in: sids } } });
     await tx.careerPlayer.deleteMany({ where: { sessionId: { in: sids } } }); // cascades to seasons, matches, training

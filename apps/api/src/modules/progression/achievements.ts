@@ -59,7 +59,8 @@ const RULES: Rule[] = [
   {
     id: 'lenda',
     category: 'progressao',
-    name: 'Lenda',
+    // Not "Lenda": that is a title at 400 stars now.
+    name: 'Mil estrelas',
     description: 'Junte 1.000 estrelas.',
     goal: 1000,
     measure: stars,

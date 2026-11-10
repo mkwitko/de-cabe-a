@@ -156,7 +156,11 @@ describe('LGPD: exportar e excluir', () => {
     expect(data.fantasySquads).toHaveLength(1);
     expect(data.copaRuns).toHaveLength(1);
     expect(data.communityLevels).toHaveLength(1);
-    expect(JSON.stringify(data)).not.toMatch(/Bia Export|scrypt|p256dh|tokenHash/);
+    expect(data.account.signInMethods).toEqual([
+      expect.objectContaining({ providerId: 'credential' }),
+    ]);
+    expect(data.account.signIns.length).toBeGreaterThan(0);
+    expect(JSON.stringify(data)).not.toMatch(/Bia Export|scrypt|p256dh|tokenHash|"token"/);
   });
 
   it('deletes everything of the account in one go, ends the session, spares others', async () => {
@@ -188,6 +192,14 @@ describe('LGPD: exportar e excluir', () => {
     ).toBeGreaterThanOrEqual(400);
 
     expect(await rowsOf(bia)).toEqual(biaBefore);
+  });
+
+  it('erasing an account needs a live sign-in, not only the device link', async () => {
+    const ana = await populated('Ana Expired');
+    for (const k of [...ana.d.jar.keys()]) if (k.includes('better-auth')) ana.d.jar.delete(k);
+    const res = await ana.d.req('DELETE', '/me');
+    expect(res.statusCode).toBe(401);
+    expect(await prisma.user.count({ where: { id: ana.pk } })).toBe(1);
   });
 
   it('a guest can erase their device data too', async () => {

@@ -48,3 +48,6 @@ export function initPostHog() {
 export function capture(name: string, props: Record<string, unknown>) {
   if (getConsent()?.analytics) client?.capture(name, props);
 }
+
+/** Forget the anonymous id (after the player erases their data). */
+export const resetAnalytics = () => client?.reset();

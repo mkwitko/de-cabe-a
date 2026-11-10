@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
 import { api, type ApiError } from '../lib/api';
 import { openConsentPanel } from '../lib/consent';
+import { resetAnalytics } from '../lib/posthog';
 import { btnSecondary } from './ui';
 
 const WORD = 'EXCLUIR';
@@ -25,7 +26,11 @@ export function AccountData({
   const erase = useMutation({
     mutationFn: () => api<void>('/v1/me', { method: 'DELETE' }),
     // A full load: every cached query belonged to the erased player.
-    onSuccess: () => location.assign('/'),
+    onSuccess: () => {
+      // A fresh anonymous id: later events must not tie back to the erased player.
+      resetAnalytics();
+      location.assign('/');
+    },
   });
   const ok = typed.trim().toLowerCase() === word.toLowerCase();
   const error = erase.error as ApiError | null;
@@ -82,7 +87,8 @@ export function AccountData({
           </label>
           {error && (
             <p role="alert" className="font-semibold text-gold">
-              {error.message} Tente de novo.
+              {error.message}
+              {error.code === 'SIGN_IN_REQUIRED' ? '' : ' Tente de novo.'}
             </p>
           )}
           <div className="flex flex-wrap gap-3">
