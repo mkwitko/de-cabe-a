@@ -191,6 +191,7 @@ export function Broadcast({
   }, [done, promoted]);
 
   const fade = 'transition-opacity duration-500 motion-reduce:duration-200';
+  const Headline = hero ? 'p' : 'h2';
   const action = (
     <button
       type="button"
@@ -304,9 +305,10 @@ export function Broadcast({
             {(named || !hero) && (
               <div className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3 motion-safe:animate-[fade-in_400ms_both] lg:min-h-20 lg:gap-5 lg:px-6">
                 <div className="min-w-0 flex-1">
-                  <p className="font-condensed text-xl leading-none font-black tracking-wide text-cover uppercase sm:text-2xl lg:text-3xl">
+                  {/* With a hero his name is the heading; otherwise the verdict is. */}
+                  <Headline className="font-condensed text-xl leading-none font-black tracking-wide text-cover uppercase sm:text-2xl lg:text-3xl">
                     {headline}
-                  </p>
+                  </Headline>
                   {!hero && <div className="mt-1 text-sm leading-snug text-white/80">{detail}</div>}
                 </div>
                 <Stars n={stars} size="size-6 sm:size-7 lg:size-8" animate />
