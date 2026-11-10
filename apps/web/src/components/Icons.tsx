@@ -78,3 +78,16 @@ export const TrophyIcon = (p: { className?: string }) => (
     <path d="M12 14v3.5M8.5 20.5h7l-.8-3h-5.4z" />
   </Icon>
 );
+
+export const CheckIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+);
+
+export const LockIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <rect x="5" y="11" width="14" height="9.5" rx="2" />
+    <path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
+  </Icon>
+);
