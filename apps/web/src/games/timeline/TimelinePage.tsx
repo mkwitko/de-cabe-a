@@ -2,9 +2,11 @@
  * Linha do tempo screen (ADR-011): a player and 4 of their clubs, shuffled; tap them in career
  * order (tap again to take one back), then confirm. The round then shows the right order with years.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AttemptResponse, TimelineReveal, TimelineView } from '@decabeca/contracts';
 import { ClubBadge } from '../../components/ClubBadge';
+import { buzz } from '../../lib/haptics';
+import { play } from '../../lib/sound';
 import { btnPrimary, btnSecondary, GameHeader, Skeleton } from '../../components/ui';
 import type { ApiError } from '../../lib/api';
 import { useAction, useAttempt } from '../../lib/game';
@@ -38,27 +40,57 @@ function RoundDots({ view }: { view: TimelineView }) {
   );
 }
 
-/** A played round: the career order with years; marks where the answer differed. */
+/** Newsprint clipping: hung on the line by a peg, tilted a little differently each. */
+const TILT = [-2.2, 1.6, -1.2, 2.4];
+const clipping =
+  'relative flex min-h-16 w-full items-center gap-3 rounded-sm bg-[#f3ead2] px-3 py-2 text-[#2b2418] shadow-[0_4px_0_#0003] [background-image:repeating-linear-gradient(0deg,#0000000d_0_1px,transparent_1px_5px)] [filter:sepia(0.25)]';
+
+function Peg() {
+  return (
+    <i
+      aria-hidden="true"
+      className="absolute -top-3 left-1/2 h-5 w-2.5 -translate-x-1/2 rounded-sm bg-[#8a5a33] shadow-[0_1px_0_#0006]"
+    />
+  );
+}
+
+/** Wrong order: the clipping crumples and a paper-tear sound plays (once, on arrival). */
+function CrumpleFx({ wrong }: { wrong: boolean }) {
+  useEffect(() => {
+    if (!wrong) return;
+    play('rip');
+    buzz(30);
+  }, [wrong]);
+  return null;
+}
+
+/** A played round: the career order with years; clippings out of place crumple. */
 function RoundResult({ r }: { r: Round }) {
   return (
-    <ol className="flex flex-col gap-2">
+    <ol className="grid grid-cols-2 gap-x-3 gap-y-5 pt-3 lg:my-auto lg:grid-cols-4">
       {r.clubs.map((c, i) => {
         const placed = r.answer[i] === c.id;
         return (
           <li
             key={c.id}
-            className={`flex min-h-16 items-center gap-3 rounded-xl px-4 py-2 ${placed ? 'bg-cover text-ink' : 'border-2 border-dashed border-chalk-soft/60 text-chalk'}`}
+            style={{ rotate: `${TILT[i]}deg` }}
+            className={placed ? '' : 'clip-crumple'}
           >
-            <span className="font-condensed w-6 text-2xl font-black">{i + 1}</span>
-            <ClubBadge name={c.name} size="sm" />
-            <span className="flex flex-col">
-              <span className="font-condensed text-xl leading-tight font-black uppercase">
+            <div
+              className={`${clipping} h-full flex-col items-start gap-1 ${placed ? 'border-2 border-[#2b2418]' : 'border-2 border-dashed border-[#2b2418]/60 opacity-90'}`}
+            >
+              <Peg />
+              <span className="flex w-full items-center gap-2">
+                <span className="font-condensed text-2xl leading-none font-black">{i + 1}</span>
+                <ClubBadge name={c.name} size="sm" />
+              </span>
+              <span className="font-condensed text-lg leading-tight font-black uppercase">
                 {c.name}
               </span>
-              <span className="text-sm font-semibold">
+              <span className="text-xs font-semibold">
                 {years(c)} · {placed ? 'você acertou a posição' : 'posição errada'}
               </span>
-            </span>
+            </div>
           </li>
         );
       })}
@@ -132,7 +164,9 @@ export function TimelinePage({ level, timed = false }: { level: number; timed?: 
     );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div
+      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] sm:h-[calc(100dvh-9rem)]'}`}
+    >
       <GameHeader
         title={title}
         aside={
@@ -150,90 +184,98 @@ export function TimelinePage({ level, timed = false }: { level: number; timed?: 
       <p className="sr-only" aria-live="polite">
         {announce}
       </p>
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)] lg:items-start">
-        <section className="flex flex-col gap-5">
-          {showing ? (
-            <>
-              <p className="font-condensed text-4xl leading-none font-black uppercase">
-                {showing.playerName}
-              </p>
-              <p className="font-condensed text-2xl font-black uppercase">
-                {showing.correct ? 'Ordem certa!' : 'Não foi essa a ordem.'}
-              </p>
-              <RoundResult r={showing} />
-              {!done && (
-                <button
-                  className={`${btnPrimary} self-start`}
-                  onClick={() => setShown(null)}
-                  autoFocus
-                >
-                  Próxima rodada
-                </button>
-              )}
-            </>
-          ) : view.current ? (
-            <>
-              <p className="font-condensed text-4xl leading-none font-black uppercase sm:text-5xl">
-                {view.current.playerName}
-              </p>
-              <h2 className="text-lg font-semibold text-chalk-soft">
-                Toque nos clubes na ordem da carreira, do primeiro ao último.
-              </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {view.current.clubs.map((c) => {
-                  const pos = order.indexOf(c.id);
-                  return (
-                    <li key={c.id}>
-                      <button
-                        onClick={() => toggle(c.id)}
-                        aria-pressed={pos >= 0}
-                        className={`flex min-h-16 w-full items-center gap-3 rounded-xl px-4 py-3 text-left shadow-[0_6px_14px_-6px_rgb(0_0_0/0.45)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 ${pos >= 0 ? 'bg-cover text-ink' : 'bg-paper text-ink'}`}
-                      >
-                        <span className="font-condensed grid size-8 shrink-0 place-items-center rounded-full border-2 border-ink/30 text-lg font-black">
-                          {pos >= 0 ? pos + 1 : ''}
-                          <span className="sr-only">{pos >= 0 ? 'º na ordem' : 'sem posição'}</span>
-                        </span>
-                        <span className="font-condensed text-xl leading-tight font-black uppercase">
-                          {c.name}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  className={btnPrimary}
-                  disabled={order.length < 4 || action.isPending}
-                  onClick={confirm}
-                >
-                  Confirmar ordem
-                </button>
-                {order.length > 0 && (
-                  <button className={btnSecondary} onClick={() => setOrder([])}>
-                    Recomeçar
-                  </button>
-                )}
-              </div>
-              {action.error && (
-                <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
-                  {(action.error as ApiError).message}
-                </p>
-              )}
-            </>
-          ) : null}
-        </section>
-        <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
-          {done ? (
-            <LevelEnd data={data} {...resultCopy(data)} />
-          ) : (
-            <p className="rounded-xl border-2 border-dashed border-chalk-soft/40 p-4 text-chalk-soft">
-              Cinco jogadores, quatro clubes de cada um. Ponha na ordem em que ele jogou: do
-              primeiro clube ao último.
+      <section
+        aria-label="Varal de recortes"
+        className={`relative mx-auto flex w-full max-w-5xl flex-col gap-3 overflow-y-auto rounded-lg border-2 border-[#2b2418] bg-[#e8dcc0] p-3 pt-6 text-[#2b2418] shadow-[0_6px_0_#0004] [background-image:repeating-linear-gradient(0deg,#0000000d_0_1px,transparent_1px_6px)] sm:p-5 sm:pt-8 ${done ? '' : 'min-h-0 flex-1'}`}
+      >
+        <i
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-2 top-3 h-4 rounded-b-[50%] border-b-2 border-[#5a4a32]"
+        />
+        {showing ? (
+          <>
+            <p className="font-condensed text-4xl leading-none font-black uppercase">
+              {showing.playerName}
             </p>
-          )}
-        </aside>
-      </div>
+            <p className="font-condensed text-2xl font-black uppercase">
+              {showing.correct ? 'Ordem certa!' : 'Não foi essa a ordem.'}
+            </p>
+            <CrumpleFx wrong={!showing.correct} />
+            <RoundResult r={showing} />
+            {!done && (
+              <button
+                className={`${btnPrimary} self-start`}
+                onClick={() => setShown(null)}
+                autoFocus
+              >
+                Próxima rodada
+              </button>
+            )}
+          </>
+        ) : view.current ? (
+          <>
+            <p className="font-condensed text-4xl leading-none font-black uppercase sm:text-5xl">
+              {view.current.playerName}
+            </p>
+            <h2 className="text-base font-semibold sm:text-lg">
+              Toque nos recortes na ordem da carreira, do primeiro ao último clube.
+            </h2>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-5 pt-3 lg:my-auto lg:grid-cols-4">
+              {view.current.clubs.map((c, i) => {
+                const pos = order.indexOf(c.id);
+                return (
+                  <li key={c.id} style={{ rotate: `${TILT[i % 4]}deg` }}>
+                    <button
+                      onClick={() => {
+                        play('tap');
+                        toggle(c.id);
+                      }}
+                      aria-pressed={pos >= 0}
+                      className={`${clipping} min-h-24 flex-col items-start lg:min-h-40 justify-between border-2 text-left transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 ${pos >= 0 ? 'border-[#2b2418] bg-cover' : 'border-transparent'}`}
+                    >
+                      <Peg />
+                      <span className="font-condensed grid size-8 shrink-0 place-items-center rounded-full border-2 border-[#2b2418]/40 text-lg font-black">
+                        {pos >= 0 ? pos + 1 : ''}
+                        <span className="sr-only">{pos >= 0 ? 'º na ordem' : 'sem posição'}</span>
+                      </span>
+                      <span className="font-condensed text-xl leading-tight font-black uppercase">
+                        {c.name}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-auto flex flex-wrap gap-3 pt-2">
+              <button
+                className={btnPrimary}
+                disabled={order.length < 4 || action.isPending}
+                onClick={confirm}
+              >
+                Confirmar ordem
+              </button>
+              {order.length > 0 && (
+                <button
+                  className={`${btnSecondary} border-[#2b2418]/50! text-[#2b2418]!`}
+                  onClick={() => setOrder([])}
+                >
+                  Recomeçar
+                </button>
+              )}
+            </div>
+            {action.error && (
+              <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
+                {(action.error as ApiError).message}
+              </p>
+            )}
+          </>
+        ) : null}
+      </section>
+      {done && (
+        <div className="mx-auto w-full max-w-5xl">
+          <LevelEnd data={data} {...resultCopy(data)} />
+        </div>
+      )}
     </div>
   );
 }
