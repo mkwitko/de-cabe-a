@@ -90,6 +90,7 @@ const LeaguePage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
+const AlbumPage = lazy(() => import('./pages/AlbumPage').then((m) => ({ default: m.AlbumPage })));
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 
 export const GAMES = [
@@ -567,7 +568,7 @@ const NAV = [
     to: '/',
     label: 'Jogos',
     Icon: GamesIcon,
-    match: (p: string) => !/^\/(d|ranking|ligas?|fantasy|stats|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) => !/^\/(d|ranking|ligas?|fantasy|stats|album|history|conta|perfil)(\/|$)/.test(p),
   },
   { to: '/d/hoje', label: 'Desafio', Icon: DailyIcon, match: (p: string) => /^\/d(\/|$)/.test(p) },
   {
@@ -580,7 +581,7 @@ const NAV = [
     to: '/stats',
     label: 'Perfil',
     Icon: ProfileIcon,
-    match: (p: string) => /^\/(stats|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) => /^\/(stats|album|history|conta|perfil)(\/|$)/.test(p),
   },
 ] as const;
 
@@ -687,6 +688,7 @@ function PublicRoutes() {
           <Route path="/fantasy" element={<FantasyPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
+          <Route path="/album" element={<AlbumPage />} />
           <Route path="/conta" element={<AccountPage />} />
           <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
           <Route path="/privacidade" element={<PrivacyPage />} />

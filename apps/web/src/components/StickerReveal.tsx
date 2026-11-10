@@ -4,8 +4,7 @@ import { buzz } from '../lib/haptics';
 import { play } from '../lib/sound';
 import { Lamps, reducedMotion } from './Broadcast';
 import { RARITY_ORDER, RARITY_STYLE } from './rarity';
-
-const POSITION = { GK: 'GOL', DF: 'DEF', MF: 'MEI', FW: 'ATA' } as const;
+import { StickerCard } from './StickerCard';
 
 /** Rarity colour and name first (with its sound), then the card spins in, then the name. */
 export function StickerReveal({
@@ -97,31 +96,7 @@ export function StickerReveal({
           className={`relative aspect-[3/4] w-[min(64vw,250px)] [transform-style:preserve-3d] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
           style={{ '--d': `${dur}ms` } as React.CSSProperties}
         >
-          <div className="absolute inset-0 rounded-[14px] bg-(--edge) p-2 shadow-[12px_20px_30px_rgb(0_0_0/0.5)]">
-            <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-lg bg-(image:--face) p-3 text-(--ink)">
-              <div>
-                <p className="text-[11px] font-extrabold tracking-[0.16em] uppercase">Figurinha</p>
-                <p className="text-5xl leading-[0.85] font-black tracking-tighter">
-                  {sticker.positionGroup ? POSITION[sticker.positionGroup] : '—'}
-                </p>
-              </div>
-              <div>
-                <p
-                  className={`text-2xl leading-[0.92] font-black tracking-tight uppercase transition-opacity duration-400 ${phase === 'named' ? 'opacity-100' : 'opacity-0'}`}
-                >
-                  {sticker.name}
-                </p>
-                <p className="mt-1 text-[11px] font-extrabold tracking-[0.16em] uppercase">
-                  {sticker.nationality}
-                </p>
-              </div>
-              <div
-                ref={strip}
-                aria-hidden="true"
-                className="holo pointer-events-none absolute inset-y-0 -left-full w-[300%] bg-(image:--holo) opacity-80 mix-blend-soft-light"
-              />
-            </div>
-          </div>
+          <StickerCard sticker={sticker} size="lg" showName={phase === 'named'} stripRef={strip} />
         </div>
       </div>
       <p aria-live="polite" className="sr-only">

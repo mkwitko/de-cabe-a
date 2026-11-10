@@ -1,18 +1,24 @@
 /** Public profile (GROWTH_PLAN.md 2.2): only when the player turned it on in /conta. */
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import type { ProfileResponse } from '@decabeca/contracts';
+import type { ProfileAlbumResponse, ProfileResponse } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { GAME_NAME } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { TrophyIcon } from '../components/Icons';
+import { StickerCard } from '../components/StickerCard';
 
 export function ProfilePage() {
   const nickname = useParams().nickname ?? '';
   const q = useQuery<ProfileResponse, ApiError>({
     queryKey: ['profile', nickname],
     queryFn: () => api(`/v1/profiles/${encodeURIComponent(nickname)}`),
+    retry: false,
+  });
+  const album = useQuery<ProfileAlbumResponse, ApiError>({
+    queryKey: ['profile-album', nickname],
+    queryFn: () => api(`/v1/profiles/${encodeURIComponent(nickname)}/album`),
     retry: false,
   });
   if (q.isPending) return <Skeleton className="h-96" />;
@@ -57,6 +63,21 @@ export function ProfilePage() {
                 <span className="text-sm font-semibold">
                   Temporada {t.season} · {t.theme}
                 </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {album.data && album.data.showcase.length > 0 && (
+        <>
+          <h2 className="font-condensed mt-10 text-2xl font-extrabold uppercase">
+            Vitrine · {album.data.owned} figurinhas
+          </h2>
+          <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {album.data.showcase.map((s) => (
+              <li key={s.playerId} className="aspect-[3/4]">
+                <StickerCard sticker={s} size="sm" />
               </li>
             ))}
           </ul>
