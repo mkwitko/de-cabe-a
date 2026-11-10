@@ -22,6 +22,7 @@ import { deleteData, exportData } from './account.data';
 import { assertNicknameFree, authRequest, isLiveSignIn, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
 import { trophies } from '../progression/seasons';
+import { cancelSubscriptions, clubeStatus } from '../billing/billing';
 
 type Who = { sessionId: string; userId: string | null; nickname: string };
 
@@ -97,6 +98,8 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
     // The device link lives for 400 days; erasing an account also needs a live sign-in.
     if (req.userId && !(await isLiveSignIn(auth, req)))
       throw new AppError(401, 'UNAUTHORIZED', 'Entre na sua conta de novo para excluir os dados.');
+    // Renewals stop at Stripe first; the sales themselves stay as anonymous fiscal records.
+    if (req.userId) await cancelSubscriptions(prisma, app.deps.billing, req.userId);
     await deleteData(prisma, req);
     const gone = `Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secureCookie ? '; Secure' : ''}`;
     reply.header('set-cookie', `${COOKIE}=; ${gone}`);
@@ -133,12 +136,13 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       const owner = await publicProfileOwner(prisma, req.params.nickname);
       if (!owner) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
       const { who } = owner;
-      const [done, items] = await Promise.all([
+      const [done, items, clube] = await Promise.all([
         prisma.attempt.findMany({
           where: { ...playerAttempts(who), completedAt: { not: null } },
           select: { gameMode: true, stars: true },
         }),
         playerAchievements(prisma, who),
+        who.userId ? clubeStatus(prisma, who.userId, now()) : null,
       ]);
       const totalStars = done.reduce((s, a) => s + a.stars, 0);
       return {
@@ -151,6 +155,7 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
         }),
         achievements: items.filter((x) => x.done).map(({ id, name }) => ({ id, name })),
         trophies: await trophies(prisma, who.userId ?? who.sessionId, now()),
+        member: clube?.active ?? false,
       };
     },
   );

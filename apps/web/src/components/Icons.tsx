@@ -91,3 +91,20 @@ export const LockIcon = (p: { className?: string }) => (
     <path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
   </Icon>
 );
+
+/** The Clube's member seal: a scalloped rosette with a star. */
+export const ClubeSeal = (p: { className?: string }) => (
+  <Icon {...p}>
+    <path d="M12 2.8l2.1 1.6 2.6-.3 1 2.4 2.4 1-.3 2.6 1.6 2.1-1.6 2.1.3 2.6-2.4 1-1 2.4-2.6-.3L12 21.2l-2.1-1.6-2.6.3-1-2.4-2.4-1 .3-2.6L2.6 12l1.6-2.1-.3-2.6 2.4-1 1-2.4 2.6.3z" />
+    <path d="m12 8.2 1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" />
+  </Icon>
+);
+
+/** A gift box, for Presentear Clube. */
+export const GiftIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <rect x="3.5" y="8" width="17" height="4" rx="1" />
+    <path d="M5 12v8h14v-8M12 8v12" />
+    <path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z" />
+  </Icon>
+);

@@ -40,6 +40,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     seasonPromotions,
     pushSubscriptions,
     modeVote,
+    billing,
   ] = await Promise.all([
     who.userId ? prisma.user.findUnique({ where: { id: who.userId } }) : null,
     who.userId
@@ -84,6 +85,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
           select: { mode: true, updatedAt: true },
         })
       : null,
+    who.userId ? billingOf(prisma, who.userId) : null,
   ]);
   return {
     exportedAt: exportedAt.toISOString(),
@@ -122,12 +124,32 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     leagueReports,
     seasonPromotions,
     modeVote,
+    billing,
     // Push keys are secrets of the browser, not data about the player: only the preferences.
     pushSubscriptions: pushSubscriptions.map((p) => ({
       daily: p.daily,
       league: p.league,
       createdAt: p.createdAt,
     })),
+  };
+}
+
+/** Payments of an account: the Stripe customer, subscriptions, purchases and gift codes. */
+async function billingOf(prisma: PrismaClient, userId: string) {
+  const [customer, subscriptions, purchases, giftsRedeemed] = await Promise.all([
+    prisma.billingCustomer.findUnique({ where: { userId } }),
+    prisma.billingSubscription.findMany({ where: { userId } }),
+    prisma.purchase.findMany({ where: { userId }, include: { gift: true } }),
+    prisma.giftCode.findMany({
+      where: { redeemedBy: userId },
+      select: { code: true, months: true, redeemedAt: true, startsAt: true, endsAt: true },
+    }),
+  ]);
+  return {
+    stripeCustomerId: customer?.stripeCustomerId ?? null,
+    subscriptions,
+    purchases,
+    giftsRedeemed,
   };
 }
 
@@ -177,6 +199,13 @@ export async function erase(tx: Tx, sids: string[], pks: string[], userId: strin
     const user = await tx.user.findUnique({ where: { id: userId } });
     if (user) await tx.verification.deleteMany({ where: { identifier: user.email } });
     await tx.modeVote.deleteMany({ where: { userId } });
+    // Billing: renewals were cancelled at Stripe by the caller. Sales stay as fiscal records
+    // without the account (Stripe keeps its own copy of the customer and payments, as the law
+    // asks of a payment processor); a gift code bought here still works for whoever holds it.
+    await tx.billingSubscription.deleteMany({ where: { userId } });
+    await tx.billingCustomer.deleteMany({ where: { userId } });
+    await tx.purchase.updateMany({ where: { userId }, data: { userId: DELETED } });
+    await tx.giftCode.updateMany({ where: { redeemedBy: userId }, data: { redeemedBy: DELETED } });
     await tx.user.delete({ where: { id: userId } }); // cascades to Better Auth sessions and accounts
   }
 }

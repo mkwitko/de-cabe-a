@@ -13,6 +13,9 @@ import { btnPrimary, btnSecondary, GameHeader, Notice, Skeleton } from '../compo
 import { StarIcon } from '../components/Stars';
 import { signInHref } from '../components/SignInButton';
 import { useMe } from '../lib/game';
+import { isPageLaunched } from '../lib/launch';
+import { brl, checkout } from '../lib/billing';
+import { CATALOG } from '@decabeca/contracts';
 
 /** Errors of create/join; without a nickname, one tap takes a suggested one and tries again. */
 function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => void }) {
@@ -261,6 +264,7 @@ export function LeaguePage() {
         <>
           <div className="mt-6 flex flex-wrap gap-3">
             <ShareButton text={invite} label="Convidar amigos" />
+            {!guest && isPageLaunched('clube') && <LigaPro code={l.code} />}
           </div>
           <section aria-labelledby="semana" className="mt-8">
             <h2 id="semana" className="font-condensed text-2xl font-extrabold uppercase">
@@ -321,5 +325,27 @@ export function LeaguePage() {
         </>
       )}
     </>
+  );
+}
+
+/** Liga Pro (closed with the Clube page): the league's owner subscribes; the API checks ownership. */
+function LigaPro({ code }: { code: string }) {
+  const buy = useMutation<void, ApiError>({ mutationFn: () => checkout('liga_pro', code) });
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        className={btnSecondary}
+        disabled={buy.isPending}
+        onClick={() => buy.mutate()}
+      >
+        Liga Pro · {brl(CATALOG.liga_pro.amount)}/mês
+      </button>
+      {buy.error && (
+        <p role="alert" className="text-sm text-chalk-soft">
+          {buy.error.message}
+        </p>
+      )}
+    </div>
   );
 }

@@ -188,6 +188,18 @@ export function AccountPage() {
             </button>
           </section>
 
+          {isPageLaunched('clube') && (
+            <section className={card}>
+              <h2 className={h2}>Clube</h2>
+              <p className="text-chalk-soft">
+                Assinatura, enfeites avulsos e presentes. Só visual, nada de vantagem no jogo.
+              </p>
+              <Link to="/clube" className={`${btnSecondary} self-start`}>
+                Ver o Clube
+              </Link>
+            </section>
+          )}
+
           <Notifications />
 
           <AccountData

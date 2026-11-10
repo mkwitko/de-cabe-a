@@ -15,6 +15,8 @@ describe('launch', () => {
     expect(closedRoute('/ranking', false)?.name).toBe('Ranking');
     expect(closedRoute('/liga/ABC', false)?.name).toBe('Ligas');
     expect(closedRoute('/carreira', false)?.name).toBe('Modo Carreira');
+    expect(closedRoute('/clube', false)?.name).toBe('Clube');
+    expect(closedRoute('/presente/ABCD-EFGH-JKLM', false)?.name).toBe('Clube');
     expect(isPageLaunched('daily', false)).toBe(false);
     for (const p of ['/', '/album', '/stats', '/conta', '/privacidade', '/como-jogar', '/nada'])
       expect(closedRoute(p, false)).toBeNull();

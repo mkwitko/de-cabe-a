@@ -6,6 +6,8 @@ import {
   HOME_EVERY,
   levelMoment,
   levelsDone,
+  OFFER_EVERY,
+  offerMoment,
   shown,
   silenced,
   started,
@@ -58,5 +60,17 @@ describe('nudges', () => {
     expect(
       levelsDone({ totalStars: 9, CAREER_PATH: { completed: 3 }, FOOTBALL_GRID: { completed: 2 } }),
     ).toBe(5);
+  });
+});
+
+describe('Clube offers', () => {
+  const day = 24 * 60 * 60 * 1000;
+  it('speaks after a promotion or a rare sticker, then waits 14 days', () => {
+    expect(offerMoment({}, { promoted: true }, T)).toBe('promotion');
+    expect(offerMoment({}, { promoted: false, rarity: 'lenda' }, T)).toBe('rare');
+    expect(offerMoment({}, { promoted: false, rarity: 'bronze' }, T)).toBeNull();
+    expect(offerMoment({ last: T }, { promoted: true }, T + 13 * day)).toBeNull();
+    expect(offerMoment({ last: T }, { promoted: true }, T + OFFER_EVERY)).toBe('promotion');
+    expect(offerMoment({ never: true }, { promoted: true }, T)).toBeNull();
   });
 });

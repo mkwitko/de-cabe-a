@@ -37,6 +37,10 @@ export const ErrorCode = z.enum([
   'COPA_NOT_STARTED',
   'COPA_CONFLICT',
   'NO_PROMOTION',
+  'BILLING_UNAVAILABLE',
+  'ALREADY_SUBSCRIBED',
+  'GIFT_INVALID',
+  'GIFT_USED',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 
