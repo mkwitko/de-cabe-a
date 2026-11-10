@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { GameMode } from '@decabeca/contracts';
 import { GameArt, type CoverMode } from './GameArt';
 
 type Cover = {
@@ -13,11 +12,10 @@ type Cover = {
   extra?: ReactNode;
 };
 
-const grain = 'radial-gradient(rgb(0 0 0/0.28) 0.8px, transparent 1.2px) 0 0/5px 5px';
 const lines = (c: string, step: string) =>
   `repeating-linear-gradient(0deg, ${c} 0 1px, transparent 1px ${step})`;
 
-/** One real object per game: passport, chalkboard, newspaper, sealed pack, stadium screen... */
+/** One real object per game: chalkboard, newspaper, sealed pack, stadium screen... */
 const COVERS: Record<CoverMode, Cover> = {
   FOOTBALL_GRID: {
     shell: { background: 'radial-gradient(120% 90% at 30% 20%, #34493f, #1f2d26)' },
