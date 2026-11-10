@@ -874,6 +874,8 @@ export const ProfileResponse = z.strictObject({
   games: z.array(z.strictObject({ mode: GameMode, completed: z.number(), stars: z.number() })),
   achievements: z.array(z.strictObject({ id: z.string(), name: z.string() })),
   trophies: z.array(Trophy),
+  /** Clube member: the profile card shows the member badge (cosmetic only). */
+  member: z.boolean().optional(),
 });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;
 
