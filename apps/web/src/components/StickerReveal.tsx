@@ -62,7 +62,7 @@ export function StickerReveal({
       onPointerMove={onMove}
       role="dialog"
       aria-label="Figurinha nova"
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
+      className={`screen-overlay fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
     >
       <Lamps on={3} />
       {!short && !reducedMotion() && (

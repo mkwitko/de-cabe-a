@@ -195,7 +195,7 @@ export function Broadcast({
     <div
       role="dialog"
       aria-label="Resultado"
-      className="fixed inset-0 z-50 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white"
+      className="screen-overlay fixed inset-0 z-50 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white"
     >
       <div
         className="absolute inset-0 motion-safe:data-[shake=true]:animate-[bc-shake_320ms_linear]"

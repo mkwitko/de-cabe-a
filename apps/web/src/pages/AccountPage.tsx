@@ -61,8 +61,7 @@ export function AccountPage() {
     .replace(/[^\p{L}\p{N}]/gu, '')
     .slice(0, 2)
     .toUpperCase();
-  const h2 =
-    'font-condensed text-2xl font-extrabold uppercase border-l-4 border-gold pl-3 leading-none';
+  const h2 = 'font-condensed text-2xl font-extrabold uppercase leading-none';
   const card = 'flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-5';
 
   return (
