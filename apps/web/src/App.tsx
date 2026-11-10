@@ -1,5 +1,5 @@
 import { SoundToggle } from './components/SoundToggle';
-import { GameArt } from './components/GameArt';
+import { HomeCarousel } from './components/HomeCarousel';
 import { RouteMeta } from './components/RouteMeta';
 import { StarIcon } from './components/Stars';
 import { DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
@@ -256,158 +256,6 @@ function BrandSticker() {
   );
 }
 
-type Track = GamesResponse['games'][number];
-
-function TrackState({ track }: { track: Track | undefined }) {
-  if (!track) return <Skeleton className="h-9 w-full" />;
-  if (track.levels === 0) return <p className="font-semibold">Fases a caminho.</p>;
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-baseline gap-2 text-sm font-semibold">
-        <span className="font-condensed tabular text-xl font-black">
-          {track.completed}/{track.levels}
-        </span>
-        <span>fases</span>
-        <span
-          className="font-condensed tabular ml-auto text-lg font-black"
-          aria-label={`${track.stars} estrelas`}
-        >
-          <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {track.stars}
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-ink/15" aria-hidden="true">
-        <div
-          className="h-full rounded-full bg-ink"
-          style={{ width: `${(track.completed / track.levels) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
- * The nine games as a row of album stickers: drawing, what the game is, its pace, the player's
- * progress and one button into the next level. Native scroll-snap; arrows on wider screens.
- */
-function GameCarousel({ games }: { games?: GamesResponse | undefined }) {
-  const row = useRef<HTMLUListElement>(null);
-  const step = (dir: 1 | -1) => {
-    const el = row.current;
-    const card = el?.querySelector('li');
-    if (el && card) el.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: 'smooth' });
-  };
-  const arrow =
-    'hidden size-11 place-items-center rounded-full border border-chalk/25 text-chalk hover:bg-chalk/10 sm:grid';
-  return (
-    <section aria-labelledby="jogos" className="mt-12 sm:mt-16">
-      <div className="flex items-end justify-between gap-4">
-        <h2 id="jogos" className="font-condensed text-2xl font-extrabold uppercase">
-          Jogos
-        </h2>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className={arrow}
-            onClick={() => step(-1)}
-            aria-label="Jogos anteriores"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={arrow}
-            onClick={() => step(1)}
-            aria-label="Próximos jogos"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M9 6l6 6-6 6" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <ul
-        ref={row}
-        className="-mx-4 mt-5 flex snap-x snap-mandatory gap-4 scroll-px-4 overflow-x-auto scroll-smooth px-4 pb-4 [scrollbar-width:none] sm:scroll-px-0 sm:[scrollbar-width:thin] sm:-mx-0 sm:px-0"
-      >
-        {GAMES.map((g) => {
-          const track = games?.games.find((x) => x.mode === g.mode);
-          return (
-            <li
-              key={g.mode}
-              className="flex w-[82%] max-w-80 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-paper text-ink shadow-[0_14px_30px_-14px_rgb(0_0_0/0.55)] sm:w-80"
-            >
-              <Link
-                to={g.path}
-                tabIndex={-1}
-                aria-hidden="true"
-                className="block bg-pitch-deep px-4 py-3"
-              >
-                <GameArt mode={g.mode} className="mx-auto h-32 w-full" />
-              </Link>
-              <div className="flex flex-1 flex-col gap-3 p-5">
-                <h3 className="font-condensed text-3xl leading-none font-black uppercase">
-                  <Link to={g.path} className="hover:underline hover:underline-offset-4">
-                    {g.name}
-                  </Link>
-                </h3>
-                <p className="font-medium">{g.rule}</p>
-                <p className="flex gap-2 text-sm font-semibold">
-                  {g.facts.map((f) => (
-                    <span key={f} className="rounded-full bg-ink/10 px-2.5 py-1">
-                      {f}
-                    </span>
-                  ))}
-                </p>
-                <div className="mt-auto flex flex-col gap-3 pt-2">
-                  <TrackState track={track} />
-                  <div className="flex items-center justify-between gap-3">
-                    <Link
-                      to={track?.nextLevel ? `${g.path}/${track.nextLevel}` : g.path}
-                      className="font-condensed inline-flex min-h-11 items-center rounded-lg bg-ink px-5 text-lg font-extrabold text-paper uppercase"
-                    >
-                      {track?.nextLevel
-                        ? track.completed
-                          ? `Jogar fase ${track.nextLevel}`
-                          : 'Começar'
-                        : 'Ver fases'}
-                    </Link>
-                    <Link
-                      to={`/como-jogar#${g.mode.toLowerCase()}`}
-                      className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
-                    >
-                      Como jogar
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
 export function Home({ games }: { games?: GamesResponse | undefined }) {
   // The game with the most progress that still has a level to play: one tap back into it.
   const resume = games?.games
@@ -500,7 +348,7 @@ export function Home({ games }: { games?: GamesResponse | undefined }) {
         </Link>
       )}
 
-      <GameCarousel games={games} />
+      <HomeCarousel catalog={GAMES} games={games} />
     </>
   );
 }
