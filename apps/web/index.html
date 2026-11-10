@@ -37,7 +37,12 @@
       // Apply the saved theme before first paint (no flash); no saved choice follows the system.
       try {
         var t = localStorage.getItem('dc-theme');
-        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.setAttribute('data-theme', t);
+          document.querySelectorAll('meta[name=theme-color]').forEach(function (m) {
+            m.content = t === 'dark' ? '#0f1f16' : '#bfe8c4';
+          });
+        }
       } catch (e) {}
     </script>
     <title>De Cabeça F.C. · Minijogos de futebol</title>

@@ -13,11 +13,18 @@ export function getTheme(): ThemeChoice {
   }
 }
 
+/** Browser chrome colour per theme (same values as the theme-color metas in index.html). */
+const CHROME = { light: '#bfe8c4', dark: '#0f1f16' } as const;
+
 /** "system" removes data-theme so the CSS follows prefers-color-scheme. */
 export function applyTheme(t: ThemeChoice) {
   const root = document.documentElement;
   if (t === 'system') root.removeAttribute('data-theme');
   else root.setAttribute('data-theme', t);
+  // Each meta keeps its media query; an explicit choice paints both with that theme.
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
+    m.content = CHROME[t === 'system' ? (m.media.includes('dark') ? 'dark' : 'light') : t];
+  });
 }
 
 export function setTheme(t: ThemeChoice) {
