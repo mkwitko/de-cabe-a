@@ -408,6 +408,7 @@ export function MissingXiPage({ level, timed = false }: { level: number; timed?:
             </p>
             <button
               type="button"
+              aria-label="Desistir e ver a escalação"
               className={`${btnSecondary} min-h-11 shrink-0 px-3 text-base`}
               disabled={!online || action.isPending}
               onClick={() =>
