@@ -111,9 +111,14 @@ export function ModeCover({
   mode,
   name,
   compact = false,
+  heading: H = 'h3',
+  headingId,
 }: {
   mode: GameMode;
   name: ReactNode;
+  /** The name's heading level where the cover leads its own card. */
+  heading?: 'h2' | 'h3';
+  headingId?: string;
   /** Shorter cover for cards that carry more below it. */
   compact?: boolean;
 }) {
@@ -136,11 +141,12 @@ export function ModeCover({
           className={`mx-auto h-auto w-full ${compact ? 'max-h-20 sm:max-h-28' : 'max-h-36 sm:max-h-44'}`}
         />
       </div>
-      <h3
+      <H
+        id={headingId}
         className={`font-condensed leading-[0.9] font-black uppercase ${compact ? 'text-4xl sm:text-5xl' : 'text-4xl sm:text-6xl'} ${c.ink}`}
       >
         {name}
-      </h3>
+      </H>
     </div>
   );
 }

@@ -33,16 +33,16 @@ export function CareerPathCard({ linked = true }: { linked?: boolean }) {
       <ModeCover
         mode="CAREER_PATH"
         compact
+        heading="h2"
+        headingId="cp-name"
         name={
-          <h2 id="cp-name">
-            {linked ? (
-              <Link to="/career-path" className="after:absolute after:inset-0 after:content-['']">
-                {name}
-              </Link>
-            ) : (
-              name
-            )}
-          </h2>
+          linked ? (
+            <Link to="/career-path" className="after:absolute after:inset-0 after:content-['']">
+              {name}
+            </Link>
+          ) : (
+            name
+          )
         }
       />
       <div className="flex flex-col gap-2.5 p-4">
