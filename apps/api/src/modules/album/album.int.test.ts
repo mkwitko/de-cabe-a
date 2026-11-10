@@ -272,6 +272,41 @@ describe('album routes', () => {
     expect(res.owned).toBe(8);
   });
 
+  it('public profile shows the finishes the owner wears and still owns', async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `${randomUUID()}@t.test`,
+        nickname: 'Vaidoso',
+        nicknameKey: 'vaidoso',
+        publicProfile: true,
+      },
+    });
+    await giveStickers(user.id, ['bronze', 'prata']);
+    const [a, b] = (await prisma.sticker.findMany({ where: { pk: user.id } })).map((x) => x.playerId);
+    const choice = {
+      userId: user.id,
+      finish: 'acabamento_holografico',
+      stickers: { [b!]: 'none' },
+    };
+    await prisma.cosmeticChoice.create({ data: choice });
+    const viewer = await startLevel();
+    const get = async () => (await viewer.req('GET', '/profiles/Vaidoso/album')).json();
+    // worn but not owned (no purchase): nothing shows
+    expect((await get()).finishes).toEqual({});
+    await prisma.purchase.create({
+      data: {
+        checkoutSessionId: `cs_${randomUUID()}`,
+        userId: user.id,
+        product: 'acabamento_holografico',
+        amount: 990,
+        status: 'paid',
+        paidAt: new Date(),
+      },
+    });
+    // owned: the default finish on one sticker, the other opted out with "none"
+    expect((await get()).finishes).toEqual({ [a!]: 'acabamento_holografico' });
+  });
+
   /** Links a device's guest session to a new account (only accounts are ranked). */
   async function asAccount(sessionId: string, nickname = `Conta ${randomUUID().slice(0, 8)}`) {
     const user = await prisma.user.create({
