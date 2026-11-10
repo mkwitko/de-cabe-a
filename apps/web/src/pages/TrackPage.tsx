@@ -16,12 +16,74 @@ type Level = TrackResponse['levels'][number];
 const DIFFICULTY = { 1: 'fácil', 2: 'média', 3: 'difícil' } as Record<number, string>;
 const PAGE = 10;
 
+/**
+ * The material a mode's houses are made of: `shape` is the outline (also used by the locked,
+ * dashed house), `done` the face of a finished one, `dark` whether stars need a light ink.
+ */
+const HOUSE: Record<GameMode, { shape: string; done: string; dark: boolean }> = {
+  CAREER_PATH: {
+    // passport stamps
+    shape: 'rounded-full border-[3px] border-double -rotate-3',
+    done: 'border-[#5b2b1d] bg-[#f3e9d2] text-[#5b2b1d]',
+    dark: false,
+  },
+  FOOTBALL_GRID: {
+    // chalk on the board
+    shape: 'rounded-full border-2',
+    done: 'border-chalk bg-[#1f2d26] text-chalk',
+    dark: true,
+  },
+  TIMELINE: {
+    // newsprint clippings
+    shape: 'rounded-none border',
+    done: 'border-[#2b2418] bg-[#e8dcc0] text-[#2b2418] [background-image:repeating-linear-gradient(0deg,#0000000d_0_1px,transparent_1px_5px)]',
+    dark: false,
+  },
+  DRAFT: {
+    // foil of the sealed pack
+    shape: 'rounded-lg border-2',
+    done: 'border-ink/70 bg-[linear-gradient(115deg,#b9c4cc,#eef2f4_45%,#9aa7b1)] text-ink',
+    dark: false,
+  },
+  HIGHER_LOWER: {
+    // LED stadium screen
+    shape: 'rounded-md border-4',
+    done: 'border-[#2a2f33] bg-[#0b0d0e] text-[#f5e27a] [background-image:repeating-linear-gradient(0deg,#0004_0_1px,transparent_1px_3px)]',
+    dark: true,
+  },
+  MISSING_XI: {
+    // photo prints
+    shape: 'rounded-sm border-[6px] border-b-[16px] rotate-1',
+    done: 'border-paper bg-[#a9a08a] text-[#2b2418]',
+    dark: false,
+  },
+  MYSTERY_PLAYER: {
+    // scout folder
+    shape: 'rounded-md border-2 border-dashed',
+    done: 'border-[#5a4520] bg-[#d6b46f] text-[#3d2f14]',
+    dark: false,
+  },
+  CONNECTIONS: {
+    // locker doors
+    shape: 'rounded-sm border-4',
+    done: 'border-[#4b565c] bg-[#aab5ba] text-[#20282c]',
+    dark: false,
+  },
+  IMPOSTOR: {
+    // recognition board
+    shape: 'rounded-sm border-4',
+    done: 'border-[#2a2d31] bg-[#8d9096] text-[#1c1e21]',
+    dark: false,
+  },
+};
+
 function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean }) {
   const label = `Fase ${l.level}, ${DIFFICULTY[l.difficultyTier] ?? ''}`;
+  const h = HOUSE[mode];
   if (l.state === 'locked')
     return (
       <li
-        className="grid aspect-square place-items-center rounded-full border-2 border-dashed border-chalk-soft/35 text-chalk-soft/75"
+        className={`grid aspect-square place-items-center ${h.shape} border-dashed border-chalk-soft/40 text-chalk-soft`}
         aria-label={`${label}, trancada`}
       >
         <span className="font-condensed tabular text-xl font-black sm:text-2xl">{l.level}</span>
@@ -38,17 +100,17 @@ function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean
             ? `${label}, ${l.stars} estrelas`
             : `${label}, ${l.state === 'in_progress' ? 'em andamento' : 'jogar'}`
         }
-        className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-full transition-transform duration-200 ease-out-expo hover:-translate-y-0.5 ${
+        className={`flex aspect-square flex-col items-center justify-center gap-1 transition-transform duration-200 ease-out-expo hover:-translate-y-0.5 ${h.shape} ${
           done
-            ? 'border-[3px] border-dashed border-ink/25 bg-paper text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]'
-            : 'house-pulse bg-cover text-ink shadow-[0_10px_24px_-8px_rgb(0_0_0/0.6)]'
+            ? `${h.done} shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]`
+            : 'house-pulse border-ink/60 bg-cover text-ink shadow-[0_10px_24px_-8px_rgb(0_0_0/0.6)]'
         }`}
       >
         <span className="font-condensed tabular text-2xl leading-none font-black sm:text-3xl">
           {l.level}
         </span>
         {done ? (
-          <Stars n={l.stars} size="size-3 sm:size-3.5" />
+          <Stars n={l.stars} size="size-3 sm:size-3.5" onCover={!h.dark} />
         ) : (
           <span className="font-condensed text-[0.7rem] font-extrabold tracking-wide uppercase sm:text-xs">
             {l.state === 'in_progress' ? 'Continuar' : 'Jogar'}
