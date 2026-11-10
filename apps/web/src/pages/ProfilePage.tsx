@@ -84,7 +84,11 @@ export function ProfilePage() {
           {album.isPending ? (
             <Skeleton className="h-64" />
           ) : album.data?.showcase.length ? (
-            <Showcase stickers={album.data.showcase} cols="grid-cols-3 lg:grid-cols-6" />
+            <Showcase
+              stickers={album.data.showcase}
+              cols="grid-cols-3 lg:grid-cols-6"
+              finishOf={(id) => album.data.finishes[id] ?? null}
+            />
           ) : (
             <p className="text-chalk-soft">Nenhuma figurinha na vitrine ainda.</p>
           )}

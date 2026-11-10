@@ -17,7 +17,15 @@ export function InstallInvite() {
       aria-label="Instalar o app"
       className="flex items-start gap-3 rounded-xl border border-chalk/15 bg-black/25 p-3 text-sm text-chalk-soft"
     >
-      <img src="/icon-192.png" alt="" className="size-10 shrink-0 rounded-lg" />
+      <img
+        src="/icon-192.png"
+        alt=""
+        width={40}
+        height={40}
+        loading="lazy"
+        decoding="async"
+        className="size-10 shrink-0 rounded-lg"
+      />
       <div className="min-w-0 flex-1">
         <p className="font-bold text-chalk">Jogue direto da tela inicial</p>
         {kind === 'ios' ? (

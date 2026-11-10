@@ -72,6 +72,9 @@ const byEnd = (a: { currentPeriodEnd: Date }, b: { currentPeriodEnd: Date }) =>
  * Has supported the project: a paid one-time apoio, or a monthly apoio that got past its first
  * payment (incomplete ones never did). Kept after a monthly apoio ends: it is a thank-you.
  */
+/** Owner of a guest's one-time apoio until the device signs up. */
+export const guestApoio = (sessionId: string) => `guest:${sessionId}`;
+
 export async function supportOf(prisma: Db, userId: string, now: Date) {
   const [paid, monthly] = await Promise.all([
     prisma.purchase.count({ where: { userId, product: 'apoio_avulso', status: 'paid' } }),

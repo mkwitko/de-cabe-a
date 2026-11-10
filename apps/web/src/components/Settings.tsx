@@ -7,6 +7,7 @@
  */
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { isPageLaunched } from '../lib/launch';
 import { systemReducesMotion, TRACKS, updateSettings, useSettings } from '../lib/settings';
 import { onPreviewChange, previewing, previewTrack, setMusic } from '../lib/music';
 import { play, setSound } from '../lib/sound';
@@ -296,6 +297,11 @@ export function SettingsDialog() {
               <Link to="/conta" onClick={close} className={linkRow}>
                 Conta <span aria-hidden="true">›</span>
               </Link>
+              {isPageLaunched('apoie') && (
+                <Link to="/apoie" onClick={close} className={linkRow}>
+                  Apoie o projeto <span aria-hidden="true">›</span>
+                </Link>
+              )}
               <Link to="/privacidade" onClick={close} className={linkRow}>
                 Privacidade <span aria-hidden="true">›</span>
               </Link>

@@ -13,6 +13,7 @@ export function GameHeader({
   aside,
   back = '/',
 }: {
+  /** Empty when the page shows its own h1 (a Liga Pro crest). */
   title: string;
   aside?: ReactNode;
   /** Where the back arrow goes: the games (home) by default, the track from a level. */
@@ -27,9 +28,11 @@ export function GameHeader({
       >
         <Icon name="back" />
       </Link>
-      <h1 className="font-condensed text-2xl leading-none font-extrabold uppercase sm:text-3xl">
-        {title}
-      </h1>
+      {title && (
+        <h1 className="font-condensed text-2xl leading-none font-extrabold uppercase sm:text-3xl">
+          {title}
+        </h1>
+      )}
       {aside && <div className="ml-auto">{aside}</div>}
     </header>
   );

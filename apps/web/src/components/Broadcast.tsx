@@ -57,6 +57,8 @@ function BigScreen({ hero, on }: { hero: Hero; on: boolean }) {
               src={hero.photo}
               alt=""
               draggable={false}
+              decoding="async"
+              fetchPriority="high"
               className="size-full object-cover object-[50%_20%]"
             />
           ) : (
