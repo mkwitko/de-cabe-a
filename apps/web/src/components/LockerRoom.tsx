@@ -81,7 +81,7 @@ function useDust() {
 }
 
 /** Motes drifting in the light: CSS only (transform/opacity, compositor), no player download. */
-const DUST = Array.from({ length: 16 }, (_, i) => {
+const DUST = Array.from({ length: 8 }, (_, i) => {
   const r = (n: number) => ((i * 7919 + n * 104729) % 1000) / 1000;
   return {
     left: `${10 + r(1) * 80}%`,

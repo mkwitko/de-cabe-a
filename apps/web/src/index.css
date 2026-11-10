@@ -883,7 +883,6 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 38% 62% at 50% 4%, rgb(255 214 150 / 0.22), transparent 70%);
-  mix-blend-mode: screen;
 }
 .scene-dust {
   position: absolute;
@@ -893,16 +892,14 @@
   height: 62%;
   translate: -50% 0;
   opacity: 0.8;
-  mix-blend-mode: screen;
   animation: scene-fade 1.6s ease-out backwards;
 }
 .scene-dust i {
   position: absolute;
-  width: var(--s);
-  height: var(--s);
+  width: calc(var(--s) * 3);
+  height: calc(var(--s) * 3);
   border-radius: 50%;
-  background: #fff6d8;
-  box-shadow: 0 0 6px 1px rgb(255 240 190 / 0.6);
+  background: radial-gradient(#fff6d8 30%, rgb(255 240 190 / 0.35) 55%, transparent 72%);
   opacity: 0;
   animation: dust-drift 9s ease-in-out infinite;
 }
@@ -1178,7 +1175,6 @@
     linear-gradient(90deg, rgb(0 0 0 / 0.08), transparent 12% 88%, rgb(0 0 0 / 0.08)),
     rgb(236 228 200 / 0.62);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-  backdrop-filter: blur(1px);
 }
 .poster::before {
   left: -4%;
@@ -3523,4 +3519,11 @@
     scale: 1.08;
     rotate: 3deg;
   }
+}
+
+/* hidden tab: every animation waits (main.tsx) */
+:root[data-hidden] *,
+:root[data-hidden] *::before,
+:root[data-hidden] *::after {
+  animation-play-state: paused !important;
 }

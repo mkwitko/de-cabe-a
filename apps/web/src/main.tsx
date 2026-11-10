@@ -42,3 +42,8 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+// A hidden tab keeps no looping animation running (the dust, sheens, pulses).
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.toggleAttribute('data-hidden', document.hidden);
+});
