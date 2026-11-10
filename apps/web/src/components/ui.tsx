@@ -8,13 +8,22 @@ export const btnPrimary =
 export const btnSecondary =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-chalk-soft/60 px-4 font-condensed text-lg font-extrabold uppercase tracking-wide text-chalk transition-[transform,background-color,border-color] duration-100 ease-standard hover:border-chalk hover:bg-chalk/[0.06] active:scale-[0.98] motion-reduce:transform-none disabled:opacity-45';
 
-export function GameHeader({ title, aside }: { title: string; aside?: ReactNode }) {
+export function GameHeader({
+  title,
+  aside,
+  back = '/',
+}: {
+  title: string;
+  aside?: ReactNode;
+  /** Where the back arrow goes: the games (home) by default, the track from a level. */
+  back?: string;
+}) {
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <Link
-        to="/"
+        to={back}
         className="-ml-2 grid size-11 place-items-center rounded-lg hover:bg-chalk/10"
-        aria-label="Voltar aos jogos"
+        aria-label={back === '/' ? 'Voltar aos jogos' : 'Voltar às fases'}
       >
         <Icon name="back" />
       </Link>

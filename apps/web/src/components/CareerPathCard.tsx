@@ -90,21 +90,25 @@ export function CareerPathCard({ linked = true }: { linked?: boolean }) {
               </p>
             )}
           </div>
+        ) : track.error ? (
+          <p className="font-semibold">Seu progresso não carregou. Confira a internet.</p>
         ) : (
           <p className="font-semibold">Fases a caminho.</p>
         )}
-        <Link
-          to={next ? `/career-path/${next.level}` : '/career-path'}
-          className="font-condensed relative z-10 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-ink px-5 text-xl font-extrabold text-paper uppercase"
-        >
-          {next
-            ? next.inProgress
-              ? 'Continuar'
-              : `Jogar fase ${next.level}`
-            : levels.length > 0
-              ? 'Rever as fases'
-              : 'Jogar'}
-        </Link>
+        {!(track.error && !linked) && (
+          <Link
+            to={next ? `/career-path/${next.level}` : '/career-path'}
+            className="font-condensed relative z-10 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-ink px-5 text-xl font-extrabold text-paper uppercase"
+          >
+            {next
+              ? next.inProgress
+                ? 'Continuar'
+                : `Jogar fase ${next.level}`
+              : levels.length > 0
+                ? 'Rever as fases'
+                : 'Jogar'}
+          </Link>
+        )}
       </div>
     </article>
   );

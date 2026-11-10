@@ -139,7 +139,7 @@ export function Broadcast({
         {promoted && (
           <div
             role="status"
-            className={`absolute inset-x-5 top-[60%] flex items-center gap-3 rounded-lg px-4 py-2.5 text-ink transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${done ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
+            className={`absolute inset-x-5 top-[60%] mx-auto flex max-w-3xl items-center gap-3 rounded-lg px-4 py-2.5 text-ink transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${done ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
             style={{ background: titleTone(promoted) }}
           >
             <TitleBadge name={promoted} className="size-10" />
@@ -149,10 +149,10 @@ export function Broadcast({
           </div>
         )}
         <div
-          className={`absolute inset-x-0 bottom-24 px-5 transition-[opacity,transform] duration-500 ${lit ? 'opacity-100' : 'translate-y-8 opacity-0'}`}
+          className={`absolute inset-x-0 bottom-24 mx-auto max-w-3xl px-5 transition-[opacity,transform] duration-500 ${lit ? 'opacity-100' : 'translate-y-8 opacity-0'}`}
         >
           <div className="rounded-lg bg-cover px-4 py-3 text-ink">
-            <h2 className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase">
+            <h2 className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-5xl">
               {headline}
             </h2>
             <div className="mt-1 text-sm leading-snug font-semibold">{detail}</div>
@@ -165,7 +165,11 @@ export function Broadcast({
       <button
         type="button"
         onClick={() => onDoneRef.current()}
-        className="absolute right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] min-h-11 rounded-full border-2 border-white/60 px-5 font-extrabold text-white"
+        className={
+          done
+            ? 'font-condensed absolute inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] mx-auto min-h-14 max-w-md rounded-xl bg-cover text-xl font-black tracking-wide text-ink uppercase shadow-[0_10px_24px_-8px_rgb(0_0_0/0.7)] motion-safe:animate-[fade-in_300ms_both]'
+            : 'absolute right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] min-h-11 rounded-full border-2 border-white/60 px-5 font-extrabold text-white'
+        }
       >
         {done ? 'Continuar' : 'Pular'}
       </button>

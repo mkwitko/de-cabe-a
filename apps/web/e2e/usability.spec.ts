@@ -64,6 +64,7 @@ for (const route of ROUTES)
 test('album shows the sticker won in a level', async ({ page }) => {
   await page.goto('/career-path/1');
   await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();

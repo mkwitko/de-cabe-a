@@ -25,6 +25,8 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
   // Mode chosen once, before the level starts (ADR-009).
   await page.getByRole('button', { name: /No seu tempo/ }).click();
+  // First run: the 3-step tutorial lays over level 1; it can be skipped and does not come back.
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
   const revealed = page.getByRole('list', { name: 'Clubes revelados' }).getByRole('listitem');
   await expect(revealed.first()).toContainText('Cruzeiro');
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('Romar');
@@ -133,6 +135,7 @@ test('Modo Carreira: create a footballer, train him with a level, play a match',
   // Win Career Path level 1 at the first guess: 3 stars = 3 training points = one match.
   await page.goto('/career-path/1');
   await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();

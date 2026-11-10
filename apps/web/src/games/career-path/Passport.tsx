@@ -25,6 +25,8 @@ function Stamp({
   delay: number;
 }) {
   const stats = statsLabel(club.appearances, club.goals);
+  // Fit the longest word on one line (Barcelona, not "Barcelon-a"); two lines for long names.
+  const longest = Math.max(6, ...club.clubName.split(/\s+/).map((w) => w.length));
   return (
     <div
       className={`relative flex h-[92%] w-[94%] max-w-72 flex-col items-center justify-center border-[3px] border-current text-center opacity-90 mix-blend-multiply ${hit ? 'stamp-hit' : ''}`}
@@ -42,20 +44,19 @@ function Stamp({
         aria-hidden="true"
         className="absolute inset-[5px] rounded-[inherit] border-[1.5px] border-current"
       />
-      <span className="text-[clamp(0.45rem,9cqh,0.7rem)] font-extrabold tracking-[0.14em] uppercase">
-        {club.isLoan ? 'Empréstimo' : 'Entrada'}
-      </span>
-      <b className="font-condensed mt-[2cqh] line-clamp-2 max-w-[86%] text-[clamp(0.7rem,22cqh,1.6rem)] leading-[0.95] font-black break-words uppercase">
+      {club.isLoan && (
+        <span className="text-xs font-extrabold tracking-[0.12em] uppercase">Empréstimo</span>
+      )}
+      <b
+        className="font-condensed mt-[2cqh] line-clamp-2 max-w-[86%] leading-[0.95] font-black break-words uppercase"
+        style={{ fontSize: `clamp(0.8rem, min(22cqh, ${140 / longest}cqw), 1.6rem)` }}
+      >
         {club.clubName}
       </b>
-      <span className="tabular mt-[2cqh] text-[clamp(0.5rem,10cqh,0.75rem)] font-bold">
+      <span className="tabular mt-[2cqh] text-xs font-bold">
         {yearsLabel(club.fromYear, club.toYear)}
       </span>
-      {stats && (
-        <span className="tabular text-[clamp(0.5rem,10cqh,0.75rem)] font-bold opacity-85">
-          {stats}
-        </span>
-      )}
+      {stats && <span className="tabular text-xs font-bold opacity-85">{stats}</span>}
     </div>
   );
 }
@@ -156,9 +157,9 @@ export function Passport({
           aria-hidden={opened}
           tabIndex={opened ? -1 : 0}
           onClick={onOpen}
-          className={`passport-cover absolute inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-4 rounded-[6px_14px_14px_6px] text-[#e7c26a] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [backface-visibility:hidden] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] ${opened ? 'pointer-events-none [transform:rotateY(-178deg)]' : ''}`}
+          className={`passport-cover absolute inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-[min(1rem,3.5cqh)] rounded-[6px_14px_14px_6px] text-[#e7c26a] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [backface-visibility:hidden] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] [container-type:size] ${opened ? 'pointer-events-none [transform:rotateY(-178deg)]' : ''}`}
         >
-          <span className="font-condensed grid size-24 place-items-center rounded-full border-[3px] border-[#e7c26a] text-3xl font-black">
+          <span className="font-condensed grid size-[min(6rem,24cqh)] place-items-center rounded-full border-[3px] border-[#e7c26a] text-[min(1.875rem,8cqh)] font-black">
             DC
           </span>
           <span className="font-condensed text-center text-4xl leading-[0.9] font-black tracking-[0.06em] uppercase">
@@ -169,7 +170,7 @@ export function Passport({
           <span className="text-xs font-bold tracking-[0.3em] uppercase opacity-85">
             República do futebol
           </span>
-          <span className="absolute bottom-7 text-[13px] font-extrabold tracking-[0.2em] uppercase motion-safe:animate-pulse">
+          <span className="mt-[min(1.5rem,4cqh)] text-[13px] font-extrabold tracking-[0.2em] uppercase motion-safe:animate-pulse">
             Toque para abrir
           </span>
         </button>

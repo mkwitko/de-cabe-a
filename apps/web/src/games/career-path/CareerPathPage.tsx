@@ -3,7 +3,7 @@
  * stamps land per revealed club; the guess box docks at the bottom (overlapping the passport's foot
  * on wide screens).
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   AttemptResponse,
   CareerPathReveal,
@@ -27,6 +27,7 @@ import {
   useOnline,
 } from '../../components/ui';
 import { Passport } from './Passport';
+import { Tutorial, tutorialSeen } from './Tutorial';
 
 function Clues({ view }: { view: CareerPathView }) {
   return (
@@ -121,11 +122,24 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
     [view?.history],
   );
   const title = `Career Path · Fase ${level}`;
+  // First run: level 1 in the player's own time (no clock running), nothing played yet, never
+  // seen on this device. The passport opens by itself, the first stamp lands, then the three
+  // steps lay over the level.
+  const [tour, setTour] = useState(() => level === 1 && !timed && !tutorialSeen());
+  const [tourReady, setTourReady] = useState(false);
+  const touring =
+    tour && !!view && data?.attempt.status === 'IN_PROGRESS' && view.attemptsUsed === 0;
+  useEffect(() => {
+    if (!touring) return;
+    setTapped(true);
+    const t = window.setTimeout(() => setTourReady(true), reduced.current ? 200 : 1700);
+    return () => window.clearTimeout(t);
+  }, [touring]);
 
   if (attempt.isPending)
     return (
       <div className="flex flex-col gap-4">
-        <GameHeader title={title} />
+        <GameHeader title={title} back="/career-path" />
         {Array.from({ length: 3 }, (_, i) => (
           <Skeleton key={i} className="h-20" />
         ))}
@@ -134,7 +148,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
   if (attempt.error)
     return (
       <div className="flex flex-col gap-6">
-        <GameHeader title={title} />
+        <GameHeader title={title} back="/career-path" />
         <LevelError
           error={attempt.error as ApiError}
           mode="CAREER_PATH"
@@ -173,18 +187,21 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
     >
       <GameHeader
         title={title}
+        back="/career-path"
         aside={
-          <div className="flex items-center gap-3">
-            <Countdown
-              data={data}
-              onTimeUp={() => void submit({ kind: 'give_up' }, 'Acabou o tempo')}
-            />
-            <AttemptDots
-              used={view.attemptsUsed}
-              max={view.maxAttempts}
-              won={data.attempt.status === 'WON'}
-            />
-          </div>
+          !done && (
+            <div className="flex items-center gap-3" data-tour="tries">
+              <Countdown
+                data={data}
+                onTimeUp={() => void submit({ kind: 'give_up' }, 'Acabou o tempo')}
+              />
+              <AttemptDots
+                used={view.attemptsUsed}
+                max={view.maxAttempts}
+                won={data.attempt.status === 'WON'}
+              />
+            </div>
+          )
         }
       />
       <p className="sr-only" aria-live="polite">
@@ -204,27 +221,40 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
           <Guesses view={view} />
         </div>
       )}
-      <section
-        aria-labelledby="path-title"
-        className={done ? 'h-[28rem] sm:h-[34rem]' : 'min-h-0 flex-1'}
-      >
-        <h2 id="path-title" className="sr-only">
-          Trajetória
-        </h2>
-        <Passport
-          clubs={clubs}
-          total={done ? clubs.length : view.maxAttempts}
-          opened={done || opened}
-          onOpen={() => setTapped(true)}
-          label={done ? 'Trajetória completa' : 'Clubes revelados'}
-          done={done}
-        />
-      </section>
+      {/* Finished: the result first, the full passport beside it (below on phones). */}
+      <div className={done ? 'grid items-start gap-8 lg:grid-cols-2' : 'contents'}>
+        {done && <LevelEnd data={data} {...resultCopy(data)} />}
+        <section
+          aria-labelledby="path-title"
+          className={done ? 'flex flex-col gap-3 lg:sticky lg:top-6' : 'min-h-0 flex-1'}
+        >
+          <h2
+            id="path-title"
+            className={
+              done ? 'font-condensed text-2xl leading-none font-extrabold uppercase' : 'sr-only'
+            }
+          >
+            {done ? 'O passaporte completo' : 'Trajetória'}
+          </h2>
+          <div
+            data-tour="passport"
+            className={`mx-auto w-full max-w-2xl ${done ? 'h-[28rem] sm:h-[34rem]' : 'h-full'}`}
+          >
+            <Passport
+              clubs={clubs}
+              total={done ? clubs.length : view.maxAttempts}
+              opened={done || opened}
+              onOpen={() => setTapped(true)}
+              label={done ? 'Trajetória completa' : 'Clubes revelados'}
+              done={done}
+            />
+          </div>
+        </section>
+      </div>
 
-      {done ? (
-        <LevelEnd data={data} {...resultCopy(data)} />
-      ) : (
+      {!done && (
         <form
+          data-tour="guess"
           className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:shrink-0 sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4"
           onSubmit={(e) => {
             e.preventDefault();
@@ -269,6 +299,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
           )}
         </form>
       )}
+      {touring && tourReady && <Tutorial onDone={() => setTour(false)} />}
       {/* room for the guess form docked at the bottom on phones */}
       {!done && <div className="h-20 shrink-0 sm:hidden" aria-hidden="true" />}
     </div>

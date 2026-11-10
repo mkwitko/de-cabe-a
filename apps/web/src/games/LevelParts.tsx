@@ -11,7 +11,7 @@ import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from 
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
 import { Reactions } from '../components/Reactions';
-import { Stars } from '../components/Stars';
+import { Stars, StarIcon } from '../components/Stars';
 import { Broadcast } from '../components/Broadcast';
 import { StickerReveal } from '../components/StickerReveal';
 import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
@@ -19,7 +19,11 @@ import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 import { TitleBadge } from '../components/TitleBadge';
 import { SignInButton } from '../components/SignInButton';
-import { promotedTo, titleTone } from '../lib/format';
+import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
+import { isPageLaunched } from '../lib/launch';
+import { nextLevel } from '../lib/track';
+import { POSITION } from '../components/StickerCard';
+import { RARITY_STYLE } from '../components/rarity';
 
 const INVITE_KEY = 'decabeca:save-invite';
 
@@ -32,33 +36,50 @@ export function LevelError({
   mode: GameMode;
   retry: () => void;
 }) {
+  // The player's real next level: a locked or missing link leads there, not to a dead end.
+  const next = nextLevel(useTrack(mode).data);
+  const go = next ? (
+    <Link to={`${GAME_PATH[mode]}/${next.level}`} className={btnPrimary}>
+      {next.inProgress ? 'Continuar' : 'Jogar'} fase {next.level}
+    </Link>
+  ) : null;
   const back = (
-    <Link to={GAME_PATH[mode]} className={btnPrimary}>
-      Ver fases
+    <Link to={GAME_PATH[mode]} className={go ? btnSecondary : btnPrimary}>
+      Ver as fases
     </Link>
   );
   if (error.code === 'LEVEL_LOCKED')
     return (
       <Notice
-        title="Essa fase ainda não chegou"
+        title="Essa fase ainda está trancada"
         action={
           <div className="flex flex-wrap gap-3">
-            <Link to="/d/hoje" className={btnPrimary}>
-              Desafio do Dia
-            </Link>
-            <Link to={GAME_PATH[mode]} className={btnSecondary}>
-              Ir para a trilha
-            </Link>
+            {go}
+            {isPageLaunched('daily') && (
+              <Link to="/d/hoje" className={btnSecondary}>
+                Desafio do Dia
+              </Link>
+            )}
+            {back}
           </div>
         }
       >
-        Ela abre quando você terminar as anteriores. O Desafio do Dia está aberto para todo mundo.
+        Ela abre quando você terminar as anteriores
+        {next ? `. A sua vez é a fase ${next.level}.` : '.'}
       </Notice>
     );
   if (error.code === 'LEVEL_NOT_FOUND')
     return (
-      <Notice title="Fase não encontrada" action={back}>
-        Essa fase não existe (ainda).
+      <Notice
+        title="Fase não encontrada"
+        action={
+          <div className="flex flex-wrap gap-3">
+            {go}
+            {back}
+          </div>
+        }
+      >
+        Essa fase não existe (ainda). As fases novas entram na trilha.
       </Notice>
     );
   return (
@@ -70,14 +91,96 @@ export function LevelError({
         </button>
       }
     >
-      {error.message}
+      A fase não carregou. Confira a internet e tente de novo.
     </Notice>
   );
 }
 
+/** The sticker this level put in the album, as a small face (finish + portrait), linking to the album. */
+function StickerWon({ award }: { award: NonNullable<AttemptResponse['sticker']> }) {
+  const { sticker, isNew, upgradedFrom } = award;
+  const style = RARITY_STYLE[sticker.rarity];
+  return (
+    <Link
+      to="/album"
+      className="group flex items-center gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3 transition-colors duration-150 hover:bg-chalk/[0.09]"
+    >
+      <span
+        aria-hidden="true"
+        className={`${style.className} aspect-[3/4] w-12 shrink-0 -rotate-3 rounded-[6px] bg-(--edge) p-[3px] shadow-[3px_5px_10px_rgb(0_0_0/0.45)] transition-transform duration-200 ease-out-expo group-hover:rotate-0`}
+      >
+        <span className="grid size-full place-items-center overflow-hidden rounded-[4px] bg-(image:--face) text-(--ink)">
+          {sticker.photo ? (
+            <img
+              src={sticker.photo}
+              alt=""
+              draggable={false}
+              className="size-full object-cover object-[50%_20%]"
+            />
+          ) : (
+            <span className="font-condensed text-lg font-black">
+              {sticker.positionGroup ? POSITION[sticker.positionGroup] : '?'}
+            </span>
+          )}
+        </span>
+      </span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="font-condensed truncate text-lg leading-none font-extrabold uppercase">
+          {sticker.name}
+        </span>
+        <span className="text-xs font-semibold whitespace-nowrap text-chalk-soft">
+          {isNew
+            ? `${style.label} · nova`
+            : upgradedFrom
+              ? `Subiu para ${style.label}`
+              : `${style.label} · já colada`}
+        </span>
+        <span className="text-sm font-bold text-gold underline underline-offset-4">Álbum</span>
+      </span>
+    </Link>
+  );
+}
+
+/** Where the player stands on the title ladder after this level. */
+function TitleProgress({ total }: { total: number }) {
+  const i = TITLE_LADDER.findLastIndex((t) => total >= t.min);
+  const cur = TITLE_LADDER[i]!;
+  const next = TITLE_LADDER[i + 1];
+  const pct = next ? ((total - cur.min) / (next.min - cur.min)) * 100 : 100;
+  return (
+    <div className="flex min-w-0 flex-col justify-center gap-1.5 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3">
+      <p className="flex items-center gap-2">
+        <TitleBadge name={cur.name} className="size-7 shrink-0" />
+        <span className="font-condensed min-w-0 text-lg leading-none font-extrabold uppercase">
+          {cur.name}
+        </span>
+      </p>
+      <div
+        className="h-2 overflow-hidden rounded-full bg-chalk/15"
+        role="progressbar"
+        aria-label={next ? `Estrelas até ${next.name}` : 'Título máximo'}
+        aria-valuemin={cur.min}
+        aria-valuemax={next?.min ?? total}
+        aria-valuenow={total}
+      >
+        <div
+          className="h-full rounded-full bg-cover transition-[width] duration-700 ease-out-expo"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-sm leading-tight font-semibold text-chalk-soft">
+        <StarIcon className="inline size-[0.85em] align-[-0.08em] text-gold" />{' '}
+        <span className="tabular font-bold text-chalk">{total}</span>
+        {next ? ` · faltam ${next.min - total} para ${next.name}` : ' · título máximo'}
+      </p>
+    </div>
+  );
+}
+
 /**
- * End of a level: the result pasted as one album sticker (verdict, answer, stars, points),
- * then the next step, sharing and the level's top 10.
+ * End of a level, one screen: the result pasted as an album sticker (verdict, answer, stars,
+ * points), the sticker won and the title progress, then "Próxima fase" (shares secondary). Reactions
+ * and the level's top 10 only while the ranking is open.
  */
 export function LevelEnd({
   data,
@@ -101,7 +204,7 @@ export function LevelEnd({
   /** Oficina levels (no track number) have no next level, track ranking or training. */
   const oficina = level === 0;
   const trackQ = useTrack(mode);
-  const top = useLevelRanking(mode, level, true);
+  const top = useLevelRanking(mode, level, !oficina && isPageLaunched('ranking'));
   const me = useMe();
   // The track's real next level: never a locked one, and never back into this one. After a
   // Desafio do Dia level far ahead, that is the player's own place in the track.
@@ -129,7 +232,10 @@ export function LevelEnd({
         /* private mode: the invite may show again */
       }
   }, [showInvite, stage]);
-  const daily = useDaily('hoje').data?.games.find((g) => g.mode === mode && g.level === level);
+  const dailyQ = useDaily('hoje');
+  const daily = isPageLaunched('daily')
+    ? dailyQ.data?.games.find((g) => g.mode === mode && g.level === level)
+    : undefined;
   if (stage === 'broadcast')
     return (
       <Broadcast
@@ -144,29 +250,32 @@ export function LevelEnd({
     );
   if (stage === 'sticker' && data.sticker)
     return <StickerReveal award={data.sticker} short={short} onDone={() => setStage('end')} />;
+  const award = data.sticker;
+  const total = stats.data?.totalStars;
+  const social = !oficina && isPageLaunched('ranking');
   return (
-    <section aria-labelledby="level-end" className="flex flex-col gap-6">
+    <section aria-labelledby="level-end" className="flex flex-col gap-5">
       <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
-        <div className="rounded-[6px] bg-cover px-5 pt-5 pb-4 text-ink">
+        <div className="rounded-[6px] bg-cover px-4 pt-4 pb-3 text-ink sm:px-5 sm:pt-5">
           <h2
             id="level-end"
-            className="font-condensed text-4xl leading-[0.92] font-black text-balance uppercase sm:text-5xl"
+            className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-5xl"
           >
             {headline}
           </h2>
-          <div className="mt-3 text-lg leading-snug font-semibold">{detail}</div>
-          {data.attempt.durationSec !== null && (
-            <p className="mt-2 text-base font-semibold">
-              <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
-              {formatClock(data.attempt.durationSec)}
-              {data.attempt.timed ? ' · contra o relógio' : ''}
-            </p>
-          )}
-          <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
-            <Stars n={stars} size="size-9" onCover animate />
+          <div className="mt-2 leading-snug font-semibold sm:text-lg">{detail}</div>
+          <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
+            <Stars n={stars} size="size-8 sm:size-9" onCover animate />
             <p className="font-condensed tabular text-right leading-none font-black uppercase">
               <span className="text-3xl">{score}</span>
               <span className="ml-1 text-base">pts</span>
+              {data.attempt.durationSec !== null && (
+                <span className="mt-1 block text-sm font-bold normal-case">
+                  <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
+                  {formatClock(data.attempt.durationSec)}
+                  {data.attempt.timed ? ' · contra o relógio' : ''}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -183,43 +292,33 @@ export function LevelEnd({
           </span>
         </p>
       )}
-      {showInvite && (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border-2 border-cover/70 px-4 py-3">
-          <p className="min-w-0 flex-1 basis-56">
-            <span className="font-condensed block text-xl leading-none font-extrabold uppercase">
-              Salve seu progresso
-            </span>
-            <span className="text-sm text-chalk-soft">
-              Crie uma conta e leve suas estrelas e figurinhas para qualquer aparelho.
-            </span>
-          </p>
-          <SignInButton />
+
+      {!oficina && (award || total !== undefined) && (
+        <div className={`grid gap-3 ${award && total !== undefined ? 'grid-cols-2' : ''}`}>
+          {award && <StickerWon award={award} />}
+          {total !== undefined && <TitleProgress total={total} />}
         </div>
       )}
-      {stars > 0 && !oficina && (
-        <Link
-          to="/carreira"
-          className="-mt-2 text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
-        >
-          +{stars} de treino para o seu craque no Modo Carreira
-        </Link>
-      )}
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+
+      <div className="grid gap-3 sm:grid-cols-2">
         {oficina ? (
-          <Link to="/oficina" className={btnPrimary}>
+          <Link to="/oficina" className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}>
             Mais desafios da Oficina
           </Link>
         ) : daily ? (
-          <Link to="/d/hoje" className={btnPrimary}>
+          <Link to="/d/hoje" className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}>
             Voltar ao Desafio do Dia
           </Link>
         ) : next ? (
-          <Link to={`${GAME_PATH[mode]}/${next.level}`} className={btnPrimary}>
+          <Link
+            to={`${GAME_PATH[mode]}/${next.level}`}
+            className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}
+          >
             Próxima fase · {next.level}
           </Link>
         ) : (
-          <Link to={GAME_PATH[mode]} className={btnPrimary}>
-            Ver fases
+          <Link to={GAME_PATH[mode]} className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}>
+            Ver as fases
           </Link>
         )}
         {data.share && (
@@ -237,9 +336,31 @@ export function LevelEnd({
         )}
       </div>
 
-      {!oficina && <Reactions mode={mode} level={level} />}
+      {showInvite && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border-2 border-cover/70 px-4 py-3">
+          <p className="min-w-0 flex-1 basis-56">
+            <span className="font-condensed block text-xl leading-none font-extrabold uppercase">
+              Salve seu progresso
+            </span>
+            <span className="text-sm text-chalk-soft">
+              Crie uma conta e leve suas estrelas e figurinhas para qualquer aparelho.
+            </span>
+          </p>
+          <SignInButton />
+        </div>
+      )}
+      {stars > 0 && !oficina && isPageLaunched('career') && (
+        <Link
+          to="/carreira"
+          className="text-sm font-semibold text-chalk-soft underline underline-offset-4 hover:text-chalk"
+        >
+          +{stars} de treino para o seu craque no Modo Carreira
+        </Link>
+      )}
 
-      {!oficina && (
+      {social && <Reactions mode={mode} level={level} />}
+
+      {social && (
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="font-condensed text-xl font-extrabold uppercase">Top 10 da fase</h3>
