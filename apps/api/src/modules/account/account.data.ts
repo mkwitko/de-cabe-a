@@ -134,9 +134,9 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
   };
 }
 
-/** Payments of an account: the Stripe customer, subscriptions, purchases and gift codes. */
+/** Payments of an account: the Stripe customer, subscriptions, purchases, gift codes, what it wears. */
 async function billingOf(prisma: PrismaClient, userId: string) {
-  const [customer, subscriptions, purchases, giftsRedeemed] = await Promise.all([
+  const [customer, subscriptions, purchases, giftsRedeemed, cosmetics] = await Promise.all([
     prisma.billingCustomer.findUnique({ where: { userId } }),
     prisma.billingSubscription.findMany({ where: { userId } }),
     prisma.purchase.findMany({ where: { userId }, include: { gift: true } }),
@@ -144,12 +144,14 @@ async function billingOf(prisma: PrismaClient, userId: string) {
       where: { redeemedBy: userId },
       select: { code: true, months: true, redeemedAt: true, startsAt: true, endsAt: true },
     }),
+    prisma.cosmeticChoice.findUnique({ where: { userId } }),
   ]);
   return {
     stripeCustomerId: customer?.stripeCustomerId ?? null,
     subscriptions,
     purchases,
     giftsRedeemed,
+    cosmetics,
   };
 }
 
@@ -206,7 +208,8 @@ export async function erase(tx: Tx, sids: string[], pks: string[], userId: strin
     await tx.billingCustomer.deleteMany({ where: { userId } });
     await tx.purchase.updateMany({ where: { userId }, data: { userId: DELETED } });
     await tx.giftCode.updateMany({ where: { redeemedBy: userId }, data: { redeemedBy: DELETED } });
-    await tx.user.delete({ where: { id: userId } }); // cascades to Better Auth sessions and accounts
+    // cascades to Better Auth sessions and accounts, and the cosmetics worn
+    await tx.user.delete({ where: { id: userId } });
   }
 }
 

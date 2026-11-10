@@ -2,6 +2,9 @@ import {
   CATALOG,
   CheckoutRequest,
   EntitlementsResponse,
+  EquipRequest,
+  MAX_STICKER_FINISHES,
+  type Cosmetic,
   RedeemRequest,
   RedirectResponse,
 } from '@decabeca/contracts';
@@ -59,6 +62,40 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.get('/me/entitlements', { schema: { response: { 200: EntitlementsResponse } } }, (req) =>
     entitlements(prisma, accountOf(req), now()),
+  );
+
+  /** Wears or takes off owned items; anything not owned (now) is refused, guests are asked to sign in. */
+  app.patch(
+    '/me/cosmetics',
+    { schema: { body: EquipRequest, response: { 200: EntitlementsResponse } } },
+    async (req) => {
+      const userId = accountOf(req);
+      const t = now();
+      const owned = new Set<string>((await entitlements(prisma, userId, t)).cosmetics);
+      const { stickers: patch, ...worn } = req.body;
+      const wanted = [...Object.values(worn), ...Object.values(patch ?? {})];
+      if (wanted.some((v) => v && v !== 'none' && !owned.has(v as Cosmetic)))
+        throw new AppError(403, 'FORBIDDEN', 'Este item não é seu. Veja a Banca no Clube.');
+      const saved = await prisma.cosmeticChoice.findUnique({ where: { userId } });
+      const stickers = { ...((saved?.stickers ?? {}) as Record<string, string>) };
+      for (const [playerId, f] of Object.entries(patch ?? {}))
+        if (f) stickers[playerId] = f;
+        else delete stickers[playerId];
+      if (Object.keys(stickers).length > MAX_STICKER_FINISHES)
+        throw new AppError(400, 'VALIDATION_ERROR', 'Figurinhas demais com acabamento próprio.');
+      const data = {
+        ...(Object.fromEntries(Object.entries(worn).filter(([, v]) => v !== undefined)) as {
+          [K in keyof typeof worn]?: string | null;
+        }),
+        stickers,
+      };
+      await prisma.cosmeticChoice.upsert({
+        where: { userId },
+        create: { userId, ...data },
+        update: data,
+      });
+      return entitlements(prisma, userId, t);
+    },
   );
 
   app.post(
