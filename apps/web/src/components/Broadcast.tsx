@@ -166,7 +166,9 @@ export function Broadcast({
       at(260, showName);
       count(300, 500);
     } else {
-      // The build-up starts at once: three lamps inside 300 ms, then the screen, then the name.
+      // The build-up starts at once: the screen powers on with the first lamp (never a dark empty
+      // frame), the other lamps inside 300 ms, then the stands light and the name lands.
+      showScreen();
       [0, 120, 240].forEach((ms, i) =>
         at(ms, () => {
           setLamps(i + 1);
@@ -175,7 +177,6 @@ export function Broadcast({
         }),
       );
       at(300, light);
-      at(420, showScreen);
       at(withHero ? 1000 : 420, showName);
       count(withHero ? 1200 : 700, 900);
     }

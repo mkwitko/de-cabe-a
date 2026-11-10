@@ -275,10 +275,10 @@
 }
 @keyframes sheen-move {
   from {
-    transform: translateX(-30%);
+    background-position-x: 20%;
   }
   to {
-    transform: translateX(30%);
+    background-position-x: 80%;
   }
 }
 /* The sheen strip is wider than the card so pointer tilt only moves it sideways. */
@@ -338,9 +338,9 @@
     opacity: 0;
   }
 }
-/* The stamp's impact: the one deliberate overshoot in the app. */
+/* The stamp's impact: the keyframes carry the thump, the curve never overshoots. */
 .stamp-hit {
-  animation: stamp-hit 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation: stamp-hit 420ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .passport-shake {
   animation: passport-shake 320ms linear;
@@ -1126,6 +1126,9 @@
 }
 .pcard-lg {
   filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55)) drop-shadow(0 3px 4px rgb(0 0 0 / 0.4));
+  /* its own layer: without it Chromium paints stale, pixelated copies of the masked card around
+     the shield once the reveal's tilt has moved it (seen on phones) */
+  will-change: filter;
 }
 .pcard-rim,
 .pcard-face,
@@ -1315,21 +1318,26 @@
   text-transform: uppercase;
   opacity: 0.7;
 }
+/* The light stays inside the face: the strip is a 300%-wide background that slides (--hx, 0–1)
+ * rather than a 300%-wide layer, and the face isolates the blend, so a tilted card never paints
+ * blended copies outside the shield (seen on phones under the reveal's 3D tilt). */
+.pcard-face {
+  isolation: isolate;
+}
 .pcard .holo {
   position: absolute;
-  inset-block: 0;
-  left: -100%;
-  width: 300%;
+  inset: 0;
   background-image: var(--holo);
+  background-size: 300% 100%;
+  background-position: calc(var(--hx, 0.5) * 100%) 0;
   opacity: 0.8;
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
 /* Lenda: the foil slides and shifts hue with the pointer (set on the card by StickerCard) */
 .pcard.holo-rainbow .holo {
+  --hx: calc(0.3 + var(--px, 0.5) * 0.4);
   opacity: 0.4;
-  mix-blend-mode: soft-light;
-  transform: translateX(calc((var(--px, 0.5) - 0.5) * 40%));
   filter: hue-rotate(calc((var(--py, 0.5) - 0.5) * 160deg));
 }
 /* album size: rating, position, flag, portrait and a bigger name; no grid, no brand */

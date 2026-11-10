@@ -251,7 +251,7 @@ function Brand({ home }: { home: boolean }) {
         <H className="font-condensed block text-[1.35rem] leading-[0.95] font-black whitespace-nowrap uppercase sm:text-2xl lg:text-3xl">
           De Cabeça F.C.
         </H>
-        <span className="mt-0.5 block text-sm leading-tight font-semibold text-chalk-soft sm:whitespace-nowrap">
+        <span className="mt-0.5 block text-xs leading-tight font-semibold whitespace-nowrap text-chalk-soft sm:text-sm">
           Minijogos de futebol
         </span>
       </div>

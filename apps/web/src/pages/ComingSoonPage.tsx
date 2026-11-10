@@ -24,9 +24,9 @@ export function ComingSoonPage({ closed }: { closed: Closed }) {
       className="mx-auto flex w-full max-w-md flex-col items-center gap-6 pt-4 text-center sm:pt-10"
     >
       <div className="relative w-full overflow-hidden rounded-2xl bg-paper text-ink shadow-[0_18px_36px_-14px_rgb(0_0_0/0.6)]">
-        <div className="flex h-72 flex-col grayscale-[0.6]">
+        <div className="flex min-h-72 flex-col grayscale-[0.6]">
           {closed.mode && closed.mode !== 'CAREER_PATH' ? (
-            <ModeCover mode={closed.mode} name={name} />
+            <ModeCover mode={closed.mode} name={name} compact />
           ) : (
             <div className="grid flex-1 place-items-center bg-cover px-5">
               <p className="font-condensed text-5xl leading-[0.9] font-black uppercase">{name}</p>

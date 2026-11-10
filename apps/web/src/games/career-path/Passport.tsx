@@ -127,7 +127,7 @@ export function Passport({
           </div>
           <ol
             aria-label={label}
-            className={`absolute inset-x-2.5 top-11 bottom-2.5 grid grid-cols-2 gap-1 ${done ? 'overflow-y-auto [grid-auto-rows:minmax(4.5rem,1fr)]' : '[grid-auto-rows:minmax(0,1fr)] sm:bottom-24'}`}
+            className={`absolute inset-x-2.5 top-11 bottom-2.5 grid grid-cols-2 gap-1 ${done ? 'overflow-x-hidden overflow-y-auto [scrollbar-width:none] [grid-auto-rows:minmax(4.5rem,1fr)]' : '[grid-auto-rows:minmax(0,1fr)] sm:bottom-24'}`}
           >
             {clubs.map((c, i) => (
               <li key={i} className="grid min-h-0 min-w-0 place-items-center [container-type:size]">
@@ -145,7 +145,7 @@ export function Passport({
                 aria-hidden="true"
                 className="grid min-h-0 place-items-center [container-type:size]"
               >
-                <span className="font-condensed grid size-[min(60cqw,88cqh,8rem)] place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a55]">
+                <span className="font-condensed grid size-[min(60cqw,88cqh,8rem)] place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a]/70">
                   ?
                 </span>
               </li>
@@ -171,7 +171,7 @@ export function Passport({
           <span className="text-xs font-bold tracking-[0.3em] uppercase opacity-85">
             República do futebol
           </span>
-          <span className="mt-[min(1.5rem,4cqh)] text-[13px] font-extrabold tracking-[0.2em] uppercase motion-safe:animate-pulse">
+          <span className="mt-[min(1.5rem,4cqh)] text-[13px] font-extrabold tracking-[0.2em] uppercase">
             Toque para abrir
           </span>
         </button>

@@ -1,5 +1,4 @@
-import { stickerPhoto } from '../knowledge/player-card';
-import { cardNumbers, cardSpells, nationalRecords } from './nota';
+import { cardInclude, nationalRecords, stickerFace } from './nota';
 import {
   AlbumResponse,
   ProfileAlbumResponse,
@@ -20,7 +19,7 @@ import { applyRoundUpgrades } from './round-upgrade';
 async function bestStickers(prisma: PrismaClient, pks: string[], now: Date) {
   const rows = await prisma.sticker.findMany({
     where: { pk: { in: pks } },
-    include: { player: { include: { nationality: true, spells: cardSpells } } },
+    include: { player: { include: cardInclude } },
   });
   const best = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
@@ -31,13 +30,7 @@ async function bestStickers(prisma: PrismaClient, pks: string[], now: Date) {
   return [...best.values()]
     .sort((a, b) => rank(b.rarity) - rank(a.rarity) || +a.earnedAt - +b.earnedAt)
     .map((r) => ({
-      playerId: r.playerId,
-      name: r.player.canonicalName,
-      positionGroup: r.player.primaryPositionGroup,
-      nationality: r.player.nationality.name,
-      nationalityCode: r.player.nationality.isoCode,
-      ...cardNumbers(r.player, national.get(r.playerId), now.getUTCFullYear()),
-      ...stickerPhoto(r.player),
+      ...stickerFace(r.player, national.get(r.playerId), now.getUTCFullYear()),
       rarity: r.rarity,
       mode: r.mode,
       earnedAt: r.earnedAt.toISOString(),

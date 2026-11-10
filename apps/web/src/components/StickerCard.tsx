@@ -14,8 +14,6 @@ const follow = (e: React.PointerEvent<HTMLDivElement>) => {
   e.currentTarget.style.setProperty('--py', String((e.clientY - r.top) / r.height));
 };
 
-const num = (n: number | null | undefined) => (n == null ? '—' : String(n));
-
 /** Shield inner frame (viewBox of the card, 300×400): the same outline as the mask, inset. */
 const FRAME =
   'M24 0H128L150 9 172 0H276C280 12 288 18 300 20V318C300 336 290 346 272 354L150 400 28 354C10 346 0 336 0 318V20C12 18 20 12 24 0Z';
@@ -24,7 +22,8 @@ const FRAME =
  * The sticker as a player card: a notched shield with a fine metal rim around a textured face
  * in the rarity's finish; the portrait large in the upper 60%, faded into the face; the Nota De
  * Cabeça, position and flag in the top-left column; the name across the card; and a 2×3 grid of
- * real numbers (JOG, GOL, CLU | TEM, SEL, GDE), "—" when unknown. Fills its parent (which sets
+ * real numbers (JOG, GOL, CLU | TEM, SEL, GDE); unknown ones are left out, and with none known
+ * there is no grid. Fills its parent (which sets
  * the 3:4 box); everything scales with the card's width (container units). Small cards (album)
  * keep rating, position, flag, photo and name. The reveal moves `stripRef` and hides the name
  * until it is announced (`showName={false}`); `selected` draws an outline around the shield.
@@ -45,14 +44,16 @@ export function StickerCard({
   const style = RARITY_STYLE[sticker.rarity];
   const pos = sticker.positionGroup;
   const [broken, setBroken] = useState(false);
-  const attrs: [string, string, string][] = [
-    ['JOG', 'Jogos na carreira (ligas)', num(sticker.games)],
-    ['GOL', 'Gols na carreira (ligas)', num(sticker.goals)],
-    ['CLU', 'Clubes', num(sticker.clubs)],
-    ['TEM', 'Temporadas', num(sticker.seasons)],
-    ['SEL', 'Jogos pela seleção (Copa do Mundo e Copa América)', num(sticker.nationalGames)],
-    ['GDE', 'Jogos em clubes grandes', num(sticker.bigClubGames)],
-  ];
+  const attrs = (
+    [
+      ['JOG', 'Jogos na carreira (ligas)', sticker.games],
+      ['GOL', 'Gols na carreira (ligas)', sticker.goals],
+      ['CLU', 'Clubes', sticker.clubs],
+      ['TEM', 'Temporadas', sticker.seasons],
+      ['SEL', 'Jogos pela seleção (Copa do Mundo e Copa América)', sticker.nationalGames],
+      ['GDE', 'Jogos em clubes grandes', sticker.bigClubGames],
+    ] as [string, string, number | null | undefined][]
+  ).filter((a): a is [string, string, number] => a[2] != null);
   return (
     <div
       className={`pcard ${size === 'lg' ? 'pcard-lg' : ''} ${selected ? 'pcard-selected' : ''} ${style.className}`}
@@ -113,18 +114,20 @@ export function StickerCard({
           >
             {sticker.name}
           </p>
-          <dl className="pcard-attrs">
-            {attrs.map(([k, label, v]) => (
-              <div key={k}>
-                <dd className="font-condensed tabular">{v}</dd>
-                <dt>
-                  <abbr title={label} className="no-underline">
-                    {k}
-                  </abbr>
-                </dt>
-              </div>
-            ))}
-          </dl>
+          {attrs.length > 0 && (
+            <dl className="pcard-attrs">
+              {attrs.map(([k, label, v]) => (
+                <div key={k}>
+                  <dd className="font-condensed tabular">{v}</dd>
+                  <dt>
+                    <abbr title={label} className="no-underline">
+                      {k}
+                    </abbr>
+                  </dt>
+                </div>
+              ))}
+            </dl>
+          )}
           <span aria-hidden="true" className="pcard-brand font-condensed">
             De Cabeça
           </span>

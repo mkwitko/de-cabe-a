@@ -23,7 +23,7 @@ import { SignInButton } from '../components/SignInButton';
 import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
 import { isPageLaunched } from '../lib/launch';
 import { nextLevel } from '../lib/track';
-import { POSITION } from '../components/StickerCard';
+import { StickerCard } from '../components/StickerCard';
 import { RARITY_STYLE } from '../components/rarity';
 
 const INVITE_KEY = 'decabeca:save-invite';
@@ -99,7 +99,7 @@ export function LevelError({
   );
 }
 
-/** The sticker this level put in the album, as a small face (finish + portrait), linking to the album. */
+/** The sticker this level put in the album, as the small shield card, linking to the album. */
 function StickerWon({
   award,
   onPaper = false,
@@ -117,24 +117,11 @@ function StickerWon({
     >
       <span
         aria-hidden="true"
-        className={`${style.className} aspect-[3/4] w-12 shrink-0 -rotate-3 rounded-[6px] bg-(--edge) p-[3px] shadow-[3px_5px_10px_rgb(0_0_0/0.45)] transition-transform duration-200 ease-out-expo group-hover:rotate-0`}
+        className="aspect-[3/4] w-16 shrink-0 -rotate-3 transition-transform duration-200 ease-out-expo group-hover:rotate-0"
       >
-        <span className="grid size-full place-items-center overflow-hidden rounded-[4px] bg-(image:--face) text-(--ink)">
-          {sticker.photo ? (
-            <img
-              src={sticker.photo}
-              alt=""
-              draggable={false}
-              className="size-full object-cover object-[50%_20%]"
-            />
-          ) : (
-            <span className="font-condensed text-lg font-black">
-              {sticker.positionGroup ? POSITION[sticker.positionGroup] : '?'}
-            </span>
-          )}
-        </span>
+        <StickerCard sticker={sticker} size="sm" />
       </span>
-      <span className="flex min-w-0 flex-col gap-0.5">
+      <span className="flex min-w-0 flex-col gap-1">
         {/* wraps rather than clipping a long name on a phone ("Neym…") */}
         <span className="font-condensed text-base leading-[0.95] font-extrabold break-words uppercase sm:text-lg">
           {sticker.name}
@@ -149,9 +136,9 @@ function StickerWon({
               : `${style.label} · já colada`}
         </span>
         <span
-          className={`text-sm font-bold underline underline-offset-4 ${onPaper ? 'text-[#7a2633]' : 'text-gold'}`}
+          className={`mt-0.5 text-sm font-bold underline underline-offset-4 ${onPaper ? 'text-[#7a2633]' : 'text-gold'}`}
         >
-          Álbum
+          Ver no álbum
         </span>
       </span>
     </Link>
@@ -432,7 +419,7 @@ export function LevelEnd({
                 </div>
                 {!oficina && (award || total !== undefined) && (
                   <div
-                    className={`grid gap-3 border-t border-[#c9b98f] pt-3 ${award && total !== undefined ? 'grid-cols-2' : ''}`}
+                    className={`grid gap-3 border-t border-[#c9b98f] pt-3 ${award && total !== undefined ? 'min-[400px]:grid-cols-2' : ''}`}
                   >
                     {award && <StickerWon award={award} onPaper />}
                     {total !== undefined && <TitleProgress total={total} onPaper />}
@@ -516,7 +503,9 @@ export function LevelEnd({
           )}
 
           {!oficina && (award || total !== undefined) && (
-            <div className={`grid gap-3 ${award && total !== undefined ? 'grid-cols-2' : ''}`}>
+            <div
+              className={`grid gap-3 ${award && total !== undefined ? 'min-[400px]:grid-cols-2' : ''}`}
+            >
               {award && <StickerWon award={award} />}
               {total !== undefined && <TitleProgress total={total} />}
             </div>

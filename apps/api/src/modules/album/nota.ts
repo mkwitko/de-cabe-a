@@ -5,7 +5,8 @@
  */
 import type { PrismaClient } from '../../generated/prisma/client';
 import { BIG_BRAZILIAN_CLUBS } from '../challenges/career-path-difficulty';
-import { stickerStats } from '../knowledge/player-card';
+import { stickerPhoto, stickerStats } from '../knowledge/player-card';
+import { displayName } from '../challenges/connections-snapshot';
 
 /** Clubs every fan knows, by "ISO:shortName" (short names repeat across countries). */
 export const BIG_CLUBS = new Set([
@@ -168,5 +169,67 @@ export function cardNumbers(
       bigClubs: big.length,
       bigClubGames,
     }),
+  };
+}
+
+/** Prisma include for `stickerFace`. */
+export const cardInclude = {
+  nationality: true,
+  spells: cardSpells,
+  aliases: { select: { alias: true } },
+} as const;
+
+type PositionGroup = 'GK' | 'DF' | 'MF' | 'FW';
+
+/**
+ * The card's position. Wikidata often lists wide forwards as midfielders first (Neymar: MF,
+ * also FW); a midfielder also known as a forward who scores at a forward's rate (0.35+ league
+ * goals a game) is shown as ATA. Everyone else keeps the primary position.
+ * ponytail: goal-rate heuristic; switch to the most-played role once line-up roles are stored.
+ */
+export function cardPosition(
+  primary: PositionGroup | null,
+  secondary: PositionGroup[],
+  games: number | null,
+  goals: number | null,
+): PositionGroup | null {
+  if (
+    primary === 'MF' &&
+    secondary.includes('FW') &&
+    games &&
+    goals !== null &&
+    goals / games >= 0.35
+  )
+    return 'FW';
+  return primary;
+}
+
+/** Everything on the sticker but its rarity and when it was earned. */
+export function stickerFace(
+  p: Parameters<typeof cardNumbers>[0] &
+    Parameters<typeof displayName>[0] &
+    Parameters<typeof stickerPhoto>[0] & {
+      id: string;
+      primaryPositionGroup: PositionGroup | null;
+      secondaryPositionGroups: PositionGroup[];
+      nationality: { name: string; isoCode: string };
+    },
+  national: National | undefined,
+  nowYear: number,
+) {
+  const numbers = cardNumbers(p, national, nowYear);
+  return {
+    playerId: p.id,
+    name: displayName(p),
+    positionGroup: cardPosition(
+      p.primaryPositionGroup,
+      p.secondaryPositionGroups,
+      numbers.games,
+      numbers.goals,
+    ),
+    nationality: p.nationality.name,
+    nationalityCode: p.nationality.isoCode,
+    ...numbers,
+    ...stickerPhoto(p),
   };
 }

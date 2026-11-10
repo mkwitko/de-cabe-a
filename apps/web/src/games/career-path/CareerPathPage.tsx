@@ -19,14 +19,7 @@ import { Countdown } from '../Clock';
 import { Icon } from '../../components/Icon';
 import { PlayerSearch } from '../../components/PlayerSearch';
 import { SoundOffer } from '../../components/SoundToggle';
-import {
-  AttemptDots,
-  btnPrimary,
-  btnSecondary,
-  GameHeader,
-  Skeleton,
-  useOnline,
-} from '../../components/ui';
+import { AttemptDots, btnPrimary, GameHeader, Skeleton, useOnline } from '../../components/ui';
 import { Passport } from './Passport';
 import { Tutorial, tutorialSeen } from './Tutorial';
 
@@ -296,7 +289,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
           </div>
           <button
             type="button"
-            className={`${btnSecondary} min-h-10 text-base`}
+            className="mt-1 inline-flex min-h-11 items-center justify-center gap-2 self-center rounded-lg px-4 text-sm font-bold text-chalk-soft transition-colors hover:bg-chalk/10 hover:text-chalk disabled:opacity-50"
             disabled={!online || action.isPending}
             onClick={() => void submit({ kind: 'skip' }, 'Pulou')}
           >

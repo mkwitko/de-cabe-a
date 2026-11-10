@@ -111,7 +111,7 @@ export function StampMark({
       </span>
     );
   return (
-    <span className="grid size-full place-items-center rounded-full border-2 border-dashed border-[#6d5c3a]/25 text-[#6d5c3a]/50">
+    <span className="grid size-full place-items-center rounded-full border-2 border-dashed border-[#6d5c3a]/35 text-[#6d5c3a]/85">
       {num}
     </span>
   );

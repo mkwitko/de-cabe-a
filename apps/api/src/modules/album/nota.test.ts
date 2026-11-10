@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardNumbers, notaDeCabeca, type NotaFacts } from './nota';
+import { cardNumbers, cardPosition, notaDeCabeca, type NotaFacts } from './nota';
 
 const none: NotaFacts = {
   tier: 'T3',
@@ -90,5 +90,15 @@ describe('cardNumbers', () => {
       2026,
     );
     expect(n).toMatchObject({ games: null, nationalGames: null, bigClubGames: 0, seasons: 3 });
+  });
+});
+
+describe('cardPosition', () => {
+  it('shows a scoring midfielder also known as a forward as FW', () => {
+    expect(cardPosition('MF', ['FW'], 400, 200)).toBe('FW'); // Neymar-like
+    expect(cardPosition('MF', ['FW'], 400, 100)).toBe('MF'); // creator, not a scorer
+    expect(cardPosition('MF', [], 400, 200)).toBe('MF');
+    expect(cardPosition('MF', ['FW'], null, null)).toBe('MF');
+    expect(cardPosition('DF', ['FW'], 400, 200)).toBe('DF');
   });
 });

@@ -67,7 +67,7 @@ export function StickerReveal({
     const x = (e.clientX - r.left) / r.width;
     const y = (e.clientY - r.top) / r.height;
     tilt.current.style.transform = `rotateY(${(x - 0.5) * 28}deg) rotateX(${(0.5 - y) * 24}deg)`;
-    if (follow && strip.current) strip.current.style.transform = `translateX(${(x - 0.5) * 60}%)`;
+    if (follow && strip.current) strip.current.style.setProperty('--hx', String(0.2 + x * 0.6));
   };
 
   const revealed = phase === 'card' || phase === 'named';
@@ -106,7 +106,7 @@ export function StickerReveal({
         )}
         <div
           ref={tilt}
-          className={`relative aspect-[3/4] w-[min(62vw,33vh)] [transform-style:preserve-3d] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
+          className={`relative aspect-[3/4] w-[min(62vw,33vh)] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
           style={{ '--d': `${dur}ms` } as React.CSSProperties}
         >
           <StickerCard sticker={sticker} size="lg" showName={phase === 'named'} stripRef={strip} />
