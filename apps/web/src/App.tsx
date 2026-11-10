@@ -568,7 +568,8 @@ const NAV = [
     to: '/',
     label: 'Jogos',
     Icon: GamesIcon,
-    match: (p: string) => !/^\/(d|ranking|ligas?|fantasy|stats|album|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) =>
+      !/^\/(d|ranking|ligas?|fantasy|stats|album|history|conta|perfil)(\/|$)/.test(p),
   },
   { to: '/d/hoje', label: 'Desafio', Icon: DailyIcon, match: (p: string) => /^\/d(\/|$)/.test(p) },
   {
