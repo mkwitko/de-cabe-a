@@ -1408,35 +1408,30 @@
     transition: none;
   }
 }
-/* ==== Sticker player card (StickerCard.tsx) ====
- * A notched shield: a metal rim (--rim, with a bright inner bevel --rim-hi) around a face in the
- * rarity's finish. Face layers, back to front: the base (--face, blended by --blend), the
- * engraving (--pattern, --pattern-blend) and the specular bands (--spec, --spec-blend) in
- * .pcard-art; the inner panel (--plate fill, --frame shade, --frame-hi bevel); a backlight
- * (--glow); the player (cut-out, its head over the panel's top edge, or the faded photo); the
- * text in --ink (--ink-soft for labels, --emboss shadow); the light strip (--holo) on top.
- * Every size is a container unit of the card; the album size (~95–120px) keeps rating,
- * position, player and name. */
+/* ==== Sticker player card (StickerCard.tsx), "Refletor" ====
+ * A chamfered slab (top-right and bottom-left corners cut): a foil rim in the rarity's metal
+ * (--rim, with a bright inner bevel --rim-hi) around a night face lit by a floodlight from the
+ * top right. The player's image comes graded per rarity (tritone, rim light and the fades are
+ * baked offline: scripts/research/cutouts/bake.py) and is placed by his face box (--fx/--fy/--fw
+ * from cutouts.json), so every head has one scale and one height. Performance first: static
+ * gradients and a clip-path; no filters, blur, blend modes or animation (one static mask on the
+ * rare photo fallback without a cut-out).
+ * Rating, position and flag top left, the tier down the right edge, name and numbers at the
+ * foot. Palette per rarity: --deep, --mid, --light, --acc (labels, rules). Every size is a
+ * container unit of the card; the album size (~95-120px) keeps rating, position, player, name. */
 .pcard {
-  --shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cpath d='M24 0H128L150 9 172 0H276C280 12 288 18 300 20V318C300 336 290 346 272 354L150 400 28 354C10 346 0 336 0 318V20C12 18 20 12 24 0Z'/%3E%3C/svg%3E");
+  --shield: polygon(0 0, 83.3% 0, 100% 10.5%, 100% 100%, 16.7% 100%, 0 89.5%);
   container-type: inline-size;
   position: relative;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.5));
-}
-.pcard-lg {
-  filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55)) drop-shadow(0 3px 4px rgb(0 0 0 / 0.4));
-  /* its own layer: without it Chromium paints stale, pixelated copies of the masked card around
-     the shield once the reveal's tilt has moved it (seen on phones) */
-  will-change: filter;
 }
 .pcard-rim,
 .pcard-face,
 .pcard-selected::before,
 .pcard-rim::before,
 .pcard-rim::after {
-  mask: var(--shield) center / 100% 100% no-repeat;
+  clip-path: var(--shield);
 }
 /* selected in the album: a cover-yellow outline that follows the shield */
 .pcard-selected::before {
@@ -1454,139 +1449,110 @@
 .pcard-rim::before {
   content: '';
   position: absolute;
-  inset: 1.1cqw;
+  inset: 0.9cqw;
   background: var(--rim-hi);
 }
 .pcard-rim::after {
   content: '';
   position: absolute;
-  inset: 1.6cqw;
-  background: rgb(0 0 0 / 0.6);
+  inset: 1.4cqw;
+  background: rgb(0 0 0 / 0.7);
 }
 .pcard-face {
   position: absolute;
   z-index: 1;
-  inset: 2.1cqw;
+  inset: 1.8cqw;
   overflow: hidden;
-  background: var(--face);
-  background-size: 100% 100%;
-  background-blend-mode: var(--blend, normal);
-  color: var(--ink);
+  color: #fff;
+  background:
+    radial-gradient(
+      95% 58% at 52% 30%,
+      color-mix(in oklab, var(--mid) 78%, #000) 0%,
+      transparent 72%
+    ),
+    linear-gradient(to bottom, var(--deep), #000 88%);
 }
-.pcard-art,
-.pcard-art::before,
-.pcard-art::after {
+/* floodlight from the top right: two soft beams */
+.pcard-beam {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from 160deg at 88% -6%,
+    transparent 0deg,
+    color-mix(in oklab, var(--light) 22%, transparent) 14deg,
+    transparent 30deg 40deg,
+    color-mix(in oklab, var(--light) 12%, transparent) 50deg,
+    transparent 62deg
+  );
+}
+/* the player (his image carries its own fades into the name and the night) */
+.pcard-stage {
   position: absolute;
   inset: 0;
 }
-.pcard-art::before {
-  content: '';
-  background: var(--pattern, none);
-  mix-blend-mode: var(--pattern-blend, normal);
-}
-.pcard-art::after {
-  content: '';
-  background: var(--spec, none);
-  mix-blend-mode: var(--spec-blend, overlay);
-}
-.pcard-panel {
+/* placed by the face box: face --head cqw wide, centred, its top at --top % of the card's height */
+.pcard-fig {
+  --head: 25;
+  --top: 22;
+  --w: calc(var(--head) * 1cqw / var(--fw, 0.294));
   position: absolute;
-  inset: 0;
+  width: var(--w);
+  aspect-ratio: 4 / 5;
+  left: calc(50cqw - (var(--fx, 0.353) + var(--fw, 0.294) / 2) * var(--w));
+  top: calc(var(--top) * 1.333cqw - var(--fy, 0.188) * var(--w) * 1.25);
+}
+.pcard-fig img {
   width: 100%;
   height: 100%;
-  overflow: visible;
-}
-.pcard-panel path {
-  vector-effect: non-scaling-stroke;
-}
-.pcard-panel-fill {
-  fill: var(--plate, transparent);
-}
-.pcard-panel-shade {
-  fill: none;
-  stroke: var(--frame);
-  stroke-width: max(2px, 1.1cqw);
-}
-.pcard-panel-hi {
-  fill: none;
-  stroke: var(--frame-hi);
-  stroke-width: max(1px, 0.35cqw);
-}
-.pcard-glow {
-  position: absolute;
-  inset: 0 0 30% 14%;
-  background: radial-gradient(48% 52% at 58% 40%, var(--glow), transparent 72%);
-}
-/* the cut-out stands in front of the panel: head over its top edge, shoulders fading out
-   into the name; a contact shadow and a thin rim light in the finish's colour lift it */
-.pcard-cut {
-  position: absolute;
-  top: 0.5%;
-  left: 21%;
-  height: 66%;
-  aspect-ratio: 4 / 5;
-  filter: drop-shadow(0 1.2cqw 1.4cqw rgb(0 0 0 / 0.45)) drop-shadow(0 0 0.5cqw var(--cut-light));
-  -webkit-mask-image: linear-gradient(#000 74%, transparent 98%);
-  mask-image: linear-gradient(#000 74%, transparent 98%);
+  display: block;
 }
 .pcard-photo {
   position: absolute;
-  top: 4%;
-  left: 22%;
-  width: 80%;
-  height: 60%;
+  top: 6%;
+  left: 15%;
+  width: 70%;
+  height: 62%;
   object-fit: cover;
   object-position: 50% 15%;
-  filter: saturate(1.06) contrast(1.04);
-  -webkit-mask-image:
-    radial-gradient(62% 64% at 52% 40%, #000 52%, transparent 100%),
-    linear-gradient(#000 60%, transparent 97%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    radial-gradient(62% 64% at 52% 40%, #000 52%, transparent 100%),
-    linear-gradient(#000 60%, transparent 97%);
-  mask-composite: intersect;
+  -webkit-mask-image: radial-gradient(62% 64% at 50% 40%, #000 52%, transparent 100%);
+  mask-image: radial-gradient(62% 64% at 50% 40%, #000 52%, transparent 100%);
 }
 .pcard-silhouette {
-  fill: currentColor;
-  opacity: 0.22;
-  top: 12%;
-  height: 52%;
+  fill: var(--light);
+  opacity: 0.18;
+  top: 14%;
+  height: 50%;
 }
 .pcard-head {
   position: absolute;
-  top: 15.5%;
-  left: 6%;
-  width: 22%;
+  top: 5.5cqw;
+  left: 5cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5cqw;
+  gap: 1.4cqw;
+  text-shadow: 0 0.5cqw 0 rgb(0 0 0 / 0.55);
 }
 .pcard-rating {
-  font-size: max(18px, 25cqw);
+  font-size: max(18px, 24cqw);
   font-weight: 900;
   font-stretch: 62%;
-  line-height: 0.78;
-  letter-spacing: -0.02em;
-  text-shadow: var(--emboss);
+  line-height: 0.8;
+  letter-spacing: -0.03em;
 }
 .pcard-pos {
-  font-size: max(9px, 8.6cqw);
+  font-size: max(9px, 7cqw);
   font-weight: 800;
+  font-stretch: 75%;
   line-height: 1;
-  letter-spacing: 0.04em;
-  text-shadow: var(--emboss);
-  padding-bottom: 1.6cqw;
-  border-bottom: max(1px, 0.35cqw) solid var(--frame-hi);
+  letter-spacing: 0.08em;
+  color: var(--light);
 }
 .pcard-flag {
-  width: max(14px, 13cqw);
+  width: max(14px, 10cqw);
   aspect-ratio: 3 / 2;
-  border-radius: 1px;
-  box-shadow:
-    0 0 0 0.5px rgb(0 0 0 / 0.4),
-    0 0.6cqw 1.2cqw rgb(0 0 0 / 0.4);
+  border-radius: 0.6cqw;
+  box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.5);
 }
 .flag-badge {
   display: grid;
@@ -1594,32 +1560,31 @@
   font-size: max(7px, 5cqw);
   font-weight: 800;
   letter-spacing: 0.04em;
-  background: color-mix(in srgb, var(--ink) 18%, transparent);
-  outline: 1px solid var(--frame-hi);
+  background: rgb(255 255 255 / 0.14);
+  outline: 1px solid var(--acc);
 }
-.pcard-mark {
-  width: 9.5cqw;
-  margin-top: 0.4cqw;
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2;
-  opacity: 0.8;
-}
-.pcard-mark text {
-  fill: var(--ink);
-  stroke: none;
-  font: 900 12px var(--font-sans);
-  font-stretch: 62%;
-  letter-spacing: -0.02em;
+/* the tier, set down the right edge below the chamfer */
+.pcard-tier {
+  position: absolute;
+  top: 19cqw;
+  right: 3.6cqw;
+  writing-mode: vertical-rl;
+  font-size: 3.2cqw;
+  font-weight: 800;
+  font-stretch: 80%;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--acc);
 }
 /* the name across the card, fitted: long names shrink with their length (--nl) */
 .pcard-name {
   position: absolute;
-  top: 62%;
-  left: 7%;
-  right: 7%;
-  font-size: min(14cqw, calc(128cqw / var(--nl)));
+  top: 70%;
+  left: 6%;
+  right: 6%;
+  font-size: min(15cqw, calc(150cqw / var(--nl)));
   font-weight: 900;
+  font-stretch: 62%;
   line-height: 1;
   letter-spacing: 0.01em;
   text-align: center;
@@ -1630,115 +1595,77 @@
   /* room above the caps for the accents (KAKÁ, PELÉ), which overflow would clip */
   padding-top: 0.18em;
   margin-top: -0.18em;
-  text-shadow: var(--emboss);
+  text-shadow: 0 0.5cqw 0 rgb(0 0 0 / 0.6);
   transition: opacity 400ms;
 }
-/* a rule under the name with a diamond at its centre */
-.pcard-name::after {
-  content: '';
-  display: block;
-  height: 1.6cqw;
-  margin: 1.6cqw 14% 0;
-  background:
-    linear-gradient(45deg, transparent 38%, var(--frame-hi) 38% 62%, transparent 62%) center /
-      1.6cqw 1.6cqw no-repeat,
-    linear-gradient(
-        90deg,
-        transparent,
-        var(--frame-hi) 30% 44%,
-        transparent 44% 56%,
-        var(--frame-hi) 56% 70%,
-        transparent
-      )
-      center / 100% max(1px, 0.3cqw) no-repeat;
-}
+/* the numbers: one row under a rule in the rarity's accent */
 .pcard-attrs {
   position: absolute;
-  top: 73.2%;
-  left: 18%;
-  right: 18%;
+  top: 83%;
+  left: 6%;
+  right: 6%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(var(--rows), auto);
   grid-auto-flow: column;
-  column-gap: 9cqw;
-  /* the thin vertical rule between the two columns */
-  background: linear-gradient(var(--frame-hi), var(--frame-hi)) center / max(1px, 0.3cqw) 86%
-    no-repeat;
+  grid-auto-columns: 1fr;
+  padding-top: 2.2cqw;
+  border-top: max(1px, 0.4cqw) solid color-mix(in oklab, var(--acc) 70%, transparent);
+  text-align: center;
 }
 .pcard-attrs > div {
   display: flex;
-  align-items: baseline;
-  gap: 1.4cqw;
+  flex-direction: column;
   min-width: 0;
 }
-.pcard-attrs > div:only-child {
-  grid-column: 1 / -1;
-  justify-content: center;
-}
 .pcard-attrs dd {
-  min-width: 2.4ch;
-  font-size: 6.6cqw;
-  font-weight: 900;
-  line-height: 0.98;
-  text-align: right;
-  text-shadow: var(--emboss);
+  font-size: 6.2cqw;
+  font-weight: 800;
+  font-stretch: 70%;
+  line-height: 1;
 }
 .pcard-attrs dt {
-  font-size: 4.4cqw;
+  order: 1;
+  font-size: 3.4cqw;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
+  letter-spacing: 0.1em;
+  color: var(--acc);
 }
-.pcard-tier {
+.pcard-rarity {
   position: absolute;
-  top: 80%;
+  top: 85%;
   left: 0;
   right: 0;
-  font-size: 5cqw;
+  font-size: 4.6cqw;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-align: center;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--acc);
 }
 .pcard-brand {
   position: absolute;
-  top: 93.8%;
-  left: 0;
-  right: 0;
-  font-size: 2.9cqw;
+  bottom: 2.2cqw;
+  right: 4cqw;
+  font-size: 2.6cqw;
   font-weight: 800;
   letter-spacing: 0.26em;
-  text-align: center;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: color-mix(in oklab, var(--light) 55%, transparent);
 }
 .pcard .holo {
   position: absolute;
-  inset-block: 0;
-  left: -100%;
-  width: 300%;
+  inset: 0;
   background-image: var(--holo);
-  opacity: 0.8;
-  mix-blend-mode: soft-light;
+  opacity: 0.35;
   pointer-events: none;
-}
-/* Lenda: the foil slides and shifts hue with the pointer (set on the card by StickerCard) */
-.pcard.holo-rainbow .holo {
-  opacity: 0.32;
-  mix-blend-mode: overlay;
-  transform: translateX(calc((var(--px, 0.5) - 0.5) * 40%));
-  filter: hue-rotate(calc((var(--py, 0.5) - 0.5) * 160deg)) saturate(1.3);
 }
 
 /* ── Finishes (Clube, Banca): a layer over the rim (.pcard-fin-rim, under the bevel's seam) and
- * over the face (.pcard-fin, under the light strip). They blend with the rarity's own colours,
- * so a bronze stays bronze in chrome. ── */
+ * over the face (.pcard-fin, under the light strip). Static gradients with alpha over the
+ * rarity's own colours (no blend modes, no pointer tracking), so a bronze stays bronze. ── */
 .pcard-fin-rim {
   position: absolute;
   inset: 0;
-  mask: var(--shield) center / 100% 100% no-repeat;
+  clip-path: var(--shield);
   pointer-events: none;
 }
 .pcard-fin {
@@ -1746,38 +1673,20 @@
   inset: 0;
   pointer-events: none;
 }
-/* holographic: a rainbow foil that slides with the pointer, rim in full spectrum */
+/* holographic: a rainbow foil rim and faint diagonal rainbow bands over the face */
 .fin-holo .pcard-fin-rim {
-  background: conic-gradient(
-    from calc(200deg + var(--px, 0.5) * 120deg),
-    #ff8fb1,
-    #ffe17a,
-    #8affc1,
-    #7fd8ff,
-    #c79bff,
-    #ff8fb1
-  );
-  mix-blend-mode: hard-light;
+  background: conic-gradient(from 260deg, #ff8fb1, #ffe17a, #8affc1, #7fd8ff, #c79bff, #ff8fb1);
+  opacity: 0.85;
 }
 .fin-holo .pcard-fin {
-  background:
-    repeating-linear-gradient(
-      115deg,
-      #ff8fb1 0 6%,
-      #ffe17a 6% 12%,
-      #8affc1 12% 18%,
-      #7fd8ff 18% 24%,
-      #c79bff 24% 30%
-    ),
-    repeating-linear-gradient(25deg, rgb(255 255 255 / 0.5) 0 1px, transparent 1px 5px);
-  background-size:
-    260% 260%,
-    100% 100%;
-  background-position:
-    calc(var(--px, 0.5) * 100%) calc(var(--py, 0.5) * 100%),
-    0 0;
-  mix-blend-mode: color-dodge;
-  opacity: 0.42;
+  background: repeating-linear-gradient(
+    115deg,
+    rgb(255 143 177 / 0.14) 0 6%,
+    rgb(255 225 122 / 0.14) 6% 12%,
+    rgb(138 255 193 / 0.14) 12% 18%,
+    rgb(127 216 255 / 0.14) 18% 24%,
+    rgb(199 155 255 / 0.14) 24% 30%
+  );
 }
 /* chrome: a polished steel frame and one cold specular band across the face */
 .fin-chrome .pcard-fin-rim {
@@ -1792,20 +1701,17 @@
   );
 }
 .fin-chrome .pcard-fin {
-  background:
-    linear-gradient(
-      125deg,
-      transparent 30%,
-      rgb(255 255 255 / 0.55) 42%,
-      transparent 47%,
-      transparent 60%,
-      rgb(220 232 245 / 0.35) 64%,
-      transparent 68%
-    ),
-    linear-gradient(180deg, rgb(205 216 230 / 0.35), rgb(40 50 62 / 0.35));
-  mix-blend-mode: overlay;
+  background: linear-gradient(
+    125deg,
+    transparent 30%,
+    rgb(255 255 255 / 0.22) 42%,
+    transparent 47%,
+    transparent 60%,
+    rgb(220 232 245 / 0.14) 64%,
+    transparent 68%
+  );
 }
-/* Clube: gold-leaf frame, fine gold pinstripes and the member seal in the top corner */
+/* Clube: gold-leaf frame, fine gold pinstripes and the member seal */
 .fin-clube .pcard-fin-rim {
   background: linear-gradient(
     150deg,
@@ -1818,19 +1724,15 @@
   );
 }
 .fin-clube .pcard-fin {
-  background:
-    repeating-linear-gradient(135deg, rgb(255 216 74 / 0.22) 0 1px, transparent 1px 9px),
-    radial-gradient(circle at 50% 110%, rgb(255 216 74 / 0.35), transparent 45%);
-  mix-blend-mode: screen;
+  background: repeating-linear-gradient(135deg, rgb(255 216 74 / 0.16) 0 1px, transparent 1px 9px);
 }
 .pcard-fin-seal {
   position: absolute;
-  top: 4%;
-  right: 9%;
+  top: 54%;
+  right: 3cqw;
   width: 11cqw;
   height: 11cqw;
   color: #ffd84a;
-  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
 }
 @container (width < 150px) {
   .pcard-fin-seal {
@@ -1838,46 +1740,34 @@
   }
 }
 
-/* album size: rating, position, a bigger player and the name; no flag, mark, numbers, brand */
+/* album size: rating, position, a bigger player and the name; no flag, tier, numbers, brand,
+   rim light or grain */
 @container (width < 150px) {
   .pcard-attrs,
+  .pcard-rarity,
   .pcard-tier,
   .pcard-brand,
-  .pcard-flag,
-  .pcard-mark {
+  .pcard-flag {
     display: none;
   }
-  .pcard-cut {
-    top: 2%;
-    left: 14%;
-    height: 74%;
-  }
-  .pcard-photo {
-    left: 16%;
-    width: 88%;
-    height: 68%;
+  .pcard-fig {
+    --head: 31;
+    --top: 23;
   }
   .pcard-head {
-    top: 14%;
-    left: 5%;
-    width: 26%;
+    top: 5cqw;
+    left: 5cqw;
     gap: 2cqw;
   }
   .pcard-rating {
     font-size: max(18px, 27cqw);
   }
   .pcard-pos {
-    border: 0;
-    padding: 0;
+    font-size: max(9px, 9cqw);
   }
   .pcard-name {
-    top: 74%;
-    left: 6%;
-    right: 6%;
-    font-size: max(9px, min(17cqw, calc(148cqw / var(--nl))));
-  }
-  .pcard-name::after {
-    display: none;
+    top: 77%;
+    font-size: max(9px, min(17cqw, calc(150cqw / var(--nl))));
   }
 }
 /* thumbnails (the corner sticker on the result card): just the shield, player and rating */
@@ -1888,31 +1778,12 @@
   }
 }
 
-/* textures, drawn: brushed metal streaks, marble veins (dark, light, gold) and grain */
-:root {
-  --tx-brushed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .55' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .55'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
-  --tx-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='turbulence' baseFrequency='.006 .011' numOctaves='5' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .06 -5 0 0 0 .9'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
-  --tx-veins-gold: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='turbulence' baseFrequency='.005 .009' numOctaves='5' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .78 0 0 0 0 .58 0 0 0 0 .2 -7 0 0 0 1'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
-  --tx-veins-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='turbulence' baseFrequency='.007 .012' numOctaves='5' seed='21'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -6 0 0 0 .85'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
-  --tx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .35'/%3E%3C/filter%3E%3Crect width='300' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
-  /* specular bands of a polished metal: two broad soft highlights and a dark trough */
-  --spec-metal: linear-gradient(
-    114deg,
-    rgb(0 0 0 / 0.18) 0%,
-    transparent 14%,
-    rgb(255 255 255 / 0.55) 24%,
-    rgb(255 255 255 / 0.1) 31%,
-    transparent 38%,
-    rgb(0 0 0 / 0.22) 52%,
-    transparent 62%,
-    rgb(255 255 255 / 0.35) 72%,
-    transparent 80%,
-    rgb(0 0 0 / 0.2) 100%
-  );
-}
-
 /* the eight finishes (--rc, the label colour, is set in rarity.ts); --edge thumbnail frame */
 .rar-bronze {
+  --deep: #24130a;
+  --mid: #8a5330;
+  --light: #f6dcc0;
+  --acc: #d79a63;
   --edge: #e8d6c4;
   --rim: linear-gradient(
     158deg,
@@ -1925,29 +1796,13 @@
     #c88a58 100%
   );
   --rim-hi: linear-gradient(170deg, #ffe7cc, #9a5a2c 50%, #e7aa78);
-  --face:
-    var(--tx-brushed),
-    radial-gradient(120% 90% at 62% 14%, #eab285, #b56f3f 40%, #7a3d1a 74%, #43200b);
-  --blend: overlay, normal;
-  /* engraving: concentric guilloché rings from behind the head */
-  --pattern: repeating-radial-gradient(
-    circle at 60% 26%,
-    rgb(255 226 196 / 0.16) 0 0.35cqw,
-    transparent 0.35cqw 1.9cqw
-  );
-  --pattern-blend: overlay;
-  --spec: var(--spec-metal);
-  --plate: rgb(70 30 8 / 0.16);
-  --frame: rgb(52 20 4 / 0.55);
-  --frame-hi: rgb(255 214 176 / 0.6);
-  --ink: #2a1206;
-  --ink-soft: rgb(42 18 6 / 0.78);
-  --glow: rgb(255 214 170 / 0.55);
-  --cut-light: rgb(255 214 170 / 0.5);
-  --emboss: 0 1px 0 rgb(255 222 192 / 0.45);
   --holo: none;
 }
 .rar-prata {
+  --deep: #12161c;
+  --mid: #66717f;
+  --light: #f2f5f9;
+  --acc: #c9d2de;
   --edge: #f4f6f9;
   --rim: linear-gradient(
     158deg,
@@ -1960,27 +1815,13 @@
     #d6dde6
   );
   --rim-hi: linear-gradient(170deg, #ffffff, #8a97a8 50%, #f2f5f9);
-  --face: var(--tx-brushed), linear-gradient(168deg, #f6f8fa, #c3ccd7 30%, #8492a4 64%, #4a5668);
-  --blend: overlay, normal;
-  /* engraving: fine horizontal lines, like a machined plate */
-  --pattern: repeating-linear-gradient(
-    0deg,
-    rgb(255 255 255 / 0.3) 0 0.25cqw,
-    transparent 0.25cqw 1.1cqw
-  );
-  --pattern-blend: overlay;
-  --spec: var(--spec-metal);
-  --plate: rgb(30 45 65 / 0.1);
-  --frame: rgb(25 38 56 / 0.45);
-  --frame-hi: rgb(255 255 255 / 0.85);
-  --ink: #101823;
-  --ink-soft: rgb(16 24 35 / 0.72);
-  --glow: rgb(255 255 255 / 0.7);
-  --cut-light: rgb(255 255 255 / 0.6);
-  --emboss: 0 1px 0 rgb(255 255 255 / 0.65);
   --holo: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.6) 48%, transparent 58%);
 }
 .rar-ouro {
+  --deep: #241800;
+  --mid: #9a7300;
+  --light: #fff3c2;
+  --acc: #f5c400;
   --edge: #fffdf4;
   --rim: linear-gradient(
     158deg,
@@ -1993,29 +1834,13 @@
     #e8bd45
   );
   --rim-hi: linear-gradient(170deg, #fffbe0, #b88400 50%, #ffe999);
-  --face:
-    var(--tx-grain),
-    radial-gradient(115% 82% at 62% 16%, #fff1aa, #f4c623 42%, #c38b00 78%, #8a5c00);
-  --blend: overlay, normal;
-  /* engraving: a sunburst from behind the head */
-  --pattern: repeating-conic-gradient(
-    from 0deg at 60% 26%,
-    rgb(255 255 255 / 0.2) 0 2.2deg,
-    transparent 2.2deg 7.5deg
-  );
-  --pattern-blend: soft-light;
-  --spec: var(--spec-metal);
-  --plate: rgb(110 70 0 / 0.12);
-  --frame: rgb(90 55 0 / 0.5);
-  --frame-hi: rgb(255 246 200 / 0.75);
-  --ink: #2a1a00;
-  --ink-soft: rgb(42 26 0 / 0.75);
-  --glow: rgb(255 250 215 / 0.7);
-  --cut-light: rgb(255 240 180 / 0.55);
-  --emboss: 0 1px 0 rgb(255 246 200 / 0.55);
   --holo: none;
 }
 .rar-ouro-brilhante {
+  --deep: #2a1600;
+  --mid: #b98400;
+  --light: #fff7d6;
+  --acc: #ffd84a;
   --edge: #fffdf4;
   --rim: linear-gradient(
     158deg,
@@ -2028,26 +1853,6 @@
     #fff0a8
   );
   --rim-hi: linear-gradient(170deg, #ffffff, #d49a00 50%, #fff3b0);
-  --face:
-    radial-gradient(52% 40% at 60% 28%, rgb(255 255 236 / 0.95), transparent 70%),
-    radial-gradient(118% 84% at 60% 18%, #fff09a, #f6a800 34%, #b85f00 68%, #5a2a00);
-  /* engraving: diamond facets and a scatter of glints */
-  --pattern:
-    radial-gradient(circle, rgb(255 255 255 / 0.95) 0 0.35cqw, transparent 0.6cqw) 0 0 / 9cqw 9cqw,
-    radial-gradient(circle, rgb(255 255 255 / 0.7) 0 0.25cqw, transparent 0.45cqw) 4.5cqw 5cqw /
-      13cqw 11cqw,
-    repeating-linear-gradient(60deg, rgb(255 255 255 / 0.22) 0 0.3cqw, transparent 0.3cqw 6cqw),
-    repeating-linear-gradient(-60deg, rgb(120 60 0 / 0.18) 0 0.3cqw, transparent 0.3cqw 6cqw);
-  --pattern-blend: overlay;
-  --spec: var(--spec-metal);
-  --plate: rgb(130 70 0 / 0.1);
-  --frame: rgb(100 55 0 / 0.5);
-  --frame-hi: rgb(255 252 220 / 0.85);
-  --ink: #2a1600;
-  --ink-soft: rgb(42 22 0 / 0.75);
-  --glow: rgb(255 255 230 / 0.8);
-  --cut-light: rgb(255 248 200 / 0.7);
-  --emboss: 0 1px 0 rgb(255 250 214 / 0.65);
   --holo: linear-gradient(
     105deg,
     transparent 36%,
@@ -2057,11 +1862,11 @@
     transparent 60%
   );
 }
-.rar-ouro-brilhante .holo {
-  mix-blend-mode: overlay;
-  opacity: 1;
-}
 .rar-destaque {
+  --deep: #06180f;
+  --mid: #1d7347;
+  --light: #eaffea;
+  --acc: #f5c400;
   --edge: #c99a00;
   --rim: linear-gradient(
     158deg,
@@ -2074,43 +1879,13 @@
     #c99a00
   );
   --rim-hi: linear-gradient(170deg, #fff0a8, #8a6400 50%, #f4c400);
-  --face:
-    radial-gradient(64% 46% at 60% 28%, rgb(255 200 60 / 0.2), transparent 72%),
-    repeating-linear-gradient(45deg, #1b1b1b 0 0.6cqw, #0d0d0d 0.6cqw 1.2cqw), #0d0d0d;
-  /* gold geometry: two sharp chevrons behind the player and a hairline lattice */
-  --pattern:
-    linear-gradient(
-      62deg,
-      transparent 58%,
-      #e8b800 58% 58.8%,
-      transparent 58.8% 61.5%,
-      rgb(232 184 0 / 0.5) 61.5% 62%,
-      transparent 62%
-    ),
-    linear-gradient(
-      -62deg,
-      transparent 58%,
-      #e8b800 58% 58.8%,
-      transparent 58.8% 61.5%,
-      rgb(232 184 0 / 0.5) 61.5% 62%,
-      transparent 62%
-    ),
-    linear-gradient(62deg, transparent 64%, rgb(232 184 0 / 0.1) 64%),
-    repeating-linear-gradient(120deg, transparent 0 7cqw, rgb(232 184 0 / 0.08) 7cqw 7.25cqw),
-    repeating-linear-gradient(60deg, transparent 0 7cqw, rgb(232 184 0 / 0.08) 7cqw 7.25cqw);
-  --spec: linear-gradient(114deg, transparent 18%, rgb(255 230 140 / 0.22) 26%, transparent 34%);
-  --spec-blend: screen;
-  --plate: rgb(0 0 0 / 0.25);
-  --frame: rgb(0 0 0 / 0.8);
-  --frame-hi: rgb(242 194 0 / 0.75);
-  --ink: #f6cd3c;
-  --ink-soft: rgb(246 205 60 / 0.78);
-  --glow: rgb(255 214 90 / 0.28);
-  --cut-light: rgb(255 214 90 / 0.55);
-  --emboss: 0 0.4cqw 0.8cqw rgb(0 0 0 / 0.8);
   --holo: linear-gradient(115deg, transparent 34%, rgb(245 196 0 / 0.4) 48%, transparent 60%);
 }
 .rar-selecao {
+  --deep: #081032;
+  --mid: #2c4cae;
+  --light: #e6eeff;
+  --acc: #8fb4ff;
   --edge: #c9d1dc;
   --rim: linear-gradient(
     158deg,
@@ -2123,31 +1898,13 @@
     #cfd8e6
   );
   --rim-hi: linear-gradient(170deg, #ffffff, #7f8ea6 50%, #eef2f8);
-  --face:
-    radial-gradient(58% 44% at 60% 28%, #5d9bff, transparent 72%),
-    linear-gradient(176deg, #1d4fc4, #0b2878 52%, #030c33);
-  /* silver rays fanning out from behind the head */
-  --pattern:
-    repeating-conic-gradient(
-      from -4deg at 60% 26%,
-      rgb(220 232 255 / 0.3) 0 1.2deg,
-      transparent 1.2deg 9deg
-    ),
-    radial-gradient(70% 55% at 60% 26%, transparent 30%, rgb(3 12 51 / 0.65) 100%);
-  --pattern-blend: normal;
-  --spec: linear-gradient(114deg, transparent 20%, rgb(200 220 255 / 0.18) 30%, transparent 40%);
-  --spec-blend: screen;
-  --plate: rgb(2 10 40 / 0.3);
-  --frame: rgb(0 6 30 / 0.7);
-  --frame-hi: rgb(214 226 245 / 0.8);
-  --ink: #f4f7ff;
-  --ink-soft: rgb(220 230 250 / 0.82);
-  --glow: rgb(150 195 255 / 0.5);
-  --cut-light: rgb(190 215 255 / 0.65);
-  --emboss: 0 0.4cqw 0.8cqw rgb(0 8 40 / 0.75);
   --holo: linear-gradient(115deg, transparent 32%, rgb(210 225 255 / 0.5) 48%, transparent 62%);
 }
 .rar-idolo {
+  --deep: #24090e;
+  --mid: #8a2632;
+  --light: #f8e8c8;
+  --acc: #e2c37a;
   --edge: #b8964a;
   --rim: linear-gradient(
     158deg,
@@ -2160,88 +1917,24 @@
     #c9a55a
   );
   --rim-hi: linear-gradient(170deg, #fff4d0, #8a6420 50%, #ecd08a);
-  --face:
-    var(--tx-veins-gold), var(--tx-veins),
-    radial-gradient(120% 86% at 60% 18%, #fffbf1, #f1e5c8 48%, #dac397 82%, #c4a672);
-  --blend: normal, soft-light, normal;
-  /* aged-gold art-deco arcs rising from the foot of the card */
-  --pattern:
-    repeating-radial-gradient(
-      ellipse 120% 90% at 50% 112%,
-      transparent 0 3.2cqw,
-      rgb(160 118 40 / 0.28) 3.2cqw 3.5cqw
-    ),
-    radial-gradient(60% 46% at 60% 28%, rgb(255 255 250 / 0.85), transparent 72%);
-  --pattern-blend: normal;
-  --spec: linear-gradient(114deg, transparent 22%, rgb(255 255 255 / 0.35) 30%, transparent 38%);
-  --spec-blend: soft-light;
-  --plate: rgb(150 110 40 / 0.08);
-  --frame: rgb(110 76 20 / 0.45);
-  --frame-hi: rgb(176 134 52 / 0.9);
-  --ink: #3a2606;
-  --ink-soft: rgb(80 54 14 / 0.85);
-  --glow: rgb(255 252 240 / 0.8);
-  --cut-light: rgb(255 248 225 / 0.7);
-  --emboss: 0 1px 0 rgb(255 255 255 / 0.75);
   --holo: linear-gradient(115deg, transparent 32%, rgb(255 246 214 / 0.6) 48%, transparent 62%);
 }
 .rar-lenda {
+  --deep: #0f0820;
+  --mid: #5a2a9e;
+  --light: #f5ebff;
+  --acc: #e3c8ff;
   --edge: #ffffff;
-  --rim: conic-gradient(
-    from calc(200deg + var(--px, 0.5) * 120deg),
-    #ffb3c7,
-    #ffe9a3,
-    #b5ffd0,
-    #a8e4ff,
-    #d2b0ff,
-    #ffb3c7
-  );
+  --rim: conic-gradient(from 260deg, #ffb3c7, #ffe9a3, #b5ffd0, #a8e4ff, #d2b0ff, #ffb3c7);
   --rim-hi: linear-gradient(170deg, #ffffff, #d8c4ff 50%, #ffffff);
-  --face:
-    var(--tx-veins-light),
-    conic-gradient(
-      from calc(var(--px, 0.5) * 360deg) at 30% 80%,
-      rgb(255 120 180 / 0.3),
-      rgb(255 230 120 / 0.24),
-      rgb(120 255 190 / 0.26),
-      rgb(120 200 255 / 0.3),
-      rgb(200 140 255 / 0.3),
-      rgb(255 120 180 / 0.3)
-    ),
-    radial-gradient(60% 46% at 60% 28%, rgb(180 120 255 / 0.65), transparent 72%),
-    linear-gradient(170deg, #3d1690, #1e0752 52%, #08011c);
-  --blend: soft-light, overlay, normal, normal;
-  /* holographic foil: broad rainbow bands that turn with the pointer, and starry glints */
-  --pattern:
-    radial-gradient(circle, rgb(255 255 255 / 0.9) 0 0.25cqw, transparent 0.5cqw) 0 0 / 11cqw 13cqw,
-    radial-gradient(circle, rgb(255 255 255 / 0.6) 0 0.2cqw, transparent 0.4cqw) 5cqw 6cqw / 17cqw
-      15cqw,
-    linear-gradient(
-      calc(110deg + var(--px, 0.5) * 60deg),
-      rgb(255 110 150 / 0.2),
-      rgb(255 220 110 / 0.18) 20%,
-      rgb(110 255 180 / 0.18) 40%,
-      rgb(110 190 255 / 0.2) 60%,
-      rgb(200 130 255 / 0.2) 80%,
-      rgb(255 110 150 / 0.2)
-    );
-  --pattern-blend: color-dodge;
-  /* the glare sits where the light (pointer) is */
-  --spec: radial-gradient(
-    circle at calc(var(--px, 0.6) * 100%) calc(var(--py, 0.3) * 100%),
-    rgb(255 255 255 / 0.45),
-    transparent 42%
+  --holo: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgb(255 190 220 / 0.4) 42%,
+    rgb(200 230 255 / 0.5) 48%,
+    rgb(220 200 255 / 0.4) 54%,
+    transparent 66%
   );
-  --spec-blend: soft-light;
-  --plate: rgb(10 0 40 / 0.25);
-  --frame: rgb(10 0 40 / 0.7);
-  --frame-hi: rgb(236 220 255 / 0.8);
-  --ink: #ffffff;
-  --ink-soft: rgb(236 224 255 / 0.85);
-  --glow: rgb(200 160 255 / 0.55);
-  --cut-light: rgb(220 190 255 / 0.75);
-  --emboss: 0 0.4cqw 0.9cqw rgb(20 0 60 / 0.8);
-  --holo: linear-gradient(115deg, #ff6b6b, #ffd36b, #8bff9c, #6bd6ff, #b06bff, #ff6b6b);
 }
 /* the reveal: thin rays in the rarity colour behind the card, fading out from its centre */
 .reveal-rays {

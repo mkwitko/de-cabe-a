@@ -16,8 +16,7 @@ export const RARITY_ORDER: StickerRarity[] = [
  * The eight finishes (spec, "Raridade e álbum"). `className` names the theme in index.css
  * (`.rar-*`: the custom properties read by the card, the reveal and the result thumbnail), the
  * label colour `--rc` inline (the reveal's pack reads it from here), plus
- * the light behaviour: `sheen` animates the light strip, `holo-follow` lets the reveal move it,
- * `holo-rainbow` tracks the pointer on the card.
+ * `holo-follow` lets the reveal move the light strip.
  */
 export const RARITY_STYLE: Record<StickerRarity, { label: string; className: string }> = {
   bronze: { label: 'Bronze', className: '[--rc:#d79a63] rar-bronze' },
@@ -25,7 +24,7 @@ export const RARITY_STYLE: Record<StickerRarity, { label: string; className: str
   ouro: { label: 'Ouro', className: '[--rc:#f5c400] rar-ouro' },
   ouro_brilhante: {
     label: 'Ouro brilhante',
-    className: '[--rc:#ffd84a] rar-ouro-brilhante sheen holo-follow',
+    className: '[--rc:#ffd84a] rar-ouro-brilhante holo-follow',
   },
   destaque_rodada: {
     label: 'Destaque da Rodada',
@@ -36,5 +35,5 @@ export const RARITY_STYLE: Record<StickerRarity, { label: string; className: str
     className: '[--rc:#8fb4ff] rar-selecao holo-follow',
   },
   idolo: { label: 'Ídolo', className: '[--rc:#e2c37a] rar-idolo holo-follow' },
-  lenda: { label: 'Lenda', className: '[--rc:#e3c8ff] rar-lenda holo-rainbow holo-follow' },
+  lenda: { label: 'Lenda', className: '[--rc:#e3c8ff] rar-lenda holo-follow' },
 };

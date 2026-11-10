@@ -15,7 +15,10 @@ const commons = (file: string, width: number) =>
  * (scripts/research/cutouts/cutout.py): playerId -> served file and the photo it was cut from.
  * A cut-out only counts while the player's photo is still that file.
  */
-const CUTOUTS: Record<string, { file: string; photoFile: string } | undefined> = cutouts;
+const CUTOUTS: Record<
+  string,
+  { file: string; photoFile: string; face?: number[] | null } | undefined
+> = cutouts;
 
 /** Sticker portrait, its cut-out and the credit (CC licences require it where the photo shows). */
 export const stickerPhoto = (p: {
@@ -27,10 +30,13 @@ export const stickerPhoto = (p: {
   if (!p.photoFile) return { photo: null, cutout: null, photoCredit: null };
   const cut = CUTOUTS[p.id];
   const cutout = cut?.photoFile === p.photoFile ? cut.file : null;
+  const face =
+    cutout && cut?.face?.length === 4 ? (cut.face as [number, number, number, number]) : null;
   const credit = `Foto: ${p.photoAuthor ?? 'Wikimedia Commons'} · ${p.photoLicense ?? ''}`.trim();
   return {
     photo: commons(p.photoFile, 480),
     cutout,
+    cutoutFace: face,
     // the cut-out is a derivative: same licence (BY-SA stays BY-SA), marked as cropped
     photoCredit: cutout ? `${credit} · recortada` : credit,
   };

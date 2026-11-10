@@ -464,8 +464,13 @@ export const Sticker = z.strictObject({
   rating: z.number().int().min(50).max(99).optional(),
   /** Wikimedia Commons portrait, when the player has a freely licensed photo. */
   photo: z.string().nullable(),
-  /** Same photo without its background, head and shoulders (transparent WebP on the web origin). */
+  /**
+   * Same photo without its background, head and shoulders: `/cutouts/{tier}/<id>.webp` on the web
+   * origin, one copy per rarity tier with the card's grade baked in (the card fills in `{tier}`).
+   */
   cutout: z.string().nullable(),
+  /** The face in the cut-out (x, y, w, h as fractions of the image), to place every head alike. */
+  cutoutFace: z.tuple([z.number(), z.number(), z.number(), z.number()]).nullable().optional(),
   /** "Foto: author · licence" (+ " · recortada" with a cut-out; CC requires the credit). */
   photoCredit: z.string().nullable(),
   rarity: StickerRarity,

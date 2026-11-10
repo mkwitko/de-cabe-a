@@ -1,1143 +1,1306 @@
 {
   "01a1ac22-8fa8-71fb-be0e-a5e70f37c92e": {
-    "file": "/cutouts/01a1ac22-8fa8-71fb-be0e-a5e70f37c92e.webp",
+    "file": "/cutouts/{tier}/01a1ac22-8fa8-71fb-be0e-a5e70f37c92e.webp",
     "photoFile": "Pele con brasil (cropped).jpg",
     "author": "Unknown authorUnknown author",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Pele%20con%20brasil%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Pele%20con%20brasil%20%28cropped%29.jpg",
+    "face": [0.332, 0.213, 0.334, 0.268]
   },
   "01a1ac22-8fcc-76ed-ade8-3c0afe273516": {
-    "file": "/cutouts/01a1ac22-8fcc-76ed-ade8-3c0afe273516.webp",
+    "file": "/cutouts/{tier}/01a1ac22-8fcc-76ed-ade8-3c0afe273516.webp",
     "photoFile": "Neymar Junior Brazil V Morocco 13 June 2026-40.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Neymar%20Junior%20Brazil%20V%20Morocco%2013%20June%202026-40.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Neymar%20Junior%20Brazil%20V%20Morocco%2013%20June%202026-40.jpg",
+    "face": [0.329, 0.219, 0.342, 0.274]
   },
   "01a1ac22-8fe0-7678-a1f5-8f96dcecf6a2": {
-    "file": "/cutouts/01a1ac22-8fe0-7678-a1f5-8f96dcecf6a2.webp",
+    "file": "/cutouts/{tier}/01a1ac22-8fe0-7678-a1f5-8f96dcecf6a2.webp",
     "photoFile": "051119SMcC0014.jpg",
     "author": "Web Summit",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:051119SMcC0014.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:051119SMcC0014.jpg",
+    "face": [0.304, 0.251, 0.392, 0.314]
   },
   "01a1ac22-8ffc-775a-a06e-852f6f095def": {
-    "file": "/cutouts/01a1ac22-8ffc-775a-a06e-852f6f095def.webp",
+    "file": "/cutouts/{tier}/01a1ac22-8ffc-775a-a06e-852f6f095def.webp",
     "photoFile": "Sports Festival 2025 - 4 (cropped).jpg",
     "author": "Nuță Lucian",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Sports%20Festival%202025%20-%204%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Sports%20Festival%202025%20-%204%20%28cropped%29.jpg",
+    "face": [0.352, 0.187, 0.294, 0.235]
   },
   "01a1ac22-901d-77a7-901d-131f307a2a41": {
-    "file": "/cutouts/01a1ac22-901d-77a7-901d-131f307a2a41.webp",
+    "file": "/cutouts/{tier}/01a1ac22-901d-77a7-901d-131f307a2a41.webp",
     "photoFile": "Ricardo Izecson dos Santos Leite (Kaká) 01.jpg",
     "author": "José Cruz/ABr (cropped by tales.ebner)",
     "license": "CC BY 3.0 br",
-    "source": "https://commons.wikimedia.org/wiki/File:Ricardo%20Izecson%20dos%20Santos%20Leite%20%28Kak%C3%A1%29%2001.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Ricardo%20Izecson%20dos%20Santos%20Leite%20%28Kak%C3%A1%29%2001.jpg",
+    "face": [0.285, 0.273, 0.427, 0.342]
   },
   "01a1ac22-90ae-7448-bcaf-01e7a559baee": {
-    "file": "/cutouts/01a1ac22-90ae-7448-bcaf-01e7a559baee.webp",
+    "file": "/cutouts/{tier}/01a1ac22-90ae-7448-bcaf-01e7a559baee.webp",
     "photoFile": "20180610 FIFA Friendly Match Austria vs. Brazil Marcelo 850 1622.jpg",
     "author": "Granada",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20Marcelo%20850%201622.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20Marcelo%20850%201622.jpg",
+    "face": [0.297, 0.258, 0.406, 0.325]
   },
   "01a1ac22-9104-7044-abbf-c0b5bbf363c6": {
-    "file": "/cutouts/01a1ac22-9104-7044-abbf-c0b5bbf363c6.webp",
+    "file": "/cutouts/{tier}/01a1ac22-9104-7044-abbf-c0b5bbf363c6.webp",
     "photoFile": "Casemiro Brazil V Morocco 13 June 2026-76 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Casemiro%20Brazil%20V%20Morocco%2013%20June%202026-76%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Casemiro%20Brazil%20V%20Morocco%2013%20June%202026-76%20%28cropped%29.jpg",
+    "face": [0.346, 0.197, 0.307, 0.246]
   },
   "01a1ac22-9196-74bb-80b3-5903838f7a17": {
-    "file": "/cutouts/01a1ac22-9196-74bb-80b3-5903838f7a17.webp",
+    "file": "/cutouts/{tier}/01a1ac22-9196-74bb-80b3-5903838f7a17.webp",
     "photoFile": "Robinho061115-2 (cropped 2).jpg",
     "author": "Reto Stauffer, www.hopp-schwiiz.ch",
     "license": "CC BY-SA 2.0 de",
-    "source": "https://commons.wikimedia.org/wiki/File:Robinho061115-2%20%28cropped%202%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Robinho061115-2%20%28cropped%202%29.jpg",
+    "face": [0.287, 0.271, 0.425, 0.34]
   },
   "01a1ac22-91b4-757e-a8cc-1c47cb225358": {
-    "file": "/cutouts/01a1ac22-91b4-757e-a8cc-1c47cb225358.webp",
+    "file": "/cutouts/{tier}/01a1ac22-91b4-757e-a8cc-1c47cb225358.webp",
     "photoFile": "Zico 2012.jpg",
     "author": "Doha Stadium Plus",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Zico%202012.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Zico%202012.jpg",
+    "face": [0.338, 0.206, 0.323, 0.258]
   },
   "01a1ac22-91dc-72ae-b026-7f862ada6f3a": {
-    "file": "/cutouts/01a1ac22-91dc-72ae-b026-7f862ada6f3a.webp",
+    "file": "/cutouts/{tier}/01a1ac22-91dc-72ae-b026-7f862ada6f3a.webp",
     "photoFile": "Coutinho 2018.jpg",
     "author": "Oleg Bkhambri (Voltmetro)",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Coutinho%202018.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Coutinho%202018.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ac22-920b-7778-a6c4-9775fc7cc0db": {
-    "file": "/cutouts/01a1ac22-920b-7778-a6c4-9775fc7cc0db.webp",
+    "file": "/cutouts/{tier}/01a1ac22-920b-7778-a6c4-9775fc7cc0db.webp",
     "photoFile": "Russia-Portugal CC2017 (11 (cropped).jpg",
     "author": "Дмитрий Садовников",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Russia-Portugal%20CC2017%20%2811%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Russia-Portugal%20CC2017%20%2811%20%28cropped%29.jpg",
+    "face": [0.331, 0.214, 0.335, 0.268]
   },
   "01a1ac22-925c-71bb-b3ea-c13421989f1e": {
-    "file": "/cutouts/01a1ac22-925c-71bb-b3ea-c13421989f1e.webp",
+    "file": "/cutouts/{tier}/01a1ac22-925c-71bb-b3ea-c13421989f1e.webp",
     "photoFile": "Alisson Becker Brazil V Morocco 13 June 2026-117 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Alisson%20Becker%20Brazil%20V%20Morocco%2013%20June%202026-117%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Alisson%20Becker%20Brazil%20V%20Morocco%2013%20June%202026-117%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ac22-9288-76eb-a4cc-8cce1909d0d6": {
-    "file": "/cutouts/01a1ac22-9288-76eb-a4cc-8cce1909d0d6.webp",
+    "file": "/cutouts/{tier}/01a1ac22-9288-76eb-a4cc-8cce1909d0d6.webp",
     "photoFile": "David Luiz at Baku before 2019 UEFA Europe League Final.jpg",
     "author": "Amir Hosseini",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:David%20Luiz%20at%20Baku%20before%202019%20UEFA%20Europe%20League%20Final.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:David%20Luiz%20at%20Baku%20before%202019%20UEFA%20Europe%20League%20Final.jpg",
+    "face": [0.31, 0.245, 0.384, 0.307]
   },
   "01a1ac22-92cc-7159-932d-1a8df8e6fb90": {
-    "file": "/cutouts/01a1ac22-92cc-7159-932d-1a8df8e6fb90.webp",
+    "file": "/cutouts/{tier}/01a1ac22-92cc-7159-932d-1a8df8e6fb90.webp",
     "photoFile": "Cristiano Ronaldo Croatia v Portugal 2 July 2026-075 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Cristiano%20Ronaldo%20Croatia%20v%20Portugal%202%20July%202026-075%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Cristiano%20Ronaldo%20Croatia%20v%20Portugal%202%20July%202026-075%20%28cropped%29.jpg",
+    "face": [0.345, 0.198, 0.309, 0.248]
   },
   "01a1ac22-9321-75e8-bd57-d3230c63dad3": {
-    "file": "/cutouts/01a1ac22-9321-75e8-bd57-d3230c63dad3.webp",
+    "file": "/cutouts/{tier}/01a1ac22-9321-75e8-bd57-d3230c63dad3.webp",
     "photoFile": "Argentina celebrando copa (cropped).jpg",
     "author": "Unknown authorUnknown author",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Argentina%20celebrando%20copa%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Argentina%20celebrando%20copa%20%28cropped%29.jpg",
+    "face": null
   },
   "01a1ac22-933f-737d-9c96-40457d79aaac": {
-    "file": "/cutouts/01a1ac22-933f-737d-9c96-40457d79aaac.webp",
+    "file": "/cutouts/{tier}/01a1ac22-933f-737d-9c96-40457d79aaac.webp",
     "photoFile": "Zinedine Zidane by Tasnim 03.jpg",
     "author": "Hadi Abyar",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Zinedine%20Zidane%20by%20Tasnim%2003.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Zinedine%20Zidane%20by%20Tasnim%2003.jpg",
+    "face": [0.279, 0.281, 0.442, 0.353]
   },
   "01a1ac22-936d-745c-a8db-7d18c3a62564": {
-    "file": "/cutouts/01a1ac22-936d-745c-a8db-7d18c3a62564.webp",
+    "file": "/cutouts/{tier}/01a1ac22-936d-745c-a8db-7d18c3a62564.webp",
     "photoFile": "David Beckham 2009.jpg",
     "author": "The Democratic Alliance",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:David%20Beckham%202009.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:David%20Beckham%202009.jpg",
+    "face": [0.318, 0.233, 0.366, 0.292]
   },
   "01a1ac26-aa07-7637-8867-280d1672eb75": {
-    "file": "/cutouts/01a1ac26-aa07-7637-8867-280d1672eb75.webp",
+    "file": "/cutouts/{tier}/01a1ac26-aa07-7637-8867-280d1672eb75.webp",
     "photoFile": "Chelsea Deco.jpg",
     "author": "John Dobson",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Chelsea%20Deco.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Chelsea%20Deco.jpg",
+    "face": [0.356, 0.189, 0.294, 0.235]
   },
   "01a1ac26-aa3a-7657-9f76-b360a9920830": {
-    "file": "/cutouts/01a1ac26-aa3a-7657-9f76-b360a9920830.webp",
+    "file": "/cutouts/{tier}/01a1ac26-aa3a-7657-9f76-b360a9920830.webp",
     "photoFile": "Dunga061115.jpg",
     "author": "Reto Stauffer, www.hopp-schwiiz.ch",
     "license": "CC BY-SA 2.0 de",
-    "source": "https://commons.wikimedia.org/wiki/File:Dunga061115.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Dunga061115.jpg",
+    "face": [0.273, 0.29, 0.454, 0.363]
   },
   "01a1ac26-aa8d-72cc-a918-0d078df151a2": {
-    "file": "/cutouts/01a1ac26-aa8d-72cc-a918-0d078df151a2.webp",
+    "file": "/cutouts/{tier}/01a1ac26-aa8d-72cc-a918-0d078df151a2.webp",
     "photoFile": "Cafu - 26.02.2026 - Cerimônia de apresentação das taças da Copa do Mundo de 2026.jpg",
     "author": "Lula Oficial",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Cafu%20-%2026.02.2026%20-%20Cerim%C3%B4nia%20de%20apresenta%C3%A7%C3%A3o%20das%20ta%C3%A7as%20da%20Copa%20do%20Mundo%20de%202026.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Cafu%20-%2026.02.2026%20-%20Cerim%C3%B4nia%20de%20apresenta%C3%A7%C3%A3o%20das%20ta%C3%A7as%20da%20Copa%20do%20Mundo%20de%202026.jpg",
+    "face": [0.292, 0.265, 0.415, 0.332]
   },
   "01a1ac26-aaf6-74ae-93c9-229dacdebde6": {
-    "file": "/cutouts/01a1ac26-aaf6-74ae-93c9-229dacdebde6.webp",
+    "file": "/cutouts/{tier}/01a1ac26-aaf6-74ae-93c9-229dacdebde6.webp",
     "photoFile": "Bra-Cos (21) (cropped 2).jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Bra-Cos%20%2821%29%20%28cropped%202%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Bra-Cos%20%2821%29%20%28cropped%202%29.jpg",
+    "face": [0.272, 0.292, 0.456, 0.365]
   },
   "01a1ac26-ab51-7778-a6d4-d456e170db3e": {
-    "file": "/cutouts/01a1ac26-ab51-7778-a6d4-d456e170db3e.webp",
+    "file": "/cutouts/{tier}/01a1ac26-ab51-7778-a6d4-d456e170db3e.webp",
     "photoFile": "NC Courage vs Orlando Pride (Jun 2024) 073 (cropped).jpg",
     "author": "Hameltion",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:NC%20Courage%20vs%20Orlando%20Pride%20%28Jun%202024%29%20073%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:NC%20Courage%20vs%20Orlando%20Pride%20%28Jun%202024%29%20073%20%28cropped%29.jpg",
+    "face": [0.287, 0.272, 0.426, 0.341]
   },
   "01a1ac26-ac31-72d9-85b0-5af111799deb": {
-    "file": "/cutouts/01a1ac26-ac31-72d9-85b0-5af111799deb.webp",
+    "file": "/cutouts/{tier}/01a1ac26-ac31-72d9-85b0-5af111799deb.webp",
     "photoFile": "20141118 AUTBRA 5023.jpg",
     "author": "Ailura",
     "license": "CC BY-SA 3.0 at",
-    "source": "https://commons.wikimedia.org/wiki/File:20141118%20AUTBRA%205023.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20141118%20AUTBRA%205023.jpg",
+    "face": [0.305, 0.25, 0.392, 0.313]
   },
   "01a1ac26-acb5-72bb-8749-dcbdab2bd1d6": {
-    "file": "/cutouts/01a1ac26-acb5-72bb-8749-dcbdab2bd1d6.webp",
+    "file": "/cutouts/{tier}/01a1ac26-acb5-72bb-8749-dcbdab2bd1d6.webp",
     "photoFile": "Richarlison é homenageado na ALES (10.July.2019) 08 (cropped).jpg",
     "author": "Assembleia Legislativa do Espírito Santo",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Richarlison%20%C3%A9%20homenageado%20na%20ALES%20%2810.July.2019%29%2008%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Richarlison%20%C3%A9%20homenageado%20na%20ALES%20%2810.July.2019%29%2008%20%28cropped%29.jpg",
+    "face": [0.3, 0.256, 0.401, 0.321]
   },
   "01a1ac26-ace5-72ed-aa7f-34b0c8f2e197": {
-    "file": "/cutouts/01a1ac26-ace5-72ed-aa7f-34b0c8f2e197.webp",
+    "file": "/cutouts/{tier}/01a1ac26-ace5-72ed-aa7f-34b0c8f2e197.webp",
     "photoFile": "Raphinha Brazil V Morocco 13 June 2026-133 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Raphinha%20Brazil%20V%20Morocco%2013%20June%202026-133%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Raphinha%20Brazil%20V%20Morocco%2013%20June%202026-133%20%28cropped%29.jpg",
+    "face": [0.349, 0.193, 0.301, 0.241]
   },
   "01a1ac26-ad99-77df-9c30-88e61fcf3883": {
-    "file": "/cutouts/01a1ac26-ad99-77df-9c30-88e61fcf3883.webp",
+    "file": "/cutouts/{tier}/01a1ac26-ad99-77df-9c30-88e61fcf3883.webp",
     "photoFile": "20180610 FIFA Friendly Match Austria vs. Brazil Gabriel Jesus 850 1688.jpg",
     "author": "Granada",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20Gabriel%20Jesus%20850%201688.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20Gabriel%20Jesus%20850%201688.jpg",
+    "face": [0.274, 0.289, 0.452, 0.362]
   },
   "01a1ac26-add9-73cd-9069-542bfbb48d54": {
-    "file": "/cutouts/01a1ac26-add9-73cd-9069-542bfbb48d54.webp",
+    "file": "/cutouts/{tier}/01a1ac26-add9-73cd-9069-542bfbb48d54.webp",
     "photoFile": "20180610 FIFA Friendly Match Austria vs. Brazil Douglas Costa (BRA) 850 1486 (cropped).jpg",
     "author": "Granada",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20Douglas%20Costa%20%28BRA%29%20850%201486%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20Douglas%20Costa%20%28BRA%29%20850%201486%20%28cropped%29.jpg",
+    "face": [0.308, 0.245, 0.383, 0.307]
   },
   "01a1ac27-ba37-705a-8753-2b83885e0ceb": {
-    "file": "/cutouts/01a1ac27-ba37-705a-8753-2b83885e0ceb.webp",
+    "file": "/cutouts/{tier}/01a1ac27-ba37-705a-8753-2b83885e0ceb.webp",
     "photoFile": "Alessandro Santos 20191127.jpg",
     "author": "在ブラジル日本国大使館",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Alessandro%20Santos%2020191127.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Alessandro%20Santos%2020191127.jpg",
+    "face": [0.307, 0.246, 0.385, 0.308]
   },
   "01a1ac27-bb12-710c-b4e8-2efe016573ee": {
-    "file": "/cutouts/01a1ac27-bb12-710c-b4e8-2efe016573ee.webp",
+    "file": "/cutouts/{tier}/01a1ac27-bb12-710c-b4e8-2efe016573ee.webp",
     "photoFile": "Dida-wikipedia (cropped 2).png",
     "author": "NullReason",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Dida-wikipedia%20%28cropped%202%29.png"
+    "source": "https://commons.wikimedia.org/wiki/File:Dida-wikipedia%20%28cropped%202%29.png",
+    "face": [0.304, 0.252, 0.393, 0.315]
   },
   "01a1ac27-bb34-743c-8082-065d97c1e526": {
-    "file": "/cutouts/01a1ac27-bb34-743c-8082-065d97c1e526.webp",
+    "file": "/cutouts/{tier}/01a1ac27-bb34-743c-8082-065d97c1e526.webp",
     "photoFile": "Fabinho Brazil V Morocco 13 June 2026-70.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Fabinho%20Brazil%20V%20Morocco%2013%20June%202026-70.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Fabinho%20Brazil%20V%20Morocco%2013%20June%202026-70.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ac27-bd28-7115-91e1-df1ca1737101": {
-    "file": "/cutouts/01a1ac27-bd28-7115-91e1-df1ca1737101.webp",
+    "file": "/cutouts/{tier}/01a1ac27-bd28-7115-91e1-df1ca1737101.webp",
     "photoFile": "Djalma Santos.jpg",
     "author": "Fabio Rodrigues Pozzebom",
     "license": "CC BY 3.0 br",
-    "source": "https://commons.wikimedia.org/wiki/File:Djalma%20Santos.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Djalma%20Santos.jpg",
+    "face": [0.331, 0.225, 0.344, 0.275]
   },
   "01a1ac27-be78-7125-9bf9-f853b81e52b1": {
-    "file": "/cutouts/01a1ac27-be78-7125-9bf9-f853b81e52b1.webp",
+    "file": "/cutouts/{tier}/01a1ac27-be78-7125-9bf9-f853b81e52b1.webp",
     "photoFile": "Paulo Roberto Falcão, Roma 1983-84.jpg",
     "author": "Unknown authorUnknown author",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Paulo%20Roberto%20Falc%C3%A3o%2C%20Roma%201983-84.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Paulo%20Roberto%20Falc%C3%A3o%2C%20Roma%201983-84.jpg",
+    "face": [0.327, 0.221, 0.345, 0.276]
   },
   "01a1ac27-bf48-74e3-9a4a-f14c76c4e53d": {
-    "file": "/cutouts/01a1ac27-bf48-74e3-9a4a-f14c76c4e53d.webp",
+    "file": "/cutouts/{tier}/01a1ac27-bf48-74e3-9a4a-f14c76c4e53d.webp",
     "photoFile": "Cesar-Sampaio-Palmeiras-2018.jpg",
     "author": "Governo do Estado de São Paulo",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Cesar-Sampaio-Palmeiras-2018.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Cesar-Sampaio-Palmeiras-2018.jpg",
+    "face": [0.326, 0.222, 0.348, 0.279]
   },
   "01a1ac27-c010-75de-9d79-e4023b40eb13": {
-    "file": "/cutouts/01a1ac27-c010-75de-9d79-e4023b40eb13.webp",
+    "file": "/cutouts/{tier}/01a1ac27-c010-75de-9d79-e4023b40eb13.webp",
     "photoFile": "FC Zenit Saint Petersburg vs. Juventus, 20 October 2021 52 (Arthur Melo).jpg",
     "author": "Kirill Venediktov",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:FC%20Zenit%20Saint%20Petersburg%20vs.%20Juventus%2C%2020%20October%202021%2052%20%28Arthur%20Melo%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:FC%20Zenit%20Saint%20Petersburg%20vs.%20Juventus%2C%2020%20October%202021%2052%20%28Arthur%20Melo%29.jpg",
+    "face": [0.356, 0.188, 0.294, 0.235]
   },
   "01a1ac27-c222-70ea-b25a-c6d581b2fe16": {
-    "file": "/cutouts/01a1ac27-c222-70ea-b25a-c6d581b2fe16.webp",
+    "file": "/cutouts/{tier}/01a1ac27-c222-70ea-b25a-c6d581b2fe16.webp",
     "photoFile": "Renato Augusto - Rio 2016.jpg",
     "author": "Fernando Frazão/Agência Brasil",
     "license": "CC BY 3.0 br",
-    "source": "https://commons.wikimedia.org/wiki/File:Renato%20Augusto%20-%20Rio%202016.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Renato%20Augusto%20-%20Rio%202016.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ac28-fc73-719a-8526-3e3b9d0911be": {
-    "file": "/cutouts/01a1ac28-fc73-719a-8526-3e3b9d0911be.webp",
+    "file": "/cutouts/{tier}/01a1ac28-fc73-719a-8526-3e3b9d0911be.webp",
     "photoFile": "Dudu.jpg",
     "author": "Aleksandr Melnikov for Soccer.ru",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Dudu.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Dudu.jpg",
+    "face": [0.351, 0.186, 0.294, 0.235]
   },
   "01a1ac28-fd4e-7345-82c6-1e8f9dd79b79": {
-    "file": "/cutouts/01a1ac28-fd4e-7345-82c6-1e8f9dd79b79.webp",
+    "file": "/cutouts/{tier}/01a1ac28-fd4e-7345-82c6-1e8f9dd79b79.webp",
     "photoFile": "DK-Beshiktash (1).jpg",
     "author": "Илья Хохолов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:DK-Beshiktash%20%281%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:DK-Beshiktash%20%281%29.jpg",
+    "face": [0.356, 0.186, 0.294, 0.235]
   },
   "01a1ac28-fdf3-733f-93ce-355596aeea58": {
-    "file": "/cutouts/01a1ac28-fdf3-733f-93ce-355596aeea58.webp",
+    "file": "/cutouts/{tier}/01a1ac28-fdf3-733f-93ce-355596aeea58.webp",
     "photoFile": "Alex Rodrigo Dias da Costa.jpg",
     "author": "TomekBlaszczyk",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Alex%20Rodrigo%20Dias%20da%20Costa.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Alex%20Rodrigo%20Dias%20da%20Costa.jpg",
+    "face": [0.314, 0.238, 0.374, 0.299]
   },
   "01a1ac28-fe91-7548-a650-3eb5320514e1": {
-    "file": "/cutouts/01a1ac28-fe91-7548-a650-3eb5320514e1.webp",
+    "file": "/cutouts/{tier}/01a1ac28-fe91-7548-a650-3eb5320514e1.webp",
     "photoFile": "Fabio Simplicio.jpg",
     "author": "Salvo da Palermo at Italian Wikipedia",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Fabio%20Simplicio.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Fabio%20Simplicio.jpg",
+    "face": [0.273, 0.291, 0.456, 0.365]
   },
   "01a1ac29-00ea-7126-bfb6-82cc909afdda": {
-    "file": "/cutouts/01a1ac29-00ea-7126-bfb6-82cc909afdda.webp",
+    "file": "/cutouts/{tier}/01a1ac29-00ea-7126-bfb6-82cc909afdda.webp",
     "photoFile": "Juan Silveira dos Santos Brazil V Morocco 13 June 2026-52.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Juan%20Silveira%20dos%20Santos%20Brazil%20V%20Morocco%2013%20June%202026-52.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Juan%20Silveira%20dos%20Santos%20Brazil%20V%20Morocco%2013%20June%202026-52.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ac2a-5775-741a-9660-a336cf9df12f": {
-    "file": "/cutouts/01a1ac2a-5775-741a-9660-a336cf9df12f.webp",
+    "file": "/cutouts/{tier}/01a1ac2a-5775-741a-9660-a336cf9df12f.webp",
     "photoFile": "Adilson batista.jpg",
     "author": "Danielcuei",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Adilson%20batista.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Adilson%20batista.jpg",
+    "face": [0.263, 0.244, 0.49, 0.392]
   },
   "01a1ac2a-58a3-7469-8f3e-eba69e06ca9d": {
-    "file": "/cutouts/01a1ac2a-58a3-7469-8f3e-eba69e06ca9d.webp",
+    "file": "/cutouts/{tier}/01a1ac2a-58a3-7469-8f3e-eba69e06ca9d.webp",
     "photoFile": "Chelsea vs. Arsenal, 29 May 2019 28 (cropped).jpg",
     "author": "Amir Hosseini",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Chelsea%20vs.%20Arsenal%2C%2029%20May%202019%2028%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Chelsea%20vs.%20Arsenal%2C%2029%20May%202019%2028%20%28cropped%29.jpg",
+    "face": [0.306, 0.245, 0.385, 0.308]
   },
   "01a1ac2a-5cf3-7327-9e80-591d4ff1e4d9": {
-    "file": "/cutouts/01a1ac2a-5cf3-7327-9e80-591d4ff1e4d9.webp",
+    "file": "/cutouts/{tier}/01a1ac2a-5cf3-7327-9e80-591d4ff1e4d9.webp",
     "photoFile": "Bernard 2014.jpg",
     "author": "ОЛЕГ ДУБИНА",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Bernard%202014.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Bernard%202014.jpg",
+    "face": [0.284, 0.276, 0.433, 0.346]
   },
   "01a1ac2a-5d2a-735d-895f-5754994ebb07": {
-    "file": "/cutouts/01a1ac2a-5d2a-735d-895f-5754994ebb07.webp",
+    "file": "/cutouts/{tier}/01a1ac2a-5d2a-735d-895f-5754994ebb07.webp",
     "photoFile": "Gérson 1970 (cropped).jpg",
     "author": "Rolls Press / Popperfoto / Getty Images",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:G%C3%A9rson%201970%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:G%C3%A9rson%201970%20%28cropped%29.jpg",
+    "face": [0.273, 0.289, 0.452, 0.361]
   },
   "01a1ac2a-5f12-7731-abcf-d3bf35aee6fe": {
-    "file": "/cutouts/01a1ac2a-5f12-7731-abcf-d3bf35aee6fe.webp",
+    "file": "/cutouts/{tier}/01a1ac2a-5f12-7731-abcf-d3bf35aee6fe.webp",
     "photoFile": "Argel Fuchs.png",
     "author": "TV Botafogo",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Argel%20Fuchs.png"
+    "source": "https://commons.wikimedia.org/wiki/File:Argel%20Fuchs.png",
+    "face": [0.27, 0.294, 0.461, 0.369]
   },
   "01a1ac2b-a5b5-7770-8fba-9a4d32a340a6": {
-    "file": "/cutouts/01a1ac2b-a5b5-7770-8fba-9a4d32a340a6.webp",
+    "file": "/cutouts/{tier}/01a1ac2b-a5b5-7770-8fba-9a4d32a340a6.webp",
     "photoFile": "Leovegildo lins da gama júnior.JPG",
     "author": "Unknown authorUnknown author",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Leovegildo%20lins%20da%20gama%20j%C3%BAnior.JPG"
+    "source": "https://commons.wikimedia.org/wiki/File:Leovegildo%20lins%20da%20gama%20j%C3%BAnior.JPG",
+    "face": [0.355, 0.188, 0.294, 0.235]
   },
   "01a1ac2b-a618-7238-958b-57b4e002ff9d": {
-    "file": "/cutouts/01a1ac2b-a618-7238-958b-57b4e002ff9d.webp",
+    "file": "/cutouts/{tier}/01a1ac2b-a618-7238-958b-57b4e002ff9d.webp",
     "photoFile": "CASA ONZE - DENILSON.jpg",
     "author": "RicardoGuedesP",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:CASA%20ONZE%20-%20DENILSON.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:CASA%20ONZE%20-%20DENILSON.jpg",
+    "face": [0.354, 0.189, 0.294, 0.235]
   },
   "01a1ac2b-a6ec-77cb-a55e-0acd0ada2e29": {
-    "file": "/cutouts/01a1ac2b-a6ec-77cb-a55e-0acd0ada2e29.webp",
+    "file": "/cutouts/{tier}/01a1ac2b-a6ec-77cb-a55e-0acd0ada2e29.webp",
     "photoFile": "Douglas Luiz April 2026 (cropped).jpg",
     "author": "MintyGel",
     "license": "CC0",
-    "source": "https://commons.wikimedia.org/wiki/File:Douglas%20Luiz%20April%202026%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Douglas%20Luiz%20April%202026%20%28cropped%29.jpg",
+    "face": [0.353, 0.187, 0.294, 0.235]
   },
   "01a1ac2b-a771-727e-9c66-191c94b7e5f6": {
-    "file": "/cutouts/01a1ac2b-a771-727e-9c66-191c94b7e5f6.webp",
+    "file": "/cutouts/{tier}/01a1ac2b-a771-727e-9c66-191c94b7e5f6.webp",
     "photoFile": "2025-04-30 Lançamento Fundo de Investimento em Participações Nordeste Capital Semente, 017 (Raí Souza).jpg",
     "author": "gov_mcti",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:2025-04-30%20Lan%C3%A7amento%20Fundo%20de%20Investimento%20em%20Participa%C3%A7%C3%B5es%20Nordeste%20Capital%20Semente%2C%20017%20%28Ra%C3%AD%20Souza%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:2025-04-30%20Lan%C3%A7amento%20Fundo%20de%20Investimento%20em%20Participa%C3%A7%C3%B5es%20Nordeste%20Capital%20Semente%2C%20017%20%28Ra%C3%AD%20Souza%29.jpg",
+    "face": [0.291, 0.266, 0.417, 0.334]
   },
   "01a1ac2b-aa98-735c-9a87-44528c5f94f9": {
-    "file": "/cutouts/01a1ac2b-aa98-735c-9a87-44528c5f94f9.webp",
+    "file": "/cutouts/{tier}/01a1ac2b-aa98-735c-9a87-44528c5f94f9.webp",
     "photoFile": "Doni 2011.jpg",
     "author": "mattythewhite",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Doni%202011.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Doni%202011.jpg",
+    "face": [0.271, 0.297, 0.461, 0.369]
   },
   "01a1ac2b-ab5e-7069-8e75-b2b1125db541": {
-    "file": "/cutouts/01a1ac2b-ab5e-7069-8e75-b2b1125db541.webp",
+    "file": "/cutouts/{tier}/01a1ac2b-ab5e-7069-8e75-b2b1125db541.webp",
     "photoFile": "Gabriel Paulista 20240803.jpg",
     "author": "Beşiktaş JK",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Gabriel%20Paulista%2020240803.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Gabriel%20Paulista%2020240803.jpg",
+    "face": [0.346, 0.185, 0.299, 0.24]
   },
   "01a1ac2c-f97e-72a9-80de-9e7af95a7a9e": {
-    "file": "/cutouts/01a1ac2c-f97e-72a9-80de-9e7af95a7a9e.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-f97e-72a9-80de-9e7af95a7a9e.webp",
     "photoFile": "Maurosilva.png",
     "author": "Refivagert",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Maurosilva.png"
+    "source": "https://commons.wikimedia.org/wiki/File:Maurosilva.png",
+    "face": [0.355, 0.188, 0.294, 0.235]
   },
   "01a1ac2c-fcaf-73bb-8832-5a5935972638": {
-    "file": "/cutouts/01a1ac2c-fcaf-73bb-8832-5a5935972638.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-fcaf-73bb-8832-5a5935972638.webp",
     "photoFile": "Igor Thiago Brazil V Morocco 13 June 2026-120 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Igor%20Thiago%20Brazil%20V%20Morocco%2013%20June%202026-120%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Igor%20Thiago%20Brazil%20V%20Morocco%2013%20June%202026-120%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ac2c-fd0f-7244-962a-58ff68f4899e": {
-    "file": "/cutouts/01a1ac2c-fd0f-7244-962a-58ff68f4899e.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-fd0f-7244-962a-58ff68f4899e.webp",
     "photoFile": "Pedro Tonon Geromel - Grêmio (cropped).png",
     "author": "TVE RS / TV Grenal",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Pedro%20Tonon%20Geromel%20-%20Gr%C3%AAmio%20%28cropped%29.png"
+    "source": "https://commons.wikimedia.org/wiki/File:Pedro%20Tonon%20Geromel%20-%20Gr%C3%AAmio%20%28cropped%29.png",
+    "face": [0.283, 0.278, 0.435, 0.348]
   },
   "01a1ac2c-fe37-7648-9e9d-4fff98ed374a": {
-    "file": "/cutouts/01a1ac2c-fe37-7648-9e9d-4fff98ed374a.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-fe37-7648-9e9d-4fff98ed374a.webp",
     "photoFile": "Wanderlei Luxemburgo, técnico do Sport Recife (35384381641) (cropped).jpg",
     "author": "Douglas Teixeira from Santos, Brasil",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Wanderlei%20Luxemburgo%2C%20t%C3%A9cnico%20do%20Sport%20Recife%20%2835384381641%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Wanderlei%20Luxemburgo%2C%20t%C3%A9cnico%20do%20Sport%20Recife%20%2835384381641%29%20%28cropped%29.jpg",
+    "face": [0.312, 0.24, 0.375, 0.3]
   },
   "01a1ac2c-feba-72bf-ac95-bb8c5a4b5b15": {
-    "file": "/cutouts/01a1ac2c-feba-72bf-ac95-bb8c5a4b5b15.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-feba-72bf-ac95-bb8c5a4b5b15.webp",
     "photoFile": "Cassio-Corinthians-Juventude-jul-2022.jpg",
     "author": "SOCCER DIGITAL",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Cassio-Corinthians-Juventude-jul-2022.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Cassio-Corinthians-Juventude-jul-2022.jpg",
+    "face": [0.324, 0.225, 0.352, 0.282]
   },
   "01a1ac2c-ff93-717a-8f7f-b276b3e0cbb1": {
-    "file": "/cutouts/01a1ac2c-ff93-717a-8f7f-b276b3e0cbb1.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-ff93-717a-8f7f-b276b3e0cbb1.webp",
     "photoFile": "Fernando Francisco Reges.jpg",
     "author": "Amarhgil",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Fernando%20Francisco%20Reges.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Fernando%20Francisco%20Reges.jpg",
+    "face": [0.359, 0.187, 0.294, 0.235]
   },
   "01a1ac2c-ffe7-74b1-b0cb-ef0e496185e3": {
-    "file": "/cutouts/01a1ac2c-ffe7-74b1-b0cb-ef0e496185e3.webp",
+    "file": "/cutouts/{tier}/01a1ac2c-ffe7-74b1-b0cb-ef0e496185e3.webp",
     "photoFile": "SÉRIE A - PALMEIRAS 0 X 2 ATHLETICO PARANAENSE - Vitor Roque.jpg",
     "author": "SOCCER DIGITAL",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:S%C3%89RIE%20A%20-%20PALMEIRAS%200%20X%202%20ATHLETICO%20PARANAENSE%20-%20Vitor%20Roque.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:S%C3%89RIE%20A%20-%20PALMEIRAS%200%20X%202%20ATHLETICO%20PARANAENSE%20-%20Vitor%20Roque.jpg",
+    "face": [0.33, 0.218, 0.34, 0.272]
   },
   "01a1ad3e-d566-740f-b0cd-7eba141419bf": {
-    "file": "/cutouts/01a1ad3e-d566-740f-b0cd-7eba141419bf.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-d566-740f-b0cd-7eba141419bf.webp",
     "photoFile": "U10 Diego Forlán 7524.jpg",
     "author": "Ailura",
     "license": "CC BY-SA 3.0 at",
-    "source": "https://commons.wikimedia.org/wiki/File:U10%20Diego%20Forl%C3%A1n%207524.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:U10%20Diego%20Forl%C3%A1n%207524.jpg",
+    "face": [0.294, 0.263, 0.412, 0.329]
   },
   "01a1ad3e-d58b-736f-a5a7-5b494b9c382a": {
-    "file": "/cutouts/01a1ad3e-d58b-736f-a5a7-5b494b9c382a.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-d58b-736f-a5a7-5b494b9c382a.webp",
     "photoFile": "Diego Godín 2018 (cropped).jpg",
     "author": "Анна Нэсси",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Diego%20God%C3%ADn%202018%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Diego%20God%C3%ADn%202018%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad3e-d5c8-751a-9e0f-aff8d368915a": {
-    "file": "/cutouts/01a1ad3e-d5c8-751a-9e0f-aff8d368915a.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-d5c8-751a-9e0f-aff8d368915a.webp",
     "photoFile": "Keisuke Honda 2018 (cropped) (cropped).jpg",
     "author": "Светлана Бекетова",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Keisuke%20Honda%202018%20%28cropped%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Keisuke%20Honda%202018%20%28cropped%29%20%28cropped%29.jpg",
+    "face": [0.343, 0.201, 0.314, 0.251]
   },
   "01a1ad3e-d5e0-74f8-ba59-bf9c94574d42": {
-    "file": "/cutouts/01a1ad3e-d5e0-74f8-ba59-bf9c94574d42.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-d5e0-74f8-ba59-bf9c94574d42.webp",
     "photoFile": "Mascherano casagob.jpg",
     "author": "Not credited",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Mascherano%20casagob.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Mascherano%20casagob.jpg",
+    "face": [0.282, 0.28, 0.437, 0.35]
   },
   "01a1ad3e-d6a0-772e-a79b-c8ef362a6ef8": {
-    "file": "/cutouts/01a1ad3e-d6a0-772e-a79b-c8ef362a6ef8.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-d6a0-772e-a79b-c8ef362a6ef8.webp",
     "photoFile": "Payet April 2016.jpeg",
     "author": "Egghead06",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Payet%20April%202016.jpeg"
+    "source": "https://commons.wikimedia.org/wiki/File:Payet%20April%202016.jpeg",
+    "face": [0.354, 0.188, 0.294, 0.235]
   },
   "01a1ad3e-d9d0-75bc-8d30-30060420f363": {
-    "file": "/cutouts/01a1ad3e-d9d0-75bc-8d30-30060420f363.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-d9d0-75bc-8d30-30060420f363.webp",
     "photoFile": "Alejandro Sabella 2012.jpeg",
     "author": "Fanny Schertzer",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Alejandro%20Sabella%202012.jpeg"
+    "source": "https://commons.wikimedia.org/wiki/File:Alejandro%20Sabella%202012.jpeg",
+    "face": [0.329, 0.219, 0.342, 0.273]
   },
   "01a1ad3e-da86-7554-9e6a-d612d9e111a9": {
-    "file": "/cutouts/01a1ad3e-da86-7554-9e6a-d612d9e111a9.webp",
+    "file": "/cutouts/{tier}/01a1ad3e-da86-7554-9e6a-d612d9e111a9.webp",
     "photoFile": "NIG-ARG (13).jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:NIG-ARG%20%2813%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:NIG-ARG%20%2813%29.jpg",
+    "face": [0.35, 0.188, 0.294, 0.235]
   },
   "01a1ad40-924f-763a-ae9e-82b6c86ffd13": {
-    "file": "/cutouts/01a1ad40-924f-763a-ae9e-82b6c86ffd13.webp",
+    "file": "/cutouts/{tier}/01a1ad40-924f-763a-ae9e-82b6c86ffd13.webp",
     "photoFile": "Tino Asprilla en 2019 01.jpg",
     "author": "TELURO PRODUCCIONES",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Tino%20Asprilla%20en%202019%2001.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Tino%20Asprilla%20en%202019%2001.jpg",
+    "face": [0.318, 0.233, 0.364, 0.291]
   },
   "01a1ad4f-3b18-76a6-9965-dedba47094e5": {
-    "file": "/cutouts/01a1ad4f-3b18-76a6-9965-dedba47094e5.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3b18-76a6-9965-dedba47094e5.webp",
     "photoFile": "Kylian Mbappe France v Senegal 16 June 2026-391 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Kylian%20Mbappe%20France%20v%20Senegal%2016%20June%202026-391%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Kylian%20Mbappe%20France%20v%20Senegal%2016%20June%202026-391%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad4f-3b3f-7419-aa35-4018ec053cbc": {
-    "file": "/cutouts/01a1ad4f-3b3f-7419-aa35-4018ec053cbc.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3b3f-7419-aa35-4018ec053cbc.webp",
     "photoFile": "Johan Cruijff (1974).jpg",
     "author": "Rob Mieremet / Anefo",
     "license": "CC0",
-    "source": "https://commons.wikimedia.org/wiki/File:Johan%20Cruijff%20%281974%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Johan%20Cruijff%20%281974%29.jpg",
+    "face": [0.287, 0.272, 0.425, 0.34]
   },
   "01a1ad4f-3b5d-768d-a9e2-b8a6045943a4": {
-    "file": "/cutouts/01a1ad4f-3b5d-768d-a9e2-b8a6045943a4.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3b5d-768d-a9e2-b8a6045943a4.webp",
     "photoFile": "Karim Benzema 2022 (cropped).jpg",
     "author": "Fotografías Archimadrid.es",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Karim%20Benzema%202022%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Karim%20Benzema%202022%20%28cropped%29.jpg",
+    "face": [0.352, 0.189, 0.294, 0.235]
   },
   "01a1ad4f-3b87-73fe-b697-17dec88eafa4": {
-    "file": "/cutouts/01a1ad4f-3b87-73fe-b697-17dec88eafa4.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3b87-73fe-b697-17dec88eafa4.webp",
     "photoFile": "Andrés Iniesta Argentina v Spain 19 July 2026-034 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Andr%C3%A9s%20Iniesta%20Argentina%20v%20Spain%2019%20July%202026-034%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Andr%C3%A9s%20Iniesta%20Argentina%20v%20Spain%2019%20July%202026-034%20%28cropped%29.jpg",
+    "face": [0.32, 0.177, 0.354, 0.283]
   },
   "01a1ad4f-3be7-731a-841a-d4cb38f03591": {
-    "file": "/cutouts/01a1ad4f-3be7-731a-841a-d4cb38f03591.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3be7-731a-841a-d4cb38f03591.webp",
     "photoFile": "Arjen Robben 2013.jpg",
     "author": "Дмитрий Садовников",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Arjen%20Robben%202013.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Arjen%20Robben%202013.jpg",
+    "face": [0.338, 0.208, 0.326, 0.261]
   },
   "01a1ad4f-3bf9-73ca-99c2-090d5ccbf08e": {
-    "file": "/cutouts/01a1ad4f-3bf9-73ca-99c2-090d5ccbf08e.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3bf9-73ca-99c2-090d5ccbf08e.webp",
     "photoFile": "Gareth Bale 2015 (1).jpg",
     "author": "Дмитрий Журавель",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Gareth%20Bale%202015%20%281%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Gareth%20Bale%202015%20%281%29.jpg",
+    "face": [0.322, 0.228, 0.358, 0.286]
   },
   "01a1ad4f-3c20-754b-9e71-5fcdeac37c2d": {
-    "file": "/cutouts/01a1ad4f-3c20-754b-9e71-5fcdeac37c2d.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3c20-754b-9e71-5fcdeac37c2d.webp",
     "photoFile": "Fernando Torres 2017.jpg",
     "author": "cristina cifuentes",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Fernando%20Torres%202017.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Fernando%20Torres%202017.jpg",
+    "face": [0.266, 0.296, 0.464, 0.371]
   },
   "01a1ad4f-3c50-75f5-a07c-21975e55bd9c": {
-    "file": "/cutouts/01a1ad4f-3c50-75f5-a07c-21975e55bd9c.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3c50-75f5-a07c-21975e55bd9c.webp",
     "photoFile": "GerardPique.jpg",
     "author": "Vinod Divakaran",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:GerardPique.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:GerardPique.jpg",
+    "face": [0.297, 0.259, 0.405, 0.324]
   },
   "01a1ad4f-3c5d-72ce-9c53-06d83eb1daad": {
-    "file": "/cutouts/01a1ad4f-3c5d-72ce-9c53-06d83eb1daad.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3c5d-72ce-9c53-06d83eb1daad.webp",
     "photoFile": "Sergio Ramos Interview 2021 (cropped).jpg",
     "author": "Real Madrid",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Sergio%20Ramos%20Interview%202021%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Sergio%20Ramos%20Interview%202021%20%28cropped%29.jpg",
+    "face": [0.291, 0.267, 0.418, 0.335]
   },
   "01a1ad4f-3c7d-7420-bd3a-abe0fcdbab40": {
-    "file": "/cutouts/01a1ad4f-3c7d-7420-bd3a-abe0fcdbab40.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3c7d-7420-bd3a-abe0fcdbab40.webp",
     "photoFile": "Agüero in 2018.jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Ag%C3%BCero%20in%202018.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Ag%C3%BCero%20in%202018.jpg",
+    "face": [0.293, 0.264, 0.413, 0.33]
   },
   "01a1ad4f-3c8b-71c1-bc8d-fc10c3109b50": {
-    "file": "/cutouts/01a1ad4f-3c8b-71c1-bc8d-fc10c3109b50.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3c8b-71c1-bc8d-fc10c3109b50.webp",
     "photoFile": "Thibaut Courtois Belgium v USA 6 July 2026-076 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Thibaut%20Courtois%20Belgium%20v%20USA%206%20July%202026-076%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Thibaut%20Courtois%20Belgium%20v%20USA%206%20July%202026-076%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad4f-3cb4-77f2-b55d-02ccf4710196": {
-    "file": "/cutouts/01a1ad4f-3cb4-77f2-b55d-02ccf4710196.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3cb4-77f2-b55d-02ccf4710196.webp",
     "photoFile": "Toni Kroos Real Madrid 2021.jpg",
     "author": "https://www.youtube.com/@realmadrid",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Toni%20Kroos%20Real%20Madrid%202021.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Toni%20Kroos%20Real%20Madrid%202021.jpg",
+    "face": [0.309, 0.244, 0.383, 0.306]
   },
   "01a1ad4f-3cc9-72c8-b537-1c67c3b95d42": {
-    "file": "/cutouts/01a1ad4f-3cc9-72c8-b537-1c67c3b95d42.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3cc9-72c8-b537-1c67c3b95d42.webp",
     "photoFile": "Spain-Tahiti, Confederations Cup 2013 (02) (Villa crop).jpg",
     "author": "Tânia Rêgo/ABr",
     "license": "CC BY 3.0 br",
-    "source": "https://commons.wikimedia.org/wiki/File:Spain-Tahiti%2C%20Confederations%20Cup%202013%20%2802%29%20%28Villa%20crop%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Spain-Tahiti%2C%20Confederations%20Cup%202013%20%2802%29%20%28Villa%20crop%29.jpg",
+    "face": [0.309, 0.245, 0.383, 0.306]
   },
   "01a1ad4f-3cd9-716f-b486-b15c2d5142a1": {
-    "file": "/cutouts/01a1ad4f-3cd9-716f-b486-b15c2d5142a1.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3cd9-716f-b486-b15c2d5142a1.webp",
     "photoFile": "Edinson Cavani 2018 (cropped).jpg",
     "author": "Анна Нэсси",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Edinson%20Cavani%202018%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Edinson%20Cavani%202018%20%28cropped%29.jpg",
+    "face": [0.351, 0.187, 0.294, 0.235]
   },
   "01a1ad4f-3cef-729a-b1a4-8f0774ab177f": {
-    "file": "/cutouts/01a1ad4f-3cef-729a-b1a4-8f0774ab177f.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3cef-729a-b1a4-8f0774ab177f.webp",
     "photoFile": "2023 - Cesc Fabregas (cropped).jpg",
     "author": "Web Summit",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:2023%20-%20Cesc%20Fabregas%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:2023%20-%20Cesc%20Fabregas%20%28cropped%29.jpg",
+    "face": [0.281, 0.279, 0.437, 0.349]
   },
   "01a1ad4f-3d2d-7697-a977-0d7b60b5f344": {
-    "file": "/cutouts/01a1ad4f-3d2d-7697-a977-0d7b60b5f344.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3d2d-7697-a977-0d7b60b5f344.webp",
     "photoFile": "Sergio Busquets 2018 (cropped).jpg",
     "author": "Анна Нэсси",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Sergio%20Busquets%202018%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Sergio%20Busquets%202018%20%28cropped%29.jpg",
+    "face": [0.34, 0.203, 0.319, 0.255]
   },
   "01a1ad4f-3d42-70fe-8f07-8764d19e0c31": {
-    "file": "/cutouts/01a1ad4f-3d42-70fe-8f07-8764d19e0c31.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3d42-70fe-8f07-8764d19e0c31.webp",
     "photoFile": "L. Figo 2017 (cropped).jpg",
     "author": "Biser Todorov",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:L.%20Figo%202017%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:L.%20Figo%202017%20%28cropped%29.jpg",
+    "face": [0.263, 0.303, 0.474, 0.379]
   },
   "01a1ad4f-3d51-7239-be46-7bc9a996017f": {
-    "file": "/cutouts/01a1ad4f-3d51-7239-be46-7bc9a996017f.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3d51-7239-be46-7bc9a996017f.webp",
     "photoFile": "Michael Owen.jpg",
     "author": "David Seow",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Michael%20Owen.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Michael%20Owen.jpg",
+    "face": [0.283, 0.278, 0.435, 0.348]
   },
   "01a1ad4f-3d61-70ba-ad1e-87be32a7a676": {
-    "file": "/cutouts/01a1ad4f-3d61-70ba-ad1e-87be32a7a676.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3d61-70ba-ad1e-87be32a7a676.webp",
     "photoFile": "Ivan Rakitić 2020 (cropped).jpg",
     "author": "Дмитрий Пукалик",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Ivan%20Rakiti%C4%87%202020%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Ivan%20Rakiti%C4%87%202020%20%28cropped%29.jpg",
+    "face": [0.357, 0.188, 0.294, 0.235]
   },
   "01a1ad4f-3d72-73ce-885c-433af204d24f": {
-    "file": "/cutouts/01a1ad4f-3d72-73ce-885c-433af204d24f.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3d72-73ce-885c-433af204d24f.webp",
     "photoFile": "Russia-Spain 2017 (11).jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Russia-Spain%202017%20%2811%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Russia-Spain%202017%20%2811%29.jpg",
+    "face": [0.322, 0.227, 0.355, 0.284]
   },
   "01a1ad4f-3d90-736e-b7ee-e87cefc7ff75": {
-    "file": "/cutouts/01a1ad4f-3d90-736e-b7ee-e87cefc7ff75.webp",
+    "file": "/cutouts/{tier}/01a1ad4f-3d90-736e-b7ee-e87cefc7ff75.webp",
     "photoFile": "Liver-RM (8) (Varane).jpg",
     "author": "Антон Зайцев",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Liver-RM%20%288%29%20%28Varane%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Liver-RM%20%288%29%20%28Varane%29.jpg",
+    "face": [0.291, 0.264, 0.415, 0.332]
   },
   "01a1ad51-21a4-74db-a5fe-e853290fc7db": {
-    "file": "/cutouts/01a1ad51-21a4-74db-a5fe-e853290fc7db.webp",
+    "file": "/cutouts/{tier}/01a1ad51-21a4-74db-a5fe-e853290fc7db.webp",
     "photoFile": "Didier Deschamps France v Senegal 16 June 2026-519 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Didier%20Deschamps%20France%20v%20Senegal%2016%20June%202026-519%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Didier%20Deschamps%20France%20v%20Senegal%2016%20June%202026-519%20%28cropped%29.jpg",
+    "face": [0.35, 0.192, 0.3, 0.24]
   },
   "01a1ad51-21be-712e-af7e-5f166959c7ae": {
-    "file": "/cutouts/01a1ad51-21be-712e-af7e-5f166959c7ae.webp",
+    "file": "/cutouts/{tier}/01a1ad51-21be-712e-af7e-5f166959c7ae.webp",
     "photoFile": "Wesley2012.JPG",
     "author": "Dmitry Neimyrok",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Wesley2012.JPG"
+    "source": "https://commons.wikimedia.org/wiki/File:Wesley2012.JPG",
+    "face": [0.354, 0.187, 0.294, 0.235]
   },
   "01a1ad51-21d4-76c2-8825-6b09ef528cf6": {
-    "file": "/cutouts/01a1ad51-21d4-76c2-8825-6b09ef528cf6.webp",
+    "file": "/cutouts/{tier}/01a1ad51-21d4-76c2-8825-6b09ef528cf6.webp",
     "photoFile": "Higuaín 20180626.jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Higua%C3%ADn%2020180626.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Higua%C3%ADn%2020180626.jpg",
+    "face": [0.336, 0.209, 0.327, 0.261]
   },
   "01a1ad51-21f3-76ea-aeb9-0f5a9bb50879": {
-    "file": "/cutouts/01a1ad51-21f3-76ea-aeb9-0f5a9bb50879.webp",
+    "file": "/cutouts/{tier}/01a1ad51-21f3-76ea-aeb9-0f5a9bb50879.webp",
     "photoFile": "Ruud van Nistelrooy 2017.jpg",
     "author": "Ardfern",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Ruud%20van%20Nistelrooy%202017.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Ruud%20van%20Nistelrooy%202017.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad51-2208-70ef-84e0-e58f0518b713": {
-    "file": "/cutouts/01a1ad51-2208-70ef-84e0-e58f0518b713.webp",
+    "file": "/cutouts/{tier}/01a1ad51-2208-70ef-84e0-e58f0518b713.webp",
     "photoFile": "20180602 FIFA Friendly Match Austria vs. Germany Sami Khedira 850 0707.jpg",
     "author": "Granada",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:20180602%20FIFA%20Friendly%20Match%20Austria%20vs.%20Germany%20Sami%20Khedira%20850%200707.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20180602%20FIFA%20Friendly%20Match%20Austria%20vs.%20Germany%20Sami%20Khedira%20850%200707.jpg",
+    "face": [0.297, 0.26, 0.406, 0.325]
   },
   "01a1ad51-228b-741f-9d53-06498559b637": {
-    "file": "/cutouts/01a1ad51-228b-741f-9d53-06498559b637.webp",
+    "file": "/cutouts/{tier}/01a1ad51-228b-741f-9d53-06498559b637.webp",
     "photoFile": "Víctor Valdés before Euro 2012 vs France (cropped).jpg",
     "author": "Дмитрий Неймырок",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:V%C3%ADctor%20Vald%C3%A9s%20before%20Euro%202012%20vs%20France%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:V%C3%ADctor%20Vald%C3%A9s%20before%20Euro%202012%20vs%20France%20%28cropped%29.jpg",
+    "face": [0.352, 0.185, 0.294, 0.235]
   },
   "01a1ad51-22ba-77d9-900b-8708ba39c25a": {
-    "file": "/cutouts/01a1ad51-22ba-77d9-900b-8708ba39c25a.webp",
+    "file": "/cutouts/{tier}/01a1ad51-22ba-77d9-900b-8708ba39c25a.webp",
     "photoFile": "Арда Туран.webp",
     "author": "ФК \"Карпати\" Львів",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:%D0%90%D1%80%D0%B4%D0%B0%20%D0%A2%D1%83%D1%80%D0%B0%D0%BD.webp"
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%90%D1%80%D0%B4%D0%B0%20%D0%A2%D1%83%D1%80%D0%B0%D0%BD.webp",
+    "face": [0.3, 0.257, 0.402, 0.322]
   },
   "01a1ad51-2348-7150-9f20-86fbaadc9416": {
-    "file": "/cutouts/01a1ad51-2348-7150-9f20-86fbaadc9416.webp",
+    "file": "/cutouts/{tier}/01a1ad51-2348-7150-9f20-86fbaadc9416.webp",
     "photoFile": "Klaas-Jan Huntelaar 2011.jpg",
     "author": "xtranews.de",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Klaas-Jan%20Huntelaar%202011.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Klaas-Jan%20Huntelaar%202011.jpg",
+    "face": [0.298, 0.258, 0.403, 0.322]
   },
   "01a1ad51-2379-7714-8a56-d73989514df4": {
-    "file": "/cutouts/01a1ad51-2379-7714-8a56-d73989514df4.webp",
+    "file": "/cutouts/{tier}/01a1ad51-2379-7714-8a56-d73989514df4.webp",
     "photoFile": "UEFA EURO qualifiers Sweden vs Spain 20191015 Dani Carvajal 10 (cropped).jpg",
     "author": "Rolandhino1",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:UEFA%20EURO%20qualifiers%20Sweden%20vs%20Spain%2020191015%20Dani%20Carvajal%2010%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:UEFA%20EURO%20qualifiers%20Sweden%20vs%20Spain%2020191015%20Dani%20Carvajal%2010%20%28cropped%29.jpg",
+    "face": [0.342, 0.201, 0.315, 0.252]
   },
   "01a1ad51-238a-77cb-bd0f-872ab23fabd1": {
-    "file": "/cutouts/01a1ad51-238a-77cb-bd0f-872ab23fabd1.webp",
+    "file": "/cutouts/{tier}/01a1ad51-238a-77cb-bd0f-872ab23fabd1.webp",
     "photoFile": "Ajax selectie seizoen 1981 1982 nr. 140a E. Ophof speler, nr. 15a F. Rijka, Bestanddeelnr 253-8568.jpg",
     "author": "Marcel Antonisse / Anefo",
     "license": "CC0",
-    "source": "https://commons.wikimedia.org/wiki/File:Ajax%20selectie%20seizoen%201981%201982%20nr.%20140a%20E.%20Ophof%20speler%2C%20nr.%2015a%20F.%20Rijka%2C%20Bestanddeelnr%20253-8568.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Ajax%20selectie%20seizoen%201981%201982%20nr.%20140a%20E.%20Ophof%20speler%2C%20nr.%2015a%20F.%20Rijka%2C%20Bestanddeelnr%20253-8568.jpg",
+    "face": [0.281, 0.281, 0.439, 0.351]
   },
   "01a1ad51-23cd-70fe-82e5-c24b143d5f1e": {
-    "file": "/cutouts/01a1ad51-23cd-70fe-82e5-c24b143d5f1e.webp",
+    "file": "/cutouts/{tier}/01a1ad51-23cd-70fe-82e5-c24b143d5f1e.webp",
     "photoFile": "David Trezeguet became Save the Dream Ambassador, 2017 (cropped).jpg",
     "author": "Save the Dream from Doha, Qatar",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:David%20Trezeguet%20became%20Save%20the%20Dream%20Ambassador%2C%202017%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:David%20Trezeguet%20became%20Save%20the%20Dream%20Ambassador%2C%202017%20%28cropped%29.jpg",
+    "face": [0.293, 0.265, 0.414, 0.331]
   },
   "01a1ad51-255e-737a-adb4-3295919dc013": {
-    "file": "/cutouts/01a1ad51-255e-737a-adb4-3295919dc013.webp",
+    "file": "/cutouts/{tier}/01a1ad51-255e-737a-adb4-3295919dc013.webp",
     "photoFile": "1 Shkodran Mustafi 2018 (cropped).jpg",
     "author": "Chensiyuan",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:1%20Shkodran%20Mustafi%202018%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:1%20Shkodran%20Mustafi%202018%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad51-25c9-71e8-86c2-33b8ddfd0413": {
-    "file": "/cutouts/01a1ad51-25c9-71e8-86c2-33b8ddfd0413.webp",
+    "file": "/cutouts/{tier}/01a1ad51-25c9-71e8-86c2-33b8ddfd0413.webp",
     "photoFile": "Kerzhakov 2017.jpg",
     "author": "Дмитрий Голубович",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Kerzhakov%202017.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Kerzhakov%202017.jpg",
+    "face": [0.318, 0.233, 0.364, 0.291]
   },
   "01a1ad52-cb16-767e-ba98-3579a04d62ac": {
-    "file": "/cutouts/01a1ad52-cb16-767e-ba98-3579a04d62ac.webp",
+    "file": "/cutouts/{tier}/01a1ad52-cb16-767e-ba98-3579a04d62ac.webp",
     "photoFile": "2020-03-10 Fußball, Männer, UEFA Champions League Achtelfinale, RB Leipzig - Tottenham Hotspur 1DX 3693 by Stepro.jpg",
     "author": "Steffen Prößdorf",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:2020-03-10%20Fu%C3%9Fball%2C%20M%C3%A4nner%2C%20UEFA%20Champions%20League%20Achtelfinale%2C%20RB%20Leipzig%20-%20Tottenham%20Hotspur%201DX%203693%20by%20Stepro.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:2020-03-10%20Fu%C3%9Fball%2C%20M%C3%A4nner%2C%20UEFA%20Champions%20League%20Achtelfinale%2C%20RB%20Leipzig%20-%20Tottenham%20Hotspur%201DX%203693%20by%20Stepro.jpg",
+    "face": [0.306, 0.248, 0.387, 0.31]
   },
   "01a1ad52-cc2a-764f-83e8-8788e5502127": {
-    "file": "/cutouts/01a1ad52-cc2a-764f-83e8-8788e5502127.webp",
+    "file": "/cutouts/{tier}/01a1ad52-cc2a-764f-83e8-8788e5502127.webp",
     "photoFile": "Mex-Kor (1) (cropped).jpg",
     "author": "Светлана Бекетова",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Mex-Kor%20%281%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Mex-Kor%20%281%29%20%28cropped%29.jpg",
+    "face": [0.292, 0.268, 0.419, 0.335]
   },
   "01a1ad52-cc40-7633-bd4d-d559378d2fc9": {
-    "file": "/cutouts/01a1ad52-cc40-7633-bd4d-d559378d2fc9.webp",
+    "file": "/cutouts/{tier}/01a1ad52-cc40-7633-bd4d-d559378d2fc9.webp",
     "photoFile": "Yoshinori-Muto-2015-07.jpg",
     "author": "Fuguito",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Yoshinori-Muto-2015-07.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Yoshinori-Muto-2015-07.jpg",
+    "face": [0.332, 0.215, 0.336, 0.269]
   },
   "01a1ad52-cda8-7355-8310-df8f05f1d1bc": {
-    "file": "/cutouts/01a1ad52-cda8-7355-8310-df8f05f1d1bc.webp",
+    "file": "/cutouts/{tier}/01a1ad52-cda8-7355-8310-df8f05f1d1bc.webp",
     "photoFile": "Marc Cucurella Argentina v Spain 19 July 2026-064 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Marc%20Cucurella%20Argentina%20v%20Spain%2019%20July%202026-064%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Marc%20Cucurella%20Argentina%20v%20Spain%2019%20July%202026-064%20%28cropped%29.jpg",
+    "face": [0.346, 0.197, 0.307, 0.246]
   },
   "01a1ad54-c21b-70db-93d7-8ed49143028c": {
-    "file": "/cutouts/01a1ad54-c21b-70db-93d7-8ed49143028c.webp",
+    "file": "/cutouts/{tier}/01a1ad54-c21b-70db-93d7-8ed49143028c.webp",
     "photoFile": "Sevillia-Zenit (2).jpg",
     "author": "Вячеслав Евдокимов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Sevillia-Zenit%20%282%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Sevillia-Zenit%20%282%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad54-c2bc-74ca-a6b5-7d3a36917899": {
-    "file": "/cutouts/01a1ad54-c2bc-74ca-a6b5-7d3a36917899.webp",
+    "file": "/cutouts/{tier}/01a1ad54-c2bc-74ca-a6b5-7d3a36917899.webp",
     "photoFile": "Brahim Diaz Morocco v Norway 7 June 2026-36.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Brahim%20Diaz%20Morocco%20v%20Norway%207%20June%202026-36.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Brahim%20Diaz%20Morocco%20v%20Norway%207%20June%202026-36.jpg",
+    "face": [0.314, 0.238, 0.373, 0.298]
   },
   "01a1ad54-c2ce-7470-bce7-1f68ebe841a0": {
-    "file": "/cutouts/01a1ad54-c2ce-7470-bce7-1f68ebe841a0.webp",
+    "file": "/cutouts/{tier}/01a1ad54-c2ce-7470-bce7-1f68ebe841a0.webp",
     "photoFile": "XXIII Memorial Quinocho (RC Celta vs Mainz 05) - 10.jpg",
     "author": "Harpagornis",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:XXIII%20Memorial%20Quinocho%20%28RC%20Celta%20vs%20Mainz%2005%29%20-%2010.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:XXIII%20Memorial%20Quinocho%20%28RC%20Celta%20vs%20Mainz%2005%29%20-%2010.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad54-c51e-7475-9ff2-59d7f7410f10": {
-    "file": "/cutouts/01a1ad54-c51e-7475-9ff2-59d7f7410f10.webp",
+    "file": "/cutouts/{tier}/01a1ad54-c51e-7475-9ff2-59d7f7410f10.webp",
     "photoFile": "Carlos Marchena.jpg",
     "author": "Steindy (talk) 13:11, 13 July 2010 (UTC)",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Carlos%20Marchena.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Carlos%20Marchena.jpg",
+    "face": [0.341, 0.205, 0.321, 0.257]
   },
   "01a1ad54-c573-73e4-837d-4d1ed81e1546": {
-    "file": "/cutouts/01a1ad54-c573-73e4-837d-4d1ed81e1546.webp",
+    "file": "/cutouts/{tier}/01a1ad54-c573-73e4-837d-4d1ed81e1546.webp",
     "photoFile": "Txiki Begiristain 2016 (cropped).jpg",
     "author": "Biser Todorov",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Txiki%20Begiristain%202016%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Txiki%20Begiristain%202016%20%28cropped%29.jpg",
+    "face": [0.311, 0.241, 0.378, 0.302]
   },
   "01a1ad56-548d-736c-8541-d28c2d7fd965": {
-    "file": "/cutouts/01a1ad56-548d-736c-8541-d28c2d7fd965.webp",
+    "file": "/cutouts/{tier}/01a1ad56-548d-736c-8541-d28c2d7fd965.webp",
     "photoFile": "Emre Belözoğlu Kasımpaşa SK 20260130 (4).jpg",
     "author": "Zafer",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Emre%20Bel%C3%B6zo%C4%9Flu%20Kas%C4%B1mpa%C5%9Fa%20SK%2020260130%20%284%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Emre%20Bel%C3%B6zo%C4%9Flu%20Kas%C4%B1mpa%C5%9Fa%20SK%2020260130%20%284%29.jpg",
+    "face": [0.31, 0.243, 0.38, 0.304]
   },
   "01a1ad56-5678-72c7-9b45-992e0b56d1a2": {
-    "file": "/cutouts/01a1ad56-5678-72c7-9b45-992e0b56d1a2.webp",
+    "file": "/cutouts/{tier}/01a1ad56-5678-72c7-9b45-992e0b56d1a2.webp",
     "photoFile": "Andrés Guardado1 (cropped).jpg",
     "author": "Victor Araiza",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Andr%C3%A9s%20Guardado1%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Andr%C3%A9s%20Guardado1%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad56-5768-758a-abd6-c8926234e0a9": {
-    "file": "/cutouts/01a1ad56-5768-758a-abd6-c8926234e0a9.webp",
+    "file": "/cutouts/{tier}/01a1ad56-5768-758a-abd6-c8926234e0a9.webp",
     "photoFile": "Chilavert sanlorenzo.jpg",
     "author": "Unknown authorUnknown author",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Chilavert%20sanlorenzo.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Chilavert%20sanlorenzo.jpg",
+    "face": [0.354, 0.188, 0.294, 0.235]
   },
   "01a1ad56-57e5-7491-989c-4def21129c08": {
-    "file": "/cutouts/01a1ad56-57e5-7491-989c-4def21129c08.webp",
+    "file": "/cutouts/{tier}/01a1ad56-57e5-7491-989c-4def21129c08.webp",
     "photoFile": "Gabriel Heinze en Newell's Old Boys (2022).jpg",
     "author": "Newell's Old Boys",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Gabriel%20Heinze%20en%20Newell%27s%20Old%20Boys%20%282022%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Gabriel%20Heinze%20en%20Newell%27s%20Old%20Boys%20%282022%29.jpg",
+    "face": [0.335, 0.212, 0.331, 0.265]
   },
   "01a1ad58-23b7-743a-8a16-320590fd4365": {
-    "file": "/cutouts/01a1ad58-23b7-743a-8a16-320590fd4365.webp",
+    "file": "/cutouts/{tier}/01a1ad58-23b7-743a-8a16-320590fd4365.webp",
     "photoFile": "Lassana Diarra 2014.jpg",
     "author": "Светлана Бекетова",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Lassana%20Diarra%202014.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Lassana%20Diarra%202014.jpg",
+    "face": [0.355, 0.188, 0.294, 0.235]
   },
   "01a1ad58-245a-7734-981a-9462f84fc2bd": {
-    "file": "/cutouts/01a1ad58-245a-7734-981a-9462f84fc2bd.webp",
+    "file": "/cutouts/{tier}/01a1ad58-245a-7734-981a-9462f84fc2bd.webp",
     "photoFile": "Krohn-Dehli.JPG",
     "author": "Dmitry Neimyrok",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Krohn-Dehli.JPG"
+    "source": "https://commons.wikimedia.org/wiki/File:Krohn-Dehli.JPG",
+    "face": [0.358, 0.187, 0.294, 0.235]
   },
   "01a1ad59-d38b-72df-8752-3df59d68bfca": {
-    "file": "/cutouts/01a1ad59-d38b-72df-8752-3df59d68bfca.webp",
+    "file": "/cutouts/{tier}/01a1ad59-d38b-72df-8752-3df59d68bfca.webp",
     "photoFile": "Nolito.JPG",
     "author": "Roi González Villa (Vivaelcelta)",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Nolito.JPG"
+    "source": "https://commons.wikimedia.org/wiki/File:Nolito.JPG",
+    "face": [0.354, 0.188, 0.294, 0.235]
   },
   "01a1ad59-d46f-718e-9876-3eb47fb74540": {
-    "file": "/cutouts/01a1ad59-d46f-718e-9876-3eb47fb74540.webp",
+    "file": "/cutouts/{tier}/01a1ad59-d46f-718e-9876-3eb47fb74540.webp",
     "photoFile": "Real Valladolid-Valencia CF, 2019-05-18 (19) (cropped).jpg",
     "author": "www.realvalladolid.es",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Real%20Valladolid-Valencia%20CF%2C%202019-05-18%20%2819%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Real%20Valladolid-Valencia%20CF%2C%202019-05-18%20%2819%29%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad5b-8ed1-70ea-8077-d74869849bf0": {
-    "file": "/cutouts/01a1ad5b-8ed1-70ea-8077-d74869849bf0.webp",
+    "file": "/cutouts/{tier}/01a1ad5b-8ed1-70ea-8077-d74869849bf0.webp",
     "photoFile": "Aurelio Vidmar.jpg",
     "author": "Robertscriva",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Aurelio%20Vidmar.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Aurelio%20Vidmar.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad5b-9010-732a-ae1f-3f0b814ba9ba": {
-    "file": "/cutouts/01a1ad5b-9010-732a-ae1f-3f0b814ba9ba.webp",
+    "file": "/cutouts/{tier}/01a1ad5b-9010-732a-ae1f-3f0b814ba9ba.webp",
     "photoFile": "Ante Budimir Croatia v Portugal 2 July 2026-034.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Ante%20Budimir%20Croatia%20v%20Portugal%202%20July%202026-034.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Ante%20Budimir%20Croatia%20v%20Portugal%202%20July%202026-034.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad5b-9079-7474-bb2f-0117d5b9f497": {
-    "file": "/cutouts/01a1ad5b-9079-7474-bb2f-0117d5b9f497.webp",
+    "file": "/cutouts/{tier}/01a1ad5b-9079-7474-bb2f-0117d5b9f497.webp",
     "photoFile": "Oriol romeu.jpg",
     "author": "jeollo von http://www.vfb-exklusiv.de",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Oriol%20romeu.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Oriol%20romeu.jpg",
+    "face": [0.333, 0.215, 0.337, 0.269]
   },
   "01a1ad5b-90b2-77ef-a36b-0870ddb7ea45": {
-    "file": "/cutouts/01a1ad5b-90b2-77ef-a36b-0870ddb7ea45.webp",
+    "file": "/cutouts/{tier}/01a1ad5b-90b2-77ef-a36b-0870ddb7ea45.webp",
     "photoFile": "Silvestre Varela at Exponor (2011).jpg",
     "author": "Manuel de Sousa",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Silvestre%20Varela%20at%20Exponor%20%282011%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Silvestre%20Varela%20at%20Exponor%20%282011%29.jpg",
+    "face": [0.345, 0.199, 0.311, 0.249]
   },
   "01a1ad5b-916c-7568-8c5b-a31a0eaa5215": {
-    "file": "/cutouts/01a1ad5b-916c-7568-8c5b-a31a0eaa5215.webp",
+    "file": "/cutouts/{tier}/01a1ad5b-916c-7568-8c5b-a31a0eaa5215.webp",
     "photoFile": "Kubala.jpg",
     "author": "Nationaal Archief, Den Haag, Rijksfotoarchief: Fotocollectie Algemeen Nederlands Fotopersbureau (ANEFO), 1945-1989 - negatiefstroken zwart/wit, nummer toegang 2.24.01.05, bestanddeelnummer 906-0012",
     "license": "CC BY-SA 3.0 nl",
-    "source": "https://commons.wikimedia.org/wiki/File:Kubala.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Kubala.jpg",
+    "face": [0.303, 0.253, 0.396, 0.316]
   },
   "01a1ad5d-8144-712d-ba88-95c38b9f1c70": {
-    "file": "/cutouts/01a1ad5d-8144-712d-ba88-95c38b9f1c70.webp",
+    "file": "/cutouts/{tier}/01a1ad5d-8144-712d-ba88-95c38b9f1c70.webp",
     "photoFile": "Trochowski-Piotr.jpg",
     "author": "Rautenfreund",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Trochowski-Piotr.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Trochowski-Piotr.jpg",
+    "face": [0.335, 0.212, 0.331, 0.265]
   },
   "01a1ad5d-81a9-72d8-bfb2-77dfe52d859b": {
-    "file": "/cutouts/01a1ad5d-81a9-72d8-bfb2-77dfe52d859b.webp",
+    "file": "/cutouts/{tier}/01a1ad5d-81a9-72d8-bfb2-77dfe52d859b.webp",
     "photoFile": "Juan Foyth 2017.jpg",
     "author": "Agencia de Noticias ANDES",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Juan%20Foyth%202017.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Juan%20Foyth%202017.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad5d-81c2-76dd-b3b7-b41fd30fdab7": {
-    "file": "/cutouts/01a1ad5d-81c2-76dd-b3b7-b41fd30fdab7.webp",
+    "file": "/cutouts/{tier}/01a1ad5d-81c2-76dd-b3b7-b41fd30fdab7.webp",
     "photoFile": "AdamSzalai (cropped).jpg",
     "author": "Silesia711",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:AdamSzalai%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:AdamSzalai%20%28cropped%29.jpg",
+    "face": [0.355, 0.188, 0.294, 0.235]
   },
   "01a1ad5f-5bef-763a-8b3a-e1c54e8520cc": {
-    "file": "/cutouts/01a1ad5f-5bef-763a-8b3a-e1c54e8520cc.webp",
+    "file": "/cutouts/{tier}/01a1ad5f-5bef-763a-8b3a-e1c54e8520cc.webp",
     "photoFile": "Quini 1983.jpg",
     "author": "Rob Bogaerts for Anefo",
     "license": "CC0",
-    "source": "https://commons.wikimedia.org/wiki/File:Quini%201983.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Quini%201983.jpg",
+    "face": [0.297, 0.258, 0.404, 0.323]
   },
   "01a1ad5f-5ea7-7576-aadd-6997d37312b2": {
-    "file": "/cutouts/01a1ad5f-5ea7-7576-aadd-6997d37312b2.webp",
+    "file": "/cutouts/{tier}/01a1ad5f-5ea7-7576-aadd-6997d37312b2.webp",
     "photoFile": "Nuno Espírito Santo (cropped).jpg",
     "author": "Carla Cortés",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Nuno%20Esp%C3%ADrito%20Santo%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Nuno%20Esp%C3%ADrito%20Santo%20%28cropped%29.jpg",
+    "face": [0.308, 0.245, 0.383, 0.307]
   },
   "01a1ad60-ef94-722c-bee4-fe8b7262aaaa": {
-    "file": "/cutouts/01a1ad60-ef94-722c-bee4-fe8b7262aaaa.webp",
+    "file": "/cutouts/{tier}/01a1ad60-ef94-722c-bee4-fe8b7262aaaa.webp",
     "photoFile": "Kento Hashimoto.jpg",
     "author": "Артем Гусев",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Kento%20Hashimoto.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Kento%20Hashimoto.jpg",
+    "face": [0.302, 0.253, 0.396, 0.317]
   },
   "01a1ad60-effb-732e-ad20-feebe9d9299c": {
-    "file": "/cutouts/01a1ad60-effb-732e-ad20-feebe9d9299c.webp",
+    "file": "/cutouts/{tier}/01a1ad60-effb-732e-ad20-feebe9d9299c.webp",
     "photoFile": "Adrián López U21 in 2011.jpg",
     "author": "henrikalexandersen",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Adri%C3%A1n%20L%C3%B3pez%20U21%20in%202011.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Adri%C3%A1n%20L%C3%B3pez%20U21%20in%202011.jpg",
+    "face": [0.303, 0.255, 0.399, 0.319]
   },
   "01a1ad60-f050-70ba-911d-d043da85af2c": {
-    "file": "/cutouts/01a1ad60-f050-70ba-911d-d043da85af2c.webp",
+    "file": "/cutouts/{tier}/01a1ad60-f050-70ba-911d-d043da85af2c.webp",
     "photoFile": "Giuliano Simeone Argentina v Spain 19 July 2026-268.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Giuliano%20Simeone%20Argentina%20v%20Spain%2019%20July%202026-268.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Giuliano%20Simeone%20Argentina%20v%20Spain%2019%20July%202026-268.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad60-f0b2-72f9-a1c7-ca26383ca4b4": {
-    "file": "/cutouts/01a1ad60-f0b2-72f9-a1c7-ca26383ca4b4.webp",
+    "file": "/cutouts/{tier}/01a1ad60-f0b2-72f9-a1c7-ca26383ca4b4.webp",
     "photoFile": "Vicent Guaita-1.jpg",
     "author": "Jo sóc de Torrent",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Vicent%20Guaita-1.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Vicent%20Guaita-1.jpg",
+    "face": [0.349, 0.194, 0.303, 0.243]
   },
   "01a1ad60-f0d9-772a-b4e6-d791b7245aa1": {
-    "file": "/cutouts/01a1ad60-f0d9-772a-b4e6-d791b7245aa1.webp",
+    "file": "/cutouts/{tier}/01a1ad60-f0d9-772a-b4e6-d791b7245aa1.webp",
     "photoFile": "CSC 0047 (35151419544) (cropped).jpg",
     "author": "Giovanni Batista Rodriguez from San Sebastian-Donostia, España",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:CSC%200047%20%2835151419544%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:CSC%200047%20%2835151419544%29%20%28cropped%29.jpg",
+    "face": [0.323, 0.224, 0.352, 0.282]
   },
   "01a1ad60-f205-7778-b5b1-0d26ac5e8da3": {
-    "file": "/cutouts/01a1ad60-f205-7778-b5b1-0d26ac5e8da3.webp",
+    "file": "/cutouts/{tier}/01a1ad60-f205-7778-b5b1-0d26ac5e8da3.webp",
     "photoFile": "JoaoPereiraSporting.png",
     "author": "Agência Lusa.",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:JoaoPereiraSporting.png"
+    "source": "https://commons.wikimedia.org/wiki/File:JoaoPereiraSporting.png",
+    "face": [0.294, 0.263, 0.413, 0.33]
   },
   "01a1ad60-f2c8-7000-8077-276074c8d674": {
-    "file": "/cutouts/01a1ad60-f2c8-7000-8077-276074c8d674.webp",
+    "file": "/cutouts/{tier}/01a1ad60-f2c8-7000-8077-276074c8d674.webp",
     "photoFile": "Zlatan Ibrahimović nyc.jpg",
     "author": "Colleen Sturtevant",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Zlatan%20Ibrahimovi%C4%87%20nyc.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Zlatan%20Ibrahimovi%C4%87%20nyc.jpg",
+    "face": [0.296, 0.261, 0.408, 0.326]
   },
   "01a1ad60-f2d7-75fa-95da-0d3bd1d08e83": {
-    "file": "/cutouts/01a1ad60-f2d7-75fa-95da-0d3bd1d08e83.webp",
+    "file": "/cutouts/{tier}/01a1ad60-f2d7-75fa-95da-0d3bd1d08e83.webp",
     "photoFile": "Gianluigi Buffon (31784615942) (cropped).jpg",
     "author": "Original: Doha Stadium Plus Qatar from Doha, Qatar Derivative work: Alza08 Author:",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Gianluigi%20Buffon%20%2831784615942%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Gianluigi%20Buffon%20%2831784615942%29%20%28cropped%29.jpg",
+    "face": [0.285, 0.275, 0.429, 0.344]
   },
   "01a1ad62-ea03-72d8-b6bf-d1bacb5401bd": {
-    "file": "/cutouts/01a1ad62-ea03-72d8-b6bf-d1bacb5401bd.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ea03-72d8-b6bf-d1bacb5401bd.webp",
     "photoFile": "Luka Modric Croatia v Portugal 2 July 2026-055.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Luka%20Modric%20Croatia%20v%20Portugal%202%20July%202026-055.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Luka%20Modric%20Croatia%20v%20Portugal%202%20July%202026-055.jpg",
+    "face": [0.349, 0.193, 0.302, 0.241]
   },
   "01a1ad62-ea32-7586-8b10-b8a244348976": {
-    "file": "/cutouts/01a1ad62-ea32-7586-8b10-b8a244348976.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ea32-7586-8b10-b8a244348976.webp",
     "photoFile": "Thierry Henry (51649035951) (cropped).jpg",
     "author": "Web Summit",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Thierry%20Henry%20%2851649035951%29%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Thierry%20Henry%20%2851649035951%29%20%28cropped%29.jpg",
+    "face": [0.28, 0.282, 0.441, 0.352]
   },
   "01a1ad62-eab0-76a4-a886-e7fbef815321": {
-    "file": "/cutouts/01a1ad62-eab0-76a4-a886-e7fbef815321.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eab0-76a4-a886-e7fbef815321.webp",
     "photoFile": "Kevin De Bruyne USMNT v Belgium Mar 28 2026-64 (cropped).jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Kevin%20De%20Bruyne%20USMNT%20v%20Belgium%20Mar%2028%202026-64%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Kevin%20De%20Bruyne%20USMNT%20v%20Belgium%20Mar%2028%202026-64%20%28cropped%29.jpg",
+    "face": [0.336, 0.209, 0.327, 0.262]
   },
   "01a1ad62-eb18-770e-b4c4-c6175bba596c": {
-    "file": "/cutouts/01a1ad62-eb18-770e-b4c4-c6175bba596c.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eb18-770e-b4c4-c6175bba596c.webp",
     "photoFile": "Lukas Podolski 2019.jpg",
     "author": "Sven Mandel",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Lukas%20Podolski%202019.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Lukas%20Podolski%202019.jpg",
+    "face": [0.271, 0.292, 0.457, 0.365]
   },
   "01a1ad62-eb2d-73ef-ad1d-c957b40c4f58": {
-    "file": "/cutouts/01a1ad62-eb2d-73ef-ad1d-c957b40c4f58.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eb2d-73ef-ad1d-c957b40c4f58.webp",
     "photoFile": "Carlo Ancelotti Brazil V Morocco 13 June 2026-47.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Carlo%20Ancelotti%20Brazil%20V%20Morocco%2013%20June%202026-47.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Carlo%20Ancelotti%20Brazil%20V%20Morocco%2013%20June%202026-47.jpg",
+    "face": [0.32, 0.23, 0.359, 0.287]
   },
   "01a1ad62-eb56-7489-8cdf-92d3165f1d6f": {
-    "file": "/cutouts/01a1ad62-eb56-7489-8cdf-92d3165f1d6f.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eb56-7489-8cdf-92d3165f1d6f.webp",
     "photoFile": "Franck Ribery 2019 (cropped).jpg",
     "author": "Sven Mandel",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Franck%20Ribery%202019%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Franck%20Ribery%202019%20%28cropped%29.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   },
   "01a1ad62-eb66-734b-97e9-c0bae60456d1": {
-    "file": "/cutouts/01a1ad62-eb66-734b-97e9-c0bae60456d1.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eb66-734b-97e9-c0bae60456d1.webp",
     "photoFile": "Андрій Шевченко 2024 (cropped).png",
     "author": "Міністерство молоді та спорту України",
     "license": "CC BY 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:%D0%90%D0%BD%D0%B4%D1%80%D1%96%D0%B9%20%D0%A8%D0%B5%D0%B2%D1%87%D0%B5%D0%BD%D0%BA%D0%BE%202024%20%28cropped%29.png"
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%90%D0%BD%D0%B4%D1%80%D1%96%D0%B9%20%D0%A8%D0%B5%D0%B2%D1%87%D0%B5%D0%BD%D0%BA%D0%BE%202024%20%28cropped%29.png",
+    "face": [0.352, 0.187, 0.294, 0.235]
   },
   "01a1ad62-eb9c-75fc-a41d-37a23b62deff": {
-    "file": "/cutouts/01a1ad62-eb9c-75fc-a41d-37a23b62deff.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eb9c-75fc-a41d-37a23b62deff.webp",
     "photoFile": "David de Gea 2017.jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:David%20de%20Gea%202017.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:David%20de%20Gea%202017.jpg",
+    "face": [0.308, 0.245, 0.384, 0.307]
   },
   "01a1ad62-ebb9-76bf-8068-5ef1230f44ff": {
-    "file": "/cutouts/01a1ad62-ebb9-76bf-8068-5ef1230f44ff.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ebb9-76bf-8068-5ef1230f44ff.webp",
     "photoFile": "Матч «Динамо» - «Ювентус» 0-2. 20 октября 2020 года — 1153905 (cropped).jpg",
     "author": "Olga Shcherbytska",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%82%D1%87%20%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB%20-%20%C2%AB%D0%AE%D0%B2%D0%B5%D0%BD%D1%82%D1%83%D1%81%C2%BB%200-2.%2020%20%D0%BE%D0%BA%D1%82%D1%8F%D0%B1%D1%80%D1%8F%202020%20%D0%B3%D0%BE%D0%B4%D0%B0%20%E2%80%94%201153905%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%82%D1%87%20%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB%20-%20%C2%AB%D0%AE%D0%B2%D0%B5%D0%BD%D1%82%D1%83%D1%81%C2%BB%200-2.%2020%20%D0%BE%D0%BA%D1%82%D1%8F%D0%B1%D1%80%D1%8F%202020%20%D0%B3%D0%BE%D0%B4%D0%B0%20%E2%80%94%201153905%20%28cropped%29.jpg",
+    "face": [0.331, 0.218, 0.341, 0.273]
   },
   "01a1ad62-ebcd-753e-bd3e-5b063833365b": {
-    "file": "/cutouts/01a1ad62-ebcd-753e-bd3e-5b063833365b.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ebcd-753e-bd3e-5b063833365b.webp",
     "photoFile": "MJK30405 Jérôme Boateng (Berlinale 2017).jpg",
     "author": "Martin Kraft",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:MJK30405%20J%C3%A9r%C3%B4me%20Boateng%20%28Berlinale%202017%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:MJK30405%20J%C3%A9r%C3%B4me%20Boateng%20%28Berlinale%202017%29.jpg",
+    "face": [0.301, 0.255, 0.399, 0.319]
   },
   "01a1ad62-ebdd-73c6-bf0e-ef77e5baae3c": {
-    "file": "/cutouts/01a1ad62-ebdd-73c6-bf0e-ef77e5baae3c.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ebdd-73c6-bf0e-ef77e5baae3c.webp",
     "photoFile": "Hernán Crespo.png",
     "author": "Omgosh30",
     "license": "CC0",
-    "source": "https://commons.wikimedia.org/wiki/File:Hern%C3%A1n%20Crespo.png"
+    "source": "https://commons.wikimedia.org/wiki/File:Hern%C3%A1n%20Crespo.png",
+    "face": [0.352, 0.187, 0.294, 0.235]
   },
   "01a1ad62-ebf0-75f8-8f16-5de62bf6a481": {
-    "file": "/cutouts/01a1ad62-ebf0-75f8-8f16-5de62bf6a481.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ebf0-75f8-8f16-5de62bf6a481.webp",
     "photoFile": "Nemanja Vidić.jpg",
     "author": "Austin Osuide",
     "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Nemanja%20Vidi%C4%87.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Nemanja%20Vidi%C4%87.jpg",
+    "face": [0.354, 0.188, 0.294, 0.235]
   },
   "01a1ad62-ec49-7023-b670-2fc91df16a57": {
-    "file": "/cutouts/01a1ad62-ec49-7023-b670-2fc91df16a57.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ec49-7023-b670-2fc91df16a57.webp",
     "photoFile": "25th Laureus World Sports Awards - Ruud Gullit - 240422 131911 (cropped).jpg",
     "author": "Barcex",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:25th%20Laureus%20World%20Sports%20Awards%20-%20Ruud%20Gullit%20-%20240422%20131911%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:25th%20Laureus%20World%20Sports%20Awards%20-%20Ruud%20Gullit%20-%20240422%20131911%20%28cropped%29.jpg",
+    "face": [0.295, 0.262, 0.41, 0.328]
   },
   "01a1ad62-ec5b-73e4-b621-cc0f9b91c4b9": {
-    "file": "/cutouts/01a1ad62-ec5b-73e4-b621-cc0f9b91c4b9.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ec5b-73e4-b621-cc0f9b91c4b9.webp",
     "photoFile": "2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–103 (cropped).jpg",
     "author": "Sandro Halank, Wikimedia Commons",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:2023-08-12%20TSV%20Schott%20Mainz%20gegen%20Borussia%20Dortmund%20%28DFB-Pokal%202023-24%29%20by%20Sandro%20Halank%E2%80%93103%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:2023-08-12%20TSV%20Schott%20Mainz%20gegen%20Borussia%20Dortmund%20%28DFB-Pokal%202023-24%29%20by%20Sandro%20Halank%E2%80%93103%20%28cropped%29.jpg",
+    "face": [0.284, 0.277, 0.433, 0.347]
   },
   "01a1ad62-ec8d-7461-b010-0db7664ba2fe": {
-    "file": "/cutouts/01a1ad62-ec8d-7461-b010-0db7664ba2fe.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ec8d-7461-b010-0db7664ba2fe.webp",
     "photoFile": "Hidetoshi Nakata in Okinawa (cropped).jpg",
     "author": "norio nakayama",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Hidetoshi%20Nakata%20in%20Okinawa%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Hidetoshi%20Nakata%20in%20Okinawa%20%28cropped%29.jpg",
+    "face": [0.264, 0.302, 0.473, 0.378]
   },
   "01a1ad62-ec9b-76fc-a5e1-7ba5c846b135": {
-    "file": "/cutouts/01a1ad62-ec9b-76fc-a5e1-7ba5c846b135.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ec9b-76fc-a5e1-7ba5c846b135.webp",
     "photoFile": "Patrick Vieira NYCFC.JPG",
     "author": "Simon Heseltine",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Patrick%20Vieira%20NYCFC.JPG"
+    "source": "https://commons.wikimedia.org/wiki/File:Patrick%20Vieira%20NYCFC.JPG",
+    "face": [0.354, 0.188, 0.294, 0.235]
   },
   "01a1ad62-ecbe-7099-b264-8dd6849ae468": {
-    "file": "/cutouts/01a1ad62-ecbe-7099-b264-8dd6849ae468.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ecbe-7099-b264-8dd6849ae468.webp",
     "photoFile": "Aaron Ramsey 2019.jpg",
     "author": "Анна Нэсси",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Aaron%20Ramsey%202019.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Aaron%20Ramsey%202019.jpg",
+    "face": [0.307, 0.247, 0.386, 0.309]
   },
   "01a1ad62-ecd1-77a1-b82a-19326dc6cc1f": {
-    "file": "/cutouts/01a1ad62-ecd1-77a1-b82a-19326dc6cc1f.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ecd1-77a1-b82a-19326dc6cc1f.webp",
     "photoFile": "Mario gomez.jpg",
     "author": "Jeollo von VfB-exklusiv.de",
     "license": "CC BY 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Mario%20gomez.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Mario%20gomez.jpg",
+    "face": [0.301, 0.255, 0.4, 0.32]
   },
   "01a1ad62-ecfa-72ce-93ad-b2c8de32233b": {
-    "file": "/cutouts/01a1ad62-ecfa-72ce-93ad-b2c8de32233b.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ecfa-72ce-93ad-b2c8de32233b.webp",
     "photoFile": "Paolo Rossi Vicenza (cropped).jpg",
     "author": "The original uploader was Snake90 at Italian Wikipedia.",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Paolo%20Rossi%20Vicenza%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Paolo%20Rossi%20Vicenza%20%28cropped%29.jpg",
+    "face": [0.316, 0.235, 0.367, 0.294]
   },
   "01a1ad62-ed11-71af-8a27-8910e98e6787": {
-    "file": "/cutouts/01a1ad62-ed11-71af-8a27-8910e98e6787.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ed11-71af-8a27-8910e98e6787.webp",
     "photoFile": "20150616 - Portugal - Italie - Genève - Leonardo Bonucci.jpg",
     "author": "Clément Bucco-Lechat",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:20150616%20-%20Portugal%20-%20Italie%20-%20Gen%C3%A8ve%20-%20Leonardo%20Bonucci.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20150616%20-%20Portugal%20-%20Italie%20-%20Gen%C3%A8ve%20-%20Leonardo%20Bonucci.jpg",
+    "face": [0.306, 0.246, 0.386, 0.308]
   },
   "01a1ad62-edae-7179-9b6f-80b3a49439f9": {
-    "file": "/cutouts/01a1ad62-edae-7179-9b6f-80b3a49439f9.webp",
+    "file": "/cutouts/{tier}/01a1ad62-edae-7179-9b6f-80b3a49439f9.webp",
     "photoFile": "Salvatore Schillac croppedi.jpg",
     "author": "Користувач:Thevolodymyr на основі оригінального зображення авторства Fcbello з commons",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Salvatore%20Schillac%20croppedi.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Salvatore%20Schillac%20croppedi.jpg",
+    "face": [0.298, 0.263, 0.409, 0.327]
   },
   "01a1ad62-eded-742a-aedc-8ec92a2b6feb": {
-    "file": "/cutouts/01a1ad62-eded-742a-aedc-8ec92a2b6feb.webp",
+    "file": "/cutouts/{tier}/01a1ad62-eded-742a-aedc-8ec92a2b6feb.webp",
     "photoFile": "20180610 FIFA Friendly Match Austria vs. Brazil David Alaba 850 1632.jpg",
     "author": "Granada",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20David%20Alaba%20850%201632.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:20180610%20FIFA%20Friendly%20Match%20Austria%20vs.%20Brazil%20David%20Alaba%20850%201632.jpg",
+    "face": [0.27, 0.294, 0.46, 0.368]
   },
   "01a1ad62-ee12-72c4-876a-69c113faa04f": {
-    "file": "/cutouts/01a1ad62-ee12-72c4-876a-69c113faa04f.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ee12-72c4-876a-69c113faa04f.webp",
     "photoFile": "Giuseppe Meazza 1935.jpg",
     "author": "Unknown authorUnknown author",
     "license": "Public domain",
-    "source": "https://commons.wikimedia.org/wiki/File:Giuseppe%20Meazza%201935.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Giuseppe%20Meazza%201935.jpg",
+    "face": [0.293, 0.264, 0.413, 0.331]
   },
   "01a1ad62-ee3a-70bc-91a0-0a80f3bd0d94": {
-    "file": "/cutouts/01a1ad62-ee3a-70bc-91a0-0a80f3bd0d94.webp",
+    "file": "/cutouts/{tier}/01a1ad62-ee3a-70bc-91a0-0a80f3bd0d94.webp",
     "photoFile": "Jens Lehmann - 2019202184453 2019-07-21 Champions for Charity - 3017 - B70I3052 (cropped).jpg",
     "author": "Sven Mandel",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Jens%20Lehmann%20-%202019202184453%202019-07-21%20Champions%20for%20Charity%20-%203017%20-%20B70I3052%20%28cropped%29.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Jens%20Lehmann%20-%202019202184453%202019-07-21%20Champions%20for%20Charity%20-%203017%20-%20B70I3052%20%28cropped%29.jpg",
+    "face": [0.308, 0.245, 0.384, 0.307]
   },
   "01a1ad64-8cd2-7581-8216-e5fb502ea507": {
-    "file": "/cutouts/01a1ad64-8cd2-7581-8216-e5fb502ea507.webp",
+    "file": "/cutouts/{tier}/01a1ad64-8cd2-7581-8216-e5fb502ea507.webp",
     "photoFile": "Thomas Vermaelen 2018.jpg",
     "author": "Кирилл Венедиктов",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Thomas%20Vermaelen%202018.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Thomas%20Vermaelen%202018.jpg",
+    "face": [0.293, 0.264, 0.414, 0.331]
   },
   "01a1ad64-8cec-73b9-a39f-a5833e4a1b8d": {
-    "file": "/cutouts/01a1ad64-8cec-73b9-a39f-a5833e4a1b8d.webp",
+    "file": "/cutouts/{tier}/01a1ad64-8cec-73b9-a39f-a5833e4a1b8d.webp",
     "photoFile": "Joe Hart 69775.jpg",
     "author": "Голубович Дмитрий",
     "license": "CC BY-SA 3.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Joe%20Hart%2069775.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Joe%20Hart%2069775.jpg",
+    "face": [0.354, 0.187, 0.294, 0.235]
   },
   "01a1ad64-8d61-74ea-ae72-f0f40b5cf5e8": {
-    "file": "/cutouts/01a1ad64-8d61-74ea-ae72-f0f40b5cf5e8.webp",
+    "file": "/cutouts/{tier}/01a1ad64-8d61-74ea-ae72-f0f40b5cf5e8.webp",
     "photoFile": "Marcello Lippi by Martina De Siervo - International Journalism Festival 2010.jpg",
     "author": "International Journalism Festival",
     "license": "CC BY-SA 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Marcello%20Lippi%20by%20Martina%20De%20Siervo%20-%20International%20Journalism%20Festival%202010.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:Marcello%20Lippi%20by%20Martina%20De%20Siervo%20-%20International%20Journalism%20Festival%202010.jpg",
+    "face": [0.292, 0.266, 0.415, 0.332]
   },
   "01a1ad64-8dc4-758a-85be-2d042b9f0016": {
-    "file": "/cutouts/01a1ad64-8dc4-758a-85be-2d042b9f0016.webp",
+    "file": "/cutouts/{tier}/01a1ad64-8dc4-758a-85be-2d042b9f0016.webp",
     "photoFile": "John Stones England v Ghana 23 June 2026-038.jpg",
     "author": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
-    "source": "https://commons.wikimedia.org/wiki/File:John%20Stones%20England%20v%20Ghana%2023%20June%202026-038.jpg"
+    "source": "https://commons.wikimedia.org/wiki/File:John%20Stones%20England%20v%20Ghana%2023%20June%202026-038.jpg",
+    "face": [0.353, 0.188, 0.294, 0.235]
   }
 }
