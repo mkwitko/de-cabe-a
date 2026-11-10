@@ -438,3 +438,19 @@
     transform: scale(1.08);
   }
 }
+
+/* Escalação: a found name develops its face, like a print coming up in the tray. */
+@keyframes develop-out {
+  to {
+    opacity: 0;
+  }
+}
+.develop-out {
+  animation: develop-out 1100ms 150ms ease-in both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .develop-out {
+    animation-duration: 300ms;
+    animation-delay: 0ms;
+  }
+}
