@@ -3,10 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 // The e2e stack runs on its own ports and database so it never touches local dev data.
 const E2E_DB =
   process.env.E2E_DATABASE_URL ?? 'postgresql://decabeca:decabeca@localhost:5432/decabeca_e2e';
-const API_PORT = 3001;
-const WEB_PORT = 5174;
+// Ports are overridable so a local run can dodge whatever already holds the defaults.
+const API_PORT = Number(process.env.E2E_API_PORT ?? 3001);
+const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 5174);
 // The site as it ships (only the launched games open), for e2e/launch.spec.ts.
-const LAUNCH_PORT = 5175;
+const LAUNCH_PORT = Number(process.env.E2E_LAUNCH_PORT ?? 5175);
 
 export default defineConfig({
   testDir: 'e2e',
@@ -58,7 +59,8 @@ export default defineConfig({
     {
       command: `pnpm exec vite --port ${LAUNCH_PORT} --strictPort`,
       url: `http://localhost:${LAUNCH_PORT}`,
-      env: { API_URL: `http://127.0.0.1:${API_PORT}` },
+      // A dummy AdSense client turns the consent banner on; AdSense itself loads only after "Aceitar".
+      env: { API_URL: `http://127.0.0.1:${API_PORT}`, VITE_ADSENSE_CLIENT: 'ca-pub-0000000000000000' },
       reuseExistingServer: false,
     },
   ],
