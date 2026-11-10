@@ -10,6 +10,7 @@ import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
+import { InstallInvite } from '../components/InstallApp';
 import { Reactions } from '../components/Reactions';
 import { Stars, StarIcon } from '../components/Stars';
 import { Broadcast, type Hero } from '../components/Broadcast';
@@ -468,7 +469,8 @@ export function LevelEnd({
               </>
             )}
           </div>
-          {nudge && <Nudge moment={nudge} onDone={() => setNudge(null)} />}
+          {/* One invitation at a time: the account nudge wins over the install card. */}
+          {nudge ? <Nudge moment={nudge} onDone={() => setNudge(null)} /> : <InstallInvite />}
         </>
       ) : (
         <>

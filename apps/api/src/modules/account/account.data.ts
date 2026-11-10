@@ -136,40 +136,82 @@ export async function deleteData(prisma: PrismaClient, who: Who) {
   await prisma.$transaction(async (tx) => {
     // Resolved inside the transaction, so a session linked meanwhile is not left behind.
     const { sids, pks } = await owner(tx, who);
-    const byPk = { where: { pk: { in: pks } } };
-    await tx.attemptAction.deleteMany({ where: { attempt: { sessionId: { in: sids } } } });
-    await tx.attempt.deleteMany({ where: { sessionId: { in: sids } } });
-    await tx.careerPlayer.deleteMany({ where: { sessionId: { in: sids } } }); // cascades to seasons, matches, training
-    await tx.levelReport.deleteMany({ where: { sessionId: { in: sids } } });
-    await tx.levelReaction.deleteMany(byPk);
-    await tx.leagueMember.deleteMany(byPk);
-    await tx.leagueReport.deleteMany(byPk);
-    await tx.pushSubscription.deleteMany(byPk);
-    await tx.fantasySquad.deleteMany(byPk);
-    await tx.copaRun.deleteMany(byPk);
-    await tx.communityVote.deleteMany(byPk);
-    await tx.communityReport.deleteMany(byPk);
-    await tx.sticker.deleteMany(byPk);
-    await tx.seasonPromotion.deleteMany(byPk);
-    await tx.roundCheck.deleteMany(byPk);
-    // Shared things stay for the others, without the name: leagues (closed when empty) and Oficina levels.
-    await tx.league.updateMany({ where: { createdBy: { in: pks } }, data: { createdBy: DELETED } });
-    await tx.league.deleteMany({ where: { members: { none: {} } } });
-    await tx.communityLevel.updateMany({
-      where: { authorPk: { in: pks } },
-      data: { authorPk: DELETED },
-    });
-    for (const pk of pks)
-      await tx.challenge.updateMany({
-        where: { createdBy: `oficina:${pk}` },
-        data: { createdBy: `oficina:${DELETED}` },
-      });
-    await tx.guestSession.deleteMany({ where: { id: { in: sids } } });
-    if (who.userId) {
-      const user = await tx.user.findUnique({ where: { id: who.userId } });
-      if (user) await tx.verification.deleteMany({ where: { identifier: user.email } });
-      await tx.modeVote.deleteMany({ where: { userId: who.userId } });
-      await tx.user.delete({ where: { id: who.userId } }); // cascades to Better Auth sessions and accounts
-    }
+    await erase(tx, sids, pks, who.userId);
   });
+}
+
+type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+
+/** Erases the given guest sessions (and the account, if any) inside the caller's transaction. */
+export async function erase(tx: Tx, sids: string[], pks: string[], userId: string | null) {
+  const byPk = { where: { pk: { in: pks } } };
+  await tx.attemptAction.deleteMany({ where: { attempt: { sessionId: { in: sids } } } });
+  await tx.attempt.deleteMany({ where: { sessionId: { in: sids } } });
+  await tx.careerPlayer.deleteMany({ where: { sessionId: { in: sids } } }); // cascades to seasons, matches, training
+  await tx.levelReport.deleteMany({ where: { sessionId: { in: sids } } });
+  await tx.levelReaction.deleteMany(byPk);
+  await tx.leagueMember.deleteMany(byPk);
+  await tx.leagueReport.deleteMany(byPk);
+  await tx.pushSubscription.deleteMany(byPk);
+  await tx.fantasySquad.deleteMany(byPk);
+  await tx.copaRun.deleteMany(byPk);
+  await tx.communityVote.deleteMany(byPk);
+  await tx.communityReport.deleteMany(byPk);
+  await tx.sticker.deleteMany(byPk);
+  await tx.seasonPromotion.deleteMany(byPk);
+  await tx.roundCheck.deleteMany(byPk);
+  // Shared things stay for the others, without the name: leagues (closed when empty) and Oficina levels.
+  await tx.league.updateMany({ where: { createdBy: { in: pks } }, data: { createdBy: DELETED } });
+  await tx.league.deleteMany({ where: { members: { none: {} } } });
+  await tx.communityLevel.updateMany({
+    where: { authorPk: { in: pks } },
+    data: { authorPk: DELETED },
+  });
+  for (const pk of pks)
+    await tx.challenge.updateMany({
+      where: { createdBy: `oficina:${pk}` },
+      data: { createdBy: `oficina:${DELETED}` },
+    });
+  await tx.guestSession.deleteMany({ where: { id: { in: sids } } });
+  if (userId) {
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (user) await tx.verification.deleteMany({ where: { identifier: user.email } });
+    await tx.modeVote.deleteMany({ where: { userId } });
+    await tx.user.delete({ where: { id: userId } }); // cascades to Better Auth sessions and accounts
+  }
+}
+
+const IDLE_MONTHS = 12;
+
+/**
+ * LGPD retention (/privacidade): erases guest sessions (never linked to an account) idle for
+ * 12 months, in batches of one transaction each. One run at a time across instances
+ * (transaction advisory lock; a busy lock skips the batch). Returns how many were erased.
+ */
+export async function purgeIdleGuests(prisma: PrismaClient, now: Date, batch = 200) {
+  const cutoff = new Date(now);
+  cutoff.setUTCMonth(cutoff.getUTCMonth() - IDLE_MONTHS);
+  let total = 0;
+  for (;;) {
+    const n = await prisma.$transaction(
+      async (tx) => {
+        const [{ locked }] = await tx.$queryRaw<[{ locked: boolean }]>`
+        SELECT pg_try_advisory_xact_lock(hashtext('guest_purge')) AS locked`;
+        if (!locked) return 0;
+        // Selected inside the transaction that erases them, so batches never overlap.
+        const sids = (
+          await tx.guestSession.findMany({
+            where: { userId: null, lastSeenAt: { lt: cutoff } },
+            select: { id: true },
+            take: batch,
+          })
+        ).map((s) => s.id);
+        if (sids.length) await erase(tx, sids, sids, null);
+        return sids.length;
+      },
+      { timeout: 60_000 },
+    );
+    total += n;
+    if (n < batch) return total;
+  }
 }
