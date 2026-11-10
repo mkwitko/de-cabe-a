@@ -1,7 +1,7 @@
 /**
- * Background music: football loops recorded at stadiums and samba schools (CC0, see
- * public/audio/CREDITS.md). The track follows Ajustes: one fixed track, or `auto` (Arquibancada
- * between levels, Samba-enredo inside one). Off by default, starts only after a user gesture,
+ * Background music: football loops recorded in South American stadiums and streets (CC0, see
+ * public/audio/CREDITS.md). The track follows Ajustes: one fixed track, or `auto` (Torcida
+ * organizada between levels, Batucada inside one). Off by default, starts only after a user gesture,
  * fades in/out, pauses with the tab, and follows the volume slider live.
  */
 import { getSettings, subscribeSettings, updateSettings, type TrackId } from './settings';
@@ -21,7 +21,7 @@ const LEVEL_RE =
 export const sceneFor = (pathname: string): Scene => (LEVEL_RE.test(pathname) ? 'level' : 'menu');
 
 export const trackFor = (choice: TrackId | 'auto', s: Scene): TrackId =>
-  choice !== 'auto' ? choice : s === 'level' ? 'samba' : 'arquibancada';
+  choice !== 'auto' ? choice : s === 'level' ? 'batucada' : 'torcida-organizada';
 
 let scene: Scene = 'menu';
 let preview: TrackId | null = null;

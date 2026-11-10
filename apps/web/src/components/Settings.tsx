@@ -131,7 +131,7 @@ function TrackList() {
     {
       id: 'auto' as const,
       name: 'Automática',
-      about: 'Arquibancada fora do jogo, Samba-enredo na fase',
+      about: 'Torcida organizada fora do jogo, Batucada na fase',
     },
     ...TRACKS,
   ];

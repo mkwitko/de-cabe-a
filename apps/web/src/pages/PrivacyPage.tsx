@@ -200,13 +200,15 @@ export function PrivacyPage() {
                 <strong>Dados de carreira</strong>: Wikidata (CC0) e Wikipédia (CC BY-SA).
               </li>
               <li>
-                <strong>Música e efeitos sonoros</strong>: as faixas Arquibancada (&quot;Soccer fans
-                screaming and playing drums in a small stadium of Chile&quot;) e Batucada
-                (&quot;Batucada rehearsal in Chile&quot;), de felix.blume; Charanga
-                (&quot;tradicional village carnival brass band&quot;), de speedyrce; e Samba-enredo
-                (&quot;SAMBA CARIOCA CARNAVAL RIO BRAZIL&quot;), de carlosmancuso. Todas em CC0
-                (domínio público) no Freesound, cortadas e com volume igualado por nós. Os efeitos
-                sonoros são sintetizados no seu aparelho.
+                <strong>Música e efeitos sonoros</strong>: as faixas Batucada (&quot;Batucada
+                rehearsal in Chile&quot;), de felix.blume; Torcida organizada
+                (&quot;TRATADA190127_0785 torcida organizada sao jose 1.wav&quot;), de Bruna32U;
+                Hinchada (&quot;Explosions, football&apos;s chants in street celebration (in the
+                Boca Juniors fan national day)&quot;), de bienvenido69; Murga
+                (&quot;080519-003.wav&quot;), de cabro; e Maracanã (&quot;Maraca_04.aif&quot;), de
+                _vk. Todas em CC0 (domínio público) no Freesound, cortadas e com volume igualado por
+                nós. Os sons de torcida dos pacotes de cosméticos são recortes de gravações CC0 de
+                felix.blume e speedyrce. Os efeitos sonoros são sintetizados no seu aparelho.
               </li>
               <li>
                 <strong>Vestiário da página inicial</strong>: as imagens do vestiário (de dia e à

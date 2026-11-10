@@ -44,9 +44,9 @@ describe('sceneFor / trackFor', () => {
     expect(sceneFor('/')).toBe('menu');
     expect(sceneFor('/conta')).toBe('menu');
   });
-  it('auto picks the crowd between levels and samba inside one; a fixed choice stays', () => {
-    expect(trackFor('auto', 'menu')).toBe('arquibancada');
-    expect(trackFor('auto', 'level')).toBe('samba');
-    expect(trackFor('charanga', 'level')).toBe('charanga');
+  it('auto picks the torcida between levels and batucada inside one; a fixed choice stays', () => {
+    expect(trackFor('auto', 'menu')).toBe('torcida-organizada');
+    expect(trackFor('auto', 'level')).toBe('batucada');
+    expect(trackFor('murga', 'level')).toBe('murga');
   });
 });
