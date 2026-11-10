@@ -259,29 +259,42 @@ function Brand({ home }: { home: boolean }) {
   );
 }
 
-/** Pages that are still closed; they hang with the closed modes and do not open. */
-const SOON_EXTRA: { name: string; page: PageKey }[] = [
-  { name: 'Modo Carreira', page: 'career' },
-  { name: 'Copa dos Sonhos', page: 'copa' },
-  { name: 'Oficina', page: 'oficina' },
+/** Pages that are still closed; they get a locker next to the closed modes and do not open. */
+const SOON_EXTRA: { name: string; page: PageKey; rule: string }[] = [
+  {
+    name: 'Modo Carreira',
+    page: 'career',
+    rule: 'Seu próprio jogador, treinado pelas estrelas dos jogos, da base à Europa.',
+  },
+  {
+    name: 'Copa dos Sonhos',
+    page: 'copa',
+    rule: 'Monte um XI das grandes seleções e dispute uma Copa contra as lendas.',
+  },
+  {
+    name: 'Oficina',
+    page: 'oficina',
+    rule: 'Monte seu próprio Football Grid e desafie a galera.',
+  },
 ];
 
 /**
  * The home is one scene: the Career Path passport open on the locker-room bench, the next-level
- * ticket clipped to it, and the closed modes hanging as jerseys (numbered by their slot).
+ * ticket clipped to it, and the closed modes as locked lockers (numbered by their slot).
  */
 export function Home() {
   const modes = GAMES.flatMap((g) =>
     g.mode === 'CAREER_PATH' || isModeLaunched(g.mode)
       ? []
-      : [{ key: g.mode, name: g.name, number: String(Number(g.slot)) }],
+      : [{ key: g.mode, name: g.name, number: String(Number(g.slot)), rule: g.rule }],
   );
   const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x, i) => ({
     key: x.page,
     name: x.name,
+    rule: x.rule,
     number: String(GAMES.length + 1 + i),
   }));
-  return <LockerRoom jerseys={[...modes, ...extra]} />;
+  return <LockerRoom lockers={[...modes, ...extra]} />;
 }
 
 function HomeRoute() {
