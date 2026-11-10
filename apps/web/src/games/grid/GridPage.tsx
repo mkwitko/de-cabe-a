@@ -1,6 +1,6 @@
 /**
- * Football Grid screen (UX_SPEC.md §4, FOOTBALL_GRID.md §6). The board is an album page: empty
- * slots, pasted stickers for right answers, a short shake for a miss. Cell picker and the
+ * Football Grid screen (UX_SPEC.md §4, FOOTBALL_GRID.md §6). The board is a tactics chalkboard: empty
+ * chalk slots, a magnet that snaps on for each right answer, a chalk stroke per finished line. Cell picker and the
  * "finish" confirmation use the native <dialog> (focus trap and Escape for free).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +18,8 @@ import { LevelEnd, LevelError } from '../LevelParts';
 import { Countdown } from '../Clock';
 import { ClubBadge } from '../../components/ClubBadge';
 import { Icon } from '../../components/Icon';
+import { buzz } from '../../lib/haptics';
+import { play } from '../../lib/sound';
 import { PlayerSearch } from '../../components/PlayerSearch';
 import { btnSecondary, GameHeader, Skeleton, useOnline } from '../../components/ui';
 
@@ -43,6 +45,44 @@ function CriterionHead({ c }: { c: Crit }) {
   );
 }
 
+const LINES = [
+  ...[0, 1, 2].map((r) => ({ key: `r${r}`, cells: [r * 3, r * 3 + 1, r * 3 + 2], row: r })),
+  ...[0, 1, 2].map((c) => ({ key: `c${c}`, cells: [c, c + 3, c + 6], col: c })),
+];
+
+/** A chalk stroke over each completed row or column; strokes done before mount stay still. */
+function ChalkLines({ filled }: { filled: boolean[] }) {
+  const done = LINES.filter((l) => l.cells.every((i) => filled[i]));
+  const before = useRef<Set<string> | null>(null);
+  before.current ??= new Set(done.map((l) => l.key));
+  const count = useRef(done.length);
+  useEffect(() => {
+    if (done.length > count.current) {
+      play('tick');
+      buzz([10, 40, 10]);
+    }
+    count.current = done.length;
+  }, [done.length]);
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-1.5 grid grid-cols-[minmax(4rem,0.6fr)_repeat(3,minmax(0,1fr))] grid-rows-[4.75rem_repeat(3,minmax(0,1fr))] gap-1.5 sm:inset-3 sm:gap-2.5"
+    >
+      {done.map((l) => (
+        <i
+          key={l.key}
+          style={
+            'row' in l
+              ? { gridRow: l.row + 2, gridColumn: '2 / 5' }
+              : { gridColumn: l.col! + 2, gridRow: '2 / 5' }
+          }
+          className={`chalk-line m-auto rounded-full bg-cover/90 ${'row' in l ? 'h-1.5 w-[96%] origin-left' : 'h-[96%] w-1.5 origin-top'} ${before.current!.has(l.key) ? '' : 'chalk-draw'}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 const cellLabel = (v: FootballGridView, i: number) =>
   `${v.rows[Math.floor(i / 3)]!.label} e ${v.cols[i % 3]!.label}`;
 
@@ -63,6 +103,8 @@ export function GridPage({
   const online = useOnline();
   const [cell, setCell] = useState<number | null>(null);
   const [miss, setMiss] = useState<number | null>(null);
+  const [flash, setFlash] = useState(0);
+  const seen = useRef<Set<number> | null>(null); // cells already filled at mount: no snap
   const [announce, setAnnounce] = useState('');
   const sheet = useRef<HTMLDialogElement>(null);
   const confirm = useRef<HTMLDialogElement>(null);
@@ -113,6 +155,7 @@ export function GridPage({
       });
       if (res.event?.type === 'wrong') {
         setMiss(index);
+        setFlash((n) => n + 1);
         setTimeout(() => setMiss(null), 600);
         setAnnounce(`${p.name} não serve aqui. Tentativa perdida.`);
       } else setAnnounce(`${p.name}! Acertou.`);
@@ -121,8 +164,14 @@ export function GridPage({
     }
   }
 
+  const frame = done ? 'h-[26rem] sm:h-[32rem]' : 'min-h-0 flex-1';
+  const filledAt = view.cells.map((c) => !!c.player);
+  seen.current ??= new Set(filledAt.flatMap((f, i) => (f ? [i] : [])));
+
   return (
-    <div className="flex flex-col gap-5">
+    <div
+      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] sm:h-[calc(100dvh-9rem)]'}`}
+    >
       <GameHeader
         title={title}
         aside={
@@ -137,154 +186,166 @@ export function GridPage({
       <p className="sr-only" aria-live="polite">
         {announce}
       </p>
+      {flash > 0 && (
+        <div
+          key={flash}
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+        />
+      )}
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,1fr)] lg:items-start">
-        <div className="flex flex-col gap-3">
-          <div
-            className="grid w-full grid-cols-[minmax(4rem,0.6fr)_repeat(3,minmax(0,1fr))] gap-1.5 sm:gap-2.5"
-            role="grid"
-            aria-label="Grade 3 por 3"
-          >
-            <div />
-            {view.cols.map((c, i) => (
-              <CriterionHead key={i} c={c} />
-            ))}
-            {[0, 1, 2].map((r) => (
-              <div key={r} className="contents" role="row">
-                <CriterionHead c={view.rows[r]!} />
-                {[0, 1, 2].map((col) => {
-                  const i = r * 3 + col;
-                  const filled = view.cells[i]!.player;
-                  const example = !filled && reveal ? reveal.cells[i] : null;
-                  return (
-                    <button
-                      key={i}
-                      role="gridcell"
-                      type="button"
-                      disabled={done || !!filled || !online || action.isPending}
-                      onClick={() => setCell(i)}
-                      aria-label={
-                        filled
-                          ? `${cellLabel(view, i)}: ${filled.name}`
-                          : `${cellLabel(view, i)}: vazia${example ? `, exemplo ${example.example.name}` : ''}`
-                      }
-                      className={`relative grid aspect-square min-h-11 place-items-center rounded-lg p-1 text-center transition-colors ${
-                        filled
-                          ? 'bg-paper text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)] motion-safe:animate-[paste_420ms_var(--ease-out-expo)]'
-                          : example
-                            ? 'border-2 border-dashed border-chalk-soft/40 text-chalk-soft'
-                            : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-cover hover:bg-chalk/[0.06]'
-                      } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-cover' : ''}`}
-                    >
-                      {filled ? (
-                        <span className="font-condensed line-clamp-3 text-sm leading-tight font-black uppercase sm:text-lg lg:text-xl">
-                          {filled.name}
-                        </span>
-                      ) : example ? (
-                        <span className="flex flex-col text-xs leading-tight sm:text-sm">
-                          <span className="opacity-70">ex.:</span>
-                          <span className="font-semibold">{example.example.name}</span>
-                        </span>
-                      ) : hintOf(i) ? (
-                        <span className="flex flex-col items-center gap-0.5 leading-tight">
-                          <HintMask initial={hintOf(i)!.initial} pattern={hintOf(i)!.pattern} />
-                          <span className="text-[0.7rem] text-chalk-soft sm:text-xs">
-                            {hintOf(i)!.validAnswers} servem
-                          </span>
-                        </span>
-                      ) : (
-                        <span
-                          className="font-condensed text-2xl font-black sm:text-4xl"
-                          aria-hidden="true"
-                        >
-                          +
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-
-          {action.error && (
-            <p role="alert" className="text-cover">
-              {(action.error as ApiError).message}
+      {!done && (
+        <div className="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <p
+              className="font-condensed tabular shrink-0 text-3xl leading-none font-black"
+              aria-label={`${left} tentativas restantes`}
+            >
+              {left}
+              <span className="ml-1 text-sm text-chalk-soft">de 9</span>
             </p>
+            <div className="flex min-w-0 flex-1 gap-1" aria-hidden="true">
+              {Array.from({ length: 9 }, (_, k) => (
+                <span
+                  key={k}
+                  className={`h-2 flex-1 rounded-full ${k < view.attemptsUsed ? 'bg-chalk-soft/25' : 'bg-cover'}`}
+                />
+              ))}
+            </div>
+            <p className="font-condensed shrink-0 text-base font-extrabold text-cover uppercase">
+              Dicas: {view.hintsLeft} de 3
+            </p>
+            <button
+              className={`${btnSecondary} min-h-11 shrink-0 px-3 text-base`}
+              onClick={() => confirm.current?.showModal()}
+              disabled={!online || action.isPending}
+            >
+              Encerrar
+            </button>
+          </div>
+          <p className="text-xs text-chalk-soft">
+            Toque numa célula e escolha um jogador que cumpra a linha e a coluna. Errar gasta uma
+            tentativa.{' '}
+            {view.hints.length
+              ? 'Fase vale no máximo 2 estrelas.'
+              : 'Usar uma dica limita a fase a 2 estrelas.'}
+          </p>
+          {view.wrongGuesses.length > 0 && (
+            <ul
+              className="flex max-h-7 gap-1.5 overflow-x-auto text-xs"
+              aria-label="Chutes errados"
+            >
+              {view.wrongGuesses.map((w, k) => (
+                <li
+                  key={k}
+                  className="flex shrink-0 items-center gap-1 rounded-full border border-chalk-soft/40 px-2 py-0.5 text-chalk-soft"
+                >
+                  <Icon name="cross" className="size-3 shrink-0" />
+                  <span>
+                    <strong className="text-chalk">{w.player.name}</strong> não serve em{' '}
+                    {cellLabel(view, w.cellIndex)}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
+      )}
 
-        <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
-          {done ? (
-            <LevelEnd
-              data={data}
-              headline={
-                data.attempt.score === 9
-                  ? 'Álbum completo!'
-                  : data.attempt.score >= 6
-                    ? `Bonito! ${data.attempt.score} de 9`
-                    : `${data.attempt.score} de 9 desta vez`
-              }
-              detail={<p>As células vazias mostram uma resposta possível.</p>}
-            />
-          ) : (
-            <>
-              <div className="flex flex-col gap-2 rounded-xl bg-chalk/[0.05] p-4">
-                <p
-                  className="font-condensed tabular text-5xl leading-none font-black"
-                  aria-label={`${left} tentativas restantes`}
-                >
-                  {left}
-                  <span className="ml-2 text-xl text-chalk-soft">de 9 tentativas</span>
-                </p>
-                <div className="flex gap-1" aria-hidden="true">
-                  {Array.from({ length: 9 }, (_, k) => (
-                    <span
-                      key={k}
-                      className={`h-2 flex-1 rounded-full ${k < view.attemptsUsed ? 'bg-chalk-soft/25' : 'bg-cover'}`}
-                    />
-                  ))}
-                </div>
-                <p className="mt-1 text-sm text-chalk-soft">
-                  Toque numa célula e escolha um jogador que cumpra a linha e a coluna. Errar gasta
-                  uma tentativa.
-                </p>
-                <p className="flex items-center gap-2 text-sm">
-                  <span className="font-condensed text-lg font-extrabold text-cover uppercase">
-                    Dicas: {view.hintsLeft} de 3
-                  </span>
-                  <span className="text-chalk-soft">
-                    {view.hints.length
-                      ? 'Fase vale no máximo 2 estrelas.'
-                      : 'Usar uma limita a fase a 2 estrelas.'}
-                  </span>
-                </p>
-              </div>
-              {view.wrongGuesses.length > 0 && (
-                <ul className="flex flex-col gap-1.5 text-sm" aria-label="Chutes errados">
-                  {view.wrongGuesses.map((w, k) => (
-                    <li key={k} className="flex items-center gap-2 text-chalk-soft">
-                      <Icon name="cross" className="size-3.5 shrink-0" />
-                      <span>
-                        <strong className="text-chalk">{w.player.name}</strong> não serve em{' '}
-                        {cellLabel(view, w.cellIndex)}
+      <div
+        className={`${frame} relative mx-auto w-full max-w-5xl rounded-xl border-[10px] border-[#8a5a33] bg-[radial-gradient(120%_90%_at_30%_20%,#34493f,#1f2d26)] p-1.5 shadow-[inset_0_0_0_1px_#0006,0_6px_0_#0005] sm:p-3`}
+      >
+        <ChalkLines filled={filledAt} />
+        <div
+          className="relative grid h-full w-full grid-cols-[minmax(4rem,0.6fr)_repeat(3,minmax(0,1fr))] grid-rows-[4.75rem_repeat(3,minmax(0,1fr))] gap-1.5 sm:gap-2.5"
+          role="grid"
+          aria-label="Grade 3 por 3"
+        >
+          <div />
+          {view.cols.map((c, i) => (
+            <CriterionHead key={i} c={c} />
+          ))}
+          {[0, 1, 2].map((r) => (
+            <div key={r} className="contents" role="row">
+              <CriterionHead c={view.rows[r]!} />
+              {[0, 1, 2].map((col) => {
+                const i = r * 3 + col;
+                const filled = view.cells[i]!.player;
+                const example = !filled && reveal ? reveal.cells[i] : null;
+                return (
+                  <button
+                    key={i}
+                    role="gridcell"
+                    type="button"
+                    disabled={done || !!filled || !online || action.isPending}
+                    onClick={() => setCell(i)}
+                    aria-label={
+                      filled
+                        ? `${cellLabel(view, i)}: ${filled.name}`
+                        : `${cellLabel(view, i)}: vazia${example ? `, exemplo ${example.example.name}` : ''}`
+                    }
+                    className={`relative grid min-h-11 min-w-0 place-items-center rounded-lg p-1 text-center [container-type:size] transition-colors ${
+                      filled
+                        ? ''
+                        : example
+                          ? 'border-2 border-dashed border-chalk-soft/40 text-chalk-soft'
+                          : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-cover hover:bg-chalk/[0.06]'
+                    } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-cover' : ''}`}
+                  >
+                    {filled ? (
+                      <span
+                        className={`font-condensed grid aspect-square w-[min(92cqw,92cqh)] place-items-center rounded-full border-[3px] border-cover bg-paper p-[6%] text-[clamp(0.6rem,15cqmin,1.4rem)] leading-[0.95] font-black text-ink uppercase shadow-[0_4px_0_#0007,inset_0_0_0_2px_#0002] ${seen.current!.has(i) ? '' : 'magnet-snap'}`}
+                      >
+                        <span className="line-clamp-3 break-words">{filled.name}</span>
                       </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <button
-                className={`${btnSecondary} self-start`}
-                onClick={() => confirm.current?.showModal()}
-                disabled={!online || action.isPending}
-              >
-                Encerrar
-              </button>
-            </>
-          )}
-        </aside>
+                    ) : example ? (
+                      <span className="flex flex-col text-xs leading-tight sm:text-sm">
+                        <span className="opacity-70">ex.:</span>
+                        <span className="font-semibold">{example.example.name}</span>
+                      </span>
+                    ) : hintOf(i) ? (
+                      <span className="flex flex-col items-center gap-0.5 leading-tight">
+                        <HintMask initial={hintOf(i)!.initial} pattern={hintOf(i)!.pattern} />
+                        <span className="text-[0.7rem] text-chalk-soft sm:text-xs">
+                          {hintOf(i)!.validAnswers} servem
+                        </span>
+                      </span>
+                    ) : (
+                      <span
+                        className="font-condensed text-2xl font-black sm:text-4xl"
+                        aria-hidden="true"
+                      >
+                        +
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
+      {action.error && (
+        <p role="alert" className="mx-auto w-full max-w-5xl text-cover">
+          {(action.error as ApiError).message}
+        </p>
+      )}
+      {done && (
+        <div className="mx-auto w-full max-w-5xl">
+          <LevelEnd
+            data={data}
+            headline={
+              data.attempt.score === 9
+                ? 'Álbum completo!'
+                : data.attempt.score >= 6
+                  ? `Bonito! ${data.attempt.score} de 9`
+                  : `${data.attempt.score} de 9 desta vez`
+            }
+            detail={<p>As células vazias mostram uma resposta possível.</p>}
+          />
+        </div>
+      )}
       <dialog
         ref={sheet}
         onClose={() => setCell(null)}

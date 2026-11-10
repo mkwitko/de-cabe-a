@@ -299,3 +299,48 @@
     display: none;
   }
 }
+
+/* Grid prancheta: a magnet snaps onto its cell, a chalk stroke crosses a finished line. */
+@keyframes magnet-snap {
+  0% {
+    transform: translateY(-28px) scale(1.5) rotate(-14deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.93);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes chalk-draw {
+  from {
+    transform: scale(0, 1);
+  }
+}
+@keyframes chalk-draw-y {
+  from {
+    transform: scale(1, 0);
+  }
+}
+.magnet-snap {
+  animation: magnet-snap 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.chalk-draw {
+  animation: chalk-draw 450ms 150ms var(--ease-out-expo) both;
+}
+.chalk-draw.origin-top {
+  animation-name: chalk-draw-y;
+}
+@media (prefers-reduced-motion: reduce) {
+  .magnet-snap {
+    animation: stamp-fade 300ms ease-out both;
+  }
+  .chalk-draw {
+    animation: stamp-fade 300ms ease-out both;
+  }
+}
