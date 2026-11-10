@@ -282,7 +282,9 @@ describe('album routes', () => {
       },
     });
     await giveStickers(user.id, ['bronze', 'prata']);
-    const [a, b] = (await prisma.sticker.findMany({ where: { pk: user.id } })).map((x) => x.playerId);
+    const [a, b] = (await prisma.sticker.findMany({ where: { pk: user.id } })).map(
+      (x) => x.playerId,
+    );
     const choice = {
       userId: user.id,
       finish: 'acabamento_holografico',

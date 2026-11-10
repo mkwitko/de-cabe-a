@@ -22,7 +22,7 @@ import { deleteData, exportData } from './account.data';
 import { assertNicknameFree, authRequest, isLiveSignIn, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
 import { trophies } from '../progression/seasons';
-import { cancelSubscriptions, clubeStatus, supportOf } from '../billing/billing';
+import { cancelSubscriptions, clubeStatus, guestApoio, supportOf } from '../billing/billing';
 
 type Who = { sessionId: string; userId: string | null; nickname: string };
 
@@ -201,6 +201,11 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       await prisma.guestSession.update({
         where: { id: req.sessionId },
         data: { userId, nickname: null, nicknameKey: null },
+      });
+      // a one-time apoio given as a guest now counts for the account (the "Apoiador" tag)
+      await prisma.purchase.updateMany({
+        where: { userId: guestApoio(req.sessionId) },
+        data: { userId },
       });
     }
     req.userId = userId;

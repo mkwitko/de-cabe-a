@@ -44,9 +44,14 @@ const billing: BillingDeps = {
 };
 
 const prisma = testPrisma();
-const { app } = testApp({ prisma, now: () => NOW, billing });
+const { app } = testApp({
+  prisma,
+  now: () => NOW,
+  billing,
+  limits: { sessionsPerIp: 10_000, perSession: 10_000, search: 10_000, actions: 10_000 },
+});
 
-function device() {
+function device(ip?: string) {
   const jar = new Map<string, string>();
   const req = async (
     method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
@@ -56,6 +61,8 @@ function device() {
     const res = await app.inject({
       method,
       url: `/v1${url}`,
+      // its own address: the auth routes allow ten calls a minute per IP
+      ...(ip ? { remoteAddress: ip } : {}),
       headers: {
         origin: WEB_ORIGIN,
         ...(jar.size ? { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; ') } : {}),
@@ -457,7 +464,27 @@ describe('billing', () => {
     });
     expect(params).not.toHaveProperty('customer');
     expect(params.custom_text).toMatchObject({ submit: { message: APOIO_NOTE } });
-    expect(await prisma.purchase.count()).toBe(before); // nothing kept about a guest
+    expect(await prisma.purchase.count()).toBe(before + 1); // kept under the device session
+  });
+
+  it('a guest’s paid apoio follows them into the account they create on the same device', async () => {
+    const d = device('10.9.9.9');
+    const { sessionId } = await checkout(d, { product: 'apoio_avulso', amount: 1500 });
+    await deliver('checkout.session.completed', {
+      id: sessionId,
+      mode: 'payment',
+      payment_status: 'paid',
+      payment_intent: 'pi_guest_apoio',
+    });
+    const email = `${randomUUID()}@example.com`;
+    const res = await d.req('POST', '/auth/sign-up/email', {
+      email,
+      password: 'segredo-123',
+      name: 'Gil',
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const user = await prisma.user.findUniqueOrThrow({ where: { email } });
+    expect(await ents({ ...d, userId: user.id })).toMatchObject({ supporter: true });
   });
 
   it('marks an account as supporter: one-time until refunded, monthly for good', async () => {
