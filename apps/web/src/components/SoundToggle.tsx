@@ -1,95 +1,6 @@
-import { useEffect, useState } from 'react';
-import { onSoundChange, setSound, soundOn } from '../lib/sound';
-import { musicOn, onMusicChange, setMusic } from '../lib/music';
-import { hapticsOn, hapticsSupported, onHapticsChange, setHaptics } from '../lib/haptics';
-
-/** Efeitos (sound effects) on/off, off by default; the state lives on the device. */
-export function SoundToggle({ withLabel = false }: { withLabel?: boolean }) {
-  const [on, setOn] = useState(soundOn);
-  useEffect(() => onSoundChange(setOn), []);
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={() => setSound(!on)}
-      className={
-        withLabel
-          ? `flex min-h-11 items-center gap-3 font-semibold ${on ? 'text-gold' : 'text-chalk'}`
-          : `font-condensed flex min-h-11 min-w-11 items-center justify-center gap-1.5 text-lg font-extrabold tracking-wide uppercase ${on ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`
-      }
-    >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
-        {on ? (
-          <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
-        ) : (
-          <path d="M17 9l5 6M22 9l-5 6" />
-        )}
-      </svg>
-      {withLabel ? (
-        on ? (
-          'Efeitos ligados'
-        ) : (
-          'Efeitos desligados'
-        )
-      ) : (
-        <span className="max-lg:sr-only">Efeitos</span>
-      )}
-    </button>
-  );
-}
-
-/** Música on/off, off by default; separate from Efeitos. */
-export function MusicToggle({ withLabel = false }: { withLabel?: boolean }) {
-  const [on, setOn] = useState(musicOn);
-  useEffect(() => onMusicChange(setOn), []);
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={() => setMusic(!on)}
-      className={
-        withLabel
-          ? `flex min-h-11 items-center gap-3 font-semibold ${on ? 'text-gold' : 'text-chalk'}`
-          : `font-condensed flex min-h-11 min-w-11 items-center justify-center gap-1.5 text-lg font-extrabold tracking-wide uppercase ${on ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`
-      }
-    >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M9 18V6l11-2v12" />
-        <circle cx="6.5" cy="18" r="2.5" fill="currentColor" />
-        <circle cx="17.5" cy="16" r="2.5" fill="currentColor" />
-        {!on && <path d="M3 3l18 18" />}
-      </svg>
-      {withLabel ? (
-        on ? (
-          'Música ligada'
-        ) : (
-          'Música desligada'
-        )
-      ) : (
-        <span className="max-lg:sr-only">Música</span>
-      )}
-    </button>
-  );
-}
+import { useState } from 'react';
+import { setSound, soundOn } from '../lib/sound';
+import { musicOn, setMusic } from '../lib/music';
 
 const OFFER_KEY = 'dc_sound_offer';
 
@@ -168,23 +79,5 @@ export function SoundOffer() {
         Ligar
       </button>
     </div>
-  );
-}
-
-/** Vibration on/off, shown only where the phone can vibrate. */
-export function HapticsToggle() {
-  const [on, setOn] = useState(hapticsOn);
-  useEffect(() => onHapticsChange(setOn), []);
-  if (!hapticsSupported()) return null;
-  return (
-    <label className="flex min-h-11 items-center gap-3 font-semibold">
-      <input
-        type="checkbox"
-        className="size-5 accent-cover"
-        checked={on}
-        onChange={(e) => setHaptics(e.target.checked)}
-      />
-      Vibrar ao acertar, errar e ganhar estrela
-    </label>
   );
 }

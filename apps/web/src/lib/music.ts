@@ -1,41 +1,40 @@
 /**
- * Background music: two CC0 loops (see public/audio/CREDITS.md). Menu everywhere, level inside a
- * level route. Off by default, starts only after a user gesture, fades in/out, pauses with the tab.
+ * Background music: football loops recorded at stadiums and samba schools (CC0, see
+ * public/audio/CREDITS.md). The track follows Ajustes: one fixed track, or `auto` (Arquibancada
+ * between levels, Samba-enredo inside one). Off by default, starts only after a user gesture,
+ * fades in/out, pauses with the tab, and follows the volume slider live.
  */
+import { getSettings, subscribeSettings, updateSettings, type TrackId } from './settings';
+
 export type Scene = 'menu' | 'level';
 
-const KEY = 'dc_music';
-const VOLUME = 0.35;
+/** The slider's 100% is this loud; the loops are loudness-matched (-20 LUFS) when encoded. */
+const MAX_VOLUME = 0.55;
 const FADE_MS = 700;
+const PREVIEW_MS = 12_000;
 /** Ogg where it plays, AAC for the Safari versions that cannot decode Ogg in <audio>. */
 const ext = () => (new Audio().canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a');
-const src = (s: Scene) => `/audio/${s}.${ext()}`;
 
 /** /career-path/3, /grid/12, ... are levels; the track page (/career-path) and the rest are menu. */
 const LEVEL_RE =
   /^\/(career-path|grid|impostor|linha-do-tempo|mais-ou-menos|craque-misterioso|draft|conexoes|escalacao)\/[^/]+\/?$/;
 export const sceneFor = (pathname: string): Scene => (LEVEL_RE.test(pathname) ? 'level' : 'menu');
 
-export const readMusic = (store: Pick<Storage, 'getItem'>) => store.getItem(KEY) === 'on';
+export const trackFor = (choice: TrackId | 'auto', s: Scene): TrackId =>
+  choice !== 'auto' ? choice : s === 'level' ? 'samba' : 'arquibancada';
 
-let enabled = false;
-try {
-  enabled = readMusic(localStorage);
-} catch {
-  /* storage blocked: off */
-}
 let scene: Scene = 'menu';
+let preview: TrackId | null = null;
+let previewTimer = 0;
 let unlocked = false; // a user gesture happened
 let hidden = false;
-const listeners = new Set<(on: boolean) => void>();
-const els: Partial<Record<Scene, HTMLAudioElement>> = {};
+const els: Partial<Record<TrackId, HTMLAudioElement>> = {};
 const fades = new Map<HTMLAudioElement, number>();
+const previewListeners = new Set<(t: TrackId | null) => void>();
 
-export const musicOn = () => enabled;
-export const onMusicChange = (l: (on: boolean) => void) => {
-  listeners.add(l);
-  return () => void listeners.delete(l);
-};
+export const musicOn = () => getSettings().music;
+export const onMusicChange = (l: (on: boolean) => void) =>
+  subscribeSettings(() => l(getSettings().music));
 
 function fade(el: HTMLAudioElement, to: number, pauseAtEnd: boolean) {
   const prev = fades.get(el);
@@ -55,10 +54,13 @@ function fade(el: HTMLAudioElement, to: number, pauseAtEnd: boolean) {
 }
 
 function sync() {
-  const want = enabled && unlocked && !hidden;
-  for (const s of ['menu', 'level'] as const) {
-    const active = want && s === scene;
-    let el = els[s];
+  const { music, musicVolume, track } = getSettings();
+  const playing = preview ?? trackFor(track, scene);
+  const want = (music || preview !== null) && unlocked && !hidden;
+  const volume = musicVolume * MAX_VOLUME;
+  const ids = new Set([...(Object.keys(els) as TrackId[]), ...(want ? [playing] : [])]);
+  for (const id of ids) {
+    let el = els[id];
     if (el && hidden) {
       // rAF is suspended in hidden tabs, so a fade would never finish: stop at once.
       cancelAnimationFrame(fades.get(el) ?? 0);
@@ -67,34 +69,47 @@ function sync() {
       el.volume = 0;
       continue;
     }
-    if (active) {
+    if (want && id === playing) {
       if (!el) {
-        el = els[s] = new Audio(src(s));
+        el = els[id] = new Audio(`/audio/${id}.${ext()}`);
         el.loop = true;
         el.volume = 0;
       }
       if (el.paused) void el.play().catch(() => undefined);
-      fade(el, VOLUME, false);
+      fade(el, volume, false);
     } else if (el && !el.paused) fade(el, 0, true);
   }
 }
 
+// Every change in Ajustes (on/off, volume, track) applies at once.
+subscribeSettings(sync);
+
 export function setMusic(on: boolean) {
-  enabled = on;
-  try {
-    localStorage.setItem(KEY, on ? 'on' : 'off');
-  } catch {
-    /* private mode: this visit only */
-  }
   if (on) unlocked = true; // the click that turned it on is the gesture
-  for (const l of listeners) l(on);
-  sync();
+  updateSettings({ music: on });
 }
 
 export function setScene(s: Scene) {
   if (s === scene) return;
   scene = s;
   sync();
+}
+
+/** Plays a track for a few seconds (even with Música off); null stops the preview. */
+export function previewTrack(t: TrackId | null) {
+  clearTimeout(previewTimer);
+  preview = t;
+  if (t) {
+    unlocked = true;
+    previewTimer = window.setTimeout(() => previewTrack(null), PREVIEW_MS);
+  }
+  for (const l of previewListeners) l(t);
+  sync();
+}
+export const previewing = () => preview;
+export function onPreviewChange(l: (t: TrackId | null) => void) {
+  previewListeners.add(l);
+  return () => void previewListeners.delete(l);
 }
 
 if (typeof document !== 'undefined') {
@@ -104,8 +119,8 @@ if (typeof document !== 'undefined') {
   const unlock = () => {
     unlocked = true;
     sync();
-    const el = els[scene];
-    if (!enabled || !el) return;
+    const el = els[preview ?? trackFor(getSettings().track, scene)];
+    if (!getSettings().music || !el) return;
     void el
       .play()
       .then(() => GESTURES.forEach((e) => removeEventListener(e, unlock)))

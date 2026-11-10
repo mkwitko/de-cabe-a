@@ -175,10 +175,13 @@ export function PrivacyPage() {
                 <strong>Dados de carreira</strong>: Wikidata (CC0) e Wikipédia (CC BY-SA).
               </li>
               <li>
-                <strong>Música e efeitos sonoros</strong>: músicas de menu (&quot;Heavenly
-                Loop&quot;, de isaiah658) e de fase (&quot;Determined Pursuit&quot;, de Emma_MA),
-                ambas em CC0 (domínio público) no OpenGameArt. Os efeitos sonoros são sintetizados
-                no seu aparelho.
+                <strong>Música e efeitos sonoros</strong>: as faixas Arquibancada (&quot;Soccer fans
+                screaming and playing drums in a small stadium of Chile&quot;) e Batucada
+                (&quot;Batucada rehearsal in Chile&quot;), de felix.blume; Charanga
+                (&quot;tradicional village carnival brass band&quot;), de speedyrce; e Samba-enredo
+                (&quot;SAMBA CARIOCA CARNAVAL RIO BRAZIL&quot;), de carlosmancuso. Todas em CC0
+                (domínio público) no Freesound, cortadas e com volume igualado por nós. Os efeitos
+                sonoros são sintetizados no seu aparelho.
               </li>
               <li>
                 <strong>Vestiário da página inicial</strong>: as imagens do vestiário (de dia e à

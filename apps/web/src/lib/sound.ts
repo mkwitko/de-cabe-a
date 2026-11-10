@@ -1,42 +1,40 @@
 /**
  * Game sounds, synthesised with Web Audio (no files, nothing to license). Off by default: many
- * play on the bus. The choice stays on the device. The audio context starts on the first sound
- * after a tap (browsers only allow audio after a user gesture).
+ * play on the bus. The choice and the volume live in Ajustes (`settings.ts`). The audio context
+ * starts on the first sound after a tap (browsers only allow audio after a user gesture).
  */
-const KEY = 'dc_sfx';
-const LEGACY_KEY = 'dc_sound';
-let ctx: AudioContext | null = null;
-const listeners = new Set<(on: boolean) => void>();
+import { getSettings, subscribeSettings, updateSettings } from './settings';
 
-/** Efeitos preference. The old single `dc_sound` key becomes Efeitos so existing choices stay. */
-export function readSfx(store: Pick<Storage, 'getItem'>): boolean {
-  return (store.getItem(KEY) ?? store.getItem(LEGACY_KEY)) === 'on';
-}
-export function soundOn(): boolean {
-  try {
-    return readSfx(localStorage);
-  } catch {
-    return false;
-  }
-}
+let ctx: AudioContext | null = null;
+let master: GainNode | null = null;
+
+export const soundOn = () => getSettings().sfx;
 export function setSound(on: boolean) {
-  try {
-    localStorage.setItem(KEY, on ? 'on' : 'off');
-  } catch {
-    /* private mode: on for this visit only */
-  }
-  for (const l of listeners) l(on);
+  updateSettings({ sfx: on });
   if (on) play('tap');
 }
-export const onSoundChange = (l: (on: boolean) => void) => {
-  listeners.add(l);
-  return () => void listeners.delete(l);
-};
+export const onSoundChange = (l: (on: boolean) => void) =>
+  subscribeSettings(() => l(getSettings().sfx));
 
+// The Efeitos slider moves every sound, including one already ringing.
+subscribeSettings(() => {
+  if (master) master.gain.value = getSettings().sfxVolume;
+});
+
+/** Every sound goes through one gain node set by the Efeitos volume. */
 function audio() {
-  ctx ??= new AudioContext();
+  if (!ctx) {
+    ctx = new AudioContext();
+    master = ctx.createGain();
+    master.gain.value = getSettings().sfxVolume;
+    master.connect(ctx.destination);
+  }
   if (ctx.state === 'suspended') void ctx.resume();
   return ctx;
+}
+function out(): GainNode {
+  audio();
+  return master as GainNode;
 }
 
 function tone(
@@ -56,7 +54,7 @@ function tone(
   g.gain.setValueAtTime(0.0001, a.currentTime + start);
   g.gain.exponentialRampToValueAtTime(gain, a.currentTime + start + 0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + start + dur);
-  o.connect(g).connect(a.destination);
+  o.connect(g).connect(out());
   o.start(a.currentTime + start);
   o.stop(a.currentTime + start + dur + 0.05);
   return o;
@@ -78,7 +76,7 @@ function noise(start: number, dur: number, gain: number, freq: number) {
   g.gain.setValueAtTime(0.0001, a.currentTime + start);
   g.gain.exponentialRampToValueAtTime(gain, a.currentTime + start + dur * 0.3);
   g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + start + dur);
-  src.connect(filter).connect(g).connect(a.destination);
+  src.connect(filter).connect(g).connect(out());
   src.start(a.currentTime + start);
   return { src, g };
 }
