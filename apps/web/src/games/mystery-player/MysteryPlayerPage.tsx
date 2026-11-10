@@ -372,7 +372,7 @@ export function MysteryPlayerPage({ level, timed = false }: { level: number; tim
           )}
           <button
             type="button"
-            className={`${btnSecondary} min-h-10 text-base`}
+            className={`${btnSecondary} text-base`}
             disabled={!online || action.isPending}
             onClick={() =>
               action.mutate({ attemptId: data.attempt.id, input: { kind: 'give_up' } })

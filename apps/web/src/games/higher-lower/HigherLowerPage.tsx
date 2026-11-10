@@ -81,6 +81,9 @@ function LedNumber({
 /** Five floodlights; each right answer in a row lights the next one (flicker, then steady). */
 function Floodlights({ streak, total }: { streak: number; total: number }) {
   const before = useRef(streak);
+  // Lights that finished flickering; a fresh one keeps its class until animationend, re-renders or not.
+  const settled = useRef(streak);
+  if (streak < settled.current) settled.current = streak;
   useEffect(() => {
     if (streak > before.current) {
       const id = window.setTimeout(() => {
@@ -102,8 +105,9 @@ function Floodlights({ streak, total }: { streak: number; total: number }) {
         >
           {i < streak && (
             <i
-              className={`absolute inset-0 rounded-full bg-[radial-gradient(circle,#fffbe0,#f5e27a_60%,#d9b73a)] ${i >= before.current ? 'flood-on' : ''}`}
-              style={i >= before.current ? { animationDelay: `${FLOOD_DELAY}ms` } : undefined}
+              className={`absolute inset-0 rounded-full bg-[radial-gradient(circle,#fffbe0,#f5e27a_60%,#d9b73a)] ${i >= settled.current ? 'flood-on' : ''}`}
+              style={i >= settled.current ? { animationDelay: `${FLOOD_DELAY}ms` } : undefined}
+              onAnimationEnd={() => (settled.current = Math.max(settled.current, i + 1))}
             />
           )}
         </span>

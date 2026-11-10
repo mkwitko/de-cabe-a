@@ -114,13 +114,13 @@ function Lineup({
           const body = (
             <>
               <Silhouette h={HEIGHTS[i % 4]!} />
-              <span className="mt-1.5 flex w-full min-w-0 flex-col break-words rounded-sm border-2 border-[#2a2d31] bg-[#f1efe6] px-0.5 py-1 text-center text-[#1c1e21]">
+              <span className="mt-1.5 flex w-full min-w-0 flex-col [overflow-wrap:break-word] hyphens-auto rounded-sm border-2 border-[#2a2d31] bg-[#f1efe6] px-0.5 py-1 text-center text-[#1c1e21]">
                 <span className="font-condensed text-xs leading-none font-black">Nº {i + 1}</span>
-                <span className="font-condensed text-[0.72rem] leading-tight font-black uppercase sm:text-xl">
+                <span className="font-condensed text-[0.75rem] leading-tight font-black uppercase sm:text-xl">
                   {p.name}
                 </span>
                 {impostorId !== undefined && (
-                  <span className="text-[0.65rem] leading-tight font-bold sm:text-xs">
+                  <span className="text-[0.6875rem] leading-tight font-bold sm:text-xs">
                     {isImp ? 'Impostor: nunca jogou aqui' : 'Jogou aqui'}
                     {p.id === picked && (isImp ? ' · você achou!' : ' · sua escolha')}
                   </span>

@@ -384,6 +384,13 @@
   animation: flood-on 520ms both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .flood-on,
+  .led-digit {
+    animation: none;
+  }
+}
+
 /* Craque misterioso dossier: a censor bar is torn off the folder. */
 @keyframes censor-tear {
   to {

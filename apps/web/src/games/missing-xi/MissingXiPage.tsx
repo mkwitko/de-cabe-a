@@ -119,7 +119,7 @@ function Face({ s, fresh }: { s: Slot; fresh: boolean }) {
           <Portrait dark />
         </span>
       )}
-      <span className="font-condensed absolute -right-1.5 -bottom-1 grid min-w-5 place-items-center rounded-full bg-paper px-1 text-xs leading-5 font-black text-ink shadow-[0_1px_0_#0006]">
+      <span className="font-condensed absolute -right-1.5 -bottom-1 grid min-w-5 place-items-center rounded-full bg-paper px-1 text-[0.8rem] leading-5 font-black text-ink shadow-[0_1px_0_#0006]">
         {s.jersey ?? ''}
       </span>
     </span>
@@ -158,42 +158,47 @@ function Pitch({ slots, freshAt }: { slots: Slot[]; freshAt: (i: number) => bool
         aria-hidden
         className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_100%_at_50%_45%,transparent_55%,#0000008c)]"
       />
-      <ol className="absolute inset-x-1 top-1 bottom-1">
-        {rows.map((row, r) => {
-          const t = rows.length > 1 ? r / (rows.length - 1) : 1;
-          const k = 0.8 + 0.2 * t;
-          return (
-            <li
-              key={r}
-              style={{ top: `calc(${t} * (100% - 4.4rem))` }}
-              className="absolute inset-x-0 h-[4.4rem]"
-            >
-              {row.map((s) => (
-                <div
-                  key={s.i}
-                  style={{
-                    left: `${50 + (xOf(row, s) - 50) * (0.84 + 0.16 * t)}%`,
-                    transform: `translateX(-50%) scale(${k})`,
-                  }}
-                  className="absolute top-0 flex w-[4.4rem] origin-top flex-col items-center gap-0.5 text-center sm:w-24"
-                >
-                  <Face s={s} fresh={freshAt(s.i) && !!s.found} />
-                  {s.name === null ? (
-                    <span className="sr-only">jogador oculto</span>
-                  ) : (
-                    <span
-                      className={`line-clamp-2 rounded-sm bg-[#f1ead2] px-1 text-[0.65rem] leading-tight font-bold text-[#2b2418] sm:text-sm ${s.missed ? 'line-through opacity-80' : ''}`}
-                    >
-                      {s.name}
-                    </span>
-                  )}
-                  <span className="sr-only">{s.position}</span>
-                </div>
-              ))}
-            </li>
-          );
-        })}
-      </ol>
+      <div className="absolute inset-0 overflow-y-auto">
+        <ol
+          className="relative mx-1 my-1 h-[calc(100%-0.5rem)]"
+          style={{ minHeight: `${rows.length * 4.8}rem` }}
+        >
+          {rows.map((row, r) => {
+            const t = rows.length > 1 ? r / (rows.length - 1) : 1;
+            const k = 0.9 + 0.1 * t;
+            return (
+              <li
+                key={r}
+                style={{ top: `calc(${t} * (100% - 4.8rem))` }}
+                className="absolute inset-x-0 h-[4.8rem]"
+              >
+                {row.map((s) => (
+                  <div
+                    key={s.i}
+                    style={{
+                      left: `${50 + (xOf(row, s) - 50) * (0.84 + 0.16 * t)}%`,
+                      transform: `translateX(-50%) scale(${k})`,
+                    }}
+                    className="absolute top-0 flex w-[4.4rem] origin-top flex-col items-center gap-0.5 text-center sm:w-24"
+                  >
+                    <Face s={s} fresh={freshAt(s.i) && !!s.found} />
+                    {s.name === null ? (
+                      <span className="sr-only">jogador oculto</span>
+                    ) : (
+                      <span
+                        className={`line-clamp-2 rounded-sm bg-[#f1ead2] px-1 text-[0.8rem] leading-tight font-bold text-[#2b2418] sm:text-sm ${s.missed ? 'line-through opacity-80' : ''}`}
+                      >
+                        {s.name}
+                      </span>
+                    )}
+                    <span className="sr-only">{s.position}</span>
+                  </div>
+                ))}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 }
@@ -384,6 +389,7 @@ export function MissingXiPage({ level, timed = false }: { level: number; timed?:
           )}
           <div className="flex items-center justify-between gap-2">
             <p className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+              <span className="shrink-0 sm:hidden">Faltam {view.hidden - found}</span>
               <span className="shrink-0">Erros:</span>
               <span
                 className="flex shrink-0 gap-1"

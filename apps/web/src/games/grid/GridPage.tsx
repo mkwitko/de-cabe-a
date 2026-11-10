@@ -196,7 +196,7 @@ export function GridPage({
 
       {!done && (
         <div className="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-1.5">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:flex-nowrap">
             <p
               className="font-condensed tabular shrink-0 text-3xl leading-none font-black"
               aria-label={`${left} tentativas restantes`}
@@ -204,7 +204,10 @@ export function GridPage({
               {left}
               <span className="ml-1 text-sm text-chalk-soft">de 9</span>
             </p>
-            <div className="flex min-w-0 flex-1 gap-1" aria-hidden="true">
+            <div
+              className="order-last flex min-w-0 basis-full gap-1 sm:order-none sm:basis-0 sm:flex-1"
+              aria-hidden="true"
+            >
               {Array.from({ length: 9 }, (_, k) => (
                 <span
                   key={k}
