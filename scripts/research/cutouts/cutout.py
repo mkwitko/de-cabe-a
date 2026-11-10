@@ -2,8 +2,9 @@
 
 Pipeline (offline, re-runnable; downloads are cached in scripts/research/.cache/cutouts/):
   1. list-players.ts prints the players (Career Path answers + stickers in the DB) as JSON lines;
-  2. this script downloads each photo (Special:FilePath, <= 1 request/s), finds the largest face
-     (OpenCV Haar), removes the background with rembg, keeps only the person whose face it is,
+  2. this script downloads each photo (Special:FilePath, one every 5 s), finds the largest face
+     (OpenCV Haar), removes the background with rembg (isnet-general-use: close to birefnet-portrait on these
+     portraits at a tenth of the CPU time), keeps only the person whose face it is,
      crops head and shoulders (4:5, face-relative), and writes a transparent WebP 384x480 to
      apps/web/public/cutouts/<playerId>.webp;
   3. quality check: the face must survive the mask, the person must fill a sane share of the
@@ -24,6 +25,7 @@ import io
 import json
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -39,7 +41,17 @@ OUT = ROOT / "apps/web/public/cutouts"
 MANIFEST = ROOT / "apps/api/src/modules/album/cutouts.json"
 SKIPPED = Path(__file__).with_name("skipped.json")
 UA = "DeCabeca/0.1 (football quiz; research script)"
+GAP = 5.0  # seconds between downloads (Commons answers 429 to faster bursts)
 W, H = 384, 480
+# Rejected by eye on the contact sheet (another person or the background left in the cut-out).
+REJECT = {
+    "01a1ac22-9321-75e8-bd57-d3230c63dad3": "Diego Maradona: two people",
+    "01a1ac27-bd28-7115-91e1-df1ca1737101": "Djalma Santos: people behind",
+    "01a1ac29-00ea-7126-bfb6-82cc909afdda": "Juan: background left",
+    "01a1ac2a-5775-741a-9660-a336cf9df12f": "Adílson Batista: background left",
+    "01a1ac2b-ab5e-7069-8e75-b2b1125db541": "Gabriel Paulista: two people",
+    "01a1ad4f-3b87-73fe-b697-17dec88eafa4": "Andrés Iniesta: trophy and background",
+}
 _last = 0.0
 
 
@@ -47,18 +59,27 @@ def download(file: str, dest: Path) -> bytes:
     global _last
     if dest.exists():
         return dest.read_bytes()
-    url = f"https://commons.wikimedia.org/wiki/Special:FilePath/{urllib.parse.quote(file)}?width=1200"
-    for tries in range(4):
-        time.sleep(max(0, _last + 1.1 - time.time()))
+    # 960 is a standard thumbnail step (odd widths are rendered on demand and throttled harder)
+    url = f"https://commons.wikimedia.org/wiki/Special:FilePath/{urllib.parse.quote(file)}?width=960"
+    for tries in range(5):
+        time.sleep(max(0, _last + GAP - time.time()))
         _last = time.time()
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=60) as r:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=60) as r:
                 data = r.read()
             dest.write_bytes(data)
             return data
-        except Exception as e:  # retried, then reported
+        except urllib.error.HTTPError as e:  # 429: wait as long as Commons asks, at least a minute
             err = e
-            time.sleep(5 * (tries + 1))
+            print(f"  {file}: HTTP {e.code} retry-after {e.headers.get('Retry-After')}", file=sys.stderr, flush=True)
+            if e.code != 429:
+                break
+            time.sleep(min(300, max(60 * (tries + 1), int(e.headers.get("Retry-After") or 0))))
+        except Exception as e:  # network: retried, then reported
+            err = e
+            print(f"  {file}: {e!r}", file=sys.stderr, flush=True)
+            time.sleep(10 * (tries + 1))
     raise RuntimeError(f"download failed: {err}")
 
 
@@ -110,6 +131,8 @@ def cut(rgb: np.ndarray, session):
         return out, f"face not solid in the mask ({face_kept:.2f})"
     if not 0.2 <= cover <= 0.78:
         return out, f"coverage {cover:.2f}"
+    if float((a[: int(H * 0.04)] > 0.5).mean()) > 0.2:
+        return out, "background left above the head"
     if bottom < 0.2:
         return out, f"shoulders do not reach the bottom ({bottom:.2f})"
     return out, None
@@ -118,7 +141,7 @@ def cut(rgb: np.ndarray, session):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("players")
-    ap.add_argument("--model", default="birefnet-portrait")
+    ap.add_argument("--model", default="isnet-general-use")
     ap.add_argument("--only", default="")
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--force", action="store_true", help="redo players already cut or skipped")
@@ -139,6 +162,8 @@ def main():
         if done == file and out_dir == OUT and not args.force:
             continue
         try:
+            if pid in REJECT:
+                raise ValueError(f"rejected by eye ({REJECT[pid]})")
             data = download(file, CACHE / "src" / pid)
             rgb = np.array(Image.open(io.BytesIO(data)).convert("RGB"))
             img, reason = cut(rgb, session)
@@ -147,7 +172,9 @@ def main():
         if reason and img is not None and out_dir != OUT:  # trial run: keep the reject to look at
             img.save(out_dir / f"{pid}.fail.webp", "WEBP", quality=80)
         if reason:
-            skipped[pid] = {"name": p["canonicalName"], "photoFile": file, "reason": reason}
+            # a failed download is retried on the next run; a rejected cut-out is not
+            retry = reason.startswith("download failed")
+            skipped[pid] = {"name": p["canonicalName"], "photoFile": None if retry else file, "reason": reason}
             manifest.pop(pid, None)
             (out_dir / f"{pid}.webp").unlink(missing_ok=True)
             print(f"[{i + 1}/{len(players)}] skip {p['canonicalName']}: {reason}", flush=True)
@@ -170,8 +197,8 @@ def main():
 def save(out_dir, manifest, skipped):
     """After every player, so a long run can stop and resume."""
     if out_dir == OUT:
-        MANIFEST.write_text(json.dumps(dict(sorted(manifest.items())), ensure_ascii=False, indent=1) + "\n")
-        SKIPPED.write_text(json.dumps(dict(sorted(skipped.items())), ensure_ascii=False, indent=1) + "\n")
+        MANIFEST.write_text(json.dumps(dict(sorted(manifest.items())), ensure_ascii=False, indent=2) + "\n")
+        SKIPPED.write_text(json.dumps(dict(sorted(skipped.items())), ensure_ascii=False, indent=2) + "\n")
 
 
 if __name__ == "__main__":

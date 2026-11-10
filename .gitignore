@@ -18,3 +18,4 @@ content.sql.gz
 backups/
 .superpowers/
 scripts/research/.cache/
+scripts/research/cutouts/skipped.json
