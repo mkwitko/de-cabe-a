@@ -244,10 +244,10 @@
 }
 @keyframes sheen-move {
   from {
-    background-position-x: 20%;
+    transform: translateX(-9%);
   }
   to {
-    background-position-x: 80%;
+    transform: translateX(9%);
   }
 }
 /* The sheen strip is wider than the card so pointer tilt only moves it sideways. */
@@ -258,6 +258,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .sheen .holo {
     animation: sheen-move 2.4s ease-in-out infinite alternate;
+    will-change: transform;
   }
 }
 
@@ -895,6 +896,30 @@
   mix-blend-mode: screen;
   animation: scene-fade 1.6s ease-out backwards;
 }
+.scene-dust i {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #fff6d8;
+  box-shadow: 0 0 6px 1px rgb(255 240 190 / 0.6);
+  opacity: 0;
+  animation: dust-drift 9s ease-in-out infinite;
+}
+@keyframes dust-drift {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  30%,
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy));
+  }
+}
 .scene-dark {
   position: fixed;
   inset: 0;
@@ -1398,7 +1423,7 @@
   animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .scene :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit, .scene-dust) {
+  .scene :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit, .scene-dust, .scene-dust i) {
     animation: none;
   }
   .scene-art,

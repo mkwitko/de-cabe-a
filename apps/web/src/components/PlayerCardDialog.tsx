@@ -30,6 +30,7 @@ export function Avatar({
       alt=""
       title={credit}
       loading="lazy"
+      decoding="async"
       className={`${size} shrink-0 rounded-full bg-ink/10 object-cover object-top`}
     />
   ) : (
@@ -102,6 +103,7 @@ export function PlayerCardDialog({
                   <img
                     src={c.photo.url}
                     alt={`Foto de ${c.name}`}
+                    decoding="async"
                     className="aspect-[3/4] w-full object-cover object-top"
                   />
                 ) : (
