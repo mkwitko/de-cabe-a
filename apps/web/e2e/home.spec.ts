@@ -16,7 +16,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
 }) => {
   // 1. Home without sign-up shows both games
   await page.goto('/');
-  await expect(page).toHaveTitle('De Cabeça · Minijogos de futebol');
+  await expect(page).toHaveTitle('De Cabeça F.C. · Minijogos de futebol');
   await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Football Grid' })).toBeVisible();

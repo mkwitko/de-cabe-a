@@ -100,7 +100,7 @@ export function AdConsentBanner() {
       className="fixed inset-x-3 bottom-20 z-40 mx-auto flex max-w-2xl flex-col gap-3 rounded-xl bg-paper p-4 text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.55)] sm:bottom-6"
     >
       <p id="consent-title" className="font-semibold">
-        O De Cabeça é grátis graças aos anúncios, que nunca aparecem durante as fases.
+        O De Cabeça F.C. é grátis graças aos anúncios, que nunca aparecem durante as fases.
       </p>
       <p className="text-sm">
         Podemos mostrar anúncios do seu interesse (o Google usa cookies para isso) ou só anúncios

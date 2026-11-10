@@ -80,12 +80,12 @@ function page(o: {
 <title>${esc(o.title)}</title><meta name="description" content="${esc(o.description)}">
 <link rel="canonical" href="${url}">${o.noindex ? '<meta name="robots" content="noindex,follow">' : ''}<link rel="icon" href="/favicon-32.png"><link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#1f6b3d">
-<meta property="og:type" content="article"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="De Cabeça">
+<meta property="og:type" content="article"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="De Cabeça F.C.">
 <meta property="og:title" content="${esc(o.title)}"><meta property="og:description" content="${esc(o.description)}">
 <meta property="og:url" content="${url}"><meta property="og:image" content="${o.origin}/og.png"><meta name="twitter:card" content="summary_large_image">
 ${(o.jsonLd ?? []).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('')}
 <style>${CSS}</style></head><body><main>
-<header class="top"><a class="brand" href="/">De Cabeça</a><a href="/jogadores">Jogadores</a></header>
+<header class="top"><a class="brand" href="/">De Cabeça F.C.</a><a href="/jogadores">Jogadores</a></header>
 ${o.body}</main></body></html>`;
 }
 
@@ -121,7 +121,7 @@ export const seoRoutes: FastifyPluginAsync = async (app) => {
           page({
             origin: origin(),
             path: req.url,
-            title: 'Jogador não encontrado | De Cabeça',
+            title: 'Jogador não encontrado | De Cabeça F.C.',
             description: 'Jogador não encontrado.',
             body: '<h1>Jogador não encontrado</h1><p><a href="/jogadores">Ver todos os jogadores</a></p>',
           }),
@@ -165,7 +165,7 @@ export const seoRoutes: FastifyPluginAsync = async (app) => {
     const plays = Number(cp?.n ?? 0);
     const statsBlock =
       plays >= 5
-        ? `<h2>No De Cabeça</h2><p>${Math.round((Number(cp!.won) / plays) * 100)}% dos jogadores acertaram ${esc(p.canonicalName)} pela carreira${cp!.avg ? `, em média na ${Math.round(7 - cp!.avg / 10)}ª tentativa` : ''} (${plays} partidas).</p>`
+        ? `<h2>No De Cabeça F.C.</h2><p>${Math.round((Number(cp!.won) / plays) * 100)}% dos jogadores acertaram ${esc(p.canonicalName)} pela carreira${cp!.avg ? `, em média na ${Math.round(7 - cp!.avg / 10)}ª tentativa` : ''} (${plays} partidas).</p>`
         : '';
     // Quiz: three of his clubs and one club of the same country he never played for.
     const own = [...new Map(clubs.map((c) => [c.clubId, c.club])).values()];
@@ -210,7 +210,7 @@ ${quiz}
 ${statsBlock}
 ${mates.length ? `<h2>Jogou nos mesmos clubes</h2><ul class="grid">${mates.map((m) => `<li><a href="/jogador/${playerSlug(m)}">${esc(m.canonicalName)}</a></li>`).join('')}</ul>` : ''}
 <h2>Teste seu conhecimento</h2>
-<p>No De Cabeça você adivinha o jogador pela sequência de clubes, completa a grade de clubes e posições e caça o impostor que nunca jogou no clube.</p>
+<p>No De Cabeça F.C. você adivinha o jogador pela sequência de clubes, completa a grade de clubes e posições e caça o impostor que nunca jogou no clube.</p>
 <a class="cta" href="/">Jogar agora, é grátis</a>
 <p class="src">Dados conferidos entre Wikidata e Wikipédia${wikiUrl ? ` (<a href="${esc(wikiUrl)}" rel="nofollow">fonte</a>)` : ''}; textos da Wikipédia sob CC BY-SA. Jogos e gols como a ficha da Wikipédia informa (em geral, só pelo campeonato).</p>`;
     const jsonLd = [
@@ -245,7 +245,7 @@ ${mates.length ? `<h2>Jogou nos mesmos clubes</h2><ul class="grid">${mates.map((
         page({
           origin: origin(),
           path,
-          title: `Carreira de ${p.canonicalName}: clubes, jogos e gols | De Cabeça`,
+          title: `Carreira de ${p.canonicalName}: clubes, jogos e gols | De Cabeça F.C.`,
           description: answer.slice(0, 158),
           body: html(body),
           jsonLd,
@@ -289,7 +289,7 @@ ${letters
         page({
           origin: origin(),
           path: '/jogadores',
-          title: 'Jogadores de futebol: carreiras, clubes e gols | De Cabeça',
+          title: 'Jogadores de futebol: carreiras, clubes e gols | De Cabeça F.C.',
           description: `Carreiras conferidas de ${ps.length} jogadores: todos os clubes, anos, jogos e gols.`,
           body,
         }),
@@ -353,9 +353,9 @@ ${letters
         page({
           origin: origin(),
           path: '/creditos',
-          title: 'Créditos | De Cabeça',
+          title: 'Créditos | De Cabeça F.C.',
           description:
-            'Autores e licenças das fotos (Wikimedia Commons) e das escalações (Wikipédia) usadas no De Cabeça.',
+            'Autores e licenças das fotos (Wikimedia Commons) e das escalações (Wikipédia) usadas no De Cabeça F.C..',
           body,
           noindex: true,
         }),
@@ -367,7 +367,7 @@ ${letters
     const o = origin();
     const n = await prisma.player.count({ where: { verificationStatus: 'verified' } });
     return reply.type('text/plain; charset=utf-8').header('cache-control', 'public, max-age=86400')
-      .send(`# De Cabeça
+      .send(`# De Cabeça F.C.
 
 > Minijogos de conhecimento de futebol em português (Brasil): adivinhe o jogador pela carreira, complete a grade de clubes e posições, ache o impostor que nunca jogou no clube. Grátis, no navegador, sem cadastro.
 

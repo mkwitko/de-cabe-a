@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
+import { Crest } from './components/Crest';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { closedRoute, LAUNCH_ALL } from './lib/launch';
 import type { GamesResponse } from '@decabeca/contracts';
@@ -469,8 +470,12 @@ function Shell({ children }: { children: ReactNode }) {
         >
           {!home && (
             <li className="mr-auto hidden sm:block">
-              <Link to="/" className="font-condensed text-2xl font-black uppercase">
-                De Cabeça
+              <Link
+                to="/"
+                className="font-condensed flex items-center gap-2 text-2xl font-black uppercase"
+              >
+                <Crest className="h-9 w-8" />
+                De Cabeça F.C.
               </Link>
             </li>
           )}

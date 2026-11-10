@@ -120,7 +120,7 @@ export function Broadcast({
         <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-4">
           <Stars n={stars} size="size-7" animate />
           <span className="text-xs font-extrabold tracking-[0.18em] uppercase opacity-80">
-            De Cabeça
+            De Cabeça F.C.
           </span>
         </div>
         <p

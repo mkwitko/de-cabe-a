@@ -3,9 +3,9 @@
   "pages": [
     {
       "path": "/",
-      "title": "De Cabeça · Minijogos de futebol: adivinhe o jogador, grid e impostor",
+      "title": "De Cabeça F.C. · Minijogos de futebol: adivinhe o jogador, grid e impostor",
       "description": "Jogos de futebol em português: adivinhe o jogador pela carreira, complete a grade 3×3 e ache o impostor que nunca jogou no clube. Grátis, fase por fase, com ranking.",
-      "h1": "De Cabeça: minijogos de futebol",
+      "h1": "De Cabeça F.C.: minijogos de futebol",
       "text": [
         "Teste quanto você sabe de futebol de cabeça. Três jogos, centenas de fases, estrelas, títulos e ranking da comunidade.",
         "Career Path: adivinhe o jogador pela sequência de clubes. Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
@@ -20,7 +20,7 @@
     },
     {
       "path": "/career-path",
-      "title": "Career Path: adivinhe o jogador pela carreira | De Cabeça",
+      "title": "Career Path: adivinhe o jogador pela carreira | De Cabeça F.C.",
       "description": "Veja os clubes de um jogador, um por vez, com jogos e gols, e adivinhe quem é em até 6 tentativas. Centenas de fases de futebol brasileiro e mundial.",
       "h1": "Career Path: adivinhe o jogador pela carreira",
       "text": [
@@ -34,7 +34,7 @@
     },
     {
       "path": "/grid",
-      "title": "Football Grid: a grade 3×3 de futebol em português | De Cabeça",
+      "title": "Football Grid: a grade 3×3 de futebol em português | De Cabeça F.C.",
       "description": "Complete a grade 3×3: cada casa pede um jogador que cumpra a linha e a coluna, como clube, país ou posição. Nove chances e três dicas por grade.",
       "h1": "Football Grid: complete a grade 3×3",
       "text": [
@@ -48,7 +48,7 @@
     },
     {
       "path": "/impostor",
-      "title": "Impostor: ache o jogador que nunca jogou no clube | De Cabeça",
+      "title": "Impostor: ache o jogador que nunca jogou no clube | De Cabeça F.C.",
       "description": "Um clube e quatro jogadores: três jogaram lá, um nunca vestiu a camisa. Ache o impostor em cinco rodadas por fase.",
       "h1": "Impostor: quem nunca jogou no clube?",
       "text": [
@@ -62,7 +62,7 @@
     },
     {
       "path": "/linha-do-tempo",
-      "title": "Linha do tempo: ponha a carreira do jogador em ordem | De Cabeça",
+      "title": "Linha do tempo: ponha a carreira do jogador em ordem | De Cabeça F.C.",
       "description": "Quatro clubes de um jogador, embaralhados. Ponha na ordem da carreira, do primeiro ao último. Cinco jogadores por fase.",
       "h1": "Linha do tempo: em que ordem ele jogou?",
       "text": [
@@ -76,7 +76,7 @@
     },
     {
       "path": "/mais-ou-menos",
-      "title": "Mais ou Menos: quem fez mais gols pelo clube? | De Cabeça",
+      "title": "Mais ou Menos: quem fez mais gols pelo clube? | De Cabeça F.C.",
       "description": "Duas passagens reais de jogadores por clubes. Quem fez mais gols, ou mais jogos? Cinco duelos por fase.",
       "h1": "Mais ou Menos: quem tem o número maior?",
       "text": [
@@ -90,7 +90,7 @@
     },
     {
       "path": "/escalacao",
-      "title": "Escalação: complete o time de uma final histórica | De Cabeça",
+      "title": "Escalação: complete o time de uma final histórica | De Cabeça F.C.",
       "description": "O time titular de uma final real da Copa do Mundo, Champions, Libertadores ou Copa América, com nomes escondidos. Lembre quem estava em campo.",
       "h1": "Escalação: quem jogou aquela final?",
       "text": [
@@ -105,7 +105,7 @@
     },
     {
       "path": "/craque-misterioso",
-      "title": "Craque Misterioso: adivinhe o jogador de futebol | De Cabeça",
+      "title": "Craque Misterioso: adivinhe o jogador de futebol | De Cabeça F.C.",
       "description": "Um jogador escondido e 8 palpites. Cada chute mostra se a nacionalidade e a posição batem, se ele é mais velho ou mais novo e os clubes em comum.",
       "h1": "Craque Misterioso: quem é o jogador?",
       "text": [
@@ -119,7 +119,7 @@
     },
     {
       "path": "/conexoes",
-      "title": "Conexões: ache os 4 grupos de jogadores | De Cabeça",
+      "title": "Conexões: ache os 4 grupos de jogadores | De Cabeça F.C.",
       "description": "16 jogadores de futebol em 4 grupos escondidos: mesmo clube, mesma seleção ou titulares da mesma final. Ache as conexões com até 4 erros.",
       "h1": "Conexões: o que esses jogadores têm em comum?",
       "text": [
@@ -133,8 +133,8 @@
     },
     {
       "path": "/ranking",
-      "title": "Ranking De Cabeça: quem mais sabe de futebol | De Cabeça",
-      "description": "Ranking geral, da semana e contra o relógio dos jogadores do De Cabeça, por estrelas conquistadas nas fases.",
+      "title": "Ranking De Cabeça F.C.: quem mais sabe de futebol | De Cabeça F.C.",
+      "description": "Ranking geral, da semana e contra o relógio dos jogadores do De Cabeça F.C., por estrelas conquistadas nas fases.",
       "h1": "Ranking",
       "text": [
         "Estrelas somadas em todas as fases dos três jogos. Escolha um apelido para aparecer."
@@ -143,7 +143,7 @@
     },
     {
       "path": "/como-jogar",
-      "title": "Como jogar De Cabeça: regras, estrelas e títulos | De Cabeça",
+      "title": "Como jogar De Cabeça F.C.: regras, estrelas e títulos | De Cabeça F.C.",
       "description": "Regras do Career Path, Football Grid e Impostor, como ganhar estrelas, títulos de Reserva a Lenda, ranking e modo contra o relógio.",
       "h1": "Como jogar",
       "text": [
@@ -155,7 +155,7 @@
   ],
   "faq": [
     [
-      "O De Cabeça é grátis?",
+      "O De Cabeça F.C. é grátis?",
       "Sim. Todos os jogos são grátis e funcionam no navegador, sem instalar nada e sem cadastro."
     ],
     [

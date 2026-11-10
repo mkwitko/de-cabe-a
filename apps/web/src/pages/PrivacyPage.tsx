@@ -8,7 +8,7 @@ export function PrivacyPage() {
     <article className="flex flex-col gap-6 leading-relaxed">
       <h1 className="font-condensed text-4xl font-black uppercase">Privacidade</h1>
       <p className="max-w-[60ch] text-lg text-chalk-soft">
-        O De Cabeça é um jogo. Guardamos o mínimo para ele funcionar e nunca vendemos seus dados.
+        O De Cabeça F.C. é um jogo. Guardamos o mínimo para ele funcionar e nunca vendemos seus dados.
       </p>
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <section className={card}>

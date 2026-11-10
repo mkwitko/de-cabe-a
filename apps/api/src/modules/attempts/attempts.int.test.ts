@@ -920,14 +920,16 @@ describe('search pages (SEO)', () => {
     expect(page.statusCode).toBe(200);
     expect(page.headers['content-type']).toContain('text/html');
     expect(page.body).toContain(
-      '<title>Carreira de Ronaldo: clubes, jogos e gols | De Cabeça</title>',
+      '<title>Carreira de Ronaldo: clubes, jogos e gols | De Cabeça F.C.</title>',
     );
     expect(page.body).toContain('Ronaldo é um atacante brasileiro');
     expect(page.body).toContain('"@type":"Person"');
     expect(page.body).toContain('<link rel="canonical" href="http://localhost:5173/jogador/');
     expect((await app.inject({ method: 'GET', url: '/jogador/ninguem-q1' })).statusCode).toBe(404);
     expect((await app.inject({ method: 'GET', url: '/jogadores' })).body).toContain(path!);
-    expect((await app.inject({ method: 'GET', url: '/llms.txt' })).body).toContain('# De Cabeça');
+    expect((await app.inject({ method: 'GET', url: '/llms.txt' })).body).toContain(
+      '# De Cabeça F.C.',
+    );
   });
 });
 

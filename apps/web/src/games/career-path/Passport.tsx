@@ -125,7 +125,7 @@ export function Passport({
             className="absolute inset-x-5 top-3.5 flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
           >
             <span className="whitespace-nowrap">Passaporte do jogador</span>
-            <span className="hidden whitespace-nowrap sm:inline">De Cabeça</span>
+            <span className="hidden whitespace-nowrap sm:inline">De Cabeça F.C.</span>
           </div>
           <ol
             aria-label={label}

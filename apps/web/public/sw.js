@@ -3,7 +3,7 @@
 self.addEventListener('push', (event) => {
   const m = event.data ? event.data.json() : {};
   event.waitUntil(
-    self.registration.showNotification(m.title || 'De Cabeça', {
+    self.registration.showNotification(m.title || 'De Cabeça F.C.', {
       body: m.body || '',
       icon: '/icon-192.png',
       badge: '/icon-192.png',

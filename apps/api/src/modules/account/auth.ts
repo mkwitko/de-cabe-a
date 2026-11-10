@@ -101,7 +101,7 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
       sendResetPassword: async ({ user, url }) => {
         void opts.sendEmail({
           to: user.email,
-          subject: 'De Cabeça: crie uma nova senha',
+          subject: 'De Cabeça F.C.: crie uma nova senha',
           text: `Para criar uma nova senha, abra o link (vale por 1 hora):\n${url}\n\nSe não foi você, ignore este e-mail.`,
         });
       },
@@ -113,7 +113,7 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
       sendVerificationEmail: async ({ user, url }) => {
         void opts.sendEmail({
           to: user.email,
-          subject: 'De Cabeça: confirme seu e-mail',
+          subject: 'De Cabeça F.C.: confirme seu e-mail',
           text: `Confirme seu e-mail abrindo o link:\n${url}`,
         });
       },

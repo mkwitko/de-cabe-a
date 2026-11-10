@@ -49,7 +49,7 @@ export function ProfilePage() {
       <div className="lean mt-5 w-full max-w-md -rotate-1 rounded-[14px] bg-paper p-2.5 text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.5)] sm:mx-0">
         <div className="flex items-center justify-between rounded-t-[8px] bg-ink px-4 py-2 text-paper">
           <span className="font-condensed text-sm font-extrabold tracking-[0.2em] uppercase">
-            Sócio · De Cabeça
+            Sócio · De Cabeça F.C.
           </span>
           <span className="tabular text-sm font-bold">
             <StarIcon className="inline size-[0.9em] align-[-0.1em] text-cover" /> {p.totalStars}

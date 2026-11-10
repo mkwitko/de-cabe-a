@@ -22,14 +22,14 @@ for (const p of pages) {
       {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'De Cabeça',
+        name: 'De Cabeça F.C.',
         url: site,
         inLanguage: 'pt-BR',
       },
       {
         '@context': 'https://schema.org',
         '@type': 'VideoGame',
-        name: 'De Cabeça',
+        name: 'De Cabeça F.C.',
         url: site,
         description: p.description,
         genre: ['Quiz', 'Futebol', 'Trivia'],
