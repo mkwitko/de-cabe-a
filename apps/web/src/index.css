@@ -154,3 +154,81 @@
     transform: translateX(5px);
   }
 }
+
+/* End-of-level ceremony: transform/opacity only. */
+@keyframes bc-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: translate(calc(var(--amp) * -1), calc(var(--amp) * 0.6));
+  }
+  40% {
+    transform: translate(var(--amp), calc(var(--amp) * -0.6));
+  }
+  60% {
+    transform: translate(calc(var(--amp) * -0.6), calc(var(--amp) * 0.4));
+  }
+  80% {
+    transform: translate(calc(var(--amp) * 0.4), 0);
+  }
+}
+@keyframes crowd-step {
+  50% {
+    transform: translate(1px, 1px);
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: rotateY(540deg) scale(0.2);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes beam {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1, 0);
+  }
+  40% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(20, 1);
+  }
+}
+@keyframes sheen-move {
+  from {
+    transform: translateX(-30%);
+  }
+  to {
+    transform: translateX(30%);
+  }
+}
+/* The sheen strip is wider than the card so pointer tilt only moves it sideways. */
+.holo-rainbow .holo {
+  opacity: 0.55;
+  mix-blend-mode: soft-light;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheen .holo {
+    animation: sheen-move 2.4s ease-in-out infinite alternate;
+  }
+}

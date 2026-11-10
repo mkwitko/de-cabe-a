@@ -77,7 +77,18 @@ function noise(start: number, dur: number, gain: number, freq: number) {
   src.start(a.currentTime + start);
 }
 
-export type Sound = 'whistle' | 'correct' | 'wrong' | 'win' | 'tap';
+export type Sound =
+  | 'whistle'
+  | 'correct'
+  | 'wrong'
+  | 'win'
+  | 'tap'
+  | 'stamp'
+  | 'clunk'
+  | 'crowd'
+  | 'tick'
+  | 'shimmer'
+  | 'rarity';
 
 export function play(sound: Sound) {
   if (!soundOn()) return;
@@ -104,6 +115,22 @@ export function play(sound: Sound) {
     } else if (sound === 'win') {
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.1, 0.35, 'triangle', 0.14));
       noise(0.1, 1.6, 0.08, 1000);
+    } else if (sound === 'stamp') {
+      noise(0, 0.18, 0.12, 260);
+      tone(70, 0, 0.18, 'sine', 0.2, 40);
+    } else if (sound === 'clunk') {
+      noise(0, 0.12, 0.1, 120);
+      tone(55, 0, 0.25, 'triangle', 0.2);
+    } else if (sound === 'crowd') {
+      // Swell: a roar that opens up, then fades.
+      noise(0, 3.1, 0.12, 1100);
+    } else if (sound === 'tick') {
+      tone(1400, 0, 0.03, 'square', 0.04);
+    } else if (sound === 'shimmer') {
+      [880, 1320, 1760, 2640].forEach((f, i) => tone(f, i * 0.07, 0.6, 'sine', 0.07));
+    } else if (sound === 'rarity') {
+      tone(392, 0, 0.5, 'triangle', 0.15);
+      tone(587, 0.12, 0.7, 'triangle', 0.15);
     } else {
       noise(0, 0.04, 0.05, 2500);
     }
