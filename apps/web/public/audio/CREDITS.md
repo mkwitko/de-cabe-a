@@ -1,17 +1,16 @@
 # Music credits
 
-Four football loops, all CC0 1.0 (public domain dedication) on Freesound; the licence was checked on each sound's page on 2026-11-10. No attribution is required; credited anyway. Each file is a cut of the recording (start and length below), loudness-matched to -20 LUFS, with a 3 s crossfade from its end into its start so it loops without a seam (0.25 s for the samba loop), encoded to Ogg Vorbis q3 and AAC 96 kbps (Safari). Source files were the Freesound previews (MP3, 128 kbps).
+Three football loops, all CC0 1.0 (public domain dedication) on Freesound; the licence was checked on each sound's page on 2026-11-10. No attribution is required; credited anyway. Each file is a cut of the recording (start and length below), loudness-matched to about -19 LUFS (peak-limited), with a 3 s crossfade from its end into its start so it loops without a seam, encoded to Ogg Vorbis q3 and AAC 96 kbps (Safari). Source files were the Freesound previews (MP3, 128 kbps). Arquibancada, Charanga, Samba-enredo, Torcida organizada and Maracana were removed from Ajustes (saved choices fall back to Automatica).
 
-| File                               | Name in Ajustes | Title                                                                  | Author        | Licence | Source                                                    | Cut           |
-| ---------------------------------- | --------------- | ---------------------------------------------------------------------- | ------------- | ------- | --------------------------------------------------------- | ------------- |
-| arquibancada.ogg, arquibancada.m4a | Arquibancada    | Soccer fans screaming and playing drums in a small stadium of Chile    | felix.blume   | CC0 1.0 | https://freesound.org/people/felix.blume/sounds/500250/   | 0:15, 90 s    |
-| batucada.ogg, batucada.m4a         | Batucada        | Batucada rehearsal in Chile                                            | felix.blume   | CC0 1.0 | https://freesound.org/people/felix.blume/sounds/411465/   | 1:00, 90 s    |
-| charanga.ogg, charanga.m4a         | Charanga        | tradicional village carnival brass band - drum, tube, trumpet 2.wav    | speedyrce     | CC0 1.0 | https://freesound.org/people/speedyrce/sounds/460512/     | 0:08, 68 s    |
-| samba.ogg, samba.m4a               | Samba-enredo    | SAMBA CARIOCA CARNAVAL RIO BRAZIL (samba-enredo cavaquinho intro loop) | carlosmancuso | CC0 1.0 | https://freesound.org/people/carlosmancuso/sounds/766529/ | whole, 28.6 s |
+| File                       | Name in Ajustes | Title                                                                                      | Author       | Licence | Source                                                   | Cut        |
+| -------------------------- | --------------- | ------------------------------------------------------------------------------------------ | ------------ | ------- | -------------------------------------------------------- | ---------- |
+| batucada.ogg, batucada.m4a | Batucada        | Batucada rehearsal in Chile                                                                | felix.blume  | CC0 1.0 | https://freesound.org/people/felix.blume/sounds/411465/  | 1:00, 90 s |
+| hinchada.ogg, hinchada.m4a | Hinchada        | Explosions, football's chants in street celebration (in the Boca Juniors fan national day) | bienvenido69 | CC0 1.0 | https://freesound.org/people/bienvenido69/sounds/537585/ | 0:00, 72 s |
+| murga.ogg, murga.m4a       | Murga           | 080519-003.wav (murga, Buenos Aires)                                                       | cabro        | CC0 1.0 | https://freesound.org/people/cabro/sounds/341318/        | 0:05, 90 s |
 
 ## Crowd packs (Clube and Banca)
 
-Three 6 s cuts of the loops above play the broadcast roar and the win's roar when a crowd pack is worn (`src/lib/sound.ts`). Each is the loudest 6 s of its loop, with a 0.12 s fade-in and a 1.5 s fade-out, encoded to Ogg Vorbis q3 and AAC 96 kbps. Same CC0 1.0 sources and authors as above.
+Three 6 s cuts of the loops above play the broadcast roar and the win's roar when a crowd pack is worn (`src/lib/sound.ts`). Each is the loudest 6 s of its loop, with a 0.12 s fade-in and a 1.5 s fade-out, encoded to Ogg Vorbis q3 and AAC 96 kbps. Cut from loops that have since left the music list (arquibancada and batucada by felix.blume, charanga by speedyrce; all CC0 1.0 on Freesound); the cuts themselves stay for the crowd packs.
 
 | File                                       | Pack in Ajustes | Cut from                         | Variation synthesised in sound.ts    |
 | ------------------------------------------ | --------------- | -------------------------------- | ------------------------------------ |
