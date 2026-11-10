@@ -329,7 +329,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
                   aria-label="Fases concluídas"
                 >
                   <div
-                    className="h-full rounded-full bg-cover transition-[width] duration-500 ease-out-expo"
+                    className="h-full rounded-full bg-cover"
                     style={{ width: `${(done / levels.length) * 100}%` }}
                   />
                 </div>

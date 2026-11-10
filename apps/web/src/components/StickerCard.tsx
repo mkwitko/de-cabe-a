@@ -1,4 +1,4 @@
-import { useState, type Ref } from 'react';
+import { memo, useState } from 'react';
 import type { Finish, Sticker } from '@decabeca/contracts';
 import { RARITY_STYLE } from './rarity';
 import { Flag } from './Flag';
@@ -13,14 +13,6 @@ const FINISH_CLASS: Record<Finish, string> = {
 };
 
 export const POSITION = { GK: 'GOL', DF: 'DEF', MF: 'MEI', FW: 'ATA' } as const;
-
-/** Holo layers follow the pointer (Lenda); skipped with reduced motion. */
-const follow = (e: React.PointerEvent<HTMLDivElement>) => {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const r = e.currentTarget.getBoundingClientRect();
-  e.currentTarget.style.setProperty('--px', String((e.clientX - r.left) / r.width));
-  e.currentTarget.style.setProperty('--py', String((e.clientY - r.top) / r.height));
-};
 
 /**
  * Inner panel of the shield (card viewBox 300×400): its top edge sits below the player's head,
@@ -50,22 +42,20 @@ function Mark({ className }: { className: string }) {
  * and up to six real numbers in two columns; unknown ones are left out, and with none known the
  * rarity takes their place. Fills its parent (which sets the 3:4 box); everything scales with the
  * card's width (container units). Album size keeps rating, position, player and name. The reveal
- * moves `stripRef` and hides the name until it is announced (`showName={false}`); `selected`
+ * hides the name until it is announced (`showName={false}`); `selected`
  * draws an outline around the shield. `finish` (Clube, Banca) lays a holographic, chrome or Clube
  * layer over the rim and face; the rarity underneath stays as earned.
  */
-export function StickerCard({
+function StickerCardView({
   sticker,
   size,
   showName = true,
-  stripRef,
   selected = false,
   finish = null,
 }: {
   sticker: Sticker;
   size: 'sm' | 'lg';
   showName?: boolean;
-  stripRef?: Ref<HTMLDivElement>;
   selected?: boolean;
   finish?: Finish | null;
 }) {
@@ -87,11 +77,6 @@ export function StickerCard({
   return (
     <div
       className={`pcard ${size === 'lg' ? 'pcard-lg' : ''} ${selected ? 'pcard-selected' : ''} ${style.className} ${finish ? FINISH_CLASS[finish] : ''}`}
-      onPointerMove={
-        style.className.includes('holo-rainbow') || finish === 'acabamento_holografico'
-          ? follow
-          : undefined
-      }
     >
       <div className="pcard-rim">
         {finish && <div aria-hidden="true" className="pcard-fin-rim" />}
@@ -184,9 +169,12 @@ export function StickerCard({
               {finish === 'acabamento_clube' && <ClubeSeal className="pcard-fin-seal" />}
             </div>
           )}
-          <div ref={stripRef} aria-hidden="true" className="holo" />
+          <div aria-hidden="true" className="holo" />
         </div>
       </div>
     </div>
   );
 }
+
+/** Memoised: opening a sticker re-renders its page, not the twelve cards on it. */
+export const StickerCard = memo(StickerCardView);

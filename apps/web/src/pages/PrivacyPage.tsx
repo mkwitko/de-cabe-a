@@ -210,13 +210,7 @@ export function PrivacyPage() {
               </li>
               <li>
                 <strong>Vestiário da página inicial</strong>: as imagens do vestiário (de dia e à
-                noite) e a poeira na luz são nossas, feitas para o De Cabeça F.C.; a animação usa o
-                player dotLottie (licença MIT).
-              </li>
-              <li>
-                <strong>Animações</strong>: o pacote rasgando das figurinhas raras, o brilho do
-                título novo, os fogos de 3 estrelas e a bola na rede também são nossos, desenhados
-                para o De Cabeça F.C. Nenhuma animação de banco de imagens.
+                noite) são nossas, feitas para o De Cabeça F.C.
               </li>
               <li>
                 Não usamos escudos de clubes. O De Cabeça F.C. não tem ligação com clubes,

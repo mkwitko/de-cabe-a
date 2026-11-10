@@ -142,7 +142,7 @@ export function Tutorial({ onDone }: { onDone: () => void }) {
       )}
       <div
         key={step}
-        className="fixed inset-x-4 mx-auto max-w-sm rounded-xl data-[side=true]:mx-0 data-[side=true]:max-w-none bg-[#f3ead2] p-4 text-[#1d2a4f] shadow-[0_18px_40px_-10px_rgb(0_0_0/0.7)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px)] motion-safe:animate-[paste_420ms_var(--ease-out-expo)]"
+        className="fixed inset-x-4 mx-auto max-w-sm rounded-xl data-[side=true]:mx-0 data-[side=true]:max-w-none bg-[#f3ead2] p-4 text-[#1d2a4f] shadow-[0_18px_40px_-10px_rgb(0_0_0/0.7)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px)] motion-safe:animate-[paste_150ms_ease-out]"
         style={ticket}
         data-side={side || wide}
       >

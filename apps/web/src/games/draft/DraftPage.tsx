@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { AttemptResponse, DraftReveal, DraftView } from '@decabeca/contracts';
-import { teamPt } from '@decabeca/contracts';
+import { teamPt } from '@decabeca/contracts/teams';
 import { btnPrimary, GameHeader, Skeleton } from '../../components/ui';
 import type { ApiError } from '../../lib/api';
 import { useAction, useAttempt } from '../../lib/game';
@@ -29,11 +29,11 @@ function matchLine(m: Match) {
   };
 }
 
-/** The XI so far on a pitch lying in perspective; each slot shows the starter once its round is played. */
+/** The XI so far on a pitch; each slot shows the starter once its round is played. */
 function Pitch({ view }: { view: DraftView }) {
   return (
-    <div className="obj-dark relative min-h-[11.5rem] flex-1 shrink-0 overflow-hidden rounded-md border-2 border-ink/70 bg-[#1f2d26] [perspective:520px]">
-      <div className="absolute inset-0 origin-bottom [transform:rotateX(24deg)] bg-[#4c6b3f] [background-image:repeating-linear-gradient(0deg,transparent_0_36px,rgb(0_0_0/0.08)_36px_72px)]">
+    <div className="obj-dark relative min-h-[11.5rem] flex-1 shrink-0 overflow-hidden rounded-md border-2 border-ink/70 bg-[#1f2d26]">
+      <div className="absolute inset-0 origin-bottom bg-[#4c6b3f] [background-image:repeating-linear-gradient(0deg,transparent_0_36px,rgb(0_0_0/0.08)_36px_72px)]">
         <div aria-hidden className="absolute inset-x-0 top-[38%] h-0.5 bg-[#f1ead2]/50" />
         <div
           aria-hidden
@@ -227,7 +227,7 @@ export function DraftPage({ level, timed = false }: { level: number; timed?: boo
         ) : view.current ? (
           <>
             <MatchCard m={view.current.match} slot={view.current.slot} />
-            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 [perspective:700px]">
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
               {view.current.players.map((p, i) => (
                 <li
                   key={p.id}

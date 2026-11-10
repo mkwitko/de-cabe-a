@@ -1,4 +1,4 @@
-import { SettingsButton } from './components/SettingsButton';
+import { onSettingsRequest, SettingsButton } from './components/SettingsButton';
 import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
@@ -6,7 +6,7 @@ import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { lazy, Suspense, useEffect, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
 import { SignInButton } from './components/SignInButton';
@@ -15,7 +15,7 @@ import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/l
 import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
 import type { GameMode, VotableMode } from '@decabeca/contracts';
 import { ModeGate } from './games/Clock';
-import { btnSecondary, Skeleton, useOnline } from './components/ui';
+import { AfterPaint, btnSecondary, Skeleton, useOnline } from './components/ui';
 
 const SettingsDialog = lazy(() =>
   import('./components/Settings').then((m) => ({ default: m.SettingsDialog })),
@@ -490,9 +490,7 @@ function Shell({ children }: { children: ReactNode }) {
           <AccountLink />
         </div>
       </header>
-      <Suspense fallback={null}>
-        <SettingsDialog />
-      </Suspense>
+      <SettingsHost />
       {!online && (
         <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
           Sem conexão. As jogadas voltam quando a internet voltar.
@@ -517,6 +515,17 @@ export function App() {
       <Route path="*" element={<PublicRoutes />} />
     </Routes>
   );
+}
+
+/** Ajustes (a separate chunk with the wardrobe) is fetched and mounted on the first open. */
+function SettingsHost() {
+  const [on, setOn] = useState(false);
+  useEffect(() => onSettingsRequest(() => setOn(true)), []);
+  return on ? (
+    <Suspense fallback={null}>
+      <SettingsDialog />
+    </Suspense>
+  ) : null;
 }
 
 function PublicRoutes() {
@@ -585,9 +594,11 @@ function PublicRoutes() {
       </Suspense>
       <LegalLinks />
       <ConsentBanner />
-      <Suspense fallback={null}>
-        <FirstRun />
-      </Suspense>
+      <AfterPaint>
+        <Suspense fallback={null}>
+          <FirstRun />
+        </Suspense>
+      </AfterPaint>
     </Shell>
   );
 }

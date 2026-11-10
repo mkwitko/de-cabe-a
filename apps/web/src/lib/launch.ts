@@ -3,7 +3,7 @@
  * Everything else stays in the code, its routes show "Em breve"; reopening is editing these lists.
  * `VITE_LAUNCH_ALL=1` opens everything (the e2e stack, which still tests the closed modes).
  */
-import { GAME_PATH, GameMode } from '@decabeca/contracts';
+import { GAME_MODES, GAME_PATH, type GameMode } from '@decabeca/contracts/modes';
 
 export const LAUNCH_ALL = import.meta.env.VITE_LAUNCH_ALL === '1';
 
@@ -46,7 +46,7 @@ export function closedRoute(pathname: string, all = LAUNCH_ALL): Closed | null {
 
 /** Achievements tied to a game or page; they show only while it is open. Others always show. */
 const GATE: Record<string, (all: boolean) => boolean> = {
-  'oito-jogos': (all) => GameMode.options.every((m) => isModeLaunched(m, all)),
+  'oito-jogos': (all) => GAME_MODES.every((m) => isModeLaunched(m, all)),
   'grid-perfeito': (all) => isModeLaunched('FOOTBALL_GRID', all),
   detetive: (all) => isModeLaunched('IMPOSTOR', all),
   prancheta: (all) => isModeLaunched('MISSING_XI', all),

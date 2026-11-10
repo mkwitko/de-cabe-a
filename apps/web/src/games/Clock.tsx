@@ -122,7 +122,7 @@ export function Countdown({ data, onTimeUp }: { data: AttemptResponse; onTimeUp:
     <p
       role="timer"
       aria-label={`Tempo restante: ${formatClock(left)}`}
-      className={`font-condensed tabular rounded-full px-3 py-1 text-2xl leading-none font-black ${low ? 'bg-cover text-ink motion-safe:animate-pulse' : 'border-2 border-chalk-soft/60 text-chalk'}`}
+      className={`font-condensed tabular rounded-full px-3 py-1 text-2xl leading-none font-black ${low ? 'bg-cover text-ink' : 'border-2 border-chalk-soft/60 text-chalk'}`}
     >
       <ClockIcon className="inline size-[0.8em] align-[-0.06em]" /> {formatClock(Math.max(0, left))}
     </p>

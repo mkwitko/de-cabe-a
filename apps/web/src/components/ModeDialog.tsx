@@ -252,7 +252,7 @@ export function ModeDialog({
       aria-labelledby="mode-title"
       onClose={onClose}
       onClick={(e) => e.target === e.currentTarget && ref.current?.close()}
-      className="mode-sheet text-chalk backdrop:bg-black/60 backdrop:backdrop-blur-[2px]"
+      className="mode-sheet text-chalk backdrop:bg-black/60"
     >
       {locker && (
         <button

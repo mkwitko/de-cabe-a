@@ -190,7 +190,7 @@ export function GridPage({
         <div
           key={flash}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_180ms_ease-out]"
         />
       )}
 
@@ -293,7 +293,7 @@ export function GridPage({
                         : example
                           ? 'border-2 border-dashed border-chalk-soft/40 text-chalk-soft'
                           : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-gold hover:bg-chalk/[0.06]'
-                    } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-gold' : ''}`}
+                    } ${miss === i ? 'motion-safe:animate-[shake_200ms_ease-out] border-gold' : ''}`}
                   >
                     {filled ? (
                       <span

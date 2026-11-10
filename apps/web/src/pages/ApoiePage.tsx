@@ -38,7 +38,7 @@ export function ApoiePage() {
         <div role="status">
           {back === 'ok' ? (
             // A pasted sticker, like a won level: the thank-you is the moment of this page.
-            <div className="mx-auto w-full max-w-5xl -rotate-1 rounded-[16px] bg-paper p-2 shadow-[0_24px_48px_-16px_rgb(0_0_0/0.65),0_2px_4px_rgb(0_0_0/0.25)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
+            <div className="mx-auto w-full max-w-5xl -rotate-1 rounded-[16px] bg-paper p-2 shadow-[0_24px_48px_-16px_rgb(0_0_0/0.65),0_2px_4px_rgb(0_0_0/0.25)] motion-safe:animate-[paste_150ms_ease-out]">
               <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[10px] bg-cover px-5 py-5 text-ink sm:px-8 sm:py-7">
                 <div className="min-w-0 flex-1 basis-64">
                   <h2 className="font-condensed text-[clamp(2.25rem,8vw,3.5rem)] leading-[0.9] font-black uppercase">

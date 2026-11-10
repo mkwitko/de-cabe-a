@@ -4,7 +4,7 @@
  * Presentation only: the list keeps one `li` per revealed club for screen readers. With a `leaf`
  * (the level, from `lg`) it lies open as a spread: the inside cover on the left, stamps on the right.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { RevealedClub } from '@decabeca/contracts';
 import { clubColor } from '../../components/ClubBadge';
 import { buzz } from '../../lib/haptics';
@@ -30,7 +30,7 @@ function Stamp({
   const longest = Math.max(6, ...club.clubName.split(/\s+/).map((w) => w.length));
   return (
     <div
-      className={`relative flex h-[92%] w-[94%] max-w-72 flex-col items-center justify-center border-[3px] border-current text-center opacity-90 mix-blend-multiply ${hit ? 'stamp-hit' : ''}`}
+      className={`relative flex h-[92%] w-[94%] max-w-72 flex-col items-center justify-center border-[3px] border-current text-center opacity-90 ${hit ? 'stamp-hit' : ''}`}
       style={
         {
           color: `var(--pp-ink, ${clubColor(club.clubName, 0.38)})`,
@@ -88,7 +88,6 @@ export function Passport({
   const landed = useRef(opened ? clubs.length : 0);
   const timer = useRef<number>(0);
   const pendingFrom = useRef<number | null>(null); // landed count to restore if the timer is cut
-  const [shaking, setShaking] = useState(false);
 
   useEffect(() => {
     if (!opened || landed.current >= clubs.length) return;
@@ -100,7 +99,6 @@ export function Passport({
       pendingFrom.current = null;
       play('stamp');
       buzz(25);
-      setShaking(true);
     }, wait);
   }, [opened, clubs.length]);
   // Idempotent under StrictMode's fake unmount: an unfired stamp is rescheduled by the effect above.
@@ -116,14 +114,11 @@ export function Passport({
   const slots = Math.max(total, clubs.length) - clubs.length;
   return (
     <div
-      className="cp-frame relative mx-auto h-full min-h-0 w-full max-w-2xl [perspective:1600px]"
+      className="cp-frame relative mx-auto h-full min-h-0 w-full max-w-2xl"
       data-spread={leaf ? '' : undefined}
       data-open={opened ? '' : undefined}
     >
-      <div
-        className={`cp-book absolute inset-0 ${shaking ? 'passport-shake' : ''}`}
-        onAnimationEnd={(e) => e.target === e.currentTarget && setShaking(false)}
-      >
+      <div className="cp-book absolute inset-0">
         {leaf && (
           <div className="cp-leaf hidden">
             <i aria-hidden="true" className="leaf-tool" />
@@ -175,7 +170,7 @@ export function Passport({
             aria-hidden={opened}
             tabIndex={opened ? -1 : 0}
             onClick={onOpen}
-            className={`passport-cover absolute inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-[min(1rem,3.5cqh)] rounded-[6px_14px_14px_6px] text-[var(--pp-foil)] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [backface-visibility:hidden] [background:radial-gradient(circle_at_30%_20%,var(--pp-leather-1),var(--pp-leather-2)_55%,var(--pp-leather-3))] [container-type:size] ${opened ? 'pointer-events-none [transform:rotateY(-178deg)]' : ''}`}
+            className={`passport-cover absolute transition-opacity duration-200 inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-[min(1rem,3.5cqh)] rounded-[6px_14px_14px_6px] text-[var(--pp-foil)] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [background:radial-gradient(circle_at_30%_20%,var(--pp-leather-1),var(--pp-leather-2)_55%,var(--pp-leather-3))] [container-type:size] ${opened ? 'pointer-events-none opacity-0' : ''}`}
           >
             <span className="font-condensed grid size-[min(6rem,24cqh)] place-items-center rounded-full border-[3px] border-[var(--pp-foil)] text-[min(1.875rem,8cqh)] font-black">
               DC

@@ -5,7 +5,7 @@
  * lies open on the bench as a spread (clues and tries on the inside cover) and the guess box sits
  * on the bench edge at the foot of the scene.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   AttemptResponse,
   CareerPathReveal,
@@ -13,6 +13,7 @@ import type {
   PlayerRef,
 } from '@decabeca/contracts';
 import { ApiError } from '../../lib/api';
+import { motionReduced } from '../../lib/settings';
 import { useGameTracking } from '../../lib/useGameTracking';
 import { useAction, useAttempt } from '../../lib/game';
 import { countryName, POSITION_LABEL } from '../../lib/format';
@@ -45,7 +46,7 @@ function Leaf({ view, won }: { view: CareerPathView; won: boolean }) {
       </p>
       <dl className="flex flex-col gap-3 border-t border-[var(--pp-foil)]/33 pt-[clamp(0.75rem,2.5cqh,1.5rem)]">
         {fields.map((f) => (
-          <div key={f.label} className="motion-safe:animate-[stamp-fade_420ms_ease-out]">
+          <div key={f.label} className="motion-safe:animate-[stamp-fade_150ms_ease-out]">
             <dt className="text-xs font-bold tracking-[0.2em] text-[var(--pp-foil-soft)] uppercase">
               {f.label}
             </dt>
@@ -82,7 +83,7 @@ function Clues({ view }: { view: CareerPathView }) {
         </div>
       )}
       {view.extraHints.nationalityCode && (
-        <div className="flex items-baseline gap-2 rounded-full bg-cover px-3 py-1 text-ink motion-safe:animate-[paste_420ms_var(--ease-out-expo)]">
+        <div className="flex items-baseline gap-2 rounded-full bg-cover px-3 py-1 text-ink motion-safe:animate-[paste_150ms_ease-out]">
           <dt className="text-xs font-bold uppercase">Nacionalidade</dt>
           <dd className="font-condensed text-lg font-black uppercase">
             {countryName(view.extraHints.nationalityCode)}
@@ -153,10 +154,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
   const [flash, setFlash] = useState(0);
   // First tap opens the cover; a resumed attempt or reduced motion starts open.
   const [tapped, setTapped] = useState(false);
-  const reduced = useRef(
-    typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
-  );
+  const reduced = useRef(motionReduced());
   const data = attempt.data;
   useGameTracking(data);
   const view = data?.view as CareerPathView | undefined;
@@ -176,13 +174,16 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
   const shut = !!view && !tapped && view.history.length === 0 && view.revealed.length <= 1;
   useEffect(() => {
     if (!shut) return;
-    const t = window.setTimeout(() => setTapped(true), 1200);
+    const t = window.setTimeout(() => startTransition(() => setTapped(true)), 1200);
     return () => window.clearTimeout(t);
   }, [shut]);
   useEffect(() => {
     if (!touring) return;
     setTapped(true);
-    const t = window.setTimeout(() => setTourReady(true), reduced.current ? 200 : 1700);
+    const t = window.setTimeout(
+      () => startTransition(() => setTourReady(true)),
+      reduced.current ? 200 : 1700,
+    );
     return () => window.clearTimeout(t);
   }, [touring]);
 
@@ -269,7 +270,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
         <div
           key={flash}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_180ms_ease-out]"
         />
       )}
 
@@ -291,7 +292,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
               clubs={clubs}
               total={clubs.length}
               opened
-              onOpen={() => setTapped(true)}
+              onOpen={() => startTransition(() => setTapped(true))}
               label="Trajetória completa"
               done
             />
@@ -304,7 +305,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
               clubs={clubs}
               total={view.maxAttempts}
               opened={opened}
-              onOpen={() => setTapped(true)}
+              onOpen={() => startTransition(() => setTapped(true))}
               label="Clubes revelados"
               leaf={<Leaf view={view} won={false} />}
             />
@@ -315,7 +316,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       {!done && (
         <form
           data-tour="guess"
-          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-1 border-t border-chalk/15 bg-pitch-deep/95 p-3 pb-1 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:shrink-0 sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4 sm:pb-2 lg:fixed lg:inset-x-0 lg:bottom-6 lg:mt-0 lg:w-[min(48rem,calc(100%-4rem))] lg:p-3 lg:pb-1 lg:shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)]"
+          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-1 border-t border-chalk/15 bg-pitch-deep/95 p-3 pb-1 sm:relative sm:inset-x-auto sm:bottom-auto sm:shrink-0 sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4 sm:pb-2 lg:fixed lg:inset-x-0 lg:bottom-6 lg:mt-0 lg:w-[min(48rem,calc(100%-4rem))] lg:p-3 lg:pb-1 lg:shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)]"
           onSubmit={(e) => {
             e.preventDefault();
             if (selected)

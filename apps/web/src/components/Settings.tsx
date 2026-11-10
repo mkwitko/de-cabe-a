@@ -224,7 +224,7 @@ export function SettingsDialog() {
       onClose={() => previewTrack(null)}
       // A click on the backdrop (the dialog element itself, outside the panel) closes it.
       onClick={(e) => e.target === e.currentTarget && close()}
-      className="settings-sheet text-chalk backdrop:bg-black/55 backdrop:backdrop-blur-[2px]"
+      className="settings-sheet text-chalk backdrop:bg-black/55"
     >
       <div className="flex max-h-[inherit] flex-col">
         <header className="scoreboard flex shrink-0 items-center gap-3 px-5 py-3">
@@ -279,7 +279,7 @@ export function SettingsDialog() {
               hint={
                 systemReduce
                   ? 'Ligado nas configurações do aparelho'
-                  : 'Menos movimento nas aberturas e no placar'
+                  : 'Desliga as animações e transições que restam'
               }
               on={systemReduce || s.reduceMotion === true}
               disabled={systemReduce}

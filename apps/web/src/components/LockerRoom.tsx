@@ -4,11 +4,9 @@
  * in its frame; visa page: the stamps), the player's stickers fanned out of it, the next-level
  * ticket clipped to it, and the closed modes as premiere posters taped to the wall.
  *
- * Entry (once per tab session): the light switches on, the cover swings open, stickers slide out,
- * the ticket lands, the last stamp thumps. Pointer (and device tilt where it needs no permission)
- * moves the scene a little. Reduced motion: the composed scene, still.
+ * The scene is still: no entry choreography, parallax or dust (performance first).
  */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useAlbum, useModeVotes, useStats, useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
@@ -20,79 +18,11 @@ import { StickerCard } from './StickerCard';
 import { TitleBadge } from './TitleBadge';
 import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
+import { useProgressive } from '../lib/progressive';
 import type { VotableMode } from '@decabeca/contracts';
 import { leaderOf, ModeArt, ModeDialog, type Locker } from './ModeDialog';
 import { useFinish } from '../lib/cosmetics';
 import { motionReduced } from '../lib/settings';
-
-// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
-const reduced = motionReduced;
-
-/**
- * Pointer (or a tilt that needs no permission) as --sx/--sy in −1…1, one write per frame onto the
- * elements that move (registered non-inherited in index.css: nothing else restyles).
- */
-function useParallax(ref: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || reduced()) return;
-    let frame = 0;
-    const set = (x: number, y: number) => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        for (const m of el.querySelectorAll<HTMLElement>('.scene-art, .scene-tilt, .ticket')) {
-          m.style.setProperty('--sx', x.toFixed(3));
-          m.style.setProperty('--sy', y.toFixed(3));
-        }
-      });
-    };
-    const clamp = (n: number) => Math.max(-1, Math.min(1, n));
-    const onPointer = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
-      set((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
-    };
-    const onTilt = (e: DeviceOrientationEvent) => {
-      if (e.gamma == null || e.beta == null) return;
-      set(clamp(e.gamma / 25), clamp((e.beta - 45) / 25));
-    };
-    addEventListener('pointermove', onPointer, { passive: true });
-    // iOS asks for permission before it reports tilt; there we keep to the pointer.
-    const D = globalThis.DeviceOrientationEvent as unknown as
-      { requestPermission?: unknown } | undefined;
-    const tilt = D && typeof D.requestPermission !== 'function';
-    if (tilt) addEventListener('deviceorientation', onTilt, { passive: true });
-    return () => {
-      cancelAnimationFrame(frame);
-      removeEventListener('pointermove', onPointer);
-      if (tilt) removeEventListener('deviceorientation', onTilt);
-    };
-  }, [ref]);
-}
-
-/** The dust in the light comes after the entry, and only for those who accept motion. */
-function useDust() {
-  const [on, setOn] = useState(false);
-  useEffect(() => {
-    if (reduced()) return;
-    const t = setTimeout(() => setOn(true), 2200);
-    return () => clearTimeout(t);
-  }, []);
-  return on;
-}
-
-/** Motes drifting in the light: CSS only (transform/opacity, compositor), no player download. */
-const DUST = Array.from({ length: 8 }, (_, i) => {
-  const r = (n: number) => ((i * 7919 + n * 104729) % 1000) / 1000;
-  return {
-    left: `${10 + r(1) * 80}%`,
-    top: `${10 + r(2) * 80}%`,
-    '--s': `${2 + r(3) * 3}px`,
-    '--dx': `${(r(4) - 0.5) * 40}px`,
-    '--dy': `${-20 - r(5) * 40}px`,
-    animationDuration: `${6 + r(6) * 6}s`,
-    animationDelay: `${-r(7) * 8}s`,
-  } as React.CSSProperties;
-});
 
 export type { Locker };
 
@@ -139,6 +69,9 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
   const [params, setParams] = useSearchParams();
   const row = useRef<HTMLUListElement>(null);
   const votes = useModeVotes().data;
+  // the posters hang off-screen to the right: they mount two at a time in idle time, so no one
+  // task renders (and lays out) the whole wall
+  const shown = useProgressive(lockers.length, 2);
   if (!lockers.length) return null;
   const open = lockers.find((l) => l.key === params.get('modo')) ?? null;
   const leader = leaderOf(votes?.modes);
@@ -152,7 +85,10 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
     );
   const page = (dir: 1 | -1) => {
     const el = row.current;
-    el?.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: reduced() ? 'auto' : 'smooth' });
+    el?.scrollBy({
+      left: dir * el.clientWidth * 0.75,
+      behavior: motionReduced() ? 'auto' : 'smooth',
+    });
   };
   const arrow =
     'grid size-11 place-items-center rounded-full border border-chalk-soft/40 bg-black/55 text-chalk transition-colors hover:bg-black/80 hover:text-cover';
@@ -185,8 +121,12 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
           </button>
         </div>
       </div>
-      <ul ref={row} aria-label="Modos que chegam em breve" className="poster-row">
-        {lockers.map((l, i) => {
+      <ul
+        ref={row}
+        aria-label="Modos que chegam em breve"
+        className={`poster-row ${shown < lockers.length ? 'poster-row-wait' : ''}`}
+      >
+        {lockers.slice(0, shown).map((l, i) => {
           const n = votes?.modes.find((m) => m.mode === l.key)?.votes;
           const mine = votes?.mine === l.key;
           return (
@@ -239,24 +179,9 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
 
 export function LockerRoom({ lockers }: { lockers: Locker[] }) {
   const finishOf = useFinish();
-  const scene = useRef<HTMLDivElement>(null);
   const track = useTrack('CAREER_PATH');
   const stats = useStats();
   const album = useAlbum();
-  const dust = useDust();
-  useParallax(scene);
-
-  // The full entry plays once per tab; coming back from a level, the scene is simply there.
-  // (A mark older than a moment means an earlier visit; React's dev double mount stays within it.)
-  useLayoutEffect(() => {
-    try {
-      const at = Number(sessionStorage.getItem('scene-seen'));
-      if (!at) sessionStorage.setItem('scene-seen', String(Date.now()));
-      else if (Date.now() - at > 1500) scene.current?.setAttribute('data-still', '');
-    } catch {
-      /* no storage: play it every time */
-    }
-  }, []);
 
   const levels = track.data?.levels ?? [];
   const done = levels.filter((l) => l.state === 'done').length;
@@ -284,19 +209,8 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
       : 'Jogar';
 
   return (
-    <div ref={scene} className="scene relative">
-      <div aria-hidden="true" className="scene-art">
-        <div className="scene-cone" />
-        {dust && (
-          <div className="scene-dust">
-            {DUST.map((m, i) => (
-              <i key={i} style={m} />
-            ))}
-          </div>
-        )}
-      </div>
-      {/* the room before the light comes on, over everything for a moment */}
-      <div aria-hidden="true" className="scene-dark" />
+    <div className="scene relative">
+      <div aria-hidden="true" className="scene-art" />
 
       <section
         aria-labelledby="cp-name"
@@ -424,14 +338,6 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                   </div>
                 </>
               )}
-              {/* the closed cover, swinging open on the way in */}
-              <div aria-hidden="true" className="cover-front">
-                <div className="cover-face">
-                  <span className="font-condensed text-[clamp(2.4rem,10vw,4.5rem)] leading-[0.82] font-black uppercase">
-                    Career Path
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
