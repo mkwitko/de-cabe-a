@@ -1,4 +1,4 @@
-import { SettingsButton, SettingsDialog } from './components/Settings';
+import { SettingsButton } from './components/SettingsButton';
 import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
@@ -6,7 +6,6 @@ import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { FirstRun } from './components/Welcome';
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
@@ -15,15 +14,18 @@ import { ComingSoonPage } from './pages/ComingSoonPage';
 import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/launch';
 import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
 import type { GameMode, VotableMode } from '@decabeca/contracts';
-import { TrackPage } from './pages/TrackPage';
 import { ModeGate } from './games/Clock';
 import { btnSecondary, Skeleton, useOnline } from './components/ui';
 
+const SettingsDialog = lazy(() =>
+  import('./components/Settings').then((m) => ({ default: m.SettingsDialog })),
+);
+const FirstRun = lazy(() => import('./components/Welcome').then((m) => ({ default: m.FirstRun })));
+const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
+const loadCareerPath = () => import('./games/career-path/CareerPathPage');
 const AdminApp = lazy(() => import('./admin/AdminApp'));
 // Each screen loads on demand: the first visit downloads only the shell and the home.
-const CareerPathPage = lazy(() =>
-  import('./games/career-path/CareerPathPage').then((m) => ({ default: m.CareerPathPage })),
-);
+const CareerPathPage = lazy(() => loadCareerPath().then((m) => ({ default: m.CareerPathPage })));
 const GridPage = lazy(() => import('./games/grid/GridPage').then((m) => ({ default: m.GridPage })));
 const ImpostorPage = lazy(() =>
   import('./games/impostor/ImpostorPage').then((m) => ({ default: m.ImpostorPage })),
@@ -350,6 +352,11 @@ export function Home() {
 }
 
 function HomeRoute() {
+  // Warm the launch level's chunk once the home is idle, so opening it is instant.
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 2000));
+    idle(() => void loadCareerPath());
+  }, []);
   return (
     <>
       <Home />
@@ -477,7 +484,9 @@ function Shell({ children }: { children: ReactNode }) {
           <AccountLink />
         </div>
       </header>
-      <SettingsDialog />
+      <Suspense fallback={null}>
+        <SettingsDialog />
+      </Suspense>
       {!online && (
         <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
           Sem conexão. As jogadas voltam quando a internet voltar.
@@ -569,7 +578,9 @@ function PublicRoutes() {
       </Suspense>
       <LegalLinks />
       <ConsentBanner />
-      <FirstRun />
+      <Suspense fallback={null}>
+        <FirstRun />
+      </Suspense>
     </Shell>
   );
 }

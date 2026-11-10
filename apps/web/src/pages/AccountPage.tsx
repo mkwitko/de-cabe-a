@@ -19,7 +19,7 @@ import { useEntitlements } from '../lib/billing';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { AccountData } from '../components/AccountData';
-import { openSettings } from '../components/Settings';
+import { openSettings } from '../components/SettingsButton';
 import { SupporterTag } from '../components/MemberCard';
 import { signInHref, signUpHref } from '../components/SignInButton';
 
