@@ -4,7 +4,8 @@
  * Requests are the same as before (Better Auth through /v1/auth); only the experience changed.
  */
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type { PublicConfig } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { useAccount } from '../lib/game';
 import { StarIcon } from './Stars';
@@ -81,7 +82,7 @@ function explain(e: ApiError, mode: AuthMode): string {
   if (e.code === 'NETWORK_ERROR')
     return 'Sem conexão com o servidor. Confira a internet e tente de novo.';
   if (e.code === 'INVALID_EMAIL_OR_PASSWORD')
-    return 'E-mail ou senha incorretos. Confira os dois ou crie uma senha nova em “Esqueci a senha”.';
+    return 'E-mail ou senha incorretos. Confira os dois e tente de novo.';
   if (e.status === 429) return 'Muitas tentativas seguidas. Espere um minuto e tente de novo.';
   if (mode === 'forgot' && e.status >= 500)
     return 'Não conseguimos enviar o link agora. Tente de novo em alguns minutos.';
@@ -101,6 +102,12 @@ export function AuthGate({
   stickers?: number | undefined;
 }) {
   const act = useAccount();
+  // "Continuar com Google" only when the server has the provider configured.
+  const googleOn = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api<PublicConfig>('/v1/config'),
+    staleTime: Infinity,
+  }).data?.google;
   const [mode, setModeRaw] = useState<AuthMode>(initial);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -173,9 +180,22 @@ export function AuthGate({
   };
 
   const error = (act.error ?? google.error) as ApiError | null;
+  const message = act.error
+    ? explain(act.error as ApiError, mode)
+    : google.error
+      ? (google.error as ApiError).code === 'NETWORK_ERROR'
+        ? explain(google.error as ApiError, mode)
+        : 'Não deu para abrir o Google agora. Entre com e-mail e senha ou tente de novo daqui a pouco.'
+      : null;
   const exists = error?.code?.startsWith('USER_ALREADY_EXISTS');
-  const heading =
-    mode === 'register' ? 'Criar conta' : mode === 'login' ? 'Entrar' : 'Esqueci a senha';
+  const wrong = error?.code === 'INVALID_EMAIL_OR_PASSWORD';
+  const heading = sentTo
+    ? 'Link enviado'
+    : mode === 'register'
+      ? 'Criar conta'
+      : mode === 'login'
+        ? 'Entrar'
+        : 'Esqueci a senha';
   const tab = (m: AuthMode, label: string) => (
     <button
       type="button"
@@ -191,7 +211,6 @@ export function AuthGate({
     <Ticket
       stub={
         <>
-          <TicketBrand />
           <h1 className="font-condensed text-[clamp(2.5rem,9vw,4rem)] leading-[0.88] font-black uppercase">
             {mode === 'register' ? (
               <>
@@ -210,34 +229,41 @@ export function AuthGate({
               </>
             )}
           </h1>
-          <ul className="flex flex-col gap-3 text-[0.95rem]">
-            <li className="flex gap-3">
-              <StarIcon className="mt-0.5 size-5 shrink-0 text-cover" />
-              <span>Leve suas estrelas e figurinhas para qualquer aparelho.</span>
-            </li>
-            <li className="flex gap-3">
-              <StarIcon className="mt-0.5 size-5 shrink-0 text-cover" />
-              <span>
-                O que você jogou como convidado vem junto
-                {stars > 0 || stickers ? (
-                  <>
-                    :{' '}
-                    <strong className="tabular text-cover">
-                      {stars} {stars === 1 ? 'estrela' : 'estrelas'}
-                      {stickers
-                        ? ` e ${stickers} ${stickers === 1 ? 'figurinha' : 'figurinhas'}`
-                        : ''}
-                    </strong>
-                  </>
-                ) : null}
-                .
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <StarIcon className="mt-0.5 size-5 shrink-0 text-cover" />
-              <span>Sem conta, você continua jogando aqui. A conta é opcional.</span>
-            </li>
-          </ul>
+          {mode === 'forgot' && (
+            <p className="max-w-[34ch] text-[0.95rem] text-chalk-soft">
+              Suas estrelas e figurinhas ficam na conta. Só a senha muda.
+            </p>
+          )}
+          {mode !== 'forgot' && (
+            <ul className="flex flex-col gap-3 text-[0.95rem]">
+              <li className="flex gap-3 max-md:hidden">
+                <StarIcon className="mt-0.5 size-5 shrink-0 text-cover" />
+                <span>Leve suas estrelas e figurinhas para qualquer aparelho.</span>
+              </li>
+              <li className="flex gap-3">
+                <StarIcon className="mt-0.5 size-5 shrink-0 text-cover" />
+                <span>
+                  O que você jogou como convidado vem junto
+                  {stars > 0 || stickers ? (
+                    <>
+                      :{' '}
+                      <strong className="tabular text-cover">
+                        {stars} {stars === 1 ? 'estrela' : 'estrelas'}
+                        {stickers
+                          ? ` e ${stickers} ${stickers === 1 ? 'figurinha' : 'figurinhas'}`
+                          : ''}
+                      </strong>
+                    </>
+                  ) : null}
+                  .
+                </span>
+              </li>
+              <li className="flex gap-3 max-md:hidden">
+                <StarIcon className="mt-0.5 size-5 shrink-0 text-cover" />
+                <span>Sem conta, você continua jogando aqui. A conta é opcional.</span>
+              </li>
+            </ul>
+          )}
         </>
       }
     >
@@ -274,7 +300,7 @@ export function AuthGate({
             <p className="text-ink/75">
               Digite o e-mail da conta. Mandamos um link para você criar uma senha nova.
             </p>
-          ) : (
+          ) : googleOn ? (
             <>
               <button
                 type="button"
@@ -289,7 +315,7 @@ export function AuthGate({
                 ou com e-mail
               </p>
             </>
-          )}
+          ) : null}
           <Field
             label="E-mail"
             name="email"
@@ -343,7 +369,16 @@ export function AuthGate({
               role="alert"
               className="flex flex-col gap-1 rounded-lg border-2 border-[oklch(0.55_0.19_28)]/40 bg-[oklch(0.55_0.19_28)]/[0.08] px-4 py-3 font-semibold"
             >
-              <p>{explain(error, mode)}</p>
+              <p>{message}</p>
+              {wrong && (
+                <button
+                  type="button"
+                  className="min-h-10 self-start underline underline-offset-4"
+                  onClick={() => setMode('forgot')}
+                >
+                  Esqueci a senha: criar uma nova
+                </button>
+              )}
               {exists && (
                 <button
                   type="button"

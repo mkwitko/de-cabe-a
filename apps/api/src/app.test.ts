@@ -16,6 +16,29 @@ describe('app', () => {
     expect(res.json()).toEqual({ ok: true });
   });
 
+  it('GET /v1/config says whether Google sign-in is configured', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/config' });
+    expect(res.json()).toEqual({ google: false });
+    const withGoogle = buildApp(
+      { logger: false },
+      {
+        prisma: createPrisma('postgresql://unused'),
+        adminToken: 'x'.repeat(16),
+        authOptions: {
+          secret: 's'.repeat(32),
+          baseURL: 'http://localhost',
+          trustedOrigins: [],
+          google: { clientId: 'id', clientSecret: 'secret' },
+          sendEmail: async () => {},
+        },
+      },
+    );
+    expect((await withGoogle.inject({ method: 'GET', url: '/v1/config' })).json()).toEqual({
+      google: true,
+    });
+    await withGoogle.close();
+  });
+
   it('unknown routes return 404 in the error format', async () => {
     const res = await app.inject({ method: 'GET', url: '/v1/nope' });
     expect(res.statusCode).toBe(404);

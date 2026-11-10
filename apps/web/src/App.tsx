@@ -231,6 +231,9 @@ export const GAMES = [
 /** Entrar for guests, the initial as an avatar once signed in (to the profile). */
 function AccountLink() {
   const { data: me } = useMe();
+  const { pathname } = useLocation();
+  // On /entrar itself the button would point at the page already open.
+  if (!me?.account && pathname === '/entrar') return null;
   if (!me?.account)
     return (
       <SignInButton
