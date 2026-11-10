@@ -7,7 +7,9 @@ export type Scene = 'menu' | 'level';
 const KEY = 'dc_music';
 const VOLUME = 0.35;
 const FADE_MS = 700;
-const SRC: Record<Scene, string> = { menu: '/audio/menu.ogg', level: '/audio/level.ogg' };
+/** Ogg where it plays, AAC for the Safari versions that cannot decode Ogg in <audio>. */
+const ext = () => (new Audio().canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a');
+const src = (s: Scene) => `/audio/${s}.${ext()}`;
 
 /** /career-path/3, /grid/12, ... are levels; the track page (/career-path) and the rest are menu. */
 const LEVEL_RE =
@@ -57,9 +59,17 @@ function sync() {
   for (const s of ['menu', 'level'] as const) {
     const active = want && s === scene;
     let el = els[s];
+    if (el && hidden) {
+      // rAF is suspended in hidden tabs, so a fade would never finish: stop at once.
+      cancelAnimationFrame(fades.get(el) ?? 0);
+      fades.delete(el);
+      el.pause();
+      el.volume = 0;
+      continue;
+    }
     if (active) {
       if (!el) {
-        el = els[s] = new Audio(SRC[s]);
+        el = els[s] = new Audio(src(s));
         el.loop = true;
         el.volume = 0;
       }
@@ -88,12 +98,20 @@ export function setScene(s: Scene) {
 }
 
 if (typeof document !== 'undefined') {
+  // Only these events grant user activation on touch (pointerdown does not). The listeners stay
+  // until a play() actually succeeds, so a rejected first try gets another gesture.
+  const GESTURES = ['pointerup', 'click', 'touchend', 'keydown'] as const;
   const unlock = () => {
     unlocked = true;
     sync();
-    for (const e of ['pointerdown', 'keydown'] as const) removeEventListener(e, unlock);
+    const el = els[scene];
+    if (!enabled || !el) return;
+    void el
+      .play()
+      .then(() => GESTURES.forEach((e) => removeEventListener(e, unlock)))
+      .catch(() => undefined);
   };
-  for (const e of ['pointerdown', 'keydown'] as const) addEventListener(e, unlock);
+  GESTURES.forEach((e) => addEventListener(e, unlock));
   document.addEventListener('visibilitychange', () => {
     hidden = document.hidden;
     sync();
