@@ -263,7 +263,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
             <Icon name="skip" /> Pular e ver o próximo clube
           </button>
           {action.error && (
-            <p role="alert" className="text-sm text-cover">
+            <p role="alert" className="text-sm text-gold">
               {(action.error as ApiError).message}
             </p>
           )}

@@ -1,18 +1,25 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/archivo/wdth.css';
 
-/* Album world: a printed sticker-album page. Pitch green owns the page; stickers are paper. */
+/*
+ * Album world: a printed sticker-album page. The field (pitch) owns the page; stickers are paper.
+ * Tokens are the LIGHT theme (a daytime pitch, cream paper). Dark overrides below.
+ * chalk = text on the field, chalk-soft = secondary text on the field; both flip with the theme.
+ * Objects (scoreboard, chalkboard, TV) wrap in .obj-dark to keep their night materials in light.
+ */
 @theme {
   --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --color-pitch: oklch(0.46 0.12 152);
-  --color-pitch-deep: oklch(0.38 0.1 152);
-  --color-chalk: oklch(0.98 0.012 150);
-  --color-chalk-soft: oklch(0.9 0.035 150);
-  --color-paper: oklch(0.985 0.006 100);
+  --color-pitch: oklch(0.9 0.07 148);
+  --color-pitch-deep: oklch(0.84 0.09 148);
+  --color-chalk: oklch(0.24 0.06 152);
+  --color-chalk-soft: oklch(0.38 0.06 152);
+  --color-paper: oklch(0.975 0.014 95);
   --color-cover: oklch(0.88 0.165 95);
   --color-ink: oklch(0.27 0.07 152);
   --color-stamp: oklch(0.9 0.16 95);
+  /* yellow used as text/outline on the field: gold in light, cover in dark */
+  --color-gold: oklch(0.45 0.11 75);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -21,18 +28,41 @@
 
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+    }
   }
 
+  :root[data-theme='dark'],
+  .obj-dark {
+    --color-pitch: oklch(0.22 0.045 155);
+    --color-pitch-deep: oklch(0.17 0.035 155);
+    --color-chalk: oklch(0.95 0.015 150);
+    --color-chalk-soft: oklch(0.8 0.04 150);
+    --color-paper: oklch(0.93 0.008 100);
+    --color-cover: oklch(0.84 0.15 95);
+    --color-gold: oklch(0.84 0.15 95);
+  }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme='light']) {
       --color-pitch: oklch(0.22 0.045 155);
       --color-pitch-deep: oklch(0.17 0.035 155);
       --color-chalk: oklch(0.95 0.015 150);
       --color-chalk-soft: oklch(0.8 0.04 150);
       --color-paper: oklch(0.93 0.008 100);
       --color-cover: oklch(0.84 0.15 95);
+      --color-gold: oklch(0.84 0.15 95);
     }
+  }
+  /* .obj-dark keeps its own text colour even inside a light page */
+  .obj-dark {
+    color: var(--color-chalk);
   }
 
   /* No orphan word under a paragraph; headings balance. */
@@ -102,7 +132,7 @@
   }
 
   :focus-visible {
-    outline: 3px solid var(--color-cover);
+    outline: 3px solid var(--color-gold);
     outline-offset: 3px;
   }
 }

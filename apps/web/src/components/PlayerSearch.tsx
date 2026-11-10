@@ -214,7 +214,7 @@ export function PlayerSearch({
       </ul>
       <PlayerCardDialog playerId={cardId} onClose={() => setCardId(null)} />
       {status === 'error' && (
-        <p role="alert" className="mt-1 text-sm text-cover">
+        <p role="alert" className="mt-1 text-sm text-gold">
           Não deu para buscar agora. Confira a conexão.
         </p>
       )}

@@ -32,7 +32,7 @@ function matchLine(m: Match) {
 /** The XI so far on a pitch lying in perspective; each slot shows the starter once its round is played. */
 function Pitch({ view }: { view: DraftView }) {
   return (
-    <div className="relative min-h-[11.5rem] flex-1 shrink-0 overflow-hidden rounded-md border-2 border-ink/70 bg-[#1f2d26] [perspective:520px]">
+    <div className="obj-dark relative min-h-[11.5rem] flex-1 shrink-0 overflow-hidden rounded-md border-2 border-ink/70 bg-[#1f2d26] [perspective:520px]">
       <div className="absolute inset-0 origin-bottom [transform:rotateX(24deg)] bg-[#4c6b3f] [background-image:repeating-linear-gradient(0deg,transparent_0_36px,rgb(0_0_0/0.08)_36px_72px)]">
         <div aria-hidden className="absolute inset-x-0 top-[38%] h-0.5 bg-[#f1ead2]/50" />
         <div
@@ -52,7 +52,7 @@ function Pitch({ view }: { view: DraftView }) {
               return (
                 <span
                   key={i}
-                  className={`flex min-h-11 min-w-0 max-w-28 flex-1 items-center justify-center rounded-lg px-1 text-center text-[0.6875rem] leading-tight font-bold sm:text-xs ${r ? (r.correct ? 'bg-cover text-ink' : 'bg-[#1f2d26] text-chalk-soft line-through') : i === view.round ? 'border-2 border-cover bg-[#1f2d26]/70 text-cover' : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft'}`}
+                  className={`flex min-h-11 min-w-0 max-w-28 flex-1 items-center justify-center rounded-lg px-1 text-center text-[0.6875rem] leading-tight font-bold sm:text-xs ${r ? (r.correct ? 'bg-cover text-ink' : 'bg-[#1f2d26] text-chalk-soft line-through') : i === view.round ? 'border-2 border-cover bg-[#1f2d26]/70 text-gold' : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft'}`}
                 >
                   <span className="sr-only">{r ? (r.correct ? 'acertou: ' : 'errou: ') : ''}</span>
                   {name ?? SLOT_PT[i === 0 ? 'GK' : i < 5 ? 'DF' : i < 8 ? 'MF' : 'FW']}

@@ -239,7 +239,7 @@ export function HigherLowerPage({ level, timed = false }: { level: number; timed
         return (
           <li
             key={i}
-            className={`font-condensed grid size-7 place-items-center rounded-md text-sm font-black ${r ? (r.correct ? 'bg-cover text-ink' : 'bg-chalk/15 text-chalk-soft line-through') : i === view.round ? 'border-2 border-cover text-cover' : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70'}`}
+            className={`font-condensed grid size-7 place-items-center rounded-md text-sm font-black ${r ? (r.correct ? 'bg-cover text-ink' : 'bg-chalk/15 text-chalk-soft line-through') : i === view.round ? 'border-2 border-cover text-gold' : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70'}`}
           >
             <span className="sr-only">{r ? (r.correct ? 'acertou' : 'errou') : 'a jogar'} </span>
             {i + 1}
@@ -284,7 +284,7 @@ export function HigherLowerPage({ level, timed = false }: { level: number; timed
       )}
       <section
         aria-label="Telão"
-        className={`relative mx-auto flex w-full max-w-5xl flex-col gap-3 overflow-hidden rounded-xl border-[6px] border-[#2a2f33] bg-[linear-gradient(#15181a,#0b0d0e)] p-3 shadow-[inset_0_0_30px_#000a] sm:p-5 ${done ? 'min-h-[30rem]' : 'min-h-0 flex-1'}`}
+        className={`obj-dark relative mx-auto flex w-full max-w-5xl flex-col gap-3 overflow-hidden rounded-xl border-[6px] border-[#2a2f33] bg-[linear-gradient(#15181a,#0b0d0e)] p-3 shadow-[inset_0_0_30px_#000a] sm:p-5 ${done ? 'min-h-[30rem]' : 'min-h-0 flex-1'}`}
       >
         <i
           aria-hidden="true"

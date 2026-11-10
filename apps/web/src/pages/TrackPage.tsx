@@ -31,7 +31,7 @@ const HOUSE: Record<GameMode, { shape: string; done: string; dark: boolean }> = 
   FOOTBALL_GRID: {
     // chalk on the board
     shape: 'rounded-full border-2',
-    done: 'border-chalk bg-[#1f2d26] text-chalk',
+    done: 'obj-dark border-chalk bg-[#1f2d26] text-chalk',
     dark: true,
   },
   TIMELINE: {

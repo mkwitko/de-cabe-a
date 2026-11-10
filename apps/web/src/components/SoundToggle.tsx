@@ -13,8 +13,8 @@ export function SoundToggle({ withLabel = false }: { withLabel?: boolean }) {
       onClick={() => setSound(!on)}
       className={
         withLabel
-          ? `flex min-h-11 items-center gap-3 font-semibold ${on ? 'text-cover' : 'text-chalk'}`
-          : `font-condensed flex min-h-11 min-w-11 items-center justify-center gap-1.5 text-lg font-extrabold tracking-wide uppercase ${on ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`
+          ? `flex min-h-11 items-center gap-3 font-semibold ${on ? 'text-gold' : 'text-chalk'}`
+          : `font-condensed flex min-h-11 min-w-11 items-center justify-center gap-1.5 text-lg font-extrabold tracking-wide uppercase ${on ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`
       }
     >
       <svg

@@ -31,8 +31,15 @@
       content="Figurinha amarela com o nome De Cabeça sobre um campo verde"
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#1f6b3d" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#bfe8c4" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f1f16" media="(prefers-color-scheme: dark)" />
+    <script>
+      // Apply the saved theme before first paint (no flash); no saved choice follows the system.
+      try {
+        var t = localStorage.getItem('dc-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
     <title>De Cabeça F.C. · Minijogos de futebol</title>
     <script type="application/ld+json">
       {

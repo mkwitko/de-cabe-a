@@ -408,7 +408,7 @@ function Vote({ id, myVote }: { id: string; myVote: boolean | null }) {
           </button>
         ))}
       </div>
-      {vote.error && <p className="text-sm text-cover">{vote.error.message}</p>}
+      {vote.error && <p className="text-sm text-gold">{vote.error.message}</p>}
       <button
         type="button"
         disabled={reported}

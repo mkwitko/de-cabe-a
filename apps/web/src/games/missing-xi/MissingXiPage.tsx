@@ -140,7 +140,7 @@ function Pitch({ slots, freshAt }: { slots: Slot[]; freshAt: (i: number) => bool
     .sort((a, b) => b[0] - a[0])
     .map(([, r]) => r.sort((a, b) => sideOf(a.position) - sideOf(b.position) || a.i - b.i));
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden border-2 border-[#2b2418] bg-[#3a372e] [background-image:radial-gradient(#0000004d_1px,transparent_1.5px)] [background-size:6px_6px] [perspective:560px]">
+    <div className="obj-dark relative min-h-0 flex-1 overflow-hidden border-2 border-[#2b2418] bg-[#3a372e] [background-image:radial-gradient(#0000004d_1px,transparent_1.5px)] [background-size:6px_6px] [perspective:560px]">
       <div className="absolute inset-0 origin-bottom [transform:rotateX(32deg)] bg-[#6f7a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_44px,rgb(0_0_0/0.07)_44px_88px)]">
         {/* Field markings: halfway line, centre circle and the box. */}
         <div aria-hidden className="absolute inset-x-0 top-[12%] h-0.5 bg-[#f1ead2]/60" />

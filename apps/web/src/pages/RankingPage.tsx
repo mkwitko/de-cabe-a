@@ -112,7 +112,7 @@ export function RankingPage() {
         <Skeleton className="h-96" />
       ) : (
         /* stadium scoreboard: dark LED panel, scanlines, amber condensed digits, row lines */
-        <div className="flex flex-col gap-4 rounded-xl border-[6px] border-[#2a2f33] bg-[#0b0d0e] p-3 text-[#f5e27a] shadow-[inset_0_0_30px_#000a,0_10px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,#0004_0_1px,transparent_1px_3px)] sm:p-5">
+        <div className="obj-dark flex flex-col gap-4 rounded-xl border-[6px] border-[#2a2f33] bg-[#0b0d0e] p-3 text-[#f5e27a] shadow-[inset_0_0_30px_#000a,0_10px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,#0004_0_1px,transparent_1px_3px)] sm:p-5">
           <p className="font-condensed flex items-center justify-between gap-3 border-b-2 border-[#f5e27a]/40 pb-2 text-sm font-bold tracking-[0.2em] uppercase">
             <span>
               {data.entries.length} {data.entries.length === 1 ? 'jogador' : 'jogadores'}

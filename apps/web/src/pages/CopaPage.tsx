@@ -72,7 +72,7 @@ function Setup({
   const [formation, setFormation] = useState('4-3-3');
   const [difficulty, setDifficulty] = useState('olheiro');
   const choice = (on: boolean) =>
-    `flex min-h-12 cursor-pointer flex-col justify-center rounded-xl border-2 px-4 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${on ? 'border-cover bg-cover text-ink' : 'border-white/25 hover:bg-white/[0.08]'}`;
+    `flex min-h-12 cursor-pointer flex-col justify-center rounded-xl border-2 px-4 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${on ? 'border-cover bg-cover text-ink' : 'border-chalk/25 hover:bg-white/[0.08]'}`;
   return (
     <form
       className="flex flex-col gap-6"
@@ -194,7 +194,7 @@ function Team({ run }: { run: CopaRunView }) {
             </ol>
           ) : null,
         )}
-        {!run.xi.length && <p className="text-center text-sm text-white/80">Ninguém ainda.</p>}
+        {!run.xi.length && <p className="text-center text-sm text-chalk/80">Ninguém ainda.</p>}
       </PerspectivePitch>
       <div>
         <div className="flex items-baseline justify-between text-sm font-semibold">
@@ -215,10 +215,10 @@ function Team({ run }: { run: CopaRunView }) {
           />
         </div>
         {run.chemistry.links.length > 0 && (
-          <ul className="mt-2 flex flex-col gap-1 text-sm text-white/80">
+          <ul className="mt-2 flex flex-col gap-1 text-sm text-chalk/80">
             {run.chemistry.links.slice(0, 6).map((l) => (
               <li key={l.a + l.b}>
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-chalk">
                   {l.a} e {l.b}
                 </span>
                 : {why(l.why)}
@@ -226,7 +226,7 @@ function Team({ run }: { run: CopaRunView }) {
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-white/75">
+        <p className="mt-2 text-xs text-chalk/75">
           Química vem de quem jogou junto de verdade: mesma seleção na mesma Copa, mesmo clube na
           mesma época ou mesmo país.
         </p>
@@ -247,7 +247,7 @@ function Opponent({ side }: { side: Side }) {
           </span>
         )}
       </p>
-      <p className="text-sm font-semibold text-white/85">
+      <p className="text-sm font-semibold text-chalk/85">
         {side.strength !== null && `Força ${side.strength} · `}Destaques: {side.stars.join(', ')}
       </p>
     </div>
@@ -270,9 +270,9 @@ function Report({ match }: { match: Match }) {
   return (
     <section
       aria-labelledby="partida"
-      className="flex flex-col gap-3 rounded-lg border-l-8 border-cover bg-white/10 p-4 text-white"
+      className="flex flex-col gap-3 rounded-lg border-l-8 border-gold bg-chalk/10 p-4 text-chalk"
     >
-      <h2 id="partida" className="text-sm font-semibold text-white/80">
+      <h2 id="partida" className="text-sm font-semibold text-chalk/80">
         {match.stage} · {match.tactic}
       </h2>
       <p
@@ -317,7 +317,7 @@ function Group({ run }: { run: CopaRunView }) {
         Grupo
       </LowerThird>
       <table className="mt-2 w-full text-sm">
-        <thead className="text-left text-white/75">
+        <thead className="text-left text-chalk/75">
           <tr>
             <th className="py-1 font-semibold">Seleção</th>
             <th className="w-8 text-right font-semibold">J</th>
@@ -329,7 +329,7 @@ function Group({ run }: { run: CopaRunView }) {
           {run.group.map((r, i) => (
             <tr
               key={r.team + r.season}
-              className={`border-t border-chalk/15 ${r.season ? '' : 'font-bold text-cover'}`}
+              className={`border-t border-chalk/15 ${r.season ? '' : 'font-bold text-gold'}`}
             >
               <td className="py-1.5">
                 {i + 1}. {sideName(r)}
@@ -341,7 +341,7 @@ function Group({ run }: { run: CopaRunView }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-1 text-xs text-white/75">Os dois primeiros vão às oitavas.</p>
+      <p className="mt-1 text-xs text-chalk/75">Os dois primeiros vão às oitavas.</p>
     </section>
   );
 }
@@ -412,7 +412,7 @@ export function CopaPage() {
         }
       >
         {error && (
-          <p role="alert" className="font-semibold text-cover">
+          <p role="alert" className="font-semibold text-gold">
             {error.message}
           </p>
         )}
@@ -432,12 +432,12 @@ export function CopaPage() {
                       </LowerThird>
                       <Opponent side={run.next.opponent} />
                       <fieldset className="flex flex-col gap-2">
-                        <legend className="mb-1 font-semibold text-white/85">Tática</legend>
+                        <legend className="mb-1 font-semibold text-chalk/85">Tática</legend>
                         <div className="grid grid-cols-3 gap-2">
                           {TACTICS.map((t) => (
                             <label
                               key={t.id}
-                              className={`flex min-h-12 min-w-0 cursor-pointer flex-col justify-center rounded-xl border-2 px-2.5 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${tactic === t.id ? 'border-cover bg-cover text-ink' : 'border-white/25'}`}
+                              className={`flex min-h-12 min-w-0 cursor-pointer flex-col justify-center rounded-xl border-2 px-2.5 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${tactic === t.id ? 'border-cover bg-cover text-ink' : 'border-chalk/25'}`}
                             >
                               <input
                                 type="radio"

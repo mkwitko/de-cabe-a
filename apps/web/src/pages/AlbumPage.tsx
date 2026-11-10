@@ -45,7 +45,7 @@ export function AlbumPage() {
   return (
     <>
       <GameHeader title="Meu álbum" />
-      <p className="font-condensed tabular mt-4 text-5xl leading-none font-black text-cover">
+      <p className="font-condensed tabular mt-4 text-5xl leading-none font-black text-gold">
         {a.owned} de {a.total}
       </p>
       <ul className="mt-3 flex flex-wrap gap-2" aria-label="Figurinhas por raridade">
@@ -105,7 +105,7 @@ export function AlbumPage() {
                       aria-pressed={picked?.playerId === s.playerId}
                       aria-label={`Promover ${s.name}`}
                       onClick={() => setPicked(s)}
-                      className={`block h-full w-full rounded-lg text-left ${picked?.playerId === s.playerId ? 'outline-4 outline-cover' : ''}`}
+                      className={`block h-full w-full rounded-lg text-left ${picked?.playerId === s.playerId ? 'outline-4 outline-gold' : ''}`}
                     >
                       <StickerCard sticker={s} size="sm" />
                     </button>

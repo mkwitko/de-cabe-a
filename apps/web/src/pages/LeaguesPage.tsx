@@ -43,11 +43,11 @@ function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => v
             Escolher o meu
           </Link>
         </div>
-        {take.error && <p className="text-cover">{take.error.message}</p>}
+        {take.error && <p className="text-gold">{take.error.message}</p>}
       </div>
     );
   return error ? (
-    <p role="alert" className="text-sm font-semibold text-cover">
+    <p role="alert" className="text-sm font-semibold text-gold">
       {error.message}
     </p>
   ) : null;

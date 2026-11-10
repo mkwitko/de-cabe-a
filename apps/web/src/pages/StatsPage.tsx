@@ -118,7 +118,7 @@ function TitleLadder({ total, current }: { total: number; current: string }) {
               )}
             </div>
             <span
-              className={`font-condensed text-lg leading-none font-extrabold uppercase ${t.name === current ? 'text-cover' : reached ? '' : 'text-chalk-soft'}`}
+              className={`font-condensed text-lg leading-none font-extrabold uppercase ${t.name === current ? 'text-gold' : reached ? '' : 'text-chalk-soft'}`}
             >
               {t.name}
               {t.name === current && <span className="sr-only"> (seu título)</span>}

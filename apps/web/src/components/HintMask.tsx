@@ -22,7 +22,7 @@ export function HintMask({
           {Array.from({ length: n }, (_, i) => (
             <span
               key={i}
-              className={`font-condensed grid place-items-center border-b-2 border-cover leading-none font-black text-cover ${box}`}
+              className={`font-condensed grid place-items-center border-b-2 border-gold leading-none font-black text-gold ${box}`}
             >
               {w === 0 && i === 0 ? initial : ''}
             </span>

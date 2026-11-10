@@ -125,7 +125,7 @@ export function Notifications() {
         </label>
       ))}
       {error && (
-        <p role="alert" className="text-sm font-semibold text-cover">
+        <p role="alert" className="text-sm font-semibold text-gold">
           {error}
         </p>
       )}

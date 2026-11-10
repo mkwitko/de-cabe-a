@@ -215,7 +215,7 @@ export function GridPage({
                 />
               ))}
             </div>
-            <p className="font-condensed shrink-0 text-base font-extrabold text-cover uppercase">
+            <p className="font-condensed shrink-0 text-base font-extrabold text-gold uppercase">
               Dicas: {view.hintsLeft} de 3
             </p>
             <button
@@ -256,7 +256,7 @@ export function GridPage({
       )}
 
       <div
-        className={`${frame} relative mx-auto w-full max-w-5xl rounded-xl border-[10px] border-[#8a5a33] bg-[radial-gradient(120%_90%_at_30%_20%,#34493f,#1f2d26)] p-1.5 shadow-[inset_0_0_0_1px_#0006,0_6px_0_#0005] sm:p-3`}
+        className={`${frame} obj-dark relative mx-auto w-full max-w-5xl rounded-xl border-[10px] border-[#8a5a33] bg-[radial-gradient(120%_90%_at_30%_20%,#34493f,#1f2d26)] p-1.5 shadow-[inset_0_0_0_1px_#0006,0_6px_0_#0005] sm:p-3`}
       >
         <ChalkLines filled={filledAt} />
         <div
@@ -292,12 +292,12 @@ export function GridPage({
                         ? ''
                         : example
                           ? 'border-2 border-dashed border-chalk-soft/40 text-chalk-soft'
-                          : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-cover hover:bg-chalk/[0.06]'
-                    } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-cover' : ''}`}
+                          : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70 hover:border-gold hover:bg-chalk/[0.06]'
+                    } ${miss === i ? 'motion-safe:animate-[shake_400ms_ease-out] border-gold' : ''}`}
                   >
                     {filled ? (
                       <span
-                        className={`font-condensed grid aspect-square w-[min(92cqw,92cqh)] place-items-center rounded-full border-[3px] border-cover bg-paper p-[6%] text-[clamp(0.6rem,15cqmin,1.4rem)] leading-[0.95] font-black text-ink uppercase shadow-[0_4px_0_#0007,inset_0_0_0_2px_#0002] ${seen.current!.has(i) ? '' : 'magnet-snap'}`}
+                        className={`font-condensed grid aspect-square w-[min(92cqw,92cqh)] place-items-center rounded-full border-[3px] border-gold bg-paper p-[6%] text-[clamp(0.6rem,15cqmin,1.4rem)] leading-[0.95] font-black text-ink uppercase shadow-[0_4px_0_#0007,inset_0_0_0_2px_#0002] ${seen.current!.has(i) ? '' : 'magnet-snap'}`}
                       >
                         <span className="line-clamp-3 break-words">{filled.name}</span>
                       </span>
@@ -330,7 +330,7 @@ export function GridPage({
       </div>
 
       {action.error && (
-        <p role="alert" className="mx-auto w-full max-w-5xl text-cover">
+        <p role="alert" className="mx-auto w-full max-w-5xl text-gold">
           {(action.error as ApiError).message}
         </p>
       )}
@@ -407,7 +407,7 @@ export function GridPage({
                 }
               >
                 <span>
-                  <span className="font-condensed block text-lg font-extrabold uppercase text-cover">
+                  <span className="font-condensed block text-lg font-extrabold uppercase text-gold">
                     Usar dica ({view.hintsLeft} de 3)
                   </span>
                   <span className="text-sm text-chalk-soft">

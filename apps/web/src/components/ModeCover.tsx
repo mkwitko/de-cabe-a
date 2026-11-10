@@ -121,7 +121,7 @@ export function ModeCover({
   return (
     <div
       style={c.shell}
-      className={`relative flex flex-1 flex-col justify-between overflow-hidden px-5 ${compact ? 'gap-2 pt-4 pb-4' : 'gap-3 pt-7 pb-6'}`}
+      className={`obj-dark relative flex flex-1 flex-col justify-between overflow-hidden px-5 ${compact ? 'gap-2 pt-4 pb-4' : 'gap-3 pt-7 pb-6'}`}
     >
       {c.extra}
       <p className={`font-condensed text-xs font-bold tracking-[0.2em] uppercase ${c.ink}`}>
@@ -149,7 +149,10 @@ export function ModeCover({
 export function MiniCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
   const c = COVERS[mode];
   return (
-    <div style={c.shell} className="relative flex h-full flex-col justify-between gap-2 p-3">
+    <div
+      style={c.shell}
+      className="obj-dark relative flex h-full flex-col justify-between gap-2 p-3"
+    >
       <div className="mt-5 bg-pitch-deep px-1.5 py-1">
         <GameArt mode={mode} className="mx-auto h-14 w-full" />
       </div>

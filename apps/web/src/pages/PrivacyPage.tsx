@@ -2,7 +2,7 @@ import { AdConsentChoice } from '../components/AdSlot';
 /** Privacy notice (LGPD; required by AdSense). Plain and short, PT-BR. */
 export function PrivacyPage() {
   const h2 =
-    'font-condensed text-2xl font-extrabold uppercase border-l-4 border-cover pl-3 leading-none';
+    'font-condensed text-2xl font-extrabold uppercase border-l-4 border-gold pl-3 leading-none';
   const card = 'flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-5';
   return (
     <article className="flex flex-col gap-6 leading-relaxed">
@@ -14,7 +14,7 @@ export function PrivacyPage() {
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <section className={card}>
           <h2 className={h2}>O que guardamos</h2>
-          <ul className="flex list-disc flex-col gap-2 pl-6 marker:text-cover">
+          <ul className="flex list-disc flex-col gap-2 pl-6 marker:text-gold">
             <li>
               <strong>Cookie de sessão</strong> (técnico): identifica seu aparelho para guardar suas
               fases, estrelas e apelido. Sem ele o jogo não funciona.
@@ -34,7 +34,7 @@ export function PrivacyPage() {
         </section>
         <section className={card}>
           <h2 className={h2}>Serviços de terceiros</h2>
-          <ul className="flex list-disc flex-col gap-2 pl-6 marker:text-cover">
+          <ul className="flex list-disc flex-col gap-2 pl-6 marker:text-gold">
             <li>
               <strong>Sentry</strong>: registra erros técnicos do site e da API para corrigirmos,
               sem dados pessoais.

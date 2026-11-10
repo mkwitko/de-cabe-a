@@ -29,7 +29,7 @@ function RoundDots({ view }: { view: TimelineView }) {
         return (
           <li
             key={i}
-            className={`font-condensed grid size-7 place-items-center rounded-md text-sm font-black ${r ? (r.correct ? 'bg-cover text-ink' : 'bg-chalk/15 text-chalk-soft line-through') : i === view.round ? 'border-2 border-cover text-cover' : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70'}`}
+            className={`font-condensed grid size-7 place-items-center rounded-md text-sm font-black ${r ? (r.correct ? 'bg-cover text-ink' : 'bg-chalk/15 text-chalk-soft line-through') : i === view.round ? 'border-2 border-cover text-gold' : 'border-2 border-dashed border-chalk-soft/50 text-chalk-soft/70'}`}
           >
             <span className="sr-only">{r ? (r.correct ? 'acertou' : 'errou') : 'a jogar'} </span>
             {i + 1}

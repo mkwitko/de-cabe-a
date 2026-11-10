@@ -52,7 +52,7 @@ export function ProfilePage() {
             Sócio · De Cabeça F.C.
           </span>
           <span className="tabular text-sm font-bold">
-            <StarIcon className="inline size-[0.9em] align-[-0.1em] text-cover" /> {p.totalStars}
+            <StarIcon className="inline size-[0.9em] align-[-0.1em] text-gold" /> {p.totalStars}
           </span>
         </div>
         <div className="flex items-center gap-4 rounded-b-[8px] bg-cover px-4 py-4">
@@ -95,7 +95,7 @@ export function ProfilePage() {
         <>
           <h2 className={h2}>Vitrine · {album.data.owned} figurinhas</h2>
           {/* glass case: shelf line under each row of stickers */}
-          <ul className="mt-4 grid grid-cols-3 gap-x-3 gap-y-5 rounded-xl border-4 border-chalk-soft/40 bg-pitch-deep p-3 shadow-[inset_0_0_30px_rgb(0_0_0/0.45)] sm:grid-cols-6">
+          <ul className="obj-dark mt-4 grid grid-cols-3 gap-x-3 gap-y-5 rounded-xl border-4 border-chalk-soft/40 bg-pitch-deep p-3 shadow-[inset_0_0_30px_rgb(0_0_0/0.45)] sm:grid-cols-6">
             {album.data.showcase.map((s) => (
               <li
                 key={s.playerId}
@@ -113,7 +113,7 @@ export function ProfilePage() {
         {p.games.map((g) => (
           <li
             key={g.mode}
-            className="rounded-lg border-t-[6px] border-double border-cover bg-paper p-4 text-ink"
+            className="rounded-lg border-t-[6px] border-double border-gold bg-paper p-4 text-ink"
           >
             <span className="block text-sm font-semibold text-ink/70">{GAME_NAME[g.mode]}</span>
             <span className="font-condensed tabular text-3xl font-black">

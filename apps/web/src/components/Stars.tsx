@@ -22,7 +22,7 @@ export function Stars({
   /** Stamp the earned stars one after another (the end of a level). */
   animate?: boolean;
 }) {
-  const filled = onCover ? 'fill-ink text-ink' : 'fill-cover text-cover';
+  const filled = onCover ? 'fill-ink text-ink' : 'fill-cover text-gold';
   return (
     <span className="inline-flex gap-0.5" role="img" aria-label={`${n} de 3 estrelas`}>
       {[0, 1, 2].map((i) => (

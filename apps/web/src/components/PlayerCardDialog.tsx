@@ -146,7 +146,7 @@ export function PlayerCardDialog({
                 {c.positions.map((p, i) => (
                   <li
                     key={p}
-                    className={`font-condensed rounded-full px-3 py-1 text-base font-black uppercase ${i === 0 ? 'bg-cover text-ink' : 'border-2 border-cover/70 text-cover'}`}
+                    className={`font-condensed rounded-full px-3 py-1 text-base font-black uppercase ${i === 0 ? 'bg-cover text-ink' : 'border-2 border-cover/70 text-gold'}`}
                   >
                     {POSITION_LABEL[p]}
                   </li>

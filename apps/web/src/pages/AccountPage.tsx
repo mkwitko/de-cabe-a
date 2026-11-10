@@ -9,6 +9,7 @@ import { useAccount, useMe } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { HapticsToggle, SoundToggle } from '../components/SoundToggle';
+import { ThemeChoices } from '../components/ThemeToggle';
 
 const input =
   'min-h-12 rounded-lg border-2 border-ink/15 bg-paper px-3 text-base text-ink focus:border-ink';
@@ -57,7 +58,7 @@ export function AccountPage() {
     .slice(0, 2)
     .toUpperCase();
   const h2 =
-    'font-condensed text-2xl font-extrabold uppercase border-l-4 border-cover pl-3 leading-none';
+    'font-condensed text-2xl font-extrabold uppercase border-l-4 border-gold pl-3 leading-none';
   const card = 'flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-5';
 
   return (
@@ -66,7 +67,7 @@ export function AccountPage() {
       <div className="grid gap-12 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start md:gap-14">
         {/* The player's own sticker: what the ranking shows about you. */}
         <aside className="w-64 max-w-full -rotate-2 justify-self-center rounded-[12px] md:justify-self-start bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] md:sticky md:top-6">
-          <div className="flex flex-col items-center rounded-[6px] bg-pitch-deep px-4 pt-6 pb-5 text-center text-chalk">
+          <div className="obj-dark flex flex-col items-center rounded-[6px] bg-pitch-deep px-4 pt-6 pb-5 text-center text-chalk">
             <span
               className="font-condensed grid size-24 place-items-center rounded-full border-4 border-paper bg-cover text-4xl font-black text-ink"
               aria-hidden="true"
@@ -77,7 +78,7 @@ export function AccountPage() {
               {m.nickname ?? 'Convidado'}
             </p>
             <p className="mt-2 flex items-center gap-1.5 font-semibold text-chalk-soft">
-              {m.title.name} · <StarIcon className="size-4 text-cover" />
+              {m.title.name} · <StarIcon className="size-4 text-gold" />
               <span className="tabular">{m.totalStars}</span>
             </p>
           </div>
@@ -163,6 +164,14 @@ export function AccountPage() {
             <HapticsToggle />
           </section>
 
+          <section className={card}>
+            <h2 className={h2}>Tema</h2>
+            <p className="text-chalk-soft">
+              Sistema segue o seu aparelho. Fica guardado só neste aparelho.
+            </p>
+            <ThemeChoices />
+          </section>
+
           <Notifications />
 
           {m.account ? (
@@ -172,7 +181,7 @@ export function AccountPage() {
                 Seu progresso está salvo na conta e aparece em qualquer aparelho em que você entrar.
               </p>
               {!m.account.emailVerified && (
-                <p className="rounded-lg border-2 border-cover/60 px-4 py-3 text-chalk">
+                <p className="rounded-lg border-2 border-gold/60 px-4 py-3 text-chalk">
                   Confirme seu e-mail pelo link que enviamos para <strong>{m.account.email}</strong>
                   .{' '}
                   <button

@@ -1,4 +1,5 @@
 import { SoundToggle } from './components/SoundToggle';
+import { ThemeToggle } from './components/ThemeToggle';
 import { CareerPathCard } from './components/CareerPathCard';
 import { MiniCover } from './components/ModeCover';
 import { RouteMeta } from './components/RouteMeta';
@@ -231,19 +232,22 @@ function HomeTop() {
           </p>
         </div>
       </div>
-      {me?.account ? (
-        <Link
-          to="/stats"
-          aria-label="Meu perfil"
-          className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase"
-        >
-          {who?.[0] ?? '?'}
-        </Link>
-      ) : (
-        <Link to="/conta?entrar" className={`${btnSecondary} shrink-0`}>
-          Entrar
-        </Link>
-      )}
+      <div className="flex shrink-0 items-center gap-1">
+        <ThemeToggle />
+        {me?.account ? (
+          <Link
+            to="/stats"
+            aria-label="Meu perfil"
+            className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase"
+          >
+            {who?.[0] ?? '?'}
+          </Link>
+        ) : (
+          <Link to="/conta?entrar" className={`${btnSecondary} shrink-0`}>
+            Entrar
+          </Link>
+        )}
+      </div>
     </header>
   );
 }
@@ -423,7 +427,7 @@ function Shell({ children }: { children: ReactNode }) {
                 <Link
                   to={to}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-lg sm:font-extrabold sm:uppercase ${active ? 'text-cover' : 'text-chalk-soft hover:text-chalk'}`}
+                  className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-lg sm:font-extrabold sm:uppercase ${active ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`}
                 >
                   {/* active marker: a short cover bar on top of the phone tab, under the word on wide screens */}
                   <span
@@ -438,6 +442,9 @@ function Shell({ children }: { children: ReactNode }) {
           })}
           <li className="hidden sm:block">
             <SoundToggle />
+          </li>
+          <li className="hidden sm:block">
+            <ThemeToggle />
           </li>
         </ul>
       </nav>
