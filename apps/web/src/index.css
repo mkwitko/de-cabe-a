@@ -1800,44 +1800,619 @@
   filter: brightness(0.4) saturate(0.85) blur(2px);
 }
 
-/* Album: a Panini book. Yellow board around cream pages, a printed band per page, a spine. */
-.album-book {
-  border-radius: 18px;
-  padding: 0.6rem;
-  background:
-    radial-gradient(rgb(0 0 0 / 0.08) 1px, transparent 1.4px) 0 0 / 5px 5px,
-    var(--color-cover);
-  box-shadow:
-    0 34px 60px -24px rgb(0 0 0 / 0.75),
-    0 3px 6px rgb(0 0 0 / 0.35);
+/* ── Album: a Panini book ────────────────────────────────────────────────────────────────── */
+/*
+ * Cream printed pages with a halftone, a yellow cover, a spine and a page stack at the edges.
+ * The turning leaf reads one progress value from the book: --p (0 → 1) and --m = sin(πp), the
+ * lift (gloss, shade and the shadow it casts peak mid-turn). Wide: the stage takes the viewport
+ * height and the spread keeps ~1.56:1 inside it; phones: one page, natural height.
+ */
+.album-stage {
+  position: relative;
+  width: 100%;
 }
-.album-page {
+.album-book {
+  --p: 0;
+  --m: 0;
+  --ink-page: #1d2a4f;
+  position: relative;
+  display: grid;
+  perspective: 1800px;
+  perspective-origin: 0 50%;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.album-half {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.album-half > .album-side {
+  flex: 1;
+}
+/* phones: every layer in the same cell, the leaf over the page it reveals */
+.album-book:not([data-wide]) > * {
+  grid-area: 1 / 1;
+}
+.album-side {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 1rem 1rem 2.25rem;
+}
+.album-paper {
   background:
     radial-gradient(rgb(29 42 79 / 0.07) 1px, transparent 1.3px) 0 0 / 6px 6px,
     radial-gradient(circle at 50% 35%, #fbf6e8, #f3ead2 65%, #e6d9b8);
-  color: #1d2a4f;
+  color: var(--ink-page);
 }
-@media (min-width: 1024px) {
-  .album-page + .album-page {
-    box-shadow: inset 22px 0 26px -18px rgb(0 0 0 / 0.4);
-  }
-  .album-page:first-child:not(:only-child) {
-    box-shadow: inset -22px 0 26px -18px rgb(0 0 0 / 0.4);
-  }
+/* inner shade at the spine, the page stack peeking at the outer edge, the book's shadow */
+.album-side-left {
+  border-radius: 14px 3px 3px 14px;
+  box-shadow:
+    inset -30px 0 34px -22px rgb(0 0 0 / 0.5),
+    -3px 1px 0 #e7dcc1,
+    -6px 2px 0 #cbbd9b,
+    0 34px 50px -26px rgb(0 0 0 / 0.8);
 }
-.album-slot {
-  border: 2px dashed rgb(29 42 79 / 0.32);
-  background: rgb(29 42 79 / 0.05);
+.album-side-right {
+  border-radius: 3px 14px 14px 3px;
+  box-shadow:
+    inset 30px 0 34px -22px rgb(0 0 0 / 0.5),
+    3px 1px 0 #e7dcc1,
+    6px 2px 0 #cbbd9b,
+    0 34px 50px -26px rgb(0 0 0 / 0.8);
+}
+.album-side-single {
+  min-height: 36rem;
+  border-radius: 4px 14px 14px 4px;
+  box-shadow:
+    inset 20px 0 22px -16px rgb(0 0 0 / 0.5),
+    3px 1px 0 #e7dcc1,
+    6px 2px 0 #cbbd9b,
+    0 30px 44px -24px rgb(0 0 0 / 0.8);
+}
+.album-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 4px double rgb(29 42 79 / 0.4);
+  padding-bottom: 0.5rem;
+}
+.album-pos {
+  margin-right: 0.5em;
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+  background: var(--ink-page);
+  color: #f6eedb;
+}
+.album-folio {
+  position: absolute;
+  bottom: 0.6rem;
+  font-size: 1rem;
+  font-weight: 900;
   color: rgb(29 42 79 / 0.6);
 }
-/* a pasted sticker sits a little crooked, like a thumb put it there */
+.album-side-left .album-folio {
+  left: 1.1rem;
+}
+.album-side-right .album-folio,
+.album-side-single .album-folio {
+  right: 1.1rem;
+}
+.album-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem 0.6rem;
+  margin-top: 0.85rem;
+}
+.album-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+.album-slot,
 .album-stuck {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+.album-slot {
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgb(29 42 79 / 0.3);
+  border-radius: 8px;
+  background: rgb(29 42 79 / 0.05);
+  color: rgb(29 42 79 / 0.55);
+}
+/* a pasted sticker sits a little crooked, like a thumb put it there, under a glossy film */
+.album-stuck {
+  display: block;
   rotate: var(--tilt, 0deg);
-  transition: rotate 300ms var(--ease-out-expo);
+  filter: drop-shadow(0 7px 6px rgb(0 0 0 / 0.22));
+  cursor: pointer;
+  transition:
+    rotate 300ms var(--ease-out-expo),
+    scale 300ms var(--ease-out-expo);
 }
 .album-stuck:hover {
   rotate: 0deg;
+  scale: 1.04;
 }
+.album-stuck .pcard-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    rgb(255 255 255 / 0.34),
+    rgb(255 255 255 / 0) 26%,
+    rgb(255 255 255 / 0) 62%,
+    rgb(255 255 255 / 0.16) 72%,
+    rgb(255 255 255 / 0) 80%
+  );
+  mix-blend-mode: screen;
+}
+
+/* the cover: album yellow, a green band across it, the best stickers fanned out */
+.album-cover {
+  container-type: inline-size;
+  overflow: hidden;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1.75rem;
+  border-radius: 4px 16px 16px 4px;
+  background:
+    radial-gradient(rgb(0 0 0 / 0.09) 1px, transparent 1.4px) 0 0 / 5px 5px,
+    var(--color-cover);
+  color: var(--color-ink);
+  box-shadow:
+    inset 14px 0 16px -10px rgb(0 0 0 / 0.45),
+    inset 0 0 0 3px rgb(255 255 255 / 0.25),
+    0 34px 50px -26px rgb(0 0 0 / 0.8);
+}
+.album-cover-fan {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 9rem;
+  align-items: center;
+  justify-content: center;
+}
+/* the green band runs behind the stickers only, the type stays on the yellow */
+.album-cover-fan::before {
+  content: '';
+  position: absolute;
+  inset: 24% -40%;
+  rotate: -9deg;
+  background: var(--color-pitch);
+  box-shadow: inset 0 0 0 3px color-mix(in oklch, var(--color-pitch) 70%, white);
+}
+.album-cover-fan > div {
+  position: relative;
+  width: min(30%, 11rem);
+  aspect-ratio: 3 / 4;
+  margin-inline: -3%;
+  rotate: calc(var(--i) * 11deg);
+  translate: 0 calc(var(--i) * var(--i) * 10%);
+}
+
+/* inside cover: the index with dotted leaders, like a printed contents page */
+.album-index-row {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  text-align: left;
+}
+.album-index-row:hover {
+  color: #3b4f8a;
+}
+.album-leader {
+  flex: 1;
+  translate: 0 -0.3em;
+  border-bottom: 2px dotted rgb(29 42 79 / 0.35);
+}
+
+/* group tabs: yellow index tabs standing on the top edge of the book */
+.album-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-bottom: -1.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-inline: 0.5rem;
+}
+.album-tab {
+  flex: none;
+  min-height: 2.75rem;
+  border-radius: 10px 10px 0 0;
+  padding: 0.35rem 0.9rem 0.2rem;
+  background: color-mix(in oklch, var(--color-cover) 82%, black);
+  color: var(--color-ink);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-stretch: 68%;
+  text-transform: uppercase;
+  box-shadow: inset 0 -8px 10px -8px rgb(0 0 0 / 0.45);
+  transition: background-color 160ms ease-out;
+}
+.album-tab:hover {
+  background: var(--color-cover);
+}
+.album-tab-on {
+  background: #f6eedb;
+  box-shadow: none;
+}
+
+/* the turning leaf */
+.album-leaf {
+  z-index: 3;
+  transform: rotateY(calc(var(--p) * -180deg));
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.album-leaf-single {
+  position: relative;
+}
+.album-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.album-face > .album-side {
+  flex: 1;
+}
+.album-face-back {
+  transform: rotateY(180deg);
+}
+.album-shade,
+.album-gloss,
+.album-cast {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+/* the page darkens as it turns away from the light, its back lightens as it lands */
+.album-face-front .album-shade {
+  background: linear-gradient(to right, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
+  opacity: min(1, calc(var(--p) * 2));
+}
+.album-face-back .album-shade {
+  background: linear-gradient(to left, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
+  opacity: min(1, calc((1 - var(--p)) * 2));
+}
+/* a band of light slides across the lifted page */
+.album-gloss {
+  z-index: 6;
+  background: linear-gradient(
+    100deg,
+    transparent 36%,
+    rgb(255 255 255 / 0.6) 49%,
+    rgb(255 255 255 / 0.15) 54%,
+    transparent 64%
+  );
+  background-size: 300% 100%;
+  background-position: calc(100% - var(--p) * 100%) 0;
+  opacity: var(--m);
+  mix-blend-mode: soft-light;
+}
+/* the shadow the leaf throws on the pages beneath, strongest mid-turn */
+.album-cast {
+  z-index: 2;
+  opacity: calc(var(--m) * 0.9);
+}
+.album-cast-left {
+  background: linear-gradient(to left, rgb(0 0 0 / 0.5), transparent 60%);
+}
+.album-cast-right {
+  background: linear-gradient(to right, rgb(0 0 0 / 0.5), transparent 60%);
+}
+.album-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  width: 30px;
+  translate: -50% 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(0 0 0 / 0.22) 42%,
+    rgb(0 0 0 / 0.38) 50%,
+    rgb(0 0 0 / 0.22) 58%,
+    transparent
+  );
+}
+
+/* the page corner: a curled-up flap that grows under the pointer and peeks once on arrival */
+.album-corner {
+  position: absolute;
+  bottom: 0;
+  z-index: 20;
+  width: 3.5rem;
+  height: 3.5rem;
+  cursor: pointer;
+}
+.album-corner::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: linear-gradient(var(--fold), transparent 50%, #c9bb98 50%, #fff8e8 64%, #d9ccab);
+  filter: drop-shadow(-2px -2px 3px rgb(0 0 0 / 0.25));
+  transition:
+    width 260ms var(--ease-out-expo),
+    height 260ms var(--ease-out-expo);
+  animation: corner-peek 1400ms 600ms var(--ease-out-expo) both;
+}
+.album-corner:hover::before {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.album-corner-next {
+  right: 0;
+  --fold: 135deg;
+}
+.album-corner-next::before {
+  right: 0;
+  border-bottom-right-radius: 14px;
+}
+.album-corner-prev {
+  left: 0;
+  --fold: 225deg;
+}
+.album-corner-prev::before {
+  left: 0;
+  border-bottom-left-radius: 14px;
+  filter: drop-shadow(2px -2px 3px rgb(0 0 0 / 0.25));
+}
+@keyframes corner-peek {
+  35% {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+}
+.album-fade {
+  animation: stamp-fade 260ms ease-out both;
+}
+
+@media (min-width: 1024px) {
+  /* the spread fills the screen: the stage takes the height left under the header */
+  .album-stage {
+    container-type: size;
+    display: grid;
+    aspect-ratio: 1.7;
+    max-height: clamp(30rem, calc(100dvh - 19.5rem), 62rem);
+    place-items: center;
+  }
+  /* a spread of two pages a little taller than wide: a 4 × 3 grid of stickers fills each */
+  .album-book[data-wide] {
+    width: min(100cqw, 170cqh);
+    height: min(100cqh, 58.8cqw);
+    grid-template-columns: 1fr 1fr;
+    perspective: 3200px;
+    perspective-origin: 50% 50%;
+  }
+  /* shut, the cover lies centred; it slides back as it swings open */
+  .album-book[data-closed] {
+    translate: -25% 0;
+  }
+  .album-book[data-opening] {
+    translate: calc((var(--p) - 1) * 25%) 0;
+  }
+  .album-leaf-wide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 50%;
+  }
+  .album-book[data-wide] .album-side {
+    padding: clamp(1rem, 2.6cqh, 1.75rem) clamp(1rem, 2.2cqw, 2rem) 2.5rem;
+  }
+  .album-book[data-wide] .album-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: clamp(0.5rem, 2cqh, 1.4rem) clamp(0.5rem, 1.6cqw, 1.25rem);
+    margin-top: clamp(0.6rem, 2cqh, 1.25rem);
+  }
+  .album-book[data-wide] .album-cell {
+    container-type: size;
+    min-height: 0;
+  }
+  .album-book[data-wide] .album-slot,
+  .album-book[data-wide] .album-stuck {
+    width: min(100cqw, 75cqh);
+  }
+  .album-cover {
+    padding: 2.5rem 2.25rem;
+  }
+}
+
+/* ── Sticker in focus (StickerDetail) ── */
+.sd {
+  width: min(64rem, calc(100% - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  overflow-y: auto;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 20px;
+  padding: 0;
+  background: radial-gradient(
+    circle at 22% 30%,
+    color-mix(in oklch, var(--color-pitch) 88%, white),
+    var(--color-pitch-deep) 72%
+  );
+  box-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.8);
+  overscroll-behavior: contain;
+}
+.sd[open] {
+  animation: sd-in 380ms var(--ease-out-expo);
+}
+.sd::backdrop {
+  background: rgb(4 10 7 / 0.74);
+  backdrop-filter: blur(3px);
+}
+.sd-body {
+  position: relative;
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+.sd-stage {
+  display: grid;
+  place-items: center;
+  perspective: 900px;
+}
+.sd-card {
+  position: relative;
+  width: min(62%, 15rem);
+  aspect-ratio: 3 / 4;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 180ms ease-out;
+}
+.sd[open] .sd-card {
+  animation: sd-card 640ms var(--ease-out-expo);
+}
+.sd-card .pcard-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at calc(var(--px, 0.3) * 100%) calc(var(--py, 0.2) * 100%),
+    rgb(255 255 255 / 0.4),
+    transparent 50%
+  );
+  mix-blend-mode: soft-light;
+}
+.sd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.75rem 1.5rem;
+}
+.sd-facts dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-chalk-soft);
+}
+.sd-facts dd {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.sd-attrs {
+  display: grid;
+  column-gap: 1.75rem;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+}
+.sd-attrs > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  padding: 0.5rem 0;
+}
+.sd-attrs dt {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.sd-attrs abbr {
+  flex: none;
+  width: 2.6rem;
+  font-size: 1.1rem;
+  color: var(--color-cover);
+}
+.sd-attrs dt span {
+  font-size: 0.85rem;
+  line-height: 1.25;
+  color: var(--color-chalk-soft);
+}
+.sd-attrs dd {
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+@keyframes sd-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+}
+@keyframes sd-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sd-card {
+  from {
+    opacity: 0;
+    transform: rotateY(-28deg) rotateZ(-5deg) scale(0.86);
+  }
+}
+@media (min-width: 768px) {
+  .sd-body {
+    grid-template-columns: minmax(16rem, 23rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 2.5rem;
+    padding: 2rem 2.25rem;
+  }
+  .sd-card {
+    width: 100%;
+  }
+  .sd-attrs {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+/* phones: a bottom sheet */
+@media (max-width: 767px) {
+  .sd {
+    width: 100%;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sd[open] {
+    animation: sd-sheet 380ms var(--ease-out-expo);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .album-stuck,
+  .sd-card {
+    transition: none;
+  }
+  .album-corner::before {
+    animation: none;
+  }
+  .sd[open],
+  .sd[open] .sd-card {
+    animation: stamp-fade 200ms ease-out both;
+  }
+}
+/* ── end Album ── */
 
 /* Stats: the trophy rail. One brass rail, a plaque per title; the current one is lit. */
 .trophy-rail {
@@ -1891,11 +2466,6 @@
   background: var(--color-paper);
   color: var(--color-ink);
   box-shadow: 0 10px 18px -10px rgb(0 0 0 / 0.6);
-}
-@media (prefers-reduced-motion: reduce) {
-  .album-stuck {
-    transition: none;
-  }
 }
 /* ── Career Path level: the locker room ──────────────────────────────────────────────────── */
 /*
