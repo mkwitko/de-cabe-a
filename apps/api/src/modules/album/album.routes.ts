@@ -9,9 +9,9 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
 import { publicProfileOwner } from '../account/account.routes';
-import { effectivePks } from '../leagues/leagues';
+import { ownedPks } from './owned-pks';
 import { trophies } from '../progression/seasons';
-import { rank } from './rarity';
+import { RARITY_ORDER, rank } from './rarity';
 import { applyRoundUpgrades } from './round-upgrade';
 
 /** Best sticker per footballer across the pks, best first, then oldest. */
@@ -36,16 +36,6 @@ async function bestStickers(prisma: PrismaClient, pks: string[]) {
       mode: r.mode,
       earnedAt: r.earnedAt.toISOString(),
     }));
-}
-
-/** The effective account plus every guest session linked to it (stickers keep their old pk). */
-async function ownedPks(prisma: PrismaClient, req: { sessionId: string; userId: string | null }) {
-  const eff = await effectivePks(prisma, [req.userId ?? req.sessionId]);
-  const linked = await prisma.guestSession.findMany({
-    where: { userId: { in: eff } },
-    select: { id: true },
-  });
-  return [...new Set([...eff, req.sessionId, ...linked.map((s) => s.id)])];
 }
 
 export const albumRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -107,8 +97,12 @@ export const albumRoutes: FastifyPluginAsyncZod = async (app) => {
           // A rarity above Seleção da Temporada stays; the season is consumed anyway.
           ...(rank(best.rarity) < rank('selecao_temporada')
             ? [
-                prisma.sticker.update({
-                  where: { pk_playerId: { pk: best.pk, playerId: best.playerId } },
+                prisma.sticker.updateMany({
+                  where: {
+                    pk: best.pk,
+                    playerId: best.playerId,
+                    rarity: { in: RARITY_ORDER.slice(0, rank('selecao_temporada')) },
+                  },
                   data: { rarity: 'selecao_temporada' },
                 }),
               ]

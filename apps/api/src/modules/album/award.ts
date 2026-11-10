@@ -2,8 +2,9 @@ import type { StickerAward } from '@decabeca/contracts';
 import type { Attempt, Challenge, PrismaClient } from '../../generated/prisma/client';
 import type { GameModeCode } from '../challenges/engines';
 import type { Player } from '../attempts/attempts.service';
-import { levelRarity, rank } from './rarity';
+import { RARITY_ORDER, levelRarity, rank } from './rarity';
 import { effectivePks } from '../leagues/leagues';
+import { ownedPks } from './owned-pks';
 import { streakDays } from './streak';
 
 /** The footballer a level is about, or null for modes without one (until their plans). */
@@ -25,6 +26,7 @@ export async function awardSticker(
   const mode = challenge.gameMode as GameModeCode;
   const playerId = featuredPlayerId(mode, challenge.snapshot);
   if (attempt.status !== 'WON' || attempt.stars < 1 || !playerId) return null;
+  if (challenge.publicNumber === null) return null; // community levels earn no stickers
 
   const pk = player.userId ?? player.sessionId;
   const [footballer, active, streak] = await Promise.all([
@@ -45,7 +47,13 @@ export async function awardSticker(
     flawless: (state.attempts ?? state.guesses)?.length === 1,
   });
 
-  const existing = await prisma.sticker.findUnique({ where: { pk_playerId: { pk, playerId } } });
+  const owned = await prisma.sticker.findMany({
+    where: { pk: { in: await ownedPks(prisma, player) }, playerId },
+  });
+  const existing = owned.reduce<(typeof owned)[number] | undefined>(
+    (m, r) => (!m || rank(r.rarity) > rank(m.rarity) ? r : m),
+    undefined,
+  );
   const view = (s: { rarity: typeof rarity; mode: GameModeCode; earnedAt: Date }) => ({
     playerId,
     name: footballer.canonicalName,
@@ -57,10 +65,15 @@ export async function awardSticker(
   });
   if (existing && rank(existing.rarity) >= rank(rarity))
     return { sticker: view(existing), upgradedFrom: null, isNew: false };
-  const row = await prisma.sticker.upsert({
-    where: { pk_playerId: { pk, playerId } },
-    create: { pk, playerId, rarity, mode, challengeId: challenge.id, earnedAt: now },
-    update: { rarity, mode, challengeId: challenge.id },
+  // create-if-missing then a guarded update: a concurrent better award is never downgraded
+  await prisma.sticker.createMany({
+    data: [{ pk, playerId, rarity, mode, challengeId: challenge.id, earnedAt: now }],
+    skipDuplicates: true,
   });
+  await prisma.sticker.updateMany({
+    where: { pk, playerId, rarity: { in: RARITY_ORDER.slice(0, rank(rarity)) } },
+    data: { rarity, mode, challengeId: challenge.id },
+  });
+  const row = await prisma.sticker.findUniqueOrThrow({ where: { pk_playerId: { pk, playerId } } });
   return { sticker: view(row), upgradedFrom: existing?.rarity ?? null, isNew: !existing };
 }

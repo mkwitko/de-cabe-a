@@ -767,3 +767,11 @@ model SeasonPromotion {
 
   @@id([pk, season])
 }
+
+/// A closed round already checked for Destaque da Rodada upgrades, once per pk.
+model RoundCheck {
+  pk     String
+  monday DateTime @db.Date
+
+  @@id([pk, monday])
+}

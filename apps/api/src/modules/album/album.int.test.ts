@@ -73,6 +73,7 @@ afterEach(async () => {
   clock = START;
   await prisma.sticker.deleteMany();
   await prisma.seasonPromotion.deleteMany();
+  await prisma.roundCheck.deleteMany();
   await prisma.attempt.updateMany({
     where: { completedAt: { gte: new Date('2026-11-09T00:00:00Z') } },
     data: { completedAt: null, stars: 0 },
@@ -210,15 +211,20 @@ describe('album routes', () => {
     expect(res.owned).toBe(8);
   });
 
-  it('top 10 of a closed round upgrades that week to destaque_rodada', async () => {
+  /** Two bronze stickers in the closed week of 2026-10-26; only `daily` comes from the drawn level. */
+  async function closedRound(earnedAt: { daily: string; other: string }) {
     const g = await startLevel();
-    await giveStickers(g.sessionId, ['bronze', 'lenda']);
-    const week = await prisma.sticker.findMany({ orderBy: { earnedAt: 'asc' } });
-    // earned the week of 2026-10-26, already closed on 2026-11-05
-    await prisma.sticker.update({
-      where: { pk_playerId: { pk: week[0]!.pk, playerId: week[0]!.playerId } },
-      data: { earnedAt: new Date('2026-10-27T15:00:00Z') },
-    });
+    await giveStickers(g.sessionId, ['bronze', 'bronze']);
+    const [daily, other] = await prisma.sticker.findMany({ orderBy: { earnedAt: 'asc' } });
+    const { challengeId } = await prisma.attempt.findUniqueOrThrow({ where: { id: g.attemptId } });
+    for (const [row, at, cid] of [
+      [daily!, earnedAt.daily, challengeId],
+      [other!, earnedAt.other, 'x'],
+    ] as const)
+      await prisma.sticker.update({
+        where: { pk_playerId: { pk: row.pk, playerId: row.playerId } },
+        data: { earnedAt: new Date(at), challengeId: cid },
+      });
     await prisma.dailyPick.upsert({
       where: { day_gameMode: { day: new Date('2026-10-26T00:00:00Z'), gameMode: 'CAREER_PATH' } },
       create: { day: new Date('2026-10-26T00:00:00Z'), gameMode: 'CAREER_PATH', level: 1 },
@@ -232,10 +238,69 @@ describe('album routes', () => {
         stars: 3,
       },
     });
-    const first = (await g.req('GET', '/me/album')).json();
-    expect(first.byRarity).toMatchObject({ destaque_rodada: 1, lenda: 1, bronze: 0 });
-    expect((await g.req('GET', '/me/album')).json().byRarity.destaque_rodada).toBe(1);
+    return g;
+  }
+  const cleanRound = async () => {
     await prisma.dailyPick.deleteMany({ where: { day: new Date('2026-10-26T00:00:00Z') } });
+    await prisma.roundCheck.deleteMany();
+  };
+
+  it('top 10 of a closed round upgrades only the daily-pick sticker, once', async () => {
+    const g = await closedRound({ daily: '2026-10-27T15:00:00Z', other: '2026-10-27T16:00:00Z' });
+    const first = (await g.req('GET', '/me/album')).json();
+    expect(first.byRarity).toMatchObject({ destaque_rodada: 1, bronze: 1 });
+    expect(await prisma.roundCheck.count()).toBe(1);
+    expect((await g.req('GET', '/me/album')).json().byRarity.destaque_rodada).toBe(1);
+    await cleanRound();
+  });
+
+  it('weekend stickers are not upgraded', async () => {
+    const g = await closedRound({ daily: '2026-11-01T15:00:00Z', other: '2026-10-31T15:00:00Z' });
+    const res = (await g.req('GET', '/me/album')).json();
+    expect(res.byRarity).toMatchObject({ destaque_rodada: 0, bronze: 2 });
+    await cleanRound();
+  });
+});
+
+describe('sticker keep-best across linked pks', () => {
+  it('linked user with a better guest sticker gets isNew false and no downgrade', async () => {
+    await setDifficulty(1);
+    const g = await startLevel();
+    const user = await prisma.user.create({
+      data: { email: `${randomUUID()}@t.test`, nickname: 'Dono', nicknameKey: randomUUID() },
+    });
+    await prisma.guestSession.update({ where: { id: g.sessionId }, data: { userId: user.id } });
+    await prisma.sticker.create({
+      data: {
+        pk: g.sessionId,
+        playerId: answerId,
+        rarity: 'ouro_brilhante',
+        mode: 'CAREER_PATH',
+        challengeId: 'old',
+      },
+    });
+    const res = await g.act({ kind: 'guess', playerId: answerId });
+    expect(res.sticker).toMatchObject({ isNew: false, upgradedFrom: null });
+    expect(res.sticker.sticker.rarity).toBe('ouro_brilhante');
+    expect((await stickers()).every((s) => s.rarity === 'ouro_brilhante')).toBe(true);
+  });
+
+  it('community levels award no sticker', async () => {
+    const g = await startLevel();
+    await prisma.challenge.updateMany({
+      where: { gameMode: 'CAREER_PATH' },
+      data: { publicNumber: null },
+    });
+    try {
+      const res = await g.act({ kind: 'guess', playerId: answerId });
+      expect(res.sticker).toBeUndefined();
+      expect(await stickers()).toHaveLength(0);
+    } finally {
+      await prisma.challenge.updateMany({
+        where: { gameMode: 'CAREER_PATH' },
+        data: { publicNumber: 1 },
+      });
+    }
   });
 });
 
