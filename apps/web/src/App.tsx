@@ -1,4 +1,4 @@
-import { MusicToggle, SoundToggle } from './components/SoundToggle';
+import { SettingsButton, SettingsDialog } from './components/Settings';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
@@ -223,13 +223,18 @@ export const GAMES = [
 /** Entrar for guests, the initial as an avatar once signed in (to the profile). */
 function AccountLink() {
   const { data: me } = useMe();
-  if (!me?.account) return <SignInButton className={`${btnSecondary} shrink-0`} />;
+  if (!me?.account)
+    return (
+      <SignInButton
+        className={`${btnSecondary} min-h-10 shrink-0 border-cover/70 px-3 text-base text-cover hover:border-cover sm:px-4 sm:text-lg`}
+      />
+    );
   const who = me.nickname ?? me.account.email;
   return (
     <Link
       to="/stats"
       aria-label="Meu perfil"
-      className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase"
+      className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase ring-2 ring-cover/30 ring-offset-2 ring-offset-pitch-deep"
     >
       {who?.[0] ?? '?'}
     </Link>
@@ -242,15 +247,15 @@ function Brand({ home }: { home: boolean }) {
   return (
     <Link
       to="/"
-      className="flex min-w-0 items-center gap-2 sm:gap-3"
+      className="flex min-h-11 min-w-0 items-center gap-2.5"
       aria-label={home ? undefined : 'De Cabeça F.C., início'}
     >
-      <Crest className="h-10 w-9 shrink-0 sm:h-11 sm:w-10" />
+      <Crest className="h-9 w-8 shrink-0 drop-shadow-[0_2px_3px_rgb(0_0_0/0.5)]" />
       <div className="min-w-0">
-        <H className="font-condensed block text-[1.35rem] leading-[0.95] font-black whitespace-nowrap uppercase sm:text-2xl lg:text-3xl">
+        <H className="font-condensed block text-lg leading-[0.95] font-black whitespace-nowrap uppercase min-[400px]:text-xl lg:text-2xl">
           De Cabeça F.C.
         </H>
-        <span className="mt-0.5 block text-xs leading-tight font-semibold whitespace-nowrap text-chalk-soft sm:text-sm">
+        <span className="mt-0.5 hidden text-xs leading-tight font-semibold whitespace-nowrap text-chalk-soft min-[400px]:block">
           Minijogos de futebol
         </span>
       </div>
@@ -374,23 +379,25 @@ function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const { pathname } = useLocation();
   const home = pathname === '/';
+  const level = sceneFor(pathname) === 'level';
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
-      {/* One header: brand, places, sound and Entrar on wide screens; on the phone the places
-          are the bottom bar and only the home keeps a top (brand, sound, Entrar). */}
+      {/* The scoreboard strip, the same 56px on every route: crest, places, Ajustes, Entrar.
+          On the phone the places are the bottom bar; inside a level the game owns the phone
+          screen (its height is measured without this strip), so only the bottom bar stays. */}
       <header
-        className={`items-center gap-3 sm:mb-6 sm:flex sm:gap-4 lg:gap-6 ${home ? 'mb-4 flex justify-between' : 'contents'}`}
+        className={`scoreboard floodlit mb-3 h-14 items-center gap-3 rounded-2xl border border-chalk/10 pr-1.5 pl-3 shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)] sm:flex sm:gap-4 sm:pl-4 lg:gap-6 ${level ? 'max-sm:contents' : 'flex'}`}
       >
-        <div className={home ? 'min-w-0' : 'hidden min-w-0 sm:block'}>
+        <div className={`min-w-0 ${level ? 'max-sm:hidden' : ''}`}>
           <Brand home={home} />
         </div>
         <nav
           aria-label="Principal"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:ml-auto sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none"
+          className="scoreboard floodlit fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:static sm:mx-auto sm:self-stretch sm:bg-none sm:pb-0 sm:shadow-none sm:before:hidden"
         >
           <ul
-            className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-auto sm:items-center sm:gap-4 lg:gap-6`}
+            className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}
           >
             {NAV.map(({ to, label, Icon, match }) => {
               const active = match(pathname);
@@ -399,14 +406,14 @@ function Shell({ children }: { children: ReactNode }) {
                   <Link
                     to={to}
                     aria-current={active ? 'page' : undefined}
-                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-base sm:font-extrabold lg:text-lg sm:uppercase ${active ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`}
+                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:flex-row sm:gap-2 sm:px-3 sm:text-base sm:font-extrabold sm:uppercase lg:px-4 lg:text-lg ${active ? 'tab-lit text-gold' : 'text-chalk-soft hover:text-chalk'}`}
                   >
-                    {/* active marker: a short cover bar on top of the phone tab, under the word on wide screens */}
+                    {/* the lit bar: the phone tab's top edge, the strip's floor on wide screens */}
                     <span
                       aria-hidden="true"
-                      className={`absolute top-0 h-[3px] w-8 rounded-b-full bg-cover transition-opacity duration-150 sm:top-auto sm:bottom-0 sm:w-full sm:rounded-full ${active ? 'opacity-100' : 'opacity-0'}`}
+                      className={`absolute top-0 h-[3px] w-10 rounded-b-full bg-cover transition-[opacity,scale] duration-200 ease-[var(--ease-out-expo)] sm:top-auto sm:bottom-0 sm:w-[calc(100%-1rem)] sm:rounded-t-full sm:rounded-b-none ${active ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0'}`}
                     />
-                    <Icon className="size-[22px] sm:hidden" />
+                    <Icon className="size-[22px] sm:size-5" />
                     {label}
                   </Link>
                 </li>
@@ -414,16 +421,14 @@ function Shell({ children }: { children: ReactNode }) {
             })}
           </ul>
         </nav>
-        <div className={`shrink-0 items-center gap-1 ${home ? 'flex' : 'hidden sm:flex'}`}>
-          <span className="hidden sm:contents">
-            <MusicToggle />
-          </span>
-          <SoundToggle />
-          <span className="ml-1 sm:ml-2">
-            <AccountLink />
-          </span>
+        <div
+          className={`ml-auto flex shrink-0 items-center gap-1 sm:ml-0 sm:gap-2 ${level ? 'max-sm:hidden' : ''}`}
+        >
+          <SettingsButton />
+          <AccountLink />
         </div>
       </header>
+      <SettingsDialog />
       {!online && (
         <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
           Sem conexão. As jogadas voltam quando a internet voltar.

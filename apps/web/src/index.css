@@ -2614,3 +2614,150 @@
   }
 }
 /* ── end Career Path level ───────────────────────────────────────────────────────────────── */
+
+/* ── Header, tab bar and Ajustes: the stadium scoreboard ─────────────────────────────────── */
+@layer components {
+  /* Black glass with a fine LED grid, lit from above; a gold hairline is the floodlight's edge. */
+  .scoreboard {
+    background:
+      radial-gradient(rgb(255 255 255 / 0.045) 0.7px, transparent 1.1px) 0 0 / 4px 4px,
+      linear-gradient(180deg, oklch(0.2 0.03 155), oklch(0.13 0.022 155));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      inset 0 -1px 0 rgb(0 0 0 / 0.45);
+  }
+  .floodlit {
+    position: relative;
+  }
+  .floodlit::before {
+    content: '';
+    position: absolute;
+    inset-inline: 8%;
+    top: 0;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--color-cover) 70%, transparent) 50%,
+      transparent
+    );
+  }
+  /* The active place: the bar on its edge and the light it throws onto the tab. */
+  .tab-lit {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--color-cover) 16%, transparent),
+      transparent 75%
+    );
+  }
+  @media (width >= 40rem) {
+    .tab-lit {
+      background: linear-gradient(
+        0deg,
+        color-mix(in oklch, var(--color-cover) 14%, transparent),
+        transparent 80%
+      );
+    }
+  }
+}
+
+/* Ajustes: a sheet from the bottom on phones, a panel under the header from 640px. */
+.settings-sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(88dvh, 46rem);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-top: 1px solid color-mix(in oklch, var(--color-cover) 45%, transparent);
+  border-radius: 18px 18px 0 0;
+  background: var(--color-pitch-deep);
+  box-shadow: 0 -24px 60px -20px rgb(0 0 0 / 0.75);
+}
+.settings-sheet[open] {
+  animation: sheet-up 420ms var(--ease-out-expo);
+}
+@media (width >= 40rem) {
+  .settings-sheet {
+    margin: 5.5rem max(2rem, calc((100vw - 80rem) / 2 + 2rem)) auto auto;
+    width: 26rem;
+    max-height: calc(100dvh - 7rem);
+    border: 1px solid color-mix(in oklch, var(--color-chalk) 12%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 28px 60px -18px rgb(0 0 0 / 0.75);
+  }
+  .settings-sheet[open] {
+    transform-origin: top right;
+    animation: panel-drop 280ms var(--ease-out-expo);
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes panel-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+
+/* Volume fader: the lit part is the level (--v); a 44px target around a 6px rail. */
+.fader {
+  appearance: none;
+  height: 2.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+.fader:disabled {
+  cursor: not-allowed;
+}
+.fader::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-cover) var(--v),
+    color-mix(in oklch, var(--color-chalk) 16%, transparent) var(--v)
+  );
+}
+.fader::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-cover) var(--v),
+    color-mix(in oklch, var(--color-chalk) 16%, transparent) var(--v)
+  );
+}
+.fader::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border: 3px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-chalk);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+.fader::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-chalk);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+/* Ajustes › Reduzir animações: every animation and transition ends at once. */
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
