@@ -7,12 +7,68 @@ import { effectivePks } from '../leagues/leagues';
 import { ownedPks } from './owned-pks';
 import { streakDays } from './streak';
 
-/** The footballer a level is about, or null for modes without one (until their plans). */
-export function featuredPlayerId(mode: GameModeCode, snapshot: unknown): string | null {
-  if (mode === 'CAREER_PATH') return (snapshot as { answerPlayerId: string }).answerPlayerId;
-  if (mode === 'MYSTERY_PLAYER')
-    return (snapshot as { answer: { playerId: string } }).answer.playerId;
-  return null;
+type Rounds<T> = { rounds?: T[] };
+
+/**
+ * Footballers a won level could feature. Single-answer modes give one; the others give every
+ * player on the level (Grid: the ones the player placed), and the most famous one is picked.
+ */
+export function candidatePlayerIds(
+  mode: GameModeCode,
+  snapshot: unknown,
+  state: unknown,
+): string[] {
+  const s = snapshot as Record<string, unknown>;
+  const ids: (string | null | undefined)[] = (() => {
+    switch (mode) {
+      case 'CAREER_PATH':
+        return [(s as { answerPlayerId: string }).answerPlayerId];
+      case 'MYSTERY_PLAYER':
+        return [(s as { answer: { playerId: string } }).answer.playerId];
+      case 'FOOTBALL_GRID':
+        return ((state as { cells?: { playerId: string | null }[] }).cells ?? []).map(
+          (c) => c.playerId,
+        );
+      case 'HIGHER_LOWER':
+        return (
+          (s as Rounds<{ a: { playerId: string }; b: { playerId: string } }>).rounds ?? []
+        ).flatMap((r) => [r.a.playerId, r.b.playerId]);
+      case 'TIMELINE':
+        return ((s as Rounds<{ playerId: string }>).rounds ?? []).map((r) => r.playerId);
+      case 'MISSING_XI':
+        return ((s as { slots?: { playerId: string | null }[] }).slots ?? []).map(
+          (x) => x.playerId,
+        );
+      case 'IMPOSTOR':
+        return ((s as Rounds<{ players: { id: string }[] }>).rounds ?? []).flatMap((r) =>
+          r.players.map((p) => p.id),
+        );
+      case 'CONNECTIONS':
+        return ((s as { groups?: { playerIds: string[] }[] }).groups ?? []).flatMap(
+          (g) => g.playerIds,
+        );
+      case 'DRAFT':
+        return ((s as Rounds<{ answerId: string }>).rounds ?? []).map((r) => r.answerId);
+    }
+  })();
+  return [...new Set(ids.filter((x): x is string => Boolean(x)))];
+}
+
+/** The level's star: the most famous candidate (T1 first), ties broken by id for stability. */
+export async function featuredPlayerId(
+  prisma: PrismaClient,
+  mode: GameModeCode,
+  snapshot: unknown,
+  state: unknown,
+): Promise<string | null> {
+  const ids = candidatePlayerIds(mode, snapshot, state);
+  if (ids.length <= 1) return ids[0] ?? null;
+  const top = await prisma.player.findFirst({
+    where: { id: { in: ids } },
+    orderBy: [{ notabilityTier: 'asc' }, { id: 'asc' }],
+    select: { id: true },
+  });
+  return top?.id ?? null;
 }
 
 /** Sticker for a won level; an existing one is replaced only by a higher rarity. */
@@ -24,9 +80,10 @@ export async function awardSticker(
   now: Date,
 ): Promise<StickerAward | null> {
   const mode = challenge.gameMode as GameModeCode;
-  const playerId = featuredPlayerId(mode, challenge.snapshot);
-  if (attempt.status !== 'WON' || attempt.stars < 1 || !playerId) return null;
+  if (attempt.status !== 'WON' || attempt.stars < 1) return null;
   if (challenge.publicNumber === null) return null; // community levels earn no stickers
+  const playerId = await featuredPlayerId(prisma, mode, challenge.snapshot, attempt.state);
+  if (!playerId) return null;
 
   const pk = player.userId ?? player.sessionId;
   const [footballer, active, streak] = await Promise.all([

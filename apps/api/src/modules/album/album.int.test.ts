@@ -4,6 +4,7 @@ import { seedReference } from '../../seed-reference';
 import { ADMIN_TOKEN, testApp, WEB_ORIGIN } from '../../test/app';
 import { resetDb, testPrisma } from '../../test/db';
 import { countryIds, verifiedClubs, verifiedPlayer } from '../../test/factory';
+import { featuredPlayerId } from './award';
 
 const prisma = testPrisma();
 const START = new Date('2026-11-05T15:00:00Z');
@@ -163,6 +164,25 @@ async function giveStickers(pk: string, rarities: ('bronze' | 'prata' | 'ouro' |
     });
   }
 }
+
+describe('featured player in multi-player modes', () => {
+  it('picks the most famous player of the level', async () => {
+    const clubs = await verifiedClubs(prisma);
+    const countries = await countryIds(prisma);
+    const mk = (name: string, tier: 'T1' | 'T3') =>
+      verifiedPlayer(prisma, {
+        name,
+        clubIds: [clubs.Cruzeiro!.id],
+        nationalityId: countries.BR!,
+        tier,
+      }).then((p) => p.id);
+    const lesser = await mk('Coadjuvante', 'T3');
+    const star = await mk('Craque', 'T1');
+    const snapshot = { rounds: [{ playerId: lesser }, { playerId: star }] };
+    expect(await featuredPlayerId(prisma, 'TIMELINE', snapshot, {})).toBe(star);
+    expect(await featuredPlayerId(prisma, 'DRAFT', { rounds: [] }, {})).toBeNull();
+  });
+});
 
 describe('album routes', () => {
   it('album lists my stickers best first', async () => {
