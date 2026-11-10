@@ -2,6 +2,7 @@
 import './instrument';
 import { buildApp } from './app';
 import { createPrisma } from './db';
+import { purgeIdleGuests } from './modules/account/account.data';
 import { mailer } from './modules/account/email';
 import webpush from 'web-push';
 import { NO_PUSH, runPushJobs, type PushDeps } from './modules/push/push';
@@ -106,6 +107,15 @@ if (vapid)
       .then((n) => n && app.log.info(`push: ${n} sent`))
       .catch((err: unknown) => app.log.error(err));
   }, 60_000).unref();
+
+// LGPD retention: guests idle for 12 months are erased. A minute after boot (deploys restart the
+// process) and then daily; an advisory lock keeps concurrent instances from overlapping.
+const purge = () =>
+  purgeIdleGuests(app.deps.prisma, new Date())
+    .then((n) => app.log.info(`guest purge: ${n} erased`))
+    .catch((err: unknown) => app.log.error(err));
+setTimeout(purge, 60_000).unref();
+setInterval(purge, 24 * 3600_000).unref();
 
 app
   .listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? '127.0.0.1' })
