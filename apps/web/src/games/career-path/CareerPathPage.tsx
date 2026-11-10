@@ -1,9 +1,9 @@
 /**
- * Career Path level (UX_SPEC.md §3, ADR-007). The career is a path of club stickers on the album
- * page; the dugout panel (attempts, position, guess) sits beside it on wide screens and docks to
- * the bottom of the screen on phones.
+ * Career Path level (UX_SPEC.md §3, ADR-007). The career is a full-screen leather passport whose
+ * stamps land per revealed club; the guess box docks at the bottom (overlapping the passport's foot
+ * on wide screens).
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type {
   AttemptResponse,
   CareerPathReveal,
@@ -26,7 +26,7 @@ import {
   Skeleton,
   useOnline,
 } from '../../components/ui';
-import { Trajectory } from './Trajectory';
+import { Passport } from './Passport';
 
 function Clues({ view }: { view: CareerPathView }) {
   return (
@@ -106,6 +106,13 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
   const online = useOnline();
   const [selected, setSelected] = useState<PlayerRef | null>(null);
   const [announce, setAnnounce] = useState('');
+  const [flash, setFlash] = useState(0);
+  // First tap opens the cover; a resumed attempt or reduced motion starts open.
+  const [tapped, setTapped] = useState(false);
+  const reduced = useRef(
+    typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+  );
   const data = attempt.data;
   useGameTracking(data);
   const view = data?.view as CareerPathView | undefined;
@@ -144,6 +151,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       const res = await action.mutateAsync({ attemptId: data!.attempt.id, input });
       setSelected(null);
       const ev = res.event;
+      if (ev?.type === 'wrong') setFlash((n) => n + 1);
       setAnnounce(
         ev?.type === 'correct'
           ? 'Acertou!'
@@ -156,8 +164,11 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
     }
   }
 
+  const opened = tapped || reduced.current || view.history.length > 0 || view.revealed.length > 1;
+  const clubs = done && reveal ? reveal.trajectory : view.revealed;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
       <GameHeader
         title={title}
         aside={
@@ -177,78 +188,90 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       <p className="sr-only" aria-live="polite">
         {announce}
       </p>
+      {flash > 0 && (
+        <div
+          key={flash}
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+        />
+      )}
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(20rem,1fr)] lg:items-start">
-        {/* Left: the career path */}
-        <section aria-labelledby="path-title" className="order-2 lg:order-1">
-          <h2 id="path-title" className="sr-only">
-            Trajetória
-          </h2>
-          <Trajectory
-            clubs={done && reveal ? reveal.trajectory : view.revealed}
-            pending={!done}
-            label={done ? 'Trajetória completa' : 'Clubes revelados'}
-          />
-        </section>
+      {!done && (
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
+          <Clues view={view} />
+          <Guesses view={view} />
+        </div>
+      )}
+      <section
+        aria-labelledby="path-title"
+        className={
+          done
+            ? 'h-[28rem] sm:h-[34rem]'
+            : 'h-[calc(100dvh-24rem)] min-h-[18rem] sm:h-[calc(100dvh-18rem)] sm:min-h-[26rem]'
+        }
+      >
+        <h2 id="path-title" className="sr-only">
+          Trajetória
+        </h2>
+        <Passport
+          clubs={clubs}
+          total={done ? clubs.length : view.maxAttempts}
+          opened={done || opened}
+          onOpen={() => setTapped(true)}
+          label={done ? 'Trajetória completa' : 'Clubes revelados'}
+        />
+      </section>
 
-        {/* Right: the dugout panel (docks to the bottom on phones while playing) */}
-        <aside className="order-1 flex flex-col gap-5 lg:sticky lg:top-6 lg:order-2">
-          {done ? (
-            <LevelEnd data={data} {...resultCopy(data)} />
-          ) : (
-            <>
-              <Clues view={view} />
-              <Guesses view={view} />
-              <form
-                className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur lg:static lg:gap-3 lg:rounded-xl lg:border lg:bg-chalk/[0.05] lg:p-4 lg:backdrop-blur-none"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (selected)
-                    void submit({ kind: 'guess', playerId: selected.id }, `Não é ${selected.name}`);
-                }}
-              >
-                <p className="hidden text-sm font-semibold text-chalk-soft lg:block">
-                  Quem fez essa carreira?
-                </p>
-                <div className="flex items-stretch gap-2">
-                  <div className="min-w-0 flex-1">
-                    <PlayerSearch
-                      label="Quem é o jogador?"
-                      onSelect={setSelected}
-                      selected={selected}
-                      exclude={guessed}
-                      disabled={!online || action.isPending}
-                      autoFocus
-                      dropUp
-                    />
-                  </div>
-                  <button
-                    className={`${btnPrimary} px-4`}
-                    disabled={!selected || !online || action.isPending}
-                  >
-                    Chutar
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className={`${btnSecondary} min-h-10 text-base`}
-                  disabled={!online || action.isPending}
-                  onClick={() => void submit({ kind: 'skip' }, 'Pulou')}
-                >
-                  <Icon name="skip" /> Pular e ver o próximo clube
-                </button>
-                {action.error && (
-                  <p role="alert" className="text-sm text-cover">
-                    {(action.error as ApiError).message}
-                  </p>
-                )}
-              </form>
-            </>
+      {done ? (
+        <LevelEnd data={data} {...resultCopy(data)} />
+      ) : (
+        <form
+          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (selected)
+              void submit({ kind: 'guess', playerId: selected.id }, `Não é ${selected.name}`);
+          }}
+        >
+          <p className="hidden text-center text-sm font-semibold text-chalk-soft sm:block">
+            De quem é esse passaporte?
+          </p>
+          <div className="flex items-stretch gap-2">
+            <div className="min-w-0 flex-1">
+              <PlayerSearch
+                label="Quem é o jogador?"
+                onSelect={setSelected}
+                selected={selected}
+                exclude={guessed}
+                disabled={!online || action.isPending}
+                autoFocus
+                dropUp
+              />
+            </div>
+            <button
+              className={`${btnPrimary} px-4`}
+              disabled={!selected || !online || action.isPending}
+            >
+              Chutar
+            </button>
+          </div>
+          <button
+            type="button"
+            className={`${btnSecondary} min-h-10 text-base`}
+            disabled={!online || action.isPending}
+            onClick={() => void submit({ kind: 'skip' }, 'Pulou')}
+          >
+            <Icon name="skip" /> Pular e ver o próximo clube
+          </button>
+          {action.error && (
+            <p role="alert" className="text-sm text-cover">
+              {(action.error as ApiError).message}
+            </p>
           )}
-        </aside>
-      </div>
+        </form>
+      )}
       {/* room for the guess form docked at the bottom on phones */}
-      {!done && <div className="h-32 lg:hidden" aria-hidden="true" />}
+      {!done && <div className="h-32 sm:hidden" aria-hidden="true" />}
     </div>
   );
 }
