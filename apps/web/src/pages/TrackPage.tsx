@@ -8,6 +8,7 @@ import { Link } from 'react-router';
 import type { GameMode, TrackResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useTrack } from '../lib/game';
 import { Stars } from '../components/Stars';
+import { ModeCover } from '../components/ModeCover';
 import { GameHeader, Notice, Skeleton } from '../components/ui';
 import { StarIcon } from '../components/Stars';
 
@@ -20,7 +21,7 @@ function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean
   if (l.state === 'locked')
     return (
       <li
-        className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-chalk-soft/35 text-chalk-soft/75"
+        className="grid aspect-square place-items-center rounded-full border-2 border-dashed border-chalk-soft/35 text-chalk-soft/75"
         aria-label={`${label}, trancada`}
       >
         <span className="font-condensed tabular text-xl font-black sm:text-2xl">{l.level}</span>
@@ -37,10 +38,10 @@ function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean
             ? `${label}, ${l.stars} estrelas`
             : `${label}, ${l.state === 'in_progress' ? 'em andamento' : 'jogar'}`
         }
-        className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-lg transition-transform duration-200 ease-out-expo hover:-translate-y-0.5 ${
+        className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-full transition-transform duration-200 ease-out-expo hover:-translate-y-0.5 ${
           done
-            ? 'bg-paper text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]'
-            : 'bg-cover text-ink shadow-[0_0_0_4px_rgb(255_255_255/0.12),0_10px_24px_-8px_rgb(0_0_0/0.6)] motion-safe:animate-[paste_420ms_var(--ease-out-expo)]'
+            ? 'border-[3px] border-dashed border-ink/25 bg-paper text-ink shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]'
+            : 'house-pulse bg-cover text-ink shadow-[0_10px_24px_-8px_rgb(0_0_0/0.6)]'
         }`}
       >
         <span className="font-condensed tabular text-2xl leading-none font-black sm:text-3xl">
@@ -72,6 +73,13 @@ export function TrackPage({ mode }: { mode: GameMode }) {
   return (
     <div className="flex flex-col gap-8">
       <GameHeader title={GAME_NAME[mode]} />
+      {/* The mode's own object as the header; the h1 above carries the name for assistive tech. */}
+      <div
+        aria-hidden="true"
+        className="flex flex-col overflow-hidden rounded-xl shadow-[0_14px_30px_-12px_rgb(0_0_0/0.6)]"
+      >
+        <ModeCover mode={mode} name={GAME_NAME[mode]} />
+      </div>
       {error && <Notice title="Deu ruim na conexão">{(error as Error).message}</Notice>}
       {!data && !error && <Skeleton className="h-96" />}
       {data && levels.length === 0 && (
@@ -168,7 +176,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
                 </span>
               </summary>
               <ol
-                className="grid grid-cols-5 gap-2 px-4 pb-4 sm:gap-3"
+                className="grid grid-cols-5 gap-x-2 gap-y-4 px-4 pb-5 sm:gap-x-3 [&>li]:relative [&>li:not(:nth-child(5n))::after]:absolute [&>li:not(:nth-child(5n))::after]:top-1/2 [&>li:not(:nth-child(5n))::after]:left-full [&>li:not(:nth-child(5n))::after]:h-0 [&>li:not(:nth-child(5n))::after]:w-2 [&>li:not(:nth-child(5n))::after]:border-t-2 [&>li:not(:nth-child(5n))::after]:border-dashed [&>li:not(:nth-child(5n))::after]:border-chalk-soft/50 [&>li:not(:nth-child(5n))::after]:content-[''] sm:[&>li:not(:nth-child(5n))::after]:w-3"
                 aria-label={`Fases ${page[0]!.level} a ${page.at(-1)!.level}`}
               >
                 {page.map((l) => (
