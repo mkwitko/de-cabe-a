@@ -66,12 +66,14 @@ export function Passport({
   opened,
   onOpen,
   label = 'Clubes revelados',
+  done = false,
 }: {
   clubs: RevealedClub[];
   total: number;
   opened: boolean;
   onOpen: () => void;
   label?: string;
+  done?: boolean; // finished: no guess form below, rows keep a readable minimum and the page scrolls
 }) {
   const fresh = useRef(!opened); // cover still shut at mount: stamp 1 waits for the cover
   const landed = useRef(opened ? clubs.length : 0);
@@ -127,7 +129,7 @@ export function Passport({
           </div>
           <ol
             aria-label={label}
-            className="absolute inset-x-2.5 top-11 bottom-2.5 grid grid-cols-2 [grid-auto-rows:minmax(0,1fr)] gap-1 sm:bottom-24"
+            className={`absolute inset-x-2.5 top-11 bottom-2.5 grid grid-cols-2 gap-1 ${done ? 'overflow-y-auto [grid-auto-rows:minmax(4.5rem,1fr)]' : '[grid-auto-rows:minmax(0,1fr)] sm:bottom-24'}`}
           >
             {clubs.map((c, i) => (
               <li key={i} className="grid min-h-0 min-w-0 place-items-center [container-type:size]">

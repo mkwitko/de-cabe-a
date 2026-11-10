@@ -217,6 +217,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
           opened={done || opened}
           onOpen={() => setTapped(true)}
           label={done ? 'Trajetória completa' : 'Clubes revelados'}
+          done={done}
         />
       </section>
 

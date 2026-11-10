@@ -99,7 +99,17 @@ export function useAction(mode: GameMode, level: number, challengeId?: string) {
       else if (data.event?.type === 'correct') play('correct');
       else if (data.event?.type === 'wrong') play('wrong');
       if (data.attempt.status !== 'IN_PROGRESS')
-        for (const key of ['games', 'track', 'stats', 'me', 'ranking', 'level-ranking', 'oficina'])
+        for (const key of [
+          'games',
+          'track',
+          'stats',
+          'me',
+          'ranking',
+          'level-ranking',
+          'oficina',
+          'album',
+          'profile-album',
+        ])
           void qc.invalidateQueries({ queryKey: [key] });
     },
   });
