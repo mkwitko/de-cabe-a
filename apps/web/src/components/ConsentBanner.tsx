@@ -17,7 +17,7 @@ import {
 } from '../lib/consent';
 
 const btn =
-  'font-condensed inline-flex min-h-11 items-center justify-center rounded-lg border-2 border-ink px-4 text-base font-extrabold uppercase tracking-wide transition-[transform,background-color] duration-100 active:scale-[0.98] motion-reduce:transform-none';
+  'font-condensed inline-flex min-h-11 items-center justify-center rounded-lg border-2 border-ink px-3 text-base font-extrabold uppercase tracking-wide transition-[transform,background-color] duration-100 active:scale-[0.98] motion-reduce:transform-none';
 
 export function ConsentBanner() {
   const choice = useConsent();
@@ -129,7 +129,7 @@ export function ConsentBanner() {
               </>
             )}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className={onLevel ? 'grid grid-cols-[auto_1fr] gap-2' : 'flex flex-wrap gap-2'}>
             <button
               className={`${btn} bg-ink text-paper`}
               onClick={() => save({ analytics: true, ads: true })}

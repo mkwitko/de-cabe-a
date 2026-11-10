@@ -45,8 +45,12 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
-  await expect(page.getByRole('heading', { name: 'Acertou em 3 de 6!' })).toBeVisible();
+  // The broadcast's star is the player; the verdict heads the end screen.
+  await expect(
+    page.getByRole('dialog', { name: 'Resultado' }).getByRole('heading', { name: /Ronaldo/ }),
+  ).toBeVisible();
   await skipCeremony(page);
+  await expect(page.getByRole('heading', { name: 'Acertou em 3 de 6!' })).toBeVisible();
   await expect(page.getByRole('img', { name: '2 de 3 estrelas' }).first()).toBeVisible();
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
@@ -71,7 +75,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   expect(clip).not.toContain('Ronaldo');
 
   // 6. Track page: level 1 done with stars, level 2 open
-  await page.getByRole('link', { name: 'Voltar às fases' }).click();
+  await page.getByRole('link', { name: 'Voltar às fases' }).first().click();
   await expect(page.getByRole('link', { name: /Fase 1, .*2 estrelas/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Fase 2, .*jogar/ })).toBeVisible();
 
@@ -139,8 +143,8 @@ test('Modo Carreira: create a footballer, train him with a level, play a match',
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
-  await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
   await skipCeremony(page);
+  await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
   await page.getByRole('link', { name: /de treino para o seu craque/ }).click();
 
   await page.getByRole('button', { name: 'Jogar a partida' }).click();
