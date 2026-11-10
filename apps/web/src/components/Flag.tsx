@@ -24,7 +24,6 @@ const nordic = (bg: string, cross: string, inner?: string) => ({
   ),
 });
 
-const R = '#d52b1e';
 const W = '#ffffff';
 const B = '#0b3d91';
 const K = '#111111';

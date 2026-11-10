@@ -16,7 +16,11 @@ const packColors = (r: StickerAward['sticker']['rarity']) =>
     ? ['#c08aff', '#ff8a8a', '#ffe08a', '#9dffb0', '#8ad8ff']
     : [/--rc:(#[0-9a-f]{6})/i.exec(RARITY_STYLE[r].className)?.[1] ?? '#f5c400'];
 
-/** Rarity colour and name first (with its sound), then the card spins in, then the name. */
+/**
+ * Rarity colour and name first (with its sound), then the card spins in, then the name. A hero
+ * moment sized to the viewport: the card about 44% of the screen height (60% of a phone's
+ * width) over a light in the rarity colour, then the name and the Nota De Cabeça in big type.
+ */
 export function StickerReveal({
   award,
   onDone,
@@ -74,16 +78,21 @@ export function StickerReveal({
       onPointerMove={onMove}
       role="dialog"
       aria-label="Figurinha nova"
-      className={`screen-overlay fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
+      className={`screen-overlay fixed inset-0 z-50 flex flex-col items-center justify-center gap-[clamp(0.75rem,2.5vh,1.75rem)] overflow-hidden pb-24 bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
     >
       <Lamps on={3} />
+      {/* the rarity's light behind the card */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute top-[44%] left-1/2 aspect-square w-[max(120vmin,560px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--rc)_70%,transparent),color-mix(in_srgb,var(--rc)_22%,transparent)_45%,transparent)] transition-opacity duration-700 ${revealed ? 'opacity-100' : 'opacity-0'}`}
+      />
       {!short && !reducedMotion() && (
         <div
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 h-[120%] w-1.5 bg-[linear-gradient(transparent,#fff7d1,transparent)] opacity-0 motion-safe:animate-[beam_700ms_ease-out_forwards]"
         />
       )}
-      <p className="text-center text-sm font-black tracking-[0.4em] text-(--rc) uppercase motion-safe:animate-[fade-in_300ms_both]">
+      <p className="relative text-center text-sm font-black tracking-[0.4em] text-(--rc) uppercase sm:text-base motion-safe:animate-[fade-in_300ms_both]">
         {isNew ? 'Figurinha ' : upgradedFrom ? 'Upgrade · ' : ''}
         {style.label}
       </p>
@@ -97,14 +106,31 @@ export function StickerReveal({
         )}
         <div
           ref={tilt}
-          className={`relative aspect-[3/4] w-[min(64vw,250px)] [transform-style:preserve-3d] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
+          className={`relative aspect-[3/4] w-[min(62vw,33vh)] [transform-style:preserve-3d] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
           style={{ '--d': `${dur}ms` } as React.CSSProperties}
         >
           <StickerCard sticker={sticker} size="lg" showName={phase === 'named'} stripRef={strip} />
         </div>
       </div>
+      <div
+        className={`relative flex flex-col items-center gap-1 px-5 text-center transition-[opacity,transform] duration-500 ease-out ${phase === 'named' ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
+      >
+        <p className="font-condensed max-w-[18ch] text-[clamp(2.25rem,6.5vh,4.5rem)] leading-[0.9] font-black text-balance uppercase">
+          {sticker.name}
+        </p>
+        {sticker.rating !== undefined && (
+          <p className="font-condensed flex items-baseline gap-2 text-sm font-extrabold tracking-[0.2em] text-white/75 uppercase sm:text-base">
+            Nota De Cabeça
+            <span className="tabular text-[clamp(1.75rem,4.5vh,3rem)] leading-none font-black tracking-normal text-(--rc)">
+              {sticker.rating}
+            </span>
+          </p>
+        )}
+      </div>
       <p aria-live="polite" className="sr-only">
-        {phase === 'named' ? `Figurinha ${style.label}: ${sticker.name}` : ''}
+        {phase === 'named'
+          ? `Figurinha ${style.label}: ${sticker.name}${sticker.rating === undefined ? '' : `, Nota De Cabeça ${sticker.rating}`}`
+          : ''}
       </p>
       <button
         type="button"
