@@ -89,7 +89,8 @@ export type Sound =
   | 'crowd'
   | 'tick'
   | 'shimmer'
-  | 'rarity';
+  | 'rarity'
+  | 'rip';
 
 /** Returns a stop function for 'crowd' only (the broadcast's Pular cuts the roar). */
 export function play(sound: Sound): (() => void) | void {
@@ -137,6 +138,9 @@ export function play(sound: Sound): (() => void) | void {
       tone(1400, 0, 0.03, 'square', 0.04);
     } else if (sound === 'shimmer') {
       [880, 1320, 1760, 2640].forEach((f, i) => tone(f, i * 0.07, 0.6, 'sine', 0.07));
+    } else if (sound === 'rip') {
+      // Paper tearing: a short bright burst.
+      noise(0, 0.22, 0.1, 3800);
     } else if (sound === 'rarity') {
       tone(392, 0, 0.5, 'triangle', 0.15);
       tone(587, 0.12, 0.7, 'triangle', 0.15);

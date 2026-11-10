@@ -299,3 +299,253 @@
     display: none;
   }
 }
+
+/* Grid prancheta: a magnet snaps onto its cell, a chalk stroke crosses a finished line. */
+@keyframes magnet-snap {
+  0% {
+    transform: translateY(-28px) scale(1.5) rotate(-14deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.93);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes chalk-draw {
+  from {
+    transform: scale(0, 1);
+  }
+}
+@keyframes chalk-draw-y {
+  from {
+    transform: scale(1, 0);
+  }
+}
+.magnet-snap {
+  animation: magnet-snap 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.chalk-draw {
+  animation: chalk-draw 450ms 150ms var(--ease-out-expo) both;
+}
+.chalk-draw.origin-top {
+  animation-name: chalk-draw-y;
+}
+@media (prefers-reduced-motion: reduce) {
+  .magnet-snap {
+    animation: stamp-fade 300ms ease-out both;
+  }
+  .chalk-draw {
+    animation: stamp-fade 300ms ease-out both;
+  }
+}
+
+/* Mais ou menos telão: digits light up one by one, floodlights flicker on. */
+@keyframes led-digit {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes flood-on {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.led-digit {
+  animation: led-digit 260ms steps(1, end) both;
+}
+.flood-on {
+  animation: flood-on 520ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flood-on,
+  .led-digit {
+    animation: none;
+  }
+}
+
+/* Craque misterioso dossier: a censor bar is torn off the folder. */
+@keyframes censor-tear {
+  to {
+    transform: translate(22px, -16px) rotate(7deg);
+    opacity: 0;
+  }
+}
+.censor-tear {
+  animation: censor-tear 520ms 120ms cubic-bezier(0.5, 0, 0.8, 0.4) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .censor-tear {
+    animation: censor-fade 300ms ease-out both;
+  }
+}
+@keyframes censor-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Linha do tempo: a clipping out of place crumples on the clothesline. */
+@keyframes clip-crumple {
+  40% {
+    transform: scale(0.8) rotate(-6deg) skewX(8deg);
+  }
+  to {
+    transform: scale(0.94) skewX(-2deg);
+  }
+}
+.clip-crumple {
+  animation: clip-crumple 520ms 150ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .clip-crumple {
+    animation: none;
+  }
+}
+
+/* Impostor line-up: the intruder steps out of the line, toward the viewer. */
+@keyframes lineup-pull {
+  to {
+    transform: translateY(-14px) scale(1.12);
+  }
+}
+.lineup-pull {
+  animation: lineup-pull 480ms 100ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lineup-pull {
+    animation: none;
+    transform: scale(1.08);
+  }
+}
+
+/* Escalação: a found name develops its face, like a print coming up in the tray. */
+@keyframes develop-out {
+  to {
+    opacity: 0;
+  }
+}
+.develop-out {
+  animation: develop-out 1100ms 150ms ease-in both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .develop-out {
+    animation-duration: 300ms;
+    animation-delay: 0ms;
+  }
+}
+
+/* Conexões: the locker door slams shut; the warning lamp blinks red on a wrong group. */
+@keyframes locker-slam {
+  from {
+    transform: rotateY(-85deg);
+    opacity: 0.4;
+  }
+}
+@keyframes lamp-blink {
+  0%,
+  40%,
+  80% {
+    opacity: 1;
+  }
+  20%,
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes lamp-wash {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.locker-slam {
+  transform-origin: left center;
+  animation: locker-slam 320ms cubic-bezier(0.5, 0, 0.9, 0.4) backwards;
+}
+.lamp-blink {
+  animation: lamp-blink 900ms steps(1, end) both;
+}
+.lamp-wash {
+  opacity: 0;
+  animation: lamp-wash 500ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .locker-slam {
+    animation: stamp-fade 300ms ease-out backwards;
+    transform: none;
+  }
+  .lamp-blink {
+    animation: lamp-wash 900ms ease-out both;
+  }
+  .lamp-wash {
+    animation: none;
+  }
+}
+
+/* Draft: light leaks from the pack seam, then the cards flip up one by one. */
+@keyframes card-flip {
+  from {
+    transform: rotateY(90deg);
+    opacity: 0;
+  }
+}
+@keyframes pack-seam {
+  0% {
+    transform: scaleX(0.15);
+    opacity: 0;
+  }
+  30% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+.card-flip {
+  animation: card-flip 420ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+}
+.pack-seam {
+  animation: pack-seam 800ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-flip {
+    animation: stamp-fade 300ms ease-out backwards;
+  }
+  .pack-seam {
+    animation: none;
+    opacity: 0;
+  }
+}

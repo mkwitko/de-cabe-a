@@ -6,27 +6,35 @@ import { useMemo, useState } from 'react';
 import type { AttemptResponse, ConnectionsReveal, ConnectionsView } from '@decabeca/contracts';
 import { btnPrimary, btnSecondary, GameHeader, Skeleton, useOnline } from '../../components/ui';
 import type { ApiError } from '../../lib/api';
+import { buzz } from '../../lib/haptics';
+import { play } from '../../lib/sound';
 import { useAction, useAttempt } from '../../lib/game';
 import { useGameTracking } from '../../lib/useGameTracking';
 import { Countdown } from '../Clock';
 import { LevelEnd, LevelError } from '../LevelParts';
 
 const MAX_MISTAKES = 4;
-/** Band colours by group (easiest first), all with dark ink for contrast. */
+/** Door colours by group (easiest first), all with dark ink for contrast. */
 const BAND = [
   'bg-cover text-ink',
   'bg-[oklch(0.82_0.13_150)] text-ink',
   'bg-[oklch(0.8_0.09_235)] text-ink',
   'bg-[oklch(0.78_0.1_305)] text-ink',
 ];
+const STEEL = 'bg-[linear-gradient(90deg,#7d8a91,#aab5ba_50%,#7d8a91)]';
+const SHIRT =
+  '[clip-path:polygon(0_20%,24%_0,38%_0,50%_10%,62%_0,76%_0,100%_20%,90%_38%,92%_100%,8%_100%,10%_38%)]';
 
+/** A locker door slammed shut over its row, the group theme printed on it. */
 function Band({ g }: { g: ConnectionsView['found'][number] }) {
   return (
     <li
-      className={`flex flex-col items-center gap-1 rounded-xl px-4 py-3 text-center ${BAND[g.group]}`}
+      className={`locker-slam flex min-h-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-sm border-4 border-[#4b565c] px-3 py-1.5 text-center shadow-[inset_0_0_0_2px_#fff3] ${BAND[g.group]}`}
     >
       <span className="font-condensed text-lg leading-tight font-black uppercase">{g.label}</span>
-      <span className="text-sm font-semibold">{g.players.map((p) => p.name).join(' · ')}</span>
+      <span className="text-xs font-semibold sm:text-sm">
+        {g.players.map((p) => p.name).join(' · ')}
+      </span>
     </li>
   );
 }
@@ -62,6 +70,7 @@ export function ConnectionsPage({ level, timed = false }: { level: number; timed
   const [picked, setPicked] = useState<string[]>([]);
   const [order, setOrder] = useState<string[] | null>(null);
   const [note, setNote] = useState('');
+  const [flash, setFlash] = useState(0);
   const data = attempt.data;
   useGameTracking(data);
   const title = `Conexões · Fase ${level}`;
@@ -97,15 +106,23 @@ export function ConnectionsPage({ level, timed = false }: { level: number; timed
           if (ev?.type === 'group_found') {
             setPicked([]);
             setNote('Grupo certo!');
-          } else if (ev?.type === 'miss')
+            play('clunk');
+            buzz(40);
+          } else if (ev?.type === 'miss') {
             setNote(ev.oneAway ? 'Quase! Falta trocar um.' : 'Não é um grupo.');
+            setFlash((n) => n + 1);
+            play('wrong');
+            buzz([30, 40, 30]);
+          }
         },
       },
     );
   const shuffle = () => setOrder([...tiles].map((t) => t.id).sort(() => Math.random() - 0.5));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div
+      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] sm:h-[calc(100dvh-9rem)]'}`}
+    >
       <GameHeader
         title={title}
         aside={
@@ -117,15 +134,49 @@ export function ConnectionsPage({ level, timed = false }: { level: number; timed
           />
         }
       />
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)] lg:items-start">
-        <section className="flex flex-col gap-3">
-          <ol className="flex flex-col gap-2" aria-label="Grupos encontrados">
-            {(done ? (data.reveal as ConnectionsReveal).groups : view.found).map((g) => (
-              <Band key={g.group} g={g} />
-            ))}
-          </ol>
-          {!done && (
-            <div className="grid grid-cols-4 gap-2" role="group" aria-label="Jogadores">
+      <section
+        aria-label="Vestiário"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, #0000001a 0 1px, transparent 1px 14px), linear-gradient(90deg,#7d8a91,#aab5ba 50%,#7d8a91)',
+        }}
+        className={`relative mx-auto flex w-full max-w-3xl flex-col gap-2 overflow-y-auto rounded-lg border-4 border-[#4b565c] p-2 pt-4 text-[#20282c] shadow-[0_6px_0_#0004,inset_0_0_0_2px_#fff3] sm:p-4 sm:pt-5 ${done ? 'min-h-[24rem]' : 'min-h-0 flex-1'}`}
+      >
+        {/* Warning lamp: flashes red on a wrong group. */}
+        <span
+          aria-hidden="true"
+          className="absolute top-1.5 right-3 size-4 rounded-full border-2 border-[#4b565c] bg-[#5a1a1a]"
+        />
+        {flash > 0 && (
+          <>
+            <span
+              key={`l${flash}`}
+              aria-hidden="true"
+              className="lamp-blink absolute top-1.5 right-3 size-4 rounded-full border-2 border-[#4b565c] bg-[#e5252f]"
+            />
+            <span
+              key={`w${flash}`}
+              aria-hidden="true"
+              className="lamp-wash pointer-events-none absolute inset-0 bg-[#a3242f]"
+            />
+          </>
+        )}
+        <ol className="flex flex-col gap-2 [perspective:700px]" aria-label="Grupos encontrados">
+          {(done ? (data.reveal as ConnectionsReveal).groups : view.found).map((g) => (
+            <Band key={g.group} g={g} />
+          ))}
+        </ol>
+        {!done && (
+          <>
+            <p className="sr-only text-sm font-semibold sm:not-sr-only">
+              Escolha 4 jogadores com algo em comum: mesmo clube, mesma seleção ou titulares da
+              mesma final. Cada um está em um grupo só.
+            </p>
+            <div
+              className="grid auto-rows-[3.5rem] grid-cols-4 content-start sm:auto-rows-[5rem] gap-1.5 sm:gap-3"
+              role="group"
+              aria-label="Jogadores"
+            >
               {tiles.map((t) => {
                 const on = picked.includes(t.id);
                 return (
@@ -135,78 +186,88 @@ export function ConnectionsPage({ level, timed = false }: { level: number; timed
                     aria-pressed={on}
                     onClick={() => toggle(t.id)}
                     disabled={action.isPending}
-                    className={`flex min-h-20 items-center justify-center rounded-xl p-2 text-center text-sm leading-tight font-bold transition-transform duration-150 ease-out-expo sm:text-base ${on ? '-translate-y-0.5 bg-ink text-paper shadow-[0_10px_20px_-8px_rgb(0_0_0/0.6)]' : 'bg-paper text-ink shadow-[0_6px_14px_-8px_rgb(0_0_0/0.5)] hover:-translate-y-0.5'}`}
+                    className={`relative flex items-end justify-center rounded-sm border-2 border-[#4b565c] px-0.5 pt-3 pb-1 ${STEEL} shadow-[inset_0_0_0_1px_#fff4] disabled:opacity-70`}
                   >
-                    {t.name}
+                    <i
+                      aria-hidden="true"
+                      className="absolute inset-x-2 top-1 h-1.5 bg-[repeating-linear-gradient(90deg,#20282c_0_2px,transparent_2px_5px)] opacity-70"
+                    />
+                    <span
+                      className={`flex h-full w-full items-center justify-center px-2 text-center text-[0.6875rem] leading-tight font-bold transition-transform duration-150 ease-out-expo [overflow-wrap:anywhere] hyphens-auto sm:text-sm ${SHIRT} ${on ? '-translate-y-1 bg-ink text-paper' : 'bg-paper text-ink'}`}
+                    >
+                      {t.name}
+                    </span>
                   </button>
                 );
               })}
             </div>
+          </>
+        )}
+      </section>
+      {done ? (
+        <div className="mx-auto w-full max-w-3xl">
+          <LevelEnd data={data} {...resultCopy(data)} />
+        </div>
+      ) : (
+        <div className="mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+              Erros:
+              <span className="flex gap-1" aria-label={`${view.mistakesLeft} erros restantes`}>
+                {Array.from({ length: MAX_MISTAKES }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`size-3 rounded-full ${i < view.mistakesLeft ? 'bg-cover' : 'bg-chalk/20'}`}
+                  />
+                ))}
+              </span>
+            </p>
+            <p
+              className="font-condensed min-w-0 flex-1 text-base leading-tight font-black uppercase"
+              aria-live="polite"
+            >
+              {note}
+            </p>
+            <button
+              type="button"
+              aria-label="Desistir e ver os grupos"
+              className="min-h-11 shrink-0 text-sm font-semibold text-chalk-soft underline underline-offset-4"
+              disabled={!online || action.isPending}
+              onClick={() =>
+                action.mutate({ attemptId: data.attempt.id, input: { kind: 'give_up' } })
+              }
+            >
+              Desistir
+            </button>
+          </div>
+          {action.error && (
+            <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
+              {(action.error as ApiError).message}
+            </p>
           )}
-        </section>
-        <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
-          {done ? (
-            <LevelEnd data={data} {...resultCopy(data)} />
-          ) : (
-            <div className="flex flex-col gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-4">
-              <p className="text-sm font-semibold text-chalk-soft">
-                Escolha 4 jogadores com algo em comum: mesmo clube, mesma seleção ou titulares da
-                mesma final. Cada um está em um grupo só.
-              </p>
-              <p className="flex items-center gap-2 text-sm font-semibold">
-                Erros restantes:
-                <span className="flex gap-1" aria-label={`${view.mistakesLeft} erros restantes`}>
-                  {Array.from({ length: MAX_MISTAKES }, (_, i) => (
-                    <span
-                      key={i}
-                      className={`size-3 rounded-full ${i < view.mistakesLeft ? 'bg-cover' : 'bg-chalk/20'}`}
-                    />
-                  ))}
-                </span>
-              </p>
-              <p className="min-h-6 font-condensed text-xl font-black uppercase" aria-live="polite">
-                {note}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" className={`${btnSecondary} min-h-11`} onClick={shuffle}>
-                  Embaralhar
-                </button>
-                <button
-                  type="button"
-                  className={`${btnSecondary} min-h-11`}
-                  onClick={() => setPicked([])}
-                  disabled={!picked.length}
-                >
-                  Limpar
-                </button>
-              </div>
-              <button
-                type="button"
-                className={btnPrimary}
-                disabled={picked.length !== 4 || !online || action.isPending}
-                onClick={confirm}
-              >
-                Confirmar grupo ({picked.length}/4)
-              </button>
-              {action.error && (
-                <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
-                  {(action.error as ApiError).message}
-                </p>
-              )}
-              <button
-                type="button"
-                className="min-h-10 self-center text-sm font-semibold text-chalk-soft underline underline-offset-4"
-                disabled={!online || action.isPending}
-                onClick={() =>
-                  action.mutate({ attemptId: data.attempt.id, input: { kind: 'give_up' } })
-                }
-              >
-                Desistir e ver os grupos
-              </button>
-            </div>
-          )}
-        </aside>
-      </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className={`${btnSecondary} min-h-11`} onClick={shuffle}>
+              Embaralhar
+            </button>
+            <button
+              type="button"
+              className={`${btnSecondary} min-h-11`}
+              onClick={() => setPicked([])}
+              disabled={!picked.length}
+            >
+              Limpar
+            </button>
+          </div>
+          <button
+            type="button"
+            className={btnPrimary}
+            disabled={picked.length !== 4 || !online || action.isPending}
+            onClick={confirm}
+          >
+            Confirmar grupo ({picked.length}/4)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
