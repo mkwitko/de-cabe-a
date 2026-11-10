@@ -78,7 +78,7 @@ const COVERS: Record<GameMode, Cover> = {
     extra: (
       <span
         aria-hidden="true"
-        className="font-condensed absolute top-12 right-3 rotate-12 rounded border-[3px] border-[#b3261e] px-2 text-lg font-black tracking-wider text-[#b3261e] uppercase opacity-85"
+        className="font-condensed absolute top-[3.4rem] right-2 z-10 rotate-12 bg-[#d6b46f] rounded border-[3px] border-[#b3261e] px-2 text-lg font-black tracking-wider text-[#b3261e] uppercase opacity-85"
       >
         Confidencial
       </span>
@@ -94,7 +94,7 @@ const COVERS: Record<GameMode, Cover> = {
     extra: (
       <i
         aria-hidden="true"
-        className="absolute top-3 right-4 h-2 w-8 rounded-sm bg-[repeating-linear-gradient(90deg,#20282c_0_3px,transparent_3px_6px)]"
+        className="absolute top-3 right-4 h-6 w-12 rounded-sm bg-[repeating-linear-gradient(0deg,#20282c_0_3px,transparent_3px_7px)] opacity-90"
       />
     ),
   },
@@ -112,7 +112,7 @@ export function ModeCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
   return (
     <div
       style={c.shell}
-      className="relative flex flex-1 flex-col justify-between gap-3 overflow-hidden px-5 pt-7 pb-4"
+      className="relative flex flex-1 flex-col justify-between gap-3 overflow-hidden px-5 pt-7 pb-6"
     >
       {c.extra}
       <p className={`font-condensed text-xs font-bold tracking-[0.2em] uppercase ${c.ink}`}>
