@@ -2,7 +2,7 @@
  * The home as one scene, "Vestiário à noite": a locker room under one floodlight (by day, window
  * light), the Career Path passport lying open on the bench (inside cover: the name and the title
  * in its frame; visa page: the stamps), the player's stickers fanned out of it, the next-level
- * ticket clipped to it, and the closed modes as jerseys hanging on the hooks.
+ * ticket clipped to it, and the closed modes as locked lockers along the wall.
  *
  * Entry (once per tab session): the light switches on, the cover swings open, stickers slide out,
  * the ticket lands, the last stamp thumps. Pointer (and device tilt where it needs no permission)
@@ -21,23 +21,7 @@ import { TitleBadge } from './TitleBadge';
 import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
 import { Moment } from './Moment';
-
-export type Jersey = { key: string; name: string; number: string };
-
-/** Shirt colours for the hooks: body, trim. Muted, like kit left in the dark. */
-const KITS: [string, string][] = [
-  ['#c8d3cf', '#1f5e3b'],
-  ['#7a2633', '#e7c26a'],
-  ['#1d2a4f', '#f3ead2'],
-  ['#e9e2cc', '#7a2633'],
-  ['#2f6f55', '#f3ead2'],
-  ['#c9a227', '#1d2a4f'],
-  ['#5b3a7a', '#e9e2cc'],
-  ['#2b2b2b', '#c9a227'],
-  ['#a8462f', '#f3ead2'],
-  ['#e9e2cc', '#1d2a4f'],
-  ['#3d5a80', '#e7c26a'],
-];
+import { GameArt, type CoverMode } from './GameArt';
 
 const reduced = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -89,77 +73,158 @@ function useDust() {
   return on;
 }
 
-function Hanger({ kit, number, name }: { kit: [string, string]; number: string; name: string }) {
-  const [body, trim] = kit;
-  return (
-    <div className="jersey relative aspect-[100/118] w-full">
-      <svg viewBox="0 0 100 118" aria-hidden="true" className="absolute inset-0 size-full">
-        {/* the loop on the hook and the shirt hanging from it */}
-        <path d="M50 2c-4 0-5 4-5 7" fill="none" stroke="#b08a4a" strokeWidth="2.5" />
-        <path
-          d="M36 12 46 9q4 5 8 0l10 3 26 14-9 21-11-5v70q-20 4-40 0V42l-11 5-9-21z"
-          fill={body}
-          stroke="rgb(0 0 0 / 0.35)"
-          strokeWidth="1"
-        />
-        <path d="M46 9q4 5 8 0" fill="none" stroke={trim} strokeWidth="3" />
-        <path d="m81 47 9-21M19 47 10 26" stroke={trim} strokeWidth="3" />
-        {/* folds in the cloth */}
-        <path
-          d="M38 50q2 30-1 58M63 50q-3 30 1 58"
-          fill="none"
-          stroke="rgb(0 0 0 / 0.14)"
-          strokeWidth="3"
-        />
-      </svg>
-      <div
-        className="absolute inset-x-[12%] top-[36%] flex flex-col items-center text-center"
-        style={{ color: trim }}
-      >
-        <span className="font-condensed block w-full text-[0.62rem] leading-[0.95] font-extrabold uppercase sm:text-[0.7rem]">
-          {name}
-        </span>
-        <span className="font-condensed tabular text-[1.9rem] leading-[0.9] font-black sm:text-[2.3rem]">
-          {number}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** The closed modes as jerseys on a peg rail, with the rubber stamp taped to it. */
-function JerseyRail({ jerseys }: { jerseys: Jersey[] }) {
-  if (!jerseys.length) return null;
-  return (
-    <section aria-labelledby="em-breve" className="relative mt-10 lg:mt-4">
-      <h2 id="em-breve" className="relative z-10 mb-[-0.6rem] ml-2">
-        <SoonStamp className="text-xl" />
-      </h2>
-      {/* the rail: one wooden bar with a brass hook per shirt */}
-      <div
-        aria-hidden="true"
-        className="relative h-4 rounded-full bg-[linear-gradient(180deg,#8a5a32,#5e3a1e_60%,#3d2412)] shadow-[0_8px_14px_-6px_rgb(0_0_0/0.7)]"
+/** Drawings for the closed pages, in GameArt's language (its 200×120 panel, album palette). */
+const PAGE_ART: Record<string, React.ReactNode> = {
+  career: (
+    <>
+      {/* steps from the base up to the star */}
+      <path
+        d="M40 98h36V80h36V62h36V44"
+        fill="none"
+        stroke="var(--color-chalk)"
+        strokeWidth={4}
+        strokeLinejoin="round"
       />
+      <path d="m160 14 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="var(--color-cover)" />
+      <circle cx={58} cy={70} r={7} fill="var(--color-paper)" />
+      <path
+        d="M58 77v13m-8-8 8-3 8 3"
+        stroke="var(--color-paper)"
+        strokeWidth={4}
+        strokeLinecap="round"
+      />
+    </>
+  ),
+  copa: (
+    <>
+      <path d="M80 20h40v24a20 20 0 0 1-40 0z" fill="var(--color-cover)" />
+      <path
+        d="M80 26H66a14 14 0 0 0 16 20M120 26h14a14 14 0 0 1-16 20"
+        fill="none"
+        stroke="var(--color-cover)"
+        strokeWidth={4}
+      />
+      <path d="M94 64h12v14H94z" fill="var(--color-cover)" />
+      <path d="M82 80h36v12H82z" fill="var(--color-paper)" />
+    </>
+  ),
+  oficina: (
+    <>
+      <path
+        d="M50 14h72v72H50zM74 14v72M98 14v72M50 38h72M50 62h72"
+        fill="none"
+        stroke="var(--color-chalk)"
+        strokeWidth={3}
+      />
+      <path d="m120 104 8-22 40-40 14 14-40 40z" fill="var(--color-cover)" />
+      <path d="m120 104 8-22 14 14z" fill="var(--color-paper)" />
+    </>
+  ),
+};
+
+export type Locker = { key: string; name: string; number: string; rule: string };
+
+/** How long a locker stays ajar before it shuts by itself. */
+const AJAR_MS = 4500;
+
+/**
+ * The closed modes as a bank of locked lockers on the back wall: steel doors with vents, a brass
+ * number, a padlock and a card in the name holder. A tap (or Enter) cracks one open: the door
+ * swings a few degrees, light spills out, and the note inside says "Em breve" and what the game is.
+ */
+function LockerBank({ lockers }: { lockers: Locker[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => setOpen(null), AJAR_MS);
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(null);
+    addEventListener('keydown', esc);
+    return () => {
+      clearTimeout(t);
+      removeEventListener('keydown', esc);
+    };
+  }, [open]);
+  if (!lockers.length) return null;
+  const mid = (lockers.length - 1) / 2 || 1;
+  return (
+    <section aria-labelledby="em-breve" className="lockers relative mt-10 lg:mt-0">
+      <h2 id="em-breve" className="relative z-20 mb-[-0.9rem] ml-2 lg:ml-0">
+        <SoonStamp className="text-base" />
+      </h2>
       <ul
         aria-label="Modos que chegam em breve"
-        tabIndex={0}
-        className="-mt-1 flex snap-x gap-3 overflow-x-auto px-2 pb-6 [scrollbar-width:none] sm:gap-4 lg:justify-between lg:gap-2"
+        className="locker-row flex snap-x gap-2 overflow-x-auto px-1 pt-3 pb-5 [scrollbar-width:none] lg:gap-[0.6%] lg:overflow-visible lg:pb-0"
       >
-        {jerseys.map((j, i) => (
-          <li
-            key={j.key}
-            className="jersey-hang w-[5.5rem] shrink-0 snap-start sm:w-24 lg:w-[5.75rem]"
-            style={{ '--sway': `${(i % 3) - 1}deg` } as React.CSSProperties}
-          >
-            <Hanger kit={KITS[i % KITS.length]!} number={j.number} name={j.name} />
-          </li>
-        ))}
+        {lockers.map((l, i) => {
+          const ajar = open === l.key;
+          const off = (i - mid) / mid;
+          return (
+            <li
+              key={l.key}
+              className="locker relative shrink-0 snap-start"
+              data-open={ajar ? '' : undefined}
+              style={
+                { '--o': off.toFixed(3), '--d': Math.abs(off).toFixed(3) } as React.CSSProperties
+              }
+            >
+              {/* the inside, lit, seen through the crack */}
+              <div aria-hidden="true" className="locker-inside" />
+              <button
+                type="button"
+                className="locker-door"
+                aria-expanded={ajar}
+                aria-controls={`locker-${l.key}`}
+                aria-describedby={`locker-${l.key}`}
+                onClick={() => setOpen(ajar ? null : l.key)}
+              >
+                <span aria-hidden="true" className="locker-vents" />
+                <span aria-hidden="true" className="locker-number font-condensed tabular">
+                  {l.number}
+                </span>
+                <span className="locker-card">
+                  <span aria-hidden="true" className="locker-art">
+                    {l.key in PAGE_ART ? (
+                      <svg viewBox="0 0 200 120" className="size-full">
+                        {PAGE_ART[l.key]}
+                      </svg>
+                    ) : (
+                      <GameArt mode={l.key as CoverMode} className="size-full" />
+                    )}
+                  </span>
+                  <span className="font-condensed block text-[0.8rem] leading-[0.95] font-extrabold uppercase lg:text-[clamp(0.75rem,0.75vw,1rem)]">
+                    {l.name}
+                  </span>
+                </span>
+                <svg aria-hidden="true" viewBox="0 0 24 44" className="locker-lock">
+                  {/* the handle, the shackle through it and the padlock body */}
+                  <rect x="9" y="0" width="6" height="18" rx="2" fill="#5f6a66" />
+                  <path
+                    d="M7 24v-6a5 5 0 0 1 10 0v6"
+                    fill="none"
+                    stroke="#b7bfc0"
+                    strokeWidth="2.6"
+                  />
+                  <rect x="3" y="23" width="18" height="18" rx="3" fill="#b8892f" />
+                  <rect x="3" y="23" width="18" height="5" rx="2" fill="#e2b85a" opacity="0.7" />
+                  <circle cx="12" cy="32" r="2" fill="#3a2a10" />
+                  <path d="M12 33v4" stroke="#3a2a10" strokeWidth="1.6" />
+                </svg>
+              </button>
+              <p id={`locker-${l.key}`} className="locker-note">
+                <SoonStamp className="text-sm" />
+                <span className="mt-1.5 block text-[0.8125rem] leading-snug font-semibold">
+                  {l.rule}
+                </span>
+              </p>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
 }
 
-export function LockerRoom({ jerseys }: { jerseys: Jersey[] }) {
+export function LockerRoom({ lockers }: { lockers: Locker[] }) {
   const scene = useRef<HTMLDivElement>(null);
   const track = useTrack('CAREER_PATH');
   const stats = useStats();
@@ -408,7 +473,7 @@ export function LockerRoom({ jerseys }: { jerseys: Jersey[] }) {
         )}
       </section>
 
-      <JerseyRail jerseys={jerseys} />
+      <LockerBank lockers={lockers} />
     </div>
   );
 }
