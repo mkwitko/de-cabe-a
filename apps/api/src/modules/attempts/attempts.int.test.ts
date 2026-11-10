@@ -57,6 +57,18 @@ function guest() {
     act(attemptId: string, input: object, key = randomUUID()) {
       return this.req('POST', `/attempts/${attemptId}/actions`, { idempotencyKey: key, input });
     },
+    /**
+     * Links this device to a new account, as a sign-up does (only accounts are ranked); its guest
+     * progress comes along. Direct, so the sign-up rate limit stays out of these tests.
+     */
+    async signUp(nickname: string) {
+      expect((await this.req('PATCH', '/me', { nickname })).statusCode).toBe(200);
+      const s = await prisma.guestSession.findFirstOrThrow({ where: { nickname } });
+      const user = await prisma.user.create({
+        data: { email: `${randomUUID()}@example.com`, nickname, nicknameKey: s.nicknameKey! },
+      });
+      await prisma.guestSession.update({ where: { id: s.id }, data: { userId: user.id } });
+    },
   };
 }
 
@@ -648,10 +660,10 @@ describe('ranking, nickname and accounts', () => {
     await playCareer(mid, 1, answerId, 3); // 4th attempt: 2 stars, 30 points
   });
 
-  it('only players with a nickname are listed; nicknames are unique', async () => {
+  it('guests are not ranked, even with a nickname; nicknames are unique', async () => {
     expect((await ace.req('GET', '/ranking')).json().me).toEqual({
       position: null,
-      stars: 6,
+      stars: 0,
       nickname: null,
     });
     expect((await ace.req('PATCH', '/me', { nickname: 'Fenômeno' })).json()).toMatchObject({
@@ -665,36 +677,10 @@ describe('ranking, nickname and accounts', () => {
     expect((await mid.req('PATCH', '/me', { nickname: 'x' })).statusCode).toBe(400);
     await mid.req('PATCH', '/me', { nickname: 'Meio Campo' });
     const all = (await mid.req('GET', '/ranking')).json();
-    expect(all.entries.slice(0, 2)).toEqual([
-      { position: 1, nickname: 'Fenômeno', stars: 6, score: 120, title: 'Peneira', isMe: false },
-      { position: 2, nickname: 'Meio Campo', stars: 2, score: 30, title: 'Peneira', isMe: true },
-    ]);
-    expect(all.me.position).toBe(2);
-    expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: 2, week: 2 });
-  });
-
-  it('the weekly ranking only counts levels finished since Monday', async () => {
-    clock = new Date('2026-11-10T15:00:00Z'); // next Tuesday
-    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([]);
-    await playCareer(mid, 2, decoyId, 0);
-    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([
-      expect.objectContaining({ position: 1, nickname: 'Meio Campo', stars: 3 }),
-    ]);
-    clock = new Date('2026-11-05T15:00:00Z');
-  });
-
-  it('level ranking lists the best results of one level', async () => {
-    const top = (await mid.req('GET', '/ranking/levels/CAREER_PATH/1')).json().entries;
-    expect(
-      top.map((e: { nickname: string; score: number; isMe: boolean }) => [
-        e.nickname,
-        e.score,
-        e.isMe,
-      ]),
-    ).toEqual([
-      ['Fenômeno', 60, false],
-      ['Meio Campo', 30, true],
-    ]);
+    expect(all.entries).toEqual([]);
+    expect(all.me.position).toBeNull();
+    expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: null, week: null });
+    expect((await mid.req('GET', '/ranking/levels/CAREER_PATH/1')).json().entries).toEqual([]);
   });
 
   it('sign-up keeps guest progress; sign-in on another device sees it; wrong password is 401', async () => {
@@ -761,6 +747,41 @@ describe('ranking, nickname and accounts', () => {
 
     const out = await phone.req('POST', '/auth/logout');
     expect(out.json()).toMatchObject({ nickname: null, account: null, totalStars: 0 });
+  });
+
+  it('an account enters the ranking with its guest progress', async () => {
+    await mid.signUp('Meio Campo');
+    const all = (await mid.req('GET', '/ranking')).json();
+    expect(all.entries.slice(0, 2)).toEqual([
+      { position: 1, nickname: 'Fenômeno', stars: 6, score: 120, title: 'Peneira', isMe: false },
+      { position: 2, nickname: 'Meio Campo', stars: 2, score: 30, title: 'Peneira', isMe: true },
+    ]);
+    expect(all.me.position).toBe(2);
+    expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: 2, week: 2 });
+  });
+
+  it('the weekly ranking only counts levels finished since Monday', async () => {
+    clock = new Date('2026-11-10T15:00:00Z'); // next Tuesday
+    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([]);
+    await playCareer(mid, 2, decoyId, 0);
+    expect((await ace.req('GET', '/ranking?scope=week')).json().entries).toEqual([
+      expect.objectContaining({ position: 1, nickname: 'Meio Campo', stars: 3 }),
+    ]);
+    clock = new Date('2026-11-05T15:00:00Z');
+  });
+
+  it('level ranking lists the best results of one level', async () => {
+    const top = (await mid.req('GET', '/ranking/levels/CAREER_PATH/1')).json().entries;
+    expect(
+      top.map((e: { nickname: string; score: number; isMe: boolean }) => [
+        e.nickname,
+        e.score,
+        e.isMe,
+      ]),
+    ).toEqual([
+      ['Fenômeno', 60, false],
+      ['Meio Campo', 30, true],
+    ]);
   });
 
   it('sign-up refuses a nickname in use', async () => {
@@ -1287,7 +1308,7 @@ describe('timed mode (ADR-009)', () => {
 
     // Timed win in time: listed in the timed ranking, not the untimed one.
     const r = guest();
-    await r.req('PATCH', '/me', { nickname: 'Relampago' });
+    await r.signUp('Relampago');
     clock = start;
     const fast = (
       await r.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1, timed: true })
@@ -1462,7 +1483,7 @@ describe('Desafio do Dia (GROWTH_PLAN.md 1.9)', () => {
 
     // Rodada semanal (2.7): Monday to Friday, a day scores its levels started that same day.
     await prisma.attempt.update({ where: { id: lost.attempt.id }, data: { stars: 2 } });
-    await g.req('PATCH', '/me', { nickname: 'Rodada' });
+    await g.signUp('Rodada');
     const round = (await g.req('GET', '/round')).json();
     expect(round.weekStart).toBe('2026-11-02');
     expect(
@@ -1495,7 +1516,7 @@ describe('Temporadas (GROWTH_PLAN.md 2.6)', () => {
     const before = clock;
     clock = new Date('2026-11-10T15:00:00Z'); // season 1
     const g = guest();
-    await g.req('PATCH', '/me', { nickname: 'Campeão T1' });
+    await g.signUp('Campeão T1');
     const played = await playCareer(g, 2, null, 6);
     await prisma.attempt.update({ where: { id: played.attempt.id }, data: { stars: 3 } });
     const season1 = (await g.req('GET', '/ranking?scope=season')).json();
@@ -1595,7 +1616,7 @@ describe('Fantasy de conhecimento', () => {
       .slice(0, 4)
       .map((p) => p.id);
     const g = guest();
-    await g.req('PATCH', '/me', { nickname: 'Fantasista' });
+    await g.signUp('Fantasista');
     expect((await g.req('GET', '/fantasy')).json()).toMatchObject({ squad: null, total: 0 });
     expect(
       (await g.req('POST', '/fantasy', { playerIds: [answer, answer, ...others.slice(0, 3)] }))

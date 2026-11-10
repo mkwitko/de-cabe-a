@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { testApp, WEB_ORIGIN } from '../../test/app';
 import { resetDb, testPrisma } from '../../test/db';
@@ -6,7 +7,7 @@ import { MAX_MEMBERS } from './leagues';
 const prisma = testPrisma();
 const { app } = testApp({ prisma, now: () => new Date('2026-11-09T15:00:00Z') });
 
-/** A device keeping its own cookie, optionally with a nickname. */
+/** A device keeping its own cookie; with a nickname, also an account. */
 async function player(nickname?: string) {
   let cookie = '';
   const req = async (method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) => {
@@ -20,8 +21,15 @@ async function player(nickname?: string) {
     if (set) cookie = String([set].flat()[0]).split(';')[0]!;
     return res;
   };
-  if (nickname) expect((await req('PATCH', '/me', { nickname })).statusCode).toBe(200);
-  else await req('GET', '/leagues');
+  if (nickname) {
+    expect((await req('PATCH', '/me', { nickname })).statusCode).toBe(200);
+    // Only accounts are ranked: link this device to one, as a sign-up does.
+    const s = await prisma.guestSession.findFirstOrThrow({ where: { nickname } });
+    const user = await prisma.user.create({
+      data: { email: `${randomUUID()}@t.test`, nickname, nicknameKey: s.nicknameKey! },
+    });
+    await prisma.guestSession.update({ where: { id: s.id }, data: { userId: user.id } });
+  } else await req('GET', '/leagues');
   return { req };
 }
 

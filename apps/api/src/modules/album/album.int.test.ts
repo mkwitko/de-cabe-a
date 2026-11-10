@@ -272,9 +272,18 @@ describe('album routes', () => {
     expect(res.owned).toBe(8);
   });
 
+  /** Links a device's guest session to a new account (only accounts are ranked). */
+  async function asAccount(sessionId: string, nickname = `Conta ${randomUUID().slice(0, 8)}`) {
+    const user = await prisma.user.create({
+      data: { email: `${randomUUID()}@t.test`, nickname, nicknameKey: randomUUID() },
+    });
+    await prisma.guestSession.update({ where: { id: sessionId }, data: { userId: user.id } });
+  }
+
   /** Two bronze stickers in the closed week of 2026-10-26; only `daily` comes from the drawn level. */
   async function closedRound(earnedAt: { daily: string; other: string }) {
     const g = await startLevel();
+    await asAccount(g.sessionId);
     await giveStickers(g.sessionId, ['bronze', 'bronze']);
     const [daily, other] = await prisma.sticker.findMany({ orderBy: { earnedAt: 'asc' } });
     const { challengeId } = await prisma.attempt.findUniqueOrThrow({ where: { id: g.attemptId } });
@@ -369,10 +378,10 @@ describe('Seleção da Temporada', () => {
   /** A nicknamed player with 3 stars in season 1, now in season 2. */
   async function podiumPlayer() {
     const g = await startLevel();
-    await prisma.guestSession.update({
-      where: { id: g.sessionId },
-      data: { nickname: 'Pódio', nicknameKey: randomUUID() },
+    const user = await prisma.user.create({
+      data: { email: `${randomUUID()}@t.test`, nickname: 'Pódio', nicknameKey: randomUUID() },
     });
+    await prisma.guestSession.update({ where: { id: g.sessionId }, data: { userId: user.id } });
     await prisma.attempt.update({
       where: { id: g.attemptId },
       data: { completedAt: new Date('2026-11-10T15:00:00Z'), stars: 3 },

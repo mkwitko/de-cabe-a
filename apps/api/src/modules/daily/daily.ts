@@ -68,7 +68,7 @@ const COUNTED = 3;
 /** Each player's stars per round day, counting only levels started on the day they were drawn. */
 export async function roundRows(prisma: PrismaClient, monday: string) {
   const rows = await prisma.$queryRaw<
-    { pk: string; nickname: string | null; day: string; stars: bigint }[]
+    { pk: string; nickname: string | null; account: boolean; day: string; stars: bigint }[]
   >`
     WITH best AS (
       SELECT COALESCE(s."userId", s.id) AS pk, p.day, a."challengeId", MAX(a.stars) AS stars
@@ -81,13 +81,16 @@ export async function roundRows(prisma: PrismaClient, monday: string) {
         AND p.day >= ${monday}::date AND p.day < ${monday}::date + ${ROUND_DAYS}::int
       GROUP BY 1, 2, 3
     )
-    SELECT b.pk, COALESCE(u.nickname, g.nickname) AS nickname, to_char(b.day, 'YYYY-MM-DD') AS day,
+    SELECT b.pk, COALESCE(u.nickname, g.nickname) AS nickname, u.id IS NOT NULL AS account, to_char(b.day, 'YYYY-MM-DD') AS day,
       SUM(b.stars) AS stars
     FROM best b LEFT JOIN "User" u ON u.id = b.pk LEFT JOIN "GuestSession" g ON g.id = b.pk
-    GROUP BY 1, 2, 3`;
-  const players = new Map<string, { nickname: string | null; days: Map<string, number> }>();
+    GROUP BY 1, 2, 3, 4`;
+  const players = new Map<
+    string,
+    { nickname: string | null; account: boolean; days: Map<string, number> }
+  >();
   for (const r of rows) {
-    const p = players.get(r.pk) ?? { nickname: r.nickname, days: new Map() };
+    const p = players.get(r.pk) ?? { nickname: r.nickname, account: r.account, days: new Map() };
     p.days.set(r.day, Number(r.stars));
     players.set(r.pk, p);
   }
@@ -96,6 +99,8 @@ export async function roundRows(prisma: PrismaClient, monday: string) {
     return {
       pk,
       nickname: p.nickname,
+      /** Only accounts are ranked; a guest still sees their own days. */
+      account: p.account,
       days: p.days,
       // stars = the best 3 days; score (the tie-break) = every day of the round
       stars: best.slice(0, COUNTED).reduce((s, n) => s + n, 0),
@@ -114,7 +119,10 @@ export const dailyRoutes: FastifyPluginAsyncZod = async (app) => {
       (a, b) => b.stars - a.stars || b.score - a.score || a.pk.localeCompare(b.pk),
     );
     const pk = req.userId ?? req.sessionId;
-    const r = ranking(rows, pk);
+    const r = ranking(
+      rows.filter((x) => x.account),
+      pk,
+    );
     const mine = rows.find((x) => x.pk === pk);
     return {
       weekStart: monday,

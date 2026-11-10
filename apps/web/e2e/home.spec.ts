@@ -10,7 +10,7 @@ async function skipCeremony(page: Page, { sticker = true } = {}) {
 
 /** Main flow (TEST_STRATEGY.md §3, adapted to the level tracks of ADR-007). One guest across the journey. */
 
-test('guest plays level 1 of each game, gets stars, joins the ranking, sees stats', async ({
+test('guest plays level 1 of each game, gets stars, signs up to join the ranking, sees stats', async ({
   page,
   context,
 }) => {
@@ -79,13 +79,23 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await expect(page.getByRole('link', { name: /Fase 1, .*2 estrelas/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Fase 2, .*jogar/ })).toBeVisible();
 
-  // 7. Nickname puts the guest in the ranking
+  // 7. A nickname alone does not rank a guest; an account does, with the guest's stars
   await page.getByRole('link', { name: 'Perfil', exact: true }).click();
   await page.getByRole('link', { name: 'Conta, apelido e preferências' }).click();
   await page.getByLabel('Apelido público').fill('Camisa 10');
   await page.getByRole('button', { name: 'Salvar apelido' }).click();
   await expect(page.getByText('Camisa 10', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ranking', exact: true }).click();
+  await expect(page.getByText(/Só quem tem conta entra no ranking/)).toBeVisible();
+  await page.getByRole('link', { name: 'Entre ou crie a sua' }).click();
+  await page
+    .getByRole('group', { name: 'Escolha' })
+    .getByRole('button', { name: 'Criar conta' })
+    .click();
+  await page.getByLabel('E-mail').fill(`camisa10-${Date.now()}@example.com`);
+  await page.getByLabel('Senha').fill('segredo-123');
+  await page.locator('form').getByRole('button', { name: 'Criar conta' }).click();
+  await expect(page).toHaveURL(/\/ranking$/);
   await expect(
     page.getByRole('listitem').filter({ hasText: 'Camisa 10' }).getByLabel('2 estrelas'),
   ).toBeVisible();

@@ -206,7 +206,7 @@ export const progressionRoutes: FastifyPluginAsyncZod = async (app) => {
                COALESCE(u.nickname, s.nickname) AS nickname, a.score, a.stars,
                EXTRACT(EPOCH FROM (a."completedAt" - a."startedAt"))::int AS duration
         FROM "Attempt" a JOIN "GuestSession" s ON s.id = a."sessionId" LEFT JOIN "User" u ON u.id = s."userId"
-        WHERE a."challengeId" = ${c.id} AND a."completedAt" IS NOT NULL AND COALESCE(u.nickname, s.nickname) IS NOT NULL
+        WHERE a."challengeId" = ${c.id} AND a."completedAt" IS NOT NULL AND s."userId" IS NOT NULL
         ORDER BY COALESCE(s."userId", s.id), a.score DESC, a."completedAt" - a."startedAt"`;
       rows.sort((a, b) => b.score - a.score || a.duration - b.duration);
       return {

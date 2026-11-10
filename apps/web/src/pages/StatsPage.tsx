@@ -213,7 +213,11 @@ export function StatsPage() {
   const ranking = isPageLaunched('ranking');
   const guest = !!me && !me.account;
   const rank = (n: number | null) =>
-    n ? `${n}º` : <span className="text-2xl text-chalk-soft">sem posição</span>;
+    n ? (
+      `${n}º`
+    ) : (
+      <span className="text-2xl text-chalk-soft">{guest ? 'só com conta' : 'sem posição'}</span>
+    );
   const std = (
     g: { completed: number; stars: number; threeStars: number },
     last: [string, number],
@@ -314,7 +318,7 @@ export function StatsPage() {
                 </h2>
                 <p className="text-sm text-chalk-soft">
                   Suas estrelas e figurinhas estão só neste aparelho. Entre e leve tudo para
-                  qualquer outro.
+                  qualquer outro{ranking ? '; com conta, você também entra no ranking' : ''}.
                 </p>
               </div>
               <SignInButton />

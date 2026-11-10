@@ -19,7 +19,7 @@ import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 import { TitleBadge } from '../components/TitleBadge';
 import { GoalLoop, preloadLottie } from '../components/Moment';
-import { SignInButton } from '../components/SignInButton';
+import { SignInButton, signInHref } from '../components/SignInButton';
 import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
 import { isPageLaunched } from '../lib/launch';
 import { nextLevel } from '../lib/track';
@@ -590,12 +590,15 @@ export function LevelEnd({
               Voltar às fases
             </Link>
           </div>
-          {me.data && !me.data.nickname && (
+          {me.data && !me.data.account && (
             <p className="text-sm text-chalk-soft">
-              <Link to="/conta" className="text-chalk underline underline-offset-4">
-                Escolha um apelido
+              <Link
+                to={signInHref(location.pathname)}
+                className="text-chalk underline underline-offset-4"
+              >
+                Entre na sua conta
               </Link>{' '}
-              para aparecer aqui.
+              para aparecer aqui. Só quem tem conta entra no ranking.
             </p>
           )}
           {top.data?.entries.length ? (
@@ -618,7 +621,7 @@ export function LevelEnd({
             </ol>
           ) : (
             <p className="rounded-lg border-2 border-dashed border-chalk-soft/40 px-4 py-3 text-sm text-chalk-soft">
-              Ninguém com apelido terminou essa fase ainda. O lugar 1 está vago.
+              Ninguém com conta terminou essa fase ainda. O lugar 1 está vago.
             </p>
           )}
         </div>

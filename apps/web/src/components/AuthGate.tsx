@@ -113,7 +113,7 @@ export function AuthGate({
     mutationFn: () =>
       api<{ url: string }>('/v1/auth/sign-in/social', {
         method: 'POST',
-        json: { provider: 'google', callbackURL: `${location.origin}/conta` },
+        json: { provider: 'google', callbackURL: `${location.origin}/conta${location.search}` },
       }),
     onSuccess: ({ url }) => location.assign(url),
   });

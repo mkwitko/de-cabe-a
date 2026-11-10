@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router';
+import { Link, Navigate, useSearchParams } from 'react-router';
 import { titleFrame, titleTone } from '../lib/format';
 import { isPageLaunched } from '../lib/launch';
 import { TitleBadge } from '../components/TitleBadge';
@@ -39,6 +39,10 @@ export function AccountPage() {
   const owned = useAlbum().data?.owned;
   if (!me.data) return <Skeleton className="h-96" />;
   const m = me.data;
+  // Came here to sign in from somewhere (a vote, a ranking): back there once signed in.
+  const back = params.get('voltar');
+  if (m.account && back?.startsWith('/') && !back.startsWith('//'))
+    return <Navigate to={back} replace />;
   const error = act.error as ApiError | null;
   const submit = (e: FormEvent, path: string, method: 'POST' | 'PATCH', json: object) => {
     e.preventDefault();

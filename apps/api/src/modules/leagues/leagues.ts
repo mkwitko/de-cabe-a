@@ -130,18 +130,15 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       // ponytail: ranks every player of the week and keeps the members; a member-only query
       // when the weekly ranking gets big.
+      // Only accounts are ranked; a guest member plays along and enters it once signed in.
       const stars = new Map((await rankRows(prisma, since)).map((r) => [r.pk, r.stars]));
-      const [users, guests] = await Promise.all([
-        prisma.user.findMany({ where: { id: { in: pks } }, select: { id: true, nickname: true } }),
-        prisma.guestSession.findMany({
-          where: { id: { in: pks } },
-          select: { id: true, nickname: true },
-        }),
-      ]);
-      const names = new Map([...users, ...guests].map((p) => [p.id, p.nickname]));
+      const users = await prisma.user.findMany({
+        where: { id: { in: pks } },
+        select: { id: true, nickname: true },
+      });
       const self = me(req);
-      ranking = pks
-        .map((pk) => ({ pk, nickname: names.get(pk) ?? 'Sem apelido', stars: stars.get(pk) ?? 0 }))
+      ranking = users
+        .map((u) => ({ pk: u.id, nickname: u.nickname, stars: stars.get(u.id) ?? 0 }))
         .sort((a, b) => b.stars - a.stars || a.nickname.localeCompare(b.nickname, 'pt-BR'))
         .map((r, i) => ({
           position: i + 1,
