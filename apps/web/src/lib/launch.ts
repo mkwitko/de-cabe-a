@@ -51,7 +51,6 @@ const GATE: Record<string, (all: boolean) => boolean> = {
   detetive: (all) => isModeLaunched('IMPOSTOR', all),
   prancheta: (all) => isModeLaunched('MISSING_XI', all),
   'conexao-total': (all) => isModeLaunched('CONNECTIONS', all),
-  relogio: (all) => isPageLaunched('ranking', all), // the clock is offered only with the ranking
   'dia-completo': (all) => isPageLaunched('daily', all),
   fregues: (all) => isPageLaunched('daily', all),
   resenha: (all) => isPageLaunched('leagues', all),

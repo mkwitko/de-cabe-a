@@ -24,8 +24,8 @@ export const formatClock = (sec: number) =>
 
 /**
  * Before a level starts: with or without the clock (ADR-009). Levels already started or finished
- * skip it, since the mode is chosen once. While the ranking is closed (launch) the clock has no
- * ranking to count for, so there is no choice: the level starts in the player's own time.
+ * skip it, since the mode is chosen once. The clock is offered even while the ranking is closed
+ * (launch); the ranking line and link show only when it is open.
  */
 export function ModeGate({
   mode,
@@ -40,10 +40,10 @@ export function ModeGate({
 }) {
   const track = useTrack(mode);
   const [timed, setTimed] = useState<boolean | null>(null);
-  if (!isPageLaunched('ranking')) return children(false);
   if (!track.data) return <Skeleton className="h-64" />;
   const state = track.data.levels.find((l) => l.level === level)?.state;
   if (timed !== null || state !== 'open') return children(timed ?? false);
+  const ranked = isPageLaunched('ranking');
   const options = [
     {
       timed: false,
@@ -53,7 +53,7 @@ export function ModeGate({
     {
       timed: true,
       name: `Contra o relógio · ${formatClock(TIME_LIMIT_SEC[mode])}`,
-      text: 'Acabou o tempo, a fase fecha com o que você acertou. Vale ranking próprio.',
+      text: `Acabou o tempo, a fase fecha com o que você acertou.${ranked ? ' Vale ranking próprio.' : ''}`,
     },
   ];
   return (
@@ -76,10 +76,15 @@ export function ModeGate({
         ))}
       </div>
       <p className="text-sm text-chalk-soft">
-        Uma tentativa por fase: a escolha vale até o fim.{' '}
-        <Link to="/ranking" className="underline underline-offset-4">
-          Ver ranking contra o relógio
-        </Link>
+        Uma tentativa por fase: a escolha vale até o fim.
+        {ranked && (
+          <>
+            {' '}
+            <Link to="/ranking" className="underline underline-offset-4">
+              Ver ranking contra o relógio
+            </Link>
+          </>
+        )}
       </p>
     </div>
   );

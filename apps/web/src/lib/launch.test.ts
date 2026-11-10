@@ -40,9 +40,9 @@ describe('launch', () => {
   });
 
   it('hides achievements of closed games and pages, keeps the rest', () => {
-    for (const id of ['estreia', 'titular', 'lenda', 'faro-de-gol'])
+    for (const id of ['estreia', 'titular', 'lenda', 'faro-de-gol', 'relogio'])
       expect(achievementOpen(id, false)).toBe(true);
-    for (const id of ['oito-jogos', 'grid-perfeito', 'relogio', 'fregues', 'resenha'])
+    for (const id of ['oito-jogos', 'grid-perfeito', 'fregues', 'resenha'])
       expect(achievementOpen(id, false)).toBe(false);
     expect(achievementOpen('resenha', true)).toBe(true);
   });
