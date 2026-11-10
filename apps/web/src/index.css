@@ -1622,3 +1622,79 @@
     scale: 0.6;
   }
 }
+
+/* ── Career Path level: the locker room ──────────────────────────────────────────────────── */
+/*
+ * The level happens in the home's locker room (.scene-art), at night: the passport open on the
+ * bench under the lamp. On phones the room stays faint behind the one-handed layout; from lg the
+ * passport lies open as a spread (inside cover with clues and tries, visa page with stamps) and
+ * the guess dock sits on the bench edge at the bottom of the scene.
+ */
+.cp-room {
+  --scene-art: url('/img/vestiario-night.webp');
+  --scene-night: 1;
+  --px: 0;
+  --py: 0;
+  /* phones: the room in shadow behind the passport, the pitch lines hidden under it */
+  filter: brightness(0.42) saturate(0.85);
+}
+.cp-leaf {
+  background:
+    radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
+    radial-gradient(circle at 70% 15%, #7a2633, #5b1a24 55%, #3d1018);
+  box-shadow: inset -16px 0 20px -12px rgb(0 0 0 / 0.55);
+  color: #e7c26a;
+}
+@media (min-width: 64rem) {
+  .cp-room {
+    filter: none;
+  }
+  .cp-frame[data-spread] {
+    max-width: none;
+    display: grid;
+    place-items: center;
+    container-type: size;
+  }
+  /* a passport spread is about 1.7:1; it takes the stage, bounded by both axes */
+  .cp-frame[data-spread] .cp-book {
+    position: relative;
+    inset: auto;
+    width: min(100cqw, 170cqh);
+    height: min(100cqh, 58.8cqw);
+    filter: drop-shadow(0 30px 26px rgb(0 0 0 / 0.6));
+    transition: translate 1100ms cubic-bezier(0.6, 0.05, 0.25, 1);
+  }
+  /* shut, the cover lies centred on the bench; it slides left as it swings open */
+  .cp-frame[data-spread]:not([data-open]) .cp-book {
+    translate: -25% 0;
+  }
+  .cp-frame[data-spread] .cp-leaf {
+    position: absolute;
+    inset: 0 50% 0 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px 6px 6px 14px;
+    padding: clamp(1.5rem, 5cqh, 3rem);
+    transition: opacity 0s 500ms;
+  }
+  .cp-frame[data-spread]:not([data-open]) .cp-leaf {
+    opacity: 0;
+    transition: none;
+  }
+  .cp-frame[data-spread] .cp-right {
+    left: 50%;
+  }
+  /* the dock sits under the book here, so the stamps take the whole page */
+  .cp-frame[data-spread] .cp-right ol {
+    bottom: 0.625rem;
+  }
+  .cp-frame[data-spread] .cp-brand {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-frame[data-spread] .cp-book {
+    transition: none;
+  }
+}
+/* ── end Career Path level ───────────────────────────────────────────────────────────────── */
