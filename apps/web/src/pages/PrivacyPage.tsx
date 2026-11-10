@@ -186,6 +186,11 @@ export function PrivacyPage() {
                 player dotLottie (licença MIT).
               </li>
               <li>
+                <strong>Animações</strong>: o pacote rasgando das figurinhas raras, o brilho do
+                título novo, os fogos de 3 estrelas e a bola na rede também são nossos, desenhados
+                para o De Cabeça F.C. Nenhuma animação de banco de imagens.
+              </li>
+              <li>
                 Não usamos escudos de clubes. O De Cabeça F.C. não tem ligação com clubes,
                 federações ou jogadores citados.
               </li>

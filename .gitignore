@@ -17,3 +17,4 @@ apps/api/src/generated/
 content.sql.gz
 backups/
 .superpowers/
+scripts/research/.cache/

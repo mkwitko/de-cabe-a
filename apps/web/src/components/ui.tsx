@@ -72,13 +72,17 @@ export function Notice({
   title,
   children,
   action,
+  art,
 }: {
   title: string;
   children?: ReactNode;
   action?: ReactNode;
+  /** A small drawing above the title (empty and error states). */
+  art?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-start gap-3 rounded-lg border-2 border-chalk-soft/40 bg-chalk/[0.05] p-6">
+      {art}
       <h2 className="font-condensed text-2xl font-extrabold uppercase">{title}</h2>
       {children && <p className="max-w-[48ch] text-chalk-soft">{children}</p>}
       {action}

@@ -4,7 +4,8 @@ import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AlbumResponse, Sticker } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
-import { GameHeader, Skeleton, btnPrimary, btnSecondary } from '../components/ui';
+import { GameHeader, Notice, Skeleton, btnPrimary, btnSecondary } from '../components/ui';
+import { GoalLoop } from '../components/Moment';
 import { RARITY_ORDER, RARITY_STYLE } from '../components/rarity';
 import { StickerCard } from '../components/StickerCard';
 import { useTrack } from '../lib/game';
@@ -40,7 +41,19 @@ export function AlbumPage() {
     return (
       <>
         <GameHeader title="Meu álbum" />
-        <p className="mt-6 text-chalk-soft">Não foi possível abrir o álbum.</p>
+        <div className="mt-6">
+          <Notice
+            art={<GoalLoop />}
+            title="O álbum não abriu"
+            action={
+              <button type="button" className={btnPrimary} onClick={() => void q.refetch()}>
+                Tentar de novo
+              </button>
+            }
+          >
+            Pode ser a conexão. Confira a internet e tente de novo.
+          </Notice>
+        </div>
       </>
     );
   const a = q.data;
@@ -71,7 +84,8 @@ export function AlbumPage() {
 
       {a.owned === 0 && (
         <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-[44ch] text-lg leading-snug font-semibold">
+          <GoalLoop className="h-24 w-32 shrink-0" />
+          <p className="max-w-[44ch] text-lg leading-snug font-semibold sm:mr-auto">
             Álbum vazio por enquanto. Acerte uma fase do Career Path e a figurinha do jogador vem
             colada aqui.
           </p>

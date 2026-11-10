@@ -8,7 +8,7 @@
  * the ticket lands, the last stamp thumps. Pointer (and device tilt where it needs no permission)
  * moves the scene a little. Reduced motion: the composed scene, still.
  */
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useAlbum, useStats, useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
@@ -20,8 +20,7 @@ import { StickerCard } from './StickerCard';
 import { TitleBadge } from './TitleBadge';
 import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
-
-const SceneDust = lazy(() => import('./SceneDust'));
+import { Moment } from './Moment';
 
 export type Jersey = { key: string; name: string; number: string };
 
@@ -209,13 +208,7 @@ export function LockerRoom({ jerseys }: { jerseys: Jersey[] }) {
     <div ref={scene} className="scene relative">
       <div aria-hidden="true" className="scene-art">
         <div className="scene-cone" />
-        {dust && (
-          <div className="scene-dust">
-            <Suspense fallback={null}>
-              <SceneDust />
-            </Suspense>
-          </div>
-        )}
+        {dust && <Moment className="scene-dust" src="/lottie/dust.json" loop />}
       </div>
       {/* the room before the light comes on, over everything for a moment */}
       <div aria-hidden="true" className="scene-dark" />

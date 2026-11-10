@@ -228,6 +228,19 @@
   }
 }
 /* An arrow leaning toward where the action goes. */
+/* a new title badge spins in on its vertical axis (Broadcast) */
+@keyframes badge-spin {
+  from {
+    opacity: 0;
+    transform: perspective(240px) rotateY(-540deg) scale(0.3);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    transform: perspective(240px) rotateY(0) scale(1);
+  }
+}
 @keyframes nudge-x {
   0%,
   60%,
@@ -1016,10 +1029,11 @@
     rotate: 6deg;
   }
 }
-.stamp-hit {
-  animation: stamp-hit 520ms 1.75s cubic-bezier(0.3, 0, 0.2, 1) backwards;
+/* scoped: the passport's own .stamp-hit (trail, end screen) keeps its keyframes and no delay */
+.scene .stamp-hit {
+  animation: scene-stamp-hit 520ms 1.75s cubic-bezier(0.3, 0, 0.2, 1) backwards;
 }
-@keyframes stamp-hit {
+@keyframes scene-stamp-hit {
   0% {
     opacity: 0;
     scale: 1.9;
@@ -1513,3 +1527,99 @@
   --holo: linear-gradient(115deg, #ff6b6b, #ffd36b, #8bff9c, #6bd6ff, #b06bff, #ff6b6b);
 }
 /* ==== end sticker player card ==== */
+
+/* ==== Como jogar: the three step drawings move on a 6 s loop (HowToPlayPage). Still under
+ * reduced motion: the drawings as printed. ==== */
+@media (prefers-reduced-motion: no-preference) {
+  .htp-stamp {
+    animation: htp-stamp 6s var(--d, 0s) cubic-bezier(0.3, 0, 0.2, 1) infinite backwards;
+  }
+  .htp-key {
+    animation: htp-key 6s calc(0.3s + var(--i) * 170ms) steps(1) infinite backwards;
+  }
+  .htp-pick {
+    animation: htp-pick 6s var(--ease-out-expo) infinite;
+  }
+  .htp-stars svg {
+    animation: htp-star 6s var(--ease-out-expo) infinite backwards;
+  }
+  .htp-stars svg:nth-child(2) {
+    animation-delay: 0.35s;
+  }
+  .htp-stars svg:nth-child(3) {
+    animation-delay: 0.7s;
+  }
+  .htp-sticker {
+    animation: htp-pick 6s 0.2s var(--ease-out-expo) infinite backwards;
+  }
+}
+@keyframes htp-stamp {
+  0% {
+    opacity: 0;
+    scale: 1.8;
+  }
+  5% {
+    opacity: 1;
+    scale: 0.94;
+  }
+  8%,
+  88% {
+    opacity: 1;
+    scale: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}
+@keyframes htp-key {
+  0% {
+    opacity: 0;
+  }
+  1%,
+  85% {
+    opacity: 1;
+  }
+  86%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes htp-pick {
+  0%,
+  28% {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  34%,
+  86% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  92%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+@keyframes htp-star {
+  0% {
+    opacity: 0.25;
+    scale: 0.6;
+  }
+  5% {
+    opacity: 1;
+    scale: 1.25;
+  }
+  9%,
+  88% {
+    opacity: 1;
+    scale: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.25;
+    scale: 0.6;
+  }
+}
