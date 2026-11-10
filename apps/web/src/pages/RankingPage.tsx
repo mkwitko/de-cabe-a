@@ -29,7 +29,7 @@ export function RankingPage() {
             key={s}
             aria-pressed={scope === s}
             onClick={() => setScope(s)}
-            className={`rounded-full border-2 px-4 py-1.5 font-semibold ${scope === s ? 'border-cover bg-cover text-ink' : 'border-chalk-soft/50'}`}
+            className={`min-h-11 rounded-full border-2 px-4 font-semibold ${scope === s ? 'border-cover bg-cover text-ink' : 'border-chalk-soft/50'}`}
           >
             {label}
           </button>
@@ -119,8 +119,9 @@ export function RankingPage() {
               : 'Ninguém no ranking ainda. Termine uma fase e escolha um apelido para ser o primeiro.'}
         </p>
       ) : (
-        <>
-          <p className="text-sm text-chalk-soft">
+        /* stadium screen: dark panel, scanlines, yellow LED digits */
+        <div className="flex flex-col gap-4 rounded-xl border-[6px] border-[#2a2f33] bg-[#0b0d0e] p-3 text-[#f5e27a] shadow-[inset_0_0_30px_#000a,0_10px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,#0004_0_1px,transparent_1px_3px)] sm:p-5">
+          <p className="font-condensed text-sm font-bold tracking-[0.2em] uppercase">
             {data.entries.length} {data.entries.length === 1 ? 'jogador' : 'jogadores'} ·{' '}
             {scope === 'week'
               ? 'desde segunda'
@@ -162,14 +163,14 @@ export function RankingPage() {
             {data.entries.map((e) => (
               <li
                 key={e.position}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${e.position <= 3 ? 'sm:hidden ' : ''}${e.isMe ? 'bg-cover text-ink' : e.position <= 3 ? 'bg-paper text-ink' : 'bg-chalk/[0.07]'}`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${e.position <= 3 ? 'sm:hidden ' : ''}${e.isMe ? 'sticky bottom-20 z-10 bg-cover text-ink shadow-[0_4px_12px_rgb(0_0_0/0.5)] sm:bottom-4' : e.position <= 3 ? 'bg-paper text-ink' : 'bg-[#f5e27a]/[0.08]'}`}
               >
                 <span className="font-condensed tabular w-8 text-right text-2xl font-black">
                   {e.position}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="font-bold break-words">{e.nickname}</span>
-                  <span className="text-sm opacity-70">{e.title}</span>
+                  <span className="text-sm opacity-75">{e.title}</span>
                 </span>
                 <span
                   className="font-condensed tabular text-xl font-black"
@@ -186,7 +187,7 @@ export function RankingPage() {
               <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {data.me.stars}
             </p>
           )}
-        </>
+        </div>
       )}
     </div>
   );
