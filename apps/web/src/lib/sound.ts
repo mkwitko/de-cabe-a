@@ -135,10 +135,11 @@ function crowdOf(p: CrowdPack, dur: number, gain: number): () => void {
   const a = audio();
   let stop: (() => void) | null = null;
   let stopped = false;
+  const claps: ReturnType<typeof noise>[] = [];
   if (p === 'torcida_clube')
     // The Clube's chant: two bars of claps over the drums (pa, pa, pa-pa-pa).
     for (const bar of [0.35, 1.75])
-      for (const t of [0, 0.3, 0.6, 0.8, 1.0]) noise(bar + t, 0.08, 0.16, 1700);
+      for (const t of [0, 0.3, 0.6, 0.8, 1.0]) claps.push(noise(bar + t, 0.08, 0.16, 1700));
   void bufferOf(p).then((buf) => {
     if (stopped) return;
     if (!buf) {
@@ -162,6 +163,13 @@ function crowdOf(p: CrowdPack, dur: number, gain: number): () => void {
   return () => {
     stopped = true;
     stop?.();
+    // claps not yet struck are cancelled; one already sounding is cut
+    for (const c of claps)
+      try {
+        c.src.stop();
+      } catch {
+        /* already ended */
+      }
   };
 }
 
