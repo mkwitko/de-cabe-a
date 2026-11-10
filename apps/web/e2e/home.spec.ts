@@ -14,15 +14,14 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   page,
   context,
 }) => {
-  // 1. Home without sign-up shows both games
+  // 1. Home without sign-up: the brand and Career Path (the other modes are closed to the public)
   await page.goto('/');
   await expect(page).toHaveTitle('De Cabeça F.C. · Minijogos de futebol');
-  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Football Grid' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2
-  await page.getByRole('link', { name: 'Começar' }).first().click();
+  await page.getByRole('link', { name: 'Jogar fase 1' }).click();
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
   // Mode chosen once, before the level starts (ADR-009).
   await page.getByRole('button', { name: /No seu tempo/ }).click();
@@ -123,8 +122,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
 test('Modo Carreira: create a footballer, train him with a level, play a match', async ({
   page,
 }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: /Crie seu craque/ }).click();
+  await page.goto('/carreira');
   await page.getByLabel('Nome do craque').fill('Craque do Teste');
   await page.getByRole('button', { name: 'Atacante' }).click();
   await page.getByLabel('Clube').selectOption({ label: 'Sub-20 do Flamengo' });

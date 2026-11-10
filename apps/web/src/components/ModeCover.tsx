@@ -107,12 +107,21 @@ const COVERS: Record<GameMode, Cover> = {
 };
 
 /** The illustration mounted on the mode's object, plus its name; the art slides a little as the card moves. */
-export function ModeCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
+export function ModeCover({
+  mode,
+  name,
+  compact = false,
+}: {
+  mode: GameMode;
+  name: ReactNode;
+  /** Shorter cover for cards that carry more below it. */
+  compact?: boolean;
+}) {
   const c = COVERS[mode];
   return (
     <div
       style={c.shell}
-      className="relative flex flex-1 flex-col justify-between gap-3 overflow-hidden px-5 pt-7 pb-6"
+      className={`relative flex flex-1 flex-col justify-between overflow-hidden px-5 ${compact ? 'gap-2 pt-4 pb-4' : 'gap-3 pt-7 pb-6'}`}
     >
       {c.extra}
       <p className={`font-condensed text-xs font-bold tracking-[0.2em] uppercase ${c.ink}`}>
@@ -122,13 +131,29 @@ export function ModeCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
         data-art
         className={`mx-auto w-full max-w-sm bg-pitch-deep px-3 py-2 will-change-transform ${c.frame}`}
       >
-        <GameArt mode={mode} className="mx-auto h-auto max-h-36 sm:max-h-44 w-full" />
+        <GameArt
+          mode={mode}
+          className={`mx-auto h-auto w-full ${compact ? 'max-h-20 sm:max-h-28' : 'max-h-36 sm:max-h-44'}`}
+        />
       </div>
       <h3
-        className={`font-condensed text-4xl leading-[0.9] font-black uppercase sm:text-6xl ${c.ink}`}
+        className={`font-condensed leading-[0.9] font-black uppercase ${compact ? 'text-4xl sm:text-5xl' : 'text-4xl sm:text-6xl'} ${c.ink}`}
       >
         {name}
       </h3>
+    </div>
+  );
+}
+
+/** The cover shrunk to a tile for the "Em breve" strip: the object's material, the art, the name. */
+export function MiniCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
+  const c = COVERS[mode];
+  return (
+    <div style={c.shell} className="relative flex h-full flex-col justify-between gap-2 p-3">
+      <div className="mt-5 bg-pitch-deep px-1.5 py-1">
+        <GameArt mode={mode} className="mx-auto h-14 w-full" />
+      </div>
+      <p className={`font-condensed text-xl leading-[0.9] font-black uppercase ${c.ink}`}>{name}</p>
     </div>
   );
 }

@@ -1,23 +1,21 @@
 import { SoundToggle } from './components/SoundToggle';
-import { HomeCarousel } from './components/HomeCarousel';
+import { CareerPathCard } from './components/CareerPathCard';
+import { MiniCover } from './components/ModeCover';
 import { RouteMeta } from './components/RouteMeta';
-import { StarIcon } from './components/Stars';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
-import {
-  lazy,
-  Suspense,
-  useRef,
-  type CSSProperties,
-  type PointerEvent,
-  type ReactNode,
-} from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
-import { ComingSoonPage } from './pages/ComingSoonPage';
-import { closedRoute, LAUNCH_ALL } from './lib/launch';
-import type { GamesResponse } from '@decabeca/contracts';
-import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
+import { ComingSoonPage, SoonStamp } from './pages/ComingSoonPage';
+import {
+  closedRoute,
+  isModeLaunched,
+  isPageLaunched,
+  LAUNCH_ALL,
+  type PageKey,
+} from './lib/launch';
+import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
 import type { GameMode } from '@decabeca/contracts';
 import { TrackPage } from './pages/TrackPage';
 import { ModeGate } from './games/Clock';
@@ -216,179 +214,118 @@ export const GAMES = [
   },
 ] as const;
 
-/** Brand sticker: tilts and catches the light under the pointer (off with reduced motion). */
-function BrandSticker() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  function onMove(e: PointerEvent<HTMLDivElement>) {
-    const el = ref.current;
-    if (!el || e.pointerType !== 'mouse') return;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty('--mx', String((e.clientX - r.left) / r.width));
-    el.style.setProperty('--my', String((e.clientY - r.top) / r.height));
-  }
-
-  function onLeave() {
-    ref.current?.style.setProperty('--mx', '0.5');
-    ref.current?.style.setProperty('--my', '0.5');
-  }
-
+/** Brand on the left; Entrar (or the avatar) always in view on the right. */
+function HomeTop() {
+  const { data: me } = useMe();
+  const who = me?.nickname ?? me?.account?.email;
   return (
-    <div
-      ref={ref}
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
-      style={{ '--mx': 0.5, '--my': 0.5 } as CSSProperties}
-      className="group relative w-fit max-w-full shrink-0 -rotate-2 rounded-[10px] bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] transition-transform duration-500 ease-out-expo motion-safe:[transform:perspective(900px)_rotate(-2deg)_rotateX(calc((0.5-var(--my))*10deg))_rotateY(calc((var(--mx)-0.5)*12deg))]"
-    >
-      <div className="relative overflow-hidden rounded-[5px] bg-cover px-5 pt-4 pb-5 text-ink">
-        <h1 className="font-condensed text-[clamp(3rem,14vw,5.5rem)] leading-[0.85] font-black tracking-[-0.02em] whitespace-nowrap uppercase">
-          De Cabeça
-        </h1>
-        <p className="mt-3 text-sm font-semibold">Minijogos de futebol</p>
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 mix-blend-soft-light transition-opacity duration-500 group-hover:opacity-100 motion-reduce:hidden"
-          style={{
-            background:
-              'radial-gradient(circle at calc(var(--mx)*100%) calc(var(--my)*100%), rgb(255 255 255 / 0.9), transparent 55%)',
-          }}
-        />
+    <header className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <Crest className="h-11 w-10 shrink-0" />
+        <div className="min-w-0">
+          <h1 className="font-condensed text-[1.65rem] leading-[0.95] font-black whitespace-nowrap uppercase sm:text-4xl">
+            De Cabeça F.C.
+          </h1>
+          <p className="mt-0.5 text-sm leading-tight font-semibold text-chalk-soft">
+            Minijogos de futebol
+          </p>
+        </div>
       </div>
-    </div>
+      {me?.account ? (
+        <Link
+          to="/stats"
+          aria-label="Meu perfil"
+          className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase"
+        >
+          {who?.[0] ?? '?'}
+        </Link>
+      ) : (
+        <Link to="/conta?entrar" className={`${btnSecondary} shrink-0`}>
+          Entrar
+        </Link>
+      )}
+    </header>
   );
 }
 
-export function Home({ games }: { games?: GamesResponse | undefined }) {
-  // The game with the most progress that still has a level to play: one tap back into it.
-  const resume = games?.games
-    .filter((g) => g.completed > 0 && g.nextLevel)
-    .sort((a, b) => b.completed - a.completed)[0];
+/** Modes and pages that are still closed, as small desaturated covers; they do not open. */
+const SOON_EXTRA: { name: string; page: PageKey }[] = [
+  { name: 'Modo Carreira', page: 'career' },
+  { name: 'Copa dos Sonhos', page: 'copa' },
+  { name: 'Oficina', page: 'oficina' },
+];
+
+function SoonStrip() {
+  const modes = GAMES.filter((g) => !isModeLaunched(g.mode));
+  const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page));
+  if (!modes.length && !extra.length) return null;
+  return (
+    <section aria-labelledby="em-breve" className="mt-8">
+      <h2 id="em-breve" className="font-condensed text-xl font-extrabold uppercase">
+        Em breve
+      </h2>
+      <ul
+        tabIndex={0}
+        aria-label="Modos que chegam em breve"
+        className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:px-0"
+      >
+        {modes.map((g) => (
+          <li
+            key={g.mode}
+            className="relative h-36 w-36 shrink-0 snap-start overflow-hidden rounded-xl bg-paper shadow-[0_10px_20px_-10px_rgb(0_0_0/0.6)]"
+          >
+            <div className="h-full grayscale-[0.7] [&_h3]:hidden">
+              <MiniCover mode={g.mode} name={g.name} />
+            </div>
+            <SoonStamp className="absolute top-2 right-2 text-xs" />
+          </li>
+        ))}
+        {extra.map((x) => (
+          <li
+            key={x.page}
+            className="relative grid h-36 w-36 shrink-0 snap-start place-items-center overflow-hidden rounded-xl bg-cover px-3 text-center text-ink grayscale-[0.7]"
+          >
+            <p className="font-condensed text-2xl leading-[0.9] font-black uppercase">{x.name}</p>
+            <SoonStamp className="absolute top-2 right-2 text-xs" />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function Home() {
   return (
     <>
-      <header className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-10">
-        <BrandSticker />
-        <p className="max-w-[34ch] text-lg leading-snug font-medium text-chalk sm:pb-3 sm:text-xl">
-          Pra quem sabe a escalação de cor. Fase por fase, estrela por estrela, até virar lenda.
-        </p>
-      </header>
-
-      <Link
-        to="/d/hoje"
-        className="mt-10 flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:p-6"
-      >
-        <span className="flex min-w-0 flex-col">
-          <span className="font-condensed text-3xl leading-none font-black uppercase sm:text-4xl">
-            Desafio do Dia
-          </span>
-          <span className="mt-1.5 font-semibold">
-            Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
-          </span>
-        </span>
-        <span className={`${btnPrimary} shrink-0`}>Jogar</span>
-      </Link>
-
-      {/* Modo Carreira: the stars from every game train the player's own footballer. */}
-      <Link
-        to="/carreira"
-        className="mt-6 flex flex-col gap-2 rounded-2xl bg-cover p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-      >
-        <span>
-          <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
-            Modo Carreira
-          </span>
-          <span className="mt-1.5 block font-semibold">
-            Crie seu craque e leve ele da base à Europa. Cada estrela que você ganha nos jogos vira
-            treino.
-          </span>
-        </span>
-        <span className="font-condensed self-start rounded-lg bg-ink px-5 py-3 text-lg font-extrabold text-paper uppercase sm:self-center">
-          Jogar
-        </span>
-      </Link>
-
-      <Link
-        to="/copa"
-        className="mt-6 flex flex-col gap-2 rounded-2xl border-2 border-cover p-5 transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-      >
-        <span>
-          <span className="font-condensed block text-3xl leading-none font-black uppercase sm:text-4xl">
-            Copa dos Sonhos
-          </span>
-          <span className="mt-1.5 block font-semibold text-chalk-soft">
-            Monte um time com craques de todas as Copas e tente ser campeão contra seleções
-            históricas.
-          </span>
-        </span>
-        <span className={`${btnPrimary} self-start sm:self-center`}>Montar time</span>
-      </Link>
-
-      <Link
-        to="/oficina"
-        className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
-      >
-        <span className="flex min-w-0 flex-col">
-          <span className="font-condensed text-2xl font-black uppercase">Oficina</span>
-          <span className="text-sm font-semibold text-chalk-soft">
-            Grids da comunidade, eventos e o seu próprio desafio
-          </span>
-        </span>
-        <span className={`${btnSecondary} shrink-0`}>Abrir</span>
-      </Link>
-
-      {resume && (
-        <Link
-          to={`${GAME_PATH[resume.mode]}/${resume.nextLevel}`}
-          className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-5 py-4 transition-transform duration-100 ease-standard hover:-translate-y-px"
-        >
-          <span className="flex min-w-0 flex-col">
-            <span className="font-condensed truncate text-2xl font-black uppercase">
-              {resume.name} · Fase {resume.nextLevel}
+      <HomeTop />
+      <div className="mx-auto mt-5 w-full max-w-xl">
+        <CareerPathCard />
+        {isPageLaunched('daily') && (
+          <Link
+            to="/d/hoje"
+            className="mt-6 flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5"
+          >
+            <span className="flex min-w-0 flex-col">
+              <span className="font-condensed text-3xl leading-none font-black uppercase">
+                Desafio do Dia
+              </span>
+              <span className="mt-1.5 font-semibold">
+                Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
+              </span>
             </span>
-            <span className="text-sm font-semibold text-chalk-soft">Continuar de onde parei</span>
-          </span>
-          <span className={`${btnPrimary} shrink-0`}>Jogar</span>
-        </Link>
-      )}
-
-      <HomeCarousel catalog={GAMES} games={games} />
+            <span className={`${btnPrimary} shrink-0`}>Jogar</span>
+          </Link>
+        )}
+        <SoonStrip />
+      </div>
     </>
   );
 }
 
-/** The player's standing at a glance: title, stars, ranking and what the next title needs. */
-function PlayerStrip() {
-  const { data } = useStats();
-  if (!data) return null;
-  return (
-    <Link
-      to="/stats"
-      className="mt-8 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-1 rounded-xl bg-chalk/[0.06] p-4 hover:bg-chalk/[0.09] sm:grid-cols-[auto_auto_auto_1fr] sm:gap-x-8"
-    >
-      <span className="font-condensed row-span-2 text-4xl leading-none font-black text-cover uppercase sm:row-span-1">
-        {data.title.name}
-      </span>
-      <span className="font-condensed tabular text-xl font-bold">
-        <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {data.totalStars} estrelas
-      </span>
-      <span className="font-condensed tabular text-xl font-bold">
-        {data.rank.all ? `${data.rank.all}º no ranking` : 'Fora do ranking'}
-      </span>
-      <span className="col-span-2 text-sm text-chalk-soft sm:col-span-1 sm:text-right">
-        {data.title.next
-          ? `Faltam ${data.title.next.missing} estrelas para ${data.title.next.name}`
-          : 'Título máximo. Lenda!'}
-      </span>
-    </Link>
-  );
-}
-
 function HomeRoute() {
-  const { data } = useGames();
   return (
     <>
-      <Home games={data} />
-      <PlayerStrip />
+      <Home />
       <div className="mt-10">
         <AdSlot slot={AD_SLOTS.home} />
       </div>

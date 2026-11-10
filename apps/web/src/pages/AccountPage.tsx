@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { suggestNickname } from '../lib/nickname';
 import { ShareButton } from '../components/ShareButton';
 import { Notifications } from '../components/Notifications';
@@ -29,7 +29,10 @@ export function AccountPage() {
   const me = useMe();
   const act = useAccount();
   const [nickname, setNickname] = useState('');
-  const [mode, setMode] = useState<'register' | 'login' | 'forgot'>('register');
+  // /conta?entrar opens the sign-in form (the home's Entrar button).
+  const [mode, setMode] = useState<'register' | 'login' | 'forgot'>(
+    useSearchParams()[0].has('entrar') ? 'login' : 'register',
+  );
   // Google: the API answers with the consent URL; the callback comes back to /conta.
   const google = useMutation({
     mutationFn: () =>

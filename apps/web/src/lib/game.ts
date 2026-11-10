@@ -2,6 +2,7 @@ import { play } from './sound';
 import { hapticForAction } from './haptics';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AlbumResponse,
   AttemptResponse,
   GameMode,
   DailyResponse,
@@ -41,6 +42,8 @@ export const useDaily = (date: string) =>
   useQuery({ queryKey: ['daily', date], queryFn: () => api<DailyResponse>(`/v1/daily/${date}`) });
 export const useStats = () =>
   useQuery({ queryKey: ['stats'], queryFn: () => api<StatsResponse>('/v1/me/stats') });
+export const useAlbum = () =>
+  useQuery({ queryKey: ['album'], queryFn: () => api<AlbumResponse>('/v1/me/album') });
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<MeResponse>('/v1/me') });
 export const useRanking = (scope: RankingScope) =>
   useQuery({

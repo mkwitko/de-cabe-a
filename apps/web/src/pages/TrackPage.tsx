@@ -9,6 +9,7 @@ import type { GameMode, TrackResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useTrack } from '../lib/game';
 import { Stars } from '../components/Stars';
 import { ModeCover } from '../components/ModeCover';
+import { CareerPathCard } from '../components/CareerPathCard';
 import { GameHeader, Notice, Skeleton } from '../components/ui';
 import { StarIcon } from '../components/Stars';
 
@@ -136,12 +137,18 @@ export function TrackPage({ mode }: { mode: GameMode }) {
     <div className="flex flex-col gap-8">
       <GameHeader title={GAME_NAME[mode]} />
       {/* The mode's own object as the header; the h1 above carries the name for assistive tech. */}
-      <div
-        aria-hidden="true"
-        className="flex flex-col overflow-hidden rounded-xl shadow-[0_14px_30px_-12px_rgb(0_0_0/0.6)]"
-      >
-        <ModeCover mode={mode} name={GAME_NAME[mode]} />
-      </div>
+      {mode === 'CAREER_PATH' ? (
+        <div className="mx-auto w-full max-w-lg">
+          <CareerPathCard linked={false} />
+        </div>
+      ) : (
+        <div
+          aria-hidden="true"
+          className="flex flex-col overflow-hidden rounded-xl shadow-[0_14px_30px_-12px_rgb(0_0_0/0.6)]"
+        >
+          <ModeCover mode={mode} name={GAME_NAME[mode]} />
+        </div>
+      )}
       {error && <Notice title="Deu ruim na conexão">{(error as Error).message}</Notice>}
       {!data && !error && <Skeleton className="h-96" />}
       {data && levels.length === 0 && (
