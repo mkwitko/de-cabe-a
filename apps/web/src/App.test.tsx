@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Home } from './App';
+import { App } from './App';
 
 const html = renderToString(
   <QueryClientProvider client={new QueryClient()}>
-    <MemoryRouter>
-      <Home />
+    <MemoryRouter initialEntries={['/']}>
+      <App />
     </MemoryRouter>
   </QueryClientProvider>,
 );

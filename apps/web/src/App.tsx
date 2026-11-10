@@ -1,15 +1,16 @@
 import { MusicToggle, SoundToggle } from './components/SoundToggle';
 import { sceneFor, setScene } from './lib/music';
 import { ThemeToggle } from './components/ThemeToggle';
-import { CareerPathCard } from './components/CareerPathCard';
+import { CareerPathCard, CareerPathNext } from './components/CareerPathCard';
 import { MiniCover } from './components/ModeCover';
 import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { lazy, Suspense, useEffect, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
+import { SignInButton } from './components/SignInButton';
 import { ComingSoonPage, SoonStamp } from './pages/ComingSoonPage';
 import {
   closedRoute,
@@ -221,40 +222,41 @@ export const GAMES = [
   },
 ] as const;
 
-/** Brand on the left; Entrar (or the avatar) always in view on the right. */
-function HomeTop() {
+/** Entrar for guests, the initial as an avatar once signed in (to the profile). */
+function AccountLink() {
   const { data: me } = useMe();
-  const who = me?.nickname ?? me?.account?.email;
+  if (!me?.account) return <SignInButton className={`${btnSecondary} shrink-0`} />;
+  const who = me.nickname ?? me.account.email;
   return (
-    <header className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <Crest className="h-11 w-10 shrink-0" />
-        <div className="min-w-0">
-          <h1 className="font-condensed text-[1.65rem] leading-[0.95] font-black whitespace-nowrap uppercase sm:text-4xl">
-            De Cabeça F.C.
-          </h1>
-          <p className="mt-0.5 text-sm leading-tight font-semibold text-chalk-soft">
-            Minijogos de futebol
-          </p>
-        </div>
+    <Link
+      to="/stats"
+      aria-label="Meu perfil"
+      className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase"
+    >
+      {who?.[0] ?? '?'}
+    </Link>
+  );
+}
+
+/** Crest, name and tagline; the page heading on the home, a link home everywhere else. */
+function Brand({ home }: { home: boolean }) {
+  const H = home ? 'h1' : 'span';
+  return (
+    <Link
+      to="/"
+      className="flex min-w-0 items-center gap-2 sm:gap-3"
+      aria-label={home ? undefined : 'De Cabeça F.C., início'}
+    >
+      <Crest className="h-10 w-9 shrink-0 sm:h-11 sm:w-10" />
+      <div className="min-w-0">
+        <H className="font-condensed block text-[1.35rem] leading-[0.95] font-black whitespace-nowrap uppercase sm:text-2xl lg:text-3xl">
+          De Cabeça F.C.
+        </H>
+        <span className="mt-0.5 block text-sm leading-tight font-semibold text-chalk-soft sm:whitespace-nowrap">
+          Minijogos de futebol
+        </span>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <ThemeToggle />
-        {me?.account ? (
-          <Link
-            to="/stats"
-            aria-label="Meu perfil"
-            className="font-condensed grid size-11 shrink-0 place-items-center rounded-full bg-cover text-xl font-black text-ink uppercase"
-          >
-            {who?.[0] ?? '?'}
-          </Link>
-        ) : (
-          <Link to="/conta?entrar" className={`${btnSecondary} shrink-0`}>
-            Entrar
-          </Link>
-        )}
-      </div>
-    </header>
+    </Link>
   );
 }
 
@@ -265,26 +267,87 @@ const SOON_EXTRA: { name: string; page: PageKey }[] = [
   { name: 'Oficina', page: 'oficina' },
 ];
 
-function SoonStrip() {
+/** Arrow buttons that page the rail; each greys out at its end. */
+function RailArrow({
+  dir,
+  disabled,
+  onClick,
+}: {
+  dir: -1 | 1;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir < 0 ? 'Ver os anteriores' : 'Ver os próximos'}
+      className="grid size-11 place-items-center rounded-full border-2 border-chalk-soft/50 text-chalk transition-opacity duration-150 hover:border-chalk disabled:opacity-30"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="size-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d={dir < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+      </svg>
+    </button>
+  );
+}
+
+function SoonRail() {
   const modes = GAMES.filter((g) => !isModeLaunched(g.mode));
   const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page));
+  const rail = useRef<HTMLUListElement>(null);
+  const [edge, setEdge] = useState({ start: true, end: false });
+  const measure = useCallback(() => {
+    const el = rail.current;
+    if (!el) return;
+    setEdge({
+      start: el.scrollLeft < 8,
+      end: el.scrollLeft + el.clientWidth > el.scrollWidth - 8,
+    });
+  }, []);
+  useEffect(() => {
+    measure();
+    addEventListener('resize', measure);
+    return () => removeEventListener('resize', measure);
+  }, [measure]);
   if (!modes.length && !extra.length) return null;
+  const page = (dir: -1 | 1) =>
+    rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: 'smooth' });
+  // The fade sits only on a side with more covers behind it.
+  const fade = `linear-gradient(90deg, ${edge.start ? '#000' : 'transparent'}, #000 3rem, #000 calc(100% - 4rem), ${edge.end ? '#000' : 'transparent'})`;
+  const tile =
+    'relative h-48 w-40 shrink-0 snap-start overflow-hidden rounded-xl shadow-[0_10px_20px_-10px_rgb(0_0_0/0.6)] sm:h-56 sm:w-48';
   return (
-    <section aria-labelledby="em-breve" className="mt-8">
-      <h2 id="em-breve" className="font-condensed text-xl font-extrabold uppercase">
-        Em breve
-      </h2>
+    <section aria-labelledby="em-breve" className="mt-12">
+      <div className="flex items-end justify-between gap-4">
+        <h2 id="em-breve" className="font-condensed text-3xl leading-none font-black uppercase">
+          Em breve
+        </h2>
+        <div className="flex gap-2">
+          <RailArrow dir={-1} disabled={edge.start} onClick={() => page(-1)} />
+          <RailArrow dir={1} disabled={edge.end} onClick={() => page(1)} />
+        </div>
+      </div>
       <ul
+        ref={rail}
+        onScroll={measure}
         tabIndex={0}
         aria-label="Modos que chegam em breve"
-        className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:px-0"
+        style={{ maskImage: fade, WebkitMaskImage: fade }}
+        className="-mx-4 mt-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pt-2 pb-4 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8"
       >
         {modes.map((g) => (
-          <li
-            key={g.mode}
-            className="relative h-36 w-36 shrink-0 snap-start overflow-hidden rounded-xl bg-paper shadow-[0_10px_20px_-10px_rgb(0_0_0/0.6)]"
-          >
-            <div className="h-full grayscale-[0.7] [&_h3]:hidden">
+          <li key={g.mode} className={`${tile} bg-paper`}>
+            <div className="h-full contrast-[0.9] grayscale">
               <MiniCover mode={g.mode} name={g.name} />
             </div>
             <SoonStamp className="absolute top-2 right-2 text-xs" />
@@ -293,9 +356,9 @@ function SoonStrip() {
         {extra.map((x) => (
           <li
             key={x.page}
-            className="relative grid h-36 w-36 shrink-0 snap-start place-items-center overflow-hidden rounded-xl bg-cover px-3 text-center text-ink grayscale-[0.7]"
+            className={`${tile} grid place-items-center bg-cover px-3 text-center text-ink grayscale`}
           >
-            <p className="font-condensed text-2xl leading-[0.9] font-black uppercase">{x.name}</p>
+            <p className="font-condensed text-3xl leading-[0.9] font-black uppercase">{x.name}</p>
             <SoonStamp className="absolute top-2 right-2 text-xs" />
           </li>
         ))}
@@ -304,30 +367,36 @@ function SoonStrip() {
   );
 }
 
+/**
+ * The home is one stage: the Career Path passport (filling the first phone screen) and, beside it
+ * on wide screens, what the next level is worth; the closed modes run below as a rail.
+ */
 export function Home() {
   return (
     <>
-      <HomeTop />
-      <div className="mx-auto mt-5 w-full max-w-xl">
-        <CareerPathCard />
-        {isPageLaunched('daily') && (
-          <Link
-            to="/d/hoje"
-            className="mt-6 flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5"
-          >
-            <span className="flex min-w-0 flex-col">
-              <span className="font-condensed text-3xl leading-none font-black uppercase">
-                Desafio do Dia
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
+        <CareerPathCard stage />
+        <div className="flex flex-col gap-6">
+          <CareerPathNext />
+          {isPageLaunched('daily') && (
+            <Link
+              to="/d/hoje"
+              className="flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5"
+            >
+              <span className="flex min-w-0 flex-col">
+                <span className="font-condensed text-3xl leading-none font-black uppercase">
+                  Desafio do Dia
+                </span>
+                <span className="mt-1.5 font-semibold">
+                  Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
+                </span>
               </span>
-              <span className="mt-1.5 font-semibold">
-                Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
-              </span>
-            </span>
-            <span className={`${btnPrimary} shrink-0`}>Jogar</span>
-          </Link>
-        )}
-        <SoonStrip />
+              <span className={`${btnPrimary} shrink-0`}>Jogar</span>
+            </Link>
+          )}
+        </div>
       </div>
+      <SoonRail />
     </>
   );
 }
@@ -405,61 +474,62 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
-      <nav
-        aria-label="Principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none"
+      {/* One header: brand, places, sound, theme and Entrar on wide screens; on the phone the places
+          are the bottom bar and only the home keeps a top (brand, sound, Entrar). */}
+      <header
+        className={`items-center gap-3 sm:mb-6 sm:flex sm:gap-4 lg:gap-6 ${home ? 'mb-4 flex justify-between' : 'contents'}`}
       >
-        <ul
-          className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-auto sm:max-w-7xl sm:items-center sm:justify-end sm:gap-7`}
+        <div className={home ? 'min-w-0' : 'hidden min-w-0 sm:block'}>
+          <Brand home={home} />
+        </div>
+        <nav
+          aria-label="Principal"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:ml-auto sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none"
         >
-          {!home && (
-            <li className="mr-auto hidden sm:block">
-              <Link
-                to="/"
-                className="font-condensed flex items-center gap-2 text-2xl font-black uppercase"
-              >
-                <Crest className="h-9 w-8" />
-                De Cabeça F.C.
-              </Link>
-            </li>
-          )}
-          {NAV.map(({ to, label, Icon, match }) => {
-            const active = match(pathname);
-            return (
-              <li key={to} className="flex">
-                <Link
-                  to={to}
-                  aria-current={active ? 'page' : undefined}
-                  className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-lg sm:font-extrabold sm:uppercase ${active ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`}
-                >
-                  {/* active marker: a short cover bar on top of the phone tab, under the word on wide screens */}
-                  <span
-                    aria-hidden="true"
-                    className={`absolute top-0 h-[3px] w-8 rounded-b-full bg-cover transition-opacity duration-150 sm:top-auto sm:bottom-0 sm:w-full sm:rounded-full ${active ? 'opacity-100' : 'opacity-0'}`}
-                  />
-                  <Icon className="size-[22px] sm:hidden" />
-                  {label}
-                </Link>
-              </li>
-            );
-          })}
-          <li className="hidden sm:block">
+          <ul
+            className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-auto sm:items-center sm:gap-4 lg:gap-6`}
+          >
+            {NAV.map(({ to, label, Icon, match }) => {
+              const active = match(pathname);
+              return (
+                <li key={to} className="flex">
+                  <Link
+                    to={to}
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-bold tracking-wide transition-colors duration-150 sm:font-condensed sm:min-h-11 sm:flex-row sm:gap-2 sm:text-base sm:font-extrabold lg:text-lg sm:uppercase ${active ? 'text-gold' : 'text-chalk-soft hover:text-chalk'}`}
+                  >
+                    {/* active marker: a short cover bar on top of the phone tab, under the word on wide screens */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute top-0 h-[3px] w-8 rounded-b-full bg-cover transition-opacity duration-150 sm:top-auto sm:bottom-0 sm:w-full sm:rounded-full ${active ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                    <Icon className="size-[22px] sm:hidden" />
+                    {label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className={`shrink-0 items-center gap-1 ${home ? 'flex' : 'hidden sm:flex'}`}>
+          <span className="hidden lg:contents">
             <MusicToggle />
-          </li>
-          <li className="hidden sm:block">
-            <SoundToggle />
-          </li>
-          <li className="hidden sm:block">
+          </span>
+          <SoundToggle />
+          <span className="hidden sm:contents">
             <ThemeToggle />
-          </li>
-        </ul>
-      </nav>
+          </span>
+          <span className="ml-1 sm:ml-2">
+            <AccountLink />
+          </span>
+        </div>
+      </header>
       {!online && (
         <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
           Sem conexão. As jogadas voltam quando a internet voltar.
         </p>
       )}
-      <main className={home ? 'pt-6 sm:pt-4' : ''}>{children}</main>
+      <main>{children}</main>
     </div>
   );
 }

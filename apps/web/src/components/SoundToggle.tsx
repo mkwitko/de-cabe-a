@@ -35,7 +35,15 @@ export function SoundToggle({ withLabel = false }: { withLabel?: boolean }) {
           <path d="M17 9l5 6M22 9l-5 6" />
         )}
       </svg>
-      {withLabel ? (on ? 'Efeitos ligados' : 'Efeitos desligados') : 'Efeitos'}
+      {withLabel ? (
+        on ? (
+          'Efeitos ligados'
+        ) : (
+          'Efeitos desligados'
+        )
+      ) : (
+        <span className="max-lg:sr-only">Efeitos</span>
+      )}
     </button>
   );
 }
@@ -70,7 +78,15 @@ export function MusicToggle({ withLabel = false }: { withLabel?: boolean }) {
         <circle cx="17.5" cy="16" r="2.5" fill="currentColor" />
         {!on && <path d="M3 3l18 18" />}
       </svg>
-      {withLabel ? (on ? 'Música ligada' : 'Música desligada') : 'Música'}
+      {withLabel ? (
+        on ? (
+          'Música ligada'
+        ) : (
+          'Música desligada'
+        )
+      ) : (
+        <span className="max-lg:sr-only">Música</span>
+      )}
     </button>
   );
 }
