@@ -92,7 +92,8 @@ export const CLUBE_PERKS: readonly Cosmetic[] = [
  * Who receives an apoio (the payee named on /apoie, /termos and Checkout). One place to change
  * if support moves to a CNPJ (docs/monetizacao-pesquisa.md).
  */
-export const APOIO_RECIPIENT = 'De Cabeça F.C. — responsável: Mauricio de Oliveira Kwitko';
+export const APOIO_RECIPIENT =
+  'De Cabeça F.C. — responsável: Mauricio de Oliveira Kwitko, CNPJ 40.585.767/0001-44';
 /** Above Checkout's pay button on every apoio; no tax claim either way. */
 export const APOIO_NOTE = `Apoio voluntário ao projeto, recebido por ${APOIO_RECIPIENT}. Não dá vantagem no jogo. Sem reembolso, salvo o que a lei garante.`;
 
