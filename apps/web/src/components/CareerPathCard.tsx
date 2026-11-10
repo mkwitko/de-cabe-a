@@ -322,7 +322,7 @@ export function CareerPathNext() {
   return (
     <section
       aria-labelledby="cp-next"
-      className="relative flex flex-1 flex-col overflow-hidden rounded-[18px] bg-paper text-ink shadow-[0_20px_40px_-18px_rgb(0_0_0/0.6)] sm:flex-row"
+      className="relative flex flex-col overflow-hidden rounded-[18px] bg-paper text-ink shadow-[0_20px_40px_-18px_rgb(0_0_0/0.6)] sm:flex-row"
     >
       {/* the stub: the level number, torn off along the perforation */}
       <div className="flex items-center justify-between gap-4 bg-cover px-6 py-5 sm:w-40 sm:flex-col sm:items-start sm:justify-between sm:py-7">

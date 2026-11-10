@@ -19,9 +19,11 @@ export function Showcase({
   cols?: string;
 }) {
   const shelf = stickers.length > 3 ? 6 : 3;
+  // A shelf of 3 stays 3 wide, so a 6-column row is never half empty.
+  const grid = shelf === 3 ? 'grid-cols-2 min-[480px]:grid-cols-3' : cols;
   return (
     <ul
-      className={`obj-dark grid gap-x-3 gap-y-5 rounded-xl border-4 border-chalk-soft/40 bg-pitch-deep p-3 shadow-[inset_0_0_30px_rgb(0_0_0/0.45)] ${cols}`}
+      className={`obj-dark grid gap-x-3 gap-y-5 rounded-xl border-4 border-chalk-soft/40 bg-pitch-deep p-3 shadow-[inset_0_0_30px_rgb(0_0_0/0.45)] ${grid}`}
     >
       {stickers.slice(0, 6).map((s) => (
         <li key={s.playerId} className="aspect-[3/4] shadow-[0_8px_0_-4px_rgb(255_255_255/0.2)]">

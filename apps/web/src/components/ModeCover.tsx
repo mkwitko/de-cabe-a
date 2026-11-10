@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { GameMode } from '@decabeca/contracts';
-import { GameArt } from './GameArt';
+import { GameArt, type CoverMode } from './GameArt';
 
 type Cover = {
   /** The material the whole cover is made of. */
@@ -18,13 +18,7 @@ const lines = (c: string, step: string) =>
   `repeating-linear-gradient(0deg, ${c} 0 1px, transparent 1px ${step})`;
 
 /** One real object per game: passport, chalkboard, newspaper, sealed pack, stadium screen... */
-const COVERS: Record<GameMode, Cover> = {
-  CAREER_PATH: {
-    shell: { background: `${grain}, #5b2b1d` },
-    frame: 'border-2 border-[#d9b45a] shadow-[inset_0_0_0_4px_#5b2b1d,inset_0_0_0_5px_#d9b45a80]',
-    ink: 'text-[#e3c473] [text-shadow:0_-1px_0_#0006,0_1px_0_#fff3]',
-    caption: 'Passaporte',
-  },
+const COVERS: Record<CoverMode, Cover> = {
   FOOTBALL_GRID: {
     shell: { background: 'radial-gradient(120% 90% at 30% 20%, #34493f, #1f2d26)' },
     frame: 'border-[10px] border-[#8a5a33] shadow-[inset_0_0_0_1px_#0006,0_2px_0_#0005]',
@@ -114,7 +108,7 @@ export function ModeCover({
   heading: H = 'h3',
   headingId,
 }: {
-  mode: GameMode;
+  mode: CoverMode;
   name: ReactNode;
   /** The name's heading level where the cover leads its own card. */
   heading?: 'h2' | 'h3';
@@ -152,7 +146,7 @@ export function ModeCover({
 }
 
 /** The cover shrunk to a tile for the "Em breve" strip: the object's material, the art, the name. */
-export function MiniCover({ mode, name }: { mode: GameMode; name: ReactNode }) {
+export function MiniCover({ mode, name }: { mode: CoverMode; name: ReactNode }) {
   const c = COVERS[mode];
   return (
     <div

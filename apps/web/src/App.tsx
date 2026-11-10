@@ -302,7 +302,10 @@ function RailArrow({
 }
 
 function SoonRail() {
-  const modes = GAMES.filter((g) => !isModeLaunched(g.mode));
+  // Career Path is always open and has no cover art.
+  const modes = GAMES.flatMap((g) =>
+    g.mode === 'CAREER_PATH' || isModeLaunched(g.mode) ? [] : [{ ...g, mode: g.mode }],
+  );
   const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page));
   const rail = useRef<HTMLUListElement>(null);
   const [edge, setEdge] = useState({ start: true, end: false });
@@ -376,7 +379,8 @@ export function Home() {
     <>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
         <CareerPathCard stage />
-        <div className="flex flex-col gap-6">
+        {/* A ticket keeps its own size beside the passport; it never stretches to its height. */}
+        <div className="flex flex-col justify-center gap-6">
           <CareerPathNext />
           {isPageLaunched('daily') && (
             <Link
@@ -512,7 +516,7 @@ function Shell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
         <div className={`shrink-0 items-center gap-1 ${home ? 'flex' : 'hidden sm:flex'}`}>
-          <span className="hidden lg:contents">
+          <span className="hidden sm:contents">
             <MusicToggle />
           </span>
           <SoundToggle />
