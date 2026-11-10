@@ -2,3 +2,4 @@ pnpm-lock.yaml
 docs/
 .remember/
 scripts/research/*.json
+apps/web/public/lottie/
