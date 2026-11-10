@@ -831,9 +831,21 @@
 :root {
   --scene-art: url('/img/vestiario-night.webp');
 }
+/*
+ * The scene's parallax (−1…1), written per frame onto the few elements that move. Not inherited,
+ * so a pointer move restyles those elements alone, not the whole passport under them.
+ */
+@property --sx {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+@property --sy {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
 .scene {
-  --px: 0;
-  --py: 0;
   --leather:
     radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
     radial-gradient(
@@ -851,7 +863,7 @@
   background:
     var(--scene-art) center 40% / cover no-repeat,
     #0d120f;
-  transform: translate3d(calc(var(--px) * -10px), calc(var(--py) * -6px), 0);
+  transform: translate3d(calc(var(--sx) * -10px), calc(var(--sy) * -6px), 0);
   transition: transform 900ms var(--ease-out-expo);
 }
 /* the floor fades to the ground colour so whatever scrolls below the bench stays legible */
@@ -940,7 +952,7 @@
   );
 }
 .scene-tilt {
-  transform: perspective(1800px) rotateY(calc(var(--px) * 3deg)) rotateX(calc(var(--py) * -2deg));
+  transform: perspective(1800px) rotateY(calc(var(--sx) * 3deg)) rotateX(calc(var(--sy) * -2deg));
   transition: transform 900ms var(--ease-out-expo);
 }
 .book {
@@ -1378,7 +1390,7 @@
   .ticket {
     margin-top: 0;
     rotate: 2.5deg;
-    translate: calc(var(--px) * 8px) calc(var(--py) * 5px);
+    translate: calc(var(--sx) * 8px) calc(var(--sy) * 5px);
     transition: translate 900ms var(--ease-out-expo);
   }
 }
@@ -2359,7 +2371,7 @@
 /* ── Album: a Panini book ────────────────────────────────────────────────────────────────── */
 /*
  * Cream printed pages with a halftone, a yellow cover, a spine and a page stack at the edges.
- * The turning leaf reads one progress value from the book: --p (0 → 1) and --m = sin(πp), the
+ * The turning leaf reads one progress value: --turn (0 → 1) and --lift = sin(π·turn), the
  * lift (gloss, shade and the shadow it casts peak mid-turn). Wide: the stage takes the viewport
  * height and the spread keeps ~1.56:1 inside it; phones: one page, natural height.
  */
@@ -2367,9 +2379,19 @@
   position: relative;
   width: 100%;
 }
+/* written per frame onto the leaf, its shades and casts only; not inherited, so the pages under
+   them never restyle mid-turn */
+@property --turn {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+@property --lift {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
 .album-book {
-  --p: 0;
-  --m: 0;
   --ink-page: #1d2a4f;
   position: relative;
   display: grid;
@@ -2613,7 +2635,7 @@
 /* the turning leaf */
 .album-leaf {
   z-index: 3;
-  transform: rotateY(calc(var(--p) * -180deg));
+  transform: rotateY(calc(var(--turn) * -180deg));
   transform-origin: left center;
   transform-style: preserve-3d;
   pointer-events: none;
@@ -2645,11 +2667,11 @@
 /* the page darkens as it turns away from the light, its back lightens as it lands */
 .album-face-front .album-shade {
   background: linear-gradient(to right, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
-  opacity: min(1, calc(var(--p) * 2));
+  opacity: min(1, calc(var(--turn) * 2));
 }
 .album-face-back .album-shade {
   background: linear-gradient(to left, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
-  opacity: min(1, calc((1 - var(--p)) * 2));
+  opacity: min(1, calc((1 - var(--turn)) * 2));
 }
 /* a band of light slides across the lifted page */
 .album-gloss {
@@ -2662,14 +2684,14 @@
     transparent 64%
   );
   background-size: 300% 100%;
-  background-position: calc(100% - var(--p) * 100%) 0;
-  opacity: var(--m);
+  background-position: calc(100% - var(--turn) * 100%) 0;
+  opacity: var(--lift);
   mix-blend-mode: soft-light;
 }
 /* the shadow the leaf throws on the pages beneath, strongest mid-turn */
 .album-cast {
   z-index: 2;
-  opacity: calc(var(--m) * 0.9);
+  opacity: calc(var(--lift) * 0.9);
 }
 .album-cast-left {
   background: linear-gradient(to left, rgb(0 0 0 / 0.5), transparent 60%);
@@ -2771,7 +2793,7 @@
     translate: -25% 0;
   }
   .album-book[data-opening] {
-    translate: calc((var(--p) - 1) * 25%) 0;
+    translate: calc((var(--turn) - 1) * 25%) 0;
   }
   .album-leaf-wide {
     position: absolute;
@@ -3106,8 +3128,6 @@
 .cp-room {
   --scene-art: url('/img/vestiario-night.webp');
   --scene-night: 1;
-  --px: 0;
-  --py: 0;
   /* phones: the room in shadow behind the passport, the pitch lines hidden under it */
   filter: brightness(0.42) saturate(0.85);
 }
