@@ -1,7 +1,7 @@
 /** Pieces shared by both games' level screens (ADR-007): end-of-level panel and level errors. */
 import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import { formatClock } from './Clock';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { startTransition, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode, PlayerRef } from '@decabeca/contracts';
@@ -376,11 +376,18 @@ export function LevelEnd({
         short={short}
         promoted={promoted}
         hero={hero}
-        onDone={() => setStage(data.sticker ? 'sticker' : 'end')}
+        // a transition: the next screen renders in slices, never one long task on the tap
+        onDone={() => startTransition(() => setStage(data.sticker ? 'sticker' : 'end'))}
       />
     );
   if (stage === 'sticker' && data.sticker)
-    return <StickerReveal award={data.sticker} short={short} onDone={() => setStage('end')} />;
+    return (
+      <StickerReveal
+        award={data.sticker}
+        short={short}
+        onDone={() => startTransition(() => setStage('end'))}
+      />
+    );
   const award = data.sticker;
   const total = stats.data?.totalStars;
   const social = !oficina && isPageLaunched('ranking');

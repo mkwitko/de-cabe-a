@@ -23,11 +23,15 @@ import { Skeleton } from './ui';
 import { Moment } from './Moment';
 import type { VotableMode } from '@decabeca/contracts';
 import { leaderOf, ModeArt, ModeDialog, type Locker } from './ModeDialog';
+import { motionReduced } from '../lib/settings';
 
-const reduced = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
+const reduced = motionReduced;
 
-/** Pointer (or a tilt that needs no permission) as --px/--py in −1…1 on the scene, one write per frame. */
+/**
+ * Pointer (or a tilt that needs no permission) as --sx/--sy in −1…1, one write per frame onto the
+ * elements that move (registered non-inherited in index.css: nothing else restyles).
+ */
 function useParallax(ref: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     const el = ref.current;
@@ -36,8 +40,10 @@ function useParallax(ref: React.RefObject<HTMLElement | null>) {
     const set = (x: number, y: number) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        el.style.setProperty('--px', x.toFixed(3));
-        el.style.setProperty('--py', y.toFixed(3));
+        for (const m of el.querySelectorAll<HTMLElement>('.scene-art, .scene-tilt, .ticket')) {
+          m.style.setProperty('--sx', x.toFixed(3));
+          m.style.setProperty('--sy', y.toFixed(3));
+        }
       });
     };
     const clamp = (n: number) => Math.max(-1, Math.min(1, n));
