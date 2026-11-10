@@ -39,6 +39,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     leagueReports,
     seasonPromotions,
     pushSubscriptions,
+    modeVote,
   ] = await Promise.all([
     who.userId ? prisma.user.findUnique({ where: { id: who.userId } }) : null,
     who.userId
@@ -77,6 +78,12 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     prisma.leagueReport.findMany(byPk),
     prisma.seasonPromotion.findMany(byPk),
     prisma.pushSubscription.findMany(byPk),
+    who.userId
+      ? prisma.modeVote.findUnique({
+          where: { userId: who.userId },
+          select: { mode: true, updatedAt: true },
+        })
+      : null,
   ]);
   return {
     exportedAt: exportedAt.toISOString(),
@@ -114,6 +121,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     levelReports,
     leagueReports,
     seasonPromotions,
+    modeVote,
     // Push keys are secrets of the browser, not data about the player: only the preferences.
     pushSubscriptions: pushSubscriptions.map((p) => ({
       daily: p.daily,
@@ -160,6 +168,7 @@ export async function deleteData(prisma: PrismaClient, who: Who) {
     if (who.userId) {
       const user = await tx.user.findUnique({ where: { id: who.userId } });
       if (user) await tx.verification.deleteMany({ where: { identifier: user.email } });
+      await tx.modeVote.deleteMany({ where: { userId: who.userId } });
       await tx.user.delete({ where: { id: who.userId } }); // cascades to Better Auth sessions and accounts
     }
   });

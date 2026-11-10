@@ -19,7 +19,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { AppError } from '../../errors';
 import { COOKIE, newSession, playerAttempts } from '../session/session';
 import { deleteData, exportData } from './account.data';
-import { assertNicknameFree, authRequest, nicknameKey } from './auth';
+import { assertNicknameFree, authRequest, isLiveSignIn, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
 import { trophies } from '../progression/seasons';
 
@@ -95,17 +95,8 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
   /** LGPD: erases the player's data in one transaction and ends the session (cookies expire). */
   app.delete('/me', async (req, reply) => {
     // The device link lives for 400 days; erasing an account also needs a live sign-in.
-    if (req.userId) {
-      const live = await auth.api
-        .getSession({ headers: fromNodeHeaders(req.headers) })
-        .catch(() => null);
-      if (live?.user.id !== req.userId)
-        throw new AppError(
-          401,
-          'UNAUTHORIZED',
-          'Entre na sua conta de novo para excluir os dados.',
-        );
-    }
+    if (req.userId && !(await isLiveSignIn(auth, req)))
+      throw new AppError(401, 'UNAUTHORIZED', 'Entre na sua conta de novo para excluir os dados.');
     await deleteData(prisma, req);
     const gone = `Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secureCookie ? '; Secure' : ''}`;
     reply.header('set-cookie', `${COOKIE}=; ${gone}`);
