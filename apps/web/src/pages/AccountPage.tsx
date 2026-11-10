@@ -6,9 +6,9 @@ import { suggestNickname } from '../lib/nickname';
 import { ShareButton } from '../components/ShareButton';
 import { Notifications } from '../components/Notifications';
 import { useState, type FormEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { api, type ApiError } from '../lib/api';
-import { useAccount, useMe } from '../lib/game';
+import type { ApiError } from '../lib/api';
+import { useAccount, useAlbum, useMe } from '../lib/game';
+import { AuthGate } from '../components/AuthGate';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { AccountData } from '../components/AccountData';
@@ -36,20 +36,7 @@ export function AccountPage() {
   const act = useAccount();
   const [nickname, setNickname] = useState('');
   const [params] = useSearchParams();
-  const [mode, setMode] = useState<'register' | 'login' | 'forgot'>(
-    params.has('entrar') ? 'login' : 'register',
-  );
-  // Google: the API answers with the consent URL; the callback comes back to /conta.
-  const google = useMutation({
-    mutationFn: () =>
-      api<{ url: string }>('/v1/auth/sign-in/social', {
-        method: 'POST',
-        json: { provider: 'google', callbackURL: `${location.origin}/conta` },
-      }),
-    onSuccess: ({ url }) => location.assign(url),
-  });
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const owned = useAlbum().data?.owned;
   if (!me.data) return <Skeleton className="h-96" />;
   const m = me.data;
   const error = act.error as ApiError | null;
@@ -68,7 +55,21 @@ export function AccountPage() {
   return (
     <div className="flex flex-col gap-8">
       <div aria-hidden="true" className="scene-art room-dim" />
-      <h1 className="font-condensed text-4xl font-black uppercase">Conta</h1>
+      {m.account ? (
+        <h1 className="font-condensed text-4xl font-black uppercase">Conta</h1>
+      ) : (
+        <>
+          <AuthGate
+            initial={params.has('entrar') ? 'login' : 'register'}
+            nickname={m.nickname}
+            stars={m.totalStars}
+            stickers={owned}
+          />
+          <h2 className="font-condensed mt-6 text-3xl font-black uppercase">
+            Sem conta, por enquanto
+          </h2>
+        </>
+      )}
       <div className="grid gap-12 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start md:gap-14">
         {/* The player's own sticker: what the ranking shows about you. */}
         <aside
@@ -224,150 +225,19 @@ export function AccountPage() {
                 Sair deste aparelho
               </button>
             </section>
-          ) : (
-            <form
-              className="form-slip order-first flex flex-col gap-3 p-5 sm:p-6 lg:col-span-2"
-              onSubmit={(e) =>
-                mode === 'forgot'
-                  ? submit(e, '/v1/auth/request-password-reset', 'POST', {
-                      email,
-                      redirectTo: `${location.origin}/conta/nova-senha`,
-                    })
-                  : submit(
-                      e,
-                      mode === 'register' ? '/v1/auth/sign-up/email' : '/v1/auth/sign-in/email',
-                      'POST',
-                      mode === 'register'
-                        ? { email, password, name: nickname || m.nickname || '' }
-                        : { email, password },
-                    )
-              }
-            >
-              <h2 className={h2}>
-                {mode === 'register'
-                  ? 'Criar conta'
-                  : mode === 'login'
-                    ? 'Entrar'
-                    : 'Esqueci a senha'}
-              </h2>
-              <p className="max-w-[62ch] text-ink/75">
-                {mode === 'register'
-                  ? 'Opcional. A conta guarda suas estrelas e figurinhas para você jogar em outro aparelho; sem ela, você continua jogando aqui.'
-                  : mode === 'login'
-                    ? 'Entre para trazer seu progresso para este aparelho.'
-                    : 'Mandamos um link para você criar uma senha nova.'}
-              </p>
-              {mode !== 'forgot' && (
-                <>
-                  <button
-                    type="button"
-                    className={`${btnSecondary} w-full gap-3 border-ink/30 bg-white text-base text-ink hover:border-ink hover:bg-white sm:max-w-md`}
-                    disabled={google.isPending}
-                    onClick={() => google.mutate()}
-                  >
-                    <GoogleMark />
-                    Continuar com Google
-                  </button>
-                  <p className="flex items-center gap-3 text-sm text-ink/70 before:h-px before:flex-1 before:bg-ink/20 after:h-px after:flex-1 after:bg-ink/20 sm:max-w-md">
-                    ou com e-mail
-                  </p>
-                </>
-              )}
-              <Field
-                label="E-mail"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              {mode !== 'forgot' && (
-                <Field
-                  label="Senha"
-                  hint={mode === 'register' ? 'Pelo menos 8 caracteres.' : undefined}
-                  type="password"
-                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                  minLength={mode === 'register' ? 8 : 1}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              )}
-              <div className="flex flex-wrap items-center gap-4">
-                <button className={btnPrimary} disabled={act.isPending}>
-                  {mode === 'register'
-                    ? 'Criar conta'
-                    : mode === 'login'
-                      ? 'Entrar'
-                      : 'Enviar link'}
-                </button>
-                <button
-                  type="button"
-                  className="min-h-10 font-semibold underline underline-offset-4"
-                  onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
-                >
-                  {mode === 'register' ? 'Já tenho conta' : 'Criar conta nova'}
-                </button>
-                {mode === 'login' && (
-                  <button
-                    type="button"
-                    className="font-semibold underline underline-offset-4"
-                    onClick={() => setMode('forgot')}
-                  >
-                    Esqueci a senha
-                  </button>
-                )}
-              </div>
-              {mode === 'register' && !nickname && !m.nickname && (
-                <p className="text-sm text-ink/75">
-                  Escolha também um apelido, no campo logo abaixo: ele vai junto para a conta.
-                </p>
-              )}
-            </form>
-          )}
+          ) : null}
           {error && (
             <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
               {error.message}
             </p>
           )}
-          {(google.error as ApiError | null) && (
-            <p role="alert" className="rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
-              {(google.error as ApiError).message}
-            </p>
-          )}
           {act.isSuccess && !error && (
             <p role="status" className="text-chalk-soft">
-              {mode === 'forgot' && !m.account
-                ? 'Se esse e-mail tiver conta, o link já está a caminho.'
-                : 'Pronto.'}
+              Pronto.
             </p>
           )}
         </div>
       </div>
     </div>
-  );
-}
-
-/** Google "G" mark (brand guidelines allow it on sign-in buttons). */
-function GoogleMark() {
-  return (
-    <svg aria-hidden viewBox="0 0 48 48" className="size-5">
-      <path
-        fill="#EA4335"
-        d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.7 17.7 9.5 24 9.5z"
-      />
-      <path
-        fill="#4285F4"
-        d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.5 5.8c4.4-4 6.8-10 6.8-17.2z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"
-      />
-      <path
-        fill="#34A853"
-        d="M24 48c6.5 0 11.9-2.1 15.8-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.3 2.3-6.3 0-11.6-4.2-13.5-10l-7.8 6C6.6 42.6 14.6 48 24 48z"
-      />
-    </svg>
   );
 }
