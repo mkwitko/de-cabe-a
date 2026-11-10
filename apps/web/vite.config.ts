@@ -52,6 +52,11 @@ const preloadRoot = (): Plugin => ({
 });
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(
+      (process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'dev').slice(0, 7),
+    ),
+  },
   plugins: [react(), tailwindcss(), swVersion(), preloadRoot()],
   server: {
     port: 5173,

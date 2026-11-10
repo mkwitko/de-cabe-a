@@ -172,7 +172,7 @@ function HireStamp({ won, fresh }: { won: boolean; fresh: boolean }) {
     <span
       aria-hidden="true"
       style={{ '--rot': '-12deg', transform: 'rotate(-12deg)' } as React.CSSProperties}
-      className={`font-condensed pointer-events-none absolute right-4 bottom-4 z-20 rounded-md border-4 border-current bg-[#d6b46f]/70 px-3 text-[clamp(1.6rem,7vw,3rem)] leading-[1.1] font-black tracking-wider uppercase mix-blend-multiply ${won ? 'text-[#b3261e]' : 'text-[#5a4520]'} ${fresh ? 'stamp-hit' : ''}`}
+      className={`font-condensed pointer-events-none absolute right-4 bottom-4 z-20 rounded-md border-4 border-current bg-[#d6b46f]/70 px-3 text-[clamp(1.6rem,7vw,3rem)] leading-[1.1] font-black tracking-wider uppercase ${won ? 'text-[#b3261e]' : 'text-[#5a4520]'} ${fresh ? 'stamp-hit' : ''}`}
     >
       {won ? 'Contratado' : 'Dispensado'}
     </span>

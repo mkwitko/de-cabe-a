@@ -52,6 +52,9 @@ const AccountPage = lazy(() =>
 const EntrarPage = lazy(() =>
   import('./pages/EntrarPage').then((m) => ({ default: m.EntrarPage })),
 );
+const SugestoesPage = lazy(() =>
+  import('./pages/SugestoesPage').then((m) => ({ default: m.SugestoesPage })),
+);
 const ApoiePage = lazy(() => import('./pages/ApoiePage').then((m) => ({ default: m.ApoiePage })));
 const HowToPlayPage = lazy(() =>
   import('./pages/HowToPlayPage').then((m) => ({ default: m.HowToPlayPage })),
@@ -228,6 +231,9 @@ export const GAMES = [
 /** Entrar for guests, the initial as an avatar once signed in (to the profile). */
 function AccountLink() {
   const { data: me } = useMe();
+  const { pathname } = useLocation();
+  // On /entrar itself the button would point at the page already open.
+  if (!me?.account && pathname === '/entrar') return null;
   if (!me?.account)
     return (
       <SignInButton
@@ -567,6 +573,7 @@ function PublicRoutes() {
             <Route path="/conta" element={<AccountPage />} />
             <Route path="/entrar" element={<EntrarPage />} />
             <Route path="/apoie" element={<ApoiePage />} />
+            <Route path="/sugestoes" element={<SugestoesPage />} />
             <Route path="/clube" element={<ClubePage />} />
             <Route path="/presente/:code" element={<GiftRedeemPage />} />
             <Route path="/conta/nova-senha" element={<NewPasswordPage />} />

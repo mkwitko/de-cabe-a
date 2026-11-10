@@ -21,6 +21,7 @@ import { progressionRoutes } from '../progression/progression.routes';
 import { analyticsRoutes } from '../analytics/analytics';
 import { accountRoutes } from '../account/account.routes';
 import { levelReportRoutes } from '../reports/level-reports';
+import { feedbackRoutes } from '../feedback/feedback.routes';
 import { reactionRoutes } from '../reports/reactions';
 import { pushRoutes } from '../push/push';
 import { fantasyRoutes } from '../fantasy/fantasy';
@@ -71,6 +72,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(accountRoutes);
   await app.register(levelReportRoutes);
   await app.register(reactionRoutes);
+  await app.register(feedbackRoutes);
   await app.register(pushRoutes);
   await app.register(fantasyRoutes);
   await app.register(copaRoutes);

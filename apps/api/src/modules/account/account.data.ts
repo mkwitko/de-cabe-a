@@ -17,6 +17,11 @@ async function owner(prisma: Pick<PrismaClient, 'guestSession'>, who: Who) {
   return { sessions, sids, pks: who.userId ? [who.userId, ...sids] : sids };
 }
 
+/** Feedback of the player: sent from any of their sessions or while signed in. */
+const feedbackOf = (sids: string[], userId: string | null) => ({
+  OR: [{ sessionId: { in: sids } }, ...(userId ? [{ userId }] : [])],
+});
+
 export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Date) {
   const { sessions, sids, pks } = await owner(prisma, who);
   const byPk = { where: { pk: { in: pks } } };
@@ -41,6 +46,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     pushSubscriptions,
     modeVote,
     billing,
+    feedback,
   ] = await Promise.all([
     who.userId ? prisma.user.findUnique({ where: { id: who.userId } }) : null,
     who.userId
@@ -86,6 +92,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
         })
       : null,
     who.userId ? billingOf(prisma, who.userId) : null,
+    prisma.feedback.findMany({ where: feedbackOf(sids, who.userId) }),
   ]);
   return {
     exportedAt: exportedAt.toISOString(),
@@ -125,6 +132,7 @@ export async function exportData(prisma: PrismaClient, who: Who, exportedAt: Dat
     seasonPromotions,
     modeVote,
     billing,
+    feedback,
     // Push keys are secrets of the browser, not data about the player: only the preferences.
     pushSubscriptions: pushSubscriptions.map((p) => ({
       daily: p.daily,
@@ -173,6 +181,7 @@ export async function erase(tx: Tx, sids: string[], pks: string[], userId: strin
   await tx.attempt.deleteMany({ where: { sessionId: { in: sids } } });
   await tx.careerPlayer.deleteMany({ where: { sessionId: { in: sids } } }); // cascades to seasons, matches, training
   await tx.levelReport.deleteMany({ where: { sessionId: { in: sids } } });
+  await tx.feedback.deleteMany({ where: feedbackOf(sids, userId) });
   await tx.levelReaction.deleteMany(byPk);
   await tx.leagueMember.deleteMany(byPk);
   await tx.leagueReport.deleteMany(byPk);

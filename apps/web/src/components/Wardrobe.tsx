@@ -129,7 +129,7 @@ export function MiniPassport({ theme }: { theme: PassportTheme | null }) {
         <span className="absolute top-1.5 left-2 text-[0.55rem] font-extrabold tracking-[0.16em] text-[var(--pp-label)] uppercase">
           Visto
         </span>
-        <span className="font-condensed grid size-16 -rotate-8 place-items-center rounded-full border-[3px] border-current text-center text-xs leading-none font-black text-[var(--pp-ink,#7a2633)] uppercase mix-blend-multiply">
+        <span className="font-condensed grid size-16 -rotate-8 place-items-center rounded-full border-[3px] border-current text-center text-xs leading-none font-black text-[var(--pp-ink,#7a2633)] uppercase">
           Santos
           <br />
           2009

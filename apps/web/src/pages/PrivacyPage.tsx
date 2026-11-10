@@ -52,6 +52,12 @@ export function PrivacyPage() {
                 interesse em corrigir o jogo.
               </li>
               <li>
+                <strong>Sugestões que você enviar</strong> em Ajustes › Sugestões: o texto, a página
+                em que você estava e a versão do app (nos problemas) e, se você quiser resposta, seu
+                e-mail. Guardamos para melhorar o jogo e responder você. Base: legítimo interesse em
+                melhorar o serviço.
+              </li>
+              <li>
                 <strong>Estatísticas do jogo, nossas</strong>: eventos como &quot;fase
                 iniciada&quot; e &quot;fase concluída&quot;, ligados a um código curto e
                 irreversível da sessão. Sem IP, sem texto de busca, sem cookie de terceiros. Base:
