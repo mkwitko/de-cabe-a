@@ -70,6 +70,7 @@ export function Broadcast({
             setShake(true);
             buzz(60);
           }
+          play('star');
           setDone(true);
         }
       };
@@ -100,6 +101,11 @@ export function Broadcast({
       stopCrowd.current?.();
     };
   }, [score, short]);
+
+  // A title promotion gets its own fanfare once the score has landed.
+  useEffect(() => {
+    if (done && promoted) play('promote');
+  }, [done, promoted]);
 
   const fade = 'transition-opacity duration-1000 motion-reduce:duration-200';
   return (
