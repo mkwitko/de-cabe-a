@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { titleFor } from '@decabeca/engine';
 import { APIError } from 'better-auth/api';
 import { fromNodeHeaders } from 'better-auth/node';
+import type { PrismaClient } from '../../generated/prisma/client';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { AppError } from '../../errors';
@@ -20,6 +21,36 @@ import { newSession, playerAttempts } from '../session/session';
 import { assertNicknameFree, authRequest, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
 import { trophies } from '../progression/seasons';
+
+type Who = { sessionId: string; userId: string | null; nickname: string };
+
+/** The owner of a public profile, with every pk their stickers may sit under; null when private or unknown. */
+export async function publicProfileOwner(
+  prisma: PrismaClient,
+  nickname: string,
+): Promise<{ who: Who; pks: string[] } | null> {
+  const key = nicknameKey(nickname);
+  const [user, guest] = await Promise.all([
+    prisma.user.findUnique({ where: { nicknameKey: key } }),
+    prisma.guestSession.findUnique({ where: { nicknameKey: key } }),
+  ]);
+  if (user?.publicProfile) {
+    const sessions = await prisma.guestSession.findMany({
+      where: { userId: user.id },
+      select: { id: true },
+    });
+    return {
+      who: { sessionId: '', userId: user.id, nickname: user.nickname },
+      pks: [user.id, ...sessions.map((x) => x.id)],
+    };
+  }
+  if (!user && guest?.publicProfile && !guest.userId)
+    return {
+      who: { sessionId: guest.id, userId: null, nickname: guest.nickname! },
+      pks: [guest.id],
+    };
+  return null;
+}
 
 export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now, secureCookie, auth } = app.deps;
@@ -75,17 +106,9 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
-      const key = nicknameKey(req.params.nickname);
-      const [user, guest] = await Promise.all([
-        prisma.user.findUnique({ where: { nicknameKey: key } }),
-        prisma.guestSession.findUnique({ where: { nicknameKey: key } }),
-      ]);
-      const who = user?.publicProfile
-        ? { sessionId: '', userId: user.id, nickname: user.nickname }
-        : !user && guest?.publicProfile && !guest.userId
-          ? { sessionId: guest.id, userId: null, nickname: guest.nickname! }
-          : null;
-      if (!who) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
+      const owner = await publicProfileOwner(prisma, req.params.nickname);
+      if (!owner) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
+      const { who } = owner;
       const [done, items] = await Promise.all([
         prisma.attempt.findMany({
           where: { ...playerAttempts(who), completedAt: { not: null } },

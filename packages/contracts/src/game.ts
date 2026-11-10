@@ -345,6 +345,8 @@ export const AttemptSummary = z.strictObject({
   secondsLeft: z.number().nullable(),
   /** Time the level took, once finished (shown in both modes). */
   durationSec: z.number().nullable(),
+  /** ISO time the level finished; null while in progress. */
+  completedAt: z.string().nullable(),
 });
 export type AttemptSummary = z.infer<typeof AttemptSummary>;
 
@@ -429,6 +431,37 @@ const GameEvent = z.union([
   }),
 ]);
 
+export const StickerRarity = z.enum([
+  'bronze',
+  'prata',
+  'ouro',
+  'ouro_brilhante',
+  'destaque_rodada',
+  'selecao_temporada',
+  'idolo',
+  'lenda',
+]);
+export type StickerRarity = z.infer<typeof StickerRarity>;
+
+export const Sticker = z.strictObject({
+  playerId: z.string(),
+  name: z.string(),
+  positionGroup: z.enum(['GK', 'DF', 'MF', 'FW']).nullable(),
+  nationality: z.string(),
+  rarity: StickerRarity,
+  mode: GameMode,
+  earnedAt: z.string(),
+});
+export type Sticker = z.infer<typeof Sticker>;
+
+/** Sticker earned by an attempt; `upgradedFrom` is the previous rarity when it replaced a lower one. */
+export const StickerAward = z.strictObject({
+  sticker: Sticker,
+  upgradedFrom: StickerRarity.nullable(),
+  isNew: z.boolean(),
+});
+export type StickerAward = z.infer<typeof StickerAward>;
+
 /** POST /v1/attempts, GET /v1/attempts/:id, POST /v1/attempts/:id/actions */
 export const AttemptResponse = z.strictObject({
   attempt: AttemptSummary,
@@ -459,6 +492,8 @@ export const AttemptResponse = z.strictObject({
     .nullable(),
   /** `url` is the level's page without the scheme, e.g. decabecafc.com.br/career-path/12. */
   share: z.strictObject({ text: z.string(), url: z.string() }).nullable(),
+  /** Present when finishing the level earned or upgraded a sticker. */
+  sticker: StickerAward.optional(),
 });
 export type AttemptResponse = z.infer<typeof AttemptResponse>;
 

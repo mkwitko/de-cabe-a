@@ -75,11 +75,24 @@ function noise(start: number, dur: number, gain: number, freq: number) {
   g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + start + dur);
   src.connect(filter).connect(g).connect(a.destination);
   src.start(a.currentTime + start);
+  return { src, g };
 }
 
-export type Sound = 'whistle' | 'correct' | 'wrong' | 'win' | 'tap';
+export type Sound =
+  | 'whistle'
+  | 'correct'
+  | 'wrong'
+  | 'win'
+  | 'tap'
+  | 'stamp'
+  | 'clunk'
+  | 'crowd'
+  | 'tick'
+  | 'shimmer'
+  | 'rarity';
 
-export function play(sound: Sound) {
+/** Returns a stop function for 'crowd' only (the broadcast's Pular cuts the roar). */
+export function play(sound: Sound): (() => void) | void {
   if (!soundOn()) return;
   try {
     if (sound === 'whistle') {
@@ -104,6 +117,29 @@ export function play(sound: Sound) {
     } else if (sound === 'win') {
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.1, 0.35, 'triangle', 0.14));
       noise(0.1, 1.6, 0.08, 1000);
+    } else if (sound === 'stamp') {
+      noise(0, 0.18, 0.12, 260);
+      tone(70, 0, 0.18, 'sine', 0.2, 40);
+    } else if (sound === 'clunk') {
+      noise(0, 0.12, 0.1, 120);
+      tone(55, 0, 0.25, 'triangle', 0.2);
+    } else if (sound === 'crowd') {
+      // Swell: a roar that opens up, then fades.
+      const { src, g } = noise(0, 3.1, 0.12, 1100);
+      return () => {
+        const t = audio().currentTime;
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+        src.stop(t + 0.2);
+      };
+    } else if (sound === 'tick') {
+      tone(1400, 0, 0.03, 'square', 0.04);
+    } else if (sound === 'shimmer') {
+      [880, 1320, 1760, 2640].forEach((f, i) => tone(f, i * 0.07, 0.6, 'sine', 0.07));
+    } else if (sound === 'rarity') {
+      tone(392, 0, 0.5, 'triangle', 0.15);
+      tone(587, 0.12, 0.7, 'triangle', 0.15);
     } else {
       noise(0, 0.04, 0.05, 2500);
     }

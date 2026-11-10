@@ -13,6 +13,7 @@ const ROUTES = [
   '/craque-misterioso/1',
   '/conexoes/1',
   '/stats',
+  '/album',
   '/ranking',
   '/carreira',
   '/conta',
@@ -59,3 +60,18 @@ for (const route of ROUTES)
     expect(small, 'tap targets under 40 px').toEqual([]);
     expect(errors, 'console errors').toEqual([]);
   });
+
+test('album shows the sticker won in a level', async ({ page }) => {
+  await page.goto('/career-path/1');
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
+  await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
+  await page.getByRole('option', { name: /Ronaldo/ }).click();
+  await page.getByRole('button', { name: 'Chutar' }).click();
+  const skip = (name: string) =>
+    page.getByRole('dialog', { name }).getByRole('button', { name: /Pular|Continuar/ });
+  await skip('Resultado').click({ timeout: 5000 });
+  await skip('Figurinha nova').click({ timeout: 5000 });
+  await page.goto('/album');
+  await expect(page.getByText(/^1 de \d+/)).toBeVisible();
+  await expect(page.getByText(/ronaldo/i).first()).toBeVisible();
+});

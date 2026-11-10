@@ -336,6 +336,12 @@ export function StatsPage() {
       </div>
 
       <Link
+        to="/album"
+        className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4"
+      >
+        Meu álbum
+      </Link>
+      <Link
         to="/history"
         className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4"
       >

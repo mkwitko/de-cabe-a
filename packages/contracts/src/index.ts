@@ -3,3 +3,4 @@ export * from './errors';
 export * from './admin';
 export * from './game';
 export * from './teams';
+export * from './album';

@@ -1,6 +1,15 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/** Skip the end-of-level ceremony: the broadcast, then the sticker when the level awards one. */
+async function skipCeremony(page: Page, { sticker = true } = {}) {
+  const pular = (name: string) =>
+    page.getByRole('dialog', { name }).getByRole('button', { name: /Pular|Continuar/ });
+  await pular('Resultado').click({ timeout: 5000 });
+  if (sticker) await pular('Figurinha nova').click({ timeout: 5000 });
+}
 
 /** Main flow (TEST_STRATEGY.md §3, adapted to the level tracks of ADR-007). One guest across the journey. */
+
 test('guest plays level 1 of each game, gets stars, joins the ranking, sees stats', async ({
   page,
   context,
@@ -36,6 +45,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
   await expect(page.getByRole('heading', { name: 'Acertou em 3 de 6!' })).toBeVisible();
+  await skipCeremony(page);
   await expect(page.getByRole('img', { name: '2 de 3 estrelas' }).first()).toBeVisible();
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
@@ -129,6 +139,7 @@ test('Modo Carreira: create a footballer, train him with a level, play a match',
   await page.getByRole('option', { name: /Ronaldo/ }).click();
   await page.getByRole('button', { name: 'Chutar' }).click();
   await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
+  await skipCeremony(page);
   await page.getByRole('link', { name: /de treino para o seu craque/ }).click();
 
   await page.getByRole('button', { name: 'Jogar a partida' }).click();

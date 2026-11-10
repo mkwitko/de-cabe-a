@@ -28,6 +28,7 @@ import { copaRoutes } from '../copa/copa';
 import { oficinaRoutes } from '../oficina/oficina';
 import { careerRoutes } from '../career/career.routes';
 import { dailyRoutes } from '../daily/daily';
+import { albumRoutes } from '../album/album.routes';
 import { leagueRoutes } from '../leagues/leagues';
 import { civilDate, dateColumn } from '../challenges/civil-date';
 import { getAttempt, startAttempt, submitAction } from './attempts.service';
@@ -75,6 +76,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(careerRoutes);
   await app.register(dailyRoutes);
   await app.register(leagueRoutes);
+  await app.register(albumRoutes);
 
   /** The player's track of one game: every published level with its state (ADR-007). */
   async function track(req: { sessionId: string; userId: string | null }, mode: GameMode) {

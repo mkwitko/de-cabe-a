@@ -30,7 +30,7 @@ export const onHapticsChange = (l: (on: boolean) => void) => {
   return () => void listeners.delete(l);
 };
 
-function buzz(pattern: number | number[]) {
+export function buzz(pattern: number | number[]) {
   if (hapticsSupported() && hapticsOn()) navigator.vibrate?.(pattern);
 }
 

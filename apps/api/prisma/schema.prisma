@@ -121,8 +121,9 @@ model Player {
   createdAt                     DateTime           @default(now())
   updatedAt                     DateTime           @updatedAt
 
-  aliases PlayerAlias[]
-  spells  CareerSpell[]
+  aliases  PlayerAlias[]
+  spells   CareerSpell[]
+  stickers Sticker[]
 
   @@index([nationalityCountryId])
   @@index([verificationStatus, notabilityTier])
@@ -680,16 +681,16 @@ model CopaRun {
 /// States: review (Em revisão) -> published -> featured (Destaque); flagged (Sob revisão) after
 /// reports, still playable until an editor decides; archived. Never counts for stars or titles.
 model CommunityLevel {
-  challengeId String           @id
-  challenge   Challenge        @relation(fields: [challengeId], references: [id])
+  challengeId String            @id
+  challenge   Challenge         @relation(fields: [challengeId], references: [id])
   authorPk    String
   title       String
-  state       String           @default("review")
+  state       String            @default("review")
   /// "Apresentado por": a sponsor's name shown as a label (3.5).
   sponsor     String?
-  reports     Int              @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  reports     Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   votes       CommunityVote[]
   reportRows  CommunityReport[]
 
@@ -729,4 +730,48 @@ model GameEvent {
   endsAt       DateTime
   challengeIds String[]
   createdAt    DateTime @default(now())
+}
+
+enum StickerRarity {
+  bronze
+  prata
+  ouro
+  ouro_brilhante
+  destaque_rodada
+  selecao_temporada
+  idolo
+  lenda
+}
+
+/// One sticker per (player pk, footballer); the best rarity earned is kept.
+model Sticker {
+  pk          String
+  playerId    String
+  player      Player        @relation(fields: [playerId], references: [id])
+  rarity      StickerRarity
+  mode        GameModeCode
+  challengeId String
+  earnedAt    DateTime      @default(now())
+  upgradedAt  DateTime      @updatedAt
+
+  @@id([pk, playerId])
+  @@index([pk, rarity])
+}
+
+/// One Seleção da Temporada promotion per podium season and player (pk = userId ?? sessionId).
+model SeasonPromotion {
+  pk        String
+  season    Int
+  playerId  String
+  createdAt DateTime @default(now())
+
+  @@id([pk, season])
+}
+
+/// A closed round already checked for Destaque da Rodada upgrades, once per pk.
+model RoundCheck {
+  pk     String
+  monday DateTime @db.Date
+
+  @@id([pk, monday])
 }

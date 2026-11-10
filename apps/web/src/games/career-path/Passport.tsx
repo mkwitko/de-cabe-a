@@ -1,0 +1,179 @@
+/**
+ * The career as a leather passport: the cover opens on the first tap and each revealed club lands
+ * as an ink stamp (name, years, games/goals) in a 2-column page; unknown clubs are dashed "?" slots.
+ * Presentation only: the list keeps one `li` per revealed club for screen readers.
+ */
+import { useEffect, useRef, useState } from 'react';
+import type { RevealedClub } from '@decabeca/contracts';
+import { clubColor } from '../../components/ClubBadge';
+import { buzz } from '../../lib/haptics';
+import { play } from '../../lib/sound';
+import { statsLabel, yearsLabel } from '../../lib/format';
+
+const ROT = [-8, 5, -4, 7, -6, 3, -9];
+const OPEN_MS = 900;
+
+function Stamp({
+  club,
+  i,
+  hit,
+  delay,
+}: {
+  club: RevealedClub;
+  i: number;
+  hit: boolean;
+  delay: number;
+}) {
+  const stats = statsLabel(club.appearances, club.goals);
+  return (
+    <div
+      className={`relative flex h-[92%] w-[94%] max-w-72 flex-col items-center justify-center border-[3px] border-current text-center opacity-90 mix-blend-multiply ${hit ? 'stamp-hit' : ''}`}
+      style={
+        {
+          color: clubColor(club.clubName, 0.38),
+          borderRadius: i % 2 ? '14px' : '999px',
+          '--rot': `${ROT[i % ROT.length]}deg`,
+          transform: `rotate(${ROT[i % ROT.length]}deg)`,
+          animationDelay: delay ? `${delay}ms` : undefined,
+        } as React.CSSProperties
+      }
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-[5px] rounded-[inherit] border-[1.5px] border-current"
+      />
+      <span className="text-[clamp(0.45rem,9cqh,0.7rem)] font-extrabold tracking-[0.14em] uppercase">
+        {club.isLoan ? 'Empréstimo' : 'Entrada'}
+      </span>
+      <b className="font-condensed mt-[2cqh] line-clamp-2 max-w-[86%] text-[clamp(0.7rem,22cqh,1.6rem)] leading-[0.95] font-black break-words uppercase">
+        {club.clubName}
+      </b>
+      <span className="tabular mt-[2cqh] text-[clamp(0.5rem,10cqh,0.75rem)] font-bold">
+        {yearsLabel(club.fromYear, club.toYear)}
+      </span>
+      {stats && (
+        <span className="tabular text-[clamp(0.5rem,10cqh,0.75rem)] font-bold opacity-85">
+          {stats}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function Passport({
+  clubs,
+  total,
+  opened,
+  onOpen,
+  label = 'Clubes revelados',
+  done = false,
+}: {
+  clubs: RevealedClub[];
+  total: number;
+  opened: boolean;
+  onOpen: () => void;
+  label?: string;
+  done?: boolean; // finished: no guess form below, rows keep a readable minimum and the page scrolls
+}) {
+  const fresh = useRef(!opened); // cover still shut at mount: stamp 1 waits for the cover
+  const landed = useRef(opened ? clubs.length : 0);
+  const timer = useRef<number>(0);
+  const pendingFrom = useRef<number | null>(null); // landed count to restore if the timer is cut
+  const [shaking, setShaking] = useState(false);
+
+  useEffect(() => {
+    if (!opened || landed.current >= clubs.length) return;
+    const wait = (landed.current === 0 && fresh.current ? OPEN_MS : 0) + 200;
+    pendingFrom.current ??= landed.current;
+    landed.current = clubs.length;
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      pendingFrom.current = null;
+      play('stamp');
+      buzz(25);
+      setShaking(true);
+    }, wait);
+  }, [opened, clubs.length]);
+  // Idempotent under StrictMode's fake unmount: an unfired stamp is rescheduled by the effect above.
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+      if (pendingFrom.current !== null) landed.current = pendingFrom.current;
+    },
+    [],
+  );
+
+  const base = useRef(opened ? clubs.length : 0).current; // stamps present on resume stay still
+  const slots = Math.max(total, clubs.length) - clubs.length;
+  return (
+    <div className="relative mx-auto h-full min-h-0 w-full max-w-2xl [perspective:1600px]">
+      <div
+        className={`absolute inset-0 ${shaking ? 'passport-shake' : ''}`}
+        onAnimationEnd={(e) => e.target === e.currentTarget && setShaking(false)}
+      >
+        <div className="absolute inset-0 overflow-hidden rounded-[6px_14px_14px_6px] bg-[#f3ead2] text-[#1d2a4f] shadow-[0_30px_50px_rgb(0_0_0/0.55),inset_14px_0_18px_-10px_#00000040] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)]">
+          <div
+            aria-hidden="true"
+            className="font-condensed pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-[18deg] text-center text-[clamp(4rem,16vw,8rem)] leading-[0.8] font-black text-[#1d2a4f0d]"
+          >
+            DE
+            <br />
+            CABEÇA
+          </div>
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-5 top-3.5 flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
+          >
+            <span className="whitespace-nowrap">Passaporte do jogador</span>
+            <span className="hidden whitespace-nowrap sm:inline">De Cabeça</span>
+          </div>
+          <ol
+            aria-label={label}
+            className={`absolute inset-x-2.5 top-11 bottom-2.5 grid grid-cols-2 gap-1 ${done ? 'overflow-y-auto [grid-auto-rows:minmax(4.5rem,1fr)]' : '[grid-auto-rows:minmax(0,1fr)] sm:bottom-24'}`}
+          >
+            {clubs.map((c, i) => (
+              <li key={i} className="grid min-h-0 min-w-0 place-items-center [container-type:size]">
+                <Stamp
+                  club={c}
+                  i={i}
+                  hit={opened && i >= base}
+                  delay={i === 0 && fresh.current ? OPEN_MS : 0}
+                />
+              </li>
+            ))}
+            {Array.from({ length: slots }, (_, i) => (
+              <li key={`q${i}`} aria-hidden="true" className="grid min-h-0 place-items-center">
+                <span className="font-condensed grid aspect-square w-[60%] max-w-32 place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a55]">
+                  ?
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <button
+          type="button"
+          aria-label="Abrir o passaporte"
+          aria-hidden={opened}
+          tabIndex={opened ? -1 : 0}
+          onClick={onOpen}
+          className={`passport-cover absolute inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-4 rounded-[6px_14px_14px_6px] text-[#e7c26a] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [backface-visibility:hidden] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] ${opened ? 'pointer-events-none [transform:rotateY(-178deg)]' : ''}`}
+        >
+          <span className="font-condensed grid size-24 place-items-center rounded-full border-[3px] border-[#e7c26a] text-3xl font-black">
+            DC
+          </span>
+          <span className="font-condensed text-center text-4xl leading-[0.9] font-black tracking-[0.06em] uppercase">
+            Passaporte
+            <br />
+            do craque
+          </span>
+          <span className="text-xs font-bold tracking-[0.3em] uppercase opacity-85">
+            República do futebol
+          </span>
+          <span className="absolute bottom-7 text-[13px] font-extrabold tracking-[0.2em] uppercase motion-safe:animate-pulse">
+            Toque para abrir
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}

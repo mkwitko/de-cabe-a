@@ -36,6 +36,7 @@ export const ErrorCode = z.enum([
   'SQUAD_LOCKED',
   'COPA_NOT_STARTED',
   'COPA_CONFLICT',
+  'NO_PROMOTION',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

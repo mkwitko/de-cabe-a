@@ -1,7 +1,7 @@
 /** Pieces shared by both games' level screens (ADR-007): end-of-level panel and level errors. */
 import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import { formatClock } from './Clock';
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
@@ -12,6 +12,9 @@ import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
 import { Reactions } from '../components/Reactions';
 import { Stars } from '../components/Stars';
+import { Broadcast } from '../components/Broadcast';
+import { StickerReveal } from '../components/StickerReveal';
+import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 
@@ -81,6 +84,15 @@ export function LevelEnd({
   detail: ReactNode;
 }) {
   const { mode, level, stars, score } = data.attempt;
+  // Broadcast, then the sticker (if any), then the usual end screen. Losses skip both.
+  const [stage, setStage] = useState<'broadcast' | 'sticker' | 'end'>(
+    stars > 0 && recentCompletion(data.attempt.completedAt) ? 'broadcast' : 'end',
+  );
+  const today = new Date().toLocaleDateString('en-CA');
+  const [short] = useState(() => ceremonyLength(mode, today) === 'short');
+  useEffect(() => {
+    if (stage === 'broadcast') markCeremony(mode, today);
+  }, [stage, mode, today]);
   /** Oficina levels (no track number) have no next level, track ranking or training. */
   const oficina = level === 0;
   const trackQ = useTrack(mode);
@@ -92,6 +104,19 @@ export function LevelEnd({
     (l) => l.level !== level && (l.state === 'open' || l.state === 'in_progress'),
   );
   const daily = useDaily('hoje').data?.games.find((g) => g.mode === mode && g.level === level);
+  if (stage === 'broadcast')
+    return (
+      <Broadcast
+        stars={stars}
+        score={score}
+        headline={headline}
+        detail={detail}
+        short={short}
+        onDone={() => setStage(data.sticker ? 'sticker' : 'end')}
+      />
+    );
+  if (stage === 'sticker' && data.sticker)
+    return <StickerReveal award={data.sticker} short={short} onDone={() => setStage('end')} />;
   return (
     <section aria-labelledby="level-end" className="flex flex-col gap-6">
       <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
