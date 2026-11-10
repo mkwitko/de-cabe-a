@@ -27,15 +27,21 @@ import { nextLevel } from '../lib/track';
 import { StickerCard } from '../components/StickerCard';
 import { RARITY_STYLE } from '../components/rarity';
 import { Nudge } from '../components/Nudge';
+import { ClubeOffer } from '../components/ClubeOffer';
+import type { EntitlementsResponse } from '@decabeca/contracts';
 import {
   LEVEL_ENDED,
   levelMoment,
   levelsDone,
   loadNudges,
+  loadOffers,
+  offerMoment,
   saveNudges,
+  saveOffers,
   shown,
   welcomed,
   type Moment,
+  type Offer,
 } from '../lib/nudges';
 
 export function LevelError({
@@ -316,6 +322,8 @@ export function LevelEnd({
       : null;
   // "Crie sua conta" at a guest's milestone (first sticker, first promotion, 5th level), once each.
   const [nudge, setNudge] = useState<Moment | null>(null);
+  // Signed-in non-members: the Clube offer at a promotion or a rare sticker, now and then.
+  const [offer, setOffer] = useState<Offer | null>(null);
   const nudgeChecked = useRef(false);
   useEffect(() => {
     if (stage === 'end') dispatchEvent(new Event(LEVEL_ENDED));
@@ -324,9 +332,26 @@ export function LevelEnd({
     if (nudgeChecked.current || stage !== 'end' || !me.data || !stats.data || stats.isFetching)
       return;
     nudgeChecked.current = true;
-    if (!justFinished || oficina || me.data.account || !welcomed()) return;
-    const s = loadNudges();
+    if (!justFinished || oficina || !welcomed()) return;
     const now = Date.now();
+    if (me.data.account) {
+      if (!isPageLaunched('clube')) return;
+      const o = offerMoment(
+        loadOffers(),
+        { promoted: !!promoted, rarity: data.sticker?.sticker.rarity },
+        now,
+      );
+      if (o)
+        void api<EntitlementsResponse>('/v1/me/entitlements')
+          .then((e) => {
+            if (e.clube.active) return;
+            saveOffers({ ...loadOffers(), last: now });
+            setOffer(o);
+          })
+          .catch(() => {});
+      return;
+    }
+    const s = loadNudges();
     const m = levelMoment(
       s,
       { promoted: !!promoted, sticker: !!data.sticker, levelsDone: levelsDone(stats.data) },
@@ -470,7 +495,13 @@ export function LevelEnd({
             )}
           </div>
           {/* One invitation at a time: the account nudge wins over the install card. */}
-          {nudge ? <Nudge moment={nudge} onDone={() => setNudge(null)} /> : <InstallInvite />}
+          {nudge ? (
+            <Nudge moment={nudge} onDone={() => setNudge(null)} />
+          ) : offer ? (
+            <ClubeOffer moment={offer} onDone={() => setOffer(null)} />
+          ) : (
+            <InstallInvite />
+          )}
         </>
       ) : (
         <>
@@ -565,6 +596,7 @@ export function LevelEnd({
           </div>
 
           {nudge && <Nudge moment={nudge} onDone={() => setNudge(null)} />}
+          {offer && <ClubeOffer moment={offer} onDone={() => setOffer(null)} />}
         </>
       )}
       {stars > 0 && !oficina && isPageLaunched('career') && (

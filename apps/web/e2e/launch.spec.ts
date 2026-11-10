@@ -74,6 +74,8 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await expect(page.getByRole('heading', { name: /Football Grid chega em breve/i })).toBeVisible();
   await page.goto('/ranking');
   await expect(page.getByRole('heading', { name: /chega em breve/i })).toBeVisible();
+  await page.goto('/clube');
+  await expect(page.getByRole('heading', { name: /Clube chega em breve/i })).toBeVisible();
 
   // Career Path level 1, start to finish, with the first-run tutorial.
   await page.goto('/');

@@ -8,6 +8,7 @@ const st = (i: number, positionGroup: Sticker['positionGroup']): Sticker => ({
   positionGroup,
   nationality: 'Brasil',
   photo: null,
+  cutout: null,
   photoCredit: null,
   rarity: 'bronze',
   mode: 'CAREER_PATH',

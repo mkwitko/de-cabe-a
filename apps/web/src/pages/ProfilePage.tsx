@@ -68,6 +68,7 @@ export function ProfilePage() {
             stars={p.totalStars}
             levels={levels}
             stickers={album.data?.owned}
+            member={!!p.member}
             className="max-w-lg"
           />
         </div>
