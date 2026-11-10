@@ -7,6 +7,7 @@
  * crossfade. A sticker opens in focus (StickerDetail).
  */
 import {
+  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -498,7 +499,7 @@ export function AlbumPage() {
                     type="button"
                     tabIndex={live ? 0 : -1}
                     aria-label={`${s.name}, ${RARITY_STYLE[s.rarity].label}. Ver figurinha`}
-                    onClick={() => setOpen(s)}
+                    onClick={() => startTransition(() => setOpen(s))}
                     className="album-stuck"
                     style={
                       { '--tilt': `${TILT[(num * 5) % TILT.length]}deg` } as React.CSSProperties
