@@ -139,7 +139,13 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
     return () => window.clearTimeout(t);
   }, [touring]);
 
-  if (attempt.isPending)
+  // Offline the query waits (paused) rather than failing: say so instead of a skeleton forever.
+  const error =
+    attempt.error ??
+    (attempt.isPending && !online
+      ? new ApiError(0, 'NETWORK_ERROR', 'Sem conexão com o servidor.')
+      : null);
+  if (attempt.isPending && !error)
     return (
       <div className="flex flex-col gap-4">
         <GameHeader title={title} back="/career-path" />
@@ -148,12 +154,12 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
         ))}
       </div>
     );
-  if (attempt.error)
+  if (error)
     return (
       <div className="flex flex-col gap-6">
         <GameHeader title={title} back="/career-path" />
         <LevelError
-          error={attempt.error as ApiError}
+          error={error as ApiError}
           mode="CAREER_PATH"
           retry={() => void attempt.refetch()}
         />

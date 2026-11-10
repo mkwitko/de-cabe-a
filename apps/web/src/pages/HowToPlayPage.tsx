@@ -19,16 +19,19 @@ function MiniStamp({
   years,
   ink,
   rot,
+  delay,
 }: {
   name: string;
   years: string;
   ink: string;
   rot: number;
+  /** when it lands in the loop */
+  delay: string;
 }) {
   return (
     <span
-      className="flex aspect-[1.25] w-[88%] flex-col items-center justify-center rounded-full border-[3px] border-current text-center mix-blend-multiply"
-      style={{ color: ink, rotate: `${rot}deg` }}
+      className="htp-stamp flex aspect-[1.25] w-[88%] flex-col items-center justify-center rounded-full border-[3px] border-current text-center mix-blend-multiply"
+      style={{ color: ink, rotate: `${rot}deg`, '--d': delay } as React.CSSProperties}
     >
       <b className="font-condensed text-lg leading-none font-black uppercase">{name}</b>
       <span className="tabular text-xs font-bold">{years}</span>
@@ -39,8 +42,8 @@ function MiniStamp({
 function PassportArt() {
   return (
     <div className={`grid h-full grid-cols-2 place-items-center gap-x-2 gap-y-1 p-3 ${PAPER}`}>
-      <MiniStamp name="Santos" years="2009–2013" ink="#1d2a4f" rot={-7} />
-      <MiniStamp name="Barcelona" years="2013–2017" ink="#7a2633" rot={5} />
+      <MiniStamp name="Santos" years="2009–2013" ink="#1d2a4f" rot={-7} delay="0.3s" />
+      <MiniStamp name="Barcelona" years="2013–2017" ink="#7a2633" rot={5} delay="0.9s" />
       <span className="font-condensed grid aspect-square w-3/5 place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-3xl font-black text-[#6d5c3a88]">
         ?
       </span>
@@ -56,14 +59,19 @@ function GuessArt() {
     <div className="flex h-full flex-col justify-center gap-2 bg-pitch-deep p-4">
       <div className="flex gap-2">
         <span className="flex min-h-11 flex-1 items-center rounded-lg bg-paper px-3 font-semibold text-ink">
-          Ney
+          {/* typed a letter at a time, then backspaced, on the loop */}
+          {[...'Neymar'].map((c, i) => (
+            <span key={i} className="htp-key" style={{ '--i': i } as React.CSSProperties}>
+              {c}
+            </span>
+          ))}
           <span className="ml-px h-5 w-0.5 bg-ink motion-safe:animate-pulse" />
         </span>
         <span className="font-condensed grid min-h-11 place-items-center rounded-lg bg-cover px-3 font-extrabold text-ink uppercase">
           Chutar
         </span>
       </div>
-      <span className="flex items-center gap-2 rounded-lg bg-paper px-3 py-2 text-sm font-bold text-ink shadow-[0_8px_16px_-8px_rgb(0_0_0/0.6)]">
+      <span className="htp-pick flex items-center gap-2 rounded-lg bg-paper px-3 py-2 text-sm font-bold text-ink shadow-[0_8px_16px_-8px_rgb(0_0_0/0.6)]">
         <span className="grid size-7 place-items-center rounded-full bg-ink text-xs text-paper">
           NJ
         </span>
@@ -84,8 +92,10 @@ function GuessArt() {
 function StarsArt() {
   return (
     <div className="flex h-full items-center justify-center gap-5 bg-[#070b14] p-4">
-      <Stars n={3} size="size-9" />
-      <span className="aspect-[3/4] w-20 rotate-3 rounded-[8px] bg-paper p-1 shadow-[6px_10px_16px_rgb(0_0_0/0.5)]">
+      <span className="htp-stars contents">
+        <Stars n={3} size="size-9" />
+      </span>
+      <span className="htp-sticker aspect-[3/4] w-20 rotate-3 rounded-[8px] bg-paper p-1 shadow-[6px_10px_16px_rgb(0_0_0/0.5)]">
         <span className="flex h-full flex-col justify-between rounded-[5px] bg-[linear-gradient(150deg,#ffe46b,#f2c200_45%,#d99e00)] p-1.5 text-[#1a2b1f]">
           <span className="text-[10px] font-extrabold tracking-[0.14em] uppercase">Ouro</span>
           <span className="font-condensed text-base leading-none font-black uppercase">Neymar</span>

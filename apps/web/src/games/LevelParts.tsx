@@ -18,6 +18,7 @@ import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony'
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 import { TitleBadge } from '../components/TitleBadge';
+import { GoalLoop, preloadLottie } from '../components/Moment';
 import { SignInButton } from '../components/SignInButton';
 import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
 import { isPageLaunched } from '../lib/launch';
@@ -71,6 +72,7 @@ export function LevelError({
   if (error.code === 'LEVEL_NOT_FOUND')
     return (
       <Notice
+        art={<GoalLoop />}
         title="Fase não encontrada"
         action={
           <div className="flex flex-wrap gap-3">
@@ -84,6 +86,7 @@ export function LevelError({
     );
   return (
     <Notice
+      art={<GoalLoop />}
       title="Deu ruim na conexão"
       action={
         <button className={btnPrimary} onClick={retry}>
@@ -132,11 +135,12 @@ function StickerWon({
         </span>
       </span>
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="font-condensed truncate text-lg leading-none font-extrabold uppercase">
+        {/* wraps rather than clipping a long name on a phone ("Neym…") */}
+        <span className="font-condensed text-base leading-[0.95] font-extrabold break-words uppercase sm:text-lg">
           {sticker.name}
         </span>
         <span
-          className={`text-xs font-semibold whitespace-nowrap ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+          className={`text-xs leading-tight font-semibold ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
         >
           {isNew
             ? `${style.label} · nova`
@@ -293,6 +297,10 @@ export function LevelEnd({
   useEffect(() => {
     if (stage === 'broadcast') markCeremony(mode, today);
   }, [stage, mode, today]);
+  // the broadcast's moments (three stars, a promotion, a rare pack) play without a wait
+  useEffect(() => {
+    if (stage === 'broadcast' && !short) preloadLottie();
+  }, [stage, short]);
   /** Oficina levels (no track number) have no next level, track ranking or training. */
   const oficina = level === 0;
   const trackQ = useTrack(mode);
@@ -373,57 +381,66 @@ export function LevelEnd({
                   <span>Visto de entrada</span>
                   <span>Fase {level}</span>
                 </p>
-                {/* The verdict, stamped onto the page like an official entry stamp. */}
-                <div
-                  className="stamp-hit relative max-w-full self-start rounded-[10px] border-[3px] border-current px-4 py-3 sm:px-6 sm:py-4"
-                  style={
-                    {
-                      color: stars > 0 ? '#1d3f7a' : '#a3242f',
-                      '--rot': '-2deg',
-                      transform: 'rotate(-2deg)',
-                    } as React.CSSProperties
-                  }
-                >
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-[5px] rounded-[6px] border-[1.5px] border-current opacity-70"
-                  />
-                  <h2
-                    id="level-end"
-                    className="font-condensed text-4xl leading-[0.9] font-black text-balance uppercase sm:text-5xl xl:text-6xl"
+                {/* The verdict, stamped onto the page like an official entry stamp; on the wide
+                    spread it and the promotion hold the middle of the page, not its top. */}
+                <div className="flex flex-col gap-4 lg:flex-1 lg:justify-center lg:gap-6">
+                  <div
+                    className="stamp-hit relative max-w-full self-start rounded-[10px] border-[3px] border-current px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6"
+                    style={
+                      {
+                        color: stars > 0 ? '#1d3f7a' : '#a3242f',
+                        '--rot': '-2deg',
+                        transform: 'rotate(-2deg)',
+                      } as React.CSSProperties
+                    }
                   >
-                    {headline}
-                  </h2>
-                  <div className="mt-2 leading-snug font-semibold text-[#1d2a4f] sm:text-lg">
-                    {detail}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-[5px] rounded-[6px] border-[1.5px] border-current opacity-70"
+                    />
+                    <h2
+                      id="level-end"
+                      className="font-condensed text-4xl leading-[0.9] font-black text-balance uppercase sm:text-5xl xl:text-7xl"
+                    >
+                      {headline}
+                    </h2>
+                    <div className="mt-2 leading-snug font-semibold text-[#1d2a4f] sm:text-lg">
+                      {detail}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-current/25 pt-3">
+                      <Stars n={stars} size="size-8 sm:size-9 xl:size-11" onCover animate />
+                      <Points data={data} />
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-current/25 pt-3">
-                    <Stars n={stars} size="size-8 sm:size-9" onCover animate />
-                    <Points data={data} />
-                  </div>
+                  {starRule && (
+                    <p className="text-sm font-semibold text-[#6d5c3a] max-lg:hidden">{starRule}</p>
+                  )}
+                  {promoted && (
+                    <p
+                      className="flex items-center gap-2 self-start rounded-lg px-3 py-1.5 text-ink sm:gap-3 sm:px-4 sm:py-2"
+                      style={{ background: titleTone(promoted) }}
+                    >
+                      <TitleBadge name={promoted} className="size-7 sm:size-9" />
+                      <span className="font-condensed text-lg leading-none font-black uppercase sm:text-2xl">
+                        Promovido a {promoted}
+                      </span>
+                    </p>
+                  )}
                 </div>
-                {starRule && <p className="text-sm font-semibold text-[#6d5c3a]">{starRule}</p>}
-                {promoted && (
-                  <p
-                    className="flex items-center gap-2 self-start rounded-lg px-3 py-1.5 text-ink sm:gap-3 sm:px-4 sm:py-2"
-                    style={{ background: titleTone(promoted) }}
-                  >
-                    <TitleBadge name={promoted} className="size-7 sm:size-9" />
-                    <span className="font-condensed text-lg leading-none font-black uppercase sm:text-2xl">
-                      Promovido a {promoted}
-                    </span>
-                  </p>
-                )}
                 <div className="lg:order-last">
                   <Ticket to={primary.to} stub={primary.stub} label={primary.label} />
                 </div>
                 {!oficina && (award || total !== undefined) && (
                   <div
-                    className={`grid gap-3 border-t border-[#c9b98f] pt-3 lg:mt-auto ${award && total !== undefined ? 'grid-cols-2' : ''}`}
+                    className={`grid gap-3 border-t border-[#c9b98f] pt-3 ${award && total !== undefined ? 'grid-cols-2' : ''}`}
                   >
                     {award && <StickerWon award={award} onPaper />}
                     {total !== undefined && <TitleProgress total={total} onPaper />}
                   </div>
+                )}
+                {/* on a phone the star rule waits under the way on, which stays in the first screen */}
+                {starRule && (
+                  <p className="text-sm font-semibold text-[#6d5c3a] lg:hidden">{starRule}</p>
                 )}
               </div>
               <div className="h-[28rem] sm:h-[34rem] lg:h-auto lg:min-h-[max(30rem,calc(100dvh-14rem))]">

@@ -4,6 +4,7 @@ import { play } from '../lib/sound';
 import { Stars } from './Stars';
 import { TitleBadge } from './TitleBadge';
 import { titleTone } from '../lib/format';
+import { Moment } from './Moment';
 
 export const reducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -284,6 +285,14 @@ export function Broadcast({
           </p>
         )}
 
+        {/* De placa: two fireworks over the stands and a light fall of paper across the screen. */}
+        {done && stars === 3 && !short && (
+          <Moment
+            art="confetti"
+            className="absolute top-[4%] left-1/2 aspect-[5/4] w-[min(100vw,760px)] -translate-x-1/2"
+          />
+        )}
+
         {/* The TV lower third: the verdict, stars and points, and the way on, as one graphic. */}
         <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] mx-auto max-w-3xl sm:inset-x-8 lg:max-w-4xl sm:bottom-[max(2rem,env(safe-area-inset-bottom))]">
           {promoted && (
@@ -292,7 +301,14 @@ export function Broadcast({
               className={`ml-3 inline-flex items-center gap-2 rounded-t-md px-3 py-1.5 text-ink transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${done ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
               style={{ background: titleTone(promoted) }}
             >
-              <TitleBadge name={promoted} className="size-7" />
+              {/* the new badge spins in, then glints */}
+              <span className="relative -my-3 shrink-0">
+                <TitleBadge
+                  name={promoted}
+                  className={`size-11 ${done ? 'motion-safe:animate-[badge-spin_1s_var(--ease-out-expo)_both]' : ''}`}
+                />
+                {done && !short && <Moment art="glint" className="absolute -inset-6" />}
+              </span>
               <p className="font-condensed text-lg leading-none font-black uppercase">
                 Promovido a {promoted}
               </p>
