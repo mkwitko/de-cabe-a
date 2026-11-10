@@ -1,11 +1,14 @@
 /** Sticker album: a Panini-style page per position group, with the next empty slots as teaser. */
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AlbumResponse, Sticker } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { GameHeader, Skeleton, btnPrimary, btnSecondary } from '../components/ui';
 import { RARITY_ORDER, RARITY_STYLE } from '../components/rarity';
 import { StickerCard } from '../components/StickerCard';
+import { useTrack } from '../lib/game';
+import { nextLevel } from '../lib/track';
 
 const GROUPS = [
   { key: 'GK', label: 'Goleiros' },
@@ -23,6 +26,7 @@ export function AlbumPage() {
     queryFn: () => api('/v1/me/album'),
   });
   const [picked, setPicked] = useState<Sticker | null>(null);
+  const next = nextLevel(useTrack('CAREER_PATH').data);
   const promote = useMutation<AlbumResponse, ApiError, string>({
     mutationFn: (playerId) => api('/v1/me/album/promote', { method: 'POST', json: { playerId } }),
     onSuccess: (data) => {
@@ -58,6 +62,21 @@ export function AlbumPage() {
           </li>
         ))}
       </ul>
+
+      {a.owned === 0 && (
+        <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-[44ch] text-lg leading-snug font-semibold">
+            Álbum vazio por enquanto. Acerte uma fase do Career Path e a figurinha do jogador vem
+            colada aqui.
+          </p>
+          <Link
+            to={next ? `/career-path/${next.level}` : '/career-path'}
+            className={`${btnPrimary} min-h-14 self-stretch text-xl sm:self-auto sm:px-10`}
+          >
+            {next ? `Jogar fase ${next.level}` : 'Ver as fases'}
+          </Link>
+        </div>
+      )}
 
       {promo && (
         <div className="mt-6 rounded-xl border-2 border-cover bg-cover/10 p-4">
