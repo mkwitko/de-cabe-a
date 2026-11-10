@@ -1,0 +1,72 @@
+# Edge proxy: the only thing on 127.0.0.1:8088 (cloudflared -> here). It lives across deploys, so
+# api and web can be swapped behind it (deploy/rollout.sh). Cloudflare terminates HTTPS; plain HTTP.
+# Upstreams are re-resolved from Docker DNS every second, so a new container joins and a stopped
+# one leaves; a request that cannot reach any backend is held and retried for up to 30 s instead
+# of failing with 502. Caddy does not run active health checks on dynamic upstreams: the Docker
+# healthcheck gates the swap, and passive checks drop a backend that refuses connections.
+# Changing this file recreates the edge on the next deploy (about 1 s without the site).
+{
+	admin off
+	auto_https off
+}
+
+(backend) {
+	lb_policy round_robin
+	lb_try_duration 30s
+	lb_try_interval 250ms
+	fail_duration 5s
+}
+
+:80 {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		# Only our scripts plus AdSense; analytics and errors go to Sentry and PostHog (/ingest).
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://www.googletagservices.com https://adservice.google.com https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.ingest.us.sentry.io https://*.posthog.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://www.googletagservices.com https://adservice.google.com https://fundingchoicesmessages.google.com; frame-src https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://www.googletagservices.com https://adservice.google.com https://fundingchoicesmessages.google.com https://*.adtrafficquality.google; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; upgrade-insecure-requests"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Game API and the server-rendered search pages.
+	@api path /v1/* /jogador/* /jogadores /sitemap.xml /llms.txt /creditos
+	handle @api {
+		reverse_proxy {
+			dynamic a api 3000 {
+				refresh 1s
+			}
+			import backend
+			# The player's IP as Cloudflare saw it (per-IP limits); the tunnel is the only way in.
+			header_up X-Forwarded-For {http.request.header.Cf-Connecting-Ip}
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	# PostHog through our origin, so ad blockers do not drop analytics.
+	handle_path /ingest/static/* {
+		rewrite * /static{uri}
+		reverse_proxy https://us-assets.i.posthog.com {
+			header_up Host us-assets.i.posthog.com
+			header_up -Cookie
+			header_up -Authorization
+		}
+	}
+	handle_path /ingest/* {
+		reverse_proxy https://us.i.posthog.com {
+			header_up Host us.i.posthog.com
+			header_up -Cookie
+			header_up -Authorization
+		}
+	}
+
+	# The static site (its cache rules live in deploy/Caddyfile, baked into the web image).
+	handle {
+		reverse_proxy {
+			dynamic a web 80 {
+				refresh 1s
+			}
+			import backend
+		}
+	}
+}
