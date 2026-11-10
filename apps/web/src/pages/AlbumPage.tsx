@@ -27,6 +27,7 @@ import { POSITION, StickerCard } from '../components/StickerCard';
 import { StickerDetail } from '../components/StickerDetail';
 import { useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
+import { useFinish } from '../lib/cosmetics';
 import { motionReduced } from '../lib/settings';
 
 const GROUPS = [
@@ -131,6 +132,7 @@ function Chevron({ d }: { d: string }) {
 type Flip = { a: number; b: number };
 
 export function AlbumPage() {
+  const finishOf = useFinish();
   const qc = useQueryClient();
   const q = useQuery<AlbumResponse, ApiError>({
     queryKey: ['album'],
@@ -387,7 +389,7 @@ export function AlbumPage() {
           <div aria-hidden="true" className="album-cover-fan">
             {a.stickers.slice(0, 3).map((s, i) => (
               <div key={s.playerId} style={{ '--i': i - 1 } as React.CSSProperties}>
-                <StickerCard sticker={s} size="sm" />
+                <StickerCard sticker={s} size="sm" finish={finishOf(s.playerId)} />
               </div>
             ))}
           </div>
@@ -505,7 +507,7 @@ export function AlbumPage() {
                       { '--tilt': `${TILT[(num * 5) % TILT.length]}deg` } as React.CSSProperties
                     }
                   >
-                    <StickerCard sticker={s} size="sm" />
+                    <StickerCard sticker={s} size="sm" finish={finishOf(s.playerId)} />
                   </button>
                 ) : (
                   <div aria-hidden="true" className="album-slot">

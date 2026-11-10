@@ -6,6 +6,7 @@ import { Lamps, reducedMotion } from './Broadcast';
 import { RARITY_ORDER, RARITY_STYLE } from './rarity';
 import { StickerCard } from './StickerCard';
 import { Moment } from './Moment';
+import { useFinish } from '../lib/cosmetics';
 
 /** From Destaque da Rodada up, a pack tears open in the rarity colour before the card. */
 const RARE = RARITY_ORDER.indexOf('destaque_rodada');
@@ -30,6 +31,7 @@ export function StickerReveal({
   onDone: () => void;
   short: boolean;
 }) {
+  const finishOf = useFinish();
   const { sticker, upgradedFrom, isNew } = award;
   const style = RARITY_STYLE[sticker.rarity];
   const level = RARITY_ORDER.indexOf(sticker.rarity);
@@ -114,7 +116,13 @@ export function StickerReveal({
           className={`relative aspect-[3/4] w-[min(62vw,33vh)] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
           style={{ '--d': `${dur}ms` } as React.CSSProperties}
         >
-          <StickerCard sticker={sticker} size="lg" showName={phase === 'named'} stripRef={strip} />
+          <StickerCard
+            sticker={sticker}
+            size="lg"
+            showName={phase === 'named'}
+            stripRef={strip}
+            finish={finishOf(sticker.playerId)}
+          />
         </div>
       </div>
       <div

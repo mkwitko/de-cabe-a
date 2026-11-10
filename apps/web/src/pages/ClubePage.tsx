@@ -1,17 +1,20 @@
 /**
  * O Clube, in the locker room at night: the member card on the bench, two tickets (mensal, anual),
- * what comes in the card, the newsstand of single cosmetics, and the gift envelope. Accounts only:
+ * what comes in the card, what the player owns and wears (Seus itens), the newsstand of single
+ * cosmetics, Liga Pro, and the gift envelope. Accounts only:
  * a guest sees everything and is asked to sign in at the button. Everything sold is cosmetic.
  * Payment happens on Stripe's own pages; /presente/:code redeems a gift.
  */
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CATALOG, type Cosmetic, type ProductKey } from '@decabeca/contracts';
+import { CATALOG, LIGA_PRO_PERKS, type Cosmetic, type ProductKey } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { brl, checkout, giftLink, longDate, openPortal, useEntitlements } from '../lib/billing';
 import { useMe, useStats } from '../lib/game';
 import { MemberCard } from '../components/MemberCard';
+import { SWATCH, Wardrobe } from '../components/Wardrobe';
+import { isPageLaunched } from '../lib/launch';
 import { CheckIcon, ClubeSeal, GiftIcon } from '../components/Icons';
 import { ShareButton } from '../components/ShareButton';
 import { signInHref } from '../components/SignInButton';
@@ -20,32 +23,6 @@ import { btnPrimary, btnSecondary, GameHeader, Notice, Skeleton } from '../compo
 /** The primary button in ink, for buttons on the yellow ticket and the paper envelope. */
 const btnInk = btnPrimary.replace('bg-cover', 'bg-ink').replace('text-ink', 'text-cover');
 const h2 = 'font-condensed text-3xl leading-none font-extrabold uppercase sm:text-4xl';
-
-/** What each cosmetic looks like, as a little printed swatch. */
-const SWATCH: Record<Cosmetic, CSSProperties> = {
-  acabamento_holografico: {
-    background: 'conic-gradient(from 200deg, #ffb3c7, #ffe9a3, #b5ffd0, #a8e4ff, #d2b0ff, #ffb3c7)',
-  },
-  acabamento_cromado: {
-    background: 'linear-gradient(150deg, #ffffff, #7d8a9c 28%, #f1f4f8 48%, #5f6b7c 72%, #dfe5ec)',
-  },
-  passaporte_retro: {
-    background: 'radial-gradient(circle at 30% 20%, #9a6b3f, #6b4423 55%, #3f2712)',
-  },
-  passaporte_selecao: {
-    background: 'linear-gradient(135deg, #0f7a3d 0 55%, #f5c400 55% 70%, #0f7a3d 70%)',
-  },
-  torcida_charanga: { background: 'radial-gradient(circle at 50% 120%, #d94f30, #5b1a24 70%)' },
-  torcida_geral: { background: 'radial-gradient(circle at 50% 120%, #4f7fd9, #1b2a5b 70%)' },
-  acabamento_clube: {
-    background: 'linear-gradient(135deg, #ffd84a, #c99a1a 45%, #fff1b0 60%, #b8860b)',
-  },
-  passaporte_clube: {
-    background: 'radial-gradient(circle at 30% 20%, #1d3b2c, #0f1f16 70%)',
-  },
-  torcida_clube: { background: 'radial-gradient(circle at 50% 120%, #ffd84a, #3d2c05 70%)' },
-  selo_socio: { background: 'oklch(0.84 0.15 95)' },
-};
 
 const PERKS: { flag: Cosmetic; name: string; text: string }[] = [
   {
@@ -56,17 +33,17 @@ const PERKS: { flag: Cosmetic; name: string; text: string }[] = [
   {
     flag: 'acabamento_clube',
     name: 'Acabamento Clube',
-    text: 'Moldura dourada de sócio nas figurinhas do álbum.',
+    text: 'Moldura dourada e o selo de sócio nas figurinhas, em todas ou só nas que você escolher.',
   },
   {
     flag: 'passaporte_clube',
     name: 'Passaporte Clube',
-    text: 'Capa verde-noite com o brasão gravado no Career Path.',
+    text: 'Capa verde-noite com letras douradas e carimbos verdes no Career Path.',
   },
   {
     flag: 'torcida_clube',
     name: 'Torcida do Clube',
-    text: 'Um canto próprio da arquibancada a cada acerto.',
+    text: 'Batucada com as palmas do Clube na transmissão do resultado e na vitória.',
   },
 ];
 
@@ -329,6 +306,48 @@ export function ClubePage() {
         </ul>
       </section>
 
+      {/* What the player owns, and what it wears: the same choices as Ajustes › Aparência. */}
+      {e && (Wardrobe.owns(e) || e.leaguesPro.length > 0) && (
+        <section
+          aria-labelledby="seus-itens"
+          className="grid grid-cols-1 gap-x-12 gap-y-6 lg:grid-cols-12"
+        >
+          <div className="flex flex-col gap-3 lg:col-span-4">
+            <h2 id="seus-itens" className={h2}>
+              Seus itens
+            </h2>
+            <p className="max-w-[40ch] text-chalk-soft">
+              Escolha o que usar. Muda na hora, em qualquer aparelho; também em Ajustes › Aparência.
+            </p>
+          </div>
+          <div className="flex flex-col gap-6 rounded-xl border-2 border-chalk/10 bg-pitch-deep/85 p-5 sm:p-6 lg:col-span-8">
+            <Wardrobe e={e} />
+            {e.leaguesPro.length > 0 && (
+              <div className="flex flex-col gap-2 border-t border-chalk/10 pt-5">
+                <p className="font-condensed text-lg leading-none font-extrabold uppercase">
+                  Liga Pro
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {e.leaguesPro.map((l) => (
+                    <li key={l.code} className="flex flex-wrap items-baseline gap-x-3">
+                      <Link
+                        to={`/liga/${l.code}`}
+                        className="font-condensed tabular text-xl font-black tracking-[0.12em] underline underline-offset-4 hover:text-cover"
+                      >
+                        {l.code}
+                      </Link>
+                      {l.until && (
+                        <span className="text-sm text-chalk-soft">Pro até {longDate(l.until)}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* The newsstand: single cosmetics, paid once (card or Pix). */}
       <section aria-labelledby="banca" className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
@@ -384,6 +403,40 @@ export function ClubePage() {
               </li>
             );
           })}
+        </ul>
+      </section>
+
+      {/* Liga Pro: for the league's creator, bought on the league's page. */}
+      <section
+        aria-labelledby="liga-pro"
+        className="grid grid-cols-1 gap-x-12 gap-y-6 lg:grid-cols-12"
+      >
+        <div className="flex flex-col gap-3 lg:col-span-5">
+          <h2 id="liga-pro" className={h2}>
+            Liga Pro
+          </h2>
+          <p className="max-w-[44ch] text-chalk-soft">
+            {brl(CATALOG.liga_pro.amount)} por mês, por liga. Quem criou a liga assina na página
+            dela; vale para todo mundo que está nela. A pontuação continua a mesma.
+          </p>
+          {isPageLaunched('leagues') ? (
+            <Link to="/ligas" className={`${btnSecondary} self-start`}>
+              Ir para as ligas
+            </Link>
+          ) : (
+            <p className="text-sm font-semibold text-chalk-soft">As ligas abrem em breve.</p>
+          )}
+        </div>
+        <ul className="flex flex-col rounded-xl bg-paper p-2 text-ink shadow-[0_18px_36px_-16px_rgb(0_0_0/0.7)] lg:col-span-7">
+          {LIGA_PRO_PERKS.map((perk) => (
+            <li
+              key={perk}
+              className="flex items-center gap-3 border-b-2 border-dashed border-ink/15 px-3 py-3.5 font-semibold last:border-b-0"
+            >
+              <CheckIcon className="size-5 shrink-0" />
+              {perk}
+            </li>
+          ))}
         </ul>
       </section>
 

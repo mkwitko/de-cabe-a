@@ -801,6 +801,18 @@ export const LeagueSummary = z.strictObject({
 });
 export const LeaguesResponse = z.strictObject({ leagues: z.array(LeagueSummary) });
 export type LeaguesResponse = z.infer<typeof LeaguesResponse>;
+/** Liga Pro crest: its colour and how the name is lettered (PATCH /v1/leagues/:code/style). */
+export const LeagueColor = z.enum(['verde', 'azul', 'vermelho', 'preto', 'vinho', 'dourado']);
+export type LeagueColor = z.infer<typeof LeagueColor>;
+export const LeagueNameStyle = z.enum(['bloco', 'contorno', 'dourado']);
+export type LeagueNameStyle = z.infer<typeof LeagueNameStyle>;
+export const LeagueStyle = z.strictObject({ color: LeagueColor, nameStyle: LeagueNameStyle });
+export type LeagueStyle = z.infer<typeof LeagueStyle>;
+export const LEAGUE_MAX_MEMBERS = 20;
+export const LEAGUE_PRO_MAX_MEMBERS = 100;
+/** Closed weeks a Liga Pro keeps on its page. */
+export const LEAGUE_HISTORY_WEEKS = 8;
+
 /** GET /v1/leagues/:code; the weekly ranking only for members. */
 export const LeagueResponse = z.strictObject({
   code: z.string(),
@@ -808,6 +820,12 @@ export const LeagueResponse = z.strictObject({
   members: z.number(),
   maxMembers: z.number(),
   isMember: z.boolean(),
+  /** The player created it (only the creator subscribes Liga Pro and styles the crest). */
+  isOwner: z.boolean(),
+  /** Liga Pro is live: 100 places, crest style, past weeks and the trophy shelf. */
+  pro: z.boolean(),
+  /** The crest the owner chose; null without Liga Pro or before a choice. */
+  style: LeagueStyle.nullable(),
   /** Monday 00:00 in Brasília, start of the weekly ranking. */
   weekStart: z.string(),
   ranking: z.array(
@@ -818,6 +836,17 @@ export const LeagueResponse = z.strictObject({
       isMe: z.boolean(),
     }),
   ),
+  /** Liga Pro, members only: the podium of each closed week (latest first, up to 8). */
+  history: z.array(
+    z.strictObject({
+      weekStart: z.string(),
+      podium: z.array(
+        z.strictObject({ position: z.number(), nickname: z.string(), stars: z.number() }),
+      ),
+    }),
+  ),
+  /** Liga Pro, members only: weeks won in that history, per member (most first). */
+  trophies: z.array(z.strictObject({ nickname: z.string(), wins: z.number() })),
 });
 export type LeagueResponse = z.infer<typeof LeagueResponse>;
 

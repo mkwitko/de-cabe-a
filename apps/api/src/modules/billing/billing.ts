@@ -7,9 +7,14 @@ import { randomInt } from 'node:crypto';
 import {
   CATALOG,
   CLUBE_PERKS,
+  CrowdPack,
+  Finish,
+  PassportTheme,
   ProductKey,
+  StickerFinish,
   type Cosmetic,
   type EntitlementsResponse,
+  type Equipped,
 } from '@decabeca/contracts';
 import type Stripe from 'stripe';
 import type { PrismaClient } from '../../generated/prisma/client';
@@ -68,7 +73,7 @@ export async function entitlements(
   userId: string,
   now: Date,
 ): Promise<EntitlementsResponse> {
-  const [clube, purchases, bought, leagues] = await Promise.all([
+  const [clube, purchases, bought, leagues, choice] = await Promise.all([
     clubeStatus(prisma, userId, now),
     prisma.purchase.findMany({ where: { userId, status: { in: ['paid', 'processing'] } } }),
     prisma.giftCode.findMany({
@@ -83,6 +88,7 @@ export async function entitlements(
         currentPeriodEnd: { gt: now },
       },
     }),
+    prisma.cosmeticChoice.findUnique({ where: { userId } }),
   ]);
   const owned = new Set<Cosmetic>(clube.active ? CLUBE_PERKS : []);
   for (const p of purchases) {
@@ -101,6 +107,7 @@ export async function entitlements(
       subscribed: clube.sub !== null,
     },
     cosmetics: [...owned],
+    equipped: wearing(choice, owned),
     gifts: bought.map((g) => ({ code: g.code, months: g.months, redeemed: !!g.redeemedBy })),
     pending: purchases
       .filter((p) => p.status === 'processing')
@@ -109,6 +116,30 @@ export async function entitlements(
       const code = codes.find((c) => c.id === l.leagueId)?.code;
       return code ? [{ code, until: l.currentPeriodEnd.toISOString() }] : [];
     }),
+  };
+}
+
+type Choice = {
+  finish: string | null;
+  passport: string | null;
+  crowd: string | null;
+  stickers: unknown;
+};
+/** The saved choice, keeping only what is owned now (a lapsed Clube's items drop out). */
+export function wearing(choice: Choice | null, owned: ReadonlySet<Cosmetic>): Equipped {
+  const keep = <T extends Cosmetic>(options: readonly T[], v: string | null | undefined) =>
+    options.find((o) => o === v && owned.has(o)) ?? null;
+  const stickers: Equipped['stickers'] = {};
+  const saved = (choice?.stickers ?? {}) as Record<string, unknown>;
+  for (const [playerId, f] of Object.entries(saved)) {
+    const v = StickerFinish.safeParse(f);
+    if (v.success && (v.data === 'none' || owned.has(v.data))) stickers[playerId] = v.data;
+  }
+  return {
+    finish: keep(Finish.options, choice?.finish),
+    passport: keep(PassportTheme.options, choice?.passport),
+    crowd: keep(CrowdPack.options, choice?.crowd),
+    stickers,
   };
 }
 
