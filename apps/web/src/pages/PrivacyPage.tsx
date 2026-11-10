@@ -1,5 +1,5 @@
 /** Privacy notice (LGPD, Lei 13.709/2018). Plain PT-BR; blanks for the owner are marked [preencher]. */
-import { A, CONTROLLER, DPO_EMAIL, Fill, L, LegalPage, Ul } from '../components/Legal';
+import { A, CONTROLLER, DPO_EMAIL, L, LegalPage, Ul } from '../components/Legal';
 
 export function PrivacyPage() {
   return (
@@ -99,15 +99,11 @@ export function PrivacyPage() {
             <Ul>
               <li>Conta e jogo: até você excluir a conta.</li>
               <li>
-                Visitante sem conta: até você apagar os dados em <L to="/conta">Conta</L>. Hoje não
-                há limpeza automática de sessões paradas{' '}
-                <Fill>prazo, se o dono definir uma limpeza</Fill>.
+                Visitante sem conta: até você apagar os dados em <L to="/conta">Conta</L>, ou
+                apagados automaticamente após 12 meses sem jogar.
               </li>
               <li>Buscas sem resultado: 30 dias.</li>
-              <li>
-                Cópias de segurança: mantidas pelo prazo definido na hospedagem{' '}
-                <Fill>prazo de retenção do backup</Fill>.
-              </li>
+              <li>Cópias de segurança: guardadas por até 30 dias.</li>
             </Ul>
           ),
         },
@@ -158,7 +154,7 @@ export function PrivacyPage() {
             <p>
               O jogo é para todas as idades. Para crianças, o tratamento de dados deve atender ao
               melhor interesse delas (LGPD, art. 14); peça a um responsável para criar conta ou
-              aceitar cookies opcionais <Fill>revisar esta seção com assessoria jurídica</Fill>.
+              aceitar cookies opcionais.
             </p>
           ),
         },
