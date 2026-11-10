@@ -4,9 +4,34 @@
  */
 import { expect, test } from '@playwright/test';
 
+test('first visit: the welcome, a guest with a nickname, then the home', async ({ page }) => {
+  await page.goto('/');
+  const welcome = page.getByRole('dialog', { name: /Bem-vindo ao De Cabeça F.C./ });
+  await expect(welcome.getByRole('link', { name: 'Criar conta' })).toHaveAttribute(
+    'href',
+    '/conta?voltar=%2F',
+  );
+  await expect(welcome.getByRole('link', { name: /Entrar/ })).toHaveAttribute(
+    'href',
+    '/conta?entrar=1&voltar=%2F',
+  );
+  const nick = welcome.getByRole('textbox', { name: 'Seu apelido' });
+  await expect(nick).not.toHaveValue(''); // a friendly name is already there
+  await nick.fill(`Visitante ${Date.now() % 100000}`);
+  await welcome.getByRole('button', { name: 'Jogar como visitante' }).click();
+  await expect(welcome).toBeHidden();
+  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
+
+  // Once per device: a reload goes straight to the home.
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /Bem-vindo/ })).toHaveCount(0);
+});
+
 test('launch site: home, Em breve, a won Career Path level, album, how to play, legal', async ({
   page,
 }) => {
+  await page.addInitScript(() => localStorage.setItem('dc_welcomed', '1'));
   await page.goto('/');
   await page
     .getByRole('dialog', { name: /cookies/i })

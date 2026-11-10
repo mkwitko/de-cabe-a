@@ -28,6 +28,10 @@ const ROUTES = [
 ];
 
 test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true });
+// The first-run welcome would cover a fresh browser's first screen; launch.spec covers it.
+test.beforeEach(({ context }) =>
+  context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
+);
 
 for (const route of ROUTES)
   test(`phone: ${route} fits, no errors, big tap targets`, async ({ page }) => {

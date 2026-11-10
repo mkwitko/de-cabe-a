@@ -5,6 +5,7 @@ import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
+import { FirstRun } from './components/Welcome';
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
@@ -555,6 +556,7 @@ function PublicRoutes() {
       </Suspense>
       <LegalLinks />
       <ConsentBanner />
+      <FirstRun />
     </Shell>
   );
 }
