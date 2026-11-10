@@ -9,6 +9,7 @@ import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { TrophyIcon } from '../components/Icons';
 import { Showcase } from '../components/Showcase';
 import { MemberCard } from '../components/MemberCard';
+import { Medal, MedalDefs, medalGrid } from '../components/Achievements';
 import { SignInButton } from '../components/SignInButton';
 import { achievementOpen, isModeLaunched, isPageLaunched } from '../lib/launch';
 
@@ -44,28 +45,86 @@ export function ProfilePage() {
       </>
     );
   const p = q.data;
-  const h2 = 'font-condensed mt-10 text-2xl font-extrabold uppercase';
+  const h2 = 'font-condensed text-3xl font-extrabold uppercase';
   // Only what is open at launch (lib/launch.ts): seasons belong to the ranking.
   const games = p.games.filter((g) => isModeLaunched(g.mode));
   const achievements = p.achievements.filter((a) => achievementOpen(a.id));
   const trophies = isPageLaunched('ranking') ? p.trophies : [];
+  const levels = games.reduce((n, g) => n + g.completed, 0);
   return (
-    <>
-      <GameHeader title={p.nickname} aside={<SignInButton />} />
-      <div className="mt-5">
-        <MemberCard
-          heading="h2"
-          name={p.nickname}
-          title={p.title.name}
-          stars={p.totalStars}
-          levels={games.reduce((n, g) => n + g.completed, 0)}
-        />
+    <div className="flex flex-col gap-8">
+      <div aria-hidden="true" className="scene-art room-dim" />
+      <GameHeader
+        title={p.nickname}
+        aside={<SignInButton className={`${btnPrimary} sm:hidden`} />}
+      />
+      {/* Phone: card, vitrine, medals. Wide: card | vitrine, then medals under the card. */}
+      <div className="grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-12">
+        <div className="flex justify-center lg:col-span-5 lg:block">
+          <MemberCard
+            heading="h2"
+            name={p.nickname}
+            title={p.title.name}
+            stars={p.totalStars}
+            levels={levels}
+            stickers={album.data?.owned}
+            className="max-w-lg"
+          />
+        </div>
+
+        <section
+          aria-labelledby="vitrine"
+          className="flex flex-col gap-3 lg:col-span-7 lg:row-span-2"
+        >
+          <h2 id="vitrine" className="font-condensed text-3xl font-extrabold uppercase">
+            Vitrine
+          </h2>
+          {album.isPending ? (
+            <Skeleton className="h-64" />
+          ) : album.data?.showcase.length ? (
+            <Showcase stickers={album.data.showcase} cols="grid-cols-3 lg:grid-cols-6" />
+          ) : (
+            <p className="text-chalk-soft">Nenhuma figurinha na vitrine ainda.</p>
+          )}
+          <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border-2 border-dashed border-cover/50 bg-pitch-deep/70 p-4">
+            <p className="min-w-0 flex-1 basis-56 text-sm text-chalk-soft">
+              Acha que sabe mais de futebol que {p.nickname}? Adivinhe o jogador pela carreira e
+              monte o seu álbum.
+            </p>
+            <Link to="/" className={`${btnPrimary} shrink-0`}>
+              Jogar
+            </Link>
+          </div>
+        </section>
+
+        <section aria-labelledby="conquistas" className="flex flex-col gap-5 lg:col-span-5">
+          <MedalDefs />
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 id="conquistas" className="font-condensed text-3xl font-extrabold uppercase">
+              Conquistas
+            </h2>
+            <span className="font-condensed tabular text-lg font-black text-chalk-soft">
+              {achievements.length}
+            </span>
+          </div>
+          {achievements.length ? (
+            <ul className={medalGrid}>
+              {achievements.map((a) => (
+                <Medal key={a.id} name={a.name} done />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-chalk-soft">Nenhuma ainda.</p>
+          )}
+        </section>
       </div>
 
       {trophies.length > 0 && (
-        <>
-          <h2 className={h2}>Troféus</h2>
-          <ul className="mt-4 flex flex-wrap gap-3">
+        <section aria-labelledby="trofeus" className="flex flex-col gap-4">
+          <h2 id="trofeus" className={h2}>
+            Troféus
+          </h2>
+          <ul className="flex flex-wrap gap-3">
             {trophies.map((t) => (
               <li key={t.season} className="rounded-xl bg-cover px-4 py-3 text-ink">
                 <span className="font-condensed block text-2xl leading-none font-black">
@@ -77,22 +136,15 @@ export function ProfilePage() {
               </li>
             ))}
           </ul>
-        </>
-      )}
-
-      {album.data && album.data.showcase.length > 0 && (
-        <>
-          <h2 className={h2}>Vitrine · {album.data.owned} figurinhas</h2>
-          <div className="mt-4">
-            <Showcase stickers={album.data.showcase} />
-          </div>
-        </>
+        </section>
       )}
 
       {games.length > 1 && (
-        <>
-          <h2 className={h2}>Por jogo</h2>
-          <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <section aria-labelledby="por-jogo" className="flex flex-col gap-4">
+          <h2 id="por-jogo" className={h2}>
+            Por jogo
+          </h2>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {games.map((g) => (
               <li
                 key={g.mode}
@@ -106,24 +158,8 @@ export function ProfilePage() {
               </li>
             ))}
           </ul>
-        </>
+        </section>
       )}
-
-      <h2 className={h2}>Conquistas · {achievements.length}</h2>
-      {achievements.length ? (
-        <ul className="mt-4 flex flex-wrap gap-3">
-          {achievements.map((a) => (
-            <li
-              key={a.id}
-              className="font-condensed -rotate-1 rounded-lg border-2 border-dashed border-ink/40 bg-cover px-3 py-2 text-lg font-black text-ink uppercase"
-            >
-              {a.name}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-3 text-chalk-soft">Nenhuma ainda.</p>
-      )}
-    </>
+    </div>
   );
 }
