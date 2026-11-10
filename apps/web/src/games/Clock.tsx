@@ -4,6 +4,7 @@ import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { useTrack } from '../lib/game';
 import { isPageLaunched } from '../lib/launch';
 import { play } from '../lib/sound';
+import { updateSettings, useSettings } from '../lib/settings';
 import { GameHeader, Skeleton } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 
@@ -24,8 +25,8 @@ export const formatClock = (sec: number) =>
 
 /**
  * Before a level starts: with or without the clock (ADR-009). Levels already started or finished
- * skip it, since the mode is chosen once. While the ranking is closed (launch) the clock has no
- * ranking to count for, so there is no choice: the level starts in the player's own time.
+ * skip it, since the mode is chosen once. The clock is offered even while the ranking is closed
+ * (launch); the ranking line and link show only when it is open.
  */
 export function ModeGate({
   mode,
@@ -40,10 +41,13 @@ export function ModeGate({
 }) {
   const track = useTrack(mode);
   const [timed, setTimed] = useState<boolean | null>(null);
-  if (!isPageLaunched('ranking')) return children(false);
+  const { clock } = useSettings();
   if (!track.data) return <Skeleton className="h-64" />;
   const state = track.data.levels.find((l) => l.level === level)?.state;
   if (timed !== null || state !== 'open') return children(timed ?? false);
+  // remembered from the first pick; changed in Ajustes › No jogo
+  if (clock !== 'ask') return children(clock === 'timed');
+  const ranked = isPageLaunched('ranking');
   const options = [
     {
       timed: false,
@@ -53,7 +57,7 @@ export function ModeGate({
     {
       timed: true,
       name: `Contra o relógio · ${formatClock(TIME_LIMIT_SEC[mode])}`,
-      text: 'Acabou o tempo, a fase fecha com o que você acertou. Vale ranking próprio.',
+      text: `Acabou o tempo, a fase fecha com o que você acertou.${ranked ? ' Vale ranking próprio.' : ''}`,
     },
   ];
   return (
@@ -66,6 +70,7 @@ export function ModeGate({
             key={String(o.timed)}
             onClick={() => {
               play('whistle');
+              updateSettings({ clock: o.timed ? 'timed' : 'free' });
               setTimed(o.timed);
             }}
             className={`flex min-h-40 flex-col gap-3 rounded-xl p-5 text-left transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 ${o.timed ? 'bg-cover text-ink' : 'border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] text-chalk'}`}
@@ -76,10 +81,15 @@ export function ModeGate({
         ))}
       </div>
       <p className="text-sm text-chalk-soft">
-        Uma tentativa por fase: a escolha vale até o fim.{' '}
-        <Link to="/ranking" className="underline underline-offset-4">
-          Ver ranking contra o relógio
-        </Link>
+        A escolha fica lembrada para as próximas fases; troque quando quiser em Ajustes.
+        {ranked && (
+          <>
+            {' '}
+            <Link to="/ranking" className="underline underline-offset-4">
+              Ver ranking contra o relógio
+            </Link>
+          </>
+        )}
       </p>
     </div>
   );

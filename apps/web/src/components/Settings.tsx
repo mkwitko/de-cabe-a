@@ -273,6 +273,12 @@ export function SettingsDialog() {
             <TrackList />
           </Group>
           <Group title="No jogo">
+            <Switch
+              label="Contra o relógio"
+              hint="Vale para as próximas fases; as já começadas seguem como estão"
+              on={s.clock === 'timed'}
+              onChange={(on) => updateSettings({ clock: on ? 'timed' : 'free' })}
+            />
             <Haptics />
             <Switch
               label="Reduzir animações"

@@ -83,6 +83,9 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await page.goto('/');
   await page.getByRole('link', { name: 'Jogar fase 1' }).click();
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
+  // the clock is offered at launch too (no ranking line while the ranking is closed)
+  await expect(page.getByText('Vale ranking próprio')).toHaveCount(0);
+  await page.getByRole('button', { name: /No seu tempo/ }).click();
   await page.getByRole('button', { name: 'Pular tutorial' }).click();
   await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
   await page.getByRole('option', { name: /Ronaldo/ }).click();
