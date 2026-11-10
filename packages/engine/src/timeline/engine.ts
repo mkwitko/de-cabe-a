@@ -111,6 +111,6 @@ export const timeline: GameEngine<TimelineConfig, TimelineState, TimelineInput, 
     const marks = config.rounds
       .map((r, i) => (state.answers[i] && ok(state.answers[i], r) ? '✅' : '❌'))
       .join('');
-    return `De Cabeça · ${meta.label} · ${right(state, config)}/${config.rounds.length}\n${marks}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${right(state, config)}/${config.rounds.length}\n${marks}\n${meta.url}`;
   },
 };

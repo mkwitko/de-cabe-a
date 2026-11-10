@@ -160,7 +160,7 @@ describe('footballGrid (FOOTBALL_GRID.md §1, §5, §7)', () => {
         label: 'Grid #45',
         url: 'decabeca.app/g/45',
       }),
-    ).toBe('De Cabeça · Grid #45 · 7/9\n🟩🟩⬛\n🟩🟩🟩\n⬛🟩🟩\ndecabeca.app/g/45');
+    ).toBe('De Cabeça F.C. · Grid #45 · 7/9\n🟩🟩⬛\n🟩🟩🟩\n⬛🟩🟩\ndecabeca.app/g/45');
   });
 });
 
@@ -243,6 +243,6 @@ describe('hints (football-grid@2)', () => {
     ]);
     expect(
       footballGrid.buildShareText(state, cfg, { label: 'Grid · Fase 1', url: 'decabeca.app' }),
-    ).toBe('De Cabeça · Grid · Fase 1 · 1/9 · 1 dica\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛\ndecabeca.app');
+    ).toBe('De Cabeça F.C. · Grid · Fase 1 · 1/9 · 1 dica\n🟩⬛⬛\n⬛⬛⬛\n⬛⬛⬛\ndecabeca.app');
   });
 });

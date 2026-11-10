@@ -155,6 +155,6 @@ export const careerPath: GameEngine<
     const result = won
       ? `${state.attempts.length}/${config.maxAttempts}`
       : `X/${config.maxAttempts}`;
-    return `De Cabeça · ${meta.label} · ${result}\n${squares}\n${meta.url}`;
+    return `De Cabeça F.C. · ${meta.label} · ${result}\n${squares}\n${meta.url}`;
   },
 };
