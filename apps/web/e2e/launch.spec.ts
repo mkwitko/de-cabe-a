@@ -24,6 +24,22 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await expect(nav.getByRole('link', { name: 'Perfil' })).toBeVisible();
   await expect(nav.getByRole('link', { name: /Ranking|Desafio/ })).toHaveCount(0);
 
+  // A closed mode's locker opens what it is, how it plays and the votes; voting asks to sign in.
+  await expect(page.getByText(/Toque para conhecer e votar/)).toBeVisible();
+  await page.getByRole('button', { name: /Copa dos Sonhos/ }).click();
+  const sheet = page.getByRole('dialog', { name: 'Copa dos Sonhos' });
+  await expect(sheet.getByRole('heading', { name: 'Como se joga' })).toBeVisible();
+  await expect(
+    sheet.getByRole('list', { name: 'Votos por modo' }).getByRole('listitem'),
+  ).toHaveCount(11);
+  await expect(sheet.getByText(/Só quem tem conta vota/)).toBeVisible();
+  await expect(sheet.getByRole('link', { name: 'Entrar para votar' })).toHaveAttribute(
+    'href',
+    '/conta?entrar=1&voltar=%2F%3Fmodo%3Dcopa',
+  );
+  await sheet.getByRole('button', { name: 'Fechar' }).click();
+  await expect(sheet).toBeHidden();
+
   // Closed games and pages show the Em breve screen, not a 404 or the game.
   await page.goto('/grid');
   await expect(page.getByRole('heading', { name: /Football Grid chega em breve/i })).toBeVisible();

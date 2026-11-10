@@ -10,6 +10,8 @@ import type {
   HistoryResponse,
   LevelRankingResponse,
   MeResponse,
+  ModeVotesResponse,
+  VotableMode,
   PlayerRef,
   RankingResponse,
   RankingScope,
@@ -122,6 +124,27 @@ export async function searchPlayers(q: string, signal: AbortSignal): Promise<Pla
   return (
     await api<{ players: PlayerRef[] }>(`/v1/players/search?q=${encodeURIComponent(q)}`, { signal })
   ).players;
+}
+
+/** Votes for the closed modes: counts for everyone, the vote of the signed-in account. */
+export const useModeVotes = () =>
+  useQuery({
+    queryKey: ['mode-votes'],
+    queryFn: () => api<ModeVotesResponse>('/v1/mode-votes'),
+    staleTime: 15_000,
+  });
+
+/** Vote (a mode) or withdraw (null); one current vote per account, a new one moves it. */
+export function useModeVote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (mode: VotableMode | null) =>
+      api<ModeVotesResponse>('/v1/mode-votes', {
+        method: mode ? 'PUT' : 'DELETE',
+        ...(mode ? { json: { mode } } : {}),
+      }),
+    onSuccess: (data) => qc.setQueryData(['mode-votes'], data),
+  });
 }
 
 /** Account and nickname actions; everything that depends on the player refreshes after. */

@@ -9,8 +9,8 @@
  * moves the scene a little. Reduced motion: the composed scene, still.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
-import { useAlbum, useStats, useTrack } from '../lib/game';
+import { Link, useSearchParams } from 'react-router';
+import { useAlbum, useModeVotes, useStats, useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
 import { titleFrame, titleTone, TITLE_LADDER } from '../lib/format';
 import { RARITY_ORDER } from './rarity';
@@ -21,7 +21,7 @@ import { TitleBadge } from './TitleBadge';
 import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
 import { Moment } from './Moment';
-import { GameArt, type CoverMode } from './GameArt';
+import { leaderOf, LockerArt, ModeDialog, type Locker } from './ModeDialog';
 
 const reduced = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -73,127 +73,95 @@ function useDust() {
   return on;
 }
 
-/** Drawings for the closed pages, in GameArt's language (its 200×120 panel, album palette). */
-const PAGE_ART: Record<string, React.ReactNode> = {
-  career: (
-    <>
-      {/* steps from the base up to the star */}
-      <path
-        d="M40 98h36V80h36V62h36V44"
-        fill="none"
-        stroke="var(--color-chalk)"
-        strokeWidth={4}
-        strokeLinejoin="round"
-      />
-      <path d="m160 14 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="var(--color-cover)" />
-      <circle cx={58} cy={70} r={7} fill="var(--color-paper)" />
-      <path
-        d="M58 77v13m-8-8 8-3 8 3"
-        stroke="var(--color-paper)"
-        strokeWidth={4}
-        strokeLinecap="round"
-      />
-    </>
-  ),
-  copa: (
-    <>
-      <path d="M80 20h40v24a20 20 0 0 1-40 0z" fill="var(--color-cover)" />
-      <path
-        d="M80 26H66a14 14 0 0 0 16 20M120 26h14a14 14 0 0 1-16 20"
-        fill="none"
-        stroke="var(--color-cover)"
-        strokeWidth={4}
-      />
-      <path d="M94 64h12v14H94z" fill="var(--color-cover)" />
-      <path d="M82 80h36v12H82z" fill="var(--color-paper)" />
-    </>
-  ),
-  oficina: (
-    <>
-      <path
-        d="M50 14h72v72H50zM74 14v72M98 14v72M50 38h72M50 62h72"
-        fill="none"
-        stroke="var(--color-chalk)"
-        strokeWidth={3}
-      />
-      <path d="m120 104 8-22 40-40 14 14-40 40z" fill="var(--color-cover)" />
-      <path d="m120 104 8-22 14 14z" fill="var(--color-paper)" />
-    </>
-  ),
-};
-
-export type Locker = { key: string; name: string; number: string; rule: string };
-
-/** How long a locker stays ajar before it shuts by itself. */
-const AJAR_MS = 4500;
+export type { Locker };
 
 /**
  * The closed modes as a bank of locked lockers on the back wall: steel doors with vents, a brass
- * number, a padlock and a card in the name holder. A tap (or Enter) cracks one open: the door
- * swings a few degrees, light spills out, and the note inside says "Em breve" and what the game is.
+ * number, a padlock and a card in the name holder (art, name, a line on what it is, its votes).
+ * A tap (or Enter) opens the mode: what it is, how it plays and the vote for the next one. The
+ * open mode lives in the URL (?modo=), so the back button closes it and a sign-in returns to it.
  */
 function LockerBank({ lockers }: { lockers: Locker[] }) {
-  const [open, setOpen] = useState<string | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(() => setOpen(null), AJAR_MS);
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(null);
-    addEventListener('keydown', esc);
-    return () => {
-      clearTimeout(t);
-      removeEventListener('keydown', esc);
-    };
-  }, [open]);
+  const [params, setParams] = useSearchParams();
+  const open = lockers.find((l) => l.key === params.get('modo')) ?? null;
+  const votes = useModeVotes().data;
+  const leader = leaderOf(votes?.modes);
   if (!lockers.length) return null;
   const mid = (lockers.length - 1) / 2 || 1;
+  const close = () =>
+    setParams(
+      (p) => {
+        p.delete('modo');
+        return p;
+      },
+      { replace: true },
+    );
   return (
-    <section aria-labelledby="em-breve" className="lockers relative mt-10 lg:mt-0">
-      <h2 id="em-breve" className="relative z-20 mb-[-0.9rem] ml-2 lg:ml-0">
-        <SoonStamp className="text-base" />
-      </h2>
+    <section aria-labelledby="em-breve" className="lockers relative mt-4 lg:mt-0">
+      <div className="relative z-20 mb-[-0.6rem] ml-2 flex items-center gap-x-3 lg:ml-0">
+        <h2 id="em-breve" className="shrink-0">
+          <SoonStamp className="text-sm sm:text-base" />
+        </h2>
+        <p className="font-condensed text-sm leading-tight font-extrabold text-chalk uppercase [text-shadow:0_1px_3px_rgb(0_0_0/0.8)] sm:text-base">
+          Toque para conhecer e votar
+          <span className="max-sm:hidden"> no próximo modo</span>
+        </p>
+      </div>
       <ul
         aria-label="Modos que chegam em breve"
-        className="locker-row flex snap-x gap-2 overflow-x-auto px-1 pt-3 pb-5 [scrollbar-width:none] lg:gap-[0.6%] lg:overflow-visible lg:pb-0"
+        className="locker-row flex snap-x gap-2 overflow-x-auto px-1 pt-4 pb-5 [scrollbar-width:none] lg:gap-[0.6%] lg:overflow-visible lg:pb-0"
       >
         {lockers.map((l, i) => {
-          const ajar = open === l.key;
           const off = (i - mid) / mid;
+          const n = votes?.modes.find((m) => m.mode === l.key)?.votes;
+          const mine = votes?.mine === l.key;
           return (
             <li
               key={l.key}
               className="locker relative shrink-0 snap-start"
-              data-open={ajar ? '' : undefined}
               style={
                 { '--o': off.toFixed(3), '--d': Math.abs(off).toFixed(3) } as React.CSSProperties
               }
             >
-              {/* the inside, lit, seen through the crack */}
+              {/* the inside, lit, seen through the crack on hover */}
               <div aria-hidden="true" className="locker-inside" />
               <button
                 type="button"
                 className="locker-door"
-                aria-expanded={ajar}
-                aria-controls={`locker-${l.key}`}
-                aria-describedby={`locker-${l.key}`}
-                onClick={() => setOpen(ajar ? null : l.key)}
+                aria-haspopup="dialog"
+                onClick={() => setParams({ modo: l.key })}
               >
                 <span aria-hidden="true" className="locker-vents" />
+                {leader === l.key && (
+                  <span className="locker-ribbon font-condensed">Mais votado</span>
+                )}
                 <span aria-hidden="true" className="locker-number font-condensed tabular">
                   {l.number}
                 </span>
                 <span className="locker-card">
                   <span aria-hidden="true" className="locker-art">
-                    {l.key in PAGE_ART ? (
-                      <svg viewBox="0 0 200 120" className="size-full">
-                        {PAGE_ART[l.key]}
-                      </svg>
-                    ) : (
-                      <GameArt mode={l.key as CoverMode} className="size-full" />
-                    )}
+                    <LockerArt mode={l.key} className="size-full" />
                   </span>
-                  <span className="font-condensed block text-[0.8rem] leading-[0.95] font-extrabold uppercase lg:text-[clamp(0.75rem,0.75vw,1rem)]">
-                    {l.name}
-                  </span>
+                  <span className="locker-name font-condensed">{l.name}</span>
+                  <span className="locker-pitch">{l.pitch}</span>
+                  {n !== undefined && (
+                    <span className="locker-votes tabular">
+                      {mine ? 'Seu voto · ' : ''}
+                      {n === 1 ? '1 voto' : `${n} votos`}
+                    </span>
+                  )}
+                </span>
+                <span aria-hidden="true" className="locker-more font-condensed">
+                  Ver mais
+                  <svg
+                    viewBox="0 0 12 12"
+                    className="size-2.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                  >
+                    <path d="M4 2l4 4-4 4" />
+                  </svg>
                 </span>
                 <svg aria-hidden="true" viewBox="0 0 24 44" className="locker-lock">
                   {/* the handle, the shackle through it and the padlock body */}
@@ -210,16 +178,11 @@ function LockerBank({ lockers }: { lockers: Locker[] }) {
                   <path d="M12 33v4" stroke="#3a2a10" strokeWidth="1.6" />
                 </svg>
               </button>
-              <p id={`locker-${l.key}`} className="locker-note">
-                <SoonStamp className="text-sm" />
-                <span className="mt-1.5 block text-[0.8125rem] leading-snug font-semibold">
-                  {l.rule}
-                </span>
-              </p>
             </li>
           );
         })}
       </ul>
+      <ModeDialog locker={open} lockers={lockers} onClose={close} />
     </section>
   );
 }

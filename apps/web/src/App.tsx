@@ -1,6 +1,6 @@
 import { SettingsButton, SettingsDialog } from './components/Settings';
 import { sceneFor, setScene } from './lib/music';
-import { LockerRoom } from './components/LockerRoom';
+import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
@@ -10,15 +10,9 @@ import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-rou
 import { Crest } from './components/Crest';
 import { SignInButton } from './components/SignInButton';
 import { ComingSoonPage } from './pages/ComingSoonPage';
-import {
-  closedRoute,
-  isModeLaunched,
-  isPageLaunched,
-  LAUNCH_ALL,
-  type PageKey,
-} from './lib/launch';
+import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/launch';
 import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
-import type { GameMode } from '@decabeca/contracts';
+import type { GameMode, VotableMode } from '@decabeca/contracts';
 import { TrackPage } from './pages/TrackPage';
 import { ModeGate } from './games/Clock';
 import { btnSecondary, Skeleton, useOnline } from './components/ui';
@@ -264,38 +258,85 @@ function Brand({ home }: { home: boolean }) {
 }
 
 /** Pages that are still closed; they get a locker next to the closed modes and do not open. */
-const SOON_EXTRA: { name: string; page: PageKey; rule: string }[] = [
+const SOON_EXTRA: {
+  name: string;
+  page: 'career' | 'copa' | 'oficina';
+  rule: string;
+  howTo: string[];
+}[] = [
   {
     name: 'Modo Carreira',
     page: 'career',
-    rule: 'Seu próprio jogador, treinado pelas estrelas dos jogos, da base à Europa.',
+    rule: 'Seu próprio jogador, da base à Europa. Quem treina ele é você: as estrelas que você ganha nos jogos viram evolução.',
+    howTo: [
+      'Crie seu craque: nome e posição.',
+      'Cada estrela ganha nos jogos vira treino para os atributos dele.',
+      'Jogue a temporada e suba da base até a Europa.',
+    ],
   },
   {
     name: 'Copa dos Sonhos',
     page: 'copa',
-    rule: 'Monte um XI das grandes seleções e dispute uma Copa contra as lendas.',
+    rule: 'Monte um XI com craques das grandes seleções e dispute uma Copa contra as lendas. As notas vêm da história de cada um em Copas.',
+    howTo: [
+      'Em cada posição, escolha 1 de 4 craques das grandes seleções.',
+      'Quem jogou junto de verdade dá entrosamento ao time.',
+      'Escolha a tática de cada jogo e dispute a Copa contra seleções lendárias.',
+    ],
   },
   {
     name: 'Oficina',
     page: 'oficina',
-    rule: 'Monte seu próprio Football Grid e desafie a galera.',
+    rule: 'Monte o seu próprio Football Grid com os nossos dados e desafie a galera.',
+    howTo: [
+      'Escolha as linhas e colunas: clubes, seleções ou posições.',
+      'O servidor confere: cada cruzamento precisa de pelo menos 8 respostas certas.',
+      'Aprovada por um editor, sua grade entra na Oficina para a galera jogar e votar.',
+    ],
   },
 ];
 
+/** The line on each closed locker: what the mode is, in a few words. */
+const PITCH: Record<VotableMode, string> = {
+  FOOTBALL_GRID: 'Um craque por cruzamento',
+  IMPOSTOR: 'Ache quem nunca jogou lá',
+  TIMELINE: 'Os clubes na ordem certa',
+  HIGHER_LOWER: 'Quem fez mais pelo clube?',
+  MISSING_XI: 'O XI de uma final de Copa',
+  MYSTERY_PLAYER: 'Cada palpite dá uma pista',
+  CONNECTIONS: '16 nomes, 4 grupos',
+  DRAFT: 'Um 4-3-3 de titulares reais',
+  career: 'Seu craque, da base à Europa',
+  copa: 'Um XI de lendas na Copa',
+  oficina: 'Crie seu próprio Grid',
+};
+
 /**
  * The home is one scene: the Career Path passport open on the locker-room bench, the next-level
- * ticket clipped to it, and the closed modes as locked lockers (numbered by their slot).
+ * ticket clipped to it, and the closed modes as locked lockers (numbered by their slot); each
+ * opens to what the mode is and a vote for the one that opens next.
  */
 export function Home() {
-  const modes = GAMES.flatMap((g) =>
+  const modes: Locker[] = GAMES.flatMap((g) =>
     g.mode === 'CAREER_PATH' || isModeLaunched(g.mode)
       ? []
-      : [{ key: g.mode, name: g.name, number: String(Number(g.slot)), rule: g.rule }],
+      : [
+          {
+            key: g.mode,
+            name: g.name,
+            number: String(Number(g.slot)),
+            rule: g.rule,
+            pitch: PITCH[g.mode],
+            howTo: g.howTo,
+          },
+        ],
   );
-  const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x, i) => ({
+  const extra: Locker[] = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x, i) => ({
     key: x.page,
     name: x.name,
     rule: x.rule,
+    pitch: PITCH[x.page],
+    howTo: x.howTo,
     number: String(GAMES.length + 1 + i),
   }));
   return <LockerRoom lockers={[...modes, ...extra]} />;

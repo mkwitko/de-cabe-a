@@ -46,6 +46,8 @@ export default defineConfig({
         PORT: String(API_PORT),
         HOST: '127.0.0.1',
         SESSIONS_PER_IP: '1000',
+        // Sign-up in the e2e checks the browser's origin (Better Auth).
+        WEB_ORIGIN: `http://localhost:${WEB_PORT}`,
       },
       reuseExistingServer: false,
     },

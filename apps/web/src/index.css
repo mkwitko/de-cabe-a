@@ -1004,12 +1004,14 @@
  * The closed modes: a bank of locked steel lockers on the back wall, in the art's dark green.
  * Each door: vents, brass number, a card in the name holder, a padlock on the handle. Lit by the
  * one floodlight: --d (0 centre … 1 ends) dims them, --o (−1…1) turns them toward the lamp.
- * Tapped, the door cracks open (--ajar), warm light spills out and the note inside shows.
+ * Hovered or focused, the locker lifts and the door cracks (--ajar) to show it opens; a tap opens
+ * the mode's sheet (ModeDialog).
  */
 .locker {
   --ajar: 0deg;
-  width: 8.5rem;
-  height: 12.5rem;
+  width: 9.75rem;
+  height: 15.75rem;
+  transition: translate 320ms var(--ease-out-expo);
   padding: 3px;
   border-radius: 4px;
   background: linear-gradient(180deg, #0d1813, #070d0a);
@@ -1100,85 +1102,109 @@
 }
 .locker-card {
   position: absolute;
-  top: 32%;
-  left: 11%;
-  right: 11%;
+  top: 25%;
+  left: 9%;
+  right: 9%;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.25rem 0.25rem 0.35rem;
+  gap: 0.2rem;
+  padding: 0.25rem 0.3rem 0.4rem;
   border: 2px solid #9aa3a1;
   border-radius: 2px;
   background: var(--color-paper);
   box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
+  text-align: left;
 }
 .locker-art {
   display: block;
   aspect-ratio: 200 / 120;
   background: var(--color-pitch-deep);
 }
+.locker-name {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 0.95;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+.locker-pitch {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: color-mix(in oklch, var(--color-ink) 82%, transparent);
+}
+.locker-votes {
+  margin-top: 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+/* the brass "mais votado" tag riveted across the top of the leader's door */
+.locker-ribbon {
+  position: absolute;
+  z-index: 2;
+  top: 0.45rem;
+  left: -4px;
+  right: -4px;
+  padding: 0.1rem 0;
+  background: var(--color-cover);
+  color: var(--color-ink);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 6px -2px rgb(0 0 0 / 0.7);
+}
+/* the paper tab at the foot of every door: it opens */
+.locker-more {
+  position: absolute;
+  left: 9%;
+  bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: color-mix(in oklch, var(--color-chalk) 92%, transparent);
+  color: var(--color-ink);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
+  transition: translate 320ms var(--ease-out-expo);
+}
 .locker-lock {
   position: absolute;
   right: 6%;
-  top: 70%;
-  width: 17%;
-  max-width: 1.6rem;
+  bottom: 0.4rem;
+  width: 15%;
+  max-width: 1.5rem;
   rotate: 4deg;
   transform-origin: 50% 0;
   filter: drop-shadow(1px 3px 2px rgb(0 0 0 / 0.6));
   transition: rotate 600ms var(--ease-out-expo);
 }
-.locker-door:hover .locker-lock {
+/* hover and keyboard focus: the locker lifts, the door cracks, the light inside shows */
+.locker:has(.locker-door:is(:hover, :focus-visible)) {
+  --ajar: -14deg;
+  translate: 0 -6px;
+  z-index: 5;
+}
+.locker:has(.locker-door:is(:hover, :focus-visible)) .locker-inside {
+  opacity: 1;
+}
+.locker-door:is(:hover, :focus-visible) .locker-lock {
   rotate: -8deg;
 }
-.locker-note {
-  position: absolute;
-  z-index: 30;
-  left: 6px;
-  right: 6px;
-  bottom: 12%;
-  padding: 0.6rem 0.6rem 0.7rem;
-  border-radius: 3px;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  box-shadow: 0 16px 28px -10px rgb(0 0 0 / 0.85);
-  opacity: 0;
-  visibility: hidden;
-  translate: 0 0.6rem;
-  rotate: -1.5deg;
-  transition:
-    opacity 260ms var(--ease-out-expo),
-    translate 420ms var(--ease-out-expo),
-    visibility 0s 420ms;
+.locker-door:is(:hover, :focus-visible) .locker-more {
+  translate: 3px 0;
 }
-.locker[data-open] {
-  --ajar: -32deg;
-  z-index: 30;
+.locker-door:focus-visible {
+  outline: 3px solid var(--color-cover);
+  outline-offset: 3px;
 }
-/* an open note rises over the stamp taped to the bank */
-.locker-row:has([data-open]) {
-  position: relative;
-  z-index: 30;
-}
-.locker[data-open] .locker-inside {
-  opacity: 1;
-}
-/* the light spilling out of the crack onto the floor */
-.locker[data-open]::after {
-  content: '';
-  position: absolute;
-  left: 40%;
-  right: -30%;
-  bottom: -1.5rem;
-  height: 2.5rem;
-  pointer-events: none;
-  background: radial-gradient(closest-side, rgb(255 196 110 / 0.5), transparent);
-}
-.locker[data-open] .locker-note {
-  opacity: 1;
-  visibility: visible;
-  translate: 0 0;
-  transition-delay: 140ms, 140ms, 0s;
+.locker-door:active {
+  --ajar: -6deg;
 }
 @media (width >= 64rem) {
   .scene {
@@ -1196,22 +1222,20 @@
   .locker {
     flex: 1 1 0;
     min-width: 0;
-    height: clamp(10rem, calc(var(--floor) - 3.75rem), 20rem);
+    height: clamp(12rem, calc(var(--floor) - 3.75rem), 20rem);
     transform: rotateY(calc(var(--o) * -9deg));
   }
-  .locker-note {
-    left: 50%;
-    right: auto;
-    bottom: calc(100% + 0.5rem);
-    width: 15rem;
-    margin-left: -7.5rem;
-    padding: 0.75rem 0.9rem 0.85rem;
+  .locker-name {
+    font-size: clamp(0.8125rem, 0.85vw, 1.1rem);
   }
-  .locker:first-child .locker-note {
-    margin-left: -1rem;
+  .locker-pitch {
+    font-size: clamp(0.6875rem, 0.62vw, 0.8125rem);
   }
-  .locker:last-child .locker-note {
-    margin-left: -14rem;
+}
+/* lockers about 100px wide (1024–1535px): name and votes only, the sheet carries the pitch */
+@media (width >= 64rem) and (width < 96rem) {
+  .locker-pitch {
+    display: none;
   }
 }
 @media (width >= 64rem) {
@@ -1263,11 +1287,12 @@
   }
   .scene-art,
   .scene-tilt,
+  .locker,
   .locker-door,
-  .locker-note {
+  .locker-more {
     transition: none;
   }
-  .locker[data-open] {
+  .locker:has(.locker-door:is(:hover, :focus-visible)) {
     --ajar: 0deg;
   }
 }
@@ -2760,4 +2785,51 @@
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+/* A closed mode (ModeDialog): a bottom sheet on phones, a centred two-column panel from 768px. */
+.mode-sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(92dvh, 52rem);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-top: 1px solid color-mix(in oklch, var(--color-cover) 45%, transparent);
+  border-radius: 18px 18px 0 0;
+  background: var(--color-pitch-deep);
+  box-shadow: 0 -24px 60px -20px rgb(0 0 0 / 0.75);
+}
+.mode-sheet[open] {
+  animation: sheet-up 420ms var(--ease-out-expo);
+}
+@media (width >= 48rem) {
+  .mode-sheet {
+    margin: auto;
+    width: min(60rem, calc(100vw - 4rem));
+    max-height: calc(100dvh - 4rem);
+    border: 1px solid color-mix(in oklch, var(--color-chalk) 12%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 28px 60px -18px rgb(0 0 0 / 0.75);
+  }
+  .mode-sheet[open] {
+    animation: panel-drop 280ms var(--ease-out-expo);
+  }
+}
+/* each mode's share of the votes, as a faint bar behind its row */
+.vote-row {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-cover) calc(var(--share) * 100%),
+    color-mix(in oklch, var(--color-chalk) 8%, transparent) 0
+  );
+  background-size: calc(100% - 2.5rem) 3px;
+  background-position: 2.5rem 100%;
+  background-repeat: no-repeat;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mode-sheet[open] {
+    animation: none;
+  }
 }
