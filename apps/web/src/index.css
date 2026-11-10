@@ -756,7 +756,7 @@
 
 /*
  * Home, "Vestiário à noite": a locker room under one floodlight. The art
- * is ours (public/img/vestiario-night.webp); the passport, stickers, ticket and jerseys sit in it.
+ * is ours (public/img/vestiario-night.webp); the passport, stickers, ticket and lockers sit in it.
  * Entry once per tab: light on, cover opens, stickers slide out, ticket lands, last stamp thumps.
  */
 :root {
@@ -1000,24 +1000,227 @@
     scale: 1;
   }
 }
-/* jerseys sway a little when the pointer brushes them */
-.jersey-hang {
+/*
+ * The closed modes: a bank of locked steel lockers on the back wall, in the art's dark green.
+ * Each door: vents, brass number, a card in the name holder, a padlock on the handle. Lit by the
+ * one floodlight: --d (0 centre … 1 ends) dims them, --o (−1…1) turns them toward the lamp.
+ * Tapped, the door cracks open (--ajar), warm light spills out and the note inside shows.
+ */
+.locker {
+  --ajar: 0deg;
+  width: 8.5rem;
+  height: 12.5rem;
+  padding: 3px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #0d1813, #070d0a);
+  box-shadow:
+    0 22px 26px -14px rgb(0 0 0 / 0.85),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+.locker-inside {
+  position: absolute;
+  inset: 3px;
+  border-radius: 2px;
+  background:
+    radial-gradient(60% 40% at 70% 30%, rgb(255 196 110 / 0.55), transparent 70%),
+    linear-gradient(90deg, #050806, #1b140b);
+  opacity: 0.4;
+  transition: opacity 400ms var(--ease-out-expo);
+}
+.locker-door {
+  position: absolute;
+  inset: 3px;
+  display: block;
+  border: 1px solid #08100c;
+  border-radius: 2px;
+  color: var(--color-ink);
+  cursor: pointer;
+  text-align: center;
+  background:
+    linear-gradient(
+      100deg,
+      transparent 6%,
+      rgb(255 255 255 / 0.1) 9%,
+      transparent 16% 72%,
+      rgb(255 255 255 / 0.05) 80%,
+      transparent 88%
+    ),
+    linear-gradient(180deg, #2e4d3c, #1f3a2c 40%, #142519);
+  box-shadow:
+    inset 0 0 0 3px rgb(0 0 0 / 0.28),
+    inset 0 0 0 4px rgb(255 255 255 / 0.07);
+  transform-origin: 0 50%;
+  transform: perspective(700px) rotateY(var(--ajar));
+  transition: transform 520ms var(--ease-out-expo);
+}
+/* the floodlight falls off toward the ends of the bank, and from the top of each door down */
+.locker-door::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(255 214 140 / calc(0.1 - var(--d) * 0.1)),
+      transparent 30%,
+      rgb(0 0 0 / 0.3)
+    ),
+    rgb(0 0 0 / calc(var(--d) * 0.42));
+}
+.locker-vents {
+  --vent: repeating-linear-gradient(
+    180deg,
+    #040806 0 3px,
+    rgb(120 160 140 / 0.35) 3px 4px,
+    transparent 4px 8px
+  );
+  position: absolute;
+  inset: 0;
+  background:
+    var(--vent) 50% 5% / 56% 2.1rem no-repeat,
+    var(--vent) 50% 97% / 56% 1.6rem no-repeat;
+}
+.locker-number {
+  position: absolute;
+  top: 19%;
+  left: 50%;
+  translate: -50% 0;
+  min-width: 1.9rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #e8c46a, #a77d2c);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.6),
+    inset 0 1px 0 rgb(255 255 255 / 0.4);
+  color: #2b1e08;
+  font-size: 0.875rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.locker-card {
+  position: absolute;
+  top: 32%;
+  left: 11%;
+  right: 11%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem 0.25rem 0.35rem;
+  border: 2px solid #9aa3a1;
+  border-radius: 2px;
+  background: var(--color-paper);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
+}
+.locker-art {
+  display: block;
+  aspect-ratio: 200 / 120;
+  background: var(--color-pitch-deep);
+}
+.locker-lock {
+  position: absolute;
+  right: 6%;
+  top: 70%;
+  width: 17%;
+  max-width: 1.6rem;
+  rotate: 4deg;
   transform-origin: 50% 0;
-  rotate: var(--sway);
-  transition: rotate 700ms var(--ease-out-expo);
+  filter: drop-shadow(1px 3px 2px rgb(0 0 0 / 0.6));
+  transition: rotate 600ms var(--ease-out-expo);
 }
-.jersey-hang:hover {
-  rotate: calc(var(--sway) * -3);
+.locker-door:hover .locker-lock {
+  rotate: -8deg;
 }
-.jersey {
-  filter: drop-shadow(3px 10px 8px rgb(0 0 0 / 0.5)) saturate(0.75);
+.locker-note {
+  position: absolute;
+  z-index: 30;
+  left: 6px;
+  right: 6px;
+  bottom: 12%;
+  padding: 0.6rem 0.6rem 0.7rem;
+  border-radius: 3px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: 0 16px 28px -10px rgb(0 0 0 / 0.85);
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 0.6rem;
+  rotate: -1.5deg;
+  transition:
+    opacity 260ms var(--ease-out-expo),
+    translate 420ms var(--ease-out-expo),
+    visibility 0s 420ms;
+}
+.locker[data-open] {
+  --ajar: -32deg;
+  z-index: 30;
+}
+/* an open note rises over the stamp taped to the bank */
+.locker-row:has([data-open]) {
+  position: relative;
+  z-index: 30;
+}
+.locker[data-open] .locker-inside {
+  opacity: 1;
+}
+/* the light spilling out of the crack onto the floor */
+.locker[data-open]::after {
+  content: '';
+  position: absolute;
+  left: 40%;
+  right: -30%;
+  bottom: -1.5rem;
+  height: 2.5rem;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgb(255 196 110 / 0.5), transparent);
+}
+.locker[data-open] .locker-note {
+  opacity: 1;
+  visibility: visible;
+  translate: 0 0;
+  transition-delay: 140ms, 140ms, 0s;
+}
+@media (width >= 64rem) {
+  .scene {
+    /* the strip of floor the art leaves below the bench line */
+    --floor: max(2rem, calc(50svh - 0.16 * max(100svh, 56.25vw) - 1.5rem));
+  }
+  .lockers {
+    --w: min(calc(100vw - 4rem), 100rem);
+    width: var(--w);
+    margin: 1.5rem calc((100% - var(--w)) / 2) 0;
+  }
+  .locker-row {
+    perspective: 1400px;
+  }
+  .locker {
+    flex: 1 1 0;
+    min-width: 0;
+    height: clamp(10rem, calc(var(--floor) - 3.75rem), 20rem);
+    transform: rotateY(calc(var(--o) * -9deg));
+  }
+  .locker-note {
+    left: 50%;
+    right: auto;
+    bottom: calc(100% + 0.5rem);
+    width: 15rem;
+    margin-left: -7.5rem;
+    padding: 0.75rem 0.9rem 0.85rem;
+  }
+  .locker:first-child .locker-note {
+    margin-left: -1rem;
+  }
+  .locker:last-child .locker-note {
+    margin-left: -14rem;
+  }
 }
 @media (width >= 64rem) {
   .scene-stage,
   .scene-stage:has(.fan) {
-    min-height: calc(100svh - 5.5rem);
+    /* the stage ends on the bench line; the lockers fill the floor strip below it */
+    min-height: calc(100svh - 5.5rem - var(--floor));
     padding-top: 2rem;
-    padding-bottom: max(2rem, calc(50svh - 0.16 * max(100svh, 56.25vw) - 1.5rem));
+    padding-bottom: 0;
   }
   .book {
     transform: perspective(1600px) rotateX(10deg);
@@ -1060,8 +1263,12 @@
   }
   .scene-art,
   .scene-tilt,
-  .jersey-hang {
+  .locker-door,
+  .locker-note {
     transition: none;
+  }
+  .locker[data-open] {
+    --ajar: 0deg;
   }
 }
 /* ==== Sticker player card (StickerCard.tsx) ====
@@ -2014,3 +2221,78 @@
     transition: none;
   }
 }
+/* ── Career Path level: the locker room ──────────────────────────────────────────────────── */
+/*
+ * The level happens in the home's locker room (.scene-art), at night: the passport open on the
+ * bench under the lamp. On phones the room stays faint behind the one-handed layout; from lg the
+ * passport lies open as a spread (inside cover with clues and tries, visa page with stamps) and
+ * the guess dock sits on the bench edge at the bottom of the scene.
+ */
+.cp-room {
+  --scene-art: url('/img/vestiario-night.webp');
+  --scene-night: 1;
+  --px: 0;
+  --py: 0;
+  /* phones: the room in shadow behind the passport, the pitch lines hidden under it */
+  filter: brightness(0.42) saturate(0.85);
+}
+.cp-leaf {
+  background:
+    radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
+    radial-gradient(circle at 70% 15%, #7a2633, #5b1a24 55%, #3d1018);
+  box-shadow: inset -16px 0 20px -12px rgb(0 0 0 / 0.55);
+  color: #e7c26a;
+}
+@media (min-width: 64rem) {
+  .cp-room {
+    filter: none;
+  }
+  .cp-frame[data-spread] {
+    max-width: none;
+    display: grid;
+    place-items: center;
+    container-type: size;
+  }
+  /* a passport spread is about 1.7:1; it takes the stage, bounded by both axes */
+  .cp-frame[data-spread] .cp-book {
+    position: relative;
+    inset: auto;
+    width: min(100cqw, 170cqh);
+    height: min(100cqh, 58.8cqw);
+    filter: drop-shadow(0 30px 26px rgb(0 0 0 / 0.6));
+    transition: translate 1100ms cubic-bezier(0.6, 0.05, 0.25, 1);
+  }
+  /* shut, the cover lies centred on the bench; it slides left as it swings open */
+  .cp-frame[data-spread]:not([data-open]) .cp-book {
+    translate: -25% 0;
+  }
+  .cp-frame[data-spread] .cp-leaf {
+    position: absolute;
+    inset: 0 50% 0 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px 6px 6px 14px;
+    padding: clamp(1.5rem, 5cqh, 3rem);
+    transition: opacity 0s 500ms;
+  }
+  .cp-frame[data-spread]:not([data-open]) .cp-leaf {
+    opacity: 0;
+    transition: none;
+  }
+  .cp-frame[data-spread] .cp-right {
+    left: 50%;
+  }
+  /* the dock sits under the book here, so the stamps take the whole page */
+  .cp-frame[data-spread] .cp-right ol {
+    bottom: 0.625rem;
+  }
+  .cp-frame[data-spread] .cp-brand {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-frame[data-spread] .cp-book {
+    transition: none;
+  }
+}
+/* ── end Career Path level ───────────────────────────────────────────────────────────────── */
