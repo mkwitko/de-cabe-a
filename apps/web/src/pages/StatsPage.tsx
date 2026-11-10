@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useStats } from '../lib/game';
 import { TITLE_LADDER } from '../lib/format';
@@ -6,17 +6,87 @@ import { StarIcon } from '../components/Stars';
 import { Skeleton } from '../components/ui';
 import { Achievements } from '../components/Achievements';
 
-/** One figure: label for assistive tech first (dt), number shown first. */
+/** A number that counts up when it enters; the final value stays in the DOM for assistive tech. */
+function Count({ n }: { n: number }) {
+  const still = n < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [v, setV] = useState(still ? n : 0);
+  useEffect(() => {
+    if (still) return;
+    const t0 = performance.now();
+    let raf = requestAnimationFrame(function tick(t) {
+      const k = Math.min(1, (t - t0) / 700);
+      setV(Math.round(n * (1 - (1 - k) ** 3)));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [n, still]);
+  return (
+    <>
+      <span className="sr-only">{n}</span>
+      <span aria-hidden="true">{v}</span>
+    </>
+  );
+}
+
+/** One figure on the match sheet: label for assistive tech first (dt), number shown first. */
 function Figure({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col-reverse gap-1">
-      <dt className="text-sm text-chalk-soft">{label}</dt>
-      <dd className="font-condensed tabular flex items-center gap-1 text-4xl leading-none font-black">
-        {children}
+      <dt className="text-sm font-semibold text-ink/70">{label}</dt>
+      <dd className="font-condensed tabular flex items-center gap-1 text-5xl leading-none font-black">
+        {typeof children === 'number' ? <Count n={children} /> : children}
       </dd>
     </div>
   );
 }
+
+/** One game's printed sheet (súmula): ink header band, perforated edge, figures on paper. */
+function Sheet({
+  id,
+  title,
+  figures,
+  children,
+  i,
+}: {
+  id: string;
+  title: string;
+  figures: [string, ReactNode][];
+  children?: ReactNode;
+  i: number;
+}) {
+  return (
+    <section
+      aria-labelledby={id}
+      style={{ animationDelay: `${i * 60}ms` }}
+      className="sheet-in flex flex-col overflow-hidden rounded-lg bg-paper text-ink shadow-[0_12px_26px_-12px_rgb(0_0_0/0.55)]"
+    >
+      <h2
+        id={id}
+        className="font-condensed bg-ink px-5 py-3 text-2xl font-black text-paper uppercase [border-bottom:6px_double_var(--color-cover)]"
+      >
+        {title}
+      </h2>
+      <div className="flex flex-col gap-5 p-5">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+          {figures.map(([label, v]) => (
+            <Figure key={label} label={label}>
+              {v}
+            </Figure>
+          ))}
+        </dl>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+const Stars_ = ({ n }: { n: number }) => (
+  <>
+    <StarIcon className="size-8 text-ink" />
+    {n}
+  </>
+);
+const link = 'font-bold text-ink underline underline-offset-4';
 
 /** Reserva → Titular → Craque → Lenda, filled up to the player's stars. */
 function TitleLadder({ total, current }: { total: number; current: string }) {
@@ -66,17 +136,20 @@ export function StatsPage() {
   if (!data) return <Skeleton className="h-96" />;
   const cp = data.CAREER_PATH;
   const grid = data.FOOTBALL_GRID;
-  const imp = data.IMPOSTOR;
-  const tl = data.TIMELINE;
-  const hl = data.HIGHER_LOWER;
-  const xi = data.MISSING_XI;
-  const mysStats = data.MYSTERY_PLAYER;
-  const conStats = data.CONNECTIONS;
-  const dr = data.DRAFT;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
   const next = data.title.next;
   const rank = (n: number | null) =>
     n ? `${n}º` : <span className="text-2xl text-chalk-soft">sem posição</span>;
+  const std = (
+    g: { completed: number; stars: number; threeStars: number },
+    last: [string, number],
+  ) =>
+    [
+      ['fases jogadas', g.completed],
+      ['estrelas', <Stars_ key="s" n={g.stars} />],
+      ['fases com 3 estrelas', g.threeStars],
+      last,
+    ] as [string, ReactNode][];
   return (
     <div className="flex flex-col gap-14">
       <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -99,7 +172,7 @@ export function StatsPage() {
               ? `Faltam ${next.missing} estrelas para ${next.name}.`
               : 'Lenda. Não tem título acima.'}
           </p>
-          <dl className="grid grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5">
+          <dl className="grid grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5 [&_dt]:text-chalk-soft">
             <Figure label="no ranking geral">{rank(data.rank.all)}</Figure>
             <Figure label="no ranking da semana">{rank(data.rank.week)}</Figure>
           </dl>
@@ -126,43 +199,36 @@ export function StatsPage() {
 
       <Achievements />
 
-      <div className="grid gap-12 md:grid-cols-2 md:gap-10 xl:grid-cols-3">
-        <section
-          aria-labelledby="cp-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <Sheet
+          i={0}
+          id="cp-stats"
+          title="Career Path"
+          figures={[
+            ['fases jogadas', cp.completed],
+            ['de acerto', cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—'],
+            ['estrelas', <Stars_ key="s" n={cp.stars} />],
+            ['fases com 3 estrelas', cp.threeStars],
+          ]}
         >
-          <h2 id="cp-stats" className="font-condensed text-3xl font-black uppercase">
-            Career Path
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{cp.completed}</Figure>
-            <Figure label="de acerto">
-              {cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—'}
-            </Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {cp.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{cp.threeStars}</Figure>
-          </dl>
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold text-chalk-soft">Acertou na tentativa…</h3>
+            <h3 className="text-sm font-semibold text-ink/70">Acertou na tentativa…</h3>
             <ol className="flex flex-col gap-1.5">
               {Object.entries(cp.distribution).map(([n, count]) => (
                 <li key={n} className="flex items-center gap-3">
                   <span className="font-condensed tabular w-6 text-right text-lg font-black">
                     {n}ª
                   </span>
-                  <span className="h-6 flex-1 rounded-sm border border-dashed border-chalk-soft/30">
+                  <span className="h-6 flex-1 rounded-sm border border-dashed border-ink/30">
                     {count > 0 && (
                       <span
-                        className="block h-full rounded-sm bg-cover"
+                        className="block h-full rounded-sm bg-ink"
                         style={{ width: `${(count / maxBar) * 100}%` }}
                       />
                     )}
                   </span>
                   <span
-                    className={`font-condensed tabular w-8 text-right font-bold ${count ? '' : 'text-chalk-soft'}`}
+                    className={`font-condensed tabular w-8 text-right font-bold ${count ? '' : 'text-ink/60'}`}
                   >
                     {count}
                   </span>
@@ -170,180 +236,92 @@ export function StatsPage() {
               ))}
             </ol>
           </div>
-        </section>
+        </Sheet>
 
-        <section
-          aria-labelledby="grid-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        <Sheet
+          i={1}
+          id="grid-stats"
+          title="Grid"
+          figures={[
+            ['fases jogadas', grid.completed],
+            ['células por grid', grid.completed ? grid.avgScore.toLocaleString('pt-BR') : '—'],
+            ['estrelas', <Stars_ key="s" n={grid.stars} />],
+            ['álbuns completos', grid.perfect],
+          ]}
         >
-          <h2 id="grid-stats" className="font-condensed text-3xl font-black uppercase">
-            Grid
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{grid.completed}</Figure>
-            <Figure label="células por grid">
-              {grid.completed ? grid.avgScore.toLocaleString('pt-BR') : '—'}
-            </Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {grid.stars}
-            </Figure>
-            <Figure label="álbuns completos">{grid.perfect}</Figure>
-          </dl>
           {grid.completed === 0 && (
-            <p className="rounded-lg bg-chalk/[0.06] px-4 py-3 text-sm text-chalk-soft">
+            <p className="rounded-lg bg-ink/[0.07] px-4 py-3 text-sm text-ink/75">
               Nenhum grid jogado ainda.{' '}
-              <Link to="/grid" className="text-chalk underline underline-offset-4">
+              <Link to="/grid" className={link}>
                 Ver as fases do Grid
               </Link>
             </p>
           )}
-        </section>
+        </Sheet>
 
-        <section
-          aria-labelledby="impostor-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
+        <Sheet
+          i={2}
+          id="impostor-stats"
+          title="Impostor"
+          figures={std(data.IMPOSTOR, ['5 de 5', data.IMPOSTOR.perfect])}
         >
-          <h2 id="impostor-stats" className="font-condensed text-3xl font-black uppercase">
-            Impostor
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{imp.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {imp.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{imp.threeStars}</Figure>
-            <Figure label="5 de 5">{imp.perfect}</Figure>
-          </dl>
-          {imp.completed === 0 && (
-            <p className="rounded-lg bg-chalk/[0.06] px-4 py-3 text-sm text-chalk-soft">
+          {data.IMPOSTOR.completed === 0 && (
+            <p className="rounded-lg bg-ink/[0.07] px-4 py-3 text-sm text-ink/75">
               Nenhum impostor caçado ainda.{' '}
-              <Link to="/impostor" className="text-chalk underline underline-offset-4">
+              <Link to="/impostor" className={link}>
                 Ver as fases do Impostor
               </Link>
             </p>
           )}
-        </section>
+        </Sheet>
 
-        <section
-          aria-labelledby="timeline-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
-        >
-          <h2 id="timeline-stats" className="font-condensed text-3xl font-black uppercase">
-            Linha do tempo
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{tl.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {tl.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{tl.threeStars}</Figure>
-            <Figure label="5 de 5">{tl.perfect}</Figure>
-          </dl>
-        </section>
-
-        <section
-          aria-labelledby="hl-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
-        >
-          <h2 id="hl-stats" className="font-condensed text-3xl font-black uppercase">
-            Mais ou Menos
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{hl.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {hl.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{hl.threeStars}</Figure>
-            <Figure label="5 de 5">{hl.perfect}</Figure>
-          </dl>
-        </section>
-
-        <section
-          aria-labelledby="xi-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
-        >
-          <h2 id="xi-stats" className="font-condensed text-3xl font-black uppercase">
-            Escalação
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{xi.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {xi.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{xi.threeStars}</Figure>
-            <Figure label="escalações completas">{xi.perfect}</Figure>
-          </dl>
-        </section>
-
-        <section
-          aria-labelledby="mys-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
-        >
-          <h2 id="mys-stats" className="font-condensed text-3xl font-black uppercase">
-            Craque Misterioso
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{mysStats.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {mysStats.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{mysStats.threeStars}</Figure>
-            <Figure label="de primeira">{mysStats.perfect}</Figure>
-          </dl>
-        </section>
-
-        <section
-          aria-labelledby="con-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
-        >
-          <h2 id="con-stats" className="font-condensed text-3xl font-black uppercase">
-            Conexões
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{conStats.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {conStats.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{conStats.threeStars}</Figure>
-            <Figure label="sem erros">{conStats.perfect}</Figure>
-          </dl>
-        </section>
-
-        <section
-          aria-labelledby="draft-stats"
-          className="flex flex-col gap-6 border-t-2 border-chalk/15 pt-5"
-        >
-          <h2 id="draft-stats" className="font-condensed text-3xl font-black uppercase">
-            Draft
-          </h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Figure label="fases jogadas">{dr.completed}</Figure>
-            <Figure label="estrelas">
-              <StarIcon className="size-7 text-cover" />
-              {dr.stars}
-            </Figure>
-            <Figure label="fases com 3 estrelas">{dr.threeStars}</Figure>
-            <Figure label="11 de 11">{dr.perfect}</Figure>
-          </dl>
-        </section>
+        <Sheet
+          i={3}
+          id="timeline-stats"
+          title="Linha do tempo"
+          figures={std(data.TIMELINE, ['5 de 5', data.TIMELINE.perfect])}
+        />
+        <Sheet
+          i={4}
+          id="hl-stats"
+          title="Mais ou Menos"
+          figures={std(data.HIGHER_LOWER, ['5 de 5', data.HIGHER_LOWER.perfect])}
+        />
+        <Sheet
+          i={5}
+          id="xi-stats"
+          title="Escalação"
+          figures={std(data.MISSING_XI, ['escalações completas', data.MISSING_XI.perfect])}
+        />
+        <Sheet
+          i={6}
+          id="mys-stats"
+          title="Craque Misterioso"
+          figures={std(data.MYSTERY_PLAYER, ['de primeira', data.MYSTERY_PLAYER.perfect])}
+        />
+        <Sheet
+          i={7}
+          id="con-stats"
+          title="Conexões"
+          figures={std(data.CONNECTIONS, ['sem erros', data.CONNECTIONS.perfect])}
+        />
+        <Sheet
+          i={8}
+          id="draft-stats"
+          title="Draft"
+          figures={std(data.DRAFT, ['11 de 11', data.DRAFT.perfect])}
+        />
       </div>
 
       <Link
         to="/album"
-        className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4"
+        className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4"
       >
         Meu álbum
       </Link>
       <Link
         to="/history"
-        className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4"
+        className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4"
       >
         Ver histórico de partidas
       </Link>

@@ -98,12 +98,14 @@ export function LeaguesPage() {
               <li key={l.code}>
                 <Link
                   to={`/liga/${l.code}`}
-                  className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] px-4 py-3 hover:bg-chalk/[0.09]"
+                  className="flex min-h-14 items-center justify-between gap-3 rounded-lg bg-paper px-4 py-3 text-ink shadow-[0_6px_14px_-8px_rgb(0_0_0/0.55)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5"
                 >
                   <span className="font-condensed truncate text-xl font-extrabold uppercase">
                     {l.name}
                   </span>
-                  <span className="shrink-0 text-sm text-chalk-soft">{l.members} pessoas</span>
+                  <span className="shrink-0 text-sm font-semibold text-ink/70">
+                    {l.members} pessoas
+                  </span>
                 </Link>
               </li>
             ))}
@@ -220,13 +222,24 @@ export function LeaguePage() {
   return (
     <>
       <GameHeader title={l.name} />
-      <p className="mt-2 text-chalk-soft">
-        Código <span className="tabular font-bold tracking-[0.15em] text-chalk">{l.code}</span> ·{' '}
-        {l.members}/{l.maxMembers} pessoas
-      </p>
+      {/* the code as a ticket: stub with the people count, perforation, big code */}
+      <div className="mt-4 flex w-full max-w-md items-stretch overflow-hidden rounded-lg bg-cover text-ink shadow-[0_10px_22px_-10px_rgb(0_0_0/0.6)]">
+        <p className="flex flex-1 flex-col justify-center px-4 py-3">
+          <span className="font-condensed text-sm font-extrabold tracking-[0.2em] uppercase">
+            Código
+          </span>
+          <span className="font-condensed tabular text-4xl leading-none font-black tracking-[0.15em]">
+            {l.code}
+          </span>
+        </p>
+        <p className="font-condensed tabular flex shrink-0 flex-col items-center justify-center border-l-2 border-dashed border-ink/50 px-4 text-lg leading-tight font-black">
+          {l.members}/{l.maxMembers}
+          <span className="text-sm font-bold">pessoas</span>
+        </p>
+      </div>
 
       {!l.isMember ? (
-        <div className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5">
+        <div className="mt-6 flex max-w-xl flex-col items-start gap-3 rounded-xl border-2 border-dashed border-chalk-soft/50 bg-chalk/[0.06] p-5">
           <p className="max-w-[44ch]">
             Entre para ver o ranking da semana e somar suas estrelas com a turma.
           </p>
@@ -250,11 +263,11 @@ export function LeaguePage() {
               Ranking da semana
             </h2>
             <p className="text-sm text-chalk-soft">Estrelas desde segunda, 00h de Brasília.</p>
-            <ol className="mt-4 flex flex-col gap-2">
+            <ol className="mt-4 flex flex-col overflow-hidden rounded-lg bg-paper text-ink shadow-[0_10px_22px_-12px_rgb(0_0_0/0.55)]">
               {l.ranking.map((r) => (
                 <li
                   key={r.position}
-                  className={`flex min-h-12 items-center gap-4 rounded-lg px-4 py-2 ${r.isMe ? 'bg-cover text-ink' : 'bg-chalk/[0.06]'}`}
+                  className={`flex min-h-12 items-center gap-4 border-b border-ink/15 px-4 py-2 last:border-b-0 ${r.isMe ? 'bg-cover' : ''}`}
                 >
                   <span className="font-condensed tabular w-8 text-xl font-black">
                     {r.position}º
