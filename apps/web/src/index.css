@@ -3,23 +3,22 @@
 
 /*
  * Album world: a printed sticker-album page. The field (pitch) owns the page; stickers are paper.
- * Tokens are the LIGHT theme (a daytime pitch, cream paper). Dark overrides below.
- * chalk = text on the field, chalk-soft = secondary text on the field; both flip with the theme.
- * Objects (scoreboard, chalkboard, TV) wrap in .obj-dark to keep their night materials in light.
+ * One theme, the night match: dark pitch, chalk text, cover yellow.
+ * chalk = text on the field, chalk-soft = secondary text on the field.
  */
 @theme {
   --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --color-pitch: oklch(0.9 0.07 148);
-  --color-pitch-deep: oklch(0.84 0.09 148);
-  --color-chalk: oklch(0.24 0.06 152);
-  --color-chalk-soft: oklch(0.38 0.06 152);
-  --color-paper: oklch(0.975 0.014 95);
-  --color-cover: oklch(0.88 0.165 95);
+  --color-pitch: oklch(0.22 0.045 155);
+  --color-pitch-deep: oklch(0.17 0.035 155);
+  --color-chalk: oklch(0.95 0.015 150);
+  --color-chalk-soft: oklch(0.8 0.04 150);
+  --color-paper: oklch(0.93 0.008 100);
+  --color-cover: oklch(0.84 0.15 95);
   --color-ink: oklch(0.27 0.07 152);
   --color-stamp: oklch(0.9 0.16 95);
-  /* yellow used as text/outline on the field: gold in light, cover in dark */
-  --color-gold: oklch(0.45 0.11 75);
+  /* yellow used as text/outline on the field */
+  --color-gold: oklch(0.84 0.15 95);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -28,39 +27,9 @@
 
 @layer base {
   :root {
-    color-scheme: light;
-  }
-  :root[data-theme='dark'] {
     color-scheme: dark;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
-      color-scheme: dark;
-    }
-  }
-
-  :root[data-theme='dark'],
-  .obj-dark {
-    --color-pitch: oklch(0.22 0.045 155);
-    --color-pitch-deep: oklch(0.17 0.035 155);
-    --color-chalk: oklch(0.95 0.015 150);
-    --color-chalk-soft: oklch(0.8 0.04 150);
-    --color-paper: oklch(0.93 0.008 100);
-    --color-cover: oklch(0.84 0.15 95);
-    --color-gold: oklch(0.84 0.15 95);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
-      --color-pitch: oklch(0.22 0.045 155);
-      --color-pitch-deep: oklch(0.17 0.035 155);
-      --color-chalk: oklch(0.95 0.015 150);
-      --color-chalk-soft: oklch(0.8 0.04 150);
-      --color-paper: oklch(0.93 0.008 100);
-      --color-cover: oklch(0.84 0.15 95);
-      --color-gold: oklch(0.84 0.15 95);
-    }
-  }
-  /* .obj-dark keeps its own text colour even inside a light page */
+  /* objects (scoreboard, chalkboard, TV) set chalk text on their own night materials */
   .obj-dark {
     color: var(--color-chalk);
   }
@@ -786,23 +755,12 @@
 }
 
 /*
- * Home, "Vestiário à noite": a locker room under one floodlight (by day, window light). The art
- * is ours (public/img/vestiario-*.webp); the passport, stickers, ticket and jerseys sit in it.
+ * Home, "Vestiário à noite": a locker room under one floodlight. The art
+ * is ours (public/img/vestiario-night.webp); the passport, stickers, ticket and jerseys sit in it.
  * Entry once per tab: light on, cover opens, stickers slide out, ticket lands, last stamp thumps.
  */
 :root {
-  --scene-art: url('/img/vestiario-day.webp');
-  --scene-night: 0;
-}
-:root[data-theme='dark'] {
   --scene-art: url('/img/vestiario-night.webp');
-  --scene-night: 1;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --scene-art: url('/img/vestiario-night.webp');
-    --scene-night: 1;
-  }
 }
 .scene {
   --px: 0;
@@ -837,11 +795,7 @@
 .scene-cone {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 38% 62% at 50% 4%,
-    rgb(255 214 150 / calc(0.22 * var(--scene-night))),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse 38% 62% at 50% 4%, rgb(255 214 150 / 0.22), transparent 70%);
   mix-blend-mode: screen;
 }
 .scene-dust {
@@ -851,7 +805,7 @@
   width: min(44vw, 34rem);
   height: 62%;
   translate: -50% 0;
-  opacity: calc(0.35 + 0.45 * var(--scene-night));
+  opacity: 0.8;
   mix-blend-mode: screen;
   animation: scene-fade 1.6s ease-out backwards;
 }
@@ -867,19 +821,19 @@
 @keyframes lights-on {
   0%,
   30% {
-    opacity: calc(0.9 * var(--scene-night));
+    opacity: 0.9;
   }
   36% {
-    opacity: calc(0.25 * var(--scene-night));
+    opacity: 0.25;
   }
   44% {
-    opacity: calc(0.8 * var(--scene-night));
+    opacity: 0.8;
   }
   52% {
-    opacity: calc(0.1 * var(--scene-night));
+    opacity: 0.1;
   }
   60% {
-    opacity: calc(0.45 * var(--scene-night));
+    opacity: 0.45;
   }
   100% {
     opacity: 0;

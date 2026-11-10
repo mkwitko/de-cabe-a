@@ -88,7 +88,7 @@ export function CookiesPage() {
                   time="enquanto a conta estiver conectada"
                 />
                 <Row
-                  name="dc_consent_v1, tema, música e efeitos"
+                  name="dc_consent_v1, música e efeitos"
                   what="Lembram suas escolhas neste aparelho (armazenamento local, não é cookie)."
                   who="De Cabeça F.C."
                   time="até você limpar o navegador"

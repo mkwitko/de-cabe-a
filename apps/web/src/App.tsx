@@ -1,6 +1,5 @@
 import { MusicToggle, SoundToggle } from './components/SoundToggle';
 import { sceneFor, setScene } from './lib/music';
-import { ThemeToggle } from './components/ThemeToggle';
 import { LockerRoom } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
@@ -365,7 +364,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
-      {/* One header: brand, places, sound, theme and Entrar on wide screens; on the phone the places
+      {/* One header: brand, places, sound and Entrar on wide screens; on the phone the places
           are the bottom bar and only the home keeps a top (brand, sound, Entrar). */}
       <header
         className={`items-center gap-3 sm:mb-6 sm:flex sm:gap-4 lg:gap-6 ${home ? 'mb-4 flex justify-between' : 'contents'}`}
@@ -407,9 +406,6 @@ function Shell({ children }: { children: ReactNode }) {
             <MusicToggle />
           </span>
           <SoundToggle />
-          <span className="hidden sm:contents">
-            <ThemeToggle />
-          </span>
           <span className="ml-1 sm:ml-2">
             <AccountLink />
           </span>

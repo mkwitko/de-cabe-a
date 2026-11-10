@@ -12,7 +12,7 @@ Brazilian football fans (PT-BR) who know players by heart and enjoy testing it. 
 
 ## Launch Scope (2026-11-10)
 
-Launch is Career Path only, polished to a premium, immersive standard (spec: `docs/superpowers/specs/2026-11-10-lancamento-career-path-design.md`). Open at launch: Career Path, the sticker album and public showcase, profile and account, how to play, legal pages. Every other game and page below exists in code but shows as "Em breve" behind one web flag (`apps/web/src/lib/launch.ts`) until reopened. Bottom bar at launch: Jogar · Álbum · Perfil. Titles: a 10-step ladder (Peneira to Rei da Bola). Background music and sound effects, separate toggles. Light and dark themes with a manual choice. LGPD cookie consent before analytics or ads.
+Launch is Career Path only, polished to a premium, immersive standard (spec: `docs/superpowers/specs/2026-11-10-lancamento-career-path-design.md`). Open at launch: Career Path, the sticker album and public showcase, profile and account, how to play, legal pages. Every other game and page below exists in code but shows as "Em breve" behind one web flag (`apps/web/src/lib/launch.ts`) until reopened. Bottom bar at launch: Jogar · Álbum · Perfil. Titles: a 10-step ladder (Peneira to Rei da Bola). Background music and sound effects, separate toggles. One dark theme (the night match), no theme choice. LGPD cookie consent before analytics or ads.
 
 ## Product Purpose
 
@@ -55,7 +55,7 @@ Mobile-first web (360 px base, up to 1280 px). Played one-handed on a phone; bot
 - Ads: Google AdSense only in pauses (end of a track page, under a level result, foot of the home), never during a level, no interstitials or rewarded ads. Personalised ads only with LGPD consent; otherwise non-personalised. Off until the AdSense account is approved (ADR-012).
 - No club logos (licensing): clubs are shown with initials and colours; countries with flags. Player photos only from Wikimedia Commons (free licences), always with author and licence next to them.
 - Never mock or expose real people.
-- PT-BR only. Theme: System / Light / Dark, chosen on the device. Preferences (sound, notifications) live in Perfil › Conta and stay on the device.
+- PT-BR only. One dark theme, no choice. Preferences (sound, notifications) live in Perfil › Conta and stay on the device.
 - Not yet live: deploy to decabecafc.com.br is pending (domain, VM, Google OAuth, Resend, AdSense; `docs/DEPLOY.md`).
 - Full spec in `docs/` (PRD, game design, UX spec, growth plan).
 

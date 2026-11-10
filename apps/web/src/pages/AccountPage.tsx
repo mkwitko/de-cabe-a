@@ -13,7 +13,6 @@ import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { AccountData } from '../components/AccountData';
 import { HapticsToggle, MusicToggle, SoundToggle } from '../components/SoundToggle';
-import { ThemeChoices } from '../components/ThemeToggle';
 
 const input =
   'min-h-12 rounded-lg border-2 border-ink/15 bg-paper px-3 text-base text-ink focus:border-ink';
@@ -178,14 +177,6 @@ export function AccountPage() {
             <MusicToggle withLabel />
             <SoundToggle withLabel />
             <HapticsToggle />
-          </section>
-
-          <section className={card}>
-            <h2 className={h2}>Tema</h2>
-            <p className="text-chalk-soft">
-              Sistema segue o seu aparelho. Fica guardado só neste aparelho.
-            </p>
-            <ThemeChoices />
           </section>
 
           <Notifications />

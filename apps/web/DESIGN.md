@@ -8,20 +8,20 @@ A printed sticker album. The page is pitch-green album paper with a fine halfton
 
 ## Colour (Tailwind v4 `@theme`, oklch)
 
-Strategy: Committed. Pitch green owns the page in both themes; album-cover yellow is the only accent.
+Strategy: Committed. Pitch green owns the page; album-cover yellow is the only accent.
 
-| Token        | Light           | Dark           | Use                                                    |
-| ------------ | --------------- | -------------- | ------------------------------------------------------ |
-| `pitch`      | 0.46 0.12 152   | 0.22 0.045 155 | Page ground                                            |
-| `pitch-deep` | 0.38 0.10 152   | 0.17 0.035 155 | Halftone dots, `html` ground, scrollbar track          |
-| `chalk`      | 0.98 0.012 150  | 0.95 0.015 150 | Text on pitch                                          |
-| `chalk-soft` | 0.90 0.035 150  | 0.80 0.04 150  | Secondary text, slot outlines and numbers (with alpha) |
-| `paper`      | 0.985 0.006 100 | 0.93 0.008 100 | Sticker border                                         |
-| `cover`      | 0.88 0.165 95   | 0.84 0.15 95   | Brand sticker field, selection, focus ring             |
-| `ink`        | 0.27 0.07 152   | same           | Text on paper/cover                                    |
-| `stamp`      | 0.90 0.16 95    | same           | "Em breve" rubber stamp                                |
+| Token        | Value          | Use                                                    |
+| ------------ | -------------- | ------------------------------------------------------ |
+| `pitch`      | 0.22 0.045 155 | Page ground                                            |
+| `pitch-deep` | 0.17 0.035 155 | Halftone dots, `html` ground, scrollbar track          |
+| `chalk`      | 0.95 0.015 150 | Text on pitch                                          |
+| `chalk-soft` | 0.80 0.04 150  | Secondary text, slot outlines and numbers (with alpha) |
+| `paper`      | 0.93 0.008 100 | Sticker border                                         |
+| `cover`      | 0.84 0.15 95   | Brand sticker field, selection, focus ring             |
+| `ink`        | 0.27 0.07 152  | Text on paper/cover                                    |
+| `stamp`      | 0.90 0.16 95   | "Em breve" rubber stamp                                |
 
-Theme follows `prefers-color-scheme` only (no toggle).
+One theme, dark (2026-11-10): no light values, no `prefers-color-scheme` or `data-theme` switching; `theme-color` `#0f1f16`.
 
 ## Type
 
@@ -38,7 +38,7 @@ One family, self-hosted: **Archivo Variable** (`@fontsource-variable/archivo/wdt
 - **Stamp** — 2px `stamp` border, condensed uppercase, rotated −8°.
 - **Track grid** (`TrackPage`) — progress panel (done/total, stars, "Jogar fase N"), then pages of 10 level slots; the open level is a `cover` sticker, done levels show their stars, locked ones stay dashed.
 - **Career Path passport** (`CareerPathCard`, `games/career-path/Trail`) — burgundy leather cover with gold tooling and seal, the name in gold foil, a ruled visa page tucked in it (title in its frame and tone, last stamps and the lit next slot, progress, rarest sticker) and one `cover` button. Home: the cover fills the first phone screen; from `lg` a ticket beside it shows what the next level is worth. Trail: a spread of two visa pages, 6 stamp slots each (ink stamp + stars when done, lit dashed slot when next, faint when locked), turned 12 levels at a time.
-- **Home scene, "Vestiário à noite"** (`components/LockerRoom.tsx`) — full-screen locker room (our own art, `public/img/vestiario-{night,day}.webp`, fixed and slightly parallaxed); the passport lies open on the bench (inside cover: name, rule, title in its frame; visa page: 10 stamp slots, 5 on phones, and the count), the player's Career Path stickers fanned out of it, the next-level ticket clipped to it (stub with the level and what it is worth, one big ink button "Jogar fase N"), the closed modes as numbered jerseys on a peg rail under the "Em breve" stamp. Entry once per tab: light flickers on, cover swings open (rotateY on wide, rotateX on phones), stickers slide out, ticket lands, last stamp thumps; dust in the light is a small self-authored Lottie loaded after the entry. Reduced motion: the composed scene, still. By day the same room in window light.
+- **Home scene, "Vestiário à noite"** (`components/LockerRoom.tsx`) — full-screen locker room (our own art, `public/img/vestiario-night.webp`, fixed and slightly parallaxed); the passport lies open on the bench (inside cover: name, rule, title in its frame; visa page: 10 stamp slots, 5 on phones, and the count), the player's Career Path stickers fanned out of it, the next-level ticket clipped to it (stub with the level and what it is worth, one big ink button "Jogar fase N"), the closed modes as numbered jerseys on a peg rail under the "Em breve" stamp. Entry once per tab: light flickers on, cover swings open (rotateY on wide, rotateX on phones), stickers slide out, ticket lands, last stamp thumps; dust in the light is a small self-authored Lottie loaded after the entry. Reduced motion: the composed scene, still.
 - **Trajectory** (Career Path) — vertical path of club badges joined by a dashed line; each club: name, country, years, games/goals in `cover`; the next unknown club is a dashed `?` badge.
 - **Clue chip** — `cover` pill, small uppercase label + condensed value ("Posição · Meio-campista / Atacante"); main position first, then secondary ones.
 - **Dugout panel** — the guess box (search + "Chutar" + skip) beside the board on wide screens, docked below it on phones.
@@ -72,4 +72,4 @@ One family, self-hosted: **Archivo Variable** (`@fontsource-variable/archivo/wdt
 
 ## Browser surfaces
 
-`::selection` cover on ink; `:focus-visible` 3px cover outline, 3px offset; `scrollbar-color` chalk-soft on pitch-deep; `color-scheme: light dark`.
+`::selection` cover on ink; `:focus-visible` 3px cover outline, 3px offset; `scrollbar-color` chalk-soft on pitch-deep; `color-scheme: dark`.
