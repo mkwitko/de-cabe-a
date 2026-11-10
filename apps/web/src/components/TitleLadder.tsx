@@ -31,7 +31,7 @@ export function TitleLadder({ total }: { total: number }) {
               <TitleBadge name={t.name} locked={!reached} className="size-11" />
               <div className="min-w-0 flex-1">
                 <p
-                  className={`font-condensed text-xl leading-none font-extrabold uppercase ${here ? 'text-cover' : reached ? '' : 'text-chalk-soft'}`}
+                  className={`font-condensed text-xl leading-none font-extrabold uppercase ${here ? 'text-gold' : reached ? '' : 'text-chalk-soft'}`}
                 >
                   {t.name}
                   {here && <span className="sr-only"> (seu título)</span>}

@@ -98,6 +98,8 @@ const PAGES: Record<string, Meta> = {
     description: 'Desafios por tempo limitado, com ranking próprio.',
   },
   '/privacidade': { title: 'Privacidade', description: DEFAULT.description },
+  '/termos': { title: 'Termos de uso', description: DEFAULT.description },
+  '/cookies': { title: 'Cookies', description: DEFAULT.description },
 };
 
 function set(selector: string, attr: string, value: string, create: () => HTMLElement) {
