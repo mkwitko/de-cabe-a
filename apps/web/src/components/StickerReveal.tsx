@@ -19,37 +19,24 @@ export function StickerReveal({
   const { sticker, upgradedFrom, isNew } = award;
   const style = RARITY_STYLE[sticker.rarity];
   const level = RARITY_ORDER.indexOf(sticker.rarity);
-  const [lamps, setLamps] = useState(0);
-  const [phase, setPhase] = useState<'idle' | 'rarity' | 'card' | 'named'>('idle');
+  const [phase, setPhase] = useState<'rarity' | 'card' | 'named'>('rarity');
   const stage = useRef<HTMLDivElement>(null);
   const strip = useRef<HTMLDivElement>(null);
   const tilt = useRef<HTMLDivElement>(null);
 
+  // Straight on from the broadcast, under the same lit floodlights: the rarity is called at once,
+  // the card spins in, then his name lands. Rarer stickers hold the suspense a little longer.
   useEffect(() => {
     const quick = short || reducedMotion();
     const timers: number[] = [];
     const at = (ms: number, fn: () => void) => void timers.push(window.setTimeout(fn, ms));
-    // From "Destaque da Rodada" up, the lamps open the reveal; higher levels hold longer.
-    const intro = !quick && level >= 4 ? 1000 : 0;
-    const hold = quick ? 0 : level * 120;
-    if (intro)
-      [250, 550, 850].forEach((ms, i) =>
-        at(ms, () => {
-          setLamps(i + 1);
-          play('clunk');
-          buzz(15);
-        }),
-      );
-    const t0 = quick ? 100 : intro + 250;
-    at(t0, () => {
-      setPhase('rarity');
-      play('rarity');
-    });
-    at(t0 + (quick ? 200 : 850 + hold), () => {
+    const hold = quick ? 0 : level * 80;
+    play('rarity');
+    at(quick ? 150 : 350 + hold, () => {
       setPhase('card');
       play('shimmer');
     });
-    at(t0 + (quick ? 700 : 2150 + hold), () => {
+    at(quick ? 650 : 1500 + hold, () => {
       setPhase('named');
       play('stamp');
       if (!reducedMotion()) buzz(30);
@@ -77,16 +64,14 @@ export function StickerReveal({
       aria-label="Figurinha nova"
       className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
     >
-      <Lamps on={lamps} />
-      {phase !== 'idle' && !short && !reducedMotion() && (
+      <Lamps on={3} />
+      {!short && !reducedMotion() && (
         <div
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 h-[120%] w-1.5 bg-[linear-gradient(transparent,#fff7d1,transparent)] opacity-0 motion-safe:animate-[beam_700ms_ease-out_forwards]"
         />
       )}
-      <p
-        className={`text-center text-sm font-black tracking-[0.4em] text-(--rc) uppercase transition-opacity duration-500 motion-reduce:duration-200 ${phase === 'idle' ? 'opacity-0' : 'opacity-100'}`}
-      >
+      <p className="text-center text-sm font-black tracking-[0.4em] text-(--rc) uppercase motion-safe:animate-[fade-in_300ms_both]">
         {isNew ? 'Figurinha ' : upgradedFrom ? 'Upgrade · ' : ''}
         {style.label}
       </p>

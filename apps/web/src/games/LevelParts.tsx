@@ -4,7 +4,7 @@ import { formatClock } from './Clock';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import type { AttemptResponse, GameMode } from '@decabeca/contracts';
+import type { AttemptResponse, GameMode, PlayerRef } from '@decabeca/contracts';
 import { track } from '../lib/analytics';
 import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from '../lib/game';
@@ -12,7 +12,7 @@ import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
 import { Reactions } from '../components/Reactions';
 import { Stars, StarIcon } from '../components/Stars';
-import { Broadcast } from '../components/Broadcast';
+import { Broadcast, type Hero } from '../components/Broadcast';
 import { StickerReveal } from '../components/StickerReveal';
 import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
@@ -186,16 +186,29 @@ export function LevelEnd({
   data,
   headline,
   detail,
+  answer,
 }: {
   data: AttemptResponse;
   headline: string;
   detail: ReactNode;
+  /** The player the level was about (single-answer modes): the broadcast's star. */
+  answer?: PlayerRef;
 }) {
   const { mode, level, stars, score } = data.attempt;
+  // Only the moment a level ends gets the ceremony and the promotion; reopening an old one does not.
+  const [justFinished] = useState(() => recentCompletion(data.attempt.completedAt));
   // Broadcast, then the sticker (if any), then the usual end screen. Losses skip both.
   const [stage, setStage] = useState<'broadcast' | 'sticker' | 'end'>(
-    stars > 0 && recentCompletion(data.attempt.completedAt) ? 'broadcast' : 'end',
+    stars > 0 && justFinished ? 'broadcast' : 'end',
   );
+  // His Wikimedia Commons portrait, credited: the sticker's (larger) first, else the answer's.
+  const [hero] = useState<Hero | undefined>(() => {
+    if (!answer) return undefined;
+    const s = data.sticker?.sticker.playerId === answer.id ? data.sticker.sticker : null;
+    return s?.photo
+      ? { name: answer.name, photo: s.photo, credit: s.photoCredit }
+      : { name: answer.name, photo: answer.photo ?? null, credit: answer.photoCredit ?? null };
+  });
   const today = new Date().toLocaleDateString('en-CA');
   const [short] = useState(() => ceremonyLength(mode, today) === 'short');
   useEffect(() => {
@@ -214,7 +227,9 @@ export function LevelEnd({
   // Stats are invalidated when the level closes; once refetched, totalStars includes these stars.
   const stats = useStats();
   const promoted =
-    !oficina && stats.data && !stats.isFetching ? promotedTo(stats.data.totalStars, stars) : null;
+    justFinished && !oficina && stats.data && !stats.isFetching
+      ? promotedTo(stats.data.totalStars, stars)
+      : null;
   // One-time "save your progress" invite after a guest's first win (remembered on the device).
   const [inviteSeen] = useState(() => {
     try {
@@ -245,6 +260,7 @@ export function LevelEnd({
         detail={detail}
         short={short}
         promoted={promoted}
+        hero={hero}
         onDone={() => setStage(data.sticker ? 'sticker' : 'end')}
       />
     );

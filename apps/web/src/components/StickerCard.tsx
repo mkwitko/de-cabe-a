@@ -1,6 +1,7 @@
 import type { Ref } from 'react';
 import type { Sticker } from '@decabeca/contracts';
 import { RARITY_STYLE } from './rarity';
+import { POSITION_LABEL } from '../lib/format';
 
 export const POSITION = { GK: 'GOL', DF: 'DEF', MF: 'MEI', FW: 'ATA' } as const;
 
@@ -30,19 +31,21 @@ export function StickerCard({
       >
         <div>
           <p
-            className={`font-extrabold tracking-[0.16em] uppercase ${lg ? 'text-[11px]' : 'text-[8px]'}`}
+            className={`leading-[0.88] font-black tracking-tight [overflow-wrap:anywhere] uppercase transition-opacity duration-400 ${sticker.photo ? (lg ? 'text-3xl' : 'text-base') : lg ? 'text-4xl' : 'text-lg'} ${showName ? 'opacity-100' : 'opacity-0'}`}
           >
-            Figurinha
+            {sticker.name}
           </p>
-          <p
-            className={`leading-[0.85] font-black tracking-tighter ${sticker.photo ? (lg ? 'text-3xl' : 'text-base') : lg ? 'text-5xl' : 'text-2xl'}`}
-          >
-            {sticker.positionGroup ? POSITION[sticker.positionGroup] : '—'}
-          </p>
+          {sticker.positionGroup && (
+            <p
+              className={`font-extrabold tracking-[0.12em] uppercase opacity-80 ${lg ? 'mt-1 text-xs' : 'mt-0.5 text-[8px]'}`}
+            >
+              {POSITION_LABEL[sticker.positionGroup]}
+            </p>
+          )}
         </div>
         {sticker.photo && (
-          // Portrait between the position and the name; the credit rides on title and alt text,
-          // as the CC licences ask for it where the photo shows.
+          // Portrait under the name; the credit rides on title and alt text, as the CC licences
+          // ask for it where the photo shows.
           <img
             src={sticker.photo}
             alt={sticker.photoCredit ? `${sticker.name}. ${sticker.photoCredit}` : sticker.name}
@@ -53,18 +56,11 @@ export function StickerCard({
             className={`min-h-0 w-full flex-1 bg-(--edge) object-cover object-[50%_20%] ${lg ? 'my-2 rounded-md border-2' : 'my-1 rounded-[3px] border'} border-(--ink)/40`}
           />
         )}
-        <div>
-          <p
-            className={`leading-[0.92] font-black tracking-tight uppercase transition-opacity duration-400 ${lg ? 'text-2xl' : 'text-[13px]'} ${showName ? 'opacity-100' : 'opacity-0'}`}
-          >
-            {sticker.name}
-          </p>
-          <p
-            className={`font-extrabold tracking-[0.16em] uppercase ${lg ? 'mt-1 text-[11px]' : 'mt-0.5 text-[8px]'}`}
-          >
-            {sticker.nationality}
-          </p>
-        </div>
+        <p
+          className={`font-extrabold tracking-[0.16em] uppercase ${lg ? 'text-[11px]' : 'text-[8px]'}`}
+        >
+          {sticker.nationality}
+        </p>
         <div
           ref={stripRef}
           aria-hidden="true"
