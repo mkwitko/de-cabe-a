@@ -1,0 +1,68 @@
+/**
+ * The site as it ships: only Career Path open (no VITE_LAUNCH_ALL). Runs in the "launch"
+ * Playwright project against its own web server; the other specs run with everything open.
+ */
+import { expect, test } from '@playwright/test';
+
+test('launch site: home, Em breve, a won Career Path level, album, how to play, legal', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page
+    .getByRole('dialog', { name: /cookies/i })
+    .getByRole('button', { name: 'Recusar não essenciais' })
+    .click();
+
+  // Home: the brand, the one open game, the Em breve strip; the bar is Jogar · Álbum · Perfil.
+  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
+  await expect(page.getByText('Em breve').first()).toBeVisible();
+  const nav = page
+    .getByRole('navigation')
+    .filter({ has: page.getByRole('link', { name: 'Álbum' }) });
+  await expect(nav.getByRole('link', { name: 'Jogar' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Perfil' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: /Ranking|Desafio/ })).toHaveCount(0);
+
+  // Closed games and pages show the Em breve screen, not a 404 or the game.
+  await page.goto('/grid');
+  await expect(page.getByRole('heading', { name: /Football Grid chega em breve/i })).toBeVisible();
+  await page.goto('/ranking');
+  await expect(page.getByRole('heading', { name: /chega em breve/i })).toBeVisible();
+
+  // Career Path level 1, start to finish, with the first-run tutorial.
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jogar fase 1' }).click();
+  await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
+  await page.getByRole('button', { name: 'Pular tutorial' }).click();
+  await page.getByRole('combobox', { name: 'Quem é o jogador?' }).fill('fenom');
+  await page.getByRole('option', { name: /Ronaldo/ }).click();
+  await page.getByRole('button', { name: 'Chutar' }).click();
+  for (const name of ['Resultado', 'Figurinha nova'])
+    await page
+      .getByRole('dialog', { name })
+      .getByRole('button', { name: /Pular|Continuar/ })
+      .click({ timeout: 5000 });
+  await expect(page.getByRole('img', { name: '3 de 3 estrelas' }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Próxima fase · 2' })).toBeVisible();
+  // The ranking is closed: no Top 10 or reactions on the end screen.
+  await expect(page.getByRole('button', { name: /^Craque!/ })).toHaveCount(0);
+
+  // The sticker landed in the album.
+  await page.goto('/album');
+  await expect(page.getByText('Ronaldo').first()).toBeVisible();
+
+  // How to play sends the player to their next level, not back to level 1.
+  await page.goto('/como-jogar');
+  await expect(page.getByRole('link', { name: 'Jogar a fase 2' })).toBeVisible();
+
+  // Legal pages open.
+  for (const [path, name] of [
+    ['/privacidade', /Privacidade/],
+    ['/termos', /Termos/],
+    ['/cookies', /Cookies/],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
+  }
+});

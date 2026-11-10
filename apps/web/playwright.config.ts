@@ -5,6 +5,8 @@ const E2E_DB =
   process.env.E2E_DATABASE_URL ?? 'postgresql://decabeca:decabeca@localhost:5432/decabeca_e2e';
 const API_PORT = 3001;
 const WEB_PORT = 5174;
+// The site as it ships (only the launched games open), for e2e/launch.spec.ts.
+const LAUNCH_PORT = 5175;
 
 export default defineConfig({
   testDir: 'e2e',
@@ -17,7 +19,22 @@ export default defineConfig({
     baseURL: `http://localhost:${WEB_PORT}`,
     permissions: ['clipboard-read', 'clipboard-write'],
   },
-  projects: [{ name: 'chromium', use: { ...devices['Pixel 7'], browserName: 'chromium' } }],
+  projects: [
+    {
+      name: 'chromium',
+      testIgnore: /launch\.spec\.ts/,
+      use: { ...devices['Pixel 7'], browserName: 'chromium' },
+    },
+    {
+      name: 'launch',
+      testMatch: /launch\.spec\.ts/,
+      use: {
+        ...devices['Pixel 7'],
+        browserName: 'chromium',
+        baseURL: `http://localhost:${LAUNCH_PORT}`,
+      },
+    },
+  ],
   webServer: [
     {
       command: `pnpm --filter @decabeca/api start`,
@@ -36,6 +53,12 @@ export default defineConfig({
       url: `http://localhost:${WEB_PORT}`,
       // Everything open: the e2e still covers the modes that are closed to the public.
       env: { API_URL: `http://127.0.0.1:${API_PORT}`, VITE_LAUNCH_ALL: '1' },
+      reuseExistingServer: false,
+    },
+    {
+      command: `pnpm exec vite --port ${LAUNCH_PORT} --strictPort`,
+      url: `http://localhost:${LAUNCH_PORT}`,
+      env: { API_URL: `http://127.0.0.1:${API_PORT}` },
       reuseExistingServer: false,
     },
   ],
