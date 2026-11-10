@@ -12,17 +12,19 @@ export function MemberCard({
   stars,
   levels,
   heading = 'h1',
+  className = 'max-w-md',
 }: {
   name: string;
   title: string;
   stars: number;
   levels: number;
   heading?: 'h1' | 'h2';
+  className?: string;
 }) {
   const H = heading;
   return (
     <div
-      className="lean w-full max-w-md -rotate-1 rounded-[16px] p-3 text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.5),0_2px_4px_rgb(0_0_0/0.2)]"
+      className={`lean w-full ${className} -rotate-1 rounded-[16px] p-3 text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.5),0_2px_4px_rgb(0_0_0/0.2)]`}
       style={{ background: titleFrame(title) }}
     >
       <div className="flex items-center justify-between gap-3 rounded-t-[8px] bg-ink px-4 py-2 text-paper">

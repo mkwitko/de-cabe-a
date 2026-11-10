@@ -1,13 +1,18 @@
-/** Sticker album: a Panini-style page per position group, with the next empty slots as teaser. */
-import { useState } from 'react';
+/**
+ * Sticker album as a Panini book: one page per position group, two facing pages from `lg`, one
+ * on phones, turned with Voltar/Virar or the group tabs. Numbered slots with a silhouette and the
+ * position; stickers sit pasted in, a little crooked. The cover band carries the count.
+ */
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AlbumResponse, Sticker } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
+import { play } from '../lib/sound';
 import { GameHeader, Notice, Skeleton, btnPrimary, btnSecondary } from '../components/ui';
 import { GoalLoop } from '../components/Moment';
 import { RARITY_ORDER, RARITY_STYLE } from '../components/rarity';
-import { StickerCard } from '../components/StickerCard';
+import { POSITION, StickerCard } from '../components/StickerCard';
 import { useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
 
@@ -18,7 +23,46 @@ const GROUPS = [
   { key: 'FW', label: 'Atacantes' },
   { key: null, label: 'Outros' },
 ] as const;
-const TEASER_SLOTS = 4;
+/** Slots per page: a multiple of 3 and 4 (phone and wide grids), at least two empty ones. */
+const slotsFor = (n: number) => Math.max(12, Math.ceil((n + 2) / 12) * 12);
+const TILT = [-1.6, 1.1, -0.6, 1.8, -1.2, 0.5];
+
+const WIDE = '(min-width: 1024px)';
+const subscribe = (cb: () => void) => {
+  if (typeof matchMedia !== 'function') return () => {};
+  const m = matchMedia(WIDE);
+  m.addEventListener('change', cb);
+  return () => m.removeEventListener('change', cb);
+};
+const isWide = () => typeof matchMedia === 'function' && matchMedia(WIDE).matches;
+
+function Silhouette() {
+  return (
+    <svg viewBox="0 0 60 70" aria-hidden="true" className="w-1/2 opacity-60">
+      <circle cx="30" cy="22" r="12" fill="currentColor" />
+      <path d="M6 70c0-15 10-26 24-26s24 11 24 26z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function Chevron({ d }: { d: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="size-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
+type Page = { key: keyof typeof POSITION | null; label: string; list: Sticker[]; first: number };
 
 export function AlbumPage() {
   const qc = useQueryClient();
@@ -27,6 +71,10 @@ export function AlbumPage() {
     queryFn: () => api('/v1/me/album'),
   });
   const [picked, setPicked] = useState<Sticker | null>(null);
+  const [at, setAt] = useState(0);
+  const [turn, setTurn] = useState<'next' | 'prev' | null>(null);
+  const wide = useSyncExternalStore(subscribe, isWide, () => false);
+  const per = wide ? 2 : 1;
   const next = nextLevel(useTrack('CAREER_PATH').data);
   const promote = useMutation<AlbumResponse, ApiError, string>({
     mutationFn: (playerId) => api('/v1/me/album/promote', { method: 'POST', json: { playerId } }),
@@ -35,6 +83,8 @@ export function AlbumPage() {
       setPicked(null);
     },
   });
+  // A spread index means something else when the page count per view changes.
+  useEffect(() => setAt((a) => (per === 2 ? Math.floor(a / 2) : a * 2)), [per]);
 
   if (q.isPending) return <Skeleton className="h-96" />;
   if (!q.data)
@@ -59,31 +109,34 @@ export function AlbumPage() {
   const a = q.data;
   const promo = a.promotions[0];
 
+  // Pages in album order; slot numbers run on across them.
+  const pages: Page[] = [];
+  let n = 1;
+  for (const { key, label } of GROUPS) {
+    const list = a.stickers.filter((s) => s.positionGroup === key);
+    if (!list.length && key === null) continue;
+    pages.push({ key, label, list, first: n });
+    n += slotsFor(list.length);
+  }
+  const views = Math.ceil(pages.length / per);
+  const view = Math.min(at, views - 1);
+  const shown = pages.slice(view * per, view * per + per);
+  const go = (to: number) => {
+    if (to < 0 || to >= views || to === view) return;
+    setTurn(to > view ? 'next' : 'prev');
+    setAt(to);
+    play('tap');
+  };
+  const turnBtn =
+    'font-condensed inline-flex min-h-11 items-center gap-1.5 rounded-lg border-2 border-chalk-soft/50 px-3 text-lg font-extrabold uppercase hover:border-chalk disabled:opacity-30';
+
   return (
-    <>
+    <div className="flex flex-col gap-6">
+      <div aria-hidden="true" className="scene-art room-dim" />
       <GameHeader title="Meu álbum" />
-      <p className="font-condensed tabular mt-4 text-5xl leading-none font-black text-gold">
-        {a.owned} de {a.total}
-      </p>
-      <ul className="mt-3 flex flex-wrap gap-2" aria-label="Figurinhas por raridade">
-        {RARITY_ORDER.filter((r) => a.byRarity[r]).map((r) => (
-          <li
-            key={r}
-            className="rounded-full bg-chalk/[0.08] px-3 py-1 text-sm font-semibold text-chalk-soft"
-          >
-            {RARITY_STYLE[r].label} · {a.byRarity[r]}
-          </li>
-        ))}
-      </ul>
-      {a.owned > 0 && (
-        <p className="mt-3 max-w-[60ch] text-sm text-chalk-soft">
-          Nota De Cabeça: de 50 a 99, feita só com dados reais (fama, jogos e gols na carreira,
-          seleção, Copas ganhas e passagem por clube grande).
-        </p>
-      )}
 
       {a.owned === 0 && (
-        <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <GoalLoop className="h-24 w-32 shrink-0" />
           <p className="max-w-[44ch] text-lg leading-snug font-semibold sm:mr-auto">
             Álbum vazio por enquanto. Acerte uma fase do Career Path e a figurinha do jogador vem
@@ -99,9 +152,9 @@ export function AlbumPage() {
       )}
 
       {promo && (
-        <div className="mt-6 rounded-xl border-2 border-cover bg-cover/10 p-4">
+        <div className="rounded-xl border-2 border-cover bg-pitch-deep/80 p-4">
           <p className="font-condensed text-xl font-extrabold uppercase">
-            Você está no pódio da Temporada {promo.season}: escolha uma figurinha para promover
+            Você está no pódio da Temporada {promo.season}: toque numa figurinha para promovê-la
           </p>
           {picked && (
             <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -121,56 +174,162 @@ export function AlbumPage() {
           )}
           {promote.isError && (
             <p role="alert" className="mt-2 text-sm font-semibold">
-              Não deu para promover agora.
+              Não deu para promover agora. Tente de novo em instantes.
             </p>
           )}
         </div>
       )}
 
-      {GROUPS.map(({ key, label }) => {
-        const list = a.stickers.filter((s) => s.positionGroup === key);
-        if (!list.length && key === null) return null;
-        return (
-          <section key={label} className="mt-10" aria-label={label}>
-            <h2 className="font-condensed text-2xl font-extrabold uppercase">
-              {label} · {list.length}
-            </h2>
-            <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
-              {list.map((s) => (
-                <li key={s.playerId} className="aspect-[3/4]">
-                  {promo ? (
-                    <button
-                      type="button"
-                      aria-pressed={picked?.playerId === s.playerId}
-                      aria-label={`Promover ${s.name}`}
-                      onClick={() => setPicked(s)}
-                      className="block h-full w-full text-left"
+      <div className="album-book text-ink">
+        {/* The cover band: the album's own count and finishes. */}
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 px-3 pt-2 pb-4 sm:px-5">
+          <div>
+            <p className="font-condensed text-sm font-extrabold tracking-[0.18em] uppercase">
+              Álbum De Cabeça F.C.
+            </p>
+            <p className="font-condensed tabular text-5xl leading-none font-black sm:text-6xl">
+              {a.owned} <span className="text-3xl sm:text-4xl">de {a.total}</span>
+            </p>
+          </div>
+          <ul className="flex flex-wrap gap-1.5 sm:gap-2" aria-label="Figurinhas por raridade">
+            {RARITY_ORDER.filter((r) => a.byRarity[r]).map((r) => (
+              <li
+                key={r}
+                className="flex items-center gap-1.5 rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold text-paper sm:gap-2 sm:px-3 sm:py-1 sm:text-sm"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`size-3 rounded-full bg-[var(--rc)] ${RARITY_STYLE[r].className.split(' ')[0]}`}
+                />
+                {RARITY_STYLE[r].label} · <span className="tabular">{a.byRarity[r]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <nav
+          aria-label="Seções do álbum"
+          className="flex gap-1 overflow-x-auto px-1 pb-2 [scrollbar-width:none]"
+        >
+          {pages.map((p, i) => {
+            const on = Math.floor(i / per) === view;
+            return (
+              <button
+                key={p.label}
+                type="button"
+                aria-current={on ? 'page' : undefined}
+                onClick={() => go(Math.floor(i / per))}
+                className={`font-condensed min-h-11 shrink-0 rounded-t-lg px-2.5 text-base sm:px-3 font-extrabold uppercase ${on ? 'bg-ink text-cover' : 'text-ink/75 hover:bg-ink/10'}`}
+              >
+                {p.key ? POSITION[p.key] : p.label} <span className="tabular">{p.list.length}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div
+          key={view}
+          onAnimationEnd={() => setTurn(null)}
+          className={`grid overflow-hidden rounded-[10px] lg:grid-cols-2 ${turn === 'next' ? 'page-turn-next' : turn === 'prev' ? 'page-turn-prev' : ''}`}
+        >
+          {shown.map((p) => (
+            <section
+              key={p.label}
+              aria-labelledby={`pg-${p.label}`}
+              className="album-page flex flex-col gap-4 p-4 sm:p-6"
+            >
+              <header className="flex items-baseline justify-between gap-3 border-b-4 border-double border-[#1d2a4f]/40 pb-2">
+                <h2
+                  id={`pg-${p.label}`}
+                  className="font-condensed text-3xl leading-none font-black uppercase sm:text-4xl"
+                >
+                  {p.label}
+                </h2>
+                <p className="font-condensed tabular text-lg font-extrabold">
+                  {p.list.length} {p.list.length === 1 ? 'colada' : 'coladas'}
+                </p>
+              </header>
+              <ul className="grid grid-cols-3 gap-x-3 gap-y-4 sm:grid-cols-4">
+                {Array.from({ length: slotsFor(p.list.length) }, (_, i) => {
+                  const s = p.list[i];
+                  const num = p.first + i;
+                  if (!s)
+                    return (
+                      <li
+                        key={`slot-${num}`}
+                        aria-hidden="true"
+                        className="album-slot relative grid aspect-[3/4] place-items-center rounded-lg"
+                      >
+                        <span className="font-condensed tabular absolute top-1.5 left-2 text-lg leading-none font-black">
+                          {num}
+                        </span>
+                        <Silhouette />
+                        {p.key && (
+                          <span className="font-condensed absolute bottom-1.5 text-xs font-extrabold tracking-wider">
+                            {POSITION[p.key]}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  const sel = picked?.playerId === s.playerId;
+                  return (
+                    <li
+                      key={s.playerId}
+                      className="album-stuck aspect-[3/4]"
+                      style={{ '--tilt': `${TILT[i % TILT.length]}deg` } as React.CSSProperties}
                     >
-                      <StickerCard
-                        sticker={s}
-                        size="sm"
-                        selected={picked?.playerId === s.playerId}
-                      />
-                    </button>
-                  ) : (
-                    <StickerCard sticker={s} size="sm" />
-                  )}
-                </li>
-              ))}
-              {key !== null &&
-                Array.from({ length: TEASER_SLOTS }, (_, i) => (
-                  <li
-                    key={`slot-${i}`}
-                    aria-hidden="true"
-                    className="font-condensed tabular grid aspect-[3/4] place-items-center rounded-lg border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] text-4xl font-black text-chalk-soft/50"
-                  >
-                    {list.length + i + 1}
-                  </li>
-                ))}
-            </ul>
-          </section>
-        );
-      })}
-    </>
+                      {promo ? (
+                        <button
+                          type="button"
+                          aria-pressed={sel}
+                          aria-label={`Promover ${s.name}`}
+                          onClick={() => setPicked(s)}
+                          className="block h-full w-full text-left"
+                        >
+                          <StickerCard sticker={s} size="sm" selected={sel} />
+                        </button>
+                      ) : (
+                        <StickerCard sticker={s} size="sm" />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </div>
+
+      <nav aria-label="Páginas do álbum" className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          className={turnBtn}
+          disabled={view === 0}
+          onClick={() => go(view - 1)}
+        >
+          <Chevron d="M15 6l-6 6 6 6" />
+          Voltar
+        </button>
+        <p className="font-condensed tabular text-lg font-extrabold uppercase" aria-live="polite">
+          {shown.map((p) => p.label).join(' · ')}
+        </p>
+        <button
+          type="button"
+          className={turnBtn}
+          disabled={view >= views - 1}
+          onClick={() => go(view + 1)}
+        >
+          Virar
+          <Chevron d="M9 6l6 6-6 6" />
+        </button>
+      </nav>
+
+      {a.owned > 0 && (
+        <p className="max-w-[64ch] text-sm text-chalk-soft">
+          Nota De Cabeça: de 50 a 99, feita só com dados reais (fama, jogos e gols na carreira,
+          seleção, Copas ganhas e passagem por clube grande).
+        </p>
+      )}
+    </div>
   );
 }

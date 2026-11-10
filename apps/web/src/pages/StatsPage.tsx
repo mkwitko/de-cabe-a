@@ -122,11 +122,11 @@ function AlbumShowcase() {
           cols="grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-6 lg:grid-cols-3"
         />
       ) : (
-        <div className="flex flex-col items-start gap-3 rounded-xl border-2 border-dashed border-chalk-soft/50 p-5">
-          <p className="text-chalk-soft">
+        <div className="flex items-center gap-4 rounded-xl border-2 border-dashed border-chalk-soft/50 p-4">
+          <p className="text-sm text-chalk-soft">
             Nenhuma figurinha ainda. Cada jogador que você acerta vira figurinha e cola aqui.
           </p>
-          <Link to="/" className={btnPrimary}>
+          <Link to="/" className={`${btnPrimary} shrink-0`}>
             Jogar
           </Link>
         </div>
@@ -230,40 +230,41 @@ export function StatsPage() {
 
   return (
     <div className="flex flex-col gap-14">
-      {me && !me.account && (
-        <section
-          aria-labelledby="save-progress"
-          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border-2 border-cover/70 px-5 py-4"
-        >
-          <div className="min-w-0 flex-1 basis-64">
-            <h2 id="save-progress" className="font-condensed text-2xl font-extrabold uppercase">
-              Salve seu progresso
-            </h2>
-            <p className="text-chalk-soft">
-              Suas {data.totalStars} estrelas e figurinhas ficam só neste aparelho. Crie uma conta
-              para levá-las para outro.
-            </p>
-          </div>
-          <SignInButton />
-        </section>
-      )}
-
-      {/* Phone: card, ladder, vitrine, Career Path. Wide: the ladder owns the right column. */}
-      <div className="grid gap-12 lg:grid-cols-2 lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-14">
-        <div className="flex flex-col gap-6 lg:col-start-1">
+      <div aria-hidden="true" className="scene-art room-dim" />
+      {/* Phone: card, ladder, Career Path, vitrine. Wide: the ladder owns the right column. */}
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-16">
+        <div className="flex flex-col items-center gap-5 lg:col-start-1 lg:items-start">
           <MemberCard
             name={me?.nickname ?? 'Convidado'}
             title={data.title.name}
             stars={data.totalStars}
             levels={levels}
+            className="max-w-xl"
           />
           {ranking && (
-            <dl className="grid grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5 [&_dt]:text-chalk-soft">
+            <dl className="grid w-full grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5 [&_dt]:text-chalk-soft">
               <Figure label="no ranking geral">{rank(data.rank.all)}</Figure>
               <Figure label="no ranking da semana">{rank(data.rank.week)}</Figure>
             </dl>
           )}
-          <p className="text-sm text-chalk-soft">
+          {me && !me.account ? (
+            <section
+              aria-labelledby="save-progress"
+              className="flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-3"
+            >
+              <div className="min-w-0 flex-1 basis-56">
+                <h2 id="save-progress" className="font-condensed text-xl font-extrabold uppercase">
+                  Salve seu progresso
+                </h2>
+                <p className="text-sm text-chalk-soft">
+                  Suas {data.totalStars} estrelas e figurinhas ficam só neste aparelho. Com uma
+                  conta, elas vão com você para outro.
+                </p>
+              </div>
+              <SignInButton />
+            </section>
+          ) : null}
+          <p className="w-full text-sm text-chalk-soft">
             {ranking && (!data.rank.all || !data.rank.week) ? (
               <>
                 Sem posição?{' '}
@@ -287,52 +288,79 @@ export function StatsPage() {
           </p>
         </div>
 
-        <div className="lg:col-start-2 lg:row-span-4 lg:row-start-1">
+        <div className="lg:col-start-2 lg:row-span-3 lg:row-start-1">
           <TitleLadder total={data.totalStars} />
         </div>
 
-        <div className="lg:col-start-1">
-          <AlbumShowcase />
-        </div>
-
-        <div className="lg:col-start-1">
-          <Sheet
-            i={0}
+        {/* Career Path, compact: four figures in a row, then the attempt spread as columns. */}
+        <section
+          aria-labelledby="cp-stats"
+          className="sheet-in overflow-hidden rounded-lg bg-paper text-ink shadow-[0_12px_26px_-12px_rgb(0_0_0/0.55)] lg:col-start-1"
+        >
+          <h2
             id="cp-stats"
-            title="Career Path"
-            figures={[
-              ['fases jogadas', cp.completed],
-              ['de acerto', cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—'],
-              ['estrelas', <Stars_ key="s" n={cp.stars} />],
-              ['fases com 3 estrelas', cp.threeStars],
-            ]}
+            className="font-condensed bg-ink px-4 py-2 text-xl font-black text-paper uppercase [border-bottom:6px_double_var(--color-cover)]"
           >
-            <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-ink/70">Acertou na tentativa…</h3>
-              <ol className="flex flex-col gap-1.5">
+            Career Path
+          </h2>
+          <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-8">
+            <dl className="grid grid-cols-4 gap-3">
+              {(
+                [
+                  ['fases', cp.completed],
+                  [
+                    'de acerto',
+                    cp.completed ? `${Math.round((cp.won / cp.completed) * 100)}%` : '—',
+                  ],
+                  ['estrelas', cp.stars],
+                  ['com 3 estrelas', cp.threeStars],
+                ] as [string, ReactNode][]
+              ).map(([label, v]) => (
+                <div key={label} className="flex flex-col-reverse gap-1">
+                  <dt className="text-xs leading-tight font-semibold text-ink/70">{label}</dt>
+                  <dd className="font-condensed tabular text-3xl leading-none font-black sm:text-4xl">
+                    {typeof v === 'number' ? <Count n={v} /> : v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <figure className="flex flex-col gap-1">
+              <figcaption className="text-xs font-semibold text-ink/70">
+                Acertou na tentativa…
+              </figcaption>
+              <ol className="flex items-end gap-1.5">
                 {Object.entries(cp.distribution).map(([n, count]) => (
-                  <li key={n} className="flex items-center gap-3">
-                    <span className="font-condensed tabular w-6 text-right text-lg font-black">
-                      {n}ª
+                  <li
+                    key={n}
+                    aria-label={`${n}ª tentativa: ${count}`}
+                    className="flex w-8 flex-col items-center gap-0.5"
+                  >
+                    <span aria-hidden="true" className="font-condensed tabular text-sm font-bold">
+                      {count}
                     </span>
-                    <span className="h-6 flex-1 rounded-sm border border-dashed border-ink/30">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-10 w-full items-end rounded-sm border border-dashed border-ink/30"
+                    >
                       {count > 0 && (
                         <span
-                          className="block h-full rounded-sm bg-ink"
-                          style={{ width: `${(count / maxBar) * 100}%` }}
+                          className="block w-full rounded-sm bg-ink"
+                          style={{ height: `${(count / maxBar) * 100}%` }}
                         />
                       )}
                     </span>
-                    <span
-                      className={`font-condensed tabular w-8 text-right font-bold ${count ? '' : 'text-ink/60'}`}
-                    >
-                      {count}
+                    <span aria-hidden="true" className="font-condensed tabular text-sm font-black">
+                      {n}ª
                     </span>
                   </li>
                 ))}
               </ol>
-            </div>
-          </Sheet>
+            </figure>
+          </div>
+        </section>
+
+        <div className="lg:col-start-1">
+          <AlbumShowcase />
         </div>
       </div>
 
