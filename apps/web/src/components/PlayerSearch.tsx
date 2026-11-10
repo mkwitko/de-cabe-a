@@ -156,7 +156,7 @@ export function PlayerSearch({
         role="listbox"
         aria-label="Jogadores"
         hidden={!showList}
-        className={`absolute inset-x-0 z-30 max-h-[min(26rem,60dvh)] ${dropUp ? 'bottom-full mb-1 max-sm:mx-3 lg:top-full lg:bottom-auto lg:mt-1 lg:mb-0' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
+        className={`absolute inset-x-0 z-30 max-h-[min(26rem,60dvh)] ${dropUp ? 'bottom-full mb-1 max-sm:mx-3' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
       >
         {results.map((p, i) => (
           <li
