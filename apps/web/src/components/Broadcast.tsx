@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { buzz } from '../lib/haptics';
 import { play } from '../lib/sound';
 import { Stars } from './Stars';
+import { TitleBadge } from './TitleBadge';
+import { titleTone } from '../lib/format';
 
 export const reducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -30,7 +32,10 @@ export function Broadcast({
   detail,
   onDone,
   short,
+  promoted,
 }: {
+  /** Title this level's stars just earned, if it changed. */
+  promoted?: string | null;
   stars: number;
   score: number;
   headline: string;
@@ -131,6 +136,18 @@ export function Broadcast({
             pontos
           </small>
         </p>
+        {promoted && (
+          <div
+            role="status"
+            className={`absolute inset-x-5 top-[60%] flex items-center gap-3 rounded-lg px-4 py-2.5 text-ink transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${done ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
+            style={{ background: titleTone(promoted) }}
+          >
+            <TitleBadge name={promoted} className="size-10" />
+            <p className="font-condensed text-2xl leading-none font-black uppercase">
+              Promovido a {promoted}
+            </p>
+          </div>
+        )}
         <div
           className={`absolute inset-x-0 bottom-24 px-5 transition-[opacity,transform] duration-500 ${lit ? 'opacity-100' : 'translate-y-8 opacity-0'}`}
         >

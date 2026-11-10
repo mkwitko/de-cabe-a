@@ -144,11 +144,11 @@
     {
       "path": "/como-jogar",
       "title": "Como jogar De Cabeça F.C.: regras, estrelas e títulos | De Cabeça F.C.",
-      "description": "Regras do Career Path, Football Grid e Impostor, como ganhar estrelas, títulos de Reserva a Lenda, ranking e modo contra o relógio.",
+      "description": "Regras do Career Path, Football Grid e Impostor, como ganhar estrelas, títulos de Peneira a Rei da Bola, ranking e modo contra o relógio.",
       "h1": "Como jogar",
       "text": [
         "Cada jogo é uma trilha de fases. Terminar uma fase abre a próxima, e cada fase vale de 0 a 3 estrelas.",
-        "As estrelas somam títulos: Reserva, Titular (15), Craque (60) e Lenda (150)."
+        "As estrelas somam 10 títulos, de Peneira (0) a Rei da Bola (900)."
       ],
       "links": [["/", "Escolher um jogo"]]
     }

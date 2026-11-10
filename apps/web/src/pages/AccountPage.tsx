@@ -1,4 +1,6 @@
 import { Link, useSearchParams } from 'react-router';
+import { titleTone } from '../lib/format';
+import { TitleBadge } from '../components/TitleBadge';
 import { suggestNickname } from '../lib/nickname';
 import { ShareButton } from '../components/ShareButton';
 import { Notifications } from '../components/Notifications';
@@ -30,9 +32,9 @@ export function AccountPage() {
   const me = useMe();
   const act = useAccount();
   const [nickname, setNickname] = useState('');
-  // /conta?entrar opens the sign-in form (the home's Entrar button).
+  const [params] = useSearchParams();
   const [mode, setMode] = useState<'register' | 'login' | 'forgot'>(
-    useSearchParams()[0].has('entrar') ? 'login' : 'register',
+    params.has('entrar') ? 'login' : 'register',
   );
   // Google: the API answers with the consent URL; the callback comes back to /conta.
   const google = useMutation({
@@ -69,11 +71,13 @@ export function AccountPage() {
         <aside className="w-64 max-w-full -rotate-2 justify-self-center rounded-[12px] md:justify-self-start bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] md:sticky md:top-6">
           <div className="obj-dark flex flex-col items-center rounded-[6px] bg-pitch-deep px-4 pt-6 pb-5 text-center text-chalk">
             <span
-              className="font-condensed grid size-24 place-items-center rounded-full border-4 border-paper bg-cover text-4xl font-black text-ink"
+              className="font-condensed grid size-24 place-items-center rounded-full border-4 text-4xl font-black text-ink"
+              style={{ background: titleTone(m.title.name), borderColor: 'var(--color-paper)' }}
               aria-hidden="true"
             >
               {initials || '?'}
             </span>
+            <TitleBadge name={m.title.name} className="-mt-5 size-9 self-end" />
             <p className="font-condensed mt-4 max-w-full truncate text-3xl leading-none font-black uppercase">
               {m.nickname ?? 'Convidado'}
             </p>
@@ -208,7 +212,7 @@ export function AccountPage() {
             </section>
           ) : (
             <form
-              className={card}
+              className={`${card} order-first border-cover/70 lg:col-span-2`}
               onSubmit={(e) =>
                 mode === 'forgot'
                   ? submit(e, '/v1/auth/request-password-reset', 'POST', {

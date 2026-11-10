@@ -8,6 +8,9 @@ import { StarIcon } from '../components/Stars';
 import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { TrophyIcon } from '../components/Icons';
 import { StickerCard } from '../components/StickerCard';
+import { TitleBadge } from '../components/TitleBadge';
+import { SignInButton } from '../components/SignInButton';
+import { titleTone } from '../lib/format';
 
 export function ProfilePage() {
   const nickname = useParams().nickname ?? '';
@@ -44,7 +47,7 @@ export function ProfilePage() {
   const h2 = 'font-condensed mt-10 text-2xl font-extrabold uppercase';
   return (
     <>
-      <GameHeader title={p.nickname} />
+      <GameHeader title={p.nickname} aside={<SignInButton />} />
       {/* Carteirinha de sócio: leans toward the finger that presses it. */}
       <div className="lean mt-5 w-full max-w-md -rotate-1 rounded-[14px] bg-paper p-2.5 text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.5)] sm:mx-0">
         <div className="flex items-center justify-between rounded-t-[8px] bg-ink px-4 py-2 text-paper">
@@ -55,13 +58,11 @@ export function ProfilePage() {
             <StarIcon className="inline size-[0.9em] align-[-0.1em] text-gold" /> {p.totalStars}
           </span>
         </div>
-        <div className="flex items-center gap-4 rounded-b-[8px] bg-cover px-4 py-4">
-          <span
-            aria-hidden="true"
-            className="font-condensed grid size-16 shrink-0 place-items-center rounded-full border-[3px] border-ink bg-paper text-3xl font-black uppercase"
-          >
-            {p.nickname.slice(0, 2)}
-          </span>
+        <div
+          className="flex items-center gap-4 rounded-b-[8px] px-4 py-4"
+          style={{ background: titleTone(p.title.name) }}
+        >
+          <TitleBadge name={p.title.name} className="size-16" />
           <div className="min-w-0">
             <p className="font-condensed text-4xl leading-none font-black uppercase">
               {p.title.name}

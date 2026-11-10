@@ -318,7 +318,7 @@ describe('levels (ADR-007)', () => {
     const stats = (await g.req('GET', '/me/stats')).json();
     expect(stats).toMatchObject({
       totalStars: 2,
-      title: { name: 'Reserva', next: { name: 'Titular', missing: 13 } },
+      title: { name: 'Peneira', next: { name: 'Base', missing: 8 } },
       CAREER_PATH: { completed: 1, won: 1, stars: 2, threeStars: 0, distribution: { '3': 1 } },
     });
   });
@@ -663,8 +663,8 @@ describe('ranking, nickname and accounts', () => {
     await mid.req('PATCH', '/me', { nickname: 'Meio Campo' });
     const all = (await mid.req('GET', '/ranking')).json();
     expect(all.entries.slice(0, 2)).toEqual([
-      { position: 1, nickname: 'Fenômeno', stars: 6, score: 120, title: 'Reserva', isMe: false },
-      { position: 2, nickname: 'Meio Campo', stars: 2, score: 30, title: 'Reserva', isMe: true },
+      { position: 1, nickname: 'Fenômeno', stars: 6, score: 120, title: 'Peneira', isMe: false },
+      { position: 2, nickname: 'Meio Campo', stars: 2, score: 30, title: 'Peneira', isMe: true },
     ]);
     expect(all.me.position).toBe(2);
     expect((await mid.req('GET', '/me/stats')).json().rank).toEqual({ all: 2, week: 2 });

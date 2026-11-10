@@ -34,10 +34,16 @@ export function starsFor(
 }
 
 const TITLES = [
-  { name: 'Reserva', min: 0 },
-  { name: 'Titular', min: 15 },
-  { name: 'Craque', min: 60 },
-  { name: 'Lenda', min: 150 },
+  { name: 'Peneira', min: 0 },
+  { name: 'Base', min: 10 },
+  { name: 'Reserva', min: 25 },
+  { name: 'Titular', min: 50 },
+  { name: 'Capitão', min: 100 },
+  { name: 'Craque', min: 175 },
+  { name: 'Ídolo', min: 275 },
+  { name: 'Lenda', min: 400 },
+  { name: 'Imortal', min: 600 },
+  { name: 'Rei da Bola', min: 900 },
 ] as const;
 
 /** Player title by total stars, and what is missing for the next one. */

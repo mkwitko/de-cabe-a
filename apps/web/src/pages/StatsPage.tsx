@@ -1,7 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { useStats } from '../lib/game';
-import { TITLE_LADDER } from '../lib/format';
+import { useMe, useStats } from '../lib/game';
+import { SignInButton } from '../components/SignInButton';
+import { titleTone } from '../lib/format';
+import { TitleBadge } from '../components/TitleBadge';
+import { TitleLadder } from '../components/TitleLadder';
 import { StarIcon } from '../components/Stars';
 import { Skeleton } from '../components/ui';
 import { Achievements } from '../components/Achievements';
@@ -88,56 +91,13 @@ const Stars_ = ({ n }: { n: number }) => (
 );
 const link = 'font-bold text-ink underline underline-offset-4';
 
-/** Reserva → Titular → Craque → Lenda, filled up to the player's stars. */
-function TitleLadder({ total, current }: { total: number; current: string }) {
-  return (
-    <ol className="grid grid-cols-4" aria-label="Escada de títulos">
-      {TITLE_LADDER.map((t, i) => {
-        const reached = total >= t.min;
-        const next = TITLE_LADDER[i + 1];
-        const fill = next ? Math.min(1, Math.max(0, (total - t.min) / (next.min - t.min))) : 0;
-        return (
-          <li key={t.name} className="flex flex-col gap-2">
-            <div className="flex items-center">
-              <span
-                className={`grid size-9 shrink-0 place-items-center rounded-full border-2 ${
-                  reached
-                    ? 'border-cover bg-cover text-ink'
-                    : 'border-dashed border-chalk-soft/60 text-chalk-soft'
-                }`}
-              >
-                <StarIcon className="size-4" />
-              </span>
-              {next && (
-                <span className="mx-1 h-1.5 flex-1 overflow-hidden rounded-full bg-chalk/15">
-                  <span
-                    className="block h-full rounded-full bg-cover"
-                    style={{ width: `${fill * 100}%` }}
-                  />
-                </span>
-              )}
-            </div>
-            <span
-              className={`font-condensed text-lg leading-none font-extrabold uppercase ${t.name === current ? 'text-gold' : reached ? '' : 'text-chalk-soft'}`}
-            >
-              {t.name}
-              {t.name === current && <span className="sr-only"> (seu título)</span>}
-            </span>
-            <span className="tabular text-sm text-chalk-soft">{t.min} estrelas</span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
 export function StatsPage() {
   const { data } = useStats();
+  const me = useMe().data;
   if (!data) return <Skeleton className="h-96" />;
   const cp = data.CAREER_PATH;
   const grid = data.FOOTBALL_GRID;
   const maxBar = Math.max(1, ...Object.values(cp.distribution));
-  const next = data.title.next;
   const rank = (n: number | null) =>
     n ? `${n}º` : <span className="text-2xl text-chalk-soft">sem posição</span>;
   const std = (
@@ -152,10 +112,31 @@ export function StatsPage() {
     ] as [string, ReactNode][];
   return (
     <div className="flex flex-col gap-14">
+      {me && !me.account && (
+        <section
+          aria-labelledby="save-progress"
+          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border-2 border-cover/70 px-5 py-4"
+        >
+          <div className="min-w-0 flex-1 basis-64">
+            <h2 id="save-progress" className="font-condensed text-2xl font-extrabold uppercase">
+              Salve seu progresso
+            </h2>
+            <p className="text-chalk-soft">
+              Suas {data.totalStars} estrelas e figurinhas ficam só neste aparelho. Crie uma conta
+              para levá-las para outro.
+            </p>
+          </div>
+          <SignInButton />
+        </section>
+      )}
       <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="w-fit max-w-full -rotate-2 rounded-[12px] bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)]">
-          <div className="rounded-[6px] bg-cover px-6 pt-5 pb-4 text-ink">
-            <h1 className="font-condensed text-[clamp(3.5rem,15vw,4.75rem)] leading-[0.85] font-black uppercase">
+          <div
+            className="rounded-[6px] px-6 pt-5 pb-4 text-ink"
+            style={{ background: titleTone(data.title.name) }}
+          >
+            <TitleBadge name={data.title.name} className="mb-2 size-14" />
+            <h1 className="font-condensed text-[clamp(3rem,13vw,4.75rem)] leading-[0.85] font-black uppercase">
               {data.title.name}
             </h1>
             <p className="mt-3 flex items-center gap-1.5 text-lg font-bold">
@@ -166,12 +147,7 @@ export function StatsPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <TitleLadder total={data.totalStars} current={data.title.name} />
-          <p className="font-semibold">
-            {next
-              ? `Faltam ${next.missing} estrelas para ${next.name}.`
-              : 'Lenda. Não tem título acima.'}
-          </p>
+          <TitleLadder total={data.totalStars} />
           <dl className="grid grid-cols-2 gap-6 border-t-2 border-chalk/15 pt-5 [&_dt]:text-chalk-soft">
             <Figure label="no ranking geral">{rank(data.rank.all)}</Figure>
             <Figure label="no ranking da semana">{rank(data.rank.week)}</Figure>

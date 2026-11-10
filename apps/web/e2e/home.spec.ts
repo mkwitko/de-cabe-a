@@ -108,7 +108,7 @@ test('guest plays level 1 of each game, gets stars, joins the ranking, sees stat
 
   // 9. Stats: title and stars; history lists both levels
   await page.getByRole('link', { name: 'Perfil', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Reserva' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Peneira' })).toBeVisible();
   await expect(page.getByText('2 estrelas', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ver histórico de partidas' }).click();
   await expect(page.locator('main li')).toHaveCount(2);
