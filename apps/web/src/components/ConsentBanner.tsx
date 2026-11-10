@@ -1,10 +1,11 @@
 /**
  * Cookie consent (LGPD): shown on the first visit and whenever the player reopens it (footer,
  * Conta). "Aceitar" and "Recusar não essenciais" weigh the same; "Configurar" picks one by one.
- * It never blocks play: on a level it is a compact strip at the top, away from the docked guess box
- * (search, Chutar, Pular); elsewhere it sits at the foot of the screen, above the bottom bar.
+ * It never blocks play: on a level it is a compact strip at the top (one line, two equal buttons) and
+ * the page moves down by its height (`--consent-room`), so it covers neither the level header nor
+ * the docked guess box; elsewhere it sits at the foot of the screen, above the bottom bar.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { sceneFor } from '../lib/music';
 import {
@@ -41,6 +42,21 @@ export function ConsentBanner() {
     if (configuring) box.current?.focus();
   }, [configuring]);
 
+  // On a level the strip takes room at the top instead of covering the header.
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!visible || !onLevel || !el) return;
+    const root = document.documentElement.style;
+    const ro = new ResizeObserver(() =>
+      root.setProperty('--consent-room', `${el.getBoundingClientRect().bottom}px`),
+    );
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.removeProperty('--consent-room');
+    };
+  }, [visible, onLevel]);
+
   if (!visible) return null;
 
   const save = (c: { analytics: boolean; ads: boolean }) => {
@@ -64,7 +80,7 @@ export function ConsentBanner() {
       }}
       className={`fixed inset-x-3 z-40 mx-auto flex max-w-2xl flex-col overflow-y-auto rounded-xl bg-paper text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.55)] outline-none ${
         onLevel
-          ? 'top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(100dvh-16rem)] gap-2 p-3'
+          ? 'top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(100dvh-16rem)] gap-2 p-2.5'
           : 'bottom-20 max-h-[calc(100dvh-6rem)] gap-3 p-4 sm:bottom-6'
       }`}
     >
@@ -103,19 +119,26 @@ export function ConsentBanner() {
         </>
       ) : (
         <>
-          <p className="text-sm">
-            {onLevel ? (
-              <>Cookies: um necessário para jogar; análise e anúncios só com sua permissão. </>
-            ) : (
+          <p className={onLevel ? 'text-sm leading-tight' : 'text-sm'}>
+            {onLevel ? null : (
               <>
                 Usamos um cookie necessário para o jogo funcionar. Com sua permissão, também usamos
                 análise de uso e anúncios, que nunca aparecem durante as fases. Você muda quando
                 quiser.{' '}
               </>
             )}
-            <Link to="/cookies" className="font-semibold underline underline-offset-4">
-              Ver os cookies
-            </Link>
+            {onLevel ? (
+              <>
+                <Link to="/cookies" className="font-semibold underline underline-offset-4">
+                  Cookies
+                </Link>{' '}
+                extras só com permissão
+              </>
+            ) : (
+              <Link to="/cookies" className="font-semibold underline underline-offset-4">
+                Ver os cookies
+              </Link>
+            )}
             {onLevel && (
               <>
                 {' · '}
@@ -129,7 +152,7 @@ export function ConsentBanner() {
               </>
             )}
           </p>
-          <div className={onLevel ? 'grid grid-cols-[auto_1fr] gap-2' : 'flex flex-wrap gap-2'}>
+          <div className={onLevel ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
             <button
               className={`${btn} bg-ink text-paper`}
               onClick={() => save({ analytics: true, ads: true })}
@@ -137,7 +160,7 @@ export function ConsentBanner() {
               Aceitar
             </button>
             <button className={btn} onClick={() => save({ analytics: false, ads: false })}>
-              Recusar não essenciais
+              Recusar<span className={onLevel ? 'sr-only' : undefined}> não essenciais</span>
             </button>
             {!onLevel && (
               <button

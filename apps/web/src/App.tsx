@@ -473,7 +473,7 @@ function Shell({ children }: { children: ReactNode }) {
   const home = pathname === '/';
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       {/* One header: brand, places, sound, theme and Entrar on wide screens; on the phone the places
           are the bottom bar and only the home keeps a top (brand, sound, Entrar). */}
       <header
