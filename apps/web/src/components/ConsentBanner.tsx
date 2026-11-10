@@ -9,6 +9,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { sceneFor } from '../lib/music';
 import { isPageLaunched } from '../lib/launch';
+import { CNPJ } from './Legal';
 import {
   CONSENT_NEEDED,
   closeConsentPanel,
@@ -238,6 +239,7 @@ export function LegalLinks() {
           Apoie o projeto
         </Link>
       )}
+      <p className="basis-full text-center text-xs">CNPJ {CNPJ}</p>
     </nav>
   );
 }
