@@ -2,7 +2,7 @@
  * Sticker album as a Panini book. Shut, the cover (title, count, the best stickers); open, the
  * inside cover (count, finishes, index) and one printed page per position group, 12 numbered
  * slots each. From `lg` two facing pages sized to the viewport, on phones one page. A page turns
- * on its spine (CSS 3D, driven by one progress value `--p` so a drag and a click share the same
+ * on its spine (CSS 3D, driven by one progress value `--turn` so a drag and a click share the same
  * turn): click/arrows, the page corner, the group tabs, or a drag/swipe. Reduced motion: a
  * crossfade. A sticker opens in focus (StickerDetail).
  */
@@ -37,6 +37,8 @@ const GROUPS = [
 const PER_PAGE = 12;
 const TILT = [-1.6, 1.1, -0.6, 1.8, -1.2, 0.5, 0.9, -1.9];
 const TURN_MS = 720;
+// what reads --turn/--lift (besides the book, which slides as the cover opens)
+const TURNING = '.album-leaf, .album-shade, .album-gloss, .album-cast';
 
 export type AlbumLeaf = {
   key: keyof typeof POSITION | null;
@@ -123,7 +125,7 @@ function Chevron({ d }: { d: string }) {
   );
 }
 
-/** A page turning: spread (or phone side) `a` to `b`; `--p` 0 shows a, 1 shows b. */
+/** A page turning: spread (or phone side) `a` to `b`; `--turn` 0 shows a, 1 shows b. */
 type Flip = { a: number; b: number };
 
 export function AlbumPage() {
@@ -167,8 +169,14 @@ export function AlbumPage() {
 
   const setP = (v: number) => {
     p.current = v;
-    book.current?.style.setProperty('--p', v.toFixed(4));
-    book.current?.style.setProperty('--m', Math.sin(v * Math.PI).toFixed(4));
+    const b = book.current;
+    if (!b) return;
+    const turn = v.toFixed(4);
+    const lift = Math.sin(v * Math.PI).toFixed(4);
+    for (const el of [b, ...b.querySelectorAll<HTMLElement>(TURNING)]) {
+      el.style.setProperty('--turn', turn);
+      el.style.setProperty('--lift', lift);
+    }
   };
   // the leaf mounts with the flip; give it the current progress before it paints
   useLayoutEffect(() => {

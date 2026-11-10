@@ -26,7 +26,10 @@ import { leaderOf, LockerArt, ModeDialog, type Locker } from './ModeDialog';
 const reduced = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Pointer (or a tilt that needs no permission) as --px/--py in −1…1 on the scene, one write per frame. */
+/**
+ * Pointer (or a tilt that needs no permission) as --sx/--sy in −1…1, one write per frame onto the
+ * elements that move (registered non-inherited in index.css: nothing else restyles).
+ */
 function useParallax(ref: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     const el = ref.current;
@@ -35,8 +38,10 @@ function useParallax(ref: React.RefObject<HTMLElement | null>) {
     const set = (x: number, y: number) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        el.style.setProperty('--px', x.toFixed(3));
-        el.style.setProperty('--py', y.toFixed(3));
+        for (const m of el.querySelectorAll<HTMLElement>('.scene-art, .scene-tilt, .ticket')) {
+          m.style.setProperty('--sx', x.toFixed(3));
+          m.style.setProperty('--sy', y.toFixed(3));
+        }
       });
     };
     const clamp = (n: number) => Math.max(-1, Math.min(1, n));
