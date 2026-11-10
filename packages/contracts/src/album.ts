@@ -9,6 +9,7 @@ export const AlbumResponse = z.strictObject({
   owned: z.number().int(),
   byRarity: z.record(StickerRarity, z.number().int()),
   stickers: z.array(Sticker),
+  promotions: z.array(z.strictObject({ season: z.number().int(), theme: z.string() })),
 });
 export type AlbumResponse = z.infer<typeof AlbumResponse>;
 

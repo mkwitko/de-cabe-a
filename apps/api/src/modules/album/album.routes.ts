@@ -1,10 +1,16 @@
-import { AlbumResponse, ProfileAlbumResponse, StickerRarity } from '@decabeca/contracts';
+import {
+  AlbumResponse,
+  ProfileAlbumResponse,
+  PromoteRequest,
+  StickerRarity,
+} from '@decabeca/contracts';
 import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
 import { publicProfileOwner } from '../account/account.routes';
 import { effectivePks } from '../leagues/leagues';
+import { trophies } from '../progression/seasons';
 import { rank } from './rarity';
 import { applyRoundUpgrades } from './round-upgrade';
 
@@ -45,20 +51,76 @@ async function ownedPks(prisma: PrismaClient, req: { sessionId: string; userId: 
 export const albumRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now } = app.deps;
 
-  app.get('/me/album', { schema: { response: { 200: AlbumResponse } } }, async (req) => {
-    const pks = await ownedPks(prisma, req);
+  /** Podium seasons of the player (any owned pk) whose promotion is still unused, oldest first. */
+  async function openPromotions(pks: string[]) {
+    const [won, used] = await Promise.all([
+      Promise.all(pks.map((pk) => trophies(prisma, pk, now()))),
+      prisma.seasonPromotion.findMany({ where: { pk: { in: pks } }, select: { season: true } }),
+    ]);
+    const spent = new Set(used.map((u) => u.season));
+    const open = new Map(won.flat().map((t) => [t.season, t]));
+    return [...open.values()]
+      .filter((t) => !spent.has(t.season))
+      .sort((a, b) => a.season - b.season)
+      .map(({ season, theme }) => ({ season, theme }));
+  }
+
+  async function album(pks: string[]) {
     await applyRoundUpgrades(prisma, pks, now());
-    const [stickers, total] = await Promise.all([
+    const [stickers, total, promotions] = await Promise.all([
       bestStickers(prisma, pks),
       prisma.player.count({ where: { verificationStatus: 'verified' } }),
+      openPromotions(pks),
     ]);
     const byRarity = Object.fromEntries(StickerRarity.options.map((r) => [r, 0])) as Record<
       StickerRarity,
       number
     >;
     for (const s of stickers) byRarity[s.rarity]++;
-    return { total, owned: stickers.length, byRarity, stickers };
-  });
+    return { total, owned: stickers.length, byRarity, stickers, promotions };
+  }
+
+  app.get('/me/album', { schema: { response: { 200: AlbumResponse } } }, async (req) =>
+    album(await ownedPks(prisma, req)),
+  );
+
+  app.post(
+    '/me/album/promote',
+    { schema: { body: PromoteRequest, response: { 200: AlbumResponse } } },
+    async (req) => {
+      const pks = await ownedPks(prisma, req);
+      const rows = await prisma.sticker.findMany({
+        where: { pk: { in: pks }, playerId: req.body.playerId },
+      });
+      const best = rows.reduce<(typeof rows)[number] | undefined>(
+        (m, r) => (!m || rank(r.rarity) > rank(m.rarity) ? r : m),
+        undefined,
+      );
+      if (!best) throw new AppError(404, 'NOT_FOUND', 'Você não tem essa figurinha.');
+      const [open] = await openPromotions(pks);
+      if (!open) throw new AppError(409, 'NO_PROMOTION', 'Nenhuma promoção disponível.');
+      try {
+        await prisma.$transaction([
+          prisma.seasonPromotion.create({
+            data: { pk: req.userId ?? req.sessionId, season: open.season, playerId: best.playerId },
+          }),
+          // A rarity above Seleção da Temporada stays; the season is consumed anyway.
+          ...(rank(best.rarity) < rank('selecao_temporada')
+            ? [
+                prisma.sticker.update({
+                  where: { pk_playerId: { pk: best.pk, playerId: best.playerId } },
+                  data: { rarity: 'selecao_temporada' },
+                }),
+              ]
+            : []),
+        ]);
+      } catch (err) {
+        if ((err as { code?: string }).code !== 'P2002') throw err;
+        throw new AppError(409, 'NO_PROMOTION', 'Nenhuma promoção disponível.');
+      }
+      return album(pks);
+    },
+  );
 
   app.get(
     '/profiles/:nickname/album',

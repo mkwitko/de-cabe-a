@@ -757,3 +757,13 @@ model Sticker {
   @@id([pk, playerId])
   @@index([pk, rarity])
 }
+
+/// One Seleção da Temporada promotion per podium season and player (pk = userId ?? sessionId).
+model SeasonPromotion {
+  pk        String
+  season    Int
+  playerId  String
+  createdAt DateTime @default(now())
+
+  @@id([pk, season])
+}

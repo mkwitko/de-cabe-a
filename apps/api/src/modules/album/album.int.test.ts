@@ -6,7 +6,9 @@ import { resetDb, testPrisma } from '../../test/db';
 import { countryIds, verifiedClubs, verifiedPlayer } from '../../test/factory';
 
 const prisma = testPrisma();
-const { app } = testApp({ prisma, now: () => new Date('2026-11-05T15:00:00Z') });
+const START = new Date('2026-11-05T15:00:00Z');
+let clock = START;
+const { app } = testApp({ prisma, now: () => clock });
 const admin = { 'x-admin-token': ADMIN_TOKEN, 'x-editor': 'tester' };
 let answerId = '';
 
@@ -68,7 +70,13 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
+  clock = START;
   await prisma.sticker.deleteMany();
+  await prisma.seasonPromotion.deleteMany();
+  await prisma.attempt.updateMany({
+    where: { completedAt: { gte: new Date('2026-11-09T00:00:00Z') } },
+    data: { completedAt: null, stars: 0 },
+  });
 });
 
 const stickers = () => prisma.sticker.findMany();
@@ -228,5 +236,71 @@ describe('album routes', () => {
     expect(first.byRarity).toMatchObject({ destaque_rodada: 1, lenda: 1, bronze: 0 });
     expect((await g.req('GET', '/me/album')).json().byRarity.destaque_rodada).toBe(1);
     await prisma.dailyPick.deleteMany({ where: { day: new Date('2026-10-26T00:00:00Z') } });
+  });
+});
+
+describe('Seleção da Temporada', () => {
+  /** A nicknamed player with 3 stars in season 1, now in season 2. */
+  async function podiumPlayer() {
+    const g = await startLevel();
+    await prisma.guestSession.update({
+      where: { id: g.sessionId },
+      data: { nickname: 'Pódio', nicknameKey: randomUUID() },
+    });
+    await prisma.attempt.update({
+      where: { id: g.attemptId },
+      data: { completedAt: new Date('2026-11-10T15:00:00Z'), stars: 3 },
+    });
+    clock = new Date('2026-12-08T15:00:00Z');
+    return g;
+  }
+
+  it('podium player promotes one sticker', async () => {
+    const g = await podiumPlayer();
+    await giveStickers(g.sessionId, ['bronze', 'lenda']);
+    const album = (await g.req('GET', '/me/album')).json();
+    expect(album.promotions).toEqual([{ season: 1, theme: 'Copa do Mundo' }]);
+    const bronze = album.stickers.find((s: { rarity: string }) => s.rarity === 'bronze');
+    const res = await g.req('POST', '/me/album/promote', { playerId: bronze.playerId });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().promotions).toEqual([]);
+    expect(res.json().byRarity).toMatchObject({ selecao_temporada: 1, lenda: 1, bronze: 0 });
+  });
+
+  it('promoting a higher rarity keeps it but consumes the season', async () => {
+    const g = await podiumPlayer();
+    await giveStickers(g.sessionId, ['lenda']);
+    const [lenda] = (await g.req('GET', '/me/album')).json().stickers;
+    const res = await g.req('POST', '/me/album/promote', { playerId: lenda.playerId });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().byRarity).toMatchObject({ lenda: 1, selecao_temporada: 0 });
+    expect(res.json().promotions).toEqual([]);
+  });
+
+  it('second promote for the same season is 409', async () => {
+    const g = await podiumPlayer();
+    await giveStickers(g.sessionId, ['bronze', 'prata']);
+    const [a, b] = (await g.req('GET', '/me/album')).json().stickers;
+    expect((await g.req('POST', '/me/album/promote', { playerId: a.playerId })).statusCode).toBe(
+      200,
+    );
+    const res = await g.req('POST', '/me/album/promote', { playerId: b.playerId });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error.code).toBe('NO_PROMOTION');
+  });
+
+  it('non-podium player has no promotion', async () => {
+    const g = await startLevel();
+    await giveStickers(g.sessionId, ['bronze']);
+    clock = new Date('2026-12-08T15:00:00Z');
+    const [s] = (await g.req('GET', '/me/album')).json().stickers;
+    const res = await g.req('POST', '/me/album/promote', { playerId: s.playerId });
+    expect(res.json().error.code).toBe('NO_PROMOTION');
+  });
+
+  it('cannot promote a sticker you do not own', async () => {
+    const g = await podiumPlayer();
+    const res = await g.req('POST', '/me/album/promote', { playerId: answerId });
+    expect(res.statusCode).toBe(404);
   });
 });
