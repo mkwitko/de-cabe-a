@@ -187,10 +187,13 @@ export function LevelEnd({
   headline,
   detail,
   answer,
+  starRule,
 }: {
   data: AttemptResponse;
   headline: string;
   detail: ReactNode;
+  /** How the mode earns its stars, printed under them ("Até 2 tentativas: 3 estrelas…"). */
+  starRule?: string;
   /** The player the level was about (single-answer modes): the broadcast's star. */
   answer?: PlayerRef;
 }) {
@@ -294,6 +297,7 @@ export function LevelEnd({
               )}
             </p>
           </div>
+          {starRule && <p className="mt-2 text-sm font-semibold text-ink/75">{starRule}</p>}
         </div>
       </div>
 
@@ -316,24 +320,25 @@ export function LevelEnd({
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* Both shares share a row at every width, so neither falls under the phone's bottom bar. */}
+      <div className="grid grid-cols-2 gap-3">
         {oficina ? (
-          <Link to="/oficina" className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}>
+          <Link to="/oficina" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
             Mais desafios da Oficina
           </Link>
         ) : daily ? (
-          <Link to="/d/hoje" className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}>
+          <Link to="/d/hoje" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
             Voltar ao Desafio do Dia
           </Link>
         ) : next ? (
           <Link
             to={`${GAME_PATH[mode]}/${next.level}`}
-            className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}
+            className={`${btnPrimary} min-h-14 text-xl col-span-2`}
           >
             Próxima fase · {next.level}
           </Link>
         ) : (
-          <Link to={GAME_PATH[mode]} className={`${btnPrimary} min-h-14 text-xl sm:col-span-2`}>
+          <Link to={GAME_PATH[mode]} className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
             Ver as fases
           </Link>
         )}
@@ -341,6 +346,11 @@ export function LevelEnd({
           <>
             <ShareButton
               secondary
+              label={
+                <>
+                  Copiar<span className="max-sm:sr-only"> resultado</span>
+                </>
+              }
               text={data.share.text}
               onShared={(method) => track('result_shared', { mode, level, method })}
             />

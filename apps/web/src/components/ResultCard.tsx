@@ -133,7 +133,13 @@ export function ResultCardButton({
   return (
     <button type="button" className={btnSecondary} onClick={() => void go()} disabled={busy}>
       <Icon name="share" />
-      {busy ? 'Gerando…' : 'Imagem do resultado'}
+      {busy ? (
+        'Gerando…'
+      ) : (
+        <>
+          Imagem<span className="max-sm:sr-only"> do resultado</span>
+        </>
+      )}
     </button>
   );
 }

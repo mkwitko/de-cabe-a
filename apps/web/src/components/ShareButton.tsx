@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 import { btnPrimary, btnSecondary } from './ui';
 
@@ -10,7 +10,7 @@ export function ShareButton({
   label = 'Copiar resultado',
 }: {
   text: string;
-  label?: string;
+  label?: ReactNode;
   onShared?: (method: 'webshare' | 'clipboard') => void;
   secondary?: boolean;
 }) {

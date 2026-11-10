@@ -85,6 +85,7 @@ function resultCopy(data: AttemptResponse) {
         ? 'De placa! Na primeira.'
         : `Acertou em ${view.attemptsUsed} de 6!`
       : 'Não foi dessa vez.',
+    starRule: 'Até 2 tentativas: 3 estrelas · até 4: 2 · até 6: 1.',
     detail: (
       <p>
         Era <strong className="font-black">{reveal.answer.name}</strong> ·{' '}
