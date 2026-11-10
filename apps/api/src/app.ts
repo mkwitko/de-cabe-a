@@ -45,6 +45,8 @@ export interface AppDeps {
   auth: Auth;
   /** Stripe (deploy/STRIPE-SETUP.md); null when not configured: billing answers 503. */
   billing: BillingDeps | null;
+  /** E-mails the owner a new piece of feedback; a no-op without FEEDBACK_TO. */
+  notifyFeedback: (subject: string, text: string) => Promise<void>;
 }
 
 /** Development defaults: e-mails go to the log until Resend is configured (ADR-008). */
@@ -84,6 +86,7 @@ export function buildApp(
     random: Math.random,
     push: NO_PUSH,
     billing: null,
+    notifyFeedback: async () => {},
     secureCookie: process.env.NODE_ENV === 'production',
     limits: { sessionsPerIp: 20, perSession: 300, search: 60, actions: 120 },
     ...rest,

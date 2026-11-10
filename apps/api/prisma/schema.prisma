@@ -871,3 +871,21 @@ model CosmeticChoice {
   stickers  Json     @default("{}")
   updatedAt DateTime @updatedAt
 }
+
+/// Suggestions, problems and compliments from players (/sugestoes). Erased with the player.
+model Feedback {
+  id         String   @id @default(uuid(7))
+  kind       String /// suggestion | problem | praise
+  text       String
+  email      String? /// optional, for a reply
+  route      String?
+  appVersion String?
+  userId     String?
+  sessionId  String?
+  status     String   @default("novo") /// novo | lido | respondido | arquivado
+  createdAt  DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([sessionId])
+  @@index([userId])
+}

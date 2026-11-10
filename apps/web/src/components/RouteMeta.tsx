@@ -111,6 +111,10 @@ const PAGES: Record<string, Meta> = {
       'Apoie um projeto independente de minijogos de futebol, uma vez ou todo mês. Ninguém compra vantagem.',
   },
   '/cookies': { title: 'Cookies', description: DEFAULT.description },
+  '/sugestoes': {
+    title: 'Sugestões',
+    description: 'Mande uma sugestão, um problema ou um elogio para melhorar o De Cabeça F.C.',
+  },
 };
 
 function set(selector: string, attr: string, value: string, create: () => HTMLElement) {
