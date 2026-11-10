@@ -50,51 +50,74 @@ export function DailyPage() {
 
   const isToday = data.date === data.today;
   const done = data.games.filter((g) => g.state === 'done').length;
+  // The headline is the next game still to play (or the first, when all are done).
+  const lead = data.games.find((g) => g.state !== 'done') ?? data.games[0];
   return (
     <>
       <GameHeader title="Desafio do Dia" />
-      <p className="mt-2 text-chalk-soft first-letter:uppercase">
-        {dayLabel(data.date)}
-        {isToday ? ' · mesmas fases para todo mundo, novas à meia-noite' : ''}
-      </p>
-      <p className="font-condensed tabular mt-4 text-xl font-black">
-        {done}/{data.games.length} jogados
-      </p>
-
-      <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {data.games.map((g) => {
-          const to = `${GAME_PATH[g.mode]}/${g.level}`;
-          return (
-            <li
-              key={g.mode}
-              className="flex items-center gap-4 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-4"
-            >
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="font-condensed text-xl leading-tight font-extrabold uppercase">
-                  {GAME_NAME[g.mode]}
+      {/* Capa de jornal: masthead, date line, headline with the mode of the day, columns. */}
+      <article className="mt-5 overflow-hidden rounded-lg border-2 border-[#2b2418] text-[#2b2418] shadow-[0_14px_30px_-12px_rgb(0_0_0/0.6)] [background:repeating-linear-gradient(0deg,#0000000d_0_1px,transparent_1px_6px),#e8dcc0]">
+        <div className="font-condensed flex flex-wrap items-center justify-between gap-x-4 border-b-4 border-double border-[#2b2418] px-4 py-2 text-sm font-extrabold tracking-[0.15em] uppercase">
+          <span>Gazeta De Cabeça</span>
+          <span className="first-letter:uppercase">{dayLabel(data.date)}</span>
+          <span className="tabular">
+            {done}/{data.games.length} jogados
+          </span>
+        </div>
+        {lead && (
+          <div className="flex flex-col gap-3 border-b-2 border-[#2b2418] px-4 py-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-condensed text-sm font-extrabold tracking-[0.2em] uppercase">
+                {done === data.games.length ? 'Tudo jogado' : 'Manchete do dia'}
+              </p>
+              <p className="font-condensed text-5xl leading-[0.88] font-black uppercase sm:text-7xl">
+                {GAME_NAME[lead.mode]}
+              </p>
+              <p className="mt-2 text-sm font-semibold">
+                Fase {lead.level}
+                {lead.solvedPct !== null && ` · ${lead.solvedPct}% acertaram`}
+              </p>
+            </div>
+          </div>
+        )}
+        <p className="px-4 pt-3 text-sm font-semibold">
+          {isToday ? 'Mesmas fases para todo mundo, novas à meia-noite.' : 'Edição de outro dia.'}
+        </p>
+        <ul className="grid gap-px p-3 sm:grid-cols-2 lg:grid-cols-3">
+          {data.games.map((g) => {
+            const to = `${GAME_PATH[g.mode]}/${g.level}`;
+            return (
+              <li key={g.mode} className="flex items-center gap-4 border-b border-[#2b2418]/30 p-2">
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-condensed text-xl leading-tight font-extrabold uppercase">
+                    {GAME_NAME[g.mode]}
+                  </span>
+                  <span className="text-sm font-medium">
+                    Fase {g.level}
+                    {g.solvedPct !== null && ` · ${g.solvedPct}% acertaram`}
+                  </span>
                 </span>
-                <span className="text-sm text-chalk-soft">
-                  Fase {g.level}
-                  {g.solvedPct !== null && ` · ${g.solvedPct}% acertaram`}
-                </span>
-              </span>
-              {g.state === 'done' ? (
-                <Link
-                  to={to}
-                  aria-label={`${GAME_NAME[g.mode]}: ver resultado`}
-                  className="shrink-0"
-                >
-                  <Stars n={g.stars} />
-                </Link>
-              ) : (
-                <Link to={to} className={`${btnPrimary} shrink-0`}>
-                  {g.state === 'in_progress' ? 'Continuar' : 'Jogar'}
-                </Link>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+                {g.state === 'done' ? (
+                  <Link
+                    to={to}
+                    aria-label={`${GAME_NAME[g.mode]}: ver resultado`}
+                    className="shrink-0"
+                  >
+                    <Stars n={g.stars} onCover />
+                  </Link>
+                ) : (
+                  <Link
+                    to={to}
+                    className="font-condensed inline-flex min-h-11 shrink-0 items-center rounded-lg bg-[#2b2418] px-5 text-lg font-extrabold tracking-wide text-[#e8dcc0] uppercase"
+                  >
+                    {g.state === 'in_progress' ? 'Continuar' : 'Jogar'}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </article>
       <p className="mt-3 text-sm text-chalk-soft">
         O percentual de acerto de cada jogo aparece depois de 30 jogadas no dia.
       </p>
