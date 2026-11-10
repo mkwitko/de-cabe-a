@@ -34,12 +34,7 @@
     color: var(--color-chalk);
   }
 
-  /* No orphan word under a paragraph; headings balance. */
-  p,
-  li,
-  dd {
-    text-wrap: pretty;
-  }
+  /* Headings balance (text-wrap: pretty on every paragraph was costly layout on a weak phone). */
   h1,
   h2,
   h3 {
@@ -119,104 +114,33 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Album motion: a sticker being pasted, a slot rejecting a wrong sticker. */
+/*
+ * Motion policy (performance first): nothing loops, nothing blurs or blends, no 3D for decoration.
+ * What stays is feedback of 200 ms or less on transform and opacity: press states, sheets, the
+ * route fade and a short entrance for what just changed. Ajustes > Reduzir animacoes (and the
+ * system setting) end every one of them, see the end of this file.
+ */
 @keyframes paste {
   from {
     opacity: 0;
-    transform: translateY(-6px) rotate(-2deg) scale(1.04);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: translateY(-4px);
   }
 }
-
-/* A star stamped onto the result card, one after another. */
 @keyframes star-pop {
   from {
     opacity: 0;
-    transform: scale(0.3) rotate(-20deg);
-  }
-  60% {
-    opacity: 1;
-    transform: scale(1.25) rotate(4deg);
-  }
-  to {
-    transform: none;
+    transform: scale(0.85);
   }
 }
-
 @keyframes shake {
   0%,
   100% {
     transform: none;
   }
   25% {
-    transform: translateX(-5px);
+    transform: translateX(-4px);
   }
   75% {
-    transform: translateX(5px);
-  }
-}
-
-/* End-of-level ceremony: transform/opacity only. */
-@keyframes bc-shake {
-  0%,
-  100% {
-    transform: none;
-  }
-  20% {
-    transform: translate(calc(var(--amp) * -1), calc(var(--amp) * 0.6));
-  }
-  40% {
-    transform: translate(var(--amp), calc(var(--amp) * -0.6));
-  }
-  60% {
-    transform: translate(calc(var(--amp) * -0.6), calc(var(--amp) * 0.4));
-  }
-  80% {
-    transform: translate(calc(var(--amp) * 0.4), 0);
-  }
-}
-@keyframes crowd-step {
-  50% {
-    transform: translate(1px, 1px);
-  }
-}
-@keyframes card-in {
-  from {
-    opacity: 0;
-    transform: rotateY(540deg) scale(0.2);
-  }
-  30% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-/* An arrow leaning toward where the action goes. */
-/* a new title badge spins in on its vertical axis (Broadcast) */
-@keyframes badge-spin {
-  from {
-    opacity: 0;
-    transform: perspective(240px) rotateY(-540deg) scale(0.3);
-  }
-  35% {
-    opacity: 1;
-  }
-  to {
-    transform: perspective(240px) rotateY(0) scale(1);
-  }
-}
-@keyframes nudge-x {
-  0%,
-  60%,
-  100% {
-    transform: none;
-  }
-  30% {
     transform: translateX(4px);
   }
 }
@@ -228,38 +152,8 @@
     opacity: 1;
   }
 }
-@keyframes beam {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1, 0);
-  }
-  40% {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(1, 1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(20, 1);
-  }
-}
-@keyframes sheen-move {
-  from {
-    transform: translateX(-9%);
-  }
-  to {
-    transform: translateX(9%);
-  }
-}
-/* The sheen strip is wider than the card so pointer tilt only moves it sideways. */
 .holo-rainbow .holo {
   opacity: 0.55;
-  mix-blend-mode: soft-light;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .sheen .holo {
-    animation: sheen-move 2.4s ease-in-out infinite alternate;
-    will-change: transform;
-  }
 }
 
 /*
@@ -331,37 +225,14 @@
   --pp-ink: #17533a;
 }
 
-/* Trajetória passport: a stamp lands, the page shakes, a wrong guess flashes red. */
+/* Short feedback entrances (150 ms, opacity and a little transform). */
 @keyframes stamp-hit {
-  0% {
-    transform: rotate(var(--rot)) scale(2.4) translateY(-30px);
+  from {
+    transform: rotate(var(--rot)) scale(1.25);
     opacity: 0;
-    filter: blur(3px);
   }
-  55% {
-    transform: rotate(var(--rot)) scale(0.94);
-    opacity: 1;
-    filter: blur(0);
-  }
-  75% {
-    transform: rotate(var(--rot)) scale(1.04);
-  }
-  100% {
+  to {
     transform: rotate(var(--rot)) scale(1);
-  }
-}
-@keyframes passport-shake {
-  20% {
-    transform: translate(-5px, 3px);
-  }
-  40% {
-    transform: translate(4px, -3px);
-  }
-  60% {
-    transform: translate(-3px, 2px);
-  }
-  80% {
-    transform: translate(2px, -1px);
   }
 }
 @keyframes red-flash {
@@ -377,67 +248,36 @@
     opacity: 0;
   }
 }
-/* The stamp's impact: the keyframes carry the thump, the curve never overshoots. */
-.stamp-hit {
-  animation: stamp-hit 420ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
-}
-.passport-shake {
-  animation: passport-shake 320ms linear;
-}
-.passport-cover {
-  transition: transform 1100ms cubic-bezier(0.6, 0.05, 0.25, 1);
-}
-/* The trail turns a spread: the new pages swing in from the side they come from. */
-@keyframes page-turn {
-  from {
-    opacity: 0.2;
-    transform: perspective(1600px) rotateY(var(--turn-from)) translateX(var(--turn-x));
+@keyframes fade-out {
+  to {
+    opacity: 0;
   }
 }
+.stamp-hit {
+  animation: stamp-hit 150ms ease-out both;
+}
+.passport-cover {
+  transition: opacity 200ms ease-out;
+}
+/* The trail turns a spread: the new pages fade in. */
 .page-turn-next,
 .page-turn-prev {
-  transform-origin: center;
-  animation: page-turn 420ms var(--ease-out-expo) both;
-}
-.page-turn-next {
-  --turn-from: -14deg;
-  --turn-x: 3rem;
-}
-.page-turn-prev {
-  --turn-from: 14deg;
-  --turn-x: -3rem;
+  animation: stamp-fade 150ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
   .stamp-hit {
-    animation: stamp-fade 300ms ease-out both;
-  }
-  .passport-shake {
-    animation: none;
+    animation: stamp-fade 150ms ease-out both;
   }
   .passport-cover {
     display: none;
   }
-  .page-turn-next,
-  .page-turn-prev {
-    animation: stamp-fade 200ms ease-out both;
-  }
 }
 
-/* Grid prancheta: a magnet snaps onto its cell, a chalk stroke crosses a finished line. */
+/* Grid prancheta: a magnet lands on its cell, a chalk stroke crosses a finished line. */
 @keyframes magnet-snap {
-  0% {
-    transform: translateY(-28px) scale(1.5) rotate(-14deg);
+  from {
+    transform: scale(1.2);
     opacity: 0;
-  }
-  60% {
-    transform: scale(0.93);
-    opacity: 1;
-  }
-  80% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: none;
   }
 }
 @keyframes chalk-draw {
@@ -451,62 +291,26 @@
   }
 }
 .magnet-snap {
-  animation: magnet-snap 380ms var(--ease-out-expo) both;
+  animation: magnet-snap 150ms ease-out both;
 }
 .chalk-draw {
-  animation: chalk-draw 450ms 150ms var(--ease-out-expo) both;
+  animation: chalk-draw 150ms ease-out both;
 }
 .chalk-draw.origin-top {
   animation-name: chalk-draw-y;
 }
 @media (prefers-reduced-motion: reduce) {
-  .magnet-snap {
-    animation: stamp-fade 300ms ease-out both;
-  }
+  .magnet-snap,
   .chalk-draw {
-    animation: stamp-fade 300ms ease-out both;
+    animation: stamp-fade 150ms ease-out both;
   }
 }
 
-/* Mais ou menos telão: digits light up one by one, floodlights flicker on. */
-@keyframes led-digit {
-  0% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-@keyframes flood-on {
-  0% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0.2;
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-.led-digit {
-  animation: led-digit 260ms steps(1, end) both;
-}
+/* Mais ou menos telão: the digits and floodlights simply come on. */
+.led-digit,
 .flood-on {
-  animation: flood-on 520ms both;
+  animation: stamp-fade 150ms ease-out both;
 }
-
 @media (prefers-reduced-motion: reduce) {
   .flood-on,
   .led-digit {
@@ -514,43 +318,19 @@
   }
 }
 
-/* Craque misterioso dossier: a censor bar is torn off the folder. */
-@keyframes censor-tear {
-  to {
-    transform: translate(22px, -16px) rotate(7deg);
-    opacity: 0;
-  }
-}
+/* Craque misterioso dossier: the censor bar is lifted off the folder. */
 .censor-tear {
-  animation: censor-tear 520ms 120ms cubic-bezier(0.5, 0, 0.8, 0.4) both;
+  animation: fade-out 150ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
   .censor-tear {
-    animation: censor-fade 300ms ease-out both;
-  }
-}
-@keyframes censor-fade {
-  to {
-    opacity: 0;
+    animation: fade-out 150ms ease-out both;
   }
 }
 
-/* Linha do tempo: a clipping out of place crumples on the clothesline. */
-@keyframes clip-crumple {
-  40% {
-    transform: scale(0.8) rotate(-6deg) skewX(8deg);
-  }
-  to {
-    transform: scale(0.94) skewX(-2deg);
-  }
-}
+/* Linha do tempo: a clipping out of place sits crumpled on the clothesline. */
 .clip-crumple {
-  animation: clip-crumple 520ms 150ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .clip-crumple {
-    animation: none;
-  }
+  transform: scale(0.94);
 }
 
 /* Impostor line-up: the intruder steps out of the line, toward the viewer. */
@@ -560,7 +340,7 @@
   }
 }
 .lineup-pull {
-  animation: lineup-pull 480ms 100ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation: lineup-pull 150ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
   .lineup-pull {
@@ -569,41 +349,12 @@
   }
 }
 
-/* Escalação: a found name develops its face, like a print coming up in the tray. */
-@keyframes develop-out {
-  to {
-    opacity: 0;
-  }
-}
+/* Escalação: a found name takes its face off the print. */
 .develop-out {
-  animation: develop-out 1100ms 150ms ease-in both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .develop-out {
-    animation-duration: 300ms;
-    animation-delay: 0ms;
-  }
+  animation: fade-out 200ms ease-out both;
 }
 
-/* Conexões: the locker door slams shut; the warning lamp blinks red on a wrong group. */
-@keyframes locker-slam {
-  from {
-    transform: rotateY(-85deg);
-    opacity: 0.4;
-  }
-}
-@keyframes lamp-blink {
-  0%,
-  40%,
-  80% {
-    opacity: 1;
-  }
-  20%,
-  60%,
-  100% {
-    opacity: 0;
-  }
-}
+/* Conexões: the locker door and the warning lamp appear without a slam or a blink. */
 @keyframes lamp-wash {
   0% {
     opacity: 0.3;
@@ -613,77 +364,31 @@
   }
 }
 .locker-slam {
-  transform-origin: left center;
-  animation: locker-slam 320ms cubic-bezier(0.5, 0, 0.9, 0.4) backwards;
+  animation: stamp-fade 150ms ease-out backwards;
 }
 .lamp-blink {
-  animation: lamp-blink 900ms steps(1, end) both;
+  animation: lamp-wash 200ms ease-out both;
 }
 .lamp-wash {
   opacity: 0;
-  animation: lamp-wash 500ms ease-out both;
+  animation: lamp-wash 200ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
-  .locker-slam {
-    animation: stamp-fade 300ms ease-out backwards;
-    transform: none;
-  }
-  .lamp-blink {
-    animation: lamp-wash 900ms ease-out both;
-  }
+  .lamp-blink,
   .lamp-wash {
     animation: none;
   }
 }
 
-/* Draft: light leaks from the pack seam, then the cards flip up one by one. */
-@keyframes card-flip {
-  from {
-    transform: rotateY(90deg);
-    opacity: 0;
-  }
-}
-@keyframes pack-seam {
-  0% {
-    transform: scaleX(0.15);
-    opacity: 0;
-  }
-  30% {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scaleX(1);
-    opacity: 0;
-  }
-}
+/* Draft: the cards fade in. */
 .card-flip {
-  animation: card-flip 420ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+  animation: stamp-fade 150ms ease-out backwards;
 }
 .pack-seam {
-  animation: pack-seam 800ms ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .card-flip {
-    animation: stamp-fade 300ms ease-out backwards;
-  }
-  .pack-seam {
-    animation: none;
-    opacity: 0;
-  }
+  opacity: 0;
 }
 
-/* Páginas: a ring breathes around the current house of a track, a sheet's rows come in one by one. */
-@keyframes house-pulse {
-  from {
-    opacity: 0.8;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(1.35);
-  }
-}
+/* Páginas: the current house of a track wears a static ring; a sheet's rows fade in. */
 .house-pulse {
   position: relative;
 }
@@ -694,29 +399,25 @@
   border-radius: inherit;
   border: 3px solid var(--color-cover);
   pointer-events: none;
-  animation: house-pulse 1.6s ease-out infinite;
+  opacity: 0.8;
 }
 @keyframes sheet-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(4px);
   }
 }
 .sheet-in {
-  animation: sheet-in 420ms var(--ease-out-expo) backwards;
+  animation: sheet-in 150ms ease-out backwards;
 }
-/* A card leans toward the finger that presses it. */
+/* A card sinks a little under the finger that presses it. */
 .lean {
-  transition: transform 300ms var(--ease-out-expo);
+  transition: transform 120ms ease-out;
 }
 .lean:active {
-  transform: perspective(900px) rotateX(5deg) rotateY(-7deg) scale(0.99);
+  transform: scale(0.98);
 }
 @media (prefers-reduced-motion: reduce) {
-  .house-pulse::after {
-    animation: none;
-    opacity: 0.8;
-  }
   .sheet-in {
     animation: none;
   }
@@ -725,23 +426,12 @@
   }
 }
 
-/* Transmissão: a strip slides in; the pitch of a line-up is tilted away from the viewer. */
-@keyframes strip-in {
-  from {
-    opacity: 0;
-    transform: translateX(-24px);
-  }
-}
+/* Transmissão: a strip fades in; the pitch of a line-up is drawn flat. */
 .strip-in {
-  animation: strip-in 420ms var(--ease-out-expo) backwards;
-}
-.pitch-3d {
-  perspective: 800px;
+  animation: stamp-fade 150ms ease-out backwards;
 }
 .pitch-plane {
   position: relative;
-  transform: rotateX(24deg);
-  transform-origin: 50% 100%;
   border: 2px solid rgb(255 255 255 / 0.55);
   background: repeating-linear-gradient(0deg, #1e7039 0 12%, #1a6533 12% 24%);
 }
@@ -832,20 +522,7 @@
 :root {
   --scene-art: url('/img/vestiario-night.webp');
 }
-/*
- * The scene's parallax (−1…1), written per frame onto the few elements that move. Not inherited,
- * so a pointer move restyles those elements alone, not the whole passport under them.
- */
-@property --sx {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 0;
-}
-@property --sy {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 0;
-}
+/* The scene is still: no parallax, dust, light cone or entry choreography. */
 .scene {
   --leather:
     radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
@@ -864,8 +541,6 @@
   background:
     var(--scene-art) center 40% / cover no-repeat,
     #0d120f;
-  transform: translate3d(calc(var(--sx) * -10px), calc(var(--sy) * -6px), 0);
-  transition: transform 900ms var(--ease-out-expo);
 }
 /* the floor fades to the ground colour so whatever scrolls below the bench stays legible */
 .scene-art::after {
@@ -877,80 +552,6 @@
     transparent 70%,
     color-mix(in oklch, var(--color-pitch-deep) 85%, transparent)
   );
-}
-/* the light's own glow on top of the painted one; it flickers on with the lamp */
-.scene-cone {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 38% 62% at 50% 4%, rgb(255 214 150 / 0.22), transparent 70%);
-}
-.scene-dust {
-  position: absolute;
-  left: 50%;
-  top: 6%;
-  width: min(44vw, 34rem);
-  height: 62%;
-  translate: -50% 0;
-  opacity: 0.8;
-  animation: scene-fade 1.6s ease-out backwards;
-}
-.scene-dust i {
-  position: absolute;
-  width: calc(var(--s) * 3);
-  height: calc(var(--s) * 3);
-  border-radius: 50%;
-  background: radial-gradient(#fff6d8 30%, rgb(255 240 190 / 0.35) 55%, transparent 72%);
-  opacity: 0;
-  animation: dust-drift 9s ease-in-out infinite;
-}
-@keyframes dust-drift {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translate(0, 0);
-  }
-  30%,
-  70% {
-    opacity: 0.85;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy));
-  }
-}
-.scene-dark {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
-  background: #050806;
-  opacity: 0;
-  animation: lights-on 900ms linear backwards;
-}
-@keyframes lights-on {
-  0%,
-  30% {
-    opacity: 0.9;
-  }
-  36% {
-    opacity: 0.25;
-  }
-  44% {
-    opacity: 0.8;
-  }
-  52% {
-    opacity: 0.1;
-  }
-  60% {
-    opacity: 0.45;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes scene-fade {
-  from {
-    opacity: 0;
-  }
 }
 
 /* The stage: on wide screens the passport rests on the bench line of the art. */
@@ -973,17 +574,12 @@
     transparent
   );
 }
-.scene-tilt {
-  transform: perspective(1800px) rotateY(calc(var(--sx) * 3deg)) rotateX(calc(var(--sy) * -2deg));
-  transition: transform 900ms var(--ease-out-expo);
-}
 .book {
-  filter: drop-shadow(0 26px 22px rgb(0 0 0 / 0.55));
+  box-shadow: 0 22px 30px -14px rgb(0 0 0 / 0.6);
 }
 .leaf {
   background: var(--leather);
   box-shadow: inset 0 -14px 18px -12px rgb(0 0 0 / 0.6);
-  animation: leaf-in 1s 0.55s linear backwards;
 }
 .leaf-tool {
   position: absolute;
@@ -997,59 +593,6 @@
     repeating-linear-gradient(0deg, transparent 0 27px, var(--pp-rule) 27px 28px),
     radial-gradient(circle at 50% 40%, var(--pp-paper-hi), var(--pp-paper) 60%, var(--pp-paper-lo));
   box-shadow: inset 0 16px 18px -14px rgb(60 40 10 / 0.45);
-}
-.cover-front {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--leather);
-  transform-origin: 50% 0;
-  --axis: 1, 0, 0;
-  --swing: 180deg;
-  opacity: 0;
-  visibility: hidden;
-  animation: cover-open 1s 0.55s cubic-bezier(0.55, 0, 0.25, 1) backwards;
-}
-.cover-face {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--pp-foil);
-  text-shadow:
-    0 -1px 0 #0007,
-    0 1px 0 #fff3;
-  backface-visibility: hidden;
-  border: 1px solid color-mix(in srgb, var(--pp-foil) 40%, transparent);
-  border-radius: inherit;
-}
-@keyframes cover-open {
-  0% {
-    opacity: 1;
-    visibility: visible;
-    transform: perspective(1400px) rotate3d(var(--axis), 0deg);
-  }
-  80% {
-    opacity: 1;
-    visibility: visible;
-    transform: perspective(1400px) rotate3d(var(--axis), var(--swing));
-  }
-  100% {
-    opacity: 0;
-    visibility: visible;
-    transform: perspective(1400px) rotate3d(var(--axis), var(--swing));
-  }
-}
-/* the inside of the cover shows once the cover has swung past upright */
-@keyframes leaf-in {
-  0%,
-  45% {
-    opacity: 0;
-  }
-  46%,
-  100% {
-    opacity: 1;
-  }
 }
 /* stickers: on a phone a small fan peeking over the cover; wide, fanned out to its left */
 .fan {
@@ -1070,43 +613,10 @@
   --k: calc(var(--i) - (var(--n) - 1) / 2);
   rotate: calc(var(--k) * 11deg);
   translate: calc(var(--k) * 2.6rem) 0;
-  animation: fan-out 600ms calc(1.35s + var(--i) * 70ms) var(--ease-out-expo) backwards;
-}
-@keyframes fan-out {
-  from {
-    rotate: 0deg;
-    translate: 0 2.5rem;
-    opacity: 0;
-  }
 }
 .ticket {
   rotate: -1.5deg;
   margin-top: -1.75rem;
-  animation: ticket-in 650ms 1.2s var(--ease-out-expo) backwards;
-}
-@keyframes ticket-in {
-  from {
-    opacity: 0;
-    translate: 0 2rem;
-    rotate: 6deg;
-  }
-}
-/* scoped: the passport's own .stamp-hit (trail, end screen) keeps its keyframes and no delay */
-.scene .stamp-hit {
-  animation: scene-stamp-hit 520ms 1.75s cubic-bezier(0.3, 0, 0.2, 1) backwards;
-}
-@keyframes scene-stamp-hit {
-  0% {
-    opacity: 0;
-    scale: 1.9;
-  }
-  60% {
-    opacity: 1;
-    scale: 0.9;
-  }
-  100% {
-    scale: 1;
-  }
 }
 /*
  * The closed modes: premiere posters taped to the wall. Each prints its mode's art full-bleed under
@@ -1146,6 +656,15 @@
     transparent
   );
 }
+.poster-row-wait {
+  /* holds the poster row's height until it mounts (AfterPaint), so nothing below shifts */
+  min-height: calc((100vw - 2rem) * 1.15 + 3rem);
+}
+@media (width >= 40rem) {
+  .poster-row-wait {
+    min-height: 26rem;
+  }
+}
 .poster-row::-webkit-scrollbar {
   display: none;
 }
@@ -1156,10 +675,8 @@
   aspect-ratio: 2 / 3;
   scroll-snap-align: start;
   rotate: var(--tilt);
-  filter: drop-shadow(0 16px 14px rgb(0 0 0 / 0.55)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.5));
-  transition:
-    rotate 420ms var(--ease-out-expo),
-    translate 420ms var(--ease-out-expo);
+  box-shadow: 0 14px 18px -8px rgb(0 0 0 / 0.6);
+  transition: translate 150ms ease-out;
 }
 /* two strips of tape across the top corners */
 .poster::before,
@@ -1215,7 +732,6 @@
     radial-gradient(rgb(0 0 0 / 0.28) 0.8px, transparent 1.3px) 0 0 / 4px 4px,
     linear-gradient(180deg, transparent 42%, rgb(0 0 0 / 0.82) 76%),
     radial-gradient(110% 55% at 50% -12%, rgb(255 236 200 / 0.3), transparent 62%);
-  transition: opacity 420ms var(--ease-out-expo);
 }
 /* the paper over the print: two folds, grain and edges worn by the hands that pasted it */
 .poster-sheet::after {
@@ -1256,8 +772,6 @@
   width: 165%;
   max-width: none;
   translate: -50% -50%;
-  filter: drop-shadow(0 0.5rem 0.6rem rgb(0 0 0 / 0.55));
-  transition: scale 600ms var(--ease-out-expo);
 }
 .poster-name,
 .poster-hook,
@@ -1342,11 +856,7 @@
   box-shadow: 0 0.2rem 0.4rem rgb(0 0 0 / 0.5);
 }
 .poster:has(.poster-sheet:is(:hover, :focus-visible)) {
-  rotate: 0deg;
   translate: 0 -0.5rem;
-}
-.poster:has(.poster-sheet:is(:hover, :focus-visible)) .poster-art svg {
-  scale: 1.06;
 }
 .poster:has(.poster-sheet:focus-visible) {
   outline: 3px solid var(--color-cover);
@@ -1383,20 +893,11 @@
     padding-top: 2rem;
     padding-bottom: 0;
   }
-  .book {
-    transform: perspective(1600px) rotateX(10deg);
-    transform-origin: 50% 100%;
-  }
   .leaf {
     box-shadow: inset -18px 0 22px -14px rgb(0 0 0 / 0.65);
   }
   .page {
     box-shadow: inset 20px 0 22px -16px rgb(60 40 10 / 0.5);
-  }
-  .cover-front {
-    transform-origin: 0 50%;
-    --axis: 0, 1, 0;
-    --swing: -180deg;
   }
   .fan {
     right: auto;
@@ -1411,31 +912,10 @@
   .ticket {
     margin-top: 0;
     rotate: 2.5deg;
-    translate: calc(var(--sx) * 8px) calc(var(--sy) * 5px);
-    transition: translate 900ms var(--ease-out-expo);
   }
-}
-.scene[data-still] :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit) {
-  animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .scene
-    :is(
-      .scene-dark,
-      .leaf,
-      .cover-front,
-      .fan-card,
-      .ticket,
-      .stamp-hit,
-      .scene-dust,
-      .scene-dust i
-    ) {
-    animation: none;
-  }
-  .scene-art,
-  .scene-tilt,
-  .poster,
-  .poster-art svg {
+  .poster {
     transition: none;
   }
 }
@@ -1454,13 +934,9 @@
   position: relative;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.5));
 }
 .pcard-lg {
-  filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55)) drop-shadow(0 3px 4px rgb(0 0 0 / 0.4));
-  /* its own layer: without it Chromium paints stale, pixelated copies of the masked card around
-     the shield once the reveal's tilt has moved it (seen on phones) */
-  will-change: filter;
+  filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.5));
 }
 .pcard-rim,
 .pcard-face,
@@ -1513,12 +989,10 @@
 .pcard-art::before {
   content: '';
   background: var(--pattern, none);
-  mix-blend-mode: var(--pattern-blend, normal);
 }
 .pcard-art::after {
   content: '';
   background: var(--spec, none);
-  mix-blend-mode: var(--spec-blend, overlay);
 }
 .pcard-panel {
   position: absolute;
@@ -1556,7 +1030,6 @@
   left: 21%;
   height: 66%;
   aspect-ratio: 4 / 5;
-  filter: drop-shadow(0 1.2cqw 1.4cqw rgb(0 0 0 / 0.45)) drop-shadow(0 0 0.5cqw var(--cut-light));
   -webkit-mask-image: linear-gradient(#000 74%, transparent 98%);
   mask-image: linear-gradient(#000 74%, transparent 98%);
 }
@@ -1568,7 +1041,6 @@
   height: 60%;
   object-fit: cover;
   object-position: 50% 15%;
-  filter: saturate(1.06) contrast(1.04);
   -webkit-mask-image:
     radial-gradient(62% 64% at 52% 40%, #000 52%, transparent 100%),
     linear-gradient(#000 60%, transparent 97%);
@@ -1662,7 +1134,7 @@
   padding-top: 0.18em;
   margin-top: -0.18em;
   text-shadow: var(--emboss);
-  transition: opacity 400ms;
+  transition: opacity 150ms;
 }
 /* a rule under the name with a diamond at its centre */
 .pcard-name::after {
@@ -1752,15 +1224,11 @@
   width: 300%;
   background-image: var(--holo);
   opacity: 0.8;
-  mix-blend-mode: soft-light;
   pointer-events: none;
 }
 /* Lenda: the foil slides and shifts hue with the pointer (set on the card by StickerCard) */
 .pcard.holo-rainbow .holo {
   opacity: 0.32;
-  mix-blend-mode: overlay;
-  transform: translateX(calc((var(--px, 0.5) - 0.5) * 40%));
-  filter: hue-rotate(calc((var(--py, 0.5) - 0.5) * 160deg)) saturate(1.3);
 }
 
 /* ── Finishes (Clube, Banca): a layer over the rim (.pcard-fin-rim, under the bevel's seam) and
@@ -1788,7 +1256,6 @@
     #c79bff,
     #ff8fb1
   );
-  mix-blend-mode: hard-light;
 }
 .fin-holo .pcard-fin {
   background:
@@ -1807,7 +1274,6 @@
   background-position:
     calc(var(--px, 0.5) * 100%) calc(var(--py, 0.5) * 100%),
     0 0;
-  mix-blend-mode: color-dodge;
   opacity: 0.42;
 }
 /* chrome: a polished steel frame and one cold specular band across the face */
@@ -1834,7 +1300,6 @@
       transparent 68%
     ),
     linear-gradient(180deg, rgb(205 216 230 / 0.35), rgb(40 50 62 / 0.35));
-  mix-blend-mode: overlay;
 }
 /* Clube: gold-leaf frame, fine gold pinstripes and the member seal in the top corner */
 .fin-clube .pcard-fin-rim {
@@ -1852,7 +1317,6 @@
   background:
     repeating-linear-gradient(135deg, rgb(255 216 74 / 0.22) 0 1px, transparent 1px 9px),
     radial-gradient(circle at 50% 110%, rgb(255 216 74 / 0.35), transparent 45%);
-  mix-blend-mode: screen;
 }
 .pcard-fin-seal {
   position: absolute;
@@ -1861,7 +1325,6 @@
   width: 11cqw;
   height: 11cqw;
   color: #ffd84a;
-  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
 }
 @container (width < 150px) {
   .pcard-fin-seal {
@@ -1966,7 +1429,6 @@
     rgb(255 226 196 / 0.16) 0 0.35cqw,
     transparent 0.35cqw 1.9cqw
   );
-  --pattern-blend: overlay;
   --spec: var(--spec-metal);
   --plate: rgb(70 30 8 / 0.16);
   --frame: rgb(52 20 4 / 0.55);
@@ -1999,7 +1461,6 @@
     rgb(255 255 255 / 0.3) 0 0.25cqw,
     transparent 0.25cqw 1.1cqw
   );
-  --pattern-blend: overlay;
   --spec: var(--spec-metal);
   --plate: rgb(30 45 65 / 0.1);
   --frame: rgb(25 38 56 / 0.45);
@@ -2034,7 +1495,6 @@
     rgb(255 255 255 / 0.2) 0 2.2deg,
     transparent 2.2deg 7.5deg
   );
-  --pattern-blend: soft-light;
   --spec: var(--spec-metal);
   --plate: rgb(110 70 0 / 0.12);
   --frame: rgb(90 55 0 / 0.5);
@@ -2069,7 +1529,6 @@
       13cqw 11cqw,
     repeating-linear-gradient(60deg, rgb(255 255 255 / 0.22) 0 0.3cqw, transparent 0.3cqw 6cqw),
     repeating-linear-gradient(-60deg, rgb(120 60 0 / 0.18) 0 0.3cqw, transparent 0.3cqw 6cqw);
-  --pattern-blend: overlay;
   --spec: var(--spec-metal);
   --plate: rgb(130 70 0 / 0.1);
   --frame: rgb(100 55 0 / 0.5);
@@ -2089,7 +1548,6 @@
   );
 }
 .rar-ouro-brilhante .holo {
-  mix-blend-mode: overlay;
   opacity: 1;
 }
 .rar-destaque {
@@ -2130,7 +1588,6 @@
     repeating-linear-gradient(120deg, transparent 0 7cqw, rgb(232 184 0 / 0.08) 7cqw 7.25cqw),
     repeating-linear-gradient(60deg, transparent 0 7cqw, rgb(232 184 0 / 0.08) 7cqw 7.25cqw);
   --spec: linear-gradient(114deg, transparent 18%, rgb(255 230 140 / 0.22) 26%, transparent 34%);
-  --spec-blend: screen;
   --plate: rgb(0 0 0 / 0.25);
   --frame: rgb(0 0 0 / 0.8);
   --frame-hi: rgb(242 194 0 / 0.75);
@@ -2165,9 +1622,7 @@
       transparent 1.2deg 9deg
     ),
     radial-gradient(70% 55% at 60% 26%, transparent 30%, rgb(3 12 51 / 0.65) 100%);
-  --pattern-blend: normal;
   --spec: linear-gradient(114deg, transparent 20%, rgb(200 220 255 / 0.18) 30%, transparent 40%);
-  --spec-blend: screen;
   --plate: rgb(2 10 40 / 0.3);
   --frame: rgb(0 6 30 / 0.7);
   --frame-hi: rgb(214 226 245 / 0.8);
@@ -2203,9 +1658,7 @@
       rgb(160 118 40 / 0.28) 3.2cqw 3.5cqw
     ),
     radial-gradient(60% 46% at 60% 28%, rgb(255 255 250 / 0.85), transparent 72%);
-  --pattern-blend: normal;
   --spec: linear-gradient(114deg, transparent 22%, rgb(255 255 255 / 0.35) 30%, transparent 38%);
-  --spec-blend: soft-light;
   --plate: rgb(150 110 40 / 0.08);
   --frame: rgb(110 76 20 / 0.45);
   --frame-hi: rgb(176 134 52 / 0.9);
@@ -2256,14 +1709,12 @@
       rgb(200 130 255 / 0.2) 80%,
       rgb(255 110 150 / 0.2)
     );
-  --pattern-blend: color-dodge;
   /* the glare sits where the light (pointer) is */
   --spec: radial-gradient(
     circle at calc(var(--px, 0.6) * 100%) calc(var(--py, 0.3) * 100%),
     rgb(255 255 255 / 0.45),
     transparent 42%
   );
-  --spec-blend: soft-light;
   --plate: rgb(10 0 40 / 0.25);
   --frame: rgb(10 0 40 / 0.7);
   --frame-hi: rgb(236 220 255 / 0.8);
@@ -2283,151 +1734,32 @@
   -webkit-mask-image: radial-gradient(closest-side, #000 18%, transparent 100%);
   mask-image: radial-gradient(closest-side, #000 18%, transparent 100%);
 }
-@keyframes reveal-rays {
-  to {
-    rotate: 360deg;
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .reveal-rays {
-    animation: reveal-rays 60s linear infinite;
-  }
-}
 /* ==== end sticker player card ==== */
 
-/* ==== Como jogar: the three step drawings move on a 6 s loop (HowToPlayPage). Still under
- * reduced motion: the drawings as printed. ==== */
-@media (prefers-reduced-motion: no-preference) {
-  .htp-stamp {
-    animation: htp-stamp 6s var(--d, 0s) cubic-bezier(0.3, 0, 0.2, 1) infinite backwards;
-  }
-  .htp-key {
-    animation: htp-key 6s calc(0.3s + var(--i) * 170ms) steps(1) infinite backwards;
-  }
-  .htp-pick {
-    animation: htp-pick 6s var(--ease-out-expo) infinite;
-  }
-  .htp-stars svg {
-    animation: htp-star 6s var(--ease-out-expo) infinite backwards;
-  }
-  .htp-stars svg:nth-child(2) {
-    animation-delay: 0.35s;
-  }
-  .htp-stars svg:nth-child(3) {
-    animation-delay: 0.7s;
-  }
-  .htp-sticker {
-    animation: htp-pick 6s 0.2s var(--ease-out-expo) infinite backwards;
-  }
-}
-@keyframes htp-stamp {
-  0% {
-    opacity: 0;
-    scale: 1.8;
-  }
-  5% {
-    opacity: 1;
-    scale: 0.94;
-  }
-  8%,
-  88% {
-    opacity: 1;
-    scale: 1;
-  }
-  96%,
-  100% {
-    opacity: 0;
-    scale: 1;
-  }
-}
-@keyframes htp-key {
-  0% {
-    opacity: 0;
-  }
-  1%,
-  85% {
-    opacity: 1;
-  }
-  86%,
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes htp-pick {
-  0%,
-  28% {
-    opacity: 0;
-    translate: 0 8px;
-  }
-  34%,
-  86% {
-    opacity: 1;
-    translate: 0 0;
-  }
-  92%,
-  100% {
-    opacity: 0;
-    translate: 0 0;
-  }
-}
-@keyframes htp-star {
-  0% {
-    opacity: 0.25;
-    scale: 0.6;
-  }
-  5% {
-    opacity: 1;
-    scale: 1.25;
-  }
-  9%,
-  88% {
-    opacity: 1;
-    scale: 1;
-  }
-  96%,
-  100% {
-    opacity: 0.25;
-    scale: 0.6;
-  }
-}
+/* ==== Como jogar: the three step drawings are still (HowToPlayPage). ==== */
 
 /*
  * Secondary rooms (album, stats, conta): the same locker room, out of the light. The art stays
  * behind, dimmed, so the album, the member card and the club desk sit in the house.
  */
 .room-dim {
-  filter: brightness(0.4) saturate(0.85) blur(2px);
+  opacity: 0.4;
 }
 
 /* ── Album: a Panini book ────────────────────────────────────────────────────────────────── */
 /*
  * Cream printed pages with a halftone, a yellow cover, a spine and a page stack at the edges.
- * The turning leaf reads one progress value: --turn (0 → 1) and --lift = sin(π·turn), the
- * lift (gloss, shade and the shadow it casts peak mid-turn). Wide: the stage takes the viewport
- * height and the spread keeps ~1.56:1 inside it; phones: one page, natural height.
+ * A page change is a short crossfade. Wide: the stage takes the viewport height and the spread
+ * keeps ~1.56:1 inside it; phones: one page, natural height.
  */
 .album-stage {
   position: relative;
   width: 100%;
 }
-/* written per frame onto the leaf, its shades and casts only; not inherited, so the pages under
-   them never restyle mid-turn */
-@property --turn {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 0;
-}
-@property --lift {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 0;
-}
 .album-book {
   --ink-page: #1d2a4f;
   position: relative;
   display: grid;
-  perspective: 1800px;
-  perspective-origin: 0 50%;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -2543,11 +1875,8 @@
 .album-stuck {
   display: block;
   rotate: var(--tilt, 0deg);
-  filter: drop-shadow(0 7px 6px rgb(0 0 0 / 0.22));
   cursor: pointer;
-  transition:
-    rotate 300ms var(--ease-out-expo),
-    scale 300ms var(--ease-out-expo);
+  transition: scale 150ms ease-out;
 }
 .album-stuck:hover {
   rotate: 0deg;
@@ -2567,7 +1896,6 @@
     rgb(255 255 255 / 0.16) 72%,
     rgb(255 255 255 / 0) 80%
   );
-  mix-blend-mode: screen;
 }
 
 /* the cover: album yellow, a green band across it, the best stickers fanned out */
@@ -2663,73 +1991,6 @@
   box-shadow: none;
 }
 
-/* the turning leaf */
-.album-leaf {
-  z-index: 3;
-  transform: rotateY(calc(var(--turn) * -180deg));
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  pointer-events: none;
-}
-.album-leaf-single {
-  position: relative;
-}
-.album-face {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.album-face > .album-side {
-  flex: 1;
-}
-.album-face-back {
-  transform: rotateY(180deg);
-}
-.album-shade,
-.album-gloss,
-.album-cast {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-}
-/* the page darkens as it turns away from the light, its back lightens as it lands */
-.album-face-front .album-shade {
-  background: linear-gradient(to right, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
-  opacity: min(1, calc(var(--turn) * 2));
-}
-.album-face-back .album-shade {
-  background: linear-gradient(to left, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.42));
-  opacity: min(1, calc((1 - var(--turn)) * 2));
-}
-/* a band of light slides across the lifted page */
-.album-gloss {
-  z-index: 6;
-  background: linear-gradient(
-    100deg,
-    transparent 36%,
-    rgb(255 255 255 / 0.6) 49%,
-    rgb(255 255 255 / 0.15) 54%,
-    transparent 64%
-  );
-  background-size: 300% 100%;
-  background-position: calc(100% - var(--turn) * 100%) 0;
-  opacity: var(--lift);
-  mix-blend-mode: soft-light;
-}
-/* the shadow the leaf throws on the pages beneath, strongest mid-turn */
-.album-cast {
-  z-index: 2;
-  opacity: calc(var(--lift) * 0.9);
-}
-.album-cast-left {
-  background: linear-gradient(to left, rgb(0 0 0 / 0.5), transparent 60%);
-}
-.album-cast-right {
-  background: linear-gradient(to right, rgb(0 0 0 / 0.5), transparent 60%);
-}
 .album-spine {
   position: absolute;
   top: 0;
@@ -2765,11 +2026,9 @@
   width: 1.5rem;
   height: 1.5rem;
   background: linear-gradient(var(--fold), transparent 50%, #c9bb98 50%, #fff8e8 64%, #d9ccab);
-  filter: drop-shadow(-2px -2px 3px rgb(0 0 0 / 0.25));
   transition:
-    width 260ms var(--ease-out-expo),
-    height 260ms var(--ease-out-expo);
-  animation: corner-peek 1400ms 600ms var(--ease-out-expo) both;
+    width 150ms ease-out,
+    height 150ms ease-out;
 }
 .album-corner:hover::before {
   width: 2.75rem;
@@ -2790,16 +2049,6 @@
 .album-corner-prev::before {
   left: 0;
   border-bottom-left-radius: 14px;
-  filter: drop-shadow(2px -2px 3px rgb(0 0 0 / 0.25));
-}
-@keyframes corner-peek {
-  35% {
-    width: 2.6rem;
-    height: 2.6rem;
-  }
-}
-.album-fade {
-  animation: stamp-fade 260ms ease-out both;
 }
 
 @media (min-width: 1024px) {
@@ -2816,22 +2065,10 @@
     width: min(100cqw, 170cqh);
     height: min(100cqh, 58.8cqw);
     grid-template-columns: 1fr 1fr;
-    perspective: 3200px;
-    perspective-origin: 50% 50%;
   }
-  /* shut, the cover lies centred; it slides back as it swings open */
+  /* shut, the cover lies centred */
   .album-book[data-closed] {
     translate: -25% 0;
-  }
-  .album-book[data-opening] {
-    translate: calc((var(--turn) - 1) * 25%) 0;
-  }
-  .album-leaf-wide {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 50%;
   }
   .album-book[data-wide] .album-side {
     padding: clamp(1rem, 2.6cqh, 1.75rem) clamp(1rem, 2.2cqw, 2rem) 2.5rem;
@@ -2875,11 +2112,10 @@
   overscroll-behavior: contain;
 }
 .sd[open] {
-  animation: sd-in 380ms var(--ease-out-expo);
+  animation: sd-in 150ms ease-out;
 }
 .sd::backdrop {
   background: rgb(4 10 7 / 0.74);
-  backdrop-filter: blur(3px);
 }
 .sd-body {
   position: relative;
@@ -2890,30 +2126,11 @@
 .sd-stage {
   display: grid;
   place-items: center;
-  perspective: 900px;
 }
 .sd-card {
   position: relative;
   width: min(62%, 15rem);
   aspect-ratio: 3 / 4;
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 180ms ease-out;
-}
-.sd[open] .sd-card {
-  animation: sd-card 640ms var(--ease-out-expo);
-}
-.sd-card .pcard-face::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at calc(var(--px, 0.3) * 100%) calc(var(--py, 0.2) * 100%),
-    rgb(255 255 255 / 0.4),
-    transparent 50%
-  );
-  mix-blend-mode: soft-light;
 }
 .sd-facts {
   display: grid;
@@ -2968,18 +2185,12 @@
 @keyframes sd-in {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.97);
+    transform: translateY(8px);
   }
 }
 @keyframes sd-sheet {
   from {
     transform: translateY(100%);
-  }
-}
-@keyframes sd-card {
-  from {
-    opacity: 0;
-    transform: rotateY(-28deg) rotateZ(-5deg) scale(0.86);
   }
 }
 @media (min-width: 768px) {
@@ -3006,20 +2217,16 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   .sd[open] {
-    animation: sd-sheet 380ms var(--ease-out-expo);
+    animation: sd-sheet 200ms ease-out;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .album-stuck,
-  .sd-card {
+  .album-corner::before {
     transition: none;
   }
-  .album-corner::before {
-    animation: none;
-  }
-  .sd[open],
-  .sd[open] .sd-card {
-    animation: stamp-fade 200ms ease-out both;
+  .sd[open] {
+    animation: stamp-fade 150ms ease-out both;
   }
 }
 /* ── end Album ── */
@@ -3160,7 +2367,7 @@
   --scene-art: url('/img/vestiario-night.webp');
   --scene-night: 1;
   /* phones: the room in shadow behind the passport, the pitch lines hidden under it */
-  filter: brightness(0.42) saturate(0.85);
+  opacity: 0.42;
 }
 .cp-leaf {
   background:
@@ -3176,7 +2383,7 @@
 }
 @media (min-width: 64rem) {
   .cp-room {
-    filter: none;
+    opacity: 1;
   }
   .cp-frame[data-spread] {
     max-width: none;
@@ -3190,8 +2397,8 @@
     inset: auto;
     width: min(100cqw, 170cqh);
     height: min(100cqh, 58.8cqw);
-    filter: drop-shadow(0 30px 26px rgb(0 0 0 / 0.6));
-    transition: translate 1100ms cubic-bezier(0.6, 0.05, 0.25, 1);
+    box-shadow: 0 26px 34px -16px rgb(0 0 0 / 0.65);
+    transition: translate 200ms ease-out;
   }
   /* shut, the cover lies centred on the bench; it slides left as it swings open */
   .cp-frame[data-spread]:not([data-open]) .cp-book {
@@ -3204,7 +2411,6 @@
     flex-direction: column;
     border-radius: 14px 6px 6px 14px;
     padding: clamp(1.5rem, 5cqh, 3rem);
-    transition: opacity 0s 500ms;
   }
   .cp-frame[data-spread]:not([data-open]) .cp-leaf {
     opacity: 0;
@@ -3290,7 +2496,7 @@
   box-shadow: 0 -24px 60px -20px rgb(0 0 0 / 0.75);
 }
 .settings-sheet[open] {
-  animation: sheet-up 420ms var(--ease-out-expo);
+  animation: sheet-up 200ms ease-out;
 }
 @media (width >= 40rem) {
   .settings-sheet {
@@ -3303,7 +2509,7 @@
   }
   .settings-sheet[open] {
     transform-origin: top right;
-    animation: panel-drop 280ms var(--ease-out-expo);
+    animation: panel-drop 150ms ease-out;
   }
 }
 @keyframes sheet-up {
@@ -3314,7 +2520,7 @@
 @keyframes panel-drop {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.97);
+    transform: translateY(-6px);
   }
 }
 
@@ -3370,9 +2576,23 @@
 :root[data-motion='reduce'] *::before,
 :root[data-motion='reduce'] *::after {
   animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
   scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* A closed mode (ModeDialog): a bottom sheet on phones, a centred two-column panel from 768px. */
@@ -3390,7 +2610,7 @@
   box-shadow: 0 -24px 60px -20px rgb(0 0 0 / 0.75);
 }
 .mode-sheet[open] {
-  animation: sheet-up 420ms var(--ease-out-expo);
+  animation: sheet-up 200ms ease-out;
 }
 @media (width >= 48rem) {
   .mode-sheet {
@@ -3402,7 +2622,7 @@
     box-shadow: 0 28px 60px -18px rgb(0 0 0 / 0.75);
   }
   .mode-sheet[open] {
-    animation: panel-drop 280ms var(--ease-out-expo);
+    animation: panel-drop 150ms ease-out;
   }
 }
 /* each mode's share of the votes, as a faint bar behind its row */
@@ -3453,7 +2673,7 @@
     ),
     var(--scene-art) center 40% / cover no-repeat,
     #0d120f;
-  filter: brightness(0.55) saturate(0.9);
+  opacity: 0.55;
 }
 .welcome-body {
   position: relative;
@@ -3488,42 +2708,8 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  /* the one moment: the floodlight comes up, the choices rise into it, the card is pasted last */
-  .welcome[open] .welcome-art {
-    animation: welcome-light 1100ms var(--ease-out-expo) both;
+  /* the choices fade in */
+  .welcome[open] .welcome-body {
+    animation: fade-in 150ms ease-out both;
   }
-  .welcome[open] .welcome-body > * {
-    animation: welcome-rise 600ms var(--ease-out-expo) both;
-  }
-  .welcome[open] .welcome-body > :nth-child(2) {
-    animation-delay: 120ms;
-  }
-  .welcome[open] .welcome-card {
-    animation: welcome-paste 520ms 380ms var(--ease-out-expo) both;
-  }
-}
-@keyframes welcome-light {
-  from {
-    filter: brightness(0.15) saturate(0.6);
-  }
-}
-@keyframes welcome-rise {
-  from {
-    opacity: 0;
-    translate: 0 16px;
-  }
-}
-@keyframes welcome-paste {
-  from {
-    opacity: 0;
-    scale: 1.08;
-    rotate: 3deg;
-  }
-}
-
-/* hidden tab: every animation waits (main.tsx) */
-:root[data-hidden] *,
-:root[data-hidden] *::before,
-:root[data-hidden] *::after {
-  animation-play-state: paused !important;
 }

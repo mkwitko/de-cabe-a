@@ -15,16 +15,17 @@ import { Reactions } from '../components/Reactions';
 import { Stars, StarIcon } from '../components/Stars';
 import { Broadcast, type Hero } from '../components/Broadcast';
 import { StickerReveal } from '../components/StickerReveal';
-import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
+import { recentCompletion } from '../lib/ceremony';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 import { TitleBadge } from '../components/TitleBadge';
-import { GoalLoop, preloadLottie } from '../components/Moment';
+import { GoalStill } from '../components/GoalStill';
 import { signInHref } from '../components/SignInButton';
 import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
 import { isPageLaunched } from '../lib/launch';
 import { nextLevel } from '../lib/track';
 import { StickerCard } from '../components/StickerCard';
+import { useNextFrame } from '../lib/progressive';
 import { RARITY_STYLE } from '../components/rarity';
 import { Nudge } from '../components/Nudge';
 import { ClubeOffer } from '../components/ClubeOffer';
@@ -89,7 +90,7 @@ export function LevelError({
   if (error.code === 'LEVEL_NOT_FOUND')
     return (
       <Notice
-        art={<GoalLoop />}
+        art={<GoalStill />}
         title="Fase não encontrada"
         action={
           <div className="flex flex-wrap gap-3">
@@ -103,7 +104,7 @@ export function LevelError({
     );
   return (
     <Notice
-      art={<GoalLoop />}
+      art={<GoalStill />}
       title="Deu ruim na conexão"
       action={
         <button className={btnPrimary} onClick={retry}>
@@ -128,6 +129,7 @@ function StickerWon({
   const finishOf = useFinish();
   const { sticker, isNew, upgradedFrom } = award;
   const style = RARITY_STYLE[sticker.rarity];
+  const cardOn = useNextFrame();
   return (
     <Link
       to="/album"
@@ -137,7 +139,7 @@ function StickerWon({
         aria-hidden="true"
         className="aspect-[3/4] w-16 shrink-0 -rotate-3 transition-transform duration-200 ease-out-expo group-hover:rotate-0"
       >
-        <StickerCard sticker={sticker} size="sm" finish={finishOf(sticker.playerId)} />
+        {cardOn && <StickerCard sticker={sticker} size="sm" finish={finishOf(sticker.playerId)} />}
       </span>
       <span className="flex min-w-0 flex-col gap-1">
         {/* wraps rather than clipping a long name on a phone ("Neym…") */}
@@ -188,7 +190,7 @@ function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: bo
         aria-valuenow={total}
       >
         <div
-          className={`h-full rounded-full transition-[width] duration-700 ease-out-expo ${onPaper ? 'bg-[var(--pp-text)]' : 'bg-cover'}`}
+          className={`h-full rounded-full ${onPaper ? 'bg-[var(--pp-text)]' : 'bg-cover'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -233,7 +235,7 @@ function Ticket({ to, label, stub }: { to: string; label: string; stub: number |
   return (
     <Link
       to={to}
-      className="group flex min-h-20 items-stretch overflow-hidden rounded-xl bg-cover text-ink shadow-[0_14px_28px_-12px_rgb(0_0_0/0.55)] transition-[transform,box-shadow] duration-200 ease-out-expo hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-12px_rgb(0_0_0/0.6)] active:translate-y-0 motion-reduce:transform-none"
+      className="group flex min-h-20 items-stretch overflow-hidden rounded-xl bg-cover text-ink shadow-[0_14px_28px_-12px_rgb(0_0_0/0.55)] transition-transform duration-200 ease-out-expo hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-12px_rgb(0_0_0/0.6)] active:translate-y-0 motion-reduce:transform-none"
     >
       {stub !== null && (
         <span
@@ -249,7 +251,7 @@ function Ticket({ to, label, stub }: { to: string; label: string; stub: number |
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
-          className="size-8 shrink-0 fill-none stroke-current stroke-[2.5] [stroke-linecap:round] [stroke-linejoin:round] motion-safe:animate-[nudge-x_1.6s_var(--ease-out-expo)_infinite]"
+          className="size-8 shrink-0 fill-none stroke-current stroke-[2.5] [stroke-linecap:round] [stroke-linejoin:round]"
         >
           <path d="M5 12h13M13 6l6 6-6 6" />
         </svg>
@@ -297,15 +299,6 @@ export function LevelEnd({
       ? { name: answer.name, photo: s.photo, credit: s.photoCredit }
       : { name: answer.name, photo: answer.photo ?? null, credit: answer.photoCredit ?? null };
   });
-  const today = new Date().toLocaleDateString('en-CA');
-  const [short] = useState(() => ceremonyLength(mode, today) === 'short');
-  useEffect(() => {
-    if (stage === 'broadcast') markCeremony(mode, today);
-  }, [stage, mode, today]);
-  // the broadcast's moments (three stars, a promotion, a rare pack) play without a wait
-  useEffect(() => {
-    if (stage === 'broadcast' && !short) preloadLottie();
-  }, [stage, short]);
   /** Oficina levels (no track number) have no next level, track ranking or training. */
   const oficina = level === 0;
   const trackQ = useTrack(mode);
@@ -375,7 +368,6 @@ export function LevelEnd({
         score={score}
         headline={headline}
         detail={detail}
-        short={short}
         promoted={promoted}
         hero={hero}
         // a transition: the next screen renders in slices, never one long task on the tap
@@ -384,11 +376,7 @@ export function LevelEnd({
     );
   if (stage === 'sticker' && data.sticker)
     return (
-      <StickerReveal
-        award={data.sticker}
-        short={short}
-        onDone={() => startTransition(() => setStage('end'))}
-      />
+      <StickerReveal award={data.sticker} onDone={() => startTransition(() => setStage('end'))} />
     );
   const award = data.sticker;
   const total = stats.data?.totalStars;
@@ -518,7 +506,7 @@ export function LevelEnd({
         </>
       ) : (
         <>
-          <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
+          <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_150ms_ease-out]">
             <div className="rounded-[6px] bg-cover px-4 pt-4 pb-3 text-ink sm:px-5 sm:pt-5">
               <h2
                 id="level-end"

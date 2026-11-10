@@ -55,7 +55,7 @@ Mobile-first web (360 px base, up to 1280 px). Played one-handed on a phone; bot
 - Ads: Google AdSense only in pauses (end of a track page, under a level result, foot of the home), never during a level, no interstitials or rewarded ads. Personalised ads only with LGPD consent; otherwise non-personalised. Off until the AdSense account is approved (ADR-012).
 - No club logos (licensing): clubs are shown with initials and colours; countries with flags. Player photos only from Wikimedia Commons (free licences), always with author and licence next to them.
 - Never mock or expose real people.
-- PT-BR only. One dark theme, no choice. Preferences (music, effects, volumes, tracks, vibration, motion) live in the Ajustes sheet (gear in the header) and stay on the device.
+- PT-BR only. One dark theme, no choice. Preferences (music, effects, volumes, tracks, vibration, motion) live in the Ajustes sheet (gear in the header) and stay on the device. Performance comes before effects: the app has no looping animation, parallax, blur, blend or 3D decoration, and keeps only short (≤200 ms) transform/opacity feedback, so it feels instant on a weak phone (see `apps/web/DESIGN.md`, Motion).
 - Not yet live: deploy to decabecafc.com.br is pending (domain, VM, Google OAuth, Resend, AdSense; `docs/DEPLOY.md`).
 - Full spec in `docs/` (PRD, game design, UX spec, growth plan).
 

@@ -161,7 +161,7 @@ export function ConnectionsPage({ level, timed = false }: { level: number; timed
             />
           </>
         )}
-        <ol className="flex flex-col gap-2 [perspective:700px]" aria-label="Grupos encontrados">
+        <ol className="flex flex-col gap-2" aria-label="Grupos encontrados">
           {(done ? (data.reveal as ConnectionsReveal).groups : view.found).map((g) => (
             <Band key={g.group} g={g} />
           ))}

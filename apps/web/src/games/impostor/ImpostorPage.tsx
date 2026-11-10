@@ -131,7 +131,7 @@ function Lineup({
           return (
             <li
               key={p.id}
-              className={`flex h-full min-w-0 transition-opacity duration-300 ${state}`}
+              className={`flex h-full min-w-0 transition-opacity duration-150 ${state}`}
             >
               {onPick ? (
                 <button

@@ -29,7 +29,7 @@ export function Stars({
         <svg
           key={i}
           viewBox="0 0 24 24"
-          className={`${size} ${i < n ? filled : `fill-none text-current ${onCover ? 'opacity-30' : 'opacity-40'}`} ${animate && i < n ? 'motion-safe:animate-[star-pop_360ms_var(--ease-emphasis)_both]' : ''}`}
+          className={`${size} ${i < n ? filled : `fill-none text-current ${onCover ? 'opacity-30' : 'opacity-40'}`} ${animate && i < n ? 'motion-safe:animate-[star-pop_150ms_ease-out_both]' : ''}`}
           style={animate && i < n ? { animationDelay: `${400 + i * 110}ms` } : undefined}
           stroke="currentColor"
           strokeWidth={1.8}

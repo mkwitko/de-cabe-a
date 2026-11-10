@@ -9,10 +9,19 @@ export const takeWanted = () => {
   wanted = false;
   return w;
 };
+const requests = new Set<() => void>();
+/** The host that mounts the sheet's chunk on the first request (App.tsx). */
+export const onSettingsRequest = (f: () => void) => {
+  requests.add(f);
+  return () => void requests.delete(f);
+};
 /** Opens Ajustes from anywhere (Conta links here). */
 export const openSettings = () => {
   if (openers.size) openers.forEach((o) => o());
-  else wanted = true;
+  else {
+    wanted = true;
+    requests.forEach((f) => f());
+  }
 };
 
 export function Svg({
@@ -53,7 +62,7 @@ export function SettingsButton() {
       onClick={openSettings}
       aria-label="Ajustes"
       aria-haspopup="dialog"
-      className="grid size-11 shrink-0 place-items-center rounded-full text-chalk-soft transition-[color,background-color,rotate] duration-300 ease-[var(--ease-out-expo)] hover:rotate-45 hover:bg-chalk/[0.08] hover:text-chalk motion-reduce:hover:rotate-0"
+      className="grid size-11 shrink-0 place-items-center rounded-full text-chalk-soft transition-[color,background-color,rotate] duration-150 ease-out hover:rotate-45 hover:bg-chalk/[0.08] hover:text-chalk motion-reduce:hover:rotate-0"
     >
       <GearIcon className="size-[22px]" />
     </button>

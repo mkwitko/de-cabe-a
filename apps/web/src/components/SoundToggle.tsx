@@ -42,7 +42,7 @@ export function SoundOffer() {
     <div
       role="group"
       aria-labelledby="sound-offer"
-      className="mx-auto flex w-full max-w-2xl shrink-0 items-center gap-2 rounded-xl border border-chalk/20 bg-pitch-deep py-1 pr-1 pl-3 motion-safe:animate-[paste_420ms_var(--ease-out-expo)]"
+      className="mx-auto flex w-full max-w-2xl shrink-0 items-center gap-2 rounded-xl border border-chalk/20 bg-pitch-deep py-1 pr-1 pl-3 motion-safe:animate-[paste_150ms_ease-out]"
     >
       <svg
         aria-hidden="true"

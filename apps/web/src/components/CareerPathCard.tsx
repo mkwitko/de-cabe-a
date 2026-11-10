@@ -75,7 +75,7 @@ export function StampMark({
     const ink = STAMP_INK[l.level % STAMP_INK.length];
     return (
       <span
-        className="relative grid size-full place-items-center rounded-full border-[3px] border-current mix-blend-multiply"
+        className="relative grid size-full place-items-center rounded-full border-[3px] border-current"
         style={{
           color: `var(--pp-ink, ${ink})`,
           rotate: `${STAMP_ROT[l.level % STAMP_ROT.length]}deg`,

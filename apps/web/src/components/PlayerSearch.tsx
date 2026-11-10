@@ -146,7 +146,7 @@ export function PlayerSearch({
         )}
         {status === 'loading' && (
           <span
-            className="size-4 shrink-0 animate-spin rounded-full border-2 border-ink/20 border-t-ink motion-reduce:animate-none"
+            className="size-4 shrink-0 rounded-full border-2 border-ink/20 border-t-ink"
             aria-hidden="true"
           />
         )}

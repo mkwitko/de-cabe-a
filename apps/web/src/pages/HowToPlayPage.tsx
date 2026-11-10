@@ -30,7 +30,7 @@ function MiniStamp({
 }) {
   return (
     <span
-      className="htp-stamp flex aspect-[1.25] w-[88%] flex-col items-center justify-center rounded-full border-[3px] border-current text-center mix-blend-multiply"
+      className="htp-stamp flex aspect-[1.25] w-[88%] flex-col items-center justify-center rounded-full border-[3px] border-current text-center"
       style={{ color: ink, rotate: `${rot}deg`, '--d': delay } as React.CSSProperties}
     >
       <b className="font-condensed text-lg leading-none font-black uppercase">{name}</b>
@@ -65,7 +65,7 @@ function GuessArt() {
               {c}
             </span>
           ))}
-          <span className="ml-px h-5 w-0.5 bg-ink motion-safe:animate-pulse" />
+          <span className="ml-px h-5 w-0.5 bg-ink" />
         </span>
         <span className="font-condensed grid min-h-11 place-items-center rounded-lg bg-cover px-3 font-extrabold text-ink uppercase">
           Chutar

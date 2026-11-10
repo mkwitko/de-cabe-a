@@ -6,8 +6,10 @@
  */
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { teamPt, type CopaResponse, type CopaRunView } from '@decabeca/contracts';
+import type { CopaResponse, CopaRunView } from '@decabeca/contracts';
+import { teamPt } from '@decabeca/contracts/teams';
 import { api, type ApiError } from '../lib/api';
+import { motionReduced } from '../lib/settings';
 import { ShareButton } from '../components/ShareButton';
 import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { TrophyIcon } from '../components/Icons';
@@ -258,8 +260,7 @@ function Opponent({ side }: { side: Side }) {
 function Report({ match }: { match: Match }) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches)
-      return setShown(match.events.length);
+    if (motionReduced()) return setShown(match.events.length);
     setShown(0);
     const id = setInterval(() => setShown((n) => (n >= match.events.length ? n : n + 1)), 650);
     return () => clearInterval(id);

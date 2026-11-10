@@ -10,6 +10,7 @@ import { btnPrimary, GameHeader, Skeleton } from '../../components/ui';
 import type { ApiError } from '../../lib/api';
 import { useAction, useAttempt } from '../../lib/game';
 import { buzz } from '../../lib/haptics';
+import { motionReduced } from '../../lib/settings';
 import { play } from '../../lib/sound';
 import { useGameTracking } from '../../lib/useGameTracking';
 import { Countdown } from '../Clock';
@@ -23,9 +24,7 @@ const QUESTION = {
 const UNIT = { goals: 'gols', games: 'jogos' } as const;
 
 const LED = 'text-[#f5e27a]';
-const reduced = () =>
-  typeof window !== 'undefined' &&
-  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const reduced = motionReduced;
 const DIGIT_MS = 220;
 
 /** The number lights up digit by digit on the scoreboard; a tick per digit. Reduced motion: all at once. */
@@ -279,7 +278,7 @@ export function HigherLowerPage({ level, timed = false }: { level: number; timed
         <div
           key={flash}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_180ms_ease-out]"
         />
       )}
       <section

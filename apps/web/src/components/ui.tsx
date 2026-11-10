@@ -4,7 +4,7 @@ import { Icon } from './Icon';
 
 /** Primary action: the album-cover yellow on ink. */
 export const btnPrimary =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-cover px-5 font-condensed text-lg font-extrabold uppercase tracking-wide text-ink shadow-[0_3px_8px_-2px_rgb(0_0_0/0.4)] transition-[transform,box-shadow] duration-100 ease-standard hover:-translate-y-px active:scale-[0.98] active:shadow-none motion-reduce:transform-none disabled:pointer-events-none disabled:opacity-45';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-cover px-5 font-condensed text-lg font-extrabold uppercase tracking-wide text-ink shadow-[0_3px_8px_-2px_rgb(0_0_0/0.4)] transition-transform duration-100 ease-standard hover:-translate-y-px active:scale-[0.98] active:shadow-none motion-reduce:transform-none disabled:pointer-events-none disabled:opacity-45';
 export const btnSecondary =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-chalk-soft/60 px-4 font-condensed text-lg font-extrabold uppercase tracking-wide text-chalk transition-[transform,background-color,border-color] duration-100 ease-standard hover:border-chalk hover:bg-chalk/[0.06] active:scale-[0.98] motion-reduce:transform-none disabled:opacity-45';
 
@@ -94,12 +94,27 @@ export function Notice({
 }
 
 export function Skeleton({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-lg bg-chalk/10 motion-reduce:animate-none ${className}`}
-      aria-hidden="true"
-    />
-  );
+  return <div className={`rounded-lg bg-chalk/10 ${className}`} aria-hidden="true" />;
+}
+
+/**
+ * Children mount once the browser is idle after the first paint (`fallback` holds the place until
+ * then): non-critical UI and its chunks stay out of the first render and the first long tasks.
+ */
+export function AfterPaint({
+  children,
+  fallback = null,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 1));
+    const id = idle(() => setOn(true), { timeout: 3000 });
+    return () => (window.cancelIdleCallback ?? clearTimeout)(id);
+  }, []);
+  return on ? children : fallback;
 }
 
 export function useOnline() {

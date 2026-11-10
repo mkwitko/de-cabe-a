@@ -10,7 +10,7 @@ import type {
   MissingXiView,
   PlayerRef,
 } from '@decabeca/contracts';
-import { teamPt } from '@decabeca/contracts';
+import { teamPt } from '@decabeca/contracts/teams';
 import { buzz } from '../../lib/haptics';
 import { play } from '../../lib/sound';
 import { PlayerSearch } from '../../components/PlayerSearch';
@@ -127,7 +127,7 @@ function Face({ s, fresh }: { s: Slot; fresh: boolean }) {
 }
 
 /**
- * The team photo. The pitch lies in perspective (only the grass is tilted); the players stand on
+ * The team photo. The pitch is drawn flat; the players stand on
  * top of it, smaller and closer together the further back their line is.
  */
 function Pitch({ slots, freshAt }: { slots: Slot[]; freshAt: (i: number) => boolean }) {
@@ -140,8 +140,8 @@ function Pitch({ slots, freshAt }: { slots: Slot[]; freshAt: (i: number) => bool
     .sort((a, b) => b[0] - a[0])
     .map(([, r]) => r.sort((a, b) => sideOf(a.position) - sideOf(b.position) || a.i - b.i));
   return (
-    <div className="obj-dark relative min-h-0 flex-1 overflow-hidden border-2 border-[#2b2418] bg-[#3a372e] [background-image:radial-gradient(#0000004d_1px,transparent_1.5px)] [background-size:6px_6px] [perspective:560px]">
-      <div className="absolute inset-0 origin-bottom [transform:rotateX(32deg)] bg-[#6f7a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_44px,rgb(0_0_0/0.07)_44px_88px)]">
+    <div className="obj-dark relative min-h-0 flex-1 overflow-hidden border-2 border-[#2b2418] bg-[#3a372e] [background-image:radial-gradient(#0000004d_1px,transparent_1.5px)] [background-size:6px_6px]">
+      <div className="absolute inset-0 origin-bottom bg-[#6f7a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_44px,rgb(0_0_0/0.07)_44px_88px)]">
         {/* Field markings: halfway line, centre circle and the box. */}
         <div aria-hidden className="absolute inset-x-0 top-[12%] h-0.5 bg-[#f1ead2]/60" />
         <div
@@ -330,7 +330,7 @@ export function MissingXiPage({ level, timed = false }: { level: number; timed?:
         <div
           key={flash}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_180ms_ease-out]"
         />
       )}
       <section
@@ -354,7 +354,7 @@ export function MissingXiPage({ level, timed = false }: { level: number; timed?:
         </div>
       ) : (
         <form
-          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:mx-auto sm:w-full sm:max-w-3xl sm:shrink-0 sm:rounded-xl sm:border sm:p-4"
+          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 sm:relative sm:inset-x-auto sm:bottom-auto sm:mx-auto sm:w-full sm:max-w-3xl sm:shrink-0 sm:rounded-xl sm:border sm:p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (selected) guess(selected);

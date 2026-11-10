@@ -82,11 +82,8 @@ test('album shows the sticker won in a level', async ({ page }) => {
   await expect(page.getByText(/^1 de \d+/)).toBeVisible();
   await expect(page.getByText(/ronaldo/i).first()).toBeVisible();
   // open the book, find the sticker on its page and take it out
-  const turning = page.locator('[data-turning]');
   await page.getByRole('button', { name: 'Abrir o álbum' }).click();
-  await expect(turning).toHaveCount(0);
   await page.getByRole('button', { name: /^Atacantes/ }).click();
-  await expect(turning).toHaveCount(0);
   await page.getByRole('button', { name: /Ronaldo.*Ver figurinha/ }).click();
   const detail = page.getByRole('dialog', { name: /Ronaldo/ });
   await expect(detail.getByRole('button', { name: 'Ver a carreira' })).toBeVisible();

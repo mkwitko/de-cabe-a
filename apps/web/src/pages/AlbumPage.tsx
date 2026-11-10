@@ -1,16 +1,14 @@
 /**
  * Sticker album as a Panini book. Shut, the cover (title, count, the best stickers); open, the
  * inside cover (count, finishes, index) and one printed page per position group, 12 numbered
- * slots each. From `lg` two facing pages sized to the viewport, on phones one page. A page turns
- * on its spine (CSS 3D, driven by one progress value `--turn` so a drag and a click share the same
- * turn): click/arrows, the page corner, the group tabs, or a drag/swipe. Reduced motion: a
- * crossfade. A sticker opens in focus (StickerDetail).
+ * slots each. From `lg` two facing pages sized to the viewport, on phones one page. A page change
+ * is a 150 ms crossfade (click/arrows, the page corner, the group tabs, or a swipe); no 3D, no
+ * drag-follow (performance first). A sticker opens in focus (StickerDetail).
  */
 import {
   startTransition,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -21,7 +19,7 @@ import type { AlbumResponse, Sticker } from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { play } from '../lib/sound';
 import { GameHeader, Notice, Skeleton, btnPrimary } from '../components/ui';
-import { GoalLoop } from '../components/Moment';
+import { GoalStill } from '../components/GoalStill';
 import { RARITY_ORDER, RARITY_STYLE } from '../components/rarity';
 import { POSITION, StickerCard } from '../components/StickerCard';
 import { StickerDetail } from '../components/StickerDetail';
@@ -39,10 +37,6 @@ const GROUPS = [
 ] as const;
 const PER_PAGE = 12;
 const TILT = [-1.6, 1.1, -0.6, 1.8, -1.2, 0.5, 0.9, -1.9];
-const TURN_MS = 720;
-// what reads --turn/--lift (besides the book, which slides as the cover opens)
-const TURNING = '.album-leaf, .album-shade, .album-gloss, .album-cast';
-
 export type AlbumLeaf = {
   key: keyof typeof POSITION | null;
   label: string;
@@ -97,11 +91,6 @@ const subscribe = (cb: () => void) => {
   return () => m.removeEventListener('change', cb);
 };
 const isWide = () => typeof matchMedia === 'function' && matchMedia(WIDE).matches;
-// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
-const reduced = motionReduced;
-const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-const out = (t: number) => 1 - (1 - t) ** 3;
-
 function Silhouette() {
   return (
     <svg viewBox="0 0 60 70" aria-hidden="true" className="w-1/2 opacity-60">
@@ -128,22 +117,27 @@ function Chevron({ d }: { d: string }) {
   );
 }
 
-/** A page turning: spread (or phone side) `a` to `b`; `--turn` 0 shows a, 1 shows b. */
-type Flip = { a: number; b: number };
+type Promo = AlbumResponse['promotions'][number];
 
-export function AlbumPage() {
-  const finishOf = useFinish();
+/**
+ * The sticker in focus. Its state lives here, not in AlbumPage, so opening one renders the dialog
+ * alone and not the book (twelve slots) behind it.
+ */
+function DetailHost({
+  openRef,
+  promo,
+}: {
+  openRef: React.RefObject<((s: Sticker) => void) | null>;
+  promo: Promo | undefined;
+}) {
   const qc = useQueryClient();
-  const q = useQuery<AlbumResponse, ApiError>({
-    queryKey: ['album'],
-    queryFn: () => api('/v1/me/album'),
-  });
   const [open, setOpen] = useState<Sticker | null>(null);
-  const [at, setAt] = useState(0);
-  const [flip, setFlip] = useState<Flip | null>(null);
-  const [fade, setFade] = useState(0);
-  const wide = useSyncExternalStore(subscribe, isWide, () => false);
-  const next = nextLevel(useTrack('CAREER_PATH').data);
+  useEffect(() => {
+    openRef.current = (s) => startTransition(() => setOpen(s));
+    return () => {
+      openRef.current = null;
+    };
+  }, [openRef]);
   const promote = useMutation<AlbumResponse, ApiError, string>({
     mutationFn: (playerId) => api('/v1/me/album/promote', { method: 'POST', json: { playerId } }),
     onSuccess: (data) => {
@@ -151,18 +145,48 @@ export function AlbumPage() {
       setOpen(null);
     },
   });
+  if (!open) return null;
+  return (
+    <StickerDetail sticker={open} onClose={() => setOpen(null)}>
+      {promo && (
+        <div className="flex flex-col gap-2 rounded-xl border-2 border-cover/70 p-3">
+          <p className="text-sm font-semibold">
+            {RARITY_ORDER.indexOf(open.rarity) < RARITY_ORDER.indexOf('selecao_temporada')
+              ? `Pódio da Temporada ${promo.season}: esta figurinha pode virar Seleção da Temporada.`
+              : `Pódio da Temporada ${promo.season}: esta figurinha já está acima de Seleção da Temporada; promover gasta o pódio sem mudar a raridade.`}
+          </p>
+          <button
+            type="button"
+            className={`${btnPrimary} self-start`}
+            disabled={promote.isPending}
+            onClick={() => promote.mutate(open.playerId)}
+          >
+            Promover {open.name}
+          </button>
+          {promote.isError && (
+            <p role="alert" className="text-sm font-semibold">
+              Não deu para promover agora. Tente de novo em instantes.
+            </p>
+          )}
+        </div>
+      )}
+    </StickerDetail>
+  );
+}
+
+export function AlbumPage() {
+  const finishOf = useFinish();
+  const q = useQuery<AlbumResponse, ApiError>({
+    queryKey: ['album'],
+    queryFn: () => api('/v1/me/album'),
+  });
+  const openRef = useRef<((s: Sticker) => void) | null>(null);
+  const [at, setAt] = useState(0);
+  const wide = useSyncExternalStore(subscribe, isWide, () => false);
+  const next = nextLevel(useTrack('CAREER_PATH').data);
 
   const book = useRef<HTMLDivElement>(null);
-  const p = useRef(0);
-  const raf = useRef(0);
-  const drag = useRef<{
-    x: number;
-    y: number;
-    id: number;
-    span: number;
-    from: number;
-    on: boolean;
-  } | null>(null);
+  const drag = useRef<{ x: number; y: number; id: number } | null>(null);
   const dragged = useRef(false);
 
   const pages = q.data ? albumPages(q.data.stickers) : [];
@@ -171,80 +195,10 @@ export function AlbumPage() {
   const view = Math.min(wide ? spreadOf(at) : at, views - 1);
   const toAt = useCallback((v: number) => (wide ? atOfSpread(v) : v), [wide]);
 
-  const setP = (v: number) => {
-    p.current = v;
-    const b = book.current;
-    if (!b) return;
-    const turn = v.toFixed(4);
-    const lift = Math.sin(v * Math.PI).toFixed(4);
-    for (const el of [b, ...b.querySelectorAll<HTMLElement>(TURNING)]) {
-      el.style.setProperty('--turn', turn);
-      el.style.setProperty('--lift', lift);
-    }
-  };
-  // the leaf mounts with the flip; give it the current progress before it paints
-  useLayoutEffect(() => {
-    if (flip) setP(p.current);
-  }, [flip]);
-  const anims = useRef<Animation[]>([]);
-  const stop = () => {
-    cancelAnimationFrame(raf.current);
-    for (const a of anims.current) a.cancel();
-    anims.current = [];
-  };
-  useEffect(() => stop, []);
-
-  // A turn the hand lets go of plays as Web Animations of transform and opacity, sampled from the
-  // same curve the drag follows: the compositor runs them, so no frame waits on the main thread.
-  const run = (f: Flip, to: 0 | 1, ease: (t: number) => number) => {
-    stop();
-    const from = p.current;
-    const ms = Math.max(160, TURN_MS * Math.abs(to - from));
-    // the leaf mounts with this render; start once it is in the page
-    raf.current = requestAnimationFrame(() => {
-      const b = book.current;
-      if (!b) return;
-      const ps = Array.from({ length: 25 }, (_, i) => from + (to - from) * ease(i / 24));
-      const play = (sel: string, frame: (p: number, lift: number) => Keyframe) => {
-        for (const el of sel ? b.querySelectorAll<HTMLElement>(sel) : [b])
-          anims.current.push(
-            el.animate(
-              ps.map((v) => frame(v, Math.sin(v * Math.PI))),
-              { duration: ms, fill: 'forwards' },
-            ),
-          );
-      };
-      play('.album-leaf', (v) => ({ transform: `rotateY(${v * -180}deg)` }));
-      play('.album-face-front .album-shade', (v) => ({ opacity: Math.min(1, v * 2) }));
-      play('.album-face-back .album-shade', (v) => ({ opacity: Math.min(1, (1 - v) * 2) }));
-      play('.album-gloss', (_, lift) => ({ opacity: lift }));
-      play('.album-gloss', (v) => ({ backgroundPosition: `${100 - v * 100}% 0` }));
-      play('.album-cast', (_, lift) => ({ opacity: lift * 0.9 }));
-      if (b.hasAttribute('data-opening')) play('', (v) => ({ translate: `${(v - 1) * 25}% 0` }));
-      void anims.current[0]?.finished.then(
-        () => {
-          setP(to);
-          stop();
-          setAt(toAt(to ? f.b : f.a));
-          setFlip(null);
-        },
-        () => {},
-      );
-    });
-  };
-
   const go = (to: number) => {
-    if (flip || to < 0 || to >= views || to === view) return;
+    if (to < 0 || to >= views || to === view) return;
     play('tap');
-    if (reduced()) {
-      setAt(toAt(to));
-      setFade((n) => n + 1);
-      return;
-    }
-    const f = to > view ? { a: view, b: to } : { a: to, b: view };
-    p.current = to > view ? 0 : 1;
-    setFlip(f);
-    run(f, to > view ? 1 : 0, inOut);
+    setAt(toAt(to));
   };
 
   // arrow keys turn the page while no dialog is up
@@ -262,59 +216,35 @@ export function AlbumPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+  // a page change is a 150 ms crossfade of the whole book (compositor opacity, nothing remounts)
+  const seen = useRef(view);
+  useEffect(() => {
+    if (seen.current === view) return;
+    seen.current = view;
+    if (!motionReduced())
+      book.current?.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 150,
+        easing: 'ease-out',
+      });
+  }, [view]);
   const viewRef = useRef(view);
   viewRef.current = view;
 
-  // drag / swipe: a horizontal drag lifts the page and follows the finger; release past a third
-  // of the way finishes the turn, short of it the page falls back
+  // swipe: a horizontal flick of more than 50 px turns the page
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (flip || e.button !== 0) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    drag.current = {
-      x: e.clientX,
-      y: e.clientY,
-      id: e.pointerId,
-      span: wide ? r.width * 0.6 : r.width * 0.8,
-      from: 0,
-      on: false,
-    };
-  };
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x;
-    if (!d.on) {
-      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(e.clientY - d.y)) return;
-      if (dx < 0 ? view >= views - 1 : view <= 0) {
-        drag.current = null;
-        return;
-      }
-      d.on = true;
-      dragged.current = true;
-      e.currentTarget.setPointerCapture(e.pointerId);
-      if (reduced()) return;
-      d.from = dx < 0 ? 0 : 1;
-      p.current = d.from;
-      setFlip(dx < 0 ? { a: view, b: view + 1 } : { a: view - 1, b: view });
-    }
-    if (!reduced()) setP(Math.min(1, Math.max(0, d.from - dx / d.span)));
+    if (e.button !== 0) return;
+    drag.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
   };
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
     drag.current = null;
-    if (!d?.on) return;
+    if (!d || d.id !== e.pointerId || e.type === 'pointercancel') return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(e.clientY - d.y)) return;
     // the click that may follow this release is swallowed, and only that one
+    dragged.current = true;
     setTimeout(() => (dragged.current = false));
-    if (reduced()) {
-      const dx = e.clientX - d.x;
-      if (Math.abs(dx) > 60) go(view + (dx < 0 ? 1 : -1));
-      return;
-    }
-    const f = flip ?? (d.from ? { a: view - 1, b: view } : { a: view, b: view + 1 });
-    const done = d.from ? p.current < 0.67 : p.current > 0.33;
-    const to = (done ? 1 - d.from : d.from) as 0 | 1;
-    if (done) play('tap');
-    run(f, to, out);
+    go(view + (dx < 0 ? 1 : -1));
   };
 
   if (q.isPending) return <Skeleton className="h-96" />;
@@ -324,7 +254,7 @@ export function AlbumPage() {
         <GameHeader title="Meu álbum" />
         <div className="mt-6">
           <Notice
-            art={<GoalLoop />}
+            art={<GoalStill />}
             title="O álbum não abriu"
             action={
               <button type="button" className={btnPrimary} onClick={() => void q.refetch()}>
@@ -501,7 +431,7 @@ export function AlbumPage() {
                     type="button"
                     tabIndex={live ? 0 : -1}
                     aria-label={`${s.name}, ${RARITY_STYLE[s.rarity].label}. Ver figurinha`}
-                    onClick={() => startTransition(() => setOpen(s))}
+                    onClick={() => openRef.current?.(s)}
                     className="album-stuck"
                     style={
                       { '--tilt': `${TILT[(num * 5) % TILT.length]}deg` } as React.CSSProperties
@@ -533,14 +463,9 @@ export function AlbumPage() {
     );
   };
 
-  // what lies on the table: at rest the current view; turning, the pages under the leaf
-  const half = (i: number, pos: 'left' | 'right', live: boolean, cast: boolean) => (
-    <div
-      key={`${pos}-${fade}`}
-      className={`album-half album-half-${pos} ${live && fade ? 'album-fade' : ''}`}
-    >
-      {renderSide(sideAt(i), pos, live)}
-      {cast && <div aria-hidden="true" className={`album-cast album-cast-${pos}`} />}
+  const half = (i: number, pos: 'left' | 'right') => (
+    <div key={pos} className={`album-half album-half-${pos}`}>
+      {renderSide(sideAt(i), pos, true)}
     </div>
   );
   const corner = (dir: 1 | -1) => (
@@ -571,60 +496,19 @@ export function AlbumPage() {
       return typeof s === 'object' && s.key === g.key;
     });
 
-  let stage;
-  if (wide) {
-    const f = flip;
-    stage = f ? (
-      <>
-        {half(2 * f.a, 'left', false, true)}
-        {half(2 * f.b + 1, 'right', false, true)}
-        <div className="album-leaf album-leaf-wide" aria-hidden="true">
-          <div className="album-face album-face-front">
-            {renderSide(sideAt(2 * f.a + 1), 'right', false)}
-            <div className="album-gloss" />
-            <div className="album-shade" />
-          </div>
-          <div className="album-face album-face-back">
-            {renderSide(sideAt(2 * f.b), 'left', false)}
-            <div className="album-gloss" />
-            <div className="album-shade" />
-          </div>
-        </div>
-      </>
-    ) : (
-      <>
-        {half(2 * view, 'left', true, false)}
-        {half(2 * view + 1, 'right', true, false)}
-        {view > 0 && corner(-1)}
-        {view < views - 1 && corner(1)}
-      </>
-    );
-  } else {
-    const f = flip;
-    stage = f ? (
-      <>
-        {half(f.b, 'right', false, true)}
-        <div className="album-leaf album-leaf-single" aria-hidden="true">
-          <div className="album-face album-face-front">
-            {renderSide(sideAt(f.a), 'single', false)}
-            <div className="album-gloss" />
-            <div className="album-shade" />
-          </div>
-          <div className="album-face album-face-back">
-            <div className="album-side album-side-left album-paper" />
-            <div className="album-shade" />
-          </div>
-        </div>
-      </>
-    ) : (
-      <>
-        <div key={fade} className={`album-half album-half-single ${fade ? 'album-fade' : ''}`}>
-          {renderSide(sideAt(view), 'single', true)}
-        </div>
-        {view < views - 1 && corner(1)}
-      </>
-    );
-  }
+  const stage = wide ? (
+    <>
+      {half(2 * view, 'left')}
+      {half(2 * view + 1, 'right')}
+      {view > 0 && corner(-1)}
+      {view < views - 1 && corner(1)}
+    </>
+  ) : (
+    <>
+      <div className="album-half album-half-single">{renderSide(sideAt(view), 'single', true)}</div>
+      {view < views - 1 && corner(1)}
+    </>
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -633,7 +517,7 @@ export function AlbumPage() {
 
       {a.owned === 0 && (
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-          <GoalLoop className="h-24 w-32 shrink-0" />
+          <GoalStill className="h-24 w-32 shrink-0" />
           <p className="max-w-[44ch] text-lg leading-snug font-semibold sm:mr-auto">
             Álbum vazio por enquanto. Acerte uma fase do Career Path e a figurinha do jogador vem
             colada aqui.
@@ -676,11 +560,8 @@ export function AlbumPage() {
           ref={book}
           className="album-book"
           data-wide={wide || undefined}
-          data-closed={(wide && view === 0 && !flip) || undefined}
-          data-opening={(wide && flip?.a === 0) || undefined}
-          data-turning={flip ? '' : undefined}
+          data-closed={(wide && view === 0) || undefined}
           onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           onClickCapture={(e) => {
@@ -721,32 +602,7 @@ export function AlbumPage() {
         </button>
       </nav>
 
-      {open && (
-        <StickerDetail sticker={open} onClose={() => setOpen(null)}>
-          {promo && (
-            <div className="flex flex-col gap-2 rounded-xl border-2 border-cover/70 p-3">
-              <p className="text-sm font-semibold">
-                {RARITY_ORDER.indexOf(open.rarity) < RARITY_ORDER.indexOf('selecao_temporada')
-                  ? `Pódio da Temporada ${promo.season}: esta figurinha pode virar Seleção da Temporada.`
-                  : `Pódio da Temporada ${promo.season}: esta figurinha já está acima de Seleção da Temporada; promover gasta o pódio sem mudar a raridade.`}
-              </p>
-              <button
-                type="button"
-                className={`${btnPrimary} self-start`}
-                disabled={promote.isPending}
-                onClick={() => promote.mutate(open.playerId)}
-              >
-                Promover {open.name}
-              </button>
-              {promote.isError && (
-                <p role="alert" className="text-sm font-semibold">
-                  Não deu para promover agora. Tente de novo em instantes.
-                </p>
-              )}
-            </div>
-          )}
-        </StickerDetail>
-      )}
+      <DetailHost openRef={openRef} promo={promo} />
     </div>
   );
 }

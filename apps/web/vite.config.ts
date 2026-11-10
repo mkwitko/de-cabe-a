@@ -20,8 +20,39 @@ const swVersion = (): Plugin => ({
   },
 });
 
+/** Fetches the app chunk (and what it imports) with the HTML, in parallel with React DOM (see main.tsx). */
+const preloadRoot = (): Plugin => ({
+  name: 'preload-root',
+  apply: 'build',
+  transformIndexHtml: {
+    order: 'post',
+    handler(html, ctx) {
+      const bundle = ctx.bundle ?? {};
+      const root = Object.values(bundle).find(
+        (c) => c.type === 'chunk' && c.facadeModuleId?.endsWith('/src/root.tsx'),
+      );
+      if (!root) return;
+      const files = new Set<string>();
+      const walk = (f: string) => {
+        const c = bundle[f];
+        if (files.has(f) || c?.type !== 'chunk') return;
+        files.add(f);
+        c.imports.forEach(walk);
+      };
+      walk(root.fileName);
+      return [...files]
+        .filter((f) => !html.includes(`/${f}"`))
+        .map((f) => ({
+          tag: 'link',
+          attrs: { rel: 'modulepreload', crossorigin: '', href: `/${f}` },
+          injectTo: 'head' as const,
+        }));
+    },
+  },
+});
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), swVersion()],
+  plugins: [react(), tailwindcss(), swVersion(), preloadRoot()],
   server: {
     port: 5173,
     strictPort: true,

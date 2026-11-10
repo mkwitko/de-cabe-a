@@ -1,16 +1,9 @@
 import { z } from 'zod';
 
-export const GameMode = z.enum([
-  'CAREER_PATH',
-  'FOOTBALL_GRID',
-  'IMPOSTOR',
-  'TIMELINE',
-  'HIGHER_LOWER',
-  'MISSING_XI',
-  'MYSTERY_PLAYER',
-  'CONNECTIONS',
-  'DRAFT',
-]);
+import { GAME_MODES, GAME_PATH } from './modes';
+
+export { GAME_PATH };
+export const GameMode = z.enum(GAME_MODES);
 export type GameMode = z.infer<typeof GameMode>;
 export const AttemptStatus = z.enum(['IN_PROGRESS', 'WON', 'LOST', 'COMPLETED']);
 export type AttemptStatus = z.infer<typeof AttemptStatus>;
@@ -772,19 +765,6 @@ export const DailyResponse = z.strictObject({
   archive: z.array(z.string()),
 });
 export type DailyResponse = z.infer<typeof DailyResponse>;
-
-/** Web path of each game's track; a level is `${GAME_PATH[mode]}/${level}`. */
-export const GAME_PATH = {
-  CAREER_PATH: '/career-path',
-  FOOTBALL_GRID: '/grid',
-  IMPOSTOR: '/impostor',
-  TIMELINE: '/linha-do-tempo',
-  HIGHER_LOWER: '/mais-ou-menos',
-  MISSING_XI: '/escalacao',
-  CONNECTIONS: '/conexoes',
-  DRAFT: '/draft',
-  MYSTERY_PLAYER: '/craque-misterioso',
-} as const satisfies Record<GameMode, string>;
 
 /** Ligas de amigos (GROWTH_PLAN.md 2.1). */
 export const LeagueName = z

@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-import { GameMode, type StatsResponse } from '@decabeca/contracts';
+import type { GameMode, StatsResponse } from '@decabeca/contracts';
+import { GAME_MODES } from '@decabeca/contracts/modes';
 import { useAlbum, useMe, useStats } from '../lib/game';
 import { isModeLaunched, isPageLaunched } from '../lib/launch';
 import { useEntitlements } from '../lib/billing';
@@ -13,35 +14,13 @@ import { StarIcon } from '../components/Stars';
 import { btnPrimary, Skeleton } from '../components/ui';
 import { Achievements } from '../components/Achievements';
 
-/** A number that counts up when it enters; the final value stays in the DOM for assistive tech. */
-function Count({ n }: { n: number }) {
-  const still = n < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const [v, setV] = useState(still ? n : 0);
-  useEffect(() => {
-    if (still) return;
-    const t0 = performance.now();
-    let raf = requestAnimationFrame(function tick(t) {
-      const k = Math.min(1, (t - t0) / 700);
-      setV(Math.round(n * (1 - (1 - k) ** 3)));
-      if (k < 1) raf = requestAnimationFrame(tick);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [n, still]);
-  return (
-    <>
-      <span className="sr-only">{n}</span>
-      <span aria-hidden="true">{v}</span>
-    </>
-  );
-}
-
 /** One figure on the match sheet: label for assistive tech first (dt), number shown first. */
 function Figure({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col-reverse gap-1">
       <dt className="text-sm font-semibold text-ink/70">{label}</dt>
       <dd className="font-condensed tabular flex items-center gap-1 text-5xl leading-none font-black">
-        {typeof children === 'number' ? <Count n={children} /> : children}
+        {children}
       </dd>
     </div>
   );
@@ -165,9 +144,7 @@ function CareerSheet({ cp }: { cp: StatsResponse['CAREER_PATH'] }) {
               <dt className="max-w-[10ch] text-xs leading-tight font-semibold text-ink/70">
                 {label}
               </dt>
-              <dd className="font-condensed tabular text-4xl leading-none font-black">
-                {typeof v === 'number' ? <Count n={v} /> : v}
-              </dd>
+              <dd className="font-condensed tabular text-4xl leading-none font-black">{v}</dd>
             </div>
           ))}
         </dl>
@@ -217,9 +194,10 @@ export function StatsPage() {
   const album = useAlbum().data;
   if (!data) return <Skeleton className="h-96" />;
   const grid = data.FOOTBALL_GRID;
-  const levels = GameMode.options
-    .filter((m) => isModeLaunched(m))
-    .reduce((n, m) => n + data[m].completed, 0);
+  const levels = GAME_MODES.filter((m) => isModeLaunched(m)).reduce(
+    (n, m) => n + data[m].completed,
+    0,
+  );
   const ranking = isPageLaunched('ranking');
   const guest = !!me && !me.account;
   const rank = (n: number | null) =>

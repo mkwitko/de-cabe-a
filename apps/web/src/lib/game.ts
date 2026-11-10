@@ -22,7 +22,7 @@ import type {
 } from '@decabeca/contracts';
 import { api } from './api';
 
-export { GAME_PATH } from '@decabeca/contracts';
+export { GAME_PATH } from '@decabeca/contracts/modes';
 export const GAME_NAME = {
   CAREER_PATH: 'Career Path',
   FOOTBALL_GRID: 'Football Grid',

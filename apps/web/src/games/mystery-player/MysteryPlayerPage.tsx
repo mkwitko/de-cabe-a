@@ -44,7 +44,7 @@ function GuessRow({ g, i, fresh }: { g: Guess; i: number; fresh: boolean }) {
   return (
     <li
       style={{ rotate: `${i % 2 ? 0.5 : -0.5}deg` }}
-      className={`flex flex-col gap-1.5 bg-[#fff9dc] p-2.5 text-ink shadow-[0_3px_0_#0003] ${fresh ? 'motion-safe:animate-[paste_420ms_var(--ease-out-expo)]' : ''}`}
+      className={`flex flex-col gap-1.5 bg-[#fff9dc] p-2.5 text-ink shadow-[0_3px_0_#0003] ${fresh ? 'motion-safe:animate-[paste_150ms_ease-out]' : ''}`}
     >
       <span className="font-condensed text-xl leading-none font-black uppercase">{g.name}</span>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
@@ -150,7 +150,7 @@ function Field({
         />
       )}
       {note && !known && (
-        <span className="absolute -top-1 right-0 z-10 rotate-3 bg-[#fff9dc] px-1.5 py-0.5 text-[0.7rem] leading-tight font-bold shadow-[0_2px_0_#0003] motion-safe:animate-[paste_420ms_var(--ease-out-expo)]">
+        <span className="absolute -top-1 right-0 z-10 rotate-3 bg-[#fff9dc] px-1.5 py-0.5 text-[0.7rem] leading-tight font-bold shadow-[0_2px_0_#0003] motion-safe:animate-[paste_150ms_ease-out]">
           {note}
         </span>
       )}
@@ -282,7 +282,7 @@ export function MysteryPlayerPage({ level, timed = false }: { level: number; tim
         <div
           key={flash}
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_450ms_ease-out]"
+          className="pointer-events-none fixed inset-0 z-40 bg-[#a3242f] opacity-0 motion-safe:animate-[red-flash_180ms_ease-out]"
         />
       )}
 
@@ -337,7 +337,7 @@ export function MysteryPlayerPage({ level, timed = false }: { level: number; tim
         </div>
       ) : (
         <form
-          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:mx-auto sm:w-full sm:max-w-5xl sm:shrink-0 sm:rounded-xl sm:border sm:p-4"
+          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 sm:relative sm:inset-x-auto sm:bottom-auto sm:mx-auto sm:w-full sm:max-w-5xl sm:shrink-0 sm:rounded-xl sm:border sm:p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (selected) guess(selected);

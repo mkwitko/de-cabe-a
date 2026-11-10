@@ -1,6 +1,5 @@
 /**
- * A sticker taken out of the album: the card large (tilting with the pointer, the holo following
- * it) beside what it means: the Nota De Cabeça, the rarity and how it was earned, the numbers
+ * A sticker taken out of the album: the card large (still) beside what it means: the Nota De Cabeça, the rarity and how it was earned, the numbers
  * spelled out, where and when it was won, and the photo credit the CC licence asks for. A native
  * modal dialog (focus kept inside, Esc closes, focus goes back to the slot); a bottom sheet on
  * phones. With an owned finish, "Aplicar acabamento" picks this sticker's own.
@@ -8,6 +7,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Sticker, StickerRarity } from '@decabeca/contracts';
 import { StickerCard } from './StickerCard';
+import { useNextFrame } from '../lib/progressive';
 import { RARITY_STYLE } from './rarity';
 import { PlayerCardDialog } from './PlayerCardDialog';
 import { Flag } from './Flag';
@@ -45,31 +45,12 @@ export function StickerDetail({
   const dialog = useRef<HTMLDialogElement>(null);
   const [career, setCareer] = useState<string | null>(null);
   // the big card paints a frame after the sheet opens, so the tap itself stays short
-  const [cardOn, setCardOn] = useState(false);
+  const cardOn = useNextFrame();
   useEffect(() => {
     const back = document.activeElement as HTMLElement | null;
     dialog.current?.showModal();
-    const f = requestAnimationFrame(() => setCardOn(true));
-    return () => {
-      cancelAnimationFrame(f);
-      back?.focus();
-    };
+    return () => back?.focus();
   }, []);
-
-  const tilt = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'touch' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    const st = e.currentTarget.style;
-    st.setProperty('--px', x.toFixed(3));
-    st.setProperty('--py', y.toFixed(3));
-    st.setProperty('--ry', `${((x - 0.5) * 18).toFixed(2)}deg`);
-    st.setProperty('--rx', `${((0.5 - y) * 14).toFixed(2)}deg`);
-  };
-  const rest = (e: React.PointerEvent<HTMLDivElement>) => {
-    for (const k of ['--px', '--py', '--rx', '--ry']) e.currentTarget.style.removeProperty(k);
-  };
 
   const attrs: [string, string, number | null | undefined][] = [
     ['JOG', 'Jogos na carreira (ligas)', s.games],
@@ -110,7 +91,7 @@ export function StickerDetail({
         </button>
 
         <div className="sd-stage">
-          <div className="sd-card" onPointerMove={tilt} onPointerLeave={rest}>
+          <div className="sd-card">
             {cardOn && <StickerCard sticker={s} size="lg" finish={finishOf(owned, s.playerId)} />}
           </div>
         </div>

@@ -114,10 +114,7 @@ export function TitleLadder({ total }: { total: number }) {
             aria-valuenow={total}
             className="h-2 overflow-hidden rounded-full bg-chalk/15"
           >
-            <span
-              className="block h-full rounded-full bg-cover transition-[width] duration-700 ease-out-expo"
-              style={{ width: `${pct}%` }}
-            />
+            <span className="block h-full rounded-full bg-cover" style={{ width: `${pct}%` }} />
           </div>
         )}
         <p className="text-sm text-chalk-soft">
