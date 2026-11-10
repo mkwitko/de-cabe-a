@@ -1,4 +1,5 @@
 /** Privacy notice (LGPD, Lei 13.709/2018). Plain PT-BR; blanks for the owner are marked [preencher]. */
+import { isPageLaunched } from '../lib/launch';
 import { A, CONTROLLER, DPO_EMAIL, L, LegalPage, Ul } from '../components/Legal';
 
 export function PrivacyPage() {
@@ -92,6 +93,26 @@ export function PrivacyPage() {
             </>
           ),
         },
+        // Only while Apoie is open (lib/launch.ts).
+        ...(isPageLaunched('apoie')
+          ? [
+              {
+                id: 'apoio',
+                title: 'Apoios',
+                body: (
+                  <p>
+                    Quem apoia o projeto em <L to="/apoie">Apoie</L> paga na <strong>Stripe</strong>
+                    , que recebe nome, e-mail e os dados do cartão ou do Pix; nós não vemos nem
+                    guardamos os dados do cartão. Guardamos o valor, a data e a situação do
+                    pagamento e, se você estiver na sua conta, ligamos o apoio a ela para mostrar a
+                    marca Apoiador. Apoio sem conta não fica ligado a nada aqui. Registros de
+                    pagamento são mantidos pelo prazo que a lei fiscal pedir, mesmo depois que a
+                    conta é excluída, sem o seu nome.
+                  </p>
+                ),
+              },
+            ]
+          : []),
         {
           id: 'prazo',
           title: 'Por quanto tempo',
@@ -99,8 +120,9 @@ export function PrivacyPage() {
             <Ul>
               <li>Conta e jogo: até você excluir a conta.</li>
               <li>
-                Visitante sem conta: até você apagar os dados em <L to="/conta">Conta</L>, ou
-                apagados automaticamente após 12 meses sem jogar.
+                Visitante sem conta: até você apagar os dados em{' '}
+                <L to="/conta?aba=dados">Conta › Seus dados</L>, ou apagados automaticamente após 12
+                meses sem jogar.
               </li>
               <li>Buscas sem resultado: 30 dias.</li>
               <li>Cópias de segurança: guardadas por até 30 dias.</li>
@@ -119,14 +141,15 @@ export function PrivacyPage() {
               </p>
               <Ul>
                 <li>
-                  <strong>Baixar meus dados</strong>: em <L to="/conta">Conta</L>, um arquivo JSON
-                  com tudo que guardamos de você.
+                  <strong>Baixar meus dados</strong>: em{' '}
+                  <L to="/conta?aba=dados">Conta › Seus dados</L>, um arquivo JSON com tudo que
+                  guardamos de você.
                 </li>
                 <li>
-                  <strong>Excluir conta</strong>: em <L to="/conta">Conta</L>. Apaga seus jogos,
-                  figurinhas, ligas, avisos e sessões de uma vez e encerra seu acesso. Níveis da
-                  Oficina que você criou continuam para os outros, sem seu nome. Não dá para
-                  desfazer.
+                  <strong>Excluir conta</strong>: em <L to="/conta?aba=dados">Conta › Seus dados</L>
+                  . Apaga seus jogos, figurinhas, ligas, avisos e sessões de uma vez e encerra seu
+                  acesso. Níveis da Oficina que você criou continuam para os outros, sem seu nome.
+                  Não dá para desfazer.
                 </li>
                 <li>
                   <strong>Cookies</strong>: mude sua escolha quando quiser em{' '}

@@ -27,11 +27,26 @@ export async function checkout(product: ProductKey, leagueCode?: string) {
   location.assign(url);
 }
 
-/** Stripe's Customer Portal: card, invoices, cancel at period end. */
-export async function openPortal() {
-  const { url } = await api<RedirectResponse>('/v1/billing/portal', { method: 'POST' });
+/** Apoie: a one-time amount (centavos) or, without one, the monthly apoio; back to /apoie. */
+export async function donate(amount?: number) {
+  const body: CheckoutRequest =
+    amount === undefined ? { product: 'apoio_mensal' } : { product: 'apoio_avulso', amount };
+  const { url } = await api<RedirectResponse>('/v1/billing/checkout', {
+    method: 'POST',
+    json: body,
+  });
   location.assign(url);
 }
+
+/** Stripe's Customer Portal: card, invoices, cancel at period end; back to /clube or /apoie. */
+async function portalTo(volta: 'clube' | 'apoie') {
+  const { url } = await api<RedirectResponse>(`/v1/billing/portal?volta=${volta}`, {
+    method: 'POST',
+  });
+  location.assign(url);
+}
+export const openPortal = () => portalTo('clube');
+export const openSupportPortal = () => portalTo('apoie');
 
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 /** Centavos → "R$ 9,90". */

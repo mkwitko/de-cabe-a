@@ -9,11 +9,11 @@ test('first visit: the welcome, a guest with a nickname, then the home', async (
   const welcome = page.getByRole('dialog', { name: /Bem-vindo ao De Cabeça F.C./ });
   await expect(welcome.getByRole('link', { name: 'Criar conta' })).toHaveAttribute(
     'href',
-    '/conta?voltar=%2F',
+    '/entrar?criar=1&voltar=%2F',
   );
   await expect(welcome.getByRole('link', { name: /Entrar/ })).toHaveAttribute(
     'href',
-    '/conta?entrar=1&voltar=%2F',
+    '/entrar?voltar=%2F',
   );
   const nick = welcome.getByRole('textbox', { name: 'Seu apelido' });
   await expect(nick).not.toHaveValue(''); // a friendly name is already there
@@ -64,7 +64,7 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await expect(sheet.getByText(/Só quem tem conta vota/)).toBeVisible();
   await expect(sheet.getByRole('link', { name: 'Entrar para votar' })).toHaveAttribute(
     'href',
-    '/conta?entrar=1&voltar=%2F%3Fmodo%3Dcopa',
+    '/entrar?voltar=%2F%3Fmodo%3Dcopa',
   );
   await sheet.getByRole('button', { name: 'Fechar' }).click();
   await expect(sheet).toBeHidden();
@@ -76,6 +76,8 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await expect(page.getByRole('heading', { name: /chega em breve/i })).toBeVisible();
   await page.goto('/clube');
   await expect(page.getByRole('heading', { name: /Clube chega em breve/i })).toBeVisible();
+  await page.goto('/apoie');
+  await expect(page.getByRole('heading', { name: /Apoie chega em breve/i })).toBeVisible();
 
   // Career Path level 1, start to finish, with the first-run tutorial.
   await page.goto('/');

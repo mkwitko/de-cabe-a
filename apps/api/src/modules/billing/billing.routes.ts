@@ -133,14 +133,17 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * Apoie: a one-time amount the donor picks (price_data; card or Pix) or, with no amount, the
-   * monthly price. A guest pays as themselves (Checkout collects the e-mail) and nothing is kept
-   * here; an account's payment is recorded so the webhook can mark it as a supporter.
+   * monthly price (accounts only). A guest gives as themselves (Checkout collects the e-mail) and
+   * nothing is kept here; an account's payment is recorded so the webhook marks it a supporter.
    */
   async function donate(userId: string | null, amount: number | undefined) {
     const b = billing();
     const monthly = amount === undefined;
     if (!monthly && !amount)
       throw new AppError(400, 'VALIDATION_ERROR', 'Escolha um valor a partir de R$ 5.');
+    // Monthly needs an account: it is where the apoio is managed and cancelled.
+    if (monthly && !userId)
+      throw new AppError(401, 'UNAUTHORIZED', 'Entre na sua conta para apoiar todo mês.');
     const price = b.prices.apoio_mensal;
     if (monthly && !price)
       throw new AppError(503, 'BILLING_UNAVAILABLE', 'O apoio mensal não está disponível agora.');
@@ -186,17 +189,17 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
-    const userId = accountOf(req);
-    const b = billing();
-    const customer = await prisma.billingCustomer.findUnique({ where: { userId } });
-    if (!customer) throw new AppError(404, 'NOT_FOUND', 'Nenhuma assinatura nesta conta.');
-    const s = await b.stripe.billingPortal.sessions.create({
-      customer: customer.stripeCustomerId,
-      return_url: `${b.webOrigin}/${req.query.volta}`,
-      locale: 'pt-BR',
-    });
-    return { url: s.url };
-  },
+      const userId = accountOf(req);
+      const b = billing();
+      const customer = await prisma.billingCustomer.findUnique({ where: { userId } });
+      if (!customer) throw new AppError(404, 'NOT_FOUND', 'Nenhuma assinatura nesta conta.');
+      const s = await b.stripe.billingPortal.sessions.create({
+        customer: customer.stripeCustomerId,
+        return_url: `${b.webOrigin}/${req.query.volta}`,
+        locale: 'pt-BR',
+      });
+      return { url: s.url };
+    },
   );
 
   /**

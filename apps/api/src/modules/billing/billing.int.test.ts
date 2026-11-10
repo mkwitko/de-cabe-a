@@ -328,6 +328,9 @@ describe('billing', () => {
       (await guest.req('POST', '/billing/checkout', { product: 'apoio_avulso', amount: 499 }))
         .statusCode,
     ).toBe(400);
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_mensal' })).statusCode,
+    ).toBe(401);
     const before = await prisma.purchase.count();
     const { res } = await checkout(guest, { product: 'apoio_avulso', amount: 2500 });
     expect(res.statusCode, res.body).toBe(200);
@@ -347,7 +350,12 @@ describe('billing', () => {
     const iara = await account('Iara');
     expect(await ents(iara)).toMatchObject({ supporter: false, supportsMonthly: false });
     const { sessionId } = await checkout(iara, { product: 'apoio_avulso', amount: 1000 });
-    const paid = { id: sessionId, mode: 'payment', payment_status: 'paid', payment_intent: 'pi_iara' };
+    const paid = {
+      id: sessionId,
+      mode: 'payment',
+      payment_status: 'paid',
+      payment_intent: 'pi_iara',
+    };
     await deliver('checkout.session.completed', paid);
     expect(await ents(iara)).toMatchObject({ supporter: true, cosmetics: [] });
     await deliver('charge.refunded', { refunded: true, payment_intent: 'pi_iara' });

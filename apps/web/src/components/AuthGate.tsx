@@ -108,12 +108,13 @@ export function AuthGate({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [sentTo, setSentTo] = useState<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
-  // Google: the API answers with the consent URL; the callback comes back to /conta.
+  // Google: the API answers with the consent URL; the callback comes back here (/entrar), which
+  // then forwards to `?voltar=` or /conta.
   const google = useMutation({
     mutationFn: () =>
       api<{ url: string }>('/v1/auth/sign-in/social', {
         method: 'POST',
-        json: { provider: 'google', callbackURL: `${location.origin}/conta${location.search}` },
+        json: { provider: 'google', callbackURL: `${location.origin}/entrar${location.search}` },
       }),
     onSuccess: ({ url }) => location.assign(url),
   });
