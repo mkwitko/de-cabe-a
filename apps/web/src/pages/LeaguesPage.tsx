@@ -237,7 +237,7 @@ export function LeaguePage() {
   const invite = `Entra na minha liga "${l.name}" no De Cabeça F.C.: ranking semanal de estrelas entre amigos.\ndecabecafc.com.br/liga/${l.code}?ref=invite`;
   return (
     <>
-      <GameHeader title={l.name} />
+      <GameHeader title={l.pro ? '' : l.name} />
       {l.pro && <LeagueCrest name={l.name} style={l.style ?? DEFAULT_STYLE} />}
       {/* the code as a ticket: stub with the people count, perforation, big code */}
       <div className="mt-4 flex w-full max-w-md items-stretch overflow-hidden rounded-lg bg-cover text-ink shadow-[0_10px_22px_-10px_rgb(0_0_0/0.6)]">
@@ -423,11 +423,11 @@ function LeagueCrest({ name, style }: { name: string; style: LeagueStyle }) {
         </text>
       </svg>
       <div className="min-w-0">
-        <p
+        <h1
           className={`font-condensed text-[clamp(1.75rem,7vw,3rem)] leading-[0.9] font-black break-words uppercase ${LETTERING[style.nameStyle].className}`}
         >
           {name}
-        </p>
+        </h1>
         <p className="mt-1 text-sm font-bold tracking-[0.18em] text-cover uppercase">Liga Pro</p>
       </div>
     </div>

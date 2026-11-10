@@ -20,7 +20,6 @@ import { StickerCard } from './StickerCard';
 import { TitleBadge } from './TitleBadge';
 import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
-import { Moment } from './Moment';
 import type { VotableMode } from '@decabeca/contracts';
 import { leaderOf, ModeArt, ModeDialog, type Locker } from './ModeDialog';
 import { useFinish } from '../lib/cosmetics';
@@ -80,6 +79,20 @@ function useDust() {
   }, []);
   return on;
 }
+
+/** Motes drifting in the light: CSS only (transform/opacity, compositor), no player download. */
+const DUST = Array.from({ length: 8 }, (_, i) => {
+  const r = (n: number) => ((i * 7919 + n * 104729) % 1000) / 1000;
+  return {
+    left: `${10 + r(1) * 80}%`,
+    top: `${10 + r(2) * 80}%`,
+    '--s': `${2 + r(3) * 3}px`,
+    '--dx': `${(r(4) - 0.5) * 40}px`,
+    '--dy': `${-20 - r(5) * 40}px`,
+    animationDuration: `${6 + r(6) * 6}s`,
+    animationDelay: `${-r(7) * 8}s`,
+  } as React.CSSProperties;
+});
 
 export type { Locker };
 
@@ -274,7 +287,13 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
     <div ref={scene} className="scene relative">
       <div aria-hidden="true" className="scene-art">
         <div className="scene-cone" />
-        {dust && <Moment className="scene-dust" src="/lottie/dust.json" loop />}
+        {dust && (
+          <div className="scene-dust">
+            {DUST.map((m, i) => (
+              <i key={i} style={m} />
+            ))}
+          </div>
+        )}
       </div>
       {/* the room before the light comes on, over everything for a moment */}
       <div aria-hidden="true" className="scene-dark" />

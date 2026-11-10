@@ -76,3 +76,14 @@ style recalculation 954 ms → ~400 ms and the leaf now animates on the composit
   navigation. Further route/vendor splitting would be the next step.
 - Tap → result render tasks are 120-140 ms at 4x (from 200-260); the guess tap itself forces a
   ~60 ms layout.
+
+## Round 2
+
+- Home dust is CSS now (16 motes, transform/opacity); the dotlottie wasm (1.2 MB) is no longer
+  requested on home, only when a celebration moment mounts.
+- Ouro Brilhante `sheen` animates `transform` (compositor) instead of `background-position`.
+- Album sticker detail: the large card renders a frame after the sheet opens. 4x CPU taps:
+  detail 152 ms -> 70/99 ms; broadcast -> sticker ~88-101 ms; sticker -> end ~55-62 ms.
+- Caddy: unhashed media (img, cutouts, audio, lottie, icons) `max-age=604800, stale-while-revalidate=86400`.
+- Images: `decoding=async` on the rest; the broadcast hero is `fetchpriority=high`; the home LCP
+  (room art) was already preloaded.

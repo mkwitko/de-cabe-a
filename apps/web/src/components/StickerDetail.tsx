@@ -49,10 +49,16 @@ export function StickerDetail({
   const owned = useOwned();
   const dialog = useRef<HTMLDialogElement>(null);
   const [career, setCareer] = useState<string | null>(null);
+  // the big card paints a frame after the sheet opens, so the tap itself stays short
+  const [cardOn, setCardOn] = useState(false);
   useEffect(() => {
     const back = document.activeElement as HTMLElement | null;
     dialog.current?.showModal();
-    return () => back?.focus();
+    const f = requestAnimationFrame(() => setCardOn(true));
+    return () => {
+      cancelAnimationFrame(f);
+      back?.focus();
+    };
   }, []);
 
   const attrs: [string, string, number | null | undefined][] = [
@@ -95,7 +101,7 @@ export function StickerDetail({
 
         <div className="sd-stage">
           <div className="sd-card">
-            <StickerCard sticker={s} size="lg" finish={finishOf(owned, s.playerId)} />
+            {cardOn && <StickerCard sticker={s} size="lg" finish={finishOf(owned, s.playerId)} />}
           </div>
         </div>
 

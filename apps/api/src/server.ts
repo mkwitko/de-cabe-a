@@ -76,6 +76,10 @@ const billing: BillingDeps | null =
       }
     : null;
 
+const sendEmail = mailer(process.env.RESEND_API_KEY, process.env.EMAIL_FROM);
+/** Where new player feedback is e-mailed; unset = saved only. */
+const feedbackTo = process.env.FEEDBACK_TO;
+
 const app = buildApp(
   // Behind Caddy + the Pages Function (ADR-010) the client IP comes in X-Forwarded-For.
   // ponytail: the origin is public, so a direct caller can forge it; restrict Caddy to
@@ -118,7 +122,10 @@ const app = buildApp(
       baseURL: webOrigin,
       trustedOrigins: [webOrigin, ...(production ? [] : ['http://localhost:5173'])],
       google,
-      sendEmail: mailer(process.env.RESEND_API_KEY, process.env.EMAIL_FROM),
+      sendEmail,
+    },
+    notifyFeedback: async (subject, text) => {
+      if (feedbackTo) await sendEmail({ to: feedbackTo, subject, text });
     },
   },
 );

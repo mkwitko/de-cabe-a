@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Sticker, StickerRarity } from './game';
+import { Finish } from './billing';
 
 // Sticker schemas live in game.ts (AttemptResponse needs them; avoids an import cycle).
 export { Sticker, StickerAward, StickerRarity } from './game';
@@ -16,6 +17,8 @@ export type AlbumResponse = z.infer<typeof AlbumResponse>;
 export const ProfileAlbumResponse = z.strictObject({
   showcase: z.array(Sticker).max(6),
   owned: z.number().int(),
+  /** The finish the owner wears on each showcased sticker (only the ones they own right now). */
+  finishes: z.record(z.string(), Finish),
 });
 export type ProfileAlbumResponse = z.infer<typeof ProfileAlbumResponse>;
 

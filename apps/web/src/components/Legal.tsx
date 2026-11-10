@@ -10,7 +10,8 @@ export const Fill = ({ children }: { children: string }) => (
 );
 
 /** Controller and data-protection contact, filled in once here for every legal page. */
-export const CONTROLLER = 'Mauricio de Oliveira Kwitko';
+export const CNPJ = '40.585.767/0001-44';
+export const CONTROLLER = `Mauricio de Oliveira Kwitko (CNPJ ${CNPJ})`;
 export const DPO_EMAIL = (
   <a href="mailto:mauriciokwt@gmail.com" className="underline underline-offset-4">
     mauriciokwt@gmail.com
