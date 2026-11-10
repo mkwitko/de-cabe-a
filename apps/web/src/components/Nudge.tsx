@@ -11,6 +11,7 @@ import {
 } from '../lib/nudges';
 import { Crest } from './Crest';
 import { btnPrimary } from './ui';
+import { signUpHref } from './SignInButton';
 
 /**
  * "Crie sua conta", tied to the moment: a scoreboard ribbon. Inline at the end of a level; on the
@@ -39,7 +40,7 @@ export function Nudge({
     'min-h-11 rounded-lg px-3 text-sm font-bold text-chalk-soft underline-offset-4 hover:text-chalk hover:underline';
   const create = (
     <Link
-      to={`/conta?voltar=${encodeURIComponent(pathname)}`}
+      to={signUpHref(pathname)}
       onClick={onDone}
       className={`shrink-0 ${floating ? btnPrimary.replace('min-h-11', 'min-h-10').replace('px-5', 'px-3').replace('text-lg', 'text-base') : btnPrimary}`}
     >

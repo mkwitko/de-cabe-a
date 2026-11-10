@@ -17,6 +17,8 @@ const ROUTES = [
   '/ranking',
   '/carreira',
   '/conta',
+  '/entrar',
+  '/apoie',
   '/como-jogar',
   '/history',
   '/d/hoje',

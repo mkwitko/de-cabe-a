@@ -31,9 +31,15 @@ Já criados na sandbox (BRL). Os ids vão em `STRIPE_PRICE_<CHAVE>` (o `.env.exa
 | `passaporte_selecao`     | `decabeca_passaporte_selecao`     | R$ 6,90 único  | `price_1UaL3aD3FzwzVFN9GOTCRDWq` |
 | `torcida_charanga`       | `decabeca_torcida_charanga`       | R$ 2,90 único  | `price_1UaL3bD3FzwzVFN9HAeF9hks` |
 | `torcida_geral`          | `decabeca_torcida_geral`          | R$ 2,90 único  | `price_1UaL3cD3FzwzVFN93LlbXqUw` |
+| `apoio_mensal`           | `prod_VbYhNgJIapZTkY` (Apoio)     | R$ 10,00/mês   | `price_1UaLaUD3FzwzVFN9YWzL05Gd` |
 
 Os valores mostrados no site estão em `packages/contracts/src/billing.ts` (`CATALOG`); se mudar um
 preço na Stripe, mude lá também. Uma chave sem `STRIPE_PRICE_` fica fora de venda.
+
+`apoio_avulso` (/apoie) não tem Price: o valor que a pessoa escolhe (R$ 5 a R$ 1.000) vai como
+`price_data` no Checkout, com o botão "Doar". Quem recebe o apoio está em `APOIO_RECIPIENT`
+(`packages/contracts/src/billing.ts`); mude ali se o apoio passar para um CNPJ. A página abre com
+a chave `apoie` em `apps/web/src/lib/launch.ts`.
 
 ## 3. Webhook (obrigatório)
 

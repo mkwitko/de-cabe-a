@@ -1,4 +1,4 @@
-import type { Sticker } from '@decabeca/contracts';
+import type { Finish, Sticker } from '@decabeca/contracts';
 import { StickerCard } from './StickerCard';
 import { RARITY_ORDER } from './rarity';
 
@@ -14,9 +14,12 @@ export const bestFirst = (stickers: Sticker[]) =>
 export function Showcase({
   stickers,
   cols = 'grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-6',
+  finishOf,
 }: {
   stickers: Sticker[];
   cols?: string;
+  /** The owner's finishes (own album only; a public profile shows them plain). */
+  finishOf?: (playerId: string) => Finish | null;
 }) {
   const shelf = stickers.length > 3 ? 6 : 3;
   // A shelf of 3 stays 3 wide, so a 6-column row is never half empty.
@@ -27,7 +30,7 @@ export function Showcase({
     >
       {stickers.slice(0, 6).map((s) => (
         <li key={s.playerId} className="aspect-[3/4] shadow-[0_8px_0_-4px_rgb(255_255_255/0.2)]">
-          <StickerCard sticker={s} size="sm" />
+          <StickerCard sticker={s} size="sm" finish={finishOf?.(s.playerId) ?? null} />
         </li>
       ))}
       {/* Empty slots up to a full shelf (3 or 6); the odd last one hides on the 2-column phone. */}

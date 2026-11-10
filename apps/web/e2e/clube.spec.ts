@@ -14,12 +14,12 @@ test('guest: Clube plans, shop and gift ask for an account; the gift link too', 
   await expect(page.getByRole('heading', { name: 'Banca' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Assinar o mês' })).toHaveAttribute(
     'href',
-    '/conta?entrar=1&voltar=%2Fclube',
+    '/entrar?voltar=%2Fclube',
   );
 
   await page.goto('/presente/ABCD-EFGH-JKLM');
   await expect(page.getByRole('link', { name: 'Entrar para resgatar' })).toHaveAttribute(
     'href',
-    '/conta?entrar=1&voltar=%2Fpresente%2FABCD-EFGH-JKLM',
+    '/entrar?voltar=%2Fpresente%2FABCD-EFGH-JKLM',
   );
 });

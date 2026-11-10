@@ -350,6 +350,7 @@ model User {
   authSessions AuthSession[]
   accounts     Account[]
   modeVote     ModeVote?
+  cosmetics    CosmeticChoice?
 }
 
 /// Better Auth session (sign-in state). Game progress stays on GuestSession (ADR-004).
@@ -602,6 +603,9 @@ model League {
   name      String
   createdBy String /// pk of the creator
   createdAt DateTime       @default(now())
+  /// Liga Pro crest (LeagueColor, LeagueNameStyle); shown only while the league is Pro
+  color     String?
+  nameStyle String?
   members   LeagueMember[]
   reports   LeagueReport[]
 }
@@ -853,4 +857,17 @@ model StripeEvent {
   id        String   @id
   type      String
   createdAt DateTime @default(now())
+}
+
+/// What an account wears (PATCH /v1/me/cosmetics); values are Cosmetic flags, checked as owned on
+/// write and again on read (a lapsed Clube's items stop showing).
+model CosmeticChoice {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  finish    String?
+  passport  String?
+  crowd     String?
+  /// playerId → Finish or "none": a sticker's own finish over the default
+  stickers  Json     @default("{}")
+  updatedAt DateTime @updatedAt
 }

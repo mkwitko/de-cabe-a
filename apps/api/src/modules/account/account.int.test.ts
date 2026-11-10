@@ -141,6 +141,19 @@ afterAll(async () => {
 });
 
 describe('LGPD: exportar e excluir', () => {
+  it('e-mail sign-up with the optional nickname empty picks a free one', async () => {
+    const email = `${randomUUID()}@example.com`;
+    const res = await device().req('POST', '/auth/sign-up/email', {
+      email,
+      password: 'segredo-123',
+      name: '',
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect((await prisma.user.findUniqueOrThrow({ where: { email } })).nickname).toMatch(
+      /^Jogador/,
+    );
+  });
+
   it('exports the player data as a JSON attachment, only theirs', async () => {
     const ana = await populated('Ana Export', true);
     await populated('Bia Export');

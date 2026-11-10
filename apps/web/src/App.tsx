@@ -1,4 +1,5 @@
 import { SettingsButton } from './components/SettingsButton';
+import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
@@ -48,6 +49,10 @@ const NewPasswordPage = lazy(() =>
 const AccountPage = lazy(() =>
   import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })),
 );
+const EntrarPage = lazy(() =>
+  import('./pages/EntrarPage').then((m) => ({ default: m.EntrarPage })),
+);
+const ApoiePage = lazy(() => import('./pages/ApoiePage').then((m) => ({ default: m.ApoiePage })));
 const HowToPlayPage = lazy(() =>
   import('./pages/HowToPlayPage').then((m) => ({ default: m.HowToPlayPage })),
 );
@@ -390,7 +395,7 @@ const NAV_ALL = [
     label: 'Jogos',
     Icon: GamesIcon,
     match: (p: string) =>
-      !/^\/(d|ranking|ligas?|fantasy|stats|album|history|conta|perfil)(\/|$)/.test(p),
+      !/^\/(d|ranking|ligas?|fantasy|stats|album|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
   { to: '/d/hoje', label: 'Desafio', Icon: DailyIcon, match: (p: string) => /^\/d(\/|$)/.test(p) },
   {
@@ -403,7 +408,7 @@ const NAV_ALL = [
     to: '/stats',
     label: 'Perfil',
     Icon: ProfileIcon,
-    match: (p: string) => /^\/(stats|album|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) => /^\/(stats|album|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
 ] as const;
 
@@ -412,14 +417,14 @@ const NAV_LAUNCH = [
     to: '/',
     label: 'Jogar',
     Icon: GamesIcon,
-    match: (p: string) => !/^\/(album|stats|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) => !/^\/(album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
   { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },
   {
     to: '/stats',
     label: 'Perfil',
     Icon: ProfileIcon,
-    match: (p: string) => /^\/(stats|history|conta|perfil)(\/|$)/.test(p),
+    match: (p: string) => /^\/(stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
 ] as const;
 
@@ -431,6 +436,7 @@ function Shell({ children }: { children: ReactNode }) {
   const home = pathname === '/';
   const level = sceneFor(pathname) === 'level';
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
+  useApplyCosmetics();
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       {/* The scoreboard strip, the same 56px on every route: crest, places, Ajustes, Entrar.
@@ -550,6 +556,8 @@ function PublicRoutes() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/album" element={<AlbumPage />} />
             <Route path="/conta" element={<AccountPage />} />
+            <Route path="/entrar" element={<EntrarPage />} />
+            <Route path="/apoie" element={<ApoiePage />} />
             <Route path="/clube" element={<ClubePage />} />
             <Route path="/presente/:code" element={<GiftRedeemPage />} />
             <Route path="/conta/nova-senha" element={<NewPasswordPage />} />

@@ -126,8 +126,9 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
           before: async (user, ctx) => {
             const req = authRequest.getStore();
             const mine = { sessionId: req?.sessionId ?? '', userId: null };
-            if (ctx?.path?.startsWith('/callback')) {
-              // Social sign-up: the guest's nickname if it has one, else a free one from the profile.
+            if (ctx?.path?.startsWith('/callback') || !user.name?.trim()) {
+              // Social sign-up, or e-mail sign-up with the optional nickname left empty: the
+              // guest's nickname if it has one, else a free one from the profile ("Jogador N").
               const guest = req
                 ? await prisma.guestSession.findUnique({ where: { id: req.sessionId } })
                 : null;

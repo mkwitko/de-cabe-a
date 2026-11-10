@@ -9,7 +9,17 @@ Four football loops, all CC0 1.0 (public domain dedication) on Freesound; the li
 | charanga.ogg, charanga.m4a         | Charanga        | tradicional village carnival brass band - drum, tube, trumpet 2.wav    | speedyrce     | CC0 1.0 | https://freesound.org/people/speedyrce/sounds/460512/     | 0:08, 68 s    |
 | samba.ogg, samba.m4a               | Samba-enredo    | SAMBA CARIOCA CARNAVAL RIO BRAZIL (samba-enredo cavaquinho intro loop) | carlosmancuso | CC0 1.0 | https://freesound.org/people/carlosmancuso/sounds/766529/ | whole, 28.6 s |
 
-Sound effects are synthesised with Web Audio in `src/lib/sound.ts`; no files.
+## Crowd packs (Clube and Banca)
+
+Three 6 s cuts of the loops above play the broadcast roar and the win's roar when a crowd pack is worn (`src/lib/sound.ts`). Each is the loudest 6 s of its loop, with a 0.12 s fade-in and a 1.5 s fade-out, encoded to Ogg Vorbis q3 and AAC 96 kbps. Same CC0 1.0 sources and authors as above.
+
+| File                                       | Pack in Ajustes | Cut from                         | Variation synthesised in sound.ts    |
+| ------------------------------------------ | --------------- | -------------------------------- | ------------------------------------ |
+| torcida-charanga.ogg, torcida-charanga.m4a | Charanga        | charanga (speedyrce), 0:26       | brass stab after the win fanfare     |
+| torcida-geral.ogg, torcida-geral.m4a       | Geral           | arquibancada (felix.blume), 0:18 | none                                 |
+| torcida-clube.ogg, torcida-clube.m4a       | Clube           | batucada (felix.blume), 0:29     | two bars of claps (pa, pa, pa-pa-pa) |
+
+Other sound effects are synthesised with Web Audio in `src/lib/sound.ts`; no files.
 
 # Art and animation credits
 

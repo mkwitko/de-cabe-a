@@ -43,6 +43,7 @@ import {
   type Moment,
   type Offer,
 } from '../lib/nudges';
+import { useFinish } from '../lib/cosmetics';
 
 export function LevelError({
   error,
@@ -124,18 +125,19 @@ function StickerWon({
   /** Pasted on the passport page: ink on paper, no card. */
   onPaper?: boolean;
 }) {
+  const finishOf = useFinish();
   const { sticker, isNew, upgradedFrom } = award;
   const style = RARITY_STYLE[sticker.rarity];
   return (
     <Link
       to="/album"
-      className={`group flex items-center gap-3 transition-colors duration-150 ${onPaper ? 'rounded-lg p-1.5 hover:bg-[#1d2a4f]/[0.06]' : 'rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3 hover:bg-chalk/[0.09]'}`}
+      className={`group flex items-center gap-3 transition-colors duration-150 ${onPaper ? 'rounded-lg p-1.5 hover:bg-[var(--pp-text)]/[0.06]' : 'rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3 hover:bg-chalk/[0.09]'}`}
     >
       <span
         aria-hidden="true"
         className="aspect-[3/4] w-16 shrink-0 -rotate-3 transition-transform duration-200 ease-out-expo group-hover:rotate-0"
       >
-        <StickerCard sticker={sticker} size="sm" />
+        <StickerCard sticker={sticker} size="sm" finish={finishOf(sticker.playerId)} />
       </span>
       <span className="flex min-w-0 flex-col gap-1">
         {/* wraps rather than clipping a long name on a phone ("Neym…") */}
@@ -143,7 +145,7 @@ function StickerWon({
           {sticker.name}
         </span>
         <span
-          className={`text-xs leading-tight font-semibold ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+          className={`text-xs leading-tight font-semibold ${onPaper ? 'text-[var(--pp-label)]' : 'text-chalk-soft'}`}
         >
           {isNew
             ? `${style.label} · nova`
@@ -152,7 +154,7 @@ function StickerWon({
               : `${style.label} · já colada`}
         </span>
         <span
-          className={`mt-0.5 text-sm font-bold underline underline-offset-4 ${onPaper ? 'text-[#7a2633]' : 'text-gold'}`}
+          className={`mt-0.5 text-sm font-bold underline underline-offset-4 ${onPaper ? 'text-[var(--pp-leather-1)]' : 'text-gold'}`}
         >
           Ver no álbum
         </span>
@@ -178,7 +180,7 @@ function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: bo
         </span>
       </p>
       <div
-        className={`h-2 overflow-hidden rounded-full ${onPaper ? 'bg-[#1d2a4f]/15' : 'bg-chalk/15'}`}
+        className={`h-2 overflow-hidden rounded-full ${onPaper ? 'bg-[var(--pp-text)]/15' : 'bg-chalk/15'}`}
         role="progressbar"
         aria-label={next ? `Estrelas até ${next.name}` : 'Título máximo'}
         aria-valuemin={cur.min}
@@ -186,17 +188,17 @@ function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: bo
         aria-valuenow={total}
       >
         <div
-          className={`h-full rounded-full transition-[width] duration-700 ease-out-expo ${onPaper ? 'bg-[#1d2a4f]' : 'bg-cover'}`}
+          className={`h-full rounded-full transition-[width] duration-700 ease-out-expo ${onPaper ? 'bg-[var(--pp-text)]' : 'bg-cover'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
       <p
-        className={`text-sm leading-tight font-semibold ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+        className={`text-sm leading-tight font-semibold ${onPaper ? 'text-[var(--pp-label)]' : 'text-chalk-soft'}`}
       >
         <StarIcon
-          className={`inline size-[0.85em] align-[-0.08em] ${onPaper ? 'text-[#1d2a4f]' : 'text-gold'}`}
+          className={`inline size-[0.85em] align-[-0.08em] ${onPaper ? 'text-[var(--pp-text)]' : 'text-gold'}`}
         />{' '}
-        <span className={`tabular font-bold ${onPaper ? 'text-[#1d2a4f]' : 'text-chalk'}`}>
+        <span className={`tabular font-bold ${onPaper ? 'text-[var(--pp-text)]' : 'text-chalk'}`}>
           {total}
         </span>
         {next ? ` · faltam ${next.min - total} para ${next.name}` : ' · título máximo'}
@@ -206,7 +208,7 @@ function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: bo
 }
 
 const PAGE =
-  'rounded-[8px] bg-[#f3ead2] text-[#1d2a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)]';
+  'rounded-[8px] bg-[var(--pp-paper)] text-[var(--pp-text)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,var(--pp-rule)_27px_28px),radial-gradient(circle_at_50%_45%,var(--pp-paper-hi),var(--pp-paper)_60%,var(--pp-paper-lo))]';
 const quietLink =
   'inline-flex min-h-11 items-center gap-2 text-sm font-bold text-chalk-soft underline-offset-4 hover:text-chalk hover:underline';
 
@@ -406,12 +408,12 @@ export function LevelEnd({
     <section aria-labelledby="level-end" className="flex flex-col gap-5">
       {passport ? (
         <>
-          <div className="rounded-[18px] p-2 shadow-[0_30px_60px_-20px_rgb(0_0_0/0.7)] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] sm:p-3">
+          <div className="rounded-[18px] p-2 shadow-[0_30px_60px_-20px_rgb(0_0_0/0.7)] [background:radial-gradient(circle_at_30%_20%,var(--pp-leather-1),var(--pp-leather-2)_55%,var(--pp-leather-3))] sm:p-3">
             <div className="grid gap-2 lg:grid-cols-2 lg:gap-1">
               <div className={`${PAGE} flex flex-col gap-4 p-4 sm:p-6 lg:rounded-r-[4px]`}>
                 <p
                   aria-hidden="true"
-                  className="flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
+                  className="flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[var(--pp-label)] uppercase"
                 >
                   <span>Visto de entrada</span>
                   <span>Fase {level}</span>
@@ -439,7 +441,7 @@ export function LevelEnd({
                     >
                       {headline}
                     </h2>
-                    <div className="mt-2 leading-snug font-semibold text-[#1d2a4f] sm:text-lg">
+                    <div className="mt-2 leading-snug font-semibold text-[var(--pp-text)] sm:text-lg">
                       {detail}
                     </div>
                     <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-current/25 pt-3">
@@ -448,7 +450,9 @@ export function LevelEnd({
                     </div>
                   </div>
                   {starRule && (
-                    <p className="text-sm font-semibold text-[#6d5c3a] max-lg:hidden">{starRule}</p>
+                    <p className="text-sm font-semibold text-[var(--pp-label)] max-lg:hidden">
+                      {starRule}
+                    </p>
                   )}
                   {promoted && (
                     <p
@@ -475,7 +479,9 @@ export function LevelEnd({
                 )}
                 {/* on a phone the star rule waits under the way on, which stays in the first screen */}
                 {starRule && (
-                  <p className="text-sm font-semibold text-[#6d5c3a] lg:hidden">{starRule}</p>
+                  <p className="text-sm font-semibold text-[var(--pp-label)] lg:hidden">
+                    {starRule}
+                  </p>
                 )}
               </div>
               <div className="h-[28rem] sm:h-[34rem] lg:h-auto lg:min-h-[max(30rem,calc(100dvh-14rem))]">

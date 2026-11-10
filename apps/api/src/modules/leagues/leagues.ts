@@ -1,11 +1,19 @@
 /**
  * Ligas de amigos (GROWTH_PLAN.md 2.1): a name and a 6-letter code shared by link; up to 20
  * players; weekly ranking of stars among the members; leave and report. No chat.
+ * Liga Pro (the creator's subscription, modules/billing): up to 100 players, a crest colour and
+ * name lettering, the podium of the last closed weeks and a trophy shelf of weeks won.
  */
 import { randomInt } from 'node:crypto';
 import {
   CreateLeagueRequest,
+  LEAGUE_HISTORY_WEEKS,
+  LEAGUE_MAX_MEMBERS,
+  LEAGUE_PRO_MAX_MEMBERS,
+  LeagueColor,
+  LeagueNameStyle,
   LeagueResponse,
+  LeagueStyle,
   LeaguesResponse,
   ReportLeagueRequest,
 } from '@decabeca/contracts';
@@ -16,8 +24,9 @@ import type { PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
 import { rankRows, weekStart } from '../progression/ranking';
 import { track } from '../analytics/analytics';
+import { LIVE } from '../billing/billing';
 
-export const MAX_MEMBERS = 20;
+export const MAX_MEMBERS = LEAGUE_MAX_MEMBERS;
 /** Leagues one player can be in, so one device cannot spam codes. */
 export const MAX_LEAGUES = 10;
 /** No 0/O, 1/I/L: the code is read aloud and typed on phones. */
@@ -52,6 +61,66 @@ async function nickname(prisma: PrismaClient, req: Req) {
     return (await prisma.user.findUnique({ where: { id: req.userId } }))?.nickname ?? null;
   return (await prisma.guestSession.findUnique({ where: { id: req.sessionId } }))?.nickname ?? null;
 }
+
+/** The league has a live Liga Pro subscription. */
+async function isPro(prisma: PrismaClient, leagueId: string, now: Date) {
+  return (
+    (await prisma.billingSubscription.count({
+      where: { leagueId, product: 'liga_pro', status: { in: LIVE }, currentPeriodEnd: { gt: now } },
+    })) > 0
+  );
+}
+
+const WEEK_MS = 7 * 86400_000;
+/**
+ * The podium of each of the last closed weeks among these members (accounts only, as the
+ * ranking), and the weeks each one won. Members are today's: someone who left drops out of it.
+ */
+async function pastWeeks(prisma: PrismaClient, pks: string[], since: Date) {
+  const names = new Map(
+    (
+      await prisma.user.findMany({
+        where: { id: { in: pks } },
+        select: { id: true, nickname: true },
+      })
+    ).map((u) => [u.id, u.nickname]),
+  );
+  // ponytail: one ranking query per week (8 per Pro league view); a weekly snapshot table if
+  // league pages get hot.
+  const weeks = await Promise.all(
+    Array.from({ length: LEAGUE_HISTORY_WEEKS }, async (_, i) => {
+      const end = new Date(since.getTime() - i * WEEK_MS);
+      const start = new Date(end.getTime() - WEEK_MS);
+      const rows = (await rankRows(prisma, start, false, end)).filter(
+        (r) => names.has(r.pk) && r.stars > 0,
+      );
+      return {
+        weekStart: start.toISOString(),
+        podium: rows.slice(0, 3).map((r, j) => ({
+          position: j + 1,
+          nickname: names.get(r.pk)!,
+          stars: r.stars,
+        })),
+      };
+    }),
+  );
+  const history = weeks.filter((w) => w.podium.length);
+  const wins = new Map<string, number>();
+  for (const w of history)
+    wins.set(w.podium[0]!.nickname, (wins.get(w.podium[0]!.nickname) ?? 0) + 1);
+  const trophies = [...wins]
+    .map(([nickname, n]) => ({ nickname, wins: n }))
+    .sort((a, b) => b.wins - a.wins || a.nickname.localeCompare(b.nickname, 'pt-BR'));
+  return { history, trophies };
+}
+
+const styleOf = (l: { color: string | null; nameStyle: string | null }) => {
+  const color = LeagueColor.safeParse(l.color);
+  const nameStyle = LeagueNameStyle.safeParse(l.nameStyle);
+  return color.success && nameStyle.success
+    ? { color: color.data, nameStyle: nameStyle.data }
+    : null;
+};
 
 async function findLeague(prisma: PrismaClient, code: string) {
   const league = await prisma.league.findUnique({
@@ -122,12 +191,15 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
     const mine = new Set(await myPks(prisma, req));
     const isMember = league.members.some((m) => mine.has(m.pk));
     const since = weekStart(now());
+    const pro = await isPro(prisma, league.id, now());
     let ranking: LeagueResponse['ranking'] = [];
+    let past: Pick<LeagueResponse, 'history' | 'trophies'> = { history: [], trophies: [] };
     if (isMember) {
       const pks = await effectivePks(
         prisma,
         league.members.map((m) => m.pk),
       );
+      if (pro) past = await pastWeeks(prisma, pks, since);
       // ponytail: ranks every player of the week and keeps the members; a member-only query
       // when the weekly ranking gets big.
       // Only accounts are ranked; a guest member plays along and enters it once signed in.
@@ -151,10 +223,14 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
       code: league.code,
       name: league.name,
       members: league.members.length,
-      maxMembers: MAX_MEMBERS,
+      maxMembers: pro ? LEAGUE_PRO_MAX_MEMBERS : MAX_MEMBERS,
       isMember,
+      isOwner: mine.has(league.createdBy),
+      pro,
+      style: pro ? styleOf(league) : null,
       weekStart: since.toISOString(),
       ranking,
+      ...past,
     };
   }
 
@@ -173,11 +249,27 @@ export const leagueRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!league.members.some((m) => mine.has(m.pk))) {
         await requireNickname(req);
         await assertRoom(req);
-        if (league.members.length >= MAX_MEMBERS)
-          throw new AppError(409, 'LEAGUE_FULL', `A liga já tem ${MAX_MEMBERS} pessoas.`);
+        const max = (await isPro(prisma, league.id, now())) ? LEAGUE_PRO_MAX_MEMBERS : MAX_MEMBERS;
+        if (league.members.length >= max)
+          throw new AppError(409, 'LEAGUE_FULL', `A liga já tem ${max} pessoas.`);
         await prisma.leagueMember.create({ data: { leagueId: league.id, pk: me(req) } });
         await track(prisma, req.sessionId, 'league_joined', { members: league.members.length + 1 });
       }
+      return view(league.code, req);
+    },
+  );
+
+  /** Liga Pro: the creator picks the crest colour and the name lettering. */
+  app.patch(
+    '/leagues/:code/style',
+    { schema: { params: Code, body: LeagueStyle, response: { 200: LeagueResponse } } },
+    async (req) => {
+      const league = await findLeague(prisma, req.params.code);
+      if (!(await myPks(prisma, req)).includes(league.createdBy))
+        throw new AppError(403, 'FORBIDDEN', 'Só quem criou a liga muda o escudo.');
+      if (!(await isPro(prisma, league.id, now())))
+        throw new AppError(403, 'FORBIDDEN', 'O escudo personalizado é da Liga Pro.');
+      await prisma.league.update({ where: { id: league.id }, data: req.body });
       return view(league.code, req);
     },
   );

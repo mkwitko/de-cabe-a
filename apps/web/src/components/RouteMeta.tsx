@@ -99,6 +99,17 @@ const PAGES: Record<string, Meta> = {
   },
   '/privacidade': { title: 'Privacidade', description: DEFAULT.description },
   '/termos': { title: 'Termos de uso', description: DEFAULT.description },
+  '/entrar': {
+    title: 'Entrar ou criar conta',
+    description:
+      'Entre ou crie sua conta grátis e leve estrelas e figurinhas para qualquer aparelho.',
+  },
+  '/conta': { title: 'Conta', description: DEFAULT.description },
+  '/apoie': {
+    title: 'Apoie o De Cabeça F.C.',
+    description:
+      'Apoie um projeto independente de minijogos de futebol, uma vez ou todo mês. Ninguém compra vantagem.',
+  },
   '/cookies': { title: 'Cookies', description: DEFAULT.description },
 };
 

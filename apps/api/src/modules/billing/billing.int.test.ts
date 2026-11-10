@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { APOIO_NOTE } from '@decabeca/contracts';
 import Stripe from 'stripe';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { testApp, WEB_ORIGIN } from '../../test/app';
@@ -13,6 +14,7 @@ const PRICES = {
   liga_pro: 'price_liga',
   presente_3m: 'price_gift3',
   acabamento_holografico: 'price_holo',
+  apoio_mensal: 'price_apoio_m',
 };
 
 // Mocked Stripe client; signatures are real (the SDK's own webhook helpers, no network).
@@ -46,7 +48,11 @@ const { app } = testApp({ prisma, now: () => NOW, billing });
 
 function device() {
   const jar = new Map<string, string>();
-  const req = async (method: 'GET' | 'POST' | 'DELETE', url: string, payload?: object) => {
+  const req = async (
+    method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+    url: string,
+    payload?: object,
+  ) => {
     const res = await app.inject({
       method,
       url: `/v1${url}`,
@@ -278,6 +284,116 @@ describe('billing', () => {
       sub('sub_liga', stripeCustomerId, 'price_liga', { metadata: { leagueId: league.id } }),
     );
     expect((await ents(owner)).leaguesPro).toEqual([{ code, until: expect.any(String) }]);
+
+    // What Liga Pro delivers: 100 places and the crest, styled by the owner only.
+    expect((await owner.req('GET', `/leagues/${code}`)).json()).toMatchObject({
+      pro: true,
+      isOwner: true,
+      maxMembers: 100,
+      style: null,
+      history: [],
+      trophies: [],
+    });
+    const style = { color: 'vinho', nameStyle: 'dourado' };
+    expect((await other.req('PATCH', `/leagues/${code}/style`, style)).statusCode).toBe(403);
+    const styled = await owner.req('PATCH', `/leagues/${code}/style`, style);
+    expect(styled.statusCode, styled.body).toBe(200);
+    expect(styled.json().style).toEqual(style);
+    expect(
+      (await owner.req('PATCH', `/leagues/${code}/style`, { color: 'rosa', nameStyle: 'bloco' }))
+        .statusCode,
+    ).toBe(400);
+
+    // A league without Liga Pro keeps 20 places and cannot be styled.
+    const plain = (await owner.req('POST', '/leagues', { name: 'Pelada' })).json().code as string;
+    expect((await owner.req('GET', `/leagues/${plain}`)).json()).toMatchObject({
+      pro: false,
+      maxMembers: 20,
+      style: null,
+    });
+    expect((await owner.req('PATCH', `/leagues/${plain}/style`, style)).statusCode).toBe(403);
+
+    // Lapsed: back to a plain league; the crest is kept for a renewal.
+    await deliver(
+      'customer.subscription.deleted',
+      sub('sub_liga', stripeCustomerId, 'price_liga', {
+        status: 'canceled',
+        metadata: { leagueId: league.id },
+      }),
+    );
+    expect((await owner.req('GET', `/leagues/${code}`)).json()).toMatchObject({
+      pro: false,
+      maxMembers: 20,
+      style: null,
+    });
+  });
+
+  it('wears only owned items; guests cannot', async () => {
+    const guest = await device().req('PATCH', '/me/cosmetics', {
+      finish: 'acabamento_holografico',
+    });
+    expect(guest.statusCode).toBe(401);
+
+    const ivo = await account('Ivo');
+    const patch = (body: object) => ivo.req('PATCH', '/me/cosmetics', body);
+    expect((await ents(ivo)).equipped).toEqual({
+      finish: null,
+      passport: null,
+      crowd: null,
+      stickers: {},
+    });
+    for (const body of [
+      { finish: 'acabamento_holografico' },
+      { passport: 'passaporte_clube' },
+      { crowd: 'torcida_geral' },
+      { stickers: { p1: 'acabamento_cromado' } },
+    ])
+      expect((await patch(body)).statusCode).toBe(403);
+    expect((await patch({ finish: 'acabamento_dourado' })).statusCode).toBe(400);
+    expect((await patch({ selo: true })).statusCode).toBe(400);
+
+    // Bought: worn as the default, and per sticker.
+    const { sessionId } = await checkout(ivo, { product: 'acabamento_holografico' });
+    await deliver('checkout.session.completed', {
+      id: sessionId,
+      mode: 'payment',
+      payment_status: 'paid',
+      payment_intent: 'pi_ivo',
+    });
+    const worn = await patch({
+      finish: 'acabamento_holografico',
+      stickers: { p1: 'none', p2: 'acabamento_holografico' },
+    });
+    expect(worn.statusCode, worn.body).toBe(200);
+    expect(worn.json().equipped).toEqual({
+      finish: 'acabamento_holografico',
+      passport: null,
+      crowd: null,
+      stickers: { p1: 'none', p2: 'acabamento_holografico' },
+    });
+    // Only the fields sent change; null takes it off.
+    const off = await patch({ finish: null, stickers: { p1: null } });
+    expect(off.json().equipped).toMatchObject({
+      finish: null,
+      stickers: { p2: 'acabamento_holografico' },
+    });
+
+    // The Clube lends its items while it lasts.
+    await checkout(ivo, { product: 'clube_mensal' });
+    const { stripeCustomerId } = await prisma.billingCustomer.findUniqueOrThrow({
+      where: { userId: ivo.userId },
+    });
+    const s = sub('sub_ivo', stripeCustomerId, 'price_clube_m');
+    await deliver('customer.subscription.created', s);
+    expect(
+      (await patch({ passport: 'passaporte_clube', crowd: 'torcida_clube' })).json().equipped,
+    ).toMatchObject({ passport: 'passaporte_clube', crowd: 'torcida_clube' });
+    await deliver('customer.subscription.deleted', { ...s, status: 'canceled' });
+    expect((await ents(ivo)).equipped).toMatchObject({ passport: null, crowd: null });
+
+    // A refund takes the finish off every sticker too.
+    await deliver('charge.refunded', { refunded: true, payment_intent: 'pi_ivo' });
+    expect((await ents(ivo)).equipped.stickers).toEqual({});
   });
 
   it('exports billing rows and, on erasure, cancels renewals and anonymises sales', async () => {
@@ -315,5 +431,68 @@ describe('billing', () => {
       userId: 'deleted',
       status: 'paid',
     });
+  });
+
+  it('takes a guest’s one-time apoio without an account, at the amount picked', async () => {
+    const guest = device();
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_avulso' })).statusCode,
+    ).toBe(400);
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_avulso', amount: 499 }))
+        .statusCode,
+    ).toBe(400);
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_mensal' })).statusCode,
+    ).toBe(401);
+    const before = await prisma.purchase.count();
+    const { res } = await checkout(guest, { product: 'apoio_avulso', amount: 2500 });
+    expect(res.statusCode, res.body).toBe(200);
+    const params = stripe.checkout.sessions.create.mock.calls[0]![0];
+    expect(params).toMatchObject({
+      mode: 'payment',
+      submit_type: 'donate',
+      line_items: [{ quantity: 1, price_data: { currency: 'brl', unit_amount: 2500 } }],
+      success_url: `${WEB_ORIGIN}/apoie?apoio=ok`,
+    });
+    expect(params).not.toHaveProperty('customer');
+    expect(params.custom_text).toMatchObject({ submit: { message: APOIO_NOTE } });
+    expect(await prisma.purchase.count()).toBe(before); // nothing kept about a guest
+  });
+
+  it('marks an account as supporter: one-time until refunded, monthly for good', async () => {
+    const iara = await account('Iara');
+    expect(await ents(iara)).toMatchObject({ supporter: false, supportsMonthly: false });
+    const { sessionId } = await checkout(iara, { product: 'apoio_avulso', amount: 1000 });
+    const paid = {
+      id: sessionId,
+      mode: 'payment',
+      payment_status: 'paid',
+      payment_intent: 'pi_iara',
+    };
+    await deliver('checkout.session.completed', paid);
+    expect(await ents(iara)).toMatchObject({ supporter: true, cosmetics: [] });
+    await deliver('charge.refunded', { refunded: true, payment_intent: 'pi_iara' });
+    expect((await ents(iara)).supporter).toBe(false);
+
+    const { res } = await checkout(iara, { product: 'apoio_mensal' });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(stripe.checkout.sessions.create.mock.calls.at(-1)![0]).toMatchObject({
+      mode: 'subscription',
+      line_items: [{ price: 'price_apoio_m', quantity: 1 }],
+    });
+    const { stripeCustomerId } = await prisma.billingCustomer.findUniqueOrThrow({
+      where: { userId: iara.userId },
+    });
+    const s = sub('sub_iara', stripeCustomerId, 'price_apoio_m');
+    await deliver('customer.subscription.created', s);
+    expect(await ents(iara)).toMatchObject({
+      supporter: true,
+      supportsMonthly: true,
+      clube: { active: false },
+    });
+    expect((await checkout(iara, { product: 'apoio_mensal' })).res.statusCode).toBe(409);
+    await deliver('customer.subscription.deleted', { ...s, status: 'canceled' });
+    expect(await ents(iara)).toMatchObject({ supporter: true, supportsMonthly: false });
   });
 });

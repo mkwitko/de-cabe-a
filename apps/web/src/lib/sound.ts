@@ -2,7 +2,10 @@
  * Game sounds, synthesised with Web Audio (no files, nothing to license). Off by default: many
  * play on the bus. The choice and the volume live in Ajustes (`settings.ts`). The audio context
  * starts on the first sound after a tap (browsers only allow audio after a user gesture).
+ * A crowd pack (Clube, Banca) swaps the broadcast roar and the win's roar for a 6 s cut of a CC0
+ * recording (public/audio/torcida-*, CREDITS.md); the Clube's adds synthesised claps.
  */
+import type { CrowdPack } from '@decabeca/contracts';
 import { getSettings, subscribeSettings, updateSettings } from './settings';
 
 let ctx: AudioContext | null = null;
@@ -81,6 +84,95 @@ function noise(start: number, dur: number, gain: number, freq: number) {
   return { src, g };
 }
 
+let pack: CrowdPack | null = null;
+const files = new Map<CrowdPack, Promise<ArrayBuffer | null>>();
+const decoded = new Map<CrowdPack, Promise<AudioBuffer | null>>();
+/** Ogg where it decodes, AAC for the Safari versions that cannot (as music.ts). */
+const ext = () => (new Audio().canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a');
+const fileOf = (p: CrowdPack) => {
+  let f = files.get(p);
+  if (!f) {
+    f = fetch(`/audio/${p.replace('_', '-')}.${ext()}`)
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .catch(() => null);
+    files.set(p, f);
+  }
+  return f;
+};
+/** Decoded on the first sound (the context needs a gesture); the file is fetched ahead. */
+function bufferOf(p: CrowdPack) {
+  let b = decoded.get(p);
+  if (!b) {
+    b = fileOf(p).then((data) =>
+      data
+        ? audio()
+            .decodeAudioData(data.slice(0))
+            .catch(() => null)
+        : null,
+    );
+    decoded.set(p, b);
+  }
+  return b;
+}
+
+/** The worn crowd pack (null: the synthesised roar); its file starts loading at once. */
+export function setCrowdPack(p: CrowdPack | null) {
+  pack = p;
+  if (p) void fileOf(p);
+}
+
+/** Fades a gain to silence and stops its source (Pular on the broadcast). */
+function cut(g: GainNode, src: AudioScheduledSourceNode) {
+  const t = audio().currentTime;
+  g.gain.cancelScheduledValues(t);
+  g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+  src.stop(t + 0.2);
+}
+
+/** The pack's recording for `dur` seconds, swelling in and fading out; falls back to the roar. */
+function crowdOf(p: CrowdPack, dur: number, gain: number): () => void {
+  const a = audio();
+  let stop: (() => void) | null = null;
+  let stopped = false;
+  if (p === 'torcida_clube')
+    // The Clube's chant: two bars of claps over the drums (pa, pa, pa-pa-pa).
+    for (const bar of [0.35, 1.75])
+      for (const t of [0, 0.3, 0.6, 0.8, 1.0]) noise(bar + t, 0.08, 0.16, 1700);
+  void bufferOf(p).then((buf) => {
+    if (stopped) return;
+    if (!buf) {
+      const { src, g } = noise(0, dur, 0.12, 1100);
+      stop = () => cut(g, src);
+      return;
+    }
+    const t = a.currentTime;
+    const src = a.createBufferSource();
+    const g = a.createGain();
+    src.buffer = buf;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.35);
+    g.gain.setValueAtTime(gain, t + dur - 0.9);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(g).connect(out());
+    src.start(t);
+    src.stop(t + dur + 0.05);
+    stop = () => cut(g, src);
+  });
+  return () => {
+    stopped = true;
+    stop?.();
+  };
+}
+
+/** Plays a pack's win (Ajustes, Clube), even with Efeitos off; null plays the standard roar. */
+export function previewCrowd(p: CrowdPack | null) {
+  const worn = pack;
+  pack = p;
+  play('win', true);
+  pack = worn;
+}
+
 export type Sound =
   | 'whistle'
   | 'correct'
@@ -98,8 +190,8 @@ export type Sound =
   | 'promote';
 
 /** Returns a stop function for 'crowd' only (the broadcast's Pular cuts the roar). */
-export function play(sound: Sound): (() => void) | void {
-  if (!soundOn()) return;
+export function play(sound: Sound, force = false): (() => void) | void {
+  if (!soundOn() && !force) return;
   try {
     if (sound === 'whistle') {
       // Referee's whistle: two short trills.
@@ -122,7 +214,11 @@ export function play(sound: Sound): (() => void) | void {
       noise(0, 0.45, 0.03, 400);
     } else if (sound === 'win') {
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.1, 0.35, 'triangle', 0.14));
-      noise(0.1, 1.6, 0.08, 1000);
+      // Charanga answers the fanfare with its own brass stab.
+      if (pack === 'torcida_charanga')
+        [392, 523.25].forEach((f) => tone(f, 0.45, 0.5, 'sawtooth', 0.05));
+      if (pack) crowdOf(pack, 4, 0.75);
+      else noise(0.1, 1.6, 0.08, 1000);
     } else if (sound === 'stamp') {
       noise(0, 0.18, 0.12, 260);
       tone(70, 0, 0.18, 'sine', 0.2, 40);
@@ -130,15 +226,10 @@ export function play(sound: Sound): (() => void) | void {
       noise(0, 0.12, 0.1, 120);
       tone(55, 0, 0.25, 'triangle', 0.2);
     } else if (sound === 'crowd') {
+      if (pack) return crowdOf(pack, 3.1, 0.7);
       // Swell: a roar that opens up, then fades.
       const { src, g } = noise(0, 3.1, 0.12, 1100);
-      return () => {
-        const t = audio().currentTime;
-        g.gain.cancelScheduledValues(t);
-        g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), t);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-        src.stop(t + 0.2);
-      };
+      return () => cut(g, src);
     } else if (sound === 'tick') {
       tone(1400, 0, 0.03, 'square', 0.04);
     } else if (sound === 'shimmer') {
@@ -156,7 +247,8 @@ export function play(sound: Sound): (() => void) | void {
         tone(f, i * 0.09, 0.4, 'triangle', 0.13),
       );
       tone(1046.5, 0.5, 0.9, 'sine', 0.1);
-      noise(0.2, 1.4, 0.07, 1000);
+      if (pack) crowdOf(pack, 3, 0.7);
+      else noise(0.2, 1.4, 0.07, 1000);
     } else if (sound === 'rarity') {
       tone(392, 0, 0.5, 'triangle', 0.15);
       tone(587, 0.12, 0.7, 'triangle', 0.15);

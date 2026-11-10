@@ -24,7 +24,7 @@ import { AlbumIcon, RankingIcon, TrophyIcon } from './Icons';
 import { Crest } from './Crest';
 import { MemberCard } from './MemberCard';
 import { Nudge } from './Nudge';
-import { signInHref } from './SignInButton';
+import { signInHref, signUpHref } from './SignInButton';
 import { btnPrimary, btnSecondary } from './ui';
 
 export function FirstRun() {
@@ -44,7 +44,7 @@ export function FirstRun() {
     if (!welcomed()) {
       // Already a member, or a guest who picked a nickname before: not a first visit.
       if (me.account || me.nickname) return markWelcomed();
-      if (pathname.startsWith('/conta')) return;
+      if (/^\/(conta|entrar)(\/|$)/.test(pathname)) return;
       if (sceneFor(pathname) === 'level' && !levelEnded) return;
       setWelcome(true);
       return;
@@ -103,7 +103,7 @@ function Welcome({ onDone }: { onDone: () => void }) {
     act.mutate({ path: '/v1/me', method: 'PATCH', json: { nickname } }, { onSuccess: onDone });
   };
   const error = act.error as ApiError | null;
-  const back = pathname.startsWith('/conta') ? '/' : pathname;
+  const back = /^\/(conta|entrar)(\/|$)/.test(pathname) ? '/' : pathname;
   const name = nickname.trim() || 'Seu apelido';
   const perks = [
     { Icon: AlbumIcon, title: 'Álbum salvo', text: 'Estrelas e figurinhas em qualquer aparelho' },
@@ -183,7 +183,7 @@ function Welcome({ onDone }: { onDone: () => void }) {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 ref={primary}
-                to={`/conta?voltar=${encodeURIComponent(back)}`}
+                to={signUpHref(back)}
                 onClick={onDone}
                 className={`${btnPrimary} min-h-14 flex-1 text-xl`}
               >
