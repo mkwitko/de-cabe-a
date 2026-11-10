@@ -5,6 +5,7 @@ import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
+import { FirstRun } from './components/Welcome';
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
@@ -93,6 +94,9 @@ const ProfilePage = lazy(() =>
 );
 const AlbumPage = lazy(() => import('./pages/AlbumPage').then((m) => ({ default: m.AlbumPage })));
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
+const clube = () => import('./pages/ClubePage');
+const ClubePage = lazy(() => clube().then((m) => ({ default: m.ClubePage })));
+const GiftRedeemPage = lazy(() => clube().then((m) => ({ default: m.GiftRedeemPage })));
 
 export const GAMES = [
   {
@@ -257,7 +261,7 @@ function Brand({ home }: { home: boolean }) {
   );
 }
 
-/** Pages that are still closed; they get a locker next to the closed modes and do not open. */
+/** Pages that are still closed; they get a poster next to the closed modes and do not open. */
 const SOON_EXTRA: {
   name: string;
   page: 'career' | 'copa' | 'oficina';
@@ -296,7 +300,7 @@ const SOON_EXTRA: {
   },
 ];
 
-/** The line on each closed locker: what the mode is, in a few words. */
+/** The hook on each closed mode's poster: what the mode is, in a few words. */
 const PITCH: Record<VotableMode, string> = {
   FOOTBALL_GRID: 'Um craque por cruzamento',
   IMPOSTOR: 'Ache quem nunca jogou lá',
@@ -313,8 +317,8 @@ const PITCH: Record<VotableMode, string> = {
 
 /**
  * The home is one scene: the Career Path passport open on the locker-room bench, the next-level
- * ticket clipped to it, and the closed modes as locked lockers (numbered by their slot); each
- * opens to what the mode is and a vote for the one that opens next.
+ * ticket clipped to it, and the closed modes as premiere posters on the wall; each opens to what
+ * the mode is and a vote for the one that opens next.
  */
 export function Home() {
   const modes: Locker[] = GAMES.flatMap((g) =>
@@ -324,20 +328,18 @@ export function Home() {
           {
             key: g.mode,
             name: g.name,
-            number: String(Number(g.slot)),
             rule: g.rule,
             pitch: PITCH[g.mode],
             howTo: g.howTo,
           },
         ],
   );
-  const extra: Locker[] = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x, i) => ({
+  const extra: Locker[] = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x) => ({
     key: x.page,
     name: x.name,
     rule: x.rule,
     pitch: PITCH[x.page],
     howTo: x.howTo,
-    number: String(GAMES.length + 1 + i),
   }));
   return <LockerRoom lockers={[...modes, ...extra]} />;
 }
@@ -539,6 +541,8 @@ function PublicRoutes() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/album" element={<AlbumPage />} />
             <Route path="/conta" element={<AccountPage />} />
+            <Route path="/clube" element={<ClubePage />} />
+            <Route path="/presente/:code" element={<GiftRedeemPage />} />
             <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
             <Route path="/privacidade" element={<PrivacyPage />} />
             <Route path="/termos" element={<TermsPage />} />
@@ -557,6 +561,7 @@ function PublicRoutes() {
       </Suspense>
       <LegalLinks />
       <ConsentBanner />
+      <FirstRun />
     </Shell>
   );
 }

@@ -464,7 +464,9 @@ export const Sticker = z.strictObject({
   rating: z.number().int().min(50).max(99).optional(),
   /** Wikimedia Commons portrait, when the player has a freely licensed photo. */
   photo: z.string().nullable(),
-  /** "Foto: author · licence" (CC licences require the credit where the photo shows). */
+  /** Same photo without its background, head and shoulders (transparent WebP on the web origin). */
+  cutout: z.string().nullable(),
+  /** "Foto: author · licence" (+ " · recortada" with a cut-out; CC requires the credit). */
   photoCredit: z.string().nullable(),
   rarity: StickerRarity,
   mode: GameMode,
@@ -874,6 +876,8 @@ export const ProfileResponse = z.strictObject({
   games: z.array(z.strictObject({ mode: GameMode, completed: z.number(), stars: z.number() })),
   achievements: z.array(z.strictObject({ id: z.string(), name: z.string() })),
   trophies: z.array(Trophy),
+  /** Clube member: the profile card shows the member badge (cosmetic only). */
+  member: z.boolean().optional(),
 });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;
 

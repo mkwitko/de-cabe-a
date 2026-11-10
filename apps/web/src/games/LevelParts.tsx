@@ -10,6 +10,7 @@ import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
+import { InstallInvite } from '../components/InstallApp';
 import { Reactions } from '../components/Reactions';
 import { Stars, StarIcon } from '../components/Stars';
 import { Broadcast, type Hero } from '../components/Broadcast';
@@ -19,14 +20,29 @@ import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 import { TitleBadge } from '../components/TitleBadge';
 import { GoalLoop, preloadLottie } from '../components/Moment';
-import { SignInButton, signInHref } from '../components/SignInButton';
+import { signInHref } from '../components/SignInButton';
 import { promotedTo, TITLE_LADDER, titleTone } from '../lib/format';
 import { isPageLaunched } from '../lib/launch';
 import { nextLevel } from '../lib/track';
 import { StickerCard } from '../components/StickerCard';
 import { RARITY_STYLE } from '../components/rarity';
-
-const INVITE_KEY = 'decabeca:save-invite';
+import { Nudge } from '../components/Nudge';
+import { ClubeOffer } from '../components/ClubeOffer';
+import type { EntitlementsResponse } from '@decabeca/contracts';
+import {
+  LEVEL_ENDED,
+  levelMoment,
+  levelsDone,
+  loadNudges,
+  loadOffers,
+  offerMoment,
+  saveNudges,
+  saveOffers,
+  shown,
+  welcomed,
+  type Moment,
+  type Offer,
+} from '../lib/nudges';
 
 export function LevelError({
   error,
@@ -304,23 +320,48 @@ export function LevelEnd({
     justFinished && !oficina && stats.data && !stats.isFetching
       ? promotedTo(stats.data.totalStars, stars)
       : null;
-  // One-time "save your progress" invite after a guest's first win (remembered on the device).
-  const [inviteSeen] = useState(() => {
-    try {
-      return localStorage.getItem(INVITE_KEY) === '1';
-    } catch {
-      return true;
-    }
-  });
-  const showInvite = !inviteSeen && stars > 0 && !oficina && !!me.data && !me.data.account;
+  // "Crie sua conta" at a guest's milestone (first sticker, first promotion, 5th level), once each.
+  const [nudge, setNudge] = useState<Moment | null>(null);
+  // Signed-in non-members: the Clube offer at a promotion or a rare sticker, now and then.
+  const [offer, setOffer] = useState<Offer | null>(null);
+  const nudgeChecked = useRef(false);
   useEffect(() => {
-    if (showInvite && stage === 'end')
-      try {
-        localStorage.setItem(INVITE_KEY, '1');
-      } catch {
-        /* private mode: the invite may show again */
-      }
-  }, [showInvite, stage]);
+    if (stage === 'end') dispatchEvent(new Event(LEVEL_ENDED));
+  }, [stage]);
+  useEffect(() => {
+    if (nudgeChecked.current || stage !== 'end' || !me.data || !stats.data || stats.isFetching)
+      return;
+    nudgeChecked.current = true;
+    if (!justFinished || oficina || !welcomed()) return;
+    const now = Date.now();
+    if (me.data.account) {
+      if (!isPageLaunched('clube')) return;
+      const o = offerMoment(
+        loadOffers(),
+        { promoted: !!promoted, rarity: data.sticker?.sticker.rarity },
+        now,
+      );
+      if (o)
+        void api<EntitlementsResponse>('/v1/me/entitlements')
+          .then((e) => {
+            if (e.clube.active) return;
+            saveOffers({ ...loadOffers(), last: now });
+            setOffer(o);
+          })
+          .catch(() => {});
+      return;
+    }
+    const s = loadNudges();
+    const m = levelMoment(
+      s,
+      { promoted: !!promoted, sticker: !!data.sticker, levelsDone: levelsDone(stats.data) },
+      now,
+    );
+    if (m) {
+      saveNudges(shown(s, m, now));
+      setNudge(m);
+    }
+  }, [stage, me.data, stats.data, stats.isFetching, justFinished, oficina, promoted, data.sticker]);
   const dailyQ = useDaily('hoje');
   const daily = isPageLaunched('daily')
     ? dailyQ.data?.games.find((g) => g.mode === mode && g.level === level)
@@ -459,14 +500,15 @@ export function LevelEnd({
                 />
               </>
             )}
-            {showInvite && (
-              <p className="text-sm text-chalk-soft sm:ml-auto">
-                Suas estrelas ficam só neste aparelho.{' '}
-                <SignInButton className="font-bold text-chalk underline underline-offset-4 hover:text-gold" />{' '}
-                para levar a qualquer um.
-              </p>
-            )}
           </div>
+          {/* One invitation at a time: the account nudge wins over the install card. */}
+          {nudge ? (
+            <Nudge moment={nudge} onDone={() => setNudge(null)} />
+          ) : offer ? (
+            <ClubeOffer moment={offer} onDone={() => setOffer(null)} />
+          ) : (
+            <InstallInvite />
+          )}
         </>
       ) : (
         <>
@@ -560,19 +602,8 @@ export function LevelEnd({
             )}
           </div>
 
-          {showInvite && (
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border-2 border-cover/70 px-4 py-3">
-              <p className="min-w-0 flex-1 basis-56">
-                <span className="font-condensed block text-xl leading-none font-extrabold uppercase">
-                  Salve seu progresso
-                </span>
-                <span className="text-sm text-chalk-soft">
-                  Crie uma conta e leve suas estrelas e figurinhas para qualquer aparelho.
-                </span>
-              </p>
-              <SignInButton />
-            </div>
-          )}
+          {nudge && <Nudge moment={nudge} onDone={() => setNudge(null)} />}
+          {offer && <ClubeOffer moment={offer} onDone={() => setOffer(null)} />}
         </>
       )}
       {stars > 0 && !oficina && isPageLaunched('career') && (

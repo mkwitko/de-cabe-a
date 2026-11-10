@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { GameMode, type StatsResponse } from '@decabeca/contracts';
 import { useAlbum, useMe, useStats } from '../lib/game';
 import { isModeLaunched, isPageLaunched } from '../lib/launch';
+import { useEntitlements } from '../lib/billing';
 import { SignInButton } from '../components/SignInButton';
 import { MemberCard } from '../components/MemberCard';
 import { TitleLadder } from '../components/TitleLadder';
@@ -204,6 +205,7 @@ function CareerSheet({ cp }: { cp: StatsResponse['CAREER_PATH'] }) {
 export function StatsPage() {
   const { data } = useStats();
   const me = useMe().data;
+  const ents = useEntitlements(!!me?.account && isPageLaunched('clube')).data;
   const album = useAlbum().data;
   if (!data) return <Skeleton className="h-96" />;
   const grid = data.FOOTBALL_GRID;
@@ -305,6 +307,7 @@ export function StatsPage() {
             levels={levels}
             stickers={album?.owned}
             guest={guest}
+            member={!!ents?.clube.active}
             className="max-w-lg"
           />
           {guest && (

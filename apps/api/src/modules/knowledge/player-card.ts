@@ -6,22 +6,35 @@
  */
 import type { PlayerCard } from '@decabeca/contracts';
 import type { PrismaClient } from '../../generated/prisma/client';
+import cutouts from '../album/cutouts.json';
 
 const commons = (file: string, width: number) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
-/** Sticker portrait and its credit (CC licences require the credit where the photo shows). */
+/**
+ * Background-free head-and-shoulders portraits made offline from the same Commons photo
+ * (scripts/research/cutouts/cutout.py): playerId -> served file and the photo it was cut from.
+ * A cut-out only counts while the player's photo is still that file.
+ */
+const CUTOUTS: Record<string, { file: string; photoFile: string } | undefined> = cutouts;
+
+/** Sticker portrait, its cut-out and the credit (CC licences require it where the photo shows). */
 export const stickerPhoto = (p: {
+  id: string;
   photoFile: string | null;
   photoAuthor: string | null;
   photoLicense: string | null;
-}) =>
-  p.photoFile
-    ? {
-        photo: commons(p.photoFile, 480),
-        photoCredit:
-          `Foto: ${p.photoAuthor ?? 'Wikimedia Commons'} · ${p.photoLicense ?? ''}`.trim(),
-      }
-    : { photo: null, photoCredit: null };
+}) => {
+  if (!p.photoFile) return { photo: null, cutout: null, photoCredit: null };
+  const cut = CUTOUTS[p.id];
+  const cutout = cut?.photoFile === p.photoFile ? cut.file : null;
+  const credit = `Foto: ${p.photoAuthor ?? 'Wikimedia Commons'} · ${p.photoLicense ?? ''}`.trim();
+  return {
+    photo: commons(p.photoFile, 480),
+    cutout,
+    // the cut-out is a derivative: same licence (BY-SA stays BY-SA), marked as cropped
+    photoCredit: cutout ? `${credit} · recortada` : credit,
+  };
+};
 
 /** Sticker stat row: distinct clubs; games/goals only when every spell has them (no partial sums). */
 export const stickerStats = (

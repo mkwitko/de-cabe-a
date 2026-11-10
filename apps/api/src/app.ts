@@ -25,6 +25,8 @@ import { reportRoutes } from './modules/admin/reports.routes';
 import { publicRoutes } from './modules/attempts/public.routes';
 import { fetchEntities, type EntityFetcher } from './modules/data-import/wikidata-client';
 import { NO_PUSH, type PushDeps } from './modules/push/push';
+import type { BillingDeps } from './modules/billing/billing';
+import { billingWebhook } from './modules/billing/billing.routes';
 
 export interface AppDeps {
   prisma: PrismaClient;
@@ -41,6 +43,8 @@ export interface AppDeps {
   push: PushDeps;
   /** Better Auth (ADR-008), built from `authOptions`. */
   auth: Auth;
+  /** Stripe (deploy/STRIPE-SETUP.md); null when not configured: billing answers 503. */
+  billing: BillingDeps | null;
 }
 
 /** Development defaults: e-mails go to the log until Resend is configured (ADR-008). */
@@ -79,6 +83,7 @@ export function buildApp(
     now: () => new Date(),
     random: Math.random,
     push: NO_PUSH,
+    billing: null,
     secureCookie: process.env.NODE_ENV === 'production',
     limits: { sessionsPerIp: 20, perSession: 300, search: 60, actions: 120 },
     ...rest,
@@ -134,6 +139,8 @@ export function buildApp(
     { prefix: '/v1/admin' },
   );
   app.register(publicRoutes, { prefix: '/v1' });
+  // Stripe calls it without a session cookie, and it needs the raw body.
+  app.register(billingWebhook, { prefix: '/v1' });
   // Search pages on the site's domain (forwarded by the Pages Function, like /v1).
   app.register(seoRoutes);
 

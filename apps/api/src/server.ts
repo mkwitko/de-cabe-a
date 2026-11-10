@@ -2,8 +2,12 @@
 import './instrument';
 import { buildApp } from './app';
 import { createPrisma } from './db';
+import { purgeIdleGuests } from './modules/account/account.data';
 import { mailer } from './modules/account/email';
 import webpush from 'web-push';
+import Stripe from 'stripe';
+import { ProductKey } from '@decabeca/contracts';
+import type { BillingDeps } from './modules/billing/billing';
 import { NO_PUSH, runPushJobs, type PushDeps } from './modules/push/push';
 
 try {
@@ -53,6 +57,25 @@ const push: PushDeps = vapid
     }
   : NO_PUSH;
 
+// Pagamentos (deploy/STRIPE-SETUP.md): on only with both Stripe secrets. Live keys only in production.
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+if (stripeKey && /^(sk|rk)_live_/.test(stripeKey) && !production)
+  throw new Error('STRIPE_SECRET_KEY is a live key outside production');
+const billing: BillingDeps | null =
+  stripeKey && process.env.STRIPE_WEBHOOK_SECRET
+    ? {
+        stripe: new Stripe(stripeKey),
+        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+        prices: Object.fromEntries(
+          ProductKey.options.flatMap((k) => {
+            const id = process.env[`STRIPE_PRICE_${k.toUpperCase()}`];
+            return id ? [[k, id]] : [];
+          }),
+        ),
+        webOrigin,
+      }
+    : null;
+
 const app = buildApp(
   // Behind Caddy + the Pages Function (ADR-010) the client IP comes in X-Forwarded-For.
   // ponytail: the origin is public, so a direct caller can forge it; restrict Caddy to
@@ -76,6 +99,7 @@ const app = buildApp(
     prisma: createPrisma(env('DATABASE_URL')),
     adminToken: env('ADMIN_TOKEN'),
     push,
+    billing,
     // The e2e suite opens a fresh session per test from one IP; production keeps the default.
     ...(process.env.SESSIONS_PER_IP && !production
       ? {
@@ -106,6 +130,15 @@ if (vapid)
       .then((n) => n && app.log.info(`push: ${n} sent`))
       .catch((err: unknown) => app.log.error(err));
   }, 60_000).unref();
+
+// LGPD retention: guests idle for 12 months are erased. A minute after boot (deploys restart the
+// process) and then daily; an advisory lock keeps concurrent instances from overlapping.
+const purge = () =>
+  purgeIdleGuests(app.deps.prisma, new Date())
+    .then((n) => app.log.info(`guest purge: ${n} erased`))
+    .catch((err: unknown) => app.log.error(err));
+setTimeout(purge, 60_000).unref();
+setInterval(purge, 24 * 3600_000).unref();
 
 app
   .listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? '127.0.0.1' })

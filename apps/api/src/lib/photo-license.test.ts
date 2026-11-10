@@ -11,10 +11,16 @@ describe('isFreeLicense', () => {
     'PD-US-expired',
     'CC-BY-4.0',
   ])('accepts %s', (l) => expect(isFreeLicense(l)).toBe(true));
-  it.each(['CC BY-NC 2.0', 'CC BY-ND 4.0', 'CC BY-NC-SA 3.0', 'GFDL', 'Fair use', '', null, undefined])(
-    'rejects %s',
-    (l) => expect(isFreeLicense(l)).toBe(false),
-  );
+  it.each([
+    'CC BY-NC 2.0',
+    'CC BY-ND 4.0',
+    'CC BY-NC-SA 3.0',
+    'GFDL',
+    'Fair use',
+    '',
+    null,
+    undefined,
+  ])('rejects %s', (l) => expect(isFreeLicense(l)).toBe(false));
 });
 
 describe('cleanArtist', () => {

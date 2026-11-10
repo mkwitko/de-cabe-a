@@ -1,5 +1,5 @@
 /**
- * A closed mode, opened from its locker on the home: its art, what it is, how it plays, and the
+ * A closed mode, opened from its poster on the home: its art, what it is, how it plays, and the
  * vote for the mode that opens next. Anyone sees the votes; only an account votes (one vote,
  * movable). A bottom sheet on phones, a two-column panel from 768px.
  */
@@ -17,10 +17,9 @@ import { btnPrimary } from './ui';
 export type Locker = {
   key: VotableMode;
   name: string;
-  number: string;
   /** What the mode is, two or three lines. */
   rule: string;
-  /** A few words for the locker's card. */
+  /** A one-line hook for the mode's poster. */
   pitch: string;
   howTo: readonly string[];
 };
@@ -75,7 +74,7 @@ const PAGE_ART: Partial<Record<VotableMode, React.ReactNode>> = {
 };
 
 /** The mode's drawing on the 200×120 panel. */
-export function LockerArt({ mode, className = '' }: { mode: VotableMode; className?: string }) {
+export function ModeArt({ mode, className = '' }: { mode: VotableMode; className?: string }) {
   const page = PAGE_ART[mode];
   return page ? (
     <svg viewBox="0 0 200 120" aria-hidden="true" className={className}>
@@ -281,7 +280,7 @@ export function ModeDialog({
             {locker.key in PAGE_ART ? (
               <div className="obj-dark flex flex-col gap-3 bg-[radial-gradient(120%_90%_at_30%_20%,#34493f,#1f2d26)] px-5 pt-14 pb-5">
                 <div className="mx-auto w-full max-w-sm border-4 border-[#8a5a33] bg-pitch-deep px-3 py-2">
-                  <LockerArt
+                  <ModeArt
                     mode={locker.key}
                     className="mx-auto h-auto max-h-20 w-full sm:max-h-32"
                   />

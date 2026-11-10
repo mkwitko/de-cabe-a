@@ -4,6 +4,7 @@ import { seedReference } from '../../seed-reference';
 import { ADMIN_TOKEN, testApp, WEB_ORIGIN } from '../../test/app';
 import { resetDb, testPrisma } from '../../test/db';
 import { countryIds, verifiedClubs, verifiedPlayer } from '../../test/factory';
+import { purgeIdleGuests } from './account.data';
 
 const prisma = testPrisma();
 const { app } = testApp({ prisma, now: () => new Date('2026-11-05T15:00:00Z') });
@@ -208,5 +209,56 @@ describe('LGPD: exportar e excluir', () => {
     const s = await prisma.guestSession.findFirstOrThrow({ where: { nickname: 'Visitante X' } });
     expect((await g.req('DELETE', '/me')).statusCode).toBe(204);
     expect(await prisma.guestSession.count({ where: { id: s.id } })).toBe(0);
+  });
+});
+
+describe('LGPD: guests idle for 12 months are erased', () => {
+  const now = new Date('2026-11-05T15:00:00Z');
+  const monthsAgo = (m: number) => new Date(Date.UTC(2026, 10 - m, 5, 15));
+
+  /** A guest that played once, with pk-keyed rows, last seen `months` ago. */
+  async function guest(months: number) {
+    const g = device();
+    const start = (await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1 })).json();
+    await g.req('POST', `/attempts/${start.attempt.id}/actions`, {
+      idempotencyKey: randomUUID(),
+      input: { kind: 'guess', playerId: answerId },
+    });
+    const { sessionId: pk } = await prisma.attempt.findUniqueOrThrow({
+      where: { id: start.attempt.id },
+    });
+    await prisma.pushSubscription.create({
+      data: { endpoint: `https://push.example/${pk}`, pk, p256dh: 'k', auth: 'a' },
+    });
+    await prisma.copaRun.create({ data: { pk, difficulty: 'normal', state: {} } });
+    await prisma.guestSession.update({
+      where: { id: pk },
+      data: { lastSeenAt: monthsAgo(months) },
+    });
+    return pk;
+  }
+  const rows = async (pk: string) => ({
+    sessions: await prisma.guestSession.count({ where: { id: pk } }),
+    attempts: await prisma.attempt.count({ where: { sessionId: pk } }),
+    actions: await prisma.attemptAction.count({ where: { attempt: { sessionId: pk } } }),
+    push: await prisma.pushSubscription.count({ where: { pk } }),
+    copa: await prisma.copaRun.count({ where: { pk } }),
+  });
+
+  it('erases a 13-month idle guest with all its rows, keeps 11 months and accounts', async () => {
+    const old = await guest(13);
+    const recent = await guest(11);
+    const member = await populated('Conta Antiga');
+    await prisma.guestSession.update({
+      where: { id: member.session.id },
+      data: { lastSeenAt: monthsAgo(24) },
+    });
+
+    expect(await purgeIdleGuests(prisma, now, 1)).toBeGreaterThanOrEqual(1);
+
+    expect(await rows(old)).toEqual({ sessions: 0, attempts: 0, actions: 0, push: 0, copa: 0 });
+    expect(await rows(recent)).toEqual({ sessions: 1, attempts: 1, actions: 1, push: 1, copa: 1 });
+    expect(await rowsOf(member)).toMatchObject({ sessions: 1, attempts: 1, users: 1, copa: 1 });
+    expect(await purgeIdleGuests(prisma, now)).toBe(0);
   });
 });

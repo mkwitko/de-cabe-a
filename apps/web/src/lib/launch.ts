@@ -18,6 +18,8 @@ const GATED_PAGES = [
   { key: 'career', name: 'Modo Carreira', re: /^\/carreira(\/|$)/ },
   { key: 'copa', name: 'Copa dos Sonhos', re: /^\/copa(\/|$)/ },
   { key: 'oficina', name: 'Oficina', re: /^\/(oficina|criador|eventos)(\/|$)/ },
+  // Pagamentos (deploy/STRIPE-SETUP.md): the shop, plans and gift redeem ship closed.
+  { key: 'clube', name: 'Clube', re: /^\/(clube|presente)(\/|$)/ },
 ] as const;
 export type PageKey = (typeof GATED_PAGES)[number]['key'];
 

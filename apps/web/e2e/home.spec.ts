@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
+// The first-run welcome would cover a fresh browser's first screen; launch.spec covers it.
+test.beforeEach(({ context }) =>
+  context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
+);
+
 /** Skip the end-of-level ceremony: the broadcast, then the sticker when the level awards one. */
 async function skipCeremony(page: Page, { sticker = true } = {}) {
   const pular = (name: string) =>

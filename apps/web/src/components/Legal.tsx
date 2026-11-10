@@ -10,8 +10,12 @@ export const Fill = ({ children }: { children: string }) => (
 );
 
 /** Controller and data-protection contact, filled in once here for every legal page. */
-export const CONTROLLER = <Fill>nome ou razão social do controlador</Fill>;
-export const DPO_EMAIL = <Fill>e-mail do encarregado de dados</Fill>;
+export const CONTROLLER = 'Mauricio de Oliveira Kwitko';
+export const DPO_EMAIL = (
+  <a href="mailto:mauriciokwt@gmail.com" className="underline underline-offset-4">
+    mauriciokwt@gmail.com
+  </a>
+);
 
 export const LEGAL_UPDATED = '10 de novembro de 2026';
 

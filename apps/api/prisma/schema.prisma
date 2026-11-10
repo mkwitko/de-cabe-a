@@ -786,3 +786,71 @@ model ModeVote {
 
   @@index([mode])
 }
+
+// ───────────────────────── Billing (Stripe, deploy/STRIPE-SETUP.md) ─────────────────────────
+// Accounts only. Rows map to Stripe objects by their ids; webhooks are the source of truth.
+
+/// The Stripe Customer of an account (one per user, created at the first checkout).
+model BillingCustomer {
+  userId           String   @id
+  stripeCustomerId String   @unique
+  createdAt        DateTime @default(now())
+}
+
+/// A Stripe Subscription: the Clube, or a Liga Pro (leagueId set). Mirrors customer.subscription.*.
+model BillingSubscription {
+  id                String   @id /// Stripe subscription id
+  userId            String
+  product           String /// ProductKey (clube_mensal | clube_anual | liga_pro)
+  status            String /// Stripe status: active, past_due, canceled, ...
+  currentPeriodEnd  DateTime
+  cancelAtPeriodEnd Boolean  @default(false)
+  leagueId          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([leagueId])
+}
+
+/// A one-time Checkout (cosmetic or Clube gift); counts once paid (Pix pays later).
+model Purchase {
+  checkoutSessionId String    @id
+  /// "deleted" once the account is erased (the sale itself is kept as a fiscal record)
+  userId            String
+  product           String /// ProductKey
+  amount            Int /// centavos BRL
+  /// open (at Stripe) | processing (Pix to pay) | paid | failed | refunded
+  status            String    @default("open")
+  paymentIntentId   String?   @unique
+  paidAt            DateTime?
+  createdAt         DateTime  @default(now())
+  gift              GiftCode?
+
+  @@index([userId])
+}
+
+/// A Clube gift: the buyer shares the code; redeeming gives `months` of Clube.
+model GiftCode {
+  code       String    @id /// XXXX-XXXX-XXXX
+  purchaseId String    @unique
+  purchase   Purchase  @relation(fields: [purchaseId], references: [checkoutSessionId], onDelete: Cascade)
+  months     Int
+  redeemedBy String?
+  redeemedAt DateTime?
+  /// The Clube time this code gave the redeemer.
+  startsAt   DateTime?
+  endsAt     DateTime?
+  /// The payment was refunded or disputed: the code no longer redeems.
+  revoked    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  @@index([redeemedBy])
+}
+
+/// Stripe events already handled (webhook idempotency, by event id).
+model StripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+}

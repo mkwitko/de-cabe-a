@@ -86,6 +86,11 @@ export function StickerReveal({
         aria-hidden="true"
         className={`pointer-events-none absolute top-[44%] left-1/2 aspect-square w-[max(120vmin,560px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--rc)_70%,transparent),color-mix(in_srgb,var(--rc)_22%,transparent)_45%,transparent)] transition-opacity duration-700 ${revealed ? 'opacity-100' : 'opacity-0'}`}
       />
+      {/* and its rays, turning slowly (still with reduced motion) */}
+      <div
+        aria-hidden="true"
+        className={`reveal-rays pointer-events-none absolute top-[44%] left-1/2 aspect-square w-[max(110vmin,520px)] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ${revealed ? 'opacity-100' : 'opacity-0'}`}
+      />
       {!short && !reducedMotion() && (
         <div
           aria-hidden="true"
