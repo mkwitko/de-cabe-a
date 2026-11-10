@@ -53,10 +53,15 @@ function Stamp({
       >
         {club.clubName}
       </b>
-      <span className="tabular mt-[2cqh] text-xs font-bold">
+      {/* Sized by the slot and wrapped, so an oval stamp at 360px keeps its lines inside the ring. */}
+      <span className="tabular mt-[2cqh] max-w-[78%] text-[clamp(0.625rem,6.5cqw,0.75rem)] leading-tight font-bold">
         {yearsLabel(club.fromYear, club.toYear)}
       </span>
-      {stats && <span className="tabular text-xs font-bold opacity-85">{stats}</span>}
+      {stats && (
+        <span className="tabular max-w-[78%] text-[clamp(0.625rem,6.5cqw,0.75rem)] leading-tight font-bold text-balance opacity-85">
+          {stats}
+        </span>
+      )}
     </div>
   );
 }
@@ -115,14 +120,6 @@ export function Passport({
         <div className="absolute inset-0 overflow-hidden rounded-[6px_14px_14px_6px] bg-[#f3ead2] text-[#1d2a4f] shadow-[0_30px_50px_rgb(0_0_0/0.55),inset_14px_0_18px_-10px_#00000040] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)]">
           <div
             aria-hidden="true"
-            className="font-condensed pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-[18deg] text-center text-[clamp(4rem,16vw,8rem)] leading-[0.8] font-black text-[#1d2a4f0d]"
-          >
-            DE
-            <br />
-            CABEÇA
-          </div>
-          <div
-            aria-hidden="true"
             className="absolute inset-x-5 top-3.5 flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
           >
             <span className="whitespace-nowrap">Passaporte do jogador</span>
@@ -143,8 +140,12 @@ export function Passport({
               </li>
             ))}
             {Array.from({ length: slots }, (_, i) => (
-              <li key={`q${i}`} aria-hidden="true" className="grid min-h-0 place-items-center">
-                <span className="font-condensed grid aspect-square w-[60%] max-w-32 place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a55]">
+              <li
+                key={`q${i}`}
+                aria-hidden="true"
+                className="grid min-h-0 place-items-center [container-type:size]"
+              >
+                <span className="font-condensed grid size-[min(60cqw,88cqh,8rem)] place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a55]">
                   ?
                 </span>
               </li>
