@@ -572,8 +572,12 @@ export async function submitAction(
     pending.some(([n]) => n === 'game_completed')
   )
     await awardTraining(prisma, player, attempt, now);
+  // A sticker failure must never break a completed attempt.
   const sticker = pending.some(([n]) => n === 'game_completed')
-    ? await awardSticker(prisma, player, attempt, challenge, now)
+    ? await awardSticker(prisma, player, attempt, challenge, now).catch((err) => {
+        console.error('[album] falha ao dar figurinha', err);
+        return null;
+      })
     : null;
   return present(prisma, attempt, challenge, event, now, sticker ?? undefined);
 }

@@ -3,6 +3,7 @@ import type { Attempt, Challenge, PrismaClient } from '../../generated/prisma/cl
 import type { GameModeCode } from '../challenges/engines';
 import type { Player } from '../attempts/attempts.service';
 import { levelRarity, rank } from './rarity';
+import { effectivePks } from '../leagues/leagues';
 import { streakDays } from './streak';
 
 /** The footballer a level is about, or null for modes without one (until their plans). */
@@ -32,7 +33,7 @@ export async function awardSticker(
       include: { nationality: true },
     }),
     prisma.careerSpell.count({ where: { playerId, endDate: null } }),
-    streakDays(prisma, [pk], now),
+    effectivePks(prisma, [pk]).then((pks) => streakDays(prisma, pks, now)),
   ]);
   const state = attempt.state as { attempts?: unknown[]; guesses?: unknown[] };
   const rarity = levelRarity({
