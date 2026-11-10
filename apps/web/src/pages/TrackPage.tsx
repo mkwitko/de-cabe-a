@@ -2,8 +2,8 @@
  * A game's track as chapters of 10 levels (ADR-007), each a page laid out as a winding path: done
  * levels carry their stars, the next level is the lit house, the rest are quiet locked outlines.
  * Only the chapter with the current level starts open; the others are one line each (native
- * <details>). Career Path draws the chapters as passport pages with ink stamps, its passport card
- * on top (left on wide screens), and opens with the current stamp centred on screen.
+ * <details>). Career Path is its passport instead: the cover beside a spread of visa pages
+ * (games/career-path/Trail).
  */
 import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import { useEffect } from 'react';
@@ -13,6 +13,8 @@ import { GAME_NAME, GAME_PATH, useTrack } from '../lib/game';
 import { Stars } from '../components/Stars';
 import { ModeCover } from '../components/ModeCover';
 import { CareerPathCard } from '../components/CareerPathCard';
+import { CareerTrail } from '../games/career-path/Trail';
+import { nextLevel } from '../lib/track';
 import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { StarIcon } from '../components/Stars';
 
@@ -81,10 +83,6 @@ const HOUSE: Record<GameMode, { shape: string; done: string; dark: boolean }> = 
   },
 };
 
-/** Passport ink for done Career Path levels, turning like real stamps do. */
-const INK = ['#1d2a4f', '#7a2633', '#1f5e3b', '#5b3a7a'];
-const ROT = [-6, 4, -3, 7, -8, 2, -5, 6, -2, 5];
-
 /** Serpentine place of the i-th level of a chapter: rows of 5, every other row runs back. */
 const COLS = 5;
 const place = (i: number) => {
@@ -123,12 +121,11 @@ function Road({ n, ink }: { n: number; ink: string }) {
 
 function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean }) {
   const label = `Fase ${l.level}, ${DIFFICULTY[l.difficultyTier] ?? ''}`;
-  const passport = mode === 'CAREER_PATH';
   const h = HOUSE[mode];
   if (l.state === 'locked')
     return (
       <span
-        className={`grid aspect-square w-full place-items-center border-dashed ${passport ? 'rounded-full border-2 border-[#6d5c3a]/40 bg-[#f3ead2] text-[#6d5c3a]/75' : `${h.shape} border-chalk-soft/40 text-chalk-soft`}`}
+        className={`grid aspect-square w-full place-items-center border-dashed ${h.shape} border-chalk-soft/40 text-chalk-soft`}
         aria-label={`${label}, trancada`}
         role="img"
       >
@@ -136,7 +133,6 @@ function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean
       </span>
     );
   const done = l.state === 'done';
-  const ink = INK[l.level % INK.length];
   return (
     <Link
       to={`${GAME_PATH[mode]}/${l.level}`}
@@ -146,14 +142,9 @@ function Tile({ l, mode, current }: { l: Level; mode: GameMode; current: boolean
           ? `${label}, ${l.stars} estrelas`
           : `${label}, ${l.state === 'in_progress' ? 'em andamento' : 'jogar'}`
       }
-      style={
-        passport && done ? { color: ink, rotate: `${ROT[l.level % ROT.length]}deg` } : undefined
-      }
       className={`flex aspect-square w-full flex-col items-center justify-center gap-1 transition-transform duration-200 ease-out-expo hover:-translate-y-0.5 ${h.shape} ${
         done
-          ? passport
-            ? 'border-current bg-[#f3ead2]'
-            : `${h.done} shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]`
+          ? `${h.done} shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]`
           : 'house-pulse border-ink/60 bg-cover text-ink shadow-[0_10px_24px_-8px_rgb(0_0_0/0.6)]'
       }`}
     >
@@ -215,31 +206,26 @@ export function TrackPage({ mode }: { mode: GameMode }) {
         const pageStars = page.reduce((s, l) => s + l.stars, 0);
         const pageDone = page.filter((l) => l.state === 'done').length;
         const locked = page.every((l) => l.state === 'locked');
-        const paper = passport && !locked;
         return (
           <details
             key={i}
             open={i === currentPage}
             className={`group rounded-xl ${
-              paper
-                ? 'bg-[#f3ead2] text-[#1d2a4f] shadow-[0_18px_34px_-16px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px)]'
-                : locked
-                  ? 'border-2 border-dashed border-chalk-soft/30'
-                  : 'border border-chalk/15 bg-chalk/[0.05]'
+              locked
+                ? 'border-2 border-dashed border-chalk-soft/30'
+                : 'border border-chalk/15 bg-chalk/[0.05]'
             }`}
           >
             <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
               <span className="flex min-w-0 flex-col">
                 <span className="font-condensed text-xl font-extrabold uppercase">
-                  {passport ? 'Página' : 'Capítulo'} {i + 1}
+                  Capítulo {i + 1}
                 </span>
-                <span className={`text-sm ${paper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}>
+                <span className="text-sm text-chalk-soft">
                   fases {page[0]!.level}–{page.at(-1)!.level}
                 </span>
               </span>
-              <span
-                className={`flex shrink-0 items-center gap-3 ${paper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
-              >
+              <span className="flex shrink-0 items-center gap-3 text-chalk-soft">
                 <span
                   className="font-condensed tabular text-lg font-bold whitespace-nowrap"
                   aria-label={`${pageDone} de ${page.length} fases, ${pageStars} de ${page.length * 3} estrelas`}
@@ -277,7 +263,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
                 className="relative grid grid-cols-5 gap-x-3 gap-y-5 sm:gap-x-5"
                 aria-label={`Fases ${page[0]!.level} a ${page.at(-1)!.level}`}
               >
-                <Road n={page.length} ink={paper ? '#6d5c3a88' : 'rgb(255 255 255 / 0.35)'} />
+                <Road n={page.length} ink="rgb(255 255 255 / 0.35)" />
                 {page.map((l, j) => {
                   const { row, col } = place(j);
                   return (
@@ -297,8 +283,7 @@ export function TrackPage({ mode }: { mode: GameMode }) {
       })}
       {pages.length > currentPage + 3 && (
         <p className="px-4 text-sm text-chalk-soft">
-          Mais {pages.length - currentPage - 3}{' '}
-          {passport ? 'páginas trancadas' : 'capítulos trancados'}.
+          Mais {pages.length - currentPage - 3} capítulos trancados.
         </p>
       )}
     </div>
@@ -308,12 +293,16 @@ export function TrackPage({ mode }: { mode: GameMode }) {
     <div className="flex flex-col gap-6">
       <GameHeader title={GAME_NAME[mode]} />
       {passport ? (
-        // The passport card carries the progress (title, fases, stars) and the one button.
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-10">
+        // The passport cover carries the progress and the one button; the spread is the trail.
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10">
           <div className="mx-auto w-full max-w-md lg:sticky lg:top-6">
             <CareerPathCard linked={false} />
           </div>
-          {path}
+          {data && levels.length > 0 ? (
+            <CareerTrail levels={levels} next={nextLevel(data)?.level ?? null} />
+          ) : (
+            path
+          )}
         </div>
       ) : (
         <>
