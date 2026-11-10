@@ -2,7 +2,7 @@ import { SoundToggle } from './components/SoundToggle';
 import { HomeCarousel } from './components/HomeCarousel';
 import { RouteMeta } from './components/RouteMeta';
 import { StarIcon } from './components/Stars';
-import { DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
+import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
 import {
   lazy,
@@ -13,6 +13,8 @@ import {
   type ReactNode,
 } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
+import { ComingSoonPage } from './pages/ComingSoonPage';
+import { closedRoute, LAUNCH_ALL } from './lib/launch';
 import type { GamesResponse } from '@decabeca/contracts';
 import { GAME_NAME, GAME_PATH, useGames, useStats } from './lib/game';
 import type { GameMode } from '@decabeca/contracts';
@@ -407,11 +409,11 @@ function HomeRoute() {
 }
 
 /**
- * Four places, each the home of a few pages: Jogos (home, tracks, levels, Modo Carreira),
- * Desafio (Desafio do Dia and its round), Ranking (ranking, seasons, leagues), Perfil (stats,
- * history, account and preferences, public profiles).
+ * Four places when everything is open, each the home of a few pages: Jogos (home, tracks, levels,
+ * Modo Carreira), Desafio, Ranking (ranking, seasons, leagues), Perfil (stats, history, account,
+ * public profiles). At launch only three: Jogar, Álbum, Perfil.
  */
-const NAV = [
+const NAV_ALL = [
   {
     to: '/',
     label: 'Jogos',
@@ -434,6 +436,24 @@ const NAV = [
   },
 ] as const;
 
+const NAV_LAUNCH = [
+  {
+    to: '/',
+    label: 'Jogar',
+    Icon: GamesIcon,
+    match: (p: string) => !/^\/(album|stats|history|conta|perfil)(\/|$)/.test(p),
+  },
+  { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },
+  {
+    to: '/stats',
+    label: 'Perfil',
+    Icon: ProfileIcon,
+    match: (p: string) => /^\/(stats|history|conta|perfil)(\/|$)/.test(p),
+  },
+] as const;
+
+const NAV = LAUNCH_ALL ? NAV_ALL : NAV_LAUNCH;
+
 function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const { pathname } = useLocation();
@@ -444,7 +464,9 @@ function Shell({ children }: { children: ReactNode }) {
         aria-label="Principal"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-chalk/15 bg-pitch-deep/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:mb-6 sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none"
       >
-        <ul className="mx-auto grid h-16 max-w-xl grid-cols-4 sm:flex sm:h-auto sm:max-w-7xl sm:items-center sm:justify-end sm:gap-7">
+        <ul
+          className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-auto sm:max-w-7xl sm:items-center sm:justify-end sm:gap-7`}
+        >
           {!home && (
             <li className="mr-auto hidden sm:block">
               <Link to="/" className="font-condensed text-2xl font-black uppercase">
@@ -504,53 +526,61 @@ export function App() {
 }
 
 function PublicRoutes() {
+  const closed = closedRoute(useLocation().pathname);
   return (
     <Shell>
       <RouteMeta />
       <Suspense fallback={<Skeleton className="h-96" />}>
-        <Routes>
-          <Route path="/" element={<HomeRoute />} />
-          <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
-          <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
-          <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
-          <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
-          <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
-          <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
-          <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
-          <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
-          <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
-          <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
-          <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
-          <Route path="/craque-misterioso/:level" element={<LevelRoute mode="MYSTERY_PLAYER" />} />
-          <Route path="/draft" element={<TrackPage mode="DRAFT" />} />
-          <Route path="/draft/:level" element={<LevelRoute mode="DRAFT" />} />
-          <Route path="/conexoes" element={<TrackPage mode="CONNECTIONS" />} />
-          <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
-          <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
-          <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
-          <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
-          <Route path="/d/:date" element={<DailyPage />} />
-          <Route path="/perfil/:nickname" element={<ProfilePage />} />
-          <Route path="/ligas" element={<LeaguesPage />} />
-          <Route path="/liga/:code" element={<LeaguePage />} />
-          <Route path="/ranking" element={<RankingPage />} />
-          <Route path="/fantasy" element={<FantasyPage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/stats" element={<StatsPage />} />
-          <Route path="/album" element={<AlbumPage />} />
-          <Route path="/conta" element={<AccountPage />} />
-          <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
-          <Route path="/privacidade" element={<PrivacyPage />} />
-          <Route path="/como-jogar" element={<HowToPlayPage />} />
-          <Route path="/carreira" element={<CareerPage />} />
-          <Route path="/copa" element={<CopaPage />} />
-          <Route path="/oficina" element={<OficinaPage />} />
-          <Route path="/oficina/criar" element={<OficinaCreatePage />} />
-          <Route path="/oficina/:id" element={<OficinaLevelPage />} />
-          <Route path="/criador/:nickname" element={<CreatorPage />} />
-          <Route path="/eventos/:slug" element={<EventPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {closed ? (
+          <ComingSoonPage closed={closed} />
+        ) : (
+          <Routes>
+            <Route path="/" element={<HomeRoute />} />
+            <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
+            <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
+            <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />
+            <Route path="/grid/:level" element={<LevelRoute mode="FOOTBALL_GRID" />} />
+            <Route path="/impostor" element={<TrackPage mode="IMPOSTOR" />} />
+            <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
+            <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
+            <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
+            <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
+            <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
+            <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
+            <Route
+              path="/craque-misterioso/:level"
+              element={<LevelRoute mode="MYSTERY_PLAYER" />}
+            />
+            <Route path="/draft" element={<TrackPage mode="DRAFT" />} />
+            <Route path="/draft/:level" element={<LevelRoute mode="DRAFT" />} />
+            <Route path="/conexoes" element={<TrackPage mode="CONNECTIONS" />} />
+            <Route path="/conexoes/:level" element={<LevelRoute mode="CONNECTIONS" />} />
+            <Route path="/escalacao" element={<TrackPage mode="MISSING_XI" />} />
+            <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
+            <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
+            <Route path="/d/:date" element={<DailyPage />} />
+            <Route path="/perfil/:nickname" element={<ProfilePage />} />
+            <Route path="/ligas" element={<LeaguesPage />} />
+            <Route path="/liga/:code" element={<LeaguePage />} />
+            <Route path="/ranking" element={<RankingPage />} />
+            <Route path="/fantasy" element={<FantasyPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/stats" element={<StatsPage />} />
+            <Route path="/album" element={<AlbumPage />} />
+            <Route path="/conta" element={<AccountPage />} />
+            <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
+            <Route path="/privacidade" element={<PrivacyPage />} />
+            <Route path="/como-jogar" element={<HowToPlayPage />} />
+            <Route path="/carreira" element={<CareerPage />} />
+            <Route path="/copa" element={<CopaPage />} />
+            <Route path="/oficina" element={<OficinaPage />} />
+            <Route path="/oficina/criar" element={<OficinaCreatePage />} />
+            <Route path="/oficina/:id" element={<OficinaLevelPage />} />
+            <Route path="/criador/:nickname" element={<CreatorPage />} />
+            <Route path="/eventos/:slug" element={<EventPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        )}
       </Suspense>
       <AdConsentBanner />
     </Shell>

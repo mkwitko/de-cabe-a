@@ -31,6 +31,14 @@ export const GamesIcon = (p: { className?: string }) => (
   </Icon>
 );
 
+/** Álbum: an open album with a sticker on the right page. */
+export const AlbumIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5c-3.5-.5-6.5 0-8.5 1.5zM12 6.5v13" />
+    <rect x="14.5" y="9" width="3.5" height="4.5" rx="0.8" strokeDasharray="2 1.5" />
+  </Icon>
+);
+
 /** Desafio do Dia: a calendar page. */
 export const DailyIcon = (p: { className?: string }) => (
   <Icon {...p}>

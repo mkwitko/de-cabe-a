@@ -34,7 +34,8 @@ export default defineConfig({
     {
       command: `pnpm exec vite --port ${WEB_PORT} --strictPort`,
       url: `http://localhost:${WEB_PORT}`,
-      env: { API_URL: `http://127.0.0.1:${API_PORT}` },
+      // Everything open: the e2e still covers the modes that are closed to the public.
+      env: { API_URL: `http://127.0.0.1:${API_PORT}`, VITE_LAUNCH_ALL: '1' },
       reuseExistingServer: false,
     },
   ],
