@@ -117,3 +117,51 @@ export const levelsDone = (stats: object): number =>
 
 /** The end of a level tells the first-run welcome (deferred on shared level links) it may show. */
 export const LEVEL_ENDED = 'dc:level-ended';
+
+/**
+ * Clube offers, for signed-in players who are not members: after a title promotion or a rare
+ * sticker, at the end of the level (never during play), at most once every 14 days; "Não mostrar
+ * de novo" silences them for good. Separate from the account nudges above.
+ */
+export type Offer = 'promotion' | 'rare';
+export type OfferState = { last?: number; never?: boolean };
+export const OFFER_EVERY = 14 * 24 * 60 * 60 * 1000;
+/** Rarities worth an offer: the ones a player shows off. */
+const RARE = new Set(['ouro_brilhante', 'destaque_rodada', 'selecao_temporada', 'idolo', 'lenda']);
+
+export const OFFER_COPY: Record<Offer, { title: string; text: string }> = {
+  promotion: {
+    title: 'Subiu de título!',
+    text: 'Comemore com o Clube: selo de sócio e acabamento exclusivo nas figurinhas. Só enfeite; estrela continua sendo no braço.',
+  },
+  rare: {
+    title: 'Figurinha rara no álbum',
+    text: 'No Clube ela ganha o acabamento de sócio. Só visual, nada de vantagem no jogo.',
+  },
+};
+
+export function offerMoment(
+  s: OfferState,
+  e: { promoted: boolean; rarity?: string | undefined },
+  now: number,
+): Offer | null {
+  if (s.never || (s.last !== undefined && now - s.last < OFFER_EVERY)) return null;
+  if (e.promoted) return 'promotion';
+  return e.rarity && RARE.has(e.rarity) ? 'rare' : null;
+}
+
+const OFFERS = 'dc_offers';
+export function loadOffers(): OfferState {
+  try {
+    return (JSON.parse(localStorage.getItem(OFFERS) ?? 'null') as OfferState | null) ?? {};
+  } catch {
+    return { never: true };
+  }
+}
+export function saveOffers(s: OfferState) {
+  try {
+    localStorage.setItem(OFFERS, JSON.stringify(s));
+  } catch {
+    /* private mode */
+  }
+}

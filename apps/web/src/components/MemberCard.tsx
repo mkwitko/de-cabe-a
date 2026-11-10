@@ -1,6 +1,7 @@
 import { StarIcon } from './Stars';
 import { TitleBadge } from './TitleBadge';
 import { titleFrame, titleTone } from '../lib/format';
+import { ClubeSeal } from './Icons';
 
 /**
  * Carteirinha de sócio: the member's card on /stats and /perfil/:apelido. The outer ring is the
@@ -14,6 +15,7 @@ export function MemberCard({
   levels,
   stickers,
   guest = false,
+  member = false,
   heading = 'h1',
   className = 'max-w-md',
 }: {
@@ -24,6 +26,8 @@ export function MemberCard({
   /** Stickers owned; the third figure when known. */
   stickers?: number | undefined;
   guest?: boolean;
+  /** Clube member: the strip carries the member seal (cosmetic only). */
+  member?: boolean;
   heading?: 'h1' | 'h2';
   className?: string;
 }) {
@@ -42,12 +46,19 @@ export function MemberCard({
     >
       <div className="overflow-hidden rounded-[10px]">
         <div className="flex items-center justify-between gap-3 bg-ink px-4 py-2 text-paper">
-          <span className="font-condensed text-xs font-extrabold tracking-[0.18em] uppercase">
+          <span className="font-condensed min-w-0 truncate text-xs font-extrabold tracking-[0.18em] uppercase">
             Sócio · De Cabeça F.C.
           </span>
-          <span className="font-condensed text-xs font-extrabold tracking-[0.18em] text-paper/70 uppercase">
-            {guest ? 'Convidado' : 'Carteirinha'}
-          </span>
+          {member ? (
+            <span className="font-condensed inline-flex shrink-0 items-center gap-1.5 rounded-full bg-cover px-2.5 py-0.5 text-xs font-black tracking-[0.14em] whitespace-nowrap text-ink uppercase shadow-[0_1px_3px_rgb(0_0_0/0.4)]">
+              <ClubeSeal className="size-3.5" />
+              Sócio do Clube
+            </span>
+          ) : (
+            <span className="font-condensed text-xs font-extrabold tracking-[0.18em] text-paper/70 uppercase">
+              {guest ? 'Convidado' : 'Carteirinha'}
+            </span>
+          )}
         </div>
         <div
           className="member-field flex flex-col gap-4 px-4 pt-5 pb-4 sm:px-5"

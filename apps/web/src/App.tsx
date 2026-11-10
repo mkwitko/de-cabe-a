@@ -94,6 +94,9 @@ const ProfilePage = lazy(() =>
 );
 const AlbumPage = lazy(() => import('./pages/AlbumPage').then((m) => ({ default: m.AlbumPage })));
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
+const clube = () => import('./pages/ClubePage');
+const ClubePage = lazy(() => clube().then((m) => ({ default: m.ClubePage })));
+const GiftRedeemPage = lazy(() => clube().then((m) => ({ default: m.GiftRedeemPage })));
 
 export const GAMES = [
   {
@@ -538,6 +541,8 @@ function PublicRoutes() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/album" element={<AlbumPage />} />
             <Route path="/conta" element={<AccountPage />} />
+            <Route path="/clube" element={<ClubePage />} />
+            <Route path="/presente/:code" element={<GiftRedeemPage />} />
             <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
             <Route path="/privacidade" element={<PrivacyPage />} />
             <Route path="/termos" element={<TermsPage />} />
