@@ -24,8 +24,12 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await expect(nav.getByRole('link', { name: 'Perfil' })).toBeVisible();
   await expect(nav.getByRole('link', { name: /Ranking|Desafio/ })).toHaveCount(0);
 
-  // A closed mode's locker opens what it is, how it plays and the votes; voting asks to sign in.
+  // The closed modes are premiere posters, one button each; a poster opens what the mode is, how
+  // it plays and the votes; voting asks to sign in.
   await expect(page.getByText(/Toque para conhecer e votar/)).toBeVisible();
+  await expect(
+    page.getByRole('list', { name: 'Modos que chegam em breve' }).getByRole('button'),
+  ).toHaveCount(11);
   await page.getByRole('button', { name: /Copa dos Sonhos/ }).click();
   const sheet = page.getByRole('dialog', { name: 'Copa dos Sonhos' });
   await expect(sheet.getByRole('heading', { name: 'Como se joga' })).toBeVisible();

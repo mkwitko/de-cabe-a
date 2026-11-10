@@ -2,7 +2,7 @@
  * The home as one scene, "Vestiário à noite": a locker room under one floodlight (by day, window
  * light), the Career Path passport lying open on the bench (inside cover: the name and the title
  * in its frame; visa page: the stamps), the player's stickers fanned out of it, the next-level
- * ticket clipped to it, and the closed modes as locked lockers along the wall.
+ * ticket clipped to it, and the closed modes as premiere posters taped to the wall.
  *
  * Entry (once per tab session): the light switches on, the cover swings open, stickers slide out,
  * the ticket lands, the last stamp thumps. Pointer (and device tilt where it needs no permission)
@@ -21,7 +21,8 @@ import { TitleBadge } from './TitleBadge';
 import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
 import { Moment } from './Moment';
-import { leaderOf, LockerArt, ModeDialog, type Locker } from './ModeDialog';
+import type { VotableMode } from '@decabeca/contracts';
+import { leaderOf, ModeArt, ModeDialog, type Locker } from './ModeDialog';
 
 const reduced = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -75,19 +76,52 @@ function useDust() {
 
 export type { Locker };
 
+/** Each poster's own light: the hue its backdrop is printed in. */
+const HUE: Record<VotableMode, number> = {
+  FOOTBALL_GRID: 150,
+  IMPOSTOR: 25,
+  TIMELINE: 65,
+  HIGHER_LOWER: 95,
+  MISSING_XI: 255,
+  MYSTERY_PLAYER: 50,
+  CONNECTIONS: 200,
+  DRAFT: 300,
+  career: 15,
+  copa: 85,
+  oficina: 175,
+};
+/** Pasted by hand: no two posters hang quite straight. */
+const TILT = [-1.4, 0.9, -0.5, 1.5, -1, 0.4];
+
+const Chevron = ({ className = '', flip = false }: { className?: string; flip?: boolean }) => (
+  <svg
+    viewBox="0 0 12 12"
+    aria-hidden="true"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d={flip ? 'M8 2 4 6l4 4' : 'M4 2l4 4-4 4'} />
+  </svg>
+);
+
 /**
- * The closed modes as a bank of locked lockers on the back wall: steel doors with vents, a brass
- * number, a padlock and a card in the name holder (art, name, a line on what it is, its votes).
- * A tap (or Enter) opens the mode: what it is, how it plays and the vote for the next one. The
- * open mode lives in the URL (?modo=), so the back button closes it and a sign-in returns to it.
+ * The closed modes as premiere posters taped to the locker-room wall: the mode's art full-bleed
+ * under its own light, the name in big condensed type, a one-line hook, the "Em breve" strip and
+ * the votes. One row that scrolls sideways. A tap (or Enter) opens the mode: what it is, how it
+ * plays and the vote for the next one. The open mode lives in the URL (?modo=), so the back button
+ * closes it and a sign-in returns to it.
  */
-function LockerBank({ lockers }: { lockers: Locker[] }) {
+function PosterWall({ lockers }: { lockers: Locker[] }) {
   const [params, setParams] = useSearchParams();
-  const open = lockers.find((l) => l.key === params.get('modo')) ?? null;
+  const row = useRef<HTMLUListElement>(null);
   const votes = useModeVotes().data;
-  const leader = leaderOf(votes?.modes);
   if (!lockers.length) return null;
-  const mid = (lockers.length - 1) / 2 || 1;
+  const open = lockers.find((l) => l.key === params.get('modo')) ?? null;
+  const leader = leaderOf(votes?.modes);
   const close = () =>
     setParams(
       (p) => {
@@ -96,87 +130,83 @@ function LockerBank({ lockers }: { lockers: Locker[] }) {
       },
       { replace: true },
     );
+  const page = (dir: 1 | -1) => {
+    const el = row.current;
+    el?.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: reduced() ? 'auto' : 'smooth' });
+  };
+  const arrow =
+    'grid size-11 place-items-center rounded-full border border-chalk-soft/40 bg-black/55 text-chalk transition-colors hover:bg-black/80 hover:text-cover';
   return (
-    <section aria-labelledby="em-breve" className="lockers relative mt-4 lg:mt-0">
-      <div className="relative z-20 mb-[-0.6rem] ml-2 flex items-center gap-x-3 lg:ml-0">
+    <section aria-labelledby="em-breve" className="posters relative mt-8 lg:mt-4">
+      <div className="flex items-center gap-x-3">
         <h2 id="em-breve" className="shrink-0">
-          <SoonStamp className="text-sm sm:text-base" />
+          <SoonStamp className="text-base sm:text-lg" />
         </h2>
         <p className="font-condensed text-sm leading-tight font-extrabold text-chalk uppercase [text-shadow:0_1px_3px_rgb(0_0_0/0.8)] sm:text-base">
           Toque para conhecer e votar
           <span className="max-sm:hidden"> no próximo modo</span>
         </p>
+        <div className="ml-auto flex shrink-0 gap-2 max-lg:hidden">
+          <button
+            type="button"
+            className={arrow}
+            aria-label="Cartazes anteriores"
+            onClick={() => page(-1)}
+          >
+            <Chevron flip className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            className={arrow}
+            aria-label="Próximos cartazes"
+            onClick={() => page(1)}
+          >
+            <Chevron className="size-3.5" />
+          </button>
+        </div>
       </div>
-      <ul
-        aria-label="Modos que chegam em breve"
-        className="locker-row flex snap-x gap-2 overflow-x-auto px-1 pt-4 pb-5 [scrollbar-width:none] lg:gap-[0.6%] lg:overflow-visible lg:pb-0"
-      >
+      <ul ref={row} aria-label="Modos que chegam em breve" className="poster-row">
         {lockers.map((l, i) => {
-          const off = (i - mid) / mid;
           const n = votes?.modes.find((m) => m.mode === l.key)?.votes;
           const mine = votes?.mine === l.key;
           return (
             <li
               key={l.key}
-              className="locker relative shrink-0 snap-start"
+              className="poster"
               style={
-                { '--o': off.toFixed(3), '--d': Math.abs(off).toFixed(3) } as React.CSSProperties
+                {
+                  '--h': HUE[l.key],
+                  '--tilt': `${TILT[i % TILT.length]}deg`,
+                } as React.CSSProperties
               }
             >
-              {/* the inside, lit, seen through the crack on hover */}
-              <div aria-hidden="true" className="locker-inside" />
               <button
                 type="button"
-                className="locker-door"
+                className="poster-sheet"
                 aria-haspopup="dialog"
                 onClick={() => setParams({ modo: l.key })}
               >
-                <span aria-hidden="true" className="locker-vents" />
-                {leader === l.key && (
-                  <span className="locker-ribbon font-condensed">Mais votado</span>
-                )}
-                <span aria-hidden="true" className="locker-number font-condensed tabular">
-                  {l.number}
+                <span aria-hidden="true" className="poster-art">
+                  <ModeArt mode={l.key} />
                 </span>
-                <span className="locker-card">
-                  <span aria-hidden="true" className="locker-art">
-                    <LockerArt mode={l.key} className="size-full" />
+                <span className="poster-name font-condensed">{l.name}</span>
+                <span className="poster-hook">{l.pitch}</span>
+                <span aria-hidden="true" className="poster-strip font-condensed">
+                  Em breve
+                  <span className="inline-flex items-center gap-1">
+                    Votar <Chevron className="size-[0.7em]" />
                   </span>
-                  <span className="locker-name font-condensed">{l.name}</span>
-                  <span className="locker-pitch">{l.pitch}</span>
-                  {n !== undefined && (
-                    <span className="locker-votes tabular">
-                      {mine ? 'Seu voto · ' : ''}
-                      {n === 1 ? '1 voto' : `${n} votos`}
-                    </span>
-                  )}
                 </span>
-                <span aria-hidden="true" className="locker-more font-condensed">
-                  Ver mais
-                  <svg
-                    viewBox="0 0 12 12"
-                    className="size-2.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                  >
-                    <path d="M4 2l4 4-4 4" />
-                  </svg>
-                </span>
-                <svg aria-hidden="true" viewBox="0 0 24 44" className="locker-lock">
-                  {/* the handle, the shackle through it and the padlock body */}
-                  <rect x="9" y="0" width="6" height="18" rx="2" fill="#5f6a66" />
-                  <path
-                    d="M7 24v-6a5 5 0 0 1 10 0v6"
-                    fill="none"
-                    stroke="#b7bfc0"
-                    strokeWidth="2.6"
-                  />
-                  <rect x="3" y="23" width="18" height="18" rx="3" fill="#b8892f" />
-                  <rect x="3" y="23" width="18" height="5" rx="2" fill="#e2b85a" opacity="0.7" />
-                  <circle cx="12" cy="32" r="2" fill="#3a2a10" />
-                  <path d="M12 33v4" stroke="#3a2a10" strokeWidth="1.6" />
-                </svg>
+                {n !== undefined && (
+                  <span className={`poster-votes font-condensed ${mine ? 'is-mine' : ''}`}>
+                    <span className="tabular block text-[2.1em] leading-[0.85]">{n}</span>
+                    {n === 1 ? 'voto' : 'votos'}
+                    {mine && <span className="block">Seu voto</span>}
+                  </span>
+                )}
+                {leader === l.key && (
+                  <span className="poster-ribbon font-condensed">Mais votado</span>
+                )}
               </button>
             </li>
           );
@@ -436,7 +466,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
         )}
       </section>
 
-      <LockerBank lockers={lockers} />
+      <PosterWall lockers={lockers} />
     </div>
   );
 }
