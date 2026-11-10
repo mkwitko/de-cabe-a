@@ -1,5 +1,6 @@
 import { cardInclude, nationalRecords, stickerFace } from './nota';
 import {
+  type Finish,
   AlbumResponse,
   ProfileAlbumResponse,
   PromoteRequest,
@@ -10,6 +11,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { AppError } from '../../errors';
 import { publicProfileOwner } from '../account/account.routes';
+import { entitlements } from '../billing/billing';
 import { ownedPks } from './owned-pks';
 import { trophies } from '../progression/seasons';
 import { RARITY_ORDER, rank } from './rarity';
@@ -127,7 +129,18 @@ export const albumRoutes: FastifyPluginAsyncZod = async (app) => {
       const owner = await publicProfileOwner(prisma, req.params.nickname);
       if (!owner) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
       const stickers = await bestStickers(prisma, owner.pks, now());
-      return { showcase: stickers.slice(0, 6), owned: stickers.length };
+      const showcase = stickers.slice(0, 6);
+      // finishes only for accounts, and only the ones still owned (wearing() inside entitlements)
+      const finishes: Record<string, Finish> = {};
+      if (owner.who.userId) {
+        const { equipped } = await entitlements(prisma, owner.who.userId, now());
+        for (const s of showcase) {
+          const own = equipped.stickers[s.playerId];
+          const f = own === 'none' ? null : (own ?? equipped.finish);
+          if (f) finishes[s.playerId] = f;
+        }
+      }
+      return { showcase, owned: stickers.length, finishes };
     },
   );
 };

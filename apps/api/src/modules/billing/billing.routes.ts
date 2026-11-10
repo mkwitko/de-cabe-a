@@ -21,6 +21,7 @@ import {
   clubeStatus,
   entitlements,
   handleEvent,
+  guestApoio,
   supportOf,
   type BillingDeps,
 } from './billing';
@@ -108,7 +109,11 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
       // Apoie is open to guests: Checkout asks for the e-mail; only the thank-you needs an account.
       if (product.kind === 'apoio')
         return {
-          url: await donate(req.userId, product.interval ? undefined : (req.body.amount ?? 0)),
+          url: await donate(
+            req.userId,
+            req.sessionId,
+            product.interval ? undefined : (req.body.amount ?? 0),
+          ),
         };
       const userId = accountOf(req);
       const b = billing();
@@ -170,10 +175,10 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * Apoie: a one-time amount the donor picks (price_data; card or Pix) or, with no amount, the
-   * monthly price (accounts only). A guest gives as themselves (Checkout collects the e-mail) and
-   * nothing is kept here; an account's payment is recorded so the webhook marks it a supporter.
+   * monthly price (accounts only). A guest gives as themselves (Checkout collects the e-mail); the
+   * payment is kept under their device session and joins the account if they sign up later.
    */
-  async function donate(userId: string | null, amount: number | undefined) {
+  async function donate(userId: string | null, sessionId: string, amount: number | undefined) {
     const b = billing();
     const monthly = amount === undefined;
     if (!monthly && !amount)
@@ -209,9 +214,15 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
       success_url: `${back}?apoio=ok`,
       cancel_url: `${back}?apoio=cancelado`,
     });
-    if (userId && !monthly)
+    if (!monthly)
       await prisma.purchase.create({
-        data: { checkoutSessionId: session.id, userId, product: 'apoio_avulso', amount },
+        data: {
+          checkoutSessionId: session.id,
+          // a guest's payment waits under its device session; sign-up moves it (account `link`)
+          userId: userId ?? guestApoio(sessionId),
+          product: 'apoio_avulso',
+          amount,
+        },
       });
     return session.url!;
   }

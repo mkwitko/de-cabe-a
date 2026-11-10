@@ -18,7 +18,7 @@ export function Showcase({
 }: {
   stickers: Sticker[];
   cols?: string;
-  /** The owner's finishes (own album only; a public profile shows them plain). */
+  /** The owner's finishes (on a public profile, the ones the owner wears now). */
   finishOf?: (playerId: string) => Finish | null;
 }) {
   const shelf = stickers.length > 3 ? 6 : 3;
