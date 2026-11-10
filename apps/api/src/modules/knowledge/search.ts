@@ -79,7 +79,7 @@ export async function searchPlayers(
 
   return ranked.map(({ player, alias, normalized, isPrimary }) => {
     // Every result says who it is, since many players share a first name or nickname ("Marcelo"):
-    // main club (most league games, else the longest spell) · birth year · position.
+    // main club (most league games, else the longest spell) · "nasc. 1976" · position.
     const span = (x: (typeof player.spells)[number]) =>
       (x.endDate ?? new Date()).getTime() - (x.startDate?.getTime() ?? 0);
     const main = [...player.spells].sort(
@@ -87,7 +87,7 @@ export async function searchPlayers(
     )[0];
     const who = [
       main?.club.shortName,
-      player.birthDate?.getUTCFullYear(),
+      player.birthDate && `nasc. ${player.birthDate.getUTCFullYear()}`,
       player.primaryPositionGroup ? POSITION[player.primaryPositionGroup] : null,
     ]
       .filter(Boolean)

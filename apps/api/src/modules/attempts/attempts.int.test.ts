@@ -210,6 +210,9 @@ describe('levels (ADR-007)', () => {
         .json()
         .levels.map((l: { state: string }) => l.state),
     ).toEqual(['open', 'locked', 'locked']);
+    // Opened but untouched: still "Jogar", not "Continuar".
+    await g.req('POST', '/attempts', { mode: 'CAREER_PATH', level: 1 });
+    expect((await g.req('GET', '/tracks/CAREER_PATH')).json().levels[0].state).toBe('open');
     expect((await g.req('GET', '/games')).json().games[0]).toEqual({
       mode: 'CAREER_PATH',
       name: 'Career Path',
@@ -387,8 +390,8 @@ describe('player search', () => {
   });
   it('orders by notability; every result says who it is (main club · birth year · position)', async () => {
     expect((await search('ze rob')).json().players).toEqual([
-      { id: ids.ze, name: 'Zé Roberto', disambiguation: 'Palmeiras · 1974 · meia' },
-      { id: ids.ze2, name: 'Zé Roberto', disambiguation: 'Vasco · 1980 · meia' },
+      { id: ids.ze, name: 'Zé Roberto', disambiguation: 'Palmeiras · nasc. 1974 · meia' },
+      { id: ids.ze2, name: 'Zé Roberto', disambiguation: 'Vasco · nasc. 1980 · meia' },
     ]);
   });
   it('finds a player by the name fans use when the canonical one is the full name (Dida)', async () => {
@@ -1342,6 +1345,7 @@ describe('replace in place', () => {
     });
     const g = guest();
     const mine = (await g.req('POST', '/attempts', { mode: 'FOOTBALL_GRID', level: 1 })).json();
+    expect((await g.act(mine.attempt.id, { kind: 'hint', cellIndex: 0 })).statusCode).toBe(200);
     const draft = (
       await adminPost(`/challenges/${old.id}/retire`, {
         reason: 'Posição corrigida',

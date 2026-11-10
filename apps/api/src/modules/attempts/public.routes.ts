@@ -96,6 +96,8 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
         completedAt: true,
         stars: true,
         score: true,
+        timed: true,
+        _count: { select: { actions: true } },
         challenge: { select: { publicNumber: true } },
       },
     });
@@ -117,9 +119,10 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
     let open = true;
     return levels.map((l) => {
       const a = best.get(l.publicNumber!);
+      // A level only opened (no guess, no skip, no clock running) is still "Jogar", not "Continuar".
       const state = a?.completedAt
         ? 'done'
-        : a
+        : a && (a.timed || a._count.actions > 0)
           ? 'in_progress'
           : open || daily.has(l.publicNumber!)
             ? 'open'
