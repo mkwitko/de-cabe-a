@@ -12,7 +12,7 @@ import { AuthGate } from '../components/AuthGate';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
 import { AccountData } from '../components/AccountData';
-import { openSettings } from '../components/Settings';
+import { openSettings } from '../components/SettingsButton';
 
 const input =
   'min-h-12 rounded-lg border-2 border-ink/30 bg-white/85 px-3 text-base text-ink focus:border-ink';
