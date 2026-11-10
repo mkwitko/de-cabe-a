@@ -37,7 +37,7 @@ const TIER: Record<StickerRarity, string> = {
  * face box (`cutoutFace`), so every head lands at one scale; without a cut-out the photo fades
  * into the face. Nothing moves or blends at run time. Top left: the Nota De Cabeça in big condensed numerals, the position and
  * the flag; the tier runs down the right edge. At the foot: the name, fitted to the width, and up
- * to six real numbers in one row; unknown ones are left out, and with none known the rarity takes
+ * to six real numbers in two columns of three (big number, small-caps label); unknown ones are left out, and with none known the rarity takes
  * their place. Fills its parent (which sets the 3:4 box); everything scales with the card's width
  * (container units). Album size keeps rating, position, player and name. The reveal moves
  * `stripRef` and hides the name until it is announced (`showName={false}`); `selected` draws an

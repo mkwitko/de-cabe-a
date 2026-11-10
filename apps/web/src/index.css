@@ -1579,7 +1579,7 @@
 /* the name across the card, fitted: long names shrink with their length (--nl) */
 .pcard-name {
   position: absolute;
-  top: 70%;
+  top: 63%;
   left: 6%;
   right: 6%;
   font-size: min(15cqw, calc(150cqw / var(--nl)));
@@ -1598,36 +1598,42 @@
   text-shadow: 0 0.5cqw 0 rgb(0 0 0 / 0.6);
   transition: opacity 400ms;
 }
-/* the numbers: one row under a rule in the rarity's accent */
+/* the numbers: two columns of three rows under a rule in the rarity's accent, each row a big
+   number and its small-caps label (clear of the bottom-left chamfer) */
 .pcard-attrs {
   position: absolute;
-  top: 83%;
-  left: 6%;
-  right: 6%;
+  top: 76%;
+  left: 14%;
+  right: 10%;
   display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, auto);
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  padding-top: 2.2cqw;
+  column-gap: 6cqw;
+  row-gap: 0.6cqw;
+  padding-top: 2cqw;
   border-top: max(1px, 0.4cqw) solid color-mix(in oklab, var(--acc) 70%, transparent);
-  text-align: center;
 }
 .pcard-attrs > div {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  gap: 1.6cqw;
   min-width: 0;
 }
 .pcard-attrs dd {
-  font-size: 6.2cqw;
-  font-weight: 800;
-  font-stretch: 70%;
-  line-height: 1;
+  min-width: 2.2ch;
+  font-size: 8cqw;
+  font-weight: 900;
+  font-stretch: 62%;
+  line-height: 0.95;
+  text-align: right;
 }
 .pcard-attrs dt {
-  order: 1;
-  font-size: 3.4cqw;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--acc);
+  font-size: 3.6cqw;
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--light) 62%, transparent);
 }
 .pcard-rarity {
   position: absolute;
@@ -1643,8 +1649,9 @@
 }
 .pcard-brand {
   position: absolute;
-  bottom: 2.2cqw;
-  right: 4cqw;
+  bottom: 5cqw;
+  right: 3.6cqw;
+  writing-mode: vertical-rl;
   font-size: 2.6cqw;
   font-weight: 800;
   letter-spacing: 0.26em;
@@ -1740,10 +1747,9 @@
   }
 }
 
-/* album size: rating, position, a bigger player and the name; no flag, tier, numbers, brand,
-   rim light or grain */
+/* small cards: rating, position, player, name and the numbers (with pixel floors so they stay
+   legible); no flag, tier or brand */
 @container (width < 150px) {
-  .pcard-attrs,
   .pcard-rarity,
   .pcard-tier,
   .pcard-brand,
@@ -1751,8 +1757,8 @@
     display: none;
   }
   .pcard-fig {
-    --head: 31;
-    --top: 23;
+    --head: 26;
+    --top: 19;
   }
   .pcard-head {
     top: 5cqw;
@@ -1766,15 +1772,56 @@
     font-size: max(9px, 9cqw);
   }
   .pcard-name {
-    top: 77%;
-    font-size: max(9px, min(17cqw, calc(150cqw / var(--nl))));
+    top: 59%;
+    font-size: max(9px, min(16cqw, calc(150cqw / var(--nl))));
+  }
+  .pcard-attrs {
+    top: 71%;
+    left: 12%;
+    right: 6%;
+    column-gap: 4cqw;
+  }
+  .pcard-attrs dd {
+    font-size: max(10px, 9cqw);
+  }
+  .pcard-attrs dt {
+    font-size: max(7px, 4.6cqw);
+  }
+}
+/* the album page (~88-120px): the name and numbers move up and keep pixel floors */
+@container (width < 120px) {
+  .pcard-fig {
+    --head: 24;
+    --top: 16;
+  }
+  .pcard-name {
+    top: 53%;
+  }
+  .pcard-attrs {
+    top: 65%;
+    left: 11%;
+    right: 5%;
+    column-gap: 3cqw;
+    row-gap: 0;
+    padding-top: 1.6cqw;
+  }
+  .pcard-attrs > div {
+    gap: 1.2cqw;
+  }
+  .pcard-attrs dt {
+    font-size: max(6.5px, 5cqw);
   }
 }
 /* thumbnails (the corner sticker on the result card): just the shield, player and rating */
 @container (width < 72px) {
   .pcard-name,
-  .pcard-pos {
+  .pcard-pos,
+  .pcard-attrs {
     display: none;
+  }
+  .pcard-fig {
+    --head: 31;
+    --top: 23;
   }
 }
 
