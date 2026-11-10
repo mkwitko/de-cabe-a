@@ -1,11 +1,19 @@
 /**
  * Ligas de amigos (GROWTH_PLAN.md 2.1): /ligas lists the player's leagues and creates one;
  * /liga/:code is the invite link: join, weekly ranking of stars, invite, leave, report. No chat.
+ * Liga Pro (the creator's subscription): the crest in the owner's colour and lettering, 100 places,
+ * the podium of past weeks and the trophy shelf.
  */
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { LeagueResponse, LeaguesResponse } from '@decabeca/contracts';
+import type {
+  LeagueColor,
+  LeagueNameStyle,
+  LeagueResponse,
+  LeagueStyle,
+  LeaguesResponse,
+} from '@decabeca/contracts';
 import { api, type ApiError } from '../lib/api';
 import { ShareButton } from '../components/ShareButton';
 import { suggestNickname } from '../lib/nickname';
@@ -16,6 +24,7 @@ import { useMe } from '../lib/game';
 import { isPageLaunched } from '../lib/launch';
 import { brl, checkout } from '../lib/billing';
 import { CATALOG } from '@decabeca/contracts';
+import { TrophyIcon } from '../components/Icons';
 
 /** Errors of create/join; without a nickname, one tap takes a suggested one and tries again. */
 function NeedNickname({ error, retry }: { error: ApiError | null; retry: () => void }) {
@@ -229,6 +238,7 @@ export function LeaguePage() {
   return (
     <>
       <GameHeader title={l.name} />
+      {l.pro && <LeagueCrest name={l.name} style={l.style ?? DEFAULT_STYLE} />}
       {/* the code as a ticket: stub with the people count, perforation, big code */}
       <div className="mt-4 flex w-full max-w-md items-stretch overflow-hidden rounded-lg bg-cover text-ink shadow-[0_10px_22px_-10px_rgb(0_0_0/0.6)]">
         <p className="flex flex-1 flex-col justify-center px-4 py-3">
@@ -264,7 +274,7 @@ export function LeaguePage() {
         <>
           <div className="mt-6 flex flex-wrap gap-3">
             <ShareButton text={invite} label="Convidar amigos" />
-            {!guest && isPageLaunched('clube') && <LigaPro code={l.code} />}
+            {l.isOwner && !l.pro && !guest && isPageLaunched('clube') && <LigaPro code={l.code} />}
           </div>
           <section aria-labelledby="semana" className="mt-8">
             <h2 id="semana" className="font-condensed text-2xl font-extrabold uppercase">
@@ -303,6 +313,8 @@ export function LeaguePage() {
               </p>
             )}
           </section>
+          {l.pro && <ProHistory l={l} />}
+          {l.pro && l.isOwner && <CrestEditor l={l} onSaved={refresh} />}
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold">
             <button
               type="button"
@@ -341,11 +353,217 @@ function LigaPro({ code }: { code: string }) {
       >
         Liga Pro · {brl(CATALOG.liga_pro.amount)}/mês
       </button>
+      <p className="max-w-[44ch] text-sm text-chalk-soft">
+        100 pessoas, escudo personalizado, histórico das semanas e estante de troféus.
+      </p>
       {buy.error && (
         <p role="alert" className="text-sm text-chalk-soft">
           {buy.error.message}
         </p>
       )}
     </div>
+  );
+}
+
+const DEFAULT_STYLE: LeagueStyle = { color: 'verde', nameStyle: 'bloco' };
+const CREST: Record<LeagueColor, { name: string; fill: string }> = {
+  verde: { name: 'Verde', fill: '#1f7a45' },
+  azul: { name: 'Azul', fill: '#1f4fa8' },
+  vermelho: { name: 'Vermelho', fill: '#b3262e' },
+  preto: { name: 'Preto', fill: '#1b1d1f' },
+  vinho: { name: 'Vinho', fill: '#6b1f35' },
+  dourado: { name: 'Dourado', fill: '#b8860b' },
+};
+const LETTERING: Record<LeagueNameStyle, { name: string; className: string }> = {
+  bloco: { name: 'Bloco', className: 'text-chalk' },
+  contorno: {
+    name: 'Contorno',
+    className: 'text-transparent [-webkit-text-stroke:2px_var(--color-cover)]',
+  },
+  dourado: {
+    name: 'Dourado',
+    className: 'text-gold [text-shadow:0_-1px_0_#0007,0_2px_0_#5a4108,0_3px_8px_rgb(0_0_0/0.5)]',
+  },
+};
+/** Up to three initials: "Resenha do Bar" → RDB. */
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((w) => w[0]!.toUpperCase())
+    .join('');
+
+/** Liga Pro: a shield in the league's colour with its initials, the name in its lettering. */
+function LeagueCrest({ name, style }: { name: string; style: LeagueStyle }) {
+  return (
+    <div className="mt-4 flex items-center gap-4">
+      <svg
+        viewBox="0 0 60 70"
+        aria-hidden="true"
+        className="h-20 w-auto shrink-0 drop-shadow-[0_8px_10px_rgb(0_0_0/0.55)]"
+      >
+        <path
+          d="M4 6h52v28c0 16-12 26-26 32C16 60 4 50 4 34z"
+          fill={CREST[style.color].fill}
+          stroke="var(--color-cover)"
+          strokeWidth="2.5"
+        />
+        <path d="M9 11h42v23c0 13-10 21-21 26C19 55 9 47 9 34z" fill="none" stroke="#fff4" />
+        <text
+          x="30"
+          y="40"
+          textAnchor="middle"
+          fill="var(--color-cover)"
+          className="font-condensed"
+          fontSize="17"
+          fontWeight="900"
+        >
+          {initials(name)}
+        </text>
+      </svg>
+      <div className="min-w-0">
+        <p
+          className={`font-condensed text-[clamp(1.75rem,7vw,3rem)] leading-[0.9] font-black break-words uppercase ${LETTERING[style.nameStyle].className}`}
+        >
+          {name}
+        </p>
+        <p className="mt-1 text-sm font-bold tracking-[0.18em] text-cover uppercase">Liga Pro</p>
+      </div>
+    </div>
+  );
+}
+
+const weekLabel = (iso: string) =>
+  `Semana de ${new Date(iso).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', timeZone: 'America/Sao_Paulo' })}`;
+
+/** Liga Pro: the trophy shelf, then the podium of each closed week. */
+function ProHistory({ l }: { l: LeagueResponse }) {
+  return (
+    <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <section aria-labelledby="trofeus">
+        <h2 id="trofeus" className="font-condensed text-2xl font-extrabold uppercase">
+          Estante de troféus
+        </h2>
+        <p className="text-sm text-chalk-soft">Semanas vencidas nas últimas 8.</p>
+        {l.trophies.length ? (
+          <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-5 rounded-xl border-4 border-chalk-soft/30 bg-pitch-deep p-4 shadow-[inset_0_0_30px_rgb(0_0_0/0.45)]">
+            {l.trophies.map((t) => (
+              <li key={t.nickname} className="flex flex-col items-center gap-1">
+                <span className="flex items-end gap-0.5 text-cover" aria-hidden="true">
+                  {Array.from({ length: Math.min(t.wins, 4) }, (_, i) => (
+                    <TrophyIcon key={i} className={i ? 'size-6' : 'size-9'} />
+                  ))}
+                </span>
+                <span className="max-w-32 truncate text-sm font-bold">{t.nickname}</span>
+                <span className="font-condensed tabular text-sm font-extrabold text-chalk-soft">
+                  {t.wins} {t.wins === 1 ? 'semana' : 'semanas'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 rounded-xl border-2 border-dashed border-chalk-soft/40 p-4 text-chalk-soft">
+            A estante enche quando a primeira semana fechar.
+          </p>
+        )}
+      </section>
+      <section aria-labelledby="historico">
+        <h2 id="historico" className="font-condensed text-2xl font-extrabold uppercase">
+          Semanas anteriores
+        </h2>
+        <p className="text-sm text-chalk-soft">O pódio de cada semana fechada.</p>
+        {l.history.length ? (
+          <ol className="mt-4 flex flex-col gap-3">
+            {l.history.map((w) => (
+              <li
+                key={w.weekStart}
+                className="rounded-lg bg-paper px-4 py-3 text-ink shadow-[0_10px_22px_-12px_rgb(0_0_0/0.55)]"
+              >
+                <p className="font-condensed text-sm font-extrabold tracking-[0.12em] uppercase">
+                  {weekLabel(w.weekStart)}
+                </p>
+                <ol className="mt-1 flex flex-col">
+                  {w.podium.map((r) => (
+                    <li key={r.position} className="flex items-center gap-3">
+                      <span className="font-condensed tabular w-7 font-black">{r.position}º</span>
+                      <span className="min-w-0 flex-1 truncate font-semibold">{r.nickname}</span>
+                      <span className="font-condensed tabular font-black">
+                        <StarIcon className="inline size-[0.85em] align-[-0.08em]" /> {r.stars}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-4 rounded-xl border-2 border-dashed border-chalk-soft/40 p-4 text-chalk-soft">
+            Nenhuma semana fechada ainda com estrelas na liga.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/** Liga Pro, the creator only: colour and lettering of the crest, saved at once. */
+function CrestEditor({ l, onSaved }: { l: LeagueResponse; onSaved: (l: LeagueResponse) => void }) {
+  const style = l.style ?? DEFAULT_STYLE;
+  const save = useMutation<LeagueResponse, ApiError, LeagueStyle>({
+    mutationFn: (json) => api(`/v1/leagues/${l.code}/style`, { method: 'PATCH', json }),
+    onSuccess: onSaved,
+  });
+  const pill = (on: boolean) =>
+    `flex min-h-11 items-center gap-2 rounded-full border-2 py-1 pr-4 pl-1.5 text-sm font-bold transition-colors duration-150 ${on ? 'border-cover bg-cover text-ink' : 'border-chalk/15 hover:border-chalk/40'}`;
+  return (
+    <section
+      aria-labelledby="escudo"
+      className="mt-10 flex flex-col gap-4 rounded-xl border-2 border-chalk/10 bg-pitch-deep/85 p-5"
+    >
+      <h2 id="escudo" className="font-condensed text-2xl font-extrabold uppercase">
+        Escudo da liga
+      </h2>
+      <div role="radiogroup" aria-label="Cor do escudo" className="flex flex-wrap gap-2">
+        {(Object.keys(CREST) as LeagueColor[]).map((c) => (
+          <button
+            key={c}
+            type="button"
+            role="radio"
+            aria-checked={style.color === c}
+            disabled={save.isPending}
+            onClick={() => save.mutate({ ...style, color: c })}
+            className={pill(style.color === c)}
+          >
+            <span
+              aria-hidden="true"
+              className="size-7 rounded-full shadow-[inset_0_0_0_2px_rgb(255_255_255/0.4)]"
+              style={{ background: CREST[c].fill }}
+            />
+            {CREST[c].name}
+          </button>
+        ))}
+      </div>
+      <div role="radiogroup" aria-label="Letras do nome" className="flex flex-wrap gap-2">
+        {(Object.keys(LETTERING) as LeagueNameStyle[]).map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={style.nameStyle === n}
+            disabled={save.isPending}
+            onClick={() => save.mutate({ ...style, nameStyle: n })}
+            className={`${pill(style.nameStyle === n)} pl-4`}
+          >
+            {LETTERING[n].name}
+          </button>
+        ))}
+      </div>
+      {save.error && (
+        <p role="alert" className="text-sm font-semibold">
+          {save.error.message}
+        </p>
+      )}
+    </section>
   );
 }

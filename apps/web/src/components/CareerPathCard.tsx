@@ -14,6 +14,7 @@ import { StarIcon, Stars } from './Stars';
 import { StickerCard } from './StickerCard';
 import { TitleBadge } from './TitleBadge';
 import { Skeleton } from './ui';
+import { useFinish } from '../lib/cosmetics';
 
 type Level = TrackResponse['levels'][number];
 
@@ -76,7 +77,7 @@ export function StampMark({
       <span
         className="relative grid size-full place-items-center rounded-full border-[3px] border-current mix-blend-multiply"
         style={{
-          color: ink,
+          color: `var(--pp-ink, ${ink})`,
           rotate: `${STAMP_ROT[l.level % STAMP_ROT.length]}deg`,
           borderRadius: l.level % 3 === 0 ? '18%' : '999px',
         }}
@@ -99,7 +100,7 @@ export function StampMark({
   }
   if (next)
     return (
-      <span className="house-pulse grid size-full place-items-center rounded-full border-[3px] border-dashed border-[#1d2a4f] bg-cover/70 text-[#1d2a4f] shadow-[0_0_0_6px_rgb(255_214_80/0.25)]">
+      <span className="house-pulse grid size-full place-items-center rounded-full border-[3px] border-dashed border-[var(--pp-text)] bg-cover/70 text-[var(--pp-text)] shadow-[0_0_0_6px_rgb(255_214_80/0.25)]">
         <span className="flex flex-col items-center gap-0.5">
           {num}
           {!small && (
@@ -111,7 +112,7 @@ export function StampMark({
       </span>
     );
   return (
-    <span className="grid size-full place-items-center rounded-full border-2 border-dashed border-[#6d5c3a]/35 text-[#6d5c3a]/85">
+    <span className="grid size-full place-items-center rounded-full border-2 border-dashed border-[var(--pp-label)]/35 text-[var(--pp-label)]/85">
       {num}
     </span>
   );
@@ -151,6 +152,7 @@ export function CareerPathCard({
   linked?: boolean;
   stage?: boolean;
 }) {
+  const finishOf = useFinish();
   const track = useTrack('CAREER_PATH');
   const stats = useStats();
   const album = useAlbum();
@@ -169,7 +171,7 @@ export function CareerPathCard({
   return (
     <article
       aria-labelledby="cp-name"
-      className={`@container relative isolate flex flex-col overflow-hidden rounded-[8px_22px_22px_8px] text-[#e7c26a] shadow-[0_30px_50px_-18px_rgb(0_0_0/0.7),inset_-2px_0_0_rgb(255_255_255/0.06)] [background:radial-gradient(#00000030_1px,transparent_1.5px)_0_0/4px_4px,radial-gradient(circle_at_30%_15%,#7a2633,#5b1a24_55%,#3d1018)] ${stage ? 'min-h-[calc(100svh-10rem-env(safe-area-inset-bottom))] sm:min-h-[36rem]' : ''}`}
+      className={`@container relative isolate flex flex-col overflow-hidden rounded-[8px_22px_22px_8px] text-[var(--pp-foil)] shadow-[0_30px_50px_-18px_rgb(0_0_0/0.7),inset_-2px_0_0_rgb(255_255_255/0.06)] [background:radial-gradient(#00000030_1px,transparent_1.5px)_0_0/4px_4px,radial-gradient(circle_at_30%_15%,var(--pp-leather-1),var(--pp-leather-2)_55%,var(--pp-leather-3))] ${stage ? 'min-h-[calc(100svh-10rem-env(safe-area-inset-bottom))] sm:min-h-[36rem]' : ''}`}
     >
       {/* spine and the gold tooling around the cover */}
       <i
@@ -178,7 +180,7 @@ export function CareerPathCard({
       />
       <i
         aria-hidden="true"
-        className="pointer-events-none absolute inset-3 rounded-[4px_14px_14px_4px] border border-[#e7c26a]/40 sm:inset-4"
+        className="pointer-events-none absolute inset-3 rounded-[4px_14px_14px_4px] border border-[var(--pp-foil)]/40 sm:inset-4"
       />
       <div className="relative flex flex-1 flex-col gap-4 py-5 pr-5 pl-7 sm:gap-6 sm:py-9 sm:pr-9 sm:pl-11">
         <div className="flex items-start justify-between gap-4">
@@ -200,7 +202,7 @@ export function CareerPathCard({
             {linked ? (
               <Link
                 to="/career-path"
-                className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-[-6px] focus-visible:after:outline-[#e7c26a]"
+                className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-[-6px] focus-visible:after:outline-[var(--pp-foil)]"
               >
                 {name}
               </Link>
@@ -208,13 +210,13 @@ export function CareerPathCard({
               name
             )}
           </h2>
-          <p className="mt-2 max-w-[30ch] text-base leading-snug font-semibold text-[#f3e3b8] sm:mt-3 sm:text-lg">
+          <p className="mt-2 max-w-[30ch] text-base leading-snug font-semibold text-[var(--pp-foil-soft)] sm:mt-3 sm:text-lg">
             Adivinhe o jogador pelos clubes. Seis chances.
           </p>
         </div>
 
         {/* the visa page tucked into the cover */}
-        <div className="relative mt-auto -rotate-1 rounded-[6px] bg-[#f3ead2] p-4 text-[#1d2a4f] shadow-[0_14px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_40%,#f8f1dc,#f3ead2_60%,#e2d5b3)] max-sm:p-3 sm:p-5">
+        <div className="relative mt-auto -rotate-1 rounded-[6px] bg-[var(--pp-paper)] p-4 text-[var(--pp-text)] shadow-[0_14px_24px_-10px_rgb(0_0_0/0.6)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,var(--pp-rule)_27px_28px),radial-gradient(circle_at_50%_40%,var(--pp-paper-hi),var(--pp-paper)_60%,var(--pp-paper-lo))] max-sm:p-3 sm:p-5">
           {!track.data && !track.error ? (
             <Skeleton className="h-40 w-full" />
           ) : track.error ? (
@@ -255,7 +257,7 @@ export function CareerPathCard({
                     <span className="tabular">{levels.length}</span> fases carimbadas
                   </p>
                   <div
-                    className="h-2 overflow-hidden rounded-full bg-[#1d2a4f]/15"
+                    className="h-2 overflow-hidden rounded-full bg-[var(--pp-text)]/15"
                     role="progressbar"
                     aria-label="Fases concluídas"
                     aria-valuemin={0}
@@ -263,7 +265,7 @@ export function CareerPathCard({
                     aria-valuenow={done}
                   >
                     <div
-                      className="h-full rounded-full bg-[#1d2a4f]"
+                      className="h-full rounded-full bg-[var(--pp-text)]"
                       style={{ width: `${Math.max(done ? 2 : 0, (done / levels.length) * 100)}%` }}
                     />
                   </div>
@@ -272,7 +274,12 @@ export function CareerPathCard({
                   // the rarest sticker, pasted in the corner of the page with its name beside it
                   <figure className="flex shrink-0 items-center gap-2.5">
                     <div className="aspect-[3/4] w-11 rotate-6 sm:w-12">
-                      <StickerCard sticker={rarest} size="sm" showName={false} />
+                      <StickerCard
+                        sticker={rarest}
+                        size="sm"
+                        showName={false}
+                        finish={finishOf(rarest.playerId)}
+                      />
                     </div>
                     <figcaption className="max-w-[7rem] text-sm leading-tight font-bold">
                       <span className="sr-only">Figurinha mais rara: </span>

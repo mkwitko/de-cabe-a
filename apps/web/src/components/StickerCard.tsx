@@ -1,8 +1,16 @@
 import { useState, type Ref } from 'react';
-import type { Sticker } from '@decabeca/contracts';
+import type { Finish, Sticker } from '@decabeca/contracts';
 import { RARITY_STYLE } from './rarity';
 import { Flag } from './Flag';
 import { POSITION_LABEL } from '../lib/format';
+import { ClubeSeal } from './Icons';
+
+/** The finish's class (index.css `.fin-*`): a layer over the rarity, never a different rarity. */
+const FINISH_CLASS: Record<Finish, string> = {
+  acabamento_holografico: 'fin-holo',
+  acabamento_cromado: 'fin-chrome',
+  acabamento_clube: 'fin-clube',
+};
 
 export const POSITION = { GK: 'GOL', DF: 'DEF', MF: 'MEI', FW: 'ATA' } as const;
 
@@ -43,7 +51,8 @@ function Mark({ className }: { className: string }) {
  * rarity takes their place. Fills its parent (which sets the 3:4 box); everything scales with the
  * card's width (container units). Album size keeps rating, position, player and name. The reveal
  * moves `stripRef` and hides the name until it is announced (`showName={false}`); `selected`
- * draws an outline around the shield.
+ * draws an outline around the shield. `finish` (Clube, Banca) lays a holographic, chrome or Clube
+ * layer over the rim and face; the rarity underneath stays as earned.
  */
 export function StickerCard({
   sticker,
@@ -51,12 +60,14 @@ export function StickerCard({
   showName = true,
   stripRef,
   selected = false,
+  finish = null,
 }: {
   sticker: Sticker;
   size: 'sm' | 'lg';
   showName?: boolean;
   stripRef?: Ref<HTMLDivElement>;
   selected?: boolean;
+  finish?: Finish | null;
 }) {
   const style = RARITY_STYLE[sticker.rarity];
   const pos = sticker.positionGroup;
@@ -75,10 +86,15 @@ export function StickerCard({
   ).filter((a): a is [string, string, number] => a[2] != null);
   return (
     <div
-      className={`pcard ${size === 'lg' ? 'pcard-lg' : ''} ${selected ? 'pcard-selected' : ''} ${style.className}`}
-      onPointerMove={style.className.includes('holo-rainbow') ? follow : undefined}
+      className={`pcard ${size === 'lg' ? 'pcard-lg' : ''} ${selected ? 'pcard-selected' : ''} ${style.className} ${finish ? FINISH_CLASS[finish] : ''}`}
+      onPointerMove={
+        style.className.includes('holo-rainbow') || finish === 'acabamento_holografico'
+          ? follow
+          : undefined
+      }
     >
       <div className="pcard-rim">
+        {finish && <div aria-hidden="true" className="pcard-fin-rim" />}
         <div className="pcard-face">
           <div aria-hidden="true" className="pcard-art" />
           <svg
@@ -163,6 +179,11 @@ export function StickerCard({
             De Cabeça F.C.
           </span>
           <span className="sr-only">{style.label}</span>
+          {finish && (
+            <div aria-hidden="true" className="pcard-fin">
+              {finish === 'acabamento_clube' && <ClubeSeal className="pcard-fin-seal" />}
+            </div>
+          )}
           <div ref={stripRef} aria-hidden="true" className="holo" />
         </div>
       </div>

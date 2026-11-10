@@ -1,4 +1,5 @@
 import { SettingsButton, SettingsDialog } from './components/Settings';
+import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
@@ -428,6 +429,7 @@ function Shell({ children }: { children: ReactNode }) {
   const home = pathname === '/';
   const level = sceneFor(pathname) === 'level';
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
+  useApplyCosmetics();
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       {/* The scoreboard strip, the same 56px on every route: crest, places, Ajustes, Entrar.

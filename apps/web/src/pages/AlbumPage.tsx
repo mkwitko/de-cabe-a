@@ -2,11 +2,12 @@
  * Sticker album as a Panini book. Shut, the cover (title, count, the best stickers); open, the
  * inside cover (count, finishes, index) and one printed page per position group, 12 numbered
  * slots each. From `lg` two facing pages sized to the viewport, on phones one page. A page turns
- * on its spine (CSS 3D, driven by one progress value `--p` so a drag and a click share the same
+ * on its spine (CSS 3D, driven by one progress value `--turn` so a drag and a click share the same
  * turn): click/arrows, the page corner, the group tabs, or a drag/swipe. Reduced motion: a
  * crossfade. A sticker opens in focus (StickerDetail).
  */
 import {
+  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -26,6 +27,8 @@ import { POSITION, StickerCard } from '../components/StickerCard';
 import { StickerDetail } from '../components/StickerDetail';
 import { useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
+import { useFinish } from '../lib/cosmetics';
+import { motionReduced } from '../lib/settings';
 
 const GROUPS = [
   { key: 'GK', label: 'Goleiros' },
@@ -37,6 +40,8 @@ const GROUPS = [
 const PER_PAGE = 12;
 const TILT = [-1.6, 1.1, -0.6, 1.8, -1.2, 0.5, 0.9, -1.9];
 const TURN_MS = 720;
+// what reads --turn/--lift (besides the book, which slides as the cover opens)
+const TURNING = '.album-leaf, .album-shade, .album-gloss, .album-cast';
 
 export type AlbumLeaf = {
   key: keyof typeof POSITION | null;
@@ -92,8 +97,8 @@ const subscribe = (cb: () => void) => {
   return () => m.removeEventListener('change', cb);
 };
 const isWide = () => typeof matchMedia === 'function' && matchMedia(WIDE).matches;
-const reduced = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
+const reduced = motionReduced;
 const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const out = (t: number) => 1 - (1 - t) ** 3;
 
@@ -123,10 +128,11 @@ function Chevron({ d }: { d: string }) {
   );
 }
 
-/** A page turning: spread (or phone side) `a` to `b`; `--p` 0 shows a, 1 shows b. */
+/** A page turning: spread (or phone side) `a` to `b`; `--turn` 0 shows a, 1 shows b. */
 type Flip = { a: number; b: number };
 
 export function AlbumPage() {
+  const finishOf = useFinish();
   const qc = useQueryClient();
   const q = useQuery<AlbumResponse, ApiError>({
     queryKey: ['album'],
@@ -167,30 +173,64 @@ export function AlbumPage() {
 
   const setP = (v: number) => {
     p.current = v;
-    book.current?.style.setProperty('--p', v.toFixed(4));
-    book.current?.style.setProperty('--m', Math.sin(v * Math.PI).toFixed(4));
+    const b = book.current;
+    if (!b) return;
+    const turn = v.toFixed(4);
+    const lift = Math.sin(v * Math.PI).toFixed(4);
+    for (const el of [b, ...b.querySelectorAll<HTMLElement>(TURNING)]) {
+      el.style.setProperty('--turn', turn);
+      el.style.setProperty('--lift', lift);
+    }
   };
   // the leaf mounts with the flip; give it the current progress before it paints
   useLayoutEffect(() => {
     if (flip) setP(p.current);
   }, [flip]);
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-
-  const run = (f: Flip, to: 0 | 1, ease: (t: number) => number) => {
+  const anims = useRef<Animation[]>([]);
+  const stop = () => {
     cancelAnimationFrame(raf.current);
+    for (const a of anims.current) a.cancel();
+    anims.current = [];
+  };
+  useEffect(() => stop, []);
+
+  // A turn the hand lets go of plays as Web Animations of transform and opacity, sampled from the
+  // same curve the drag follows: the compositor runs them, so no frame waits on the main thread.
+  const run = (f: Flip, to: 0 | 1, ease: (t: number) => number) => {
+    stop();
     const from = p.current;
     const ms = Math.max(160, TURN_MS * Math.abs(to - from));
-    const t0 = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - t0) / ms);
-      setP(from + (to - from) * ease(t));
-      if (t < 1) raf.current = requestAnimationFrame(tick);
-      else {
-        setAt(toAt(to ? f.b : f.a));
-        setFlip(null);
-      }
-    };
-    raf.current = requestAnimationFrame(tick);
+    // the leaf mounts with this render; start once it is in the page
+    raf.current = requestAnimationFrame(() => {
+      const b = book.current;
+      if (!b) return;
+      const ps = Array.from({ length: 25 }, (_, i) => from + (to - from) * ease(i / 24));
+      const play = (sel: string, frame: (p: number, lift: number) => Keyframe) => {
+        for (const el of sel ? b.querySelectorAll<HTMLElement>(sel) : [b])
+          anims.current.push(
+            el.animate(
+              ps.map((v) => frame(v, Math.sin(v * Math.PI))),
+              { duration: ms, fill: 'forwards' },
+            ),
+          );
+      };
+      play('.album-leaf', (v) => ({ transform: `rotateY(${v * -180}deg)` }));
+      play('.album-face-front .album-shade', (v) => ({ opacity: Math.min(1, v * 2) }));
+      play('.album-face-back .album-shade', (v) => ({ opacity: Math.min(1, (1 - v) * 2) }));
+      play('.album-gloss', (_, lift) => ({ opacity: lift }));
+      play('.album-gloss', (v) => ({ backgroundPosition: `${100 - v * 100}% 0` }));
+      play('.album-cast', (_, lift) => ({ opacity: lift * 0.9 }));
+      if (b.hasAttribute('data-opening')) play('', (v) => ({ translate: `${(v - 1) * 25}% 0` }));
+      void anims.current[0]?.finished.then(
+        () => {
+          setP(to);
+          stop();
+          setAt(toAt(to ? f.b : f.a));
+          setFlip(null);
+        },
+        () => {},
+      );
+    });
   };
 
   const go = (to: number) => {
@@ -349,7 +389,7 @@ export function AlbumPage() {
           <div aria-hidden="true" className="album-cover-fan">
             {a.stickers.slice(0, 3).map((s, i) => (
               <div key={s.playerId} style={{ '--i': i - 1 } as React.CSSProperties}>
-                <StickerCard sticker={s} size="sm" />
+                <StickerCard sticker={s} size="sm" finish={finishOf(s.playerId)} />
               </div>
             ))}
           </div>
@@ -461,13 +501,13 @@ export function AlbumPage() {
                     type="button"
                     tabIndex={live ? 0 : -1}
                     aria-label={`${s.name}, ${RARITY_STYLE[s.rarity].label}. Ver figurinha`}
-                    onClick={() => setOpen(s)}
+                    onClick={() => startTransition(() => setOpen(s))}
                     className="album-stuck"
                     style={
                       { '--tilt': `${TILT[(num * 5) % TILT.length]}deg` } as React.CSSProperties
                     }
                   >
-                    <StickerCard sticker={s} size="sm" />
+                    <StickerCard sticker={s} size="sm" finish={finishOf(s.playerId)} />
                   </button>
                 ) : (
                   <div aria-hidden="true" className="album-slot">

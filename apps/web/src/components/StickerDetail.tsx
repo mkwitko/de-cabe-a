@@ -3,7 +3,7 @@
  * it) beside what it means: the Nota De Cabeça, the rarity and how it was earned, the numbers
  * spelled out, where and when it was won, and the photo credit the CC licence asks for. A native
  * modal dialog (focus kept inside, Esc closes, focus goes back to the slot); a bottom sheet on
- * phones.
+ * phones. With an owned finish, "Aplicar acabamento" picks this sticker's own.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Sticker, StickerRarity } from '@decabeca/contracts';
@@ -14,6 +14,8 @@ import { Flag } from './Flag';
 import { POSITION_LABEL } from '../lib/format';
 import { GAME_NAME } from '../lib/game';
 import { btnPrimary, btnSecondary } from './ui';
+import { finishOf, useOwned } from '../lib/cosmetics';
+import { FinishChoice } from './Wardrobe';
 
 /** How each finish is earned (apps/api/src/modules/album/rarity.ts, round-upgrade, promote). */
 export const RARITY_HOW: Record<StickerRarity, string> = {
@@ -39,6 +41,7 @@ export function StickerDetail({
   /** Extra action under the facts (the season promotion). */
   children?: ReactNode;
 }) {
+  const owned = useOwned();
   const dialog = useRef<HTMLDialogElement>(null);
   const [career, setCareer] = useState<string | null>(null);
   useEffect(() => {
@@ -102,7 +105,7 @@ export function StickerDetail({
 
         <div className="sd-stage">
           <div className="sd-card" onPointerMove={tilt} onPointerLeave={rest}>
-            <StickerCard sticker={s} size="lg" />
+            <StickerCard sticker={s} size="lg" finish={finishOf(owned, s.playerId)} />
           </div>
         </div>
 
@@ -184,6 +187,8 @@ export function StickerDetail({
           </dl>
 
           {children}
+
+          {owned && <FinishChoice e={owned} playerId={s.playerId} />}
 
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className={btnPrimary} onClick={() => setCareer(s.playerId)}>

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, type ComponentType, type ReactNode } from 'react';
 import type { LottieProps } from './Lottie';
+import { motionReduced } from '../lib/settings';
 
 type Props = LottieProps & { fallback?: ReactNode };
 // Offline with the chunk not yet fetched, the moment quietly becomes its still (or nothing).
@@ -10,8 +11,8 @@ const Lottie = lazy<ComponentType<Props>>(() =>
 /** Fetch the player before a moment is due (it loads on first mount otherwise). */
 export const preloadLottie = () => void import('./Lottie').catch(() => {});
 
-const still = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
+const still = motionReduced;
 
 /**
  * A Lottie moment: the player chunk loads only when this mounts, and never under reduced motion,

@@ -4,6 +4,7 @@ import { GameMode, type StatsResponse } from '@decabeca/contracts';
 import { useAlbum, useMe, useStats } from '../lib/game';
 import { isModeLaunched, isPageLaunched } from '../lib/launch';
 import { useEntitlements } from '../lib/billing';
+import { useFinish } from '../lib/cosmetics';
 import { SignInButton } from '../components/SignInButton';
 import { MemberCard } from '../components/MemberCard';
 import { TitleLadder } from '../components/TitleLadder';
@@ -98,6 +99,7 @@ const chalkLink =
 
 /** Vitrine: the album's best stickers on the glass shelf, with the way into the album. */
 function AlbumShowcase() {
+  const finishOf = useFinish();
   const { data } = useAlbum();
   return (
     <section aria-labelledby="vitrine" className="flex flex-col gap-3">
@@ -117,7 +119,11 @@ function AlbumShowcase() {
       {!data ? (
         <Skeleton className="h-64" />
       ) : data.stickers.length ? (
-        <Showcase stickers={bestFirst(data.stickers)} cols="grid-cols-3 lg:grid-cols-6" />
+        <Showcase
+          stickers={bestFirst(data.stickers)}
+          cols="grid-cols-3 lg:grid-cols-6"
+          finishOf={finishOf}
+        />
       ) : (
         <div className="flex flex-wrap items-center gap-4 rounded-xl border-2 border-dashed border-chalk-soft/50 p-4">
           <p className="min-w-0 flex-1 basis-48 text-sm text-chalk-soft">
