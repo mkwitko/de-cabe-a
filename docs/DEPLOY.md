@@ -1,6 +1,6 @@
 # Deploy do piloto (ADR-010)
 
-Tudo na **VM da Oracle** (`ubuntu@136.248.86.54`, ARM, compartilhada com outros projetos) em Docker: Postgres, API e web (Caddy serve o site e encaminha a API, então os dois ficam no **mesmo domínio**, como o cookie de convidado e o login exigem). A VM não abre portas: o **Cloudflare Tunnel** que já roda nela (`cloudflared`, `/etc/cloudflared/config.yml`) publica `decabecafc.com.br` → `127.0.0.1:8088`, e o HTTPS fica no Cloudflare. As portas 80/443 da VM são de outro projeto.
+Tudo na **VM da Oracle** (`ubuntu@136.248.86.54`, ARM, compartilhada com outros projetos) em Docker: Postgres, API, web (Caddy com o site estático) e **edge** (Caddy na porta, encaminha a API e o site, então os dois ficam no **mesmo domínio**, como o cookie de convidado e o login exigem). A VM não abre portas: o **Cloudflare Tunnel** que já roda nela (`cloudflared`, `/etc/cloudflared/config.yml`) publica `decabecafc.com.br` → `127.0.0.1:8088`, e o HTTPS fica no Cloudflare. As portas 80/443 da VM são de outro projeto.
 
 ## 1. Domínio no Cloudflare (dono)
 
@@ -12,12 +12,16 @@ Tudo na **VM da Oracle** (`ubuntu@136.248.86.54`, ARM, compartilhada com outros 
 
 1. Código em `/opt/de-cabeca` (cópia do `main` por `git archive`; sem credencial do GitHub na VM).
 2. `deploy/.env.prod` gerado na VM a partir de `deploy/.env.prod.example` (segredos com `openssl rand`).
-3. Subir: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build`. As migrações rodam na partida da API.
+3. Subir: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build` e as migrações: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod run --rm api npx prisma migrate deploy` (a API não migra na partida).
 4. Ingress no túnel (`/etc/cloudflared/config.yml`, antes da regra 404): `decabecafc.com.br` e `www.decabecafc.com.br` → `http://localhost:8088`; `sudo systemctl restart cloudflared`.
 5. Conferir: `https://decabecafc.com.br/v1/health` responde `200`.
 6. Conteúdo do jogo (jogadores, partidas, escalações e todas as fases): no computador local, `deploy/content.sh export` gera `content.sql.gz` sem nenhum dado de jogador; copiar para a VM e rodar `deploy/content.sh import content.sql.gz` com a API já no ar. Só num banco ainda sem conteúdo.
 
-Atualizar: copiar o `main` de novo e o mesmo `up -d --build`; depois `docker builder prune -f` (o disco da VM é pequeno).
+Atualizar: `sh deploy/release.sh` no computador local. Sem queda: o `deploy/rollout.sh` constrói as imagens com o site no ar, roda as migrações num contêiner avulso e troca api e web um contêiner por vez atrás do edge (o novo sobe ao lado, só substitui o antigo depois do healthcheck; se não ficar saudável, o antigo segue no ar e o script sai com erro). O edge só é recriado quando `deploy/edge.Caddyfile` muda (cerca de 1 s fora).
+
+**Migrações compatíveis com a versão anterior** (expandir, depois contrair): rodam com a API antiga no ar, e ela continua no ar se a nova falhar. Coluna nova: anulável ou com default. Remover ou renomear: só num deploy seguinte, quando nenhum código no ar usa mais.
+
+Primeiro deploy com o edge (uma vez): o `release.sh` normal resolve. O web antigo segura a porta 8088; o script sobe api e web novos, espera ficarem saudáveis, derruba o web antigo e liga o edge na hora (medido localmente: cerca de 1 s sem resposta).
 
 ## 4. Login com Google
 

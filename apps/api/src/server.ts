@@ -147,6 +147,10 @@ const purge = () =>
 setTimeout(purge, 60_000).unref();
 setInterval(purge, 24 * 3600_000).unref();
 
+// Rolling deploys stop the old container: finish the requests in flight, then exit.
+for (const signal of ['SIGTERM', 'SIGINT'] as const)
+  process.once(signal, () => void app.close().finally(() => process.exit(0)));
+
 app
   .listen({ port: Number(process.env.PORT ?? 3000), host: process.env.HOST ?? '127.0.0.1' })
   .catch((err: unknown) => {
