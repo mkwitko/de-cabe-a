@@ -22,7 +22,7 @@ import { deleteData, exportData } from './account.data';
 import { assertNicknameFree, authRequest, isLiveSignIn, nicknameKey } from './auth';
 import { playerAchievements } from '../progression/achievements';
 import { trophies } from '../progression/seasons';
-import { cancelSubscriptions, clubeStatus } from '../billing/billing';
+import { cancelSubscriptions, clubeStatus, supportOf } from '../billing/billing';
 
 type Who = { sessionId: string; userId: string | null; nickname: string };
 
@@ -136,13 +136,14 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       const owner = await publicProfileOwner(prisma, req.params.nickname);
       if (!owner) throw new AppError(404, 'NOT_FOUND', 'Perfil não encontrado ou privado.');
       const { who } = owner;
-      const [done, items, clube] = await Promise.all([
+      const [done, items, clube, support] = await Promise.all([
         prisma.attempt.findMany({
           where: { ...playerAttempts(who), completedAt: { not: null } },
           select: { gameMode: true, stars: true },
         }),
         playerAchievements(prisma, who),
         who.userId ? clubeStatus(prisma, who.userId, now()) : null,
+        who.userId ? supportOf(prisma, who.userId, now()) : null,
       ]);
       const totalStars = done.reduce((s, a) => s + a.stars, 0);
       return {
@@ -156,6 +157,7 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
         achievements: items.filter((x) => x.done).map(({ id, name }) => ({ id, name })),
         trophies: await trophies(prisma, who.userId ?? who.sessionId, now()),
         member: clube?.active ?? false,
+        supporter: support?.supporter ?? false,
       };
     },
   );

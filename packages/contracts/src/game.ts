@@ -878,6 +878,8 @@ export const ProfileResponse = z.strictObject({
   trophies: z.array(Trophy),
   /** Clube member: the profile card shows the member badge (cosmetic only). */
   member: z.boolean().optional(),
+  /** Has supported the project (/apoie): a small "Apoiador" thank-you on the card, nothing else. */
+  supporter: z.boolean().optional(),
 });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;
 
