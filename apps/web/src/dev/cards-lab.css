@@ -1,0 +1,404 @@
+/* Dev-only visual study for /dev/cards. Not shipped. */
+.lab-page {
+  min-height: 100vh;
+  background: oklch(0.15 0.02 155);
+  color: var(--color-chalk);
+  padding: 24px 16px 64px;
+}
+.lab-page section {
+  max-width: 1280px;
+  margin: 0 auto 56px;
+}
+.lab-page h2 {
+  font: 900 28px var(--font-sans);
+  font-stretch: 70%;
+  text-transform: uppercase;
+}
+.lab-page section > p {
+  color: var(--color-chalk-soft);
+  margin: 4px 0 18px;
+}
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (min-width: 900px) {
+  .lab-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+}
+.lab-cell {
+  aspect-ratio: 3 / 4;
+  position: relative;
+}
+.lab-cell > article {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  font-family: var(--font-sans);
+}
+.lab-cell h3,
+.lab-cell b {
+  font-weight: 900;
+  font-stretch: 62%;
+  text-transform: uppercase;
+  line-height: 0.82;
+}
+
+/* shared: the placed cut-out, clipped to its own silhouette */
+.lab-fig {
+  position: absolute;
+  mask: var(--m) 0 0 / 100% 100% no-repeat;
+  isolation: isolate;
+}
+.lab-fig > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.lab-fig > div {
+  position: absolute;
+  inset: 0;
+}
+/* rim light: silhouette minus itself shifted down-right = a lit top-left edge */
+.lab-rim {
+  background: var(--light);
+  mask:
+    var(--m) 0 0 / 100% 100% no-repeat,
+    var(--m) 1.3cqw 1cqw / 100% 100% no-repeat;
+  mask-composite: subtract;
+  filter: blur(0.35cqw);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+}
+.lab-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.32;
+}
+.lab-halftone {
+  background: radial-gradient(circle, var(--deep) 32%, transparent 36%) 0 0 / 1.6cqw 1.6cqw;
+  mix-blend-mode: multiply;
+  mask: linear-gradient(to bottom, transparent 15%, #000 85%);
+  opacity: 0.55;
+}
+
+/* ---------- A · Refletor ---------- */
+.la {
+  --cut: polygon(0 0, 84% 0, 100% 11%, 100% 100%, 16% 100%, 0 89%);
+  clip-path: var(--cut);
+  background: linear-gradient(155deg, var(--light) 0%, var(--acc) 18%, var(--mid) 45%, var(--deep) 62%, var(--acc) 88%, var(--light));
+  filter: drop-shadow(0 2cqw 3cqw #0009);
+}
+.la-top {
+  background:
+    linear-gradient(115deg, transparent 30%, #fff8 45%, transparent 55%),
+    conic-gradient(from 200deg at 60% 40%, var(--acc), var(--light), var(--mid), var(--acc), #fff, var(--acc));
+}
+.la-face {
+  position: absolute;
+  inset: 1.4cqw;
+  clip-path: var(--cut);
+  overflow: hidden;
+  background:
+    radial-gradient(90% 55% at 50% 30%, color-mix(in oklab, var(--mid) 75%, #000) 0%, transparent 70%),
+    linear-gradient(to bottom, var(--deep), #000 85%);
+}
+.la-beam {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 160deg at 88% -6%, transparent 0deg, color-mix(in oklab, var(--light) 22%, transparent) 14deg, transparent 30deg, transparent 40deg, color-mix(in oklab, var(--light) 12%, transparent) 50deg, transparent 62deg);
+}
+.la-stage {
+  position: absolute;
+  inset: 0;
+  mask:
+    linear-gradient(to bottom, #000 50%, transparent 76%),
+    linear-gradient(to right, transparent 3%, #000 20%, #000 80%, transparent 97%);
+  mask-composite: intersect;
+}
+.la-rate {
+  position: absolute;
+  left: 7cqw;
+  top: 6cqw;
+  display: grid;
+  justify-items: center;
+  gap: 1cqw;
+  color: var(--light);
+  text-shadow: 0 0.6cqw 2cqw #000a;
+}
+.la-rate b {
+  font-size: 23cqw;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+.la-rate span {
+  font: 800 6cqw var(--font-sans);
+  font-stretch: 75%;
+  letter-spacing: 0.08em;
+}
+.la-flag {
+  width: 9cqw;
+  border-radius: 0.6cqw;
+  box-shadow: 0 0 0 0.3cqw #0006;
+}
+.la-tier {
+  position: absolute;
+  right: 4cqw;
+  top: 24cqw;
+  writing-mode: vertical-rl;
+  font: 800 3.6cqw var(--font-sans);
+  font-stretch: 80%;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+.la-foot {
+  position: absolute;
+  left: 6cqw;
+  right: 6cqw;
+  bottom: 8cqw;
+  text-align: center;
+}
+.la-foot h3 {
+  color: #fff;
+  letter-spacing: 0.01em;
+  padding-bottom: 2.4cqw;
+  border-bottom: 0.4cqw solid color-mix(in oklab, var(--acc) 70%, transparent);
+}
+.la-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 2.4cqw;
+}
+.la-stats div,
+.lb-stats div,
+.lc-stats div {
+  display: grid;
+}
+.la-stats dd {
+  font: 800 5.6cqw var(--font-sans);
+  font-stretch: 70%;
+  color: #fff;
+}
+.la-stats dt {
+  font: 700 2.8cqw var(--font-sans);
+  letter-spacing: 0.1em;
+  color: var(--acc);
+}
+
+/* ---------- B · Cartaz ---------- */
+.lb {
+  background: #f6f1e4;
+  border-radius: 3cqw;
+  padding: 3cqw 3cqw 0;
+  display: flex;
+  flex-direction: column;
+  transform: rotate(var(--tilt));
+  box-shadow:
+    0 0.4cqw 0 #d9d0b8,
+    0 3cqw 5cqw -1cqw #0008;
+}
+.lb-face {
+  position: relative;
+  flex: 1;
+  border-radius: 1.6cqw;
+  overflow: hidden;
+  background: var(--acc);
+}
+.lb-dots {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, color-mix(in oklab, var(--light) 70%, transparent) 30%, transparent 34%) 0 0 / 3cqw 3cqw;
+  mask: radial-gradient(70% 60% at 50% 30%, #000, transparent);
+}
+.lb-rate {
+  position: absolute;
+  right: -2cqw;
+  top: -3cqw;
+  font-size: 58cqw;
+  letter-spacing: -0.05em;
+  color: var(--deep);
+  opacity: 0.9;
+}
+.lb-stage {
+  position: absolute;
+  inset: 0;
+  mask:
+    linear-gradient(to bottom, #000 58%, transparent 78%),
+    linear-gradient(to right, transparent 3%, #000 20%, #000 80%, transparent 97%);
+  mask-composite: intersect;
+  filter: drop-shadow(0.7cqw 0 0 #fbf7ec) drop-shadow(-0.7cqw 0 0 #fbf7ec) drop-shadow(0 -0.7cqw 0 #fbf7ec)
+    drop-shadow(1.8cqw 1.4cqw 0 color-mix(in oklab, var(--deep) 60%, transparent));
+}
+.lb-pos {
+  position: absolute;
+  left: 4cqw;
+  top: 4cqw;
+  padding: 1cqw 2.4cqw;
+  background: var(--deep);
+  color: #fbf7ec;
+  font: 900 5cqw var(--font-sans);
+  font-stretch: 70%;
+  transform: rotate(-4deg);
+}
+.lb-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 3cqw 4cqw 3.4cqw;
+  background: var(--deep);
+  color: #fbf7ec;
+  clip-path: polygon(0 18%, 100% 0, 100% 100%, 0 100%);
+}
+.lb-band h3 {
+  padding-top: 2cqw;
+}
+.lb-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 2cqw;
+}
+.lb-stats dd {
+  font: 800 5cqw var(--font-sans);
+  font-stretch: 70%;
+}
+.lb-stats dt {
+  font: 700 2.6cqw var(--font-sans);
+  color: var(--acc);
+  letter-spacing: 0.08em;
+}
+.lb-paper {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  height: 9cqw;
+  font: 800 3.2cqw var(--font-sans);
+  font-stretch: 80%;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #6d5c3a;
+}
+.lb-paper span:last-child {
+  margin-left: auto;
+}
+.lb-flag {
+  width: 6cqw;
+}
+
+/* ---------- C · Vitrine ---------- */
+.lc {
+  border-radius: 5cqw;
+  padding: 1.6cqw;
+  background: linear-gradient(160deg, var(--light), var(--acc) 30%, var(--mid) 60%, var(--light) 90%);
+  box-shadow:
+    inset 0 0.5cqw 0.5cqw #fff8,
+    inset 0 -0.6cqw 0.8cqw #0006,
+    0 3cqw 6cqw -1cqw #000a;
+}
+.lc-top {
+  background: conic-gradient(from 30deg, #ffd6f5, #c8f1ff, #fff3b8, #d6ffd9, #e3c8ff, #ffd6f5);
+}
+.lc-face {
+  position: relative;
+  height: 100%;
+  border-radius: 3.8cqw;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 42% at 54% 34%, color-mix(in oklab, var(--light) 55%, var(--mid)) 0%, var(--mid) 45%, var(--deep) 100%);
+  box-shadow: inset 0 0 0 0.3cqw #fff3;
+}
+.lc-rings {
+  position: absolute;
+  inset: 0;
+  background: repeating-radial-gradient(circle at 54% 34%, transparent 0 3cqw, #ffffff0d 3cqw 3.3cqw);
+}
+.lc-stage {
+  position: absolute;
+  inset: 0;
+  mask:
+    linear-gradient(to bottom, #000 54%, transparent 78%),
+    linear-gradient(to right, transparent 3%, #000 20%, #000 80%, transparent 97%);
+  mask-composite: intersect;
+}
+.lc-tone {
+  background: linear-gradient(160deg, var(--light), var(--mid) 60%, var(--deep));
+  mix-blend-mode: soft-light;
+  opacity: 0.7;
+}
+.lc-tab {
+  position: absolute;
+  left: 0;
+  top: 7cqw;
+  padding: 2.4cqw 3cqw 2.4cqw 5cqw;
+  display: grid;
+  justify-items: center;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--deep) 80%, transparent), color-mix(in oklab, var(--deep) 40%, transparent));
+  border-radius: 0 3cqw 3cqw 0;
+  backdrop-filter: blur(2px);
+  color: #fff;
+  box-shadow: inset -0.4cqw 0 0 var(--acc);
+}
+.lc-tab b {
+  font-size: 19cqw;
+  letter-spacing: -0.03em;
+}
+.lc-tab span {
+  font: 800 5cqw var(--font-sans);
+  font-stretch: 75%;
+  color: var(--acc);
+  margin-top: 1cqw;
+}
+.lc-meta {
+  position: absolute;
+  right: 5cqw;
+  top: 6cqw;
+  display: grid;
+  justify-items: end;
+  gap: 1.4cqw;
+  font: 800 3.2cqw var(--font-sans);
+  font-stretch: 80%;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--light);
+  text-shadow: 0 0.3cqw 1cqw #0008;
+}
+.lc-flag {
+  width: 8cqw;
+  border-radius: 0.6cqw;
+}
+.lc-plate {
+  position: absolute;
+  left: 3.5cqw;
+  right: 3.5cqw;
+  bottom: 3.5cqw;
+  padding: 3cqw 3.5cqw 3cqw;
+  border-radius: 3.6cqw;
+  background: linear-gradient(to bottom, #ffffff26, #ffffff0a);
+  backdrop-filter: blur(6px) saturate(1.3);
+  box-shadow:
+    inset 0 0.3cqw 0 #ffffff40,
+    0 1cqw 3cqw #0006;
+  color: #fff;
+}
+.lc-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 2cqw;
+  text-align: center;
+}
+.lc-stats dd {
+  font: 800 5.2cqw var(--font-sans);
+  font-stretch: 70%;
+}
+.lc-stats dt {
+  font: 700 2.6cqw var(--font-sans);
+  color: var(--acc);
+  letter-spacing: 0.08em;
+}

@@ -24,6 +24,8 @@ const FirstRun = lazy(() => import('./components/Welcome').then((m) => ({ defaul
 const TrackPage = lazy(() => import('./pages/TrackPage').then((m) => ({ default: m.TrackPage })));
 const loadCareerPath = () => import('./games/career-path/CareerPathPage');
 const AdminApp = lazy(() => import('./admin/AdminApp'));
+// dev-only visual study; `import.meta.env.DEV` is false in builds, so the chunk is dropped
+const CardsLab = import.meta.env.DEV ? lazy(() => import('./dev/CardsLab')) : null;
 // Each screen loads on demand: the first visit downloads only the shell and the home.
 const CareerPathPage = lazy(() => loadCareerPath().then((m) => ({ default: m.CareerPathPage })));
 const GridPage = lazy(() => import('./games/grid/GridPage').then((m) => ({ default: m.GridPage })));
@@ -508,6 +510,16 @@ export function App() {
           </Suspense>
         }
       />
+      {CardsLab && (
+        <Route
+          path="/dev/cards"
+          element={
+            <Suspense fallback={null}>
+              <CardsLab />
+            </Suspense>
+          }
+        />
+      )}
       <Route path="*" element={<PublicRoutes />} />
     </Routes>
   );
