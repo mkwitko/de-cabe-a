@@ -8,7 +8,10 @@ test.beforeEach(({ context }) =>
 test('a guest sends a problem from Ajustes and sees the thank-you', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Ajustes' }).click();
-  await page.getByRole('link', { name: /^Sugestões/ }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('link', { name: /^Sugestões/ })
+    .click();
   await expect(page).toHaveURL(/\/sugestoes$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Sugestões' })).toBeVisible();
 
@@ -24,6 +27,6 @@ test('a guest sends a problem from Ajustes and sees the thank-you', async ({ pag
   await page.getByRole('button', { name: 'Enviar', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Obrigado!' })).toBeFocused();
-  await page.getByRole('link', { name: 'Voltar aos jogos' }).click();
+  await page.getByRole('status').getByRole('link', { name: 'Voltar aos jogos' }).click();
   await expect(page).toHaveURL(/\/$/);
 });
