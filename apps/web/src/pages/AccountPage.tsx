@@ -8,6 +8,7 @@ import { api, type ApiError } from '../lib/api';
 import { useAccount, useMe } from '../lib/game';
 import { StarIcon } from '../components/Stars';
 import { btnPrimary, btnSecondary, Skeleton } from '../components/ui';
+import { AccountData } from '../components/AccountData';
 import { HapticsToggle, SoundToggle } from '../components/SoundToggle';
 
 const input =
@@ -161,6 +162,13 @@ export function AccountPage() {
           </section>
 
           <Notifications />
+
+          <AccountData
+            nickname={m.nickname}
+            hasAccount={Boolean(m.account)}
+            className={card}
+            headingClass={h2}
+          />
 
           {m.account ? (
             <section className={card}>

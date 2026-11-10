@@ -3,7 +3,8 @@ import { HomeCarousel } from './components/HomeCarousel';
 import { RouteMeta } from './components/RouteMeta';
 import { StarIcon } from './components/Stars';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
-import { AD_SLOTS, AdConsentBanner, AdSlot } from './components/AdSlot';
+import { AD_SLOTS, AdSlot } from './components/AdSlot';
+import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
 import {
   lazy,
   Suspense,
@@ -37,6 +38,10 @@ const HistoryPage = lazy(() =>
 );
 const RankingPage = lazy(() =>
   import('./pages/RankingPage').then((m) => ({ default: m.RankingPage })),
+);
+const TermsPage = lazy(() => import('./pages/TermsPage').then((m) => ({ default: m.TermsPage })));
+const CookiesPage = lazy(() =>
+  import('./pages/CookiesPage').then((m) => ({ default: m.CookiesPage })),
 );
 const PrivacyPage = lazy(() =>
   import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
@@ -575,6 +580,8 @@ function PublicRoutes() {
             <Route path="/conta" element={<AccountPage />} />
             <Route path="/conta/nova-senha" element={<NewPasswordPage />} />
             <Route path="/privacidade" element={<PrivacyPage />} />
+            <Route path="/termos" element={<TermsPage />} />
+            <Route path="/cookies" element={<CookiesPage />} />
             <Route path="/como-jogar" element={<HowToPlayPage />} />
             <Route path="/carreira" element={<CareerPage />} />
             <Route path="/copa" element={<CopaPage />} />
@@ -587,7 +594,8 @@ function PublicRoutes() {
           </Routes>
         )}
       </Suspense>
-      <AdConsentBanner />
+      <LegalLinks />
+      <ConsentBanner />
     </Shell>
   );
 }
