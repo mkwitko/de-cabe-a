@@ -1758,6 +1758,12 @@ describe('Oficina De Cabeça', () => {
       (await adminPost(`/oficina/${id}`, { state: 'published', sponsor: 'Padaria do Zé' }))
         .statusCode,
     ).toBe(200);
+    // A published community level has no number and stays out of the Grid track.
+    const gridTrack = await player.req('GET', '/tracks/FOOTBALL_GRID');
+    expect(gridTrack.statusCode, gridTrack.body).toBe(200);
+    expect(gridTrack.json().levels.every((l: { level: number | null }) => l.level !== null)).toBe(
+      true,
+    );
     const before = (await player.req('GET', '/me/stats')).json().totalStars;
     const attempt = (await player.req('POST', '/attempts', start)).json();
     expect((await player.req('PUT', `/oficina/${id}/vote`, { up: true })).statusCode).toBe(409);

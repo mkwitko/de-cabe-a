@@ -212,21 +212,27 @@ function CreateCareer() {
   );
 }
 
+/** The player's contract: a printed sheet with ruled fields, a stamped overall and the training clauses. */
 function PlayerSticker({ c }: { c: Career }) {
   return (
-    <div className="-rotate-1 rounded-[12px] bg-paper p-2.5 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.5)]">
-      <div className="rounded-[6px] bg-pitch-deep p-5 text-chalk">
+    <div className="sheet-in -rotate-[0.6deg] overflow-hidden rounded-[6px] bg-paper text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.5)]">
+      <p className="font-condensed bg-ink px-4 py-2 text-sm font-bold tracking-[0.18em] text-paper uppercase">
+        Contrato de atleta · Temporada {c.season.number}
+      </p>
+      <div className="p-5">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-chalk-soft uppercase">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold tracking-wide text-ink/75 uppercase">
               {POSITION_LABEL[c.position]}
             </p>
-            <h1 className="font-condensed text-4xl leading-none font-black uppercase">{c.name}</h1>
-            <p className="mt-1 text-sm text-chalk-soft">
+            <h1 className="font-condensed border-b-2 border-ink/50 pb-1 text-4xl leading-none font-black break-words uppercase">
+              {c.name}
+            </h1>
+            <p className="mt-2 text-sm font-semibold text-ink/80">
               {c.totals.matches} jogos · {c.totals.goals} gols · {c.totals.assists} assistências
             </p>
           </div>
-          <p className="font-condensed tabular rounded-xl bg-cover px-3 py-1 text-center text-ink">
+          <p className="font-condensed tabular grid size-20 shrink-0 rotate-6 place-content-center rounded-full border-[3px] border-double border-[#b3261e] text-center text-[#b3261e]">
             <span className="block text-4xl leading-none font-black">{c.overall}</span>
             <span className="text-xs font-bold uppercase">geral</span>
           </p>
@@ -235,23 +241,23 @@ function PlayerSticker({ c }: { c: Career }) {
           {(Object.keys(ATTR) as Attr[]).map((a) => {
             const v = c.attributes[a];
             return (
-              <li key={a}>
+              <li key={a} className="border-b border-dashed border-ink/30 pb-2">
                 <div className="flex items-baseline justify-between text-sm">
                   <span className="font-bold">
                     {ATTR[a].label}{' '}
                     <Link
                       to={ATTR[a].path}
-                      className="font-medium text-chalk-soft underline underline-offset-2"
+                      className="font-medium text-ink/80 underline underline-offset-2"
                     >
                       treina no {ATTR[a].game}
                     </Link>
                   </span>
                   <span className="font-condensed tabular text-xl font-black">{v}</span>
                 </div>
-                <div className="mt-1 h-2 rounded-full bg-chalk/10" aria-hidden="true">
-                  <div className="h-2 rounded-full bg-cover" style={{ width: `${v}%` }} />
+                <div className="mt-1 h-2 rounded-full bg-ink/15" aria-hidden="true">
+                  <div className="h-2 rounded-full bg-ink" style={{ width: `${v}%` }} />
                 </div>
-                <p className="mt-0.5 text-xs text-chalk-soft">
+                <p className="mt-0.5 text-xs text-ink/75">
                   {c.bank[a]}/{cost(v)} para o próximo ponto
                 </p>
               </li>
@@ -262,6 +268,10 @@ function PlayerSticker({ c }: { c: Career }) {
     </div>
   );
 }
+
+/** A rubber stamp: double border, condensed capitals, a little off square. */
+const stamp =
+  'font-condensed inline-block rounded-md border-[3px] border-double px-3 py-1 font-black tracking-wide uppercase';
 
 function shareText(c: Career) {
   const clubs = [...new Set(c.path.map((p) => p.club))].join(' → ');
@@ -335,19 +345,31 @@ export function CareerPage() {
         </header>
 
         {last && (
-          <article className="rounded-2xl bg-chalk/[0.07] p-5" aria-live="polite">
-            <p className="text-sm font-bold text-chalk-soft uppercase">
+          <article
+            className="relative rounded-md bg-paper p-5 text-ink shadow-[0_10px_24px_-12px_rgb(0_0_0/0.55)]"
+            aria-live="polite"
+          >
+            <span
+              className={`${stamp} absolute top-4 right-4 rotate-[-8deg] text-sm ${last.teamGoals > last.opponentGoals ? 'border-[#1d6b3a] text-[#1d6b3a]' : last.teamGoals < last.opponentGoals ? 'border-[#b3261e] text-[#b3261e]' : 'border-ink text-ink'}`}
+            >
+              {last.teamGoals > last.opponentGoals
+                ? 'Vitória'
+                : last.teamGoals < last.opponentGoals
+                  ? 'Derrota'
+                  : 'Empate'}
+            </span>
+            <p className="pr-24 text-sm font-bold text-ink/75 uppercase">
               Rodada {last.round} · {last.home ? 'em casa' : 'fora'}
             </p>
             <p className="font-condensed mt-1 text-4xl leading-none font-black uppercase">
               {s.club} {last.teamGoals} × {last.opponentGoals} {last.opponent}
             </p>
             <p className="mt-3 text-xl leading-snug font-bold">{last.headline}</p>
-            <p className="mt-2 text-chalk-soft">
+            <p className="mt-2 text-ink/80">
               {last.playerGoals} gols · {last.assists} assistências · nota{' '}
-              <strong className="text-cover">{last.rating.toFixed(1)}</strong>
+              <strong className="text-ink">{last.rating.toFixed(1)}</strong>
             </p>
-            {last.note && <p className="mt-2 text-sm text-chalk-soft">{last.note}</p>}
+            {last.note && <p className="mt-2 text-sm text-ink/80">{last.note}</p>}
           </article>
         )}
 
@@ -449,13 +471,13 @@ export function CareerPage() {
 
         <section>
           <h3 className="font-condensed text-2xl font-black uppercase">Trajetória</h3>
-          <ol className="mt-2 flex flex-wrap items-center gap-2">
+          <ol className="mt-3 flex flex-wrap gap-3">
             {c.path.map((p, i) => (
-              <li key={p.season} className="flex items-center gap-2">
-                {i > 0 && <span aria-hidden="true">→</span>}
-                <span className="rounded-full bg-chalk/10 px-3 py-1 text-sm font-semibold">
-                  T{p.season} · {p.club}
-                </span>
+              <li
+                key={p.season}
+                className={`${stamp} border-chalk bg-chalk/[0.06] text-sm text-chalk ${i % 2 ? 'rotate-2' : '-rotate-2'}`}
+              >
+                T{p.season} · {p.club}
               </li>
             ))}
           </ol>

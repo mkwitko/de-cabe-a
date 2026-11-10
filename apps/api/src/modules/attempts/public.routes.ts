@@ -81,7 +81,8 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The player's track of one game: every published level with its state (ADR-007). */
   async function track(req: { sessionId: string; userId: string | null }, mode: GameMode) {
     const levels = await prisma.challenge.findMany({
-      where: { gameMode: mode, status: 'published' },
+      // Community (Oficina) levels have no number and live outside the track.
+      where: { gameMode: mode, status: 'published', publicNumber: { not: null } },
       select: { id: true, publicNumber: true, difficultyTier: true },
       orderBy: { publicNumber: 'asc' },
     });

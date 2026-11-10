@@ -64,7 +64,7 @@ export function HistoryPage() {
             key={m}
             aria-pressed={mode === m}
             onClick={() => setMode(m)}
-            className={`rounded-full border-2 px-3 py-1.5 font-semibold ${mode === m ? 'border-cover bg-cover text-ink' : 'border-chalk-soft/50'}`}
+            className={`min-h-11 rounded-full border-2 px-4 font-semibold ${mode === m ? 'border-cover bg-cover text-ink' : 'border-chalk-soft/50'}`}
           >
             {label}
           </button>
@@ -84,23 +84,29 @@ export function HistoryPage() {
           Termine uma fase e a figurinha aparece aqui.
         </Notice>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it) => (
             <li
               key={it.attemptId}
-              className="flex items-center gap-3 rounded-lg bg-paper px-4 py-3 text-ink"
+              className="flex items-stretch overflow-hidden rounded-lg bg-paper text-ink shadow-[0_6px_14px_-8px_rgb(0_0_0/0.55)]"
             >
-              <span className="flex flex-col">
-                <span className="font-bold">
-                  {NAME[it.mode]} · Fase {it.level}
+              {/* date stamped on the stub, torn off by a perforation */}
+              <span className="font-condensed tabular flex w-16 shrink-0 items-center justify-center border-r-2 border-dashed border-ink/30 bg-ink/[0.06] text-xl leading-none font-black">
+                <span className="-rotate-6 rounded border-2 border-ink/70 px-1.5 py-1">
+                  {date.format(new Date(it.completedAt))}
                 </span>
-                <span className="text-sm text-ink/65">{date.format(new Date(it.completedAt))}</span>
               </span>
-              <span className="ml-auto">
-                <Stars n={it.stars} size="size-4" />
-              </span>
-              <span className="font-condensed tabular text-2xl font-black">
-                {result(it.mode, it.status, it.score)}
+              <span className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3">
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-bold">{NAME[it.mode]}</span>
+                  <span className="text-sm text-ink/70">Fase {it.level}</span>
+                </span>
+                <span className="ml-auto">
+                  <Stars n={it.stars} size="size-4" />
+                </span>
+                <span className="font-condensed tabular text-2xl font-black">
+                  {result(it.mode, it.status, it.score)}
+                </span>
               </span>
             </li>
           ))}

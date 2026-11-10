@@ -28,7 +28,7 @@ export function HowToPlayPage() {
           <li
             key={g.slot}
             id={g.mode.toLowerCase()}
-            className="flex scroll-mt-6 flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.06] p-5 target:ring-2 target:ring-cover"
+            className="flex scroll-mt-6 flex-col gap-3 rounded-xl border border-t-4 border-chalk/15 border-t-cover bg-chalk/[0.05] p-5 target:ring-2 target:ring-cover"
           >
             <h2 className="font-condensed text-2xl font-extrabold uppercase">{g.name}</h2>
             <p className="font-semibold">{g.rule}</p>
@@ -44,7 +44,9 @@ export function HowToPlayPage() {
         ))}
       </ol>
       <section className="flex flex-col gap-2">
-        <h2 className="font-condensed text-2xl font-extrabold uppercase">Perguntas frequentes</h2>
+        <h2 className="font-condensed border-l-4 border-cover pl-3 text-2xl leading-none font-extrabold uppercase">
+          Perguntas frequentes
+        </h2>
         {seo.faq.map(([q, a]) => (
           <details key={q} className="rounded-lg border border-chalk/15 bg-chalk/[0.05]">
             <summary className="min-h-12 cursor-pointer list-none px-4 py-3 font-bold [&::-webkit-details-marker]:hidden">

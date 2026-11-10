@@ -20,7 +20,7 @@ export function NewPasswordPage() {
     });
   };
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-6">
       <h1 className="font-condensed text-4xl font-black uppercase">Nova senha</h1>
       {!token || params.get('error') ? (
         <p className="text-chalk-soft">
