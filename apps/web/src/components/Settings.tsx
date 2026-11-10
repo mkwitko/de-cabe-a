@@ -6,7 +6,7 @@
  * the account (`lib/cosmetics.ts`). A native <dialog>: focus trap, Esc and the backdrop close it.
  */
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { systemReducesMotion, TRACKS, updateSettings, useSettings } from '../lib/settings';
 import { onPreviewChange, previewing, previewTrack, setMusic } from '../lib/music';
 import { play, setSound } from '../lib/sound';
@@ -207,6 +207,7 @@ export function SettingsDialog() {
   const ref = useRef<HTMLDialogElement>(null);
   const s = useSettings();
   const owned = useOwned();
+  const { pathname } = useLocation();
   const systemReduce = systemReducesMotion();
   useEffect(() => {
     const open = () => ref.current?.showModal();
@@ -295,6 +296,9 @@ export function SettingsDialog() {
               <InstallRow className={linkRow} />
               <Link to="/conta" onClick={close} className={linkRow}>
                 Conta <span aria-hidden="true">›</span>
+              </Link>
+              <Link to="/sugestoes" state={{ from: pathname }} onClick={close} className={linkRow}>
+                Sugestões <span aria-hidden="true">›</span>
               </Link>
               <Link to="/privacidade" onClick={close} className={linkRow}>
                 Privacidade <span aria-hidden="true">›</span>

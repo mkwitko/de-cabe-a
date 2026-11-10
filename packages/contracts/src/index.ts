@@ -6,3 +6,4 @@ export * from './teams';
 export * from './album';
 export * from './votes';
 export * from './billing';
+export * from './feedback';

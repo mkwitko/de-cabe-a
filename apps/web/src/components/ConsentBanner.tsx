@@ -225,6 +225,9 @@ export function LegalLinks() {
       <Link to="/privacidade" className={link}>
         Privacidade
       </Link>
+      <Link to="/sugestoes" state={{ from: pathname }} className={link}>
+        Sugestões
+      </Link>
       <Link to="/termos" className={link}>
         Termos
       </Link>
