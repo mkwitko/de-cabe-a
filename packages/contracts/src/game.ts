@@ -448,6 +448,12 @@ export const Sticker = z.strictObject({
   name: z.string(),
   positionGroup: z.enum(['GK', 'DF', 'MF', 'FW']).nullable(),
   nationality: z.string(),
+  /** ISO 3166 alpha-2 ("BR"), for the flag. */
+  nationalityCode: z.string().optional(),
+  /** Real career numbers (professional spells): clubs, and league games/goals summed only when every spell has them. */
+  clubs: z.number().int().optional(),
+  games: z.number().int().nullable().optional(),
+  goals: z.number().int().nullable().optional(),
   /** Wikimedia Commons portrait, when the player has a freely licensed photo. */
   photo: z.string().nullable(),
   /** "Foto: author · licence" (CC licences require the credit where the photo shows). */
