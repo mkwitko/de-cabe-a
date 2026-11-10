@@ -53,7 +53,9 @@ export function AccountPage() {
     .replace(/[^\p{L}\p{N}]/gu, '')
     .slice(0, 2)
     .toUpperCase();
-  const h2 = 'font-condensed text-2xl font-extrabold uppercase';
+  const h2 =
+    'font-condensed text-2xl font-extrabold uppercase border-l-4 border-cover pl-3 leading-none';
+  const card = 'flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-5';
 
   return (
     <div className="flex flex-col gap-8">
@@ -81,11 +83,8 @@ export function AccountPage() {
           </p>
         </aside>
 
-        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={(e) => submit(e, '/v1/me', 'PATCH', { nickname })}
-          >
+        <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-8">
+          <form className={card} onSubmit={(e) => submit(e, '/v1/me', 'PATCH', { nickname })}>
             <h2 className={h2}>{m.nickname ? 'Trocar apelido' : 'Apelido no ranking'}</h2>
             <Field
               label="Apelido público"
@@ -111,7 +110,7 @@ export function AccountPage() {
           </form>
 
           {m.nickname && (
-            <section className="flex flex-col gap-3">
+            <section className={card}>
               <h2 className={h2}>Perfil público</h2>
               <p className="text-chalk-soft">
                 {m.publicProfile
@@ -152,7 +151,7 @@ export function AccountPage() {
             </section>
           )}
 
-          <section className="flex flex-col gap-3">
+          <section className={card}>
             <h2 className={h2}>Preferências</h2>
             <p className="text-chalk-soft">
               Apito, torcida, o "uhh" do erro e a vibração. Fica guardado só neste aparelho.
@@ -164,7 +163,7 @@ export function AccountPage() {
           <Notifications />
 
           {m.account ? (
-            <section className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0">
+            <section className={card}>
               <h2 className={h2}>Sessão</h2>
               <p className="text-chalk-soft">
                 Seu progresso está salvo na conta e aparece em qualquer aparelho em que você entrar.
@@ -197,7 +196,7 @@ export function AccountPage() {
             </section>
           ) : (
             <form
-              className="flex flex-col gap-3 border-t-2 border-chalk/15 pt-8 lg:border-t-0 lg:pt-0"
+              className={card}
               onSubmit={(e) =>
                 mode === 'forgot'
                   ? submit(e, '/v1/auth/request-password-reset', 'POST', {
