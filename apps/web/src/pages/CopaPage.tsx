@@ -11,6 +11,7 @@ import { api, type ApiError } from '../lib/api';
 import { ShareButton } from '../components/ShareButton';
 import { btnPrimary, GameHeader, Notice, Skeleton } from '../components/ui';
 import { TrophyIcon } from '../components/Icons';
+import { LowerThird, PerspectivePitch, TvStage } from '../components/TvStage';
 
 type Player = CopaRunView['xi'][number];
 type Side = NonNullable<CopaRunView['next']>['opponent'];
@@ -71,10 +72,10 @@ function Setup({
   const [formation, setFormation] = useState('4-3-3');
   const [difficulty, setDifficulty] = useState('olheiro');
   const choice = (on: boolean) =>
-    `flex min-h-12 cursor-pointer flex-col justify-center rounded-xl border-2 px-4 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${on ? 'border-cover bg-cover text-ink' : 'border-chalk/25 hover:bg-chalk/[0.06]'}`;
+    `flex min-h-12 cursor-pointer flex-col justify-center rounded-xl border-2 px-4 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${on ? 'border-cover bg-cover text-ink' : 'border-white/25 hover:bg-white/[0.08]'}`;
   return (
     <form
-      className="mt-8 flex flex-col gap-6"
+      className="flex flex-col gap-6"
       onSubmit={(e) => {
         e.preventDefault();
         onStart(formation, difficulty);
@@ -139,9 +140,9 @@ function Draft({
   const d = run.draft!;
   return (
     <section aria-labelledby="draft" className="flex flex-col gap-4">
-      <h2 id="draft" className="font-condensed text-3xl font-black uppercase">
+      <LowerThird id="draft" kicker="Draft">
         Rodada {d.round} de 11 · {SLOT[d.slot]}
-      </h2>
+      </LowerThird>
       <ul className="grid gap-3 sm:grid-cols-2">
         {d.options.map((p) => (
           <li key={p.id}>
@@ -171,18 +172,18 @@ function Team({ run }: { run: CopaRunView }) {
   const lines = (['FW', 'MF', 'DF', 'GK'] as const).map((s) => run.xi.filter((p) => p.slot === s));
   return (
     <section aria-labelledby="time" className="flex flex-col gap-3">
-      <h2 id="time" className="font-condensed text-xl font-extrabold uppercase">
+      <LowerThird id="time" kicker="Escalação">
         Seu time · {run.formation}
         {run.strength !== null && ` · força ${run.strength}`}
-      </h2>
-      <div className="flex flex-col gap-2 rounded-2xl border-2 border-chalk/25 p-3">
+      </LowerThird>
+      <PerspectivePitch>
         {lines.map((line, i) =>
           line.length ? (
             <ol key={i} className="flex flex-wrap justify-center gap-1.5">
               {line.map((p) => (
                 <li
                   key={p.id}
-                  className="rounded-md bg-paper px-2 py-1 text-center text-sm font-semibold text-ink"
+                  className="rounded-md bg-paper px-2 py-1.5 text-center text-sm font-semibold text-ink shadow-[0_3px_0_rgb(0_0_0/0.35)]"
                 >
                   {p.name}
                   {p.overall !== null && (
@@ -193,8 +194,8 @@ function Team({ run }: { run: CopaRunView }) {
             </ol>
           ) : null,
         )}
-        {!run.xi.length && <p className="text-center text-sm text-chalk-soft">Ninguém ainda.</p>}
-      </div>
+        {!run.xi.length && <p className="text-center text-sm text-white/80">Ninguém ainda.</p>}
+      </PerspectivePitch>
       <div>
         <div className="flex items-baseline justify-between text-sm font-semibold">
           <span>Química</span>
@@ -214,10 +215,10 @@ function Team({ run }: { run: CopaRunView }) {
           />
         </div>
         {run.chemistry.links.length > 0 && (
-          <ul className="mt-2 flex flex-col gap-1 text-sm text-chalk-soft">
+          <ul className="mt-2 flex flex-col gap-1 text-sm text-white/80">
             {run.chemistry.links.slice(0, 6).map((l) => (
               <li key={l.a + l.b}>
-                <span className="font-semibold text-chalk">
+                <span className="font-semibold text-white">
                   {l.a} e {l.b}
                 </span>
                 : {why(l.why)}
@@ -225,7 +226,7 @@ function Team({ run }: { run: CopaRunView }) {
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-chalk-soft">
+        <p className="mt-2 text-xs text-white/75">
           Química vem de quem jogou junto de verdade: mesma seleção na mesma Copa, mesmo clube na
           mesma época ou mesmo país.
         </p>
@@ -246,7 +247,7 @@ function Opponent({ side }: { side: Side }) {
           </span>
         )}
       </p>
-      <p className="text-sm font-semibold">
+      <p className="text-sm font-semibold text-white/85">
         {side.strength !== null && `Força ${side.strength} · `}Destaques: {side.stars.join(', ')}
       </p>
     </div>
@@ -269,14 +270,23 @@ function Report({ match }: { match: Match }) {
   return (
     <section
       aria-labelledby="partida"
-      className="flex flex-col gap-3 rounded-2xl bg-paper p-5 text-ink"
+      className="flex flex-col gap-3 rounded-lg border-l-8 border-cover bg-white/10 p-4 text-white"
     >
-      <h2 id="partida" className="text-sm font-semibold">
+      <h2 id="partida" className="text-sm font-semibold text-white/80">
         {match.stage} · {match.tactic}
       </h2>
-      <p className="font-condensed text-3xl leading-none font-black uppercase" aria-live="polite">
-        Seu time <span className="tabular">{done ? match.goalsFor : mine}</span> ×{' '}
-        <span className="tabular">{done ? match.goalsAgainst : theirs}</span>{' '}
+      <p
+        className="font-condensed text-3xl leading-none font-black uppercase sm:text-5xl"
+        aria-live="polite"
+      >
+        Seu time{' '}
+        <span className="tabular rounded-sm bg-cover px-2 text-ink">
+          {done ? match.goalsFor : mine}
+        </span>{' '}
+        ×{' '}
+        <span className="tabular rounded-sm bg-white px-2 text-ink">
+          {done ? match.goalsAgainst : theirs}
+        </span>{' '}
         {sideName(match.opponent)}
       </p>
       {done && (match.extraTime || match.penalties) && (
@@ -303,11 +313,11 @@ function Report({ match }: { match: Match }) {
 function Group({ run }: { run: CopaRunView }) {
   return (
     <section aria-labelledby="grupo">
-      <h2 id="grupo" className="font-condensed text-xl font-extrabold uppercase">
+      <LowerThird id="grupo" kicker="Tabela">
         Grupo
-      </h2>
+      </LowerThird>
       <table className="mt-2 w-full text-sm">
-        <thead className="text-left text-chalk-soft">
+        <thead className="text-left text-white/75">
           <tr>
             <th className="py-1 font-semibold">Seleção</th>
             <th className="w-8 text-right font-semibold">J</th>
@@ -331,7 +341,7 @@ function Group({ run }: { run: CopaRunView }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-1 text-xs text-chalk-soft">Os dois primeiros vão às oitavas.</p>
+      <p className="mt-1 text-xs text-white/75">Os dois primeiros vão às oitavas.</p>
     </section>
   );
 }
@@ -391,111 +401,122 @@ export function CopaPage() {
           {record.runs === 1 ? 'Copa' : 'Copas'}
         </p>
       )}
-      {error && (
-        <p role="alert" className="mt-4 font-semibold text-cover">
-          {error.message}
-        </p>
-      )}
+      <TvStage
+        tag="Copa dos Sonhos"
+        status={
+          active && run
+            ? run.phase === 'draft'
+              ? `Rodada ${run.draft!.round} de 11`
+              : (run.next?.stage ?? run.formation)
+            : 'Nova Copa'
+        }
+      >
+        {error && (
+          <p role="alert" className="font-semibold text-cover">
+            {error.message}
+          </p>
+        )}
 
-      {active && run ? (
-        <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_24rem]">
-          <div className="flex flex-col gap-6">
-            {run.phase === 'draft' ? (
-              <Draft run={run} pending={pick.isPending} onPick={(id) => pick.mutate(id)} />
-            ) : (
-              <>
-                {last && <Report match={last} />}
-                {run.next && (
-                  <section aria-labelledby="proximo" className="flex flex-col gap-4">
-                    <h2 id="proximo" className="text-sm font-semibold text-chalk-soft">
-                      Próximo jogo · {run.next.stage}
-                    </h2>
-                    <Opponent side={run.next.opponent} />
-                    <fieldset className="flex flex-col gap-2">
-                      <legend className="mb-1 font-semibold">Tática</legend>
-                      <div className="grid grid-cols-3 gap-2">
-                        {TACTICS.map((t) => (
-                          <label
-                            key={t.id}
-                            className={`flex min-h-12 min-w-0 cursor-pointer flex-col justify-center rounded-xl border-2 px-2.5 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${tactic === t.id ? 'border-cover bg-cover text-ink' : 'border-chalk/25'}`}
-                          >
-                            <input
-                              type="radio"
-                              name="tactic"
-                              checked={tactic === t.id}
-                              onChange={() => setTactic(t.id)}
-                              className="sr-only"
-                            />
-                            <span className="font-condensed text-base font-black break-words uppercase sm:text-lg">
-                              {t.name}
-                            </span>
-                            <span className="text-xs font-medium">{t.hint}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                    <button
-                      type="button"
-                      className={`${btnPrimary} self-start`}
-                      disabled={play.isPending}
-                      onClick={() => play.mutate(tactic)}
-                    >
-                      Jogar
-                    </button>
-                  </section>
-                )}
-                {run.matches.length > 0 && run.matches.length <= 3 && <Group run={run} />}
-              </>
-            )}
-          </div>
-          <aside className="flex flex-col gap-4">
-            <Team run={run} />
-            <button
-              type="button"
-              className="min-h-11 self-start text-sm font-semibold underline underline-offset-4"
-              onClick={() => {
-                if (confirm('Abandonar esta Copa? Ela não conta na sua campanha.'))
-                  setRestart(true);
-              }}
-            >
-              Abandonar e começar outra
-            </button>
-          </aside>
-        </div>
-      ) : (
-        <>
-          {run?.phase === 'over' && run.finish && !restart && (
-            <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_24rem]">
-              <div className="flex flex-col gap-4">
-                <h2 className="font-condensed text-4xl leading-none font-black uppercase">
-                  {FINISH_TEXT[run.finish]}
-                </h2>
-                {last && <Report match={last} />}
-                <ol className="flex flex-col gap-1 text-sm">
-                  {run.matches.map((m) => (
-                    <li key={m.stage}>
-                      <span className="font-semibold">{m.stage}:</span>{' '}
-                      <span className="tabular">
-                        {m.goalsFor}×{m.goalsAgainst}
-                      </span>{' '}
-                      {sideName(m.opponent)}
-                      {m.penalties && ` (pênaltis ${m.penalties.mine}×${m.penalties.theirs})`}
-                    </li>
-                  ))}
-                </ol>
-                <div className="flex flex-wrap gap-3">
-                  <ShareButton text={shareText(run)} label="Compartilhar campanha" />
-                </div>
-              </div>
-              <Team run={run} />
+        {active && run ? (
+          <div className="grid gap-8 lg:grid-cols-[1fr_24rem]">
+            <div className="flex flex-col gap-6">
+              {run.phase === 'draft' ? (
+                <Draft run={run} pending={pick.isPending} onPick={(id) => pick.mutate(id)} />
+              ) : (
+                <>
+                  {last && <Report match={last} />}
+                  {run.next && (
+                    <section aria-labelledby="proximo" className="flex flex-col gap-4">
+                      <LowerThird id="proximo" kicker="Próximo jogo">
+                        {run.next.stage}
+                      </LowerThird>
+                      <Opponent side={run.next.opponent} />
+                      <fieldset className="flex flex-col gap-2">
+                        <legend className="mb-1 font-semibold text-white/85">Tática</legend>
+                        <div className="grid grid-cols-3 gap-2">
+                          {TACTICS.map((t) => (
+                            <label
+                              key={t.id}
+                              className={`flex min-h-12 min-w-0 cursor-pointer flex-col justify-center rounded-xl border-2 px-2.5 py-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cover ${tactic === t.id ? 'border-cover bg-cover text-ink' : 'border-white/25'}`}
+                            >
+                              <input
+                                type="radio"
+                                name="tactic"
+                                checked={tactic === t.id}
+                                onChange={() => setTactic(t.id)}
+                                className="sr-only"
+                              />
+                              <span className="font-condensed text-base font-black break-words uppercase sm:text-lg">
+                                {t.name}
+                              </span>
+                              <span className="text-xs font-medium">{t.hint}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <button
+                        type="button"
+                        className={`${btnPrimary} self-start`}
+                        disabled={play.isPending}
+                        onClick={() => play.mutate(tactic)}
+                      >
+                        Jogar
+                      </button>
+                    </section>
+                  )}
+                  {run.matches.length > 0 && run.matches.length <= 3 && <Group run={run} />}
+                </>
+              )}
             </div>
-          )}
-          <Setup
-            pending={start.isPending}
-            onStart={(formation, difficulty) => start.mutate({ formation, difficulty })}
-          />
-        </>
-      )}
+            <aside className="flex flex-col gap-4">
+              <Team run={run} />
+              <button
+                type="button"
+                className="min-h-11 self-start text-sm font-semibold underline underline-offset-4"
+                onClick={() => {
+                  if (confirm('Abandonar esta Copa? Ela não conta na sua campanha.'))
+                    setRestart(true);
+                }}
+              >
+                Abandonar e começar outra
+              </button>
+            </aside>
+          </div>
+        ) : (
+          <>
+            {run?.phase === 'over' && run.finish && !restart && (
+              <div className="grid gap-8 lg:grid-cols-[1fr_24rem]">
+                <div className="flex flex-col gap-4">
+                  <h2 className="font-condensed text-4xl leading-none font-black uppercase">
+                    {FINISH_TEXT[run.finish]}
+                  </h2>
+                  {last && <Report match={last} />}
+                  <ol className="flex flex-col gap-1 text-sm">
+                    {run.matches.map((m) => (
+                      <li key={m.stage}>
+                        <span className="font-semibold">{m.stage}:</span>{' '}
+                        <span className="tabular">
+                          {m.goalsFor}×{m.goalsAgainst}
+                        </span>{' '}
+                        {sideName(m.opponent)}
+                        {m.penalties && ` (pênaltis ${m.penalties.mine}×${m.penalties.theirs})`}
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="flex flex-wrap gap-3">
+                    <ShareButton text={shareText(run)} label="Compartilhar campanha" />
+                  </div>
+                </div>
+                <Team run={run} />
+              </div>
+            )}
+            <Setup
+              pending={start.isPending}
+              onStart={(formation, difficulty) => start.mutate({ formation, difficulty })}
+            />
+          </>
+        )}
+      </TvStage>
     </>
   );
 }
