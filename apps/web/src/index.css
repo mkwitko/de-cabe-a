@@ -344,3 +344,42 @@
     animation: stamp-fade 300ms ease-out both;
   }
 }
+
+/* Mais ou menos telão: digits light up one by one, floodlights flicker on. */
+@keyframes led-digit {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes flood-on {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.led-digit {
+  animation: led-digit 260ms steps(1, end) both;
+}
+.flood-on {
+  animation: flood-on 520ms both;
+}
