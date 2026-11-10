@@ -142,19 +142,3 @@ export function ModeCover({
     </div>
   );
 }
-
-/** The cover shrunk to a tile for the "Em breve" strip: the object's material, the art, the name. */
-export function MiniCover({ mode, name }: { mode: CoverMode; name: ReactNode }) {
-  const c = COVERS[mode];
-  return (
-    <div
-      style={c.shell}
-      className="obj-dark relative flex h-full flex-col justify-between gap-2 p-3"
-    >
-      <div className="mt-5 bg-pitch-deep px-1.5 py-1">
-        <GameArt mode={mode} className="mx-auto h-14 w-full" />
-      </div>
-      <p className={`font-condensed text-xl leading-[0.9] font-black uppercase ${c.ink}`}>{name}</p>
-    </div>
-  );
-}

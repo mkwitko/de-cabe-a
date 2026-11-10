@@ -1,17 +1,16 @@
 import { MusicToggle, SoundToggle } from './components/SoundToggle';
 import { sceneFor, setScene } from './lib/music';
 import { ThemeToggle } from './components/ThemeToggle';
-import { CareerPathCard, CareerPathNext } from './components/CareerPathCard';
-import { MiniCover } from './components/ModeCover';
+import { LockerRoom } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
 import { SignInButton } from './components/SignInButton';
-import { ComingSoonPage, SoonStamp } from './pages/ComingSoonPage';
+import { ComingSoonPage } from './pages/ComingSoonPage';
 import {
   closedRoute,
   isModeLaunched,
@@ -23,7 +22,7 @@ import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
 import type { GameMode } from '@decabeca/contracts';
 import { TrackPage } from './pages/TrackPage';
 import { ModeGate } from './games/Clock';
-import { btnPrimary, btnSecondary, Skeleton, useOnline } from './components/ui';
+import { btnSecondary, Skeleton, useOnline } from './components/ui';
 
 const AdminApp = lazy(() => import('./admin/AdminApp'));
 // Each screen loads on demand: the first visit downloads only the shell and the home.
@@ -260,149 +259,29 @@ function Brand({ home }: { home: boolean }) {
   );
 }
 
-/** Modes and pages that are still closed, as small desaturated covers; they do not open. */
+/** Pages that are still closed; they hang with the closed modes and do not open. */
 const SOON_EXTRA: { name: string; page: PageKey }[] = [
   { name: 'Modo Carreira', page: 'career' },
   { name: 'Copa dos Sonhos', page: 'copa' },
   { name: 'Oficina', page: 'oficina' },
 ];
 
-/** Arrow buttons that page the rail; each greys out at its end. */
-function RailArrow({
-  dir,
-  disabled,
-  onClick,
-}: {
-  dir: -1 | 1;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={dir < 0 ? 'Ver os anteriores' : 'Ver os próximos'}
-      className="grid size-11 place-items-center rounded-full border-2 border-chalk-soft/50 text-chalk transition-opacity duration-150 hover:border-chalk disabled:opacity-30"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className="size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d={dir < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
-      </svg>
-    </button>
-  );
-}
-
-function SoonRail() {
-  // Career Path is always open and has no cover art.
-  const modes = GAMES.flatMap((g) =>
-    g.mode === 'CAREER_PATH' || isModeLaunched(g.mode) ? [] : [{ ...g, mode: g.mode }],
-  );
-  const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page));
-  const rail = useRef<HTMLUListElement>(null);
-  const [edge, setEdge] = useState({ start: true, end: false });
-  const measure = useCallback(() => {
-    const el = rail.current;
-    if (!el) return;
-    setEdge({
-      start: el.scrollLeft < 8,
-      end: el.scrollLeft + el.clientWidth > el.scrollWidth - 8,
-    });
-  }, []);
-  useEffect(() => {
-    measure();
-    addEventListener('resize', measure);
-    return () => removeEventListener('resize', measure);
-  }, [measure]);
-  if (!modes.length && !extra.length) return null;
-  const page = (dir: -1 | 1) =>
-    rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: 'smooth' });
-  // The fade sits only on a side with more covers behind it.
-  const fade = `linear-gradient(90deg, ${edge.start ? '#000' : 'transparent'}, #000 3rem, #000 calc(100% - 4rem), ${edge.end ? '#000' : 'transparent'})`;
-  const tile =
-    'relative h-48 w-40 shrink-0 snap-start overflow-hidden rounded-xl shadow-[0_10px_20px_-10px_rgb(0_0_0/0.6)] sm:h-56 sm:w-48';
-  return (
-    <section aria-labelledby="em-breve" className="mt-12">
-      <div className="flex items-end justify-between gap-4">
-        <h2 id="em-breve" className="font-condensed text-3xl leading-none font-black uppercase">
-          Em breve
-        </h2>
-        <div className="flex gap-2">
-          <RailArrow dir={-1} disabled={edge.start} onClick={() => page(-1)} />
-          <RailArrow dir={1} disabled={edge.end} onClick={() => page(1)} />
-        </div>
-      </div>
-      <ul
-        ref={rail}
-        onScroll={measure}
-        tabIndex={0}
-        aria-label="Modos que chegam em breve"
-        style={{ maskImage: fade, WebkitMaskImage: fade }}
-        className="-mx-4 mt-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pt-2 pb-4 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8"
-      >
-        {modes.map((g) => (
-          <li key={g.mode} className={`${tile} bg-paper`}>
-            <div className="h-full contrast-[0.9] grayscale">
-              <MiniCover mode={g.mode} name={g.name} />
-            </div>
-            <SoonStamp className="absolute top-2 right-2 text-xs" />
-          </li>
-        ))}
-        {extra.map((x) => (
-          <li
-            key={x.page}
-            className={`${tile} grid place-items-center bg-cover px-3 text-center text-ink grayscale`}
-          >
-            <p className="font-condensed text-3xl leading-[0.9] font-black uppercase">{x.name}</p>
-            <SoonStamp className="absolute top-2 right-2 text-xs" />
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 /**
- * The home is one stage: the Career Path passport (filling the first phone screen) and, beside it
- * on wide screens, what the next level is worth; the closed modes run below as a rail.
+ * The home is one scene: the Career Path passport open on the locker-room bench, the next-level
+ * ticket clipped to it, and the closed modes hanging as jerseys (numbered by their slot).
  */
 export function Home() {
-  return (
-    <>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
-        <CareerPathCard stage />
-        {/* A ticket keeps its own size beside the passport; it never stretches to its height. */}
-        <div className="flex flex-col justify-center gap-6">
-          <CareerPathNext />
-          {isPageLaunched('daily') && (
-            <Link
-              to="/d/hoje"
-              className="flex items-center justify-between gap-4 rounded-2xl bg-paper p-5 text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out-expo hover:-translate-y-0.5"
-            >
-              <span className="flex min-w-0 flex-col">
-                <span className="font-condensed text-3xl leading-none font-black uppercase">
-                  Desafio do Dia
-                </span>
-                <span className="mt-1.5 font-semibold">
-                  Uma fase de cada jogo, a mesma para todos. Nova à meia-noite.
-                </span>
-              </span>
-              <span className={`${btnPrimary} shrink-0`}>Jogar</span>
-            </Link>
-          )}
-        </div>
-      </div>
-      <SoonRail />
-    </>
+  const modes = GAMES.flatMap((g) =>
+    g.mode === 'CAREER_PATH' || isModeLaunched(g.mode)
+      ? []
+      : [{ key: g.mode, name: g.name, number: String(Number(g.slot)) }],
   );
+  const extra = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x, i) => ({
+    key: x.page,
+    name: x.name,
+    number: String(GAMES.length + 1 + i),
+  }));
+  return <LockerRoom jerseys={[...modes, ...extra]} />;
 }
 
 function HomeRoute() {
@@ -413,6 +292,14 @@ function HomeRoute() {
         <AdSlot slot={AD_SLOTS.home} />
       </div>
       <p className="mt-10 text-center text-sm text-chalk-soft">
+        {isPageLaunched('daily') && (
+          <>
+            <Link to="/d/hoje" className="underline underline-offset-4 hover:text-chalk">
+              Desafio do Dia
+            </Link>
+            {' · '}
+          </>
+        )}
         <Link to="/como-jogar" className="underline underline-offset-4 hover:text-chalk">
           Como jogar
         </Link>

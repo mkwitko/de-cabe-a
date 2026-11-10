@@ -8,7 +8,7 @@ import { Link } from 'react-router';
 import type { TrackResponse } from '@decabeca/contracts';
 import { useAlbum, useStats, useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
-import { TITLE_LADDER, titleFrame, titleTone } from '../lib/format';
+import { titleFrame, titleTone } from '../lib/format';
 import { RARITY_ORDER, RARITY_STYLE } from './rarity';
 import { StarIcon, Stars } from './Stars';
 import { StickerCard } from './StickerCard';
@@ -302,101 +302,5 @@ export function CareerPathCard({
         )}
       </div>
     </article>
-  );
-}
-
-/**
- * What the next level is worth, as a ticket beside the passport: up to three stars, the player's
- * sticker for the album, and the next title on the ladder with its reward.
- */
-export function CareerPathNext() {
-  const track = useTrack('CAREER_PATH');
-  const stats = useStats();
-  const next = nextLevel(track.data);
-  const levels = track.data?.levels ?? [];
-  if (!track.data) return track.error ? null : <Skeleton className="h-64 w-full" />;
-  if (!levels.length) return null;
-
-  const upcoming = stats.data?.title.next;
-  const reward = upcoming && TITLE_LADDER.find((t) => t.name === upcoming.name);
-  return (
-    <section
-      aria-labelledby="cp-next"
-      className="relative flex flex-col overflow-hidden rounded-[18px] bg-paper text-ink shadow-[0_20px_40px_-18px_rgb(0_0_0/0.6)] sm:flex-row"
-    >
-      {/* the stub: the level number, torn off along the perforation */}
-      <div className="flex items-center justify-between gap-4 bg-cover px-6 py-5 sm:w-40 sm:flex-col sm:items-start sm:justify-between sm:py-7">
-        <p className="font-condensed text-[clamp(4.5rem,20vw,7rem)] leading-[0.8] font-black tabular">
-          {next?.level ?? levels.length}
-        </p>
-        <p className="font-condensed text-right text-xl leading-none font-extrabold uppercase sm:text-left">
-          {next ? (next.inProgress ? 'em jogo' : 'a próxima') : 'completo'}
-        </p>
-      </div>
-      <div
-        aria-hidden="true"
-        className="h-0 border-t-[3px] border-dashed border-ink/25 sm:h-auto sm:border-t-0 sm:border-l-[3px]"
-      />
-      <div className="flex flex-1 flex-col gap-5 p-6 sm:p-7">
-        <h2
-          id="cp-next"
-          className="font-condensed text-3xl leading-[0.9] font-black uppercase sm:text-4xl"
-        >
-          {next ? `O que a fase ${next.level} vale` : 'Todas as fases carimbadas'}
-        </h2>
-        {next ? (
-          <ul className="grid grid-cols-3 gap-3 sm:gap-5 lg:my-auto lg:grid-cols-1 lg:gap-6">
-            <li className="grid content-start gap-x-4 gap-y-1.5 lg:grid-cols-[6rem_1fr] lg:items-center">
-              <span className="grid h-20 place-items-center lg:row-span-2">
-                <Stars n={0} size="size-7 sm:size-8" onCover />
-              </span>
-              <p className="font-bold leading-tight">Até 3 estrelas</p>
-              <p className="text-sm leading-snug font-medium text-ink/75">
-                Acerte na 1ª ou 2ª chance.
-              </p>
-            </li>
-            <li className="grid content-start gap-x-4 gap-y-1.5 lg:grid-cols-[6rem_1fr] lg:items-center">
-              <span className="grid h-20 place-items-center lg:row-span-2">
-                <span className="font-condensed grid aspect-[3/4] h-full place-items-center rounded-[6px] border-2 border-dashed border-ink/45 text-3xl font-black text-ink/45 -rotate-3">
-                  ?
-                </span>
-              </span>
-              <p className="font-bold leading-tight">A figurinha</p>
-              <p className="text-sm leading-snug font-medium text-ink/75">
-                Do jogador, para o álbum.
-              </p>
-            </li>
-            {upcoming && reward ? (
-              <li className="grid content-start gap-x-4 gap-y-1.5 lg:grid-cols-[6rem_1fr] lg:items-center">
-                <span className="grid h-20 place-items-center lg:row-span-2">
-                  <span className="rounded-[12px] p-1" style={{ background: reward.frame }}>
-                    <span className="block rounded-[8px] p-1.5" style={{ background: reward.tone }}>
-                      <TitleBadge name={reward.name} className="size-11" />
-                    </span>
-                  </span>
-                </span>
-                <p className="font-bold leading-tight">{reward.name}</p>
-                <p className="text-sm leading-snug font-medium text-ink/75">
-                  Faltam <span className="tabular">{upcoming.missing}</span> estrelas. {reward.perk}
-                  .
-                </p>
-              </li>
-            ) : (
-              <li />
-            )}
-          </ul>
-        ) : (
-          <p className="text-lg font-semibold">
-            Seu passaporte está cheio. Reveja as fases e cace as três estrelas.
-          </p>
-        )}
-        <Link
-          to="/career-path"
-          className="font-condensed mt-auto inline-flex min-h-11 items-center gap-2 self-start text-lg font-extrabold uppercase underline decoration-2 underline-offset-4 hover:decoration-cover"
-        >
-          Ver a trilha de carimbos
-        </Link>
-      </div>
-    </section>
   );
 }

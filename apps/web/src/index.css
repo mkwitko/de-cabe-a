@@ -771,3 +771,328 @@
     repeating-linear-gradient(0deg, transparent 0 31px, rgb(40 90 160 / 0.12) 31px 32px),
     var(--color-paper);
 }
+
+/*
+ * Home, "Vestiário à noite": a locker room under one floodlight (by day, window light). The art
+ * is ours (public/img/vestiario-*.webp); the passport, stickers, ticket and jerseys sit in it.
+ * Entry once per tab: light on, cover opens, stickers slide out, ticket lands, last stamp thumps.
+ */
+:root {
+  --scene-art: url('/img/vestiario-day.webp');
+  --scene-night: 0;
+}
+:root[data-theme='dark'] {
+  --scene-art: url('/img/vestiario-night.webp');
+  --scene-night: 1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --scene-art: url('/img/vestiario-night.webp');
+    --scene-night: 1;
+  }
+}
+.scene {
+  --px: 0;
+  --py: 0;
+  --leather:
+    radial-gradient(#00000030 1px, transparent 1.5px) 0 0 / 4px 4px,
+    radial-gradient(circle at 30% 15%, #7a2633, #5b1a24 55%, #3d1018);
+}
+.scene-art {
+  position: fixed;
+  inset: -2%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    var(--scene-art) center 40% / cover no-repeat,
+    #0d120f;
+  transform: translate3d(calc(var(--px) * -10px), calc(var(--py) * -6px), 0);
+  transition: transform 900ms var(--ease-out-expo);
+}
+/* the floor fades to the ground colour so whatever scrolls below the bench stays legible */
+.scene-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 70%,
+    color-mix(in oklch, var(--color-pitch-deep) 85%, transparent)
+  );
+}
+/* the light's own glow on top of the painted one; it flickers on with the lamp */
+.scene-cone {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 38% 62% at 50% 4%,
+    rgb(255 214 150 / calc(0.22 * var(--scene-night))),
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+}
+.scene-dust {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  width: min(44vw, 34rem);
+  height: 62%;
+  translate: -50% 0;
+  opacity: calc(0.35 + 0.45 * var(--scene-night));
+  mix-blend-mode: screen;
+  animation: scene-fade 1.6s ease-out backwards;
+}
+.scene-dark {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: #050806;
+  opacity: 0;
+  animation: lights-on 900ms linear backwards;
+}
+@keyframes lights-on {
+  0%,
+  30% {
+    opacity: calc(0.9 * var(--scene-night));
+  }
+  36% {
+    opacity: calc(0.25 * var(--scene-night));
+  }
+  44% {
+    opacity: calc(0.8 * var(--scene-night));
+  }
+  52% {
+    opacity: calc(0.1 * var(--scene-night));
+  }
+  60% {
+    opacity: calc(0.45 * var(--scene-night));
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes scene-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The stage: on wide screens the passport rests on the bench line of the art. */
+.scene-stage {
+  padding-top: 0.5rem;
+}
+.scene-stage:has(.fan) {
+  padding-top: 3.75rem;
+}
+/* the header reads over the lamp: a soft band of shade along the top */
+.scene-art::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 9rem;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--color-pitch-deep) 70%, transparent),
+    transparent
+  );
+}
+.scene-tilt {
+  transform: perspective(1800px) rotateY(calc(var(--px) * 3deg)) rotateX(calc(var(--py) * -2deg));
+  transition: transform 900ms var(--ease-out-expo);
+}
+.book {
+  filter: drop-shadow(0 26px 22px rgb(0 0 0 / 0.55));
+}
+.leaf {
+  background: var(--leather);
+  box-shadow: inset 0 -14px 18px -12px rgb(0 0 0 / 0.6);
+  animation: leaf-in 1s 0.55s linear backwards;
+}
+.leaf-tool {
+  position: absolute;
+  inset: 0.6rem;
+  border: 1px solid rgb(231 194 106 / 0.4);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.page {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 27px, #c9b98f55 27px 28px),
+    radial-gradient(circle at 50% 40%, #f8f1dc, #f3ead2 60%, #e2d5b3);
+  box-shadow: inset 0 16px 18px -14px rgb(60 40 10 / 0.45);
+}
+.cover-front {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--leather);
+  transform-origin: 50% 0;
+  --axis: 1, 0, 0;
+  --swing: 180deg;
+  opacity: 0;
+  visibility: hidden;
+  animation: cover-open 1s 0.55s cubic-bezier(0.55, 0, 0.25, 1) backwards;
+}
+.cover-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #e7c26a;
+  text-shadow:
+    0 -1px 0 #0007,
+    0 1px 0 #fff3;
+  backface-visibility: hidden;
+  border: 1px solid rgb(231 194 106 / 0.4);
+  border-radius: inherit;
+}
+@keyframes cover-open {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    transform: perspective(1400px) rotate3d(var(--axis), 0deg);
+  }
+  80% {
+    opacity: 1;
+    visibility: visible;
+    transform: perspective(1400px) rotate3d(var(--axis), var(--swing));
+  }
+  100% {
+    opacity: 0;
+    visibility: visible;
+    transform: perspective(1400px) rotate3d(var(--axis), var(--swing));
+  }
+}
+/* the inside of the cover shows once the cover has swung past upright */
+@keyframes leaf-in {
+  0%,
+  45% {
+    opacity: 0;
+  }
+  46%,
+  100% {
+    opacity: 1;
+  }
+}
+/* stickers: on a phone a small fan peeking over the cover; wide, fanned out to its left */
+.fan {
+  position: absolute;
+  z-index: -1;
+  right: 2.5rem;
+  top: -3.5rem;
+  width: 7rem;
+  height: 9.4rem;
+  /* same sticker size everywhere; the phone shows the fan at half scale */
+  scale: 0.55;
+  transform-origin: 100% 0;
+}
+.fan-card {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  --k: calc(var(--i) - (var(--n) - 1) / 2);
+  rotate: calc(var(--k) * 11deg);
+  translate: calc(var(--k) * 2.6rem) 0;
+  animation: fan-out 600ms calc(1.35s + var(--i) * 70ms) var(--ease-out-expo) backwards;
+}
+@keyframes fan-out {
+  from {
+    rotate: 0deg;
+    translate: 0 2.5rem;
+    opacity: 0;
+  }
+}
+.ticket {
+  rotate: -1.5deg;
+  margin-top: -1.75rem;
+  animation: ticket-in 650ms 1.2s var(--ease-out-expo) backwards;
+}
+@keyframes ticket-in {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+    rotate: 6deg;
+  }
+}
+.stamp-hit {
+  animation: stamp-hit 520ms 1.75s cubic-bezier(0.3, 0, 0.2, 1) backwards;
+}
+@keyframes stamp-hit {
+  0% {
+    opacity: 0;
+    scale: 1.9;
+  }
+  60% {
+    opacity: 1;
+    scale: 0.9;
+  }
+  100% {
+    scale: 1;
+  }
+}
+/* jerseys sway a little when the pointer brushes them */
+.jersey-hang {
+  transform-origin: 50% 0;
+  rotate: var(--sway);
+  transition: rotate 700ms var(--ease-out-expo);
+}
+.jersey-hang:hover {
+  rotate: calc(var(--sway) * -3);
+}
+.jersey {
+  filter: drop-shadow(3px 10px 8px rgb(0 0 0 / 0.5)) saturate(0.75);
+}
+@media (width >= 64rem) {
+  .scene-stage,
+  .scene-stage:has(.fan) {
+    min-height: calc(100svh - 5.5rem);
+    padding-top: 2rem;
+    padding-bottom: max(2rem, calc(50svh - 0.16 * max(100svh, 56.25vw) - 1.5rem));
+  }
+  .book {
+    transform: perspective(1600px) rotateX(10deg);
+    transform-origin: 50% 100%;
+  }
+  .leaf {
+    box-shadow: inset -18px 0 22px -14px rgb(0 0 0 / 0.65);
+  }
+  .page {
+    box-shadow: inset 20px 0 22px -16px rgb(60 40 10 / 0.5);
+  }
+  .cover-front {
+    transform-origin: 0 50%;
+    --axis: 0, 1, 0;
+    --swing: -180deg;
+  }
+  .fan {
+    right: auto;
+    left: 2.5rem;
+    top: -6.25rem;
+    scale: 1;
+  }
+  .fan-card {
+    rotate: calc(-12deg + var(--i) * 7deg);
+    translate: calc(var(--i) * 3.4rem) calc(var(--i) * 0.15rem);
+  }
+  .ticket {
+    margin-top: 0;
+    rotate: 2.5deg;
+    translate: calc(var(--px) * 8px) calc(var(--py) * 5px);
+    transition: translate 900ms var(--ease-out-expo);
+  }
+}
+.scene[data-still] :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit, .scene-dust) {
+    animation: none;
+  }
+  .scene-art,
+  .scene-tilt,
+  .jersey-hang {
+    transition: none;
+  }
+}

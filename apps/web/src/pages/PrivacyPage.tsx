@@ -181,6 +181,11 @@ export function PrivacyPage() {
                 no seu aparelho.
               </li>
               <li>
+                <strong>Vestiário da página inicial</strong>: as imagens do vestiário (de dia e à
+                noite) e a poeira na luz são nossas, feitas para o De Cabeça F.C.; a animação usa o
+                player dotLottie (licença MIT).
+              </li>
+              <li>
                 Não usamos escudos de clubes. O De Cabeça F.C. não tem ligação com clubes,
                 federações ou jogadores citados.
               </li>
