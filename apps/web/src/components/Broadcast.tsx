@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { buzz } from '../lib/haptics';
 import { play } from '../lib/sound';
 import { Stars } from './Stars';
 
@@ -42,6 +43,7 @@ export function Broadcast({
   const [pts, setPts] = useState(0);
   const [done, setDone] = useState(false);
   const [shake, setShake] = useState(false);
+  const stopCrowd = useRef<(() => void) | void>(undefined);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
@@ -59,7 +61,10 @@ export function Broadcast({
           if (Math.random() < 0.5) play('tick');
           raf = requestAnimationFrame(step);
         } else {
-          if (!reducedMotion()) setShake(true);
+          if (!reducedMotion()) {
+            setShake(true);
+            buzz(60);
+          }
           setDone(true);
         }
       };
@@ -68,24 +73,26 @@ export function Broadcast({
     if (quick) {
       setLamps(3);
       setLit(true);
-      play('crowd');
+      stopCrowd.current = play('crowd');
       count(150, 500);
     } else {
       [330, 660, 990].forEach((ms, i) =>
         at(ms, () => {
           setLamps(i + 1);
           play('clunk');
+          buzz(15);
         }),
       );
       at(1240, () => {
         setLit(true);
-        play('crowd');
+        stopCrowd.current = play('crowd');
       });
       count(1540, 1100);
     }
     return () => {
       timers.forEach(clearTimeout);
       cancelAnimationFrame(raf);
+      stopCrowd.current?.();
     };
   }, [score, short]);
 

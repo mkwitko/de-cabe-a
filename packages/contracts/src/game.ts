@@ -345,6 +345,8 @@ export const AttemptSummary = z.strictObject({
   secondsLeft: z.number().nullable(),
   /** Time the level took, once finished (shown in both modes). */
   durationSec: z.number().nullable(),
+  /** ISO time the level finished; null while in progress. */
+  completedAt: z.string().nullable(),
 });
 export type AttemptSummary = z.infer<typeof AttemptSummary>;
 

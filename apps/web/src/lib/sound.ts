@@ -75,6 +75,7 @@ function noise(start: number, dur: number, gain: number, freq: number) {
   g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + start + dur);
   src.connect(filter).connect(g).connect(a.destination);
   src.start(a.currentTime + start);
+  return { src, g };
 }
 
 export type Sound =
@@ -90,7 +91,8 @@ export type Sound =
   | 'shimmer'
   | 'rarity';
 
-export function play(sound: Sound) {
+/** Returns a stop function for 'crowd' only (the broadcast's Pular cuts the roar). */
+export function play(sound: Sound): (() => void) | void {
   if (!soundOn()) return;
   try {
     if (sound === 'whistle') {
@@ -123,7 +125,14 @@ export function play(sound: Sound) {
       tone(55, 0, 0.25, 'triangle', 0.2);
     } else if (sound === 'crowd') {
       // Swell: a roar that opens up, then fades.
-      noise(0, 3.1, 0.12, 1100);
+      const { src, g } = noise(0, 3.1, 0.12, 1100);
+      return () => {
+        const t = audio().currentTime;
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+        src.stop(t + 0.2);
+      };
     } else if (sound === 'tick') {
       tone(1400, 0, 0.03, 'square', 0.04);
     } else if (sound === 'shimmer') {

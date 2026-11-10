@@ -14,7 +14,7 @@ import { Reactions } from '../components/Reactions';
 import { Stars } from '../components/Stars';
 import { Broadcast } from '../components/Broadcast';
 import { StickerReveal } from '../components/StickerReveal';
-import { ceremonyLength, markCeremony } from '../lib/ceremony';
+import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
 
@@ -86,13 +86,13 @@ export function LevelEnd({
   const { mode, level, stars, score } = data.attempt;
   // Broadcast, then the sticker (if any), then the usual end screen. Losses skip both.
   const [stage, setStage] = useState<'broadcast' | 'sticker' | 'end'>(
-    stars > 0 ? 'broadcast' : 'end',
+    stars > 0 && recentCompletion(data.attempt.completedAt) ? 'broadcast' : 'end',
   );
   const today = new Date().toLocaleDateString('en-CA');
   const [short] = useState(() => ceremonyLength(mode, today) === 'short');
   useEffect(() => {
-    if (stars > 0) markCeremony(mode, today);
-  }, [stars, mode, today]);
+    if (stage === 'broadcast') markCeremony(mode, today);
+  }, [stage, mode, today]);
   /** Oficina levels (no track number) have no next level, track ranking or training. */
   const oficina = level === 0;
   const trackQ = useTrack(mode);

@@ -247,6 +247,7 @@ export async function present(
           ? Math.max(0, (attempt.deadlineAt.getTime() - now.getTime()) / 1000)
           : null,
       durationSec: durationSec(attempt),
+      completedAt: attempt.completedAt?.toISOString() ?? null,
     },
     ...(event !== undefined ? { event: event as NonNullable<AttemptResponse['event']> } : {}),
     view,

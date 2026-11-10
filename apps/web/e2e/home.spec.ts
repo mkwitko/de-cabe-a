@@ -1,13 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Skip the end-of-level ceremony (broadcast, then the sticker when the level awards one). */
-async function skipCeremony(page: Page) {
-  for (const name of ['Resultado', 'Figurinha nova'])
-    await page
-      .getByRole('dialog', { name })
-      .getByRole('button', { name: /Pular|Continuar/ })
-      .click({ timeout: name === 'Resultado' ? 5000 : 2500 })
-      .catch(() => {});
+/** Skip the end-of-level ceremony: the broadcast, then the sticker when the level awards one. */
+async function skipCeremony(page: Page, { sticker = true } = {}) {
+  const pular = (name: string) =>
+    page.getByRole('dialog', { name }).getByRole('button', { name: /Pular|Continuar/ });
+  await pular('Resultado').click({ timeout: 5000 });
+  if (sticker) await pular('Figurinha nova').click({ timeout: 5000 });
 }
 
 /** Main flow (TEST_STRATEGY.md §3, adapted to the level tracks of ADR-007). One guest across the journey. */

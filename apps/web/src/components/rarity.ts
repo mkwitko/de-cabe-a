@@ -15,7 +15,7 @@ export const RARITY_ORDER: StickerRarity[] = [
 /**
  * The eight finishes (spec, "Raridade e álbum"). `className` sets custom properties read by the
  * reveal: --rc label colour, --face card ground, --ink card text, --edge frame, --holo sheen
- * (`sheen` animates it, `holo-follow` lets it track the pointer).
+ * (`sheen` animates it; `holo-follow` makes it track the pointer).
  */
 export const RARITY_STYLE: Record<StickerRarity, { label: string; className: string }> = {
   bronze: {

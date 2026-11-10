@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { StickerAward } from '@decabeca/contracts';
+import { buzz } from '../lib/haptics';
 import { play } from '../lib/sound';
 import { Lamps, reducedMotion } from './Broadcast';
 import { RARITY_ORDER, RARITY_STYLE } from './rarity';
@@ -37,6 +38,7 @@ export function StickerReveal({
         at(ms, () => {
           setLamps(i + 1);
           play('clunk');
+          buzz(15);
         }),
       );
     const t0 = quick ? 100 : intro + 250;
@@ -51,17 +53,19 @@ export function StickerReveal({
     at(t0 + (quick ? 700 : 2150 + hold), () => {
       setPhase('named');
       play('stamp');
+      if (!reducedMotion()) buzz(30);
     });
     return () => timers.forEach(clearTimeout);
   }, [level, short]);
 
   const onMove = (e: React.PointerEvent) => {
     if (phase !== 'named' || reducedMotion() || !stage.current || !tilt.current) return;
+    const follow = stage.current.classList.contains('holo-follow');
     const r = stage.current.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width;
     const y = (e.clientY - r.top) / r.height;
     tilt.current.style.transform = `rotateY(${(x - 0.5) * 28}deg) rotateX(${(0.5 - y) * 24}deg)`;
-    if (strip.current) strip.current.style.transform = `translateX(${(x - 0.5) * 60}%)`;
+    if (follow && strip.current) strip.current.style.transform = `translateX(${(x - 0.5) * 60}%)`;
   };
 
   const revealed = phase === 'card' || phase === 'named';
