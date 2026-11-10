@@ -191,40 +191,79 @@ export function Broadcast({
   }, [done, promoted]);
 
   const fade = 'transition-opacity duration-500 motion-reduce:duration-200';
+  const action = (
+    <button
+      type="button"
+      onClick={() => onDoneRef.current()}
+      className={`font-condensed group inline-flex min-h-14 shrink-0 items-center justify-center gap-2 px-6 text-xl lg:min-h-20 lg:px-10 lg:text-2xl font-black tracking-wide uppercase transition-[background-color,color] duration-200 ${
+        done
+          ? 'bg-cover text-ink hover:bg-[oklch(0.92_0.17_95)]'
+          : 'bg-white/[0.06] text-white/80 hover:bg-white/[0.12] hover:text-white'
+      }`}
+    >
+      {done ? 'Continuar' : 'Pular'}
+      {done && (
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className="size-6 fill-none stroke-current stroke-[2.5] [stroke-linecap:round] [stroke-linejoin:round] motion-safe:animate-[nudge-x_1.4s_var(--ease-out-expo)_infinite]"
+        >
+          <path d="M5 12h13M13 6l6 6-6 6" />
+        </svg>
+      )}
+    </button>
+  );
   return (
     <div
       role="dialog"
       aria-label="Resultado"
-      className="screen-overlay fixed inset-0 z-50 overflow-hidden bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white"
+      className="screen-overlay fixed inset-0 z-50 overflow-hidden bg-[#070b14] text-white"
     >
       <div
         className="absolute inset-0 motion-safe:data-[shake=true]:animate-[bc-shake_320ms_linear]"
         data-shake={shake}
         style={{ '--amp': `${2 + stars * 2}px` } as React.CSSProperties}
       >
+        {/* One stadium at night: sky, the stands lit by the floodlights, the pitch running away from
+            the camera. Each layer fades into the next; there is no flat band. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(#05080f_0%,#0b1322_38%,#0f1a24_56%,#0b1a12_100%)]"
+        />
+        <div
+          aria-hidden="true"
+          className={`absolute inset-x-0 top-[26%] h-[36%] [mask-image:linear-gradient(transparent,black_30%,black_70%,transparent)] ${fade} ${lit ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(180deg,rgb(255_255_255/0.035)_0_2px,transparent_2px_14px)]" />
+          <div
+            className={`absolute inset-0 bg-[radial-gradient(#e9eef8_1px,transparent_1.6px),radial-gradient(#f5c400_1px,transparent_1.6px)] bg-[length:8px_7px,13px_11px] bg-[position:0_0,4px_3px] opacity-30 ${lit ? 'motion-safe:animate-[crowd-step_500ms_steps(2)_infinite]' : ''}`}
+          />
+        </div>
+        <div
+          aria-hidden="true"
+          className={`absolute inset-x-0 bottom-0 h-[50%] overflow-hidden [perspective:520px] [perspective-origin:50%_-10%] [mask-image:linear-gradient(transparent,black_22%)] ${fade} ${lit ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <div className="absolute -inset-x-[70%] top-0 h-[240%] origin-top [transform:rotateX(58deg)] bg-[radial-gradient(circle_at_50%_34%,transparent_0_9%,rgb(255_255_255/0.5)_9%_9.5%,transparent_9.5%),linear-gradient(90deg,transparent_calc(50%-1.5px),rgb(255_255_255/0.5)_calc(50%-1.5px)_calc(50%+1.5px),transparent_calc(50%+1.5px)),repeating-linear-gradient(90deg,#1f7a3d_0_5%,#1a6a35_5%_10%)]" />
+          {/* Floodlight pools on the grass, continuous with the lamps above. */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_10%,rgb(235_242_255/0.22),transparent_70%),linear-gradient(transparent_40%,rgb(3_8_6/0.75))]" />
+        </div>
         <Lamps on={lamps} />
-        <div
-          aria-hidden="true"
-          className={`absolute inset-x-0 top-[34%] h-[22%] bg-[radial-gradient(#e9eef8_1px,transparent_1.6px),radial-gradient(#f5c400_1px,transparent_1.6px)] bg-[length:8px_7px,13px_11px] bg-[position:0_0,4px_3px] ${fade} ${lit ? 'opacity-30 motion-safe:animate-[crowd-step_500ms_steps(2)_infinite]' : 'opacity-0'}`}
-        />
-        <div
-          aria-hidden="true"
-          className={`absolute -inset-x-[30%] -bottom-[6%] h-[52%] origin-bottom [transform:rotateX(64deg)] bg-[repeating-linear-gradient(90deg,#1e7039_0_12%,#1a6533_12%_24%)] ${fade} ${lit ? 'opacity-100' : 'opacity-0'}`}
-        />
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-4">
-          {hero ? <span /> : <Stars n={stars} size="size-7" animate />}
+
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))]">
+          <span className="flex items-center gap-2 text-xs font-extrabold tracking-[0.18em] uppercase">
+            <span className="size-2 rounded-full bg-[#e5484d] motion-safe:animate-pulse" />
+            Ao vivo
+          </span>
           <span className="text-xs font-extrabold tracking-[0.18em] uppercase opacity-80">
             De Cabeça F.C.
           </span>
         </div>
 
         {hero ? (
-          <div
-            className={`absolute inset-x-0 top-14 mx-auto flex max-w-3xl flex-col items-center justify-center gap-3 px-5 ${promoted ? 'bottom-40' : 'bottom-24'}`}
-          >
+          <div className="absolute inset-x-0 top-12 bottom-44 mx-auto flex max-w-3xl flex-col items-center justify-center gap-3 px-5 sm:bottom-36">
             <BigScreen hero={hero} on={screen} />
             <h2
-              className={`font-condensed max-w-full text-center text-[clamp(3rem,17vw,7.5rem)] leading-[0.84] font-black tracking-[-0.01em] text-balance uppercase [text-shadow:0_6px_18px_rgb(0_0_0/0.6)] transition-[opacity,transform,clip-path] duration-500 ease-[var(--ease-out-expo)] motion-reduce:transition-opacity ${
+              className={`font-condensed max-w-full text-center text-[clamp(3rem,15vw,7.5rem)] leading-[0.84] font-black tracking-[-0.01em] text-balance uppercase [text-shadow:0_6px_18px_rgb(0_0_0/0.6)] transition-[opacity,transform,clip-path] duration-500 ease-[var(--ease-out-expo)] motion-reduce:transition-opacity ${
                 named
                   ? 'translate-y-0 opacity-100 [clip-path:inset(-20%_-5%_-20%_-5%)]'
                   : 'translate-y-4 opacity-0 [clip-path:inset(100%_-5%_-20%_-5%)] motion-reduce:translate-y-0'
@@ -232,74 +271,61 @@ export function Broadcast({
             >
               {hero.name}
             </h2>
-            {named && (
-              <div className="flex flex-col items-center gap-1.5 motion-safe:animate-[fade-in_300ms_both]">
-                <p className="font-condensed text-center text-xl leading-none font-extrabold tracking-wide text-cover uppercase sm:text-2xl">
-                  {headline}
-                </p>
-                <p className="flex items-center gap-3">
-                  <Stars n={stars} size="size-6" animate />
-                  <span className="font-condensed tabular text-2xl leading-none font-black">
-                    {pts}
-                    <span className="ml-1 text-sm font-extrabold tracking-[0.2em] uppercase opacity-70">
-                      pts
-                    </span>
-                  </span>
-                </p>
-              </div>
-            )}
           </div>
         ) : (
-          <>
-            <p
-              className={`absolute inset-x-0 top-[22%] text-center text-[clamp(88px,30vw,150px)] leading-none font-black tracking-tighter tabular-nums transition-[opacity,transform] duration-300 ${lit ? 'opacity-100' : 'scale-75 opacity-0'}`}
-            >
-              {pts}
-              <small className="block text-sm font-extrabold tracking-[0.3em] uppercase opacity-70">
-                pontos
-              </small>
-            </p>
-            <div
-              className={`absolute inset-x-0 bottom-24 mx-auto max-w-3xl px-5 transition-[opacity,transform] duration-500 ${lit ? 'opacity-100' : 'translate-y-8 opacity-0'}`}
-            >
-              <div className="rounded-lg bg-cover px-4 py-3 text-ink">
-                <h2 className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-5xl">
-                  {headline}
-                </h2>
-                <div className="mt-1 text-sm leading-snug font-semibold">{detail}</div>
-              </div>
-            </div>
-          </>
+          <p
+            className={`font-condensed tabular absolute inset-x-0 top-[20%] text-center text-[clamp(88px,30vw,150px)] leading-none font-black transition-[opacity,transform] duration-300 ${lit ? 'opacity-100' : 'scale-75 opacity-0'}`}
+          >
+            {pts}
+            <small className="block text-sm font-extrabold tracking-[0.3em] uppercase opacity-70">
+              pontos
+            </small>
+          </p>
         )}
 
-        {promoted && (
+        {/* The TV lower third: the verdict, stars and points, and the way on, as one graphic. */}
+        <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] mx-auto max-w-3xl sm:inset-x-8 lg:max-w-4xl sm:bottom-[max(2rem,env(safe-area-inset-bottom))]">
+          {promoted && (
+            <div
+              role="status"
+              className={`ml-3 inline-flex items-center gap-2 rounded-t-md px-3 py-1.5 text-ink transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${done ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
+              style={{ background: titleTone(promoted) }}
+            >
+              <TitleBadge name={promoted} className="size-7" />
+              <p className="font-condensed text-lg leading-none font-black uppercase">
+                Promovido a {promoted}
+              </p>
+            </div>
+          )}
+          {/* Until his name lands only "Pular" shows, at the graphic's right end. */}
           <div
-            role="status"
-            className={`absolute inset-x-5 mx-auto flex max-w-md items-center gap-3 rounded-lg px-4 py-2.5 text-ink transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${hero ? 'bottom-24' : 'top-[60%]'} ${done ? 'opacity-100' : 'translate-y-3 opacity-0'}`}
-            style={{ background: titleTone(promoted) }}
+            className={`flex flex-col overflow-hidden rounded-lg border-t-[3px] border-cover bg-[#0d1626]/95 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.9)] sm:flex-row sm:items-stretch ${named || !hero ? 'w-full' : 'ml-auto w-fit'}`}
           >
-            <TitleBadge name={promoted} className="size-10" />
-            <p className="font-condensed text-2xl leading-none font-black uppercase">
-              Promovido a {promoted}
-            </p>
+            {(named || !hero) && (
+              <div className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3 motion-safe:animate-[fade-in_400ms_both] lg:min-h-20 lg:gap-5 lg:px-6">
+                <div className="min-w-0 flex-1">
+                  <p className="font-condensed text-xl leading-none font-black tracking-wide text-cover uppercase sm:text-2xl lg:text-3xl">
+                    {headline}
+                  </p>
+                  {!hero && <div className="mt-1 text-sm leading-snug text-white/80">{detail}</div>}
+                </div>
+                <Stars n={stars} size="size-6 sm:size-7 lg:size-8" animate />
+                <span className="font-condensed tabular text-3xl leading-none font-black lg:text-4xl">
+                  {pts}
+                  <span className="ml-1 text-sm font-extrabold tracking-[0.2em] uppercase opacity-70">
+                    pts
+                  </span>
+                </span>
+              </div>
+            )}
+            {action}
           </div>
-        )}
+        </div>
       </div>
       <p aria-live="polite" className="sr-only">
         {hero ? `Era ${hero.name}! ` : 'Acertou! '}
         {score} pontos
       </p>
-      <button
-        type="button"
-        onClick={() => onDoneRef.current()}
-        className={
-          done
-            ? 'font-condensed absolute inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] mx-auto min-h-14 max-w-md rounded-xl bg-cover text-xl font-black tracking-wide text-ink uppercase shadow-[0_10px_24px_-8px_rgb(0_0_0/0.7)] motion-safe:animate-[fade-in_300ms_both]'
-            : 'absolute right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] min-h-11 rounded-full border-2 border-white/60 px-5 font-extrabold text-white'
-        }
-      >
-        {done ? 'Continuar' : 'Pular'}
-      </button>
     </div>
   );
 }

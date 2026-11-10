@@ -227,6 +227,17 @@
     transform: none;
   }
 }
+/* An arrow leaning toward where the action goes. */
+@keyframes nudge-x {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: translateX(4px);
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;
