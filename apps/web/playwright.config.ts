@@ -60,7 +60,10 @@ export default defineConfig({
       command: `pnpm exec vite --port ${LAUNCH_PORT} --strictPort`,
       url: `http://localhost:${LAUNCH_PORT}`,
       // A dummy AdSense client turns the consent banner on; AdSense itself loads only after "Aceitar".
-      env: { API_URL: `http://127.0.0.1:${API_PORT}`, VITE_ADSENSE_CLIENT: 'ca-pub-0000000000000000' },
+      env: {
+        API_URL: `http://127.0.0.1:${API_PORT}`,
+        VITE_ADSENSE_CLIENT: 'ca-pub-0000000000000000',
+      },
       reuseExistingServer: false,
     },
   ],
