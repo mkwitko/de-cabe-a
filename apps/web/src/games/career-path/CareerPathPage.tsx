@@ -151,7 +151,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       const res = await action.mutateAsync({ attemptId: data!.attempt.id, input });
       setSelected(null);
       const ev = res.event;
-      if (ev?.type === 'wrong') setFlash((n) => n + 1);
+      if (ev?.type === 'wrong' || ev?.type === 'lost') setFlash((n) => n + 1);
       setAnnounce(
         ev?.type === 'correct'
           ? 'Acertou!'
@@ -168,7 +168,9 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
   const clubs = done && reveal ? reveal.trajectory : view.revealed;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] sm:h-[calc(100dvh-9rem)]'}`}
+    >
       <GameHeader
         title={title}
         aside={
@@ -197,18 +199,14 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       )}
 
       {!done && (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
+        <div className="mx-auto flex max-h-20 w-full max-w-2xl shrink-0 flex-wrap gap-2 overflow-y-auto">
           <Clues view={view} />
           <Guesses view={view} />
         </div>
       )}
       <section
         aria-labelledby="path-title"
-        className={
-          done
-            ? 'h-[28rem] sm:h-[34rem]'
-            : 'h-[calc(100dvh-24rem)] min-h-[18rem] sm:h-[calc(100dvh-18rem)] sm:min-h-[26rem]'
-        }
+        className={done ? 'h-[28rem] sm:h-[34rem]' : 'min-h-0 flex-1'}
       >
         <h2 id="path-title" className="sr-only">
           Trajetória
@@ -226,7 +224,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
         <LevelEnd data={data} {...resultCopy(data)} />
       ) : (
         <form
-          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4"
+          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 backdrop-blur sm:relative sm:inset-x-auto sm:bottom-auto sm:shrink-0 sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (selected)
@@ -271,7 +269,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
         </form>
       )}
       {/* room for the guess form docked at the bottom on phones */}
-      {!done && <div className="h-32 sm:hidden" aria-hidden="true" />}
+      {!done && <div className="h-20 shrink-0 sm:hidden" aria-hidden="true" />}
     </div>
   );
 }

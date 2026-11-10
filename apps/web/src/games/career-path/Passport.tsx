@@ -27,11 +27,11 @@ function Stamp({
   const stats = statsLabel(club.appearances, club.goals);
   return (
     <div
-      className={`relative flex aspect-[1.15] h-[88%] max-w-[92%] flex-col items-center justify-center border-[3px] border-current text-center opacity-90 mix-blend-multiply ${hit ? 'stamp-hit' : ''}`}
+      className={`relative flex h-[92%] w-[94%] max-w-72 flex-col items-center justify-center border-[3px] border-current text-center opacity-90 mix-blend-multiply ${hit ? 'stamp-hit' : ''}`}
       style={
         {
           color: clubColor(club.clubName, 0.38),
-          borderRadius: i % 2 ? '14px' : '50%',
+          borderRadius: i % 2 ? '14px' : '999px',
           '--rot': `${ROT[i % ROT.length]}deg`,
           transform: `rotate(${ROT[i % ROT.length]}deg)`,
           animationDelay: delay ? `${delay}ms` : undefined,
@@ -42,16 +42,20 @@ function Stamp({
         aria-hidden="true"
         className="absolute inset-[5px] rounded-[inherit] border-[1.5px] border-current"
       />
-      <span className="text-[11px] font-extrabold tracking-[0.14em] uppercase">
+      <span className="text-[clamp(0.45rem,9cqh,0.7rem)] font-extrabold tracking-[0.14em] uppercase">
         {club.isLoan ? 'Empréstimo' : 'Entrada'}
       </span>
-      <b className="font-condensed mt-1 max-w-[86%] text-[clamp(1.1rem,4.6vw,1.6rem)] leading-[0.95] font-black uppercase">
+      <b className="font-condensed mt-[2cqh] line-clamp-2 max-w-[86%] text-[clamp(0.7rem,22cqh,1.6rem)] leading-[0.95] font-black break-words uppercase">
         {club.clubName}
       </b>
-      <span className="tabular mt-1 text-xs font-bold">
+      <span className="tabular mt-[2cqh] text-[clamp(0.5rem,10cqh,0.75rem)] font-bold">
         {yearsLabel(club.fromYear, club.toYear)}
       </span>
-      {stats && <span className="tabular mt-0.5 text-xs font-bold opacity-85">{stats}</span>}
+      {stats && (
+        <span className="tabular text-[clamp(0.5rem,10cqh,0.75rem)] font-bold opacity-85">
+          {stats}
+        </span>
+      )}
     </div>
   );
 }
@@ -72,20 +76,30 @@ export function Passport({
   const fresh = useRef(!opened); // cover still shut at mount: stamp 1 waits for the cover
   const landed = useRef(opened ? clubs.length : 0);
   const timer = useRef<number>(0);
+  const pendingFrom = useRef<number | null>(null); // landed count to restore if the timer is cut
   const [shaking, setShaking] = useState(false);
 
   useEffect(() => {
     if (!opened || landed.current >= clubs.length) return;
     const wait = (landed.current === 0 && fresh.current ? OPEN_MS : 0) + 200;
+    pendingFrom.current ??= landed.current;
     landed.current = clubs.length;
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
+      pendingFrom.current = null;
       play('stamp');
       buzz(25);
       setShaking(true);
     }, wait);
   }, [opened, clubs.length]);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  // Idempotent under StrictMode's fake unmount: an unfired stamp is rescheduled by the effect above.
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+      if (pendingFrom.current !== null) landed.current = pendingFrom.current;
+    },
+    [],
+  );
 
   const base = useRef(opened ? clubs.length : 0).current; // stamps present on resume stay still
   const slots = Math.max(total, clubs.length) - clubs.length;
@@ -108,15 +122,15 @@ export function Passport({
             aria-hidden="true"
             className="absolute inset-x-5 top-3.5 flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
           >
-            <span>Passaporte do jogador</span>
-            <span>De Cabeça</span>
+            <span className="whitespace-nowrap">Passaporte do jogador</span>
+            <span className="hidden whitespace-nowrap sm:inline">De Cabeça</span>
           </div>
           <ol
             aria-label={label}
             className="absolute inset-x-2.5 top-11 bottom-2.5 grid grid-cols-2 [grid-auto-rows:minmax(0,1fr)] gap-1 sm:bottom-24"
           >
             {clubs.map((c, i) => (
-              <li key={i} className="grid min-h-0 min-w-0 place-items-center">
+              <li key={i} className="grid min-h-0 min-w-0 place-items-center [container-type:size]">
                 <Stamp
                   club={c}
                   i={i}
@@ -126,7 +140,7 @@ export function Passport({
               </li>
             ))}
             {Array.from({ length: slots }, (_, i) => (
-              <li key={`q${i}`} aria-hidden="true" className="grid place-items-center">
+              <li key={`q${i}`} aria-hidden="true" className="grid min-h-0 place-items-center">
                 <span className="font-condensed grid aspect-square w-[60%] max-w-32 place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a55]">
                   ?
                 </span>
