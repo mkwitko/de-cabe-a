@@ -1423,7 +1423,17 @@
   animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .scene :is(.scene-dark, .leaf, .cover-front, .fan-card, .ticket, .stamp-hit, .scene-dust, .scene-dust i) {
+  .scene
+    :is(
+      .scene-dark,
+      .leaf,
+      .cover-front,
+      .fan-card,
+      .ticket,
+      .stamp-hit,
+      .scene-dust,
+      .scene-dust i
+    ) {
     animation: none;
   }
   .scene-art,
