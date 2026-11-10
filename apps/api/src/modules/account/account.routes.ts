@@ -102,7 +102,7 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       if (live?.user.id !== req.userId)
         throw new AppError(
           401,
-          'SIGN_IN_REQUIRED',
+          'UNAUTHORIZED',
           'Entre na sua conta de novo para excluir os dados.',
         );
     }

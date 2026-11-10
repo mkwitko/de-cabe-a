@@ -88,7 +88,7 @@ export function AccountData({
           {error && (
             <p role="alert" className="font-semibold text-gold">
               {error.message}
-              {error.code === 'SIGN_IN_REQUIRED' ? '' : ' Tente de novo.'}
+              {error.code === 'UNAUTHORIZED' ? '' : ' Tente de novo.'}
             </p>
           )}
           <div className="flex flex-wrap gap-3">
