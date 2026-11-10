@@ -211,7 +211,9 @@ function CareerSheet({ cp }: { cp: StatsResponse['CAREER_PATH'] }) {
 export function StatsPage() {
   const { data } = useStats();
   const me = useMe().data;
-  const ents = useEntitlements(!!me?.account && isPageLaunched('clube')).data;
+  const ents = useEntitlements(
+    !!me?.account && (isPageLaunched('clube') || isPageLaunched('apoie')),
+  ).data;
   const album = useAlbum().data;
   if (!data) return <Skeleton className="h-96" />;
   const grid = data.FOOTBALL_GRID;
@@ -314,6 +316,7 @@ export function StatsPage() {
             stickers={album?.owned}
             guest={guest}
             member={!!ents?.clube.active}
+            supporter={!!ents?.supporter}
             className="max-w-lg"
           />
           {guest && (

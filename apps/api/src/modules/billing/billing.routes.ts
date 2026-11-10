@@ -1,4 +1,5 @@
 import {
+  APOIO_NOTE,
   CATALOG,
   CheckoutRequest,
   EntitlementsResponse,
@@ -9,6 +10,7 @@ import {
   RedirectResponse,
 } from '@decabeca/contracts';
 import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type Stripe from 'stripe';
 import { AppError } from '../../errors';
@@ -19,6 +21,7 @@ import {
   clubeStatus,
   entitlements,
   handleEvent,
+  supportOf,
   type BillingDeps,
 } from './billing';
 
@@ -26,8 +29,7 @@ import {
 const INTEGRATION_ID = 'decabeca-checkout-qmrtzvkh';
 /** Stripe wants a trial end at least 48 h ahead. */
 const MIN_TRIAL_MS = 49 * 3600_000;
-
-/** Accounts only: guests are asked to sign in first (the web sends them to /conta). */
+/** Accounts only: guests are asked to sign in first (the web sends them to /entrar). */
 function accountOf(req: { userId: string | null }) {
   if (!req.userId) throw new AppError(401, 'UNAUTHORIZED', 'Entre na sua conta para continuar.');
   return req.userId;
@@ -102,9 +104,14 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
     '/billing/checkout',
     { schema: { body: CheckoutRequest, response: { 200: RedirectResponse } } },
     async (req) => {
+      const product = CATALOG[req.body.product];
+      // Apoie is open to guests: Checkout asks for the e-mail; only the thank-you needs an account.
+      if (product.kind === 'apoio')
+        return {
+          url: await donate(req.userId, product.interval ? undefined : (req.body.amount ?? 0)),
+        };
       const userId = accountOf(req);
       const b = billing();
-      const product = CATALOG[req.body.product];
       const price = b.prices[product.key];
       if (!price)
         throw new AppError(503, 'BILLING_UNAVAILABLE', 'Este item não está à venda agora.');
@@ -161,19 +168,76 @@ export const billingRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  /** Stripe's Customer Portal: change card, cancel at period end, invoices. */
-  app.post('/billing/portal', { schema: { response: { 200: RedirectResponse } } }, async (req) => {
-    const userId = accountOf(req);
+  /**
+   * Apoie: a one-time amount the donor picks (price_data; card or Pix) or, with no amount, the
+   * monthly price (accounts only). A guest gives as themselves (Checkout collects the e-mail) and
+   * nothing is kept here; an account's payment is recorded so the webhook marks it a supporter.
+   */
+  async function donate(userId: string | null, amount: number | undefined) {
     const b = billing();
-    const customer = await prisma.billingCustomer.findUnique({ where: { userId } });
-    if (!customer) throw new AppError(404, 'NOT_FOUND', 'Nenhuma assinatura nesta conta.');
-    const s = await b.stripe.billingPortal.sessions.create({
-      customer: customer.stripeCustomerId,
-      return_url: `${b.webOrigin}/clube`,
+    const monthly = amount === undefined;
+    if (!monthly && !amount)
+      throw new AppError(400, 'VALIDATION_ERROR', 'Escolha um valor a partir de R$ 5.');
+    // Monthly needs an account: it is where the apoio is managed and cancelled.
+    if (monthly && !userId)
+      throw new AppError(401, 'UNAUTHORIZED', 'Entre na sua conta para apoiar todo mês.');
+    const price = b.prices.apoio_mensal;
+    if (monthly && !price)
+      throw new AppError(503, 'BILLING_UNAVAILABLE', 'O apoio mensal não está disponível agora.');
+    if (monthly && userId && (await supportOf(prisma, userId, now())).supportsMonthly)
+      throw new AppError(409, 'ALREADY_SUBSCRIBED', 'Você já apoia todo mês. Valeu!');
+    const back = `${b.webOrigin}/apoie`;
+    const session = await b.stripe.checkout.sessions.create({
+      ...(userId ? { customer: await customerFor(b, userId), client_reference_id: userId } : {}),
+      mode: monthly ? 'subscription' : 'payment',
+      line_items: [
+        monthly
+          ? { price: price!, quantity: 1 }
+          : {
+              quantity: 1,
+              price_data: {
+                currency: 'brl',
+                unit_amount: amount,
+                product_data: { name: 'Apoio ao De Cabeça F.C.' },
+              },
+            },
+      ],
+      ...(monthly ? {} : { submit_type: 'donate' as const }),
+      custom_text: { submit: { message: APOIO_NOTE } },
       locale: 'pt-BR',
+      integration_identifier: INTEGRATION_ID,
+      success_url: `${back}?apoio=ok`,
+      cancel_url: `${back}?apoio=cancelado`,
     });
-    return { url: s.url };
-  });
+    if (userId && !monthly)
+      await prisma.purchase.create({
+        data: { checkoutSessionId: session.id, userId, product: 'apoio_avulso', amount },
+      });
+    return session.url!;
+  }
+
+  /** Stripe's Customer Portal: change card, cancel at period end, invoices. */
+  app.post(
+    '/billing/portal',
+    {
+      schema: {
+        querystring: z.object({ volta: z.enum(['clube', 'apoie']).default('clube') }),
+        response: { 200: RedirectResponse },
+      },
+    },
+    async (req) => {
+      const userId = accountOf(req);
+      const b = billing();
+      const customer = await prisma.billingCustomer.findUnique({ where: { userId } });
+      if (!customer) throw new AppError(404, 'NOT_FOUND', 'Nenhuma assinatura nesta conta.');
+      const s = await b.stripe.billingPortal.sessions.create({
+        customer: customer.stripeCustomerId,
+        return_url: `${b.webOrigin}/${req.query.volta}`,
+        locale: 'pt-BR',
+      });
+      return { url: s.url };
+    },
+  );
 
   /**
    * Redeems a Clube gift: the months start when the current Clube time ends. With a renewing

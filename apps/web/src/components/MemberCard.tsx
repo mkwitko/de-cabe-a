@@ -3,6 +3,20 @@ import { TitleBadge } from './TitleBadge';
 import { titleFrame, titleTone } from '../lib/format';
 import { ClubeSeal } from './Icons';
 
+/** "Apoiador": a thank-you for supporting the project (/apoie). Only a tag, nothing in play. */
+export function SupporterTag({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={`font-condensed inline-flex items-center gap-1.5 rounded-full border-2 border-current px-2.5 py-0.5 text-xs leading-none font-black tracking-[0.14em] whitespace-nowrap uppercase ${className}`}
+    >
+      <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5" fill="currentColor">
+        <path d="M8 14.2 2.3 8.6A3.4 3.4 0 0 1 7.1 3.8L8 4.7l.9-.9a3.4 3.4 0 0 1 4.8 4.8z" />
+      </svg>
+      Apoiador
+    </span>
+  );
+}
+
 /**
  * Carteirinha de sócio: the member's card on /stats and /perfil/:apelido. The outer ring is the
  * title's frame (its ladder reward); the field is the title's colour. The name leads, the title
@@ -16,6 +30,7 @@ export function MemberCard({
   stickers,
   guest = false,
   member = false,
+  supporter = false,
   heading = 'h1',
   className = 'max-w-md',
 }: {
@@ -28,6 +43,8 @@ export function MemberCard({
   guest?: boolean;
   /** Clube member: the strip carries the member seal (cosmetic only). */
   member?: boolean;
+  /** Has supported the project: a small "Apoiador" tag beside the title (thank-you only). */
+  supporter?: boolean;
   heading?: 'h1' | 'h2';
   className?: string;
 }) {
@@ -83,6 +100,7 @@ export function MemberCard({
                 <span className="sr-only">Título: </span>
                 {title}
               </p>
+              {supporter && <SupporterTag className="text-ink" />}
             </div>
           </div>
           <dl

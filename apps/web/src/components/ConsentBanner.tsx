@@ -8,6 +8,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { sceneFor } from '../lib/music';
+import { isPageLaunched } from '../lib/launch';
 import {
   CONSENT_NEEDED,
   closeConsentPanel,
@@ -213,6 +214,7 @@ function Choice({
 export function LegalLinks() {
   const { pathname } = useLocation();
   if (pathname !== '/' && pathname !== '/conta') return null;
+  const apoie = isPageLaunched('apoie');
   const link = 'inline-flex min-h-11 items-center underline underline-offset-4 hover:text-chalk';
   return (
     <nav
@@ -231,6 +233,11 @@ export function LegalLinks() {
       <button type="button" className={link} onClick={openConsentPanel}>
         Preferências de cookies
       </button>
+      {apoie && (
+        <Link to="/apoie" className={`${link} font-semibold text-cover`}>
+          Apoie o projeto
+        </Link>
+      )}
     </nav>
   );
 }

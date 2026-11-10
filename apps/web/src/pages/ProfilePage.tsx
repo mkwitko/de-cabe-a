@@ -69,6 +69,7 @@ export function ProfilePage() {
             levels={levels}
             stickers={album.data?.owned}
             member={!!p.member}
+            supporter={!!p.supporter}
             className="max-w-lg"
           />
         </div>

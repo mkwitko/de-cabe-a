@@ -52,7 +52,7 @@ export function NewPasswordPage() {
               Esse link expirou ou já foi usado. Peça outro em “Esqueci a senha”: ele chega no seu
               e-mail em alguns minutos.
             </p>
-            <Link to="/conta?entrar=1" className={`${btnPrimary} self-start`}>
+            <Link to="/entrar" className={`${btnPrimary} self-start`}>
               Pedir outro link
             </Link>
           </div>
@@ -60,7 +60,7 @@ export function NewPasswordPage() {
           <div role="status" className="flex flex-col gap-3">
             <h2 className="font-condensed text-3xl font-black uppercase">Senha trocada</h2>
             <p className="text-ink/75">Agora é só entrar com o e-mail e a senha nova.</p>
-            <Link to="/conta?entrar=1" className={`${btnPrimary} self-start`}>
+            <Link to="/entrar" className={`${btnPrimary} self-start`}>
               Entrar
             </Link>
           </div>
@@ -96,7 +96,7 @@ export function NewPasswordPage() {
               >
                 {error.message}{' '}
                 {error.code === 'INVALID_TOKEN' && (
-                  <Link to="/conta?entrar=1" className={link}>
+                  <Link to="/entrar" className={link}>
                     Pedir outro link
                   </Link>
                 )}

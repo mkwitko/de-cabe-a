@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { APOIO_NOTE } from '@decabeca/contracts';
 import Stripe from 'stripe';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { testApp, WEB_ORIGIN } from '../../test/app';
@@ -13,6 +14,7 @@ const PRICES = {
   liga_pro: 'price_liga',
   presente_3m: 'price_gift3',
   acabamento_holografico: 'price_holo',
+  apoio_mensal: 'price_apoio_m',
 };
 
 // Mocked Stripe client; signatures are real (the SDK's own webhook helpers, no network).
@@ -429,5 +431,68 @@ describe('billing', () => {
       userId: 'deleted',
       status: 'paid',
     });
+  });
+
+  it('takes a guest’s one-time apoio without an account, at the amount picked', async () => {
+    const guest = device();
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_avulso' })).statusCode,
+    ).toBe(400);
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_avulso', amount: 499 }))
+        .statusCode,
+    ).toBe(400);
+    expect(
+      (await guest.req('POST', '/billing/checkout', { product: 'apoio_mensal' })).statusCode,
+    ).toBe(401);
+    const before = await prisma.purchase.count();
+    const { res } = await checkout(guest, { product: 'apoio_avulso', amount: 2500 });
+    expect(res.statusCode, res.body).toBe(200);
+    const params = stripe.checkout.sessions.create.mock.calls[0]![0];
+    expect(params).toMatchObject({
+      mode: 'payment',
+      submit_type: 'donate',
+      line_items: [{ quantity: 1, price_data: { currency: 'brl', unit_amount: 2500 } }],
+      success_url: `${WEB_ORIGIN}/apoie?apoio=ok`,
+    });
+    expect(params).not.toHaveProperty('customer');
+    expect(params.custom_text).toMatchObject({ submit: { message: APOIO_NOTE } });
+    expect(await prisma.purchase.count()).toBe(before); // nothing kept about a guest
+  });
+
+  it('marks an account as supporter: one-time until refunded, monthly for good', async () => {
+    const iara = await account('Iara');
+    expect(await ents(iara)).toMatchObject({ supporter: false, supportsMonthly: false });
+    const { sessionId } = await checkout(iara, { product: 'apoio_avulso', amount: 1000 });
+    const paid = {
+      id: sessionId,
+      mode: 'payment',
+      payment_status: 'paid',
+      payment_intent: 'pi_iara',
+    };
+    await deliver('checkout.session.completed', paid);
+    expect(await ents(iara)).toMatchObject({ supporter: true, cosmetics: [] });
+    await deliver('charge.refunded', { refunded: true, payment_intent: 'pi_iara' });
+    expect((await ents(iara)).supporter).toBe(false);
+
+    const { res } = await checkout(iara, { product: 'apoio_mensal' });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(stripe.checkout.sessions.create.mock.calls.at(-1)![0]).toMatchObject({
+      mode: 'subscription',
+      line_items: [{ price: 'price_apoio_m', quantity: 1 }],
+    });
+    const { stripeCustomerId } = await prisma.billingCustomer.findUniqueOrThrow({
+      where: { userId: iara.userId },
+    });
+    const s = sub('sub_iara', stripeCustomerId, 'price_apoio_m');
+    await deliver('customer.subscription.created', s);
+    expect(await ents(iara)).toMatchObject({
+      supporter: true,
+      supportsMonthly: true,
+      clube: { active: false },
+    });
+    expect((await checkout(iara, { product: 'apoio_mensal' })).res.statusCode).toBe(409);
+    await deliver('customer.subscription.deleted', { ...s, status: 'canceled' });
+    expect(await ents(iara)).toMatchObject({ supporter: true, supportsMonthly: false });
   });
 });

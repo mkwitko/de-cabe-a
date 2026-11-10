@@ -9,7 +9,7 @@ export const LAUNCH_ALL = import.meta.env.VITE_LAUNCH_ALL === '1';
 
 export const LAUNCHED_MODES: readonly GameMode[] = ['CAREER_PATH'];
 
-/** Pages that can be closed. Open pages (album, perfil, conta, legais, como jogar) are not listed. */
+/** Pages that can be closed. Open pages (album, perfil, conta, entrar, legais, como jogar) are not listed. */
 const GATED_PAGES = [
   { key: 'daily', name: 'Desafio do Dia', re: /^\/d(\/|$)/ },
   { key: 'ranking', name: 'Ranking', re: /^\/ranking(\/|$)/ },
@@ -20,6 +20,8 @@ const GATED_PAGES = [
   { key: 'oficina', name: 'Oficina', re: /^\/(oficina|criador|eventos)(\/|$)/ },
   // Pagamentos (deploy/STRIPE-SETUP.md): the shop, plans and gift redeem ship closed.
   { key: 'clube', name: 'Clube', re: /^\/(clube|presente)(\/|$)/ },
+  // Apoie (/apoie): voluntary support on Stripe Checkout; ships closed like the Clube.
+  { key: 'apoie', name: 'Apoie', re: /^\/apoie(\/|$)/ },
 ] as const;
 export type PageKey = (typeof GATED_PAGES)[number]['key'];
 

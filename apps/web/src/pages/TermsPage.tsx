@@ -1,4 +1,6 @@
 /** Terms of use. Plain PT-BR; blanks for the owner are marked [preencher]. */
+import { isPageLaunched } from '../lib/launch';
+import { APOIO_RECIPIENT } from '@decabeca/contracts';
 import { CONTROLLER, DPO_EMAIL, L, LegalPage, Ul } from '../components/Legal';
 
 export function TermsPage() {
@@ -44,6 +46,32 @@ export function TermsPage() {
             </p>
           ),
         },
+        // Only while Apoie is open (lib/launch.ts).
+        ...(isPageLaunched('apoie')
+          ? [
+              {
+                id: 'apoio',
+                title: 'Apoio voluntário',
+                body: (
+                  <Ul>
+                    <li>
+                      Em <L to="/apoie">Apoie</L> você pode apoiar o projeto, uma vez ou todo mês. O
+                      apoio é voluntário e é recebido por {APOIO_RECIPIENT}.
+                    </li>
+                    <li>
+                      Não é compra: não dá estrela, dica, fase nem qualquer vantagem no jogo. Com
+                      conta, o cartão de sócio mostra a marca Apoiador, só como agradecimento.
+                    </li>
+                    <li>
+                      Apoio dado não é devolvido, salvo nos casos que a lei garante. O apoio mensal
+                      pode ser cancelado a qualquer momento e vale até o fim do mês já pago.
+                    </li>
+                    <li>Pagamentos pela Stripe, com cartão ou Pix.</li>
+                  </Ul>
+                ),
+              },
+            ]
+          : []),
         {
           id: 'garantia',
           title: 'Sem garantias',
@@ -61,9 +89,9 @@ export function TermsPage() {
           title: 'Encerrar',
           body: (
             <p>
-              Você pode excluir sua conta quando quiser em <L to="/conta">Conta</L>. Podemos
-              suspender contas que quebrem estas regras. Como tratamos seus dados está em{' '}
-              <L to="/privacidade">Privacidade</L>.
+              Você pode excluir sua conta quando quiser em{' '}
+              <L to="/conta?aba=dados">Conta › Seus dados</L>. Podemos suspender contas que quebrem
+              estas regras. Como tratamos seus dados está em <L to="/privacidade">Privacidade</L>.
             </p>
           ),
         },
