@@ -1,9 +1,11 @@
 /**
  * First run of Career Path: three steps laid over level 1 itself (the passport, the guess, the six
- * chances). A spotlight cuts the step's part of the screen out of a dimmed layer and a passport
- * paper ticket explains it in one line. Skippable at any step; seen once per device.
+ * chances), then, while both sounds are off, a last one asking "Ligar o som?". A spotlight cuts the
+ * step's part of the screen out of a dimmed layer and a passport paper ticket explains it in one
+ * line. Skippable at any step; seen once per device.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { answerSoundOffer, soundOfferPending } from '../../components/SoundToggle';
 import { play } from '../../lib/sound';
 
 const KEY = 'dc-tutorial-career-path';
@@ -34,14 +36,24 @@ const STEPS = [
   },
 ] as const;
 
+const SOUND_STEP = {
+  target: null,
+  title: 'Ligar o som?',
+  text: 'Música de estádio e efeitos a cada carimbo, erro e estrela. Muda quando quiser, no topo ou na Conta.',
+} as const;
+
 type Box = { top: number; left: number; width: number; height: number };
 
 export function Tutorial({ onDone }: { onDone: () => void }) {
+  const [steps] = useState(() =>
+    soundOfferPending() ? [...STEPS, SOUND_STEP] : ([...STEPS] as const),
+  );
   const [step, setStep] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const next = useRef<HTMLButtonElement>(null);
-  const s = STEPS[step]!;
-  const last = step === STEPS.length - 1;
+  const s = steps[step]!;
+  const last = step === steps.length - 1;
+  const asking = s === SOUND_STEP;
 
   const finish = () => {
     try {
@@ -54,7 +66,7 @@ export function Tutorial({ onDone }: { onDone: () => void }) {
 
   useLayoutEffect(() => {
     const measure = () => {
-      const el = document.querySelector(`[data-tour="${s.target}"]`);
+      const el = s.target && document.querySelector(`[data-tour="${s.target}"]`);
       if (!el) return setBox(null);
       const r = el.getBoundingClientRect();
       const pad = 6;
@@ -99,7 +111,7 @@ export function Tutorial({ onDone }: { onDone: () => void }) {
       }
     : {};
   const ticket: React.CSSProperties = !box
-    ? { bottom: 96 }
+    ? { top: Math.max(16, innerHeight / 2 - 110) }
     : side
       ? {
           top: Math.max(16, box.top),
@@ -139,11 +151,11 @@ export function Tutorial({ onDone }: { onDone: () => void }) {
             {s.title}
             <span className="sr-only">
               {' '}
-              (passo {step + 1} de {STEPS.length})
+              (passo {step + 1} de {steps.length})
             </span>
           </h2>
           <span aria-hidden="true" className="mt-1.5 flex shrink-0 gap-1.5">
-            {STEPS.map((_, i) => (
+            {steps.map((_, i) => (
               <span
                 key={i}
                 className={`size-2 rounded-full ${i <= step ? 'bg-[#1d2a4f]' : 'bg-[#1d2a4f]/25'}`}
@@ -157,22 +169,26 @@ export function Tutorial({ onDone }: { onDone: () => void }) {
         <div className="mt-3 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={finish}
+            onClick={() => {
+              if (asking) answerSoundOffer(false);
+              finish();
+            }}
             className="-ml-2 min-h-11 rounded-lg px-2 text-sm font-bold whitespace-nowrap text-[#6d5c3a] underline underline-offset-4"
           >
-            Pular tutorial
+            {asking ? 'Jogar sem som' : 'Pular tutorial'}
           </button>
           <button
             ref={next}
             type="button"
             onClick={() => {
+              if (asking) answerSoundOffer(true);
               play('tap');
               if (last) finish();
               else setStep(step + 1);
             }}
             className="font-condensed inline-flex min-h-11 items-center rounded-lg whitespace-nowrap bg-[#1d2a4f] px-5 text-lg font-extrabold tracking-wide text-[#f3ead2] uppercase"
           >
-            {last ? 'Bora jogar' : 'Próximo'}
+            {asking ? 'Ligar e jogar' : last ? 'Bora jogar' : 'Próximo'}
           </button>
         </div>
       </div>

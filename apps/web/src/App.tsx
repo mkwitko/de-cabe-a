@@ -1,4 +1,4 @@
-import { MusicToggle, SoundOffer, SoundToggle } from './components/SoundToggle';
+import { MusicToggle, SoundToggle } from './components/SoundToggle';
 import { sceneFor, setScene } from './lib/music';
 import { ThemeToggle } from './components/ThemeToggle';
 import { CareerPathCard } from './components/CareerPathCard';
@@ -460,7 +460,6 @@ function Shell({ children }: { children: ReactNode }) {
         </p>
       )}
       <main className={home ? 'pt-6 sm:pt-4' : ''}>{children}</main>
-      <SoundOffer />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { LevelEnd, LevelError } from '../LevelParts';
 import { Countdown } from '../Clock';
 import { Icon } from '../../components/Icon';
 import { PlayerSearch } from '../../components/PlayerSearch';
+import { SoundOffer } from '../../components/SoundToggle';
 import {
   AttemptDots,
   btnPrimary,
@@ -78,6 +79,7 @@ function resultCopy(data: AttemptResponse) {
   const view = data.view as CareerPathView;
   const won = data.attempt.status === 'WON';
   return {
+    answer: reveal.answer,
     headline: won
       ? view.attemptsUsed === 1
         ? 'De placa! Na primeira.'
@@ -221,6 +223,8 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
           <Guesses view={view} />
         </div>
       )}
+      {/* Asked once; the first-run tutorial asks it as its last step instead. */}
+      {!done && !touring && <SoundOffer />}
       {/* Finished: the result first, the full passport beside it (below on phones). */}
       <div className={done ? 'grid items-start gap-8 lg:grid-cols-2' : 'contents'}>
         {done && <LevelEnd data={data} {...resultCopy(data)} />}
