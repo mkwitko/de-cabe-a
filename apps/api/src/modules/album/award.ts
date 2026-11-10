@@ -6,6 +6,7 @@ import { RARITY_ORDER, levelRarity, rank } from './rarity';
 import { effectivePks } from '../leagues/leagues';
 import { ownedPks } from './owned-pks';
 import { streakDays } from './streak';
+import { stickerPhoto } from '../knowledge/player-card';
 
 type Rounds<T> = { rounds?: T[] };
 
@@ -116,6 +117,7 @@ export async function awardSticker(
     name: footballer.canonicalName,
     positionGroup: footballer.primaryPositionGroup,
     nationality: footballer.nationality.name,
+    ...stickerPhoto(footballer),
     rarity: s.rarity,
     mode: s.mode,
     earnedAt: s.earnedAt.toISOString(),

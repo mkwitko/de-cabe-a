@@ -448,6 +448,10 @@ export const Sticker = z.strictObject({
   name: z.string(),
   positionGroup: z.enum(['GK', 'DF', 'MF', 'FW']).nullable(),
   nationality: z.string(),
+  /** Wikimedia Commons portrait, when the player has a freely licensed photo. */
+  photo: z.string().nullable(),
+  /** "Foto: author · licence" (CC licences require the credit where the photo shows). */
+  photoCredit: z.string().nullable(),
   rarity: StickerRarity,
   mode: GameMode,
   earnedAt: z.string(),

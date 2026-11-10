@@ -9,6 +9,20 @@ import type { PrismaClient } from '../../generated/prisma/client';
 
 const commons = (file: string, width: number) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
+/** Sticker portrait and its credit (CC licences require the credit where the photo shows). */
+export const stickerPhoto = (p: {
+  photoFile: string | null;
+  photoAuthor: string | null;
+  photoLicense: string | null;
+}) =>
+  p.photoFile
+    ? {
+        photo: commons(p.photoFile, 320),
+        photoCredit:
+          `Foto: ${p.photoAuthor ?? 'Wikimedia Commons'} · ${p.photoLicense ?? ''}`.trim(),
+      }
+    : { photo: null, photoCredit: null };
+
 export const photoThumb = (file: string | null) => (file ? commons(file, 96) : null);
 
 export async function playerCard(prisma: PrismaClient, id: string): Promise<PlayerCard | null> {
