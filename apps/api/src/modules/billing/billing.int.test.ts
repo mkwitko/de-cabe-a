@@ -483,8 +483,7 @@ describe('billing', () => {
       name: 'Gil',
     });
     expect(res.statusCode, res.body).toBe(200);
-    const user = await prisma.user.findUniqueOrThrow({ where: { email } });
-    expect(await ents({ ...d, userId: user.id })).toMatchObject({ supporter: true });
+    expect(await ents(d)).toMatchObject({ supporter: true });
   });
 
   it('marks an account as supporter: one-time until refunded, monthly for good', async () => {
