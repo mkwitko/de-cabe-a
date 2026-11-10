@@ -26,6 +26,7 @@ import { POSITION, StickerCard } from '../components/StickerCard';
 import { StickerDetail } from '../components/StickerDetail';
 import { useTrack } from '../lib/game';
 import { nextLevel } from '../lib/track';
+import { motionReduced } from '../lib/settings';
 
 const GROUPS = [
   { key: 'GK', label: 'Goleiros' },
@@ -94,8 +95,8 @@ const subscribe = (cb: () => void) => {
   return () => m.removeEventListener('change', cb);
 };
 const isWide = () => typeof matchMedia === 'function' && matchMedia(WIDE).matches;
-const reduced = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
+const reduced = motionReduced;
 const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const out = (t: number) => 1 - (1 - t) ** 3;
 

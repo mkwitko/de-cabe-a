@@ -22,9 +22,10 @@ import { SoonStamp } from '../pages/ComingSoonPage';
 import { Skeleton } from './ui';
 import { Moment } from './Moment';
 import { leaderOf, LockerArt, ModeDialog, type Locker } from './ModeDialog';
+import { motionReduced } from '../lib/settings';
 
-const reduced = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the system setting or Ajustes › Reduzir animações (JS-driven motion; CSS follows data-motion)
+const reduced = motionReduced;
 
 /**
  * Pointer (or a tilt that needs no permission) as --sx/--sy in −1…1, one write per frame onto the
