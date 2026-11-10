@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 import type { AttemptResponse, GameMode } from '@decabeca/contracts';
 import { track } from '../lib/analytics';
 import { api, type ApiError } from '../lib/api';
-import { GAME_PATH, useDaily, useLevelRanking, useMe, useTrack } from '../lib/game';
+import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
 import { Reactions } from '../components/Reactions';
@@ -17,6 +17,11 @@ import { StickerReveal } from '../components/StickerReveal';
 import { ceremonyLength, markCeremony, recentCompletion } from '../lib/ceremony';
 import { btnPrimary, btnSecondary, Notice } from '../components/ui';
 import { ClockIcon } from '../components/Icons';
+import { TitleBadge } from '../components/TitleBadge';
+import { SignInButton } from '../components/SignInButton';
+import { promotedTo, titleTone } from '../lib/format';
+
+const INVITE_KEY = 'decabeca:save-invite';
 
 export function LevelError({
   error,
@@ -103,6 +108,27 @@ export function LevelEnd({
   const next = trackQ.data?.levels.find(
     (l) => l.level !== level && (l.state === 'open' || l.state === 'in_progress'),
   );
+  // Stats are invalidated when the level closes; once refetched, totalStars includes these stars.
+  const stats = useStats();
+  const promoted =
+    !oficina && stats.data && !stats.isFetching ? promotedTo(stats.data.totalStars, stars) : null;
+  // One-time "save your progress" invite after a guest's first win (remembered on the device).
+  const [inviteSeen] = useState(() => {
+    try {
+      return localStorage.getItem(INVITE_KEY) === '1';
+    } catch {
+      return true;
+    }
+  });
+  const showInvite = !inviteSeen && stars > 0 && !oficina && !!me.data && !me.data.account;
+  useEffect(() => {
+    if (showInvite && stage === 'end')
+      try {
+        localStorage.setItem(INVITE_KEY, '1');
+      } catch {
+        /* private mode: the invite may show again */
+      }
+  }, [showInvite, stage]);
   const daily = useDaily('hoje').data?.games.find((g) => g.mode === mode && g.level === level);
   if (stage === 'broadcast')
     return (
@@ -112,6 +138,7 @@ export function LevelEnd({
         headline={headline}
         detail={detail}
         short={short}
+        promoted={promoted}
         onDone={() => setStage(data.sticker ? 'sticker' : 'end')}
       />
     );
@@ -145,6 +172,30 @@ export function LevelEnd({
         </div>
       </div>
 
+      {promoted && (
+        <p
+          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-ink"
+          style={{ background: titleTone(promoted) }}
+        >
+          <TitleBadge name={promoted} className="size-10" />
+          <span className="font-condensed text-2xl leading-none font-black uppercase">
+            Promovido a {promoted}
+          </span>
+        </p>
+      )}
+      {showInvite && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border-2 border-cover/70 px-4 py-3">
+          <p className="min-w-0 flex-1 basis-56">
+            <span className="font-condensed block text-xl leading-none font-extrabold uppercase">
+              Salve seu progresso
+            </span>
+            <span className="text-sm text-chalk-soft">
+              Crie uma conta e leve suas estrelas e figurinhas para qualquer aparelho.
+            </span>
+          </p>
+          <SignInButton />
+        </div>
+      )}
       {stars > 0 && !oficina && (
         <Link
           to="/carreira"

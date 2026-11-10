@@ -47,8 +47,24 @@ export const hintMask = (initial: string, pattern: number[]) =>
 
 /** Title thresholds in total stars; mirrors titleFor in packages/engine/src/stars.ts (web may not import the engine). */
 export const TITLE_LADDER = [
-  { name: 'Reserva', min: 0 },
-  { name: 'Titular', min: 15 },
-  { name: 'Craque', min: 60 },
-  { name: 'Lenda', min: 150 },
+  { name: 'Peneira', min: 0, tone: 'oklch(0.82 0.02 150)', perk: 'Camisa de teste' },
+  { name: 'Base', min: 10, tone: 'oklch(0.76 0.1 60)', perk: 'Moldura de bronze' },
+  { name: 'Reserva', min: 25, tone: 'oklch(0.82 0.03 250)', perk: 'Moldura de prata' },
+  { name: 'Titular', min: 50, tone: 'oklch(0.82 0.11 150)', perk: 'Moldura verde de titular' },
+  { name: 'Capitão', min: 100, tone: 'oklch(0.8 0.1 225)', perk: 'Braçadeira azul' },
+  { name: 'Craque', min: 175, tone: 'oklch(0.87 0.16 95)', perk: 'Moldura de ouro' },
+  { name: 'Ídolo', min: 275, tone: 'oklch(0.78 0.16 55)', perk: 'Moldura de ídolo' },
+  { name: 'Lenda', min: 400, tone: 'oklch(0.76 0.17 22)', perk: 'Moldura de lenda' },
+  { name: 'Imortal', min: 600, tone: 'oklch(0.78 0.12 320)', perk: 'Moldura imortal' },
+  { name: 'Rei da Bola', min: 900, tone: 'oklch(0.92 0.15 95)', perk: 'Coroa e moldura dourada' },
 ] as const;
+
+export const titleTone = (name: string) =>
+  TITLE_LADDER.find((t) => t.name === name)?.tone ?? TITLE_LADDER[0].tone;
+
+/** The title this level's stars earned (total is after the level), or null if the title did not change. */
+export function promotedTo(totalStars: number, levelStars: number): string | null {
+  const at = (n: number) => TITLE_LADDER.findLast((t) => n >= t.min)!.name;
+  const now = at(totalStars);
+  return levelStars > 0 && now !== at(totalStars - levelStars) ? now : null;
+}
