@@ -1,5 +1,6 @@
 import { isDailyLevel } from '../daily/daily';
 import { awardTraining } from '../career/career.service';
+import { awardSticker } from '../album/award';
 /**
  * Attempts (ARCHITECTURE.md §4, ADR-007): one attempt per level per player, sequential unlock,
  * idempotent actions, views without answers, stars at the end.
@@ -21,6 +22,7 @@ import type {
   MysteryReveal,
   MysteryView,
   PlayerRef,
+  StickerAward,
   TimelineReveal,
   TimelineView,
 } from '@decabeca/contracts';
@@ -82,6 +84,7 @@ export async function present(
   challenge: Challenge,
   event?: unknown,
   now: Date = new Date(),
+  sticker?: StickerAward,
 ): Promise<AttemptResponse> {
   const engine = engineFor(challenge.gameMode);
   const config = engine.validateConfig(challenge.snapshot);
@@ -249,6 +252,7 @@ export async function present(
     view,
     reveal,
     share,
+    ...(sticker ? { sticker } : {}),
   };
 }
 
@@ -568,5 +572,8 @@ export async function submitAction(
     pending.some(([n]) => n === 'game_completed')
   )
     await awardTraining(prisma, player, attempt, now);
-  return present(prisma, attempt, challenge, event, now);
+  const sticker = pending.some(([n]) => n === 'game_completed')
+    ? await awardSticker(prisma, player, attempt, challenge, now)
+    : null;
+  return present(prisma, attempt, challenge, event, now, sticker ?? undefined);
 }
