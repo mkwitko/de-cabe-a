@@ -86,12 +86,22 @@ const setDifficulty = (difficultyTier: number) =>
 
 describe('award sticker', () => {
   it('won career path level awards a sticker', async () => {
+    await prisma.player.update({
+      where: { id: answerId },
+      data: { photoFile: 'Ronaldo 2002.jpg', photoAuthor: 'Fulano', photoLicense: 'CC BY-SA 4.0' },
+    });
     const g = await startLevel();
     const res = await g.act({ kind: 'guess', playerId: answerId });
     expect(res.sticker).toMatchObject({
       isNew: true,
       upgradedFrom: null,
-      sticker: { playerId: answerId, name: 'Ronaldo', mode: 'CAREER_PATH' },
+      sticker: {
+        playerId: answerId,
+        name: 'Ronaldo',
+        mode: 'CAREER_PATH',
+        photo: expect.stringContaining('Ronaldo%202002.jpg'),
+        photoCredit: 'Foto: Fulano · CC BY-SA 4.0',
+      },
     });
     expect(await stickers()).toHaveLength(1);
   });

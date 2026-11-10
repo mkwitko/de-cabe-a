@@ -6,6 +6,7 @@ import { RARITY_ORDER, levelRarity, rank } from './rarity';
 import { effectivePks } from '../leagues/leagues';
 import { ownedPks } from './owned-pks';
 import { streakDays } from './streak';
+import { stickerPhoto } from '../knowledge/player-card';
 
 /** The footballer a level is about, or null for modes without one (until their plans). */
 export function featuredPlayerId(mode: GameModeCode, snapshot: unknown): string | null {
@@ -59,6 +60,7 @@ export async function awardSticker(
     name: footballer.canonicalName,
     positionGroup: footballer.primaryPositionGroup,
     nationality: footballer.nationality.name,
+    ...stickerPhoto(footballer),
     rarity: s.rarity,
     mode: s.mode,
     earnedAt: s.earnedAt.toISOString(),

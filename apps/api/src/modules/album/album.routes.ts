@@ -1,3 +1,4 @@
+import { stickerPhoto } from '../knowledge/player-card';
 import {
   AlbumResponse,
   ProfileAlbumResponse,
@@ -32,6 +33,7 @@ async function bestStickers(prisma: PrismaClient, pks: string[]) {
       name: r.player.canonicalName,
       positionGroup: r.player.primaryPositionGroup,
       nationality: r.player.nationality.name,
+      ...stickerPhoto(r.player),
       rarity: r.rarity,
       mode: r.mode,
       earnedAt: r.earnedAt.toISOString(),

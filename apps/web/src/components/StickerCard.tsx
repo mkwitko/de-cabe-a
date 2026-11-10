@@ -35,11 +35,24 @@ export function StickerCard({
             Figurinha
           </p>
           <p
-            className={`leading-[0.85] font-black tracking-tighter ${lg ? 'text-5xl' : 'text-2xl'}`}
+            className={`leading-[0.85] font-black tracking-tighter ${sticker.photo ? (lg ? 'text-3xl' : 'text-base') : lg ? 'text-5xl' : 'text-2xl'}`}
           >
             {sticker.positionGroup ? POSITION[sticker.positionGroup] : '—'}
           </p>
         </div>
+        {sticker.photo && (
+          // Portrait between the position and the name; the credit rides on title and alt text,
+          // as the CC licences ask for it where the photo shows.
+          <img
+            src={sticker.photo}
+            alt={sticker.photoCredit ? `${sticker.name}. ${sticker.photoCredit}` : sticker.name}
+            title={sticker.photoCredit ?? undefined}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className={`min-h-0 w-full flex-1 bg-(--edge) object-cover object-[50%_20%] ${lg ? 'my-2 rounded-md border-2' : 'my-1 rounded-[3px] border'} border-(--ink)/40`}
+          />
+        )}
         <div>
           <p
             className={`leading-[0.92] font-black tracking-tight uppercase transition-opacity duration-400 ${lg ? 'text-2xl' : 'text-[13px]'} ${showName ? 'opacity-100' : 'opacity-0'}`}
