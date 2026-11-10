@@ -11,6 +11,7 @@ import { onPreviewChange, previewing, previewTrack, setMusic } from '../lib/musi
 import { play, setSound } from '../lib/sound';
 import { hapticsOn, hapticsSupported, onHapticsChange, setHaptics } from '../lib/haptics';
 import { CONSENT_NEEDED, openConsentPanel } from '../lib/consent';
+import { InstallRow } from './InstallApp';
 
 const openers = new Set<() => void>();
 /** Opens Ajustes from anywhere (Conta links here). */
@@ -328,6 +329,7 @@ export function SettingsDialog() {
           </Group>
           <Group title="Conta e privacidade">
             <nav aria-label="Conta e privacidade" className="grid">
+              <InstallRow className={linkRow} />
               <Link to="/conta" onClick={close} className={linkRow}>
                 Conta <span aria-hidden="true">›</span>
               </Link>

@@ -10,6 +10,7 @@ import { api, type ApiError } from '../lib/api';
 import { GAME_PATH, useDaily, useLevelRanking, useMe, useStats, useTrack } from '../lib/game';
 import { ShareButton } from '../components/ShareButton';
 import { ResultCardButton } from '../components/ResultCard';
+import { InstallInvite } from '../components/InstallApp';
 import { Reactions } from '../components/Reactions';
 import { Stars, StarIcon } from '../components/Stars';
 import { Broadcast, type Hero } from '../components/Broadcast';
@@ -460,6 +461,7 @@ export function LevelEnd({
               </p>
             )}
           </div>
+          <InstallInvite />
         </>
       ) : (
         <>

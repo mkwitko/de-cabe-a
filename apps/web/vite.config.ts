@@ -1,9 +1,27 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { Plugin } from 'vite';
+
+/** Stamps public/sw.js with a hash of the build's files, so each deploy replaces the worker. */
+const swVersion = (): Plugin => ({
+  name: 'sw-version',
+  apply: 'build',
+  writeBundle(options, bundle) {
+    const file = join(options.dir!, 'sw.js');
+    const build = createHash('sha256')
+      .update(Object.keys(bundle).sort().join())
+      .digest('hex')
+      .slice(0, 12);
+    writeFileSync(file, readFileSync(file, 'utf8').replace('__BUILD__', build));
+  },
+});
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), swVersion()],
   server: {
     port: 5173,
     strictPort: true,

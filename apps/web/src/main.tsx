@@ -6,9 +6,14 @@ import { App } from './App';
 import './index.css';
 import { trackArrival } from './lib/analytics';
 import { initPostHog } from './lib/posthog';
+import { initInstall } from './lib/install';
 
 initPostHog();
 trackArrival();
+initInstall();
+// Installable app and offline shell (public/sw.js); production only, so dev never caches.
+if (import.meta.env.PROD && 'serviceWorker' in navigator)
+  addEventListener('load', () => void navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
 // Error and performance monitoring (Sentry) only when built with VITE_SENTRY_DSN; loaded apart so
 // it costs nothing otherwise. A sample of page loads and API calls is traced; the API's spans join
