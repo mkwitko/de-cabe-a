@@ -38,7 +38,6 @@ const GROUPS = [
   { key: null, label: 'Outros' },
 ] as const;
 const PER_PAGE = 12;
-const TILT = [-1.6, 1.1, -0.6, 1.8, -1.2, 0.5, 0.9, -1.9];
 const TURN_MS = 720;
 // what reads --turn/--lift (besides the book, which slides as the cover opens)
 const TURNING = '.album-leaf, .album-shade, .album-gloss, .album-cast';
@@ -503,9 +502,6 @@ export function AlbumPage() {
                     aria-label={`${s.name}, ${RARITY_STYLE[s.rarity].label}. Ver figurinha`}
                     onClick={() => startTransition(() => setOpen(s))}
                     className="album-stuck"
-                    style={
-                      { '--tilt': `${TILT[(num * 5) % TILT.length]}deg` } as React.CSSProperties
-                    }
                   >
                     <StickerCard sticker={s} size="sm" finish={finishOf(s.playerId)} />
                   </button>

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type Ref } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { Finish, Sticker, StickerRarity } from '@decabeca/contracts';
 import { RARITY_STYLE } from './rarity';
 import { Flag } from './Flag';
@@ -31,31 +31,42 @@ const TIER: Record<StickerRarity, string> = {
 };
 
 /**
+ * The name for small cards: a long name becomes initial + surname ("C. Ronaldo"), and the
+ * surname alone if that is still long. Big cards and the dialog keep the full name.
+ */
+export const shortName = (name: string) => {
+  const words = name.trim().split(/\s+/);
+  if (name.length <= 10 || words.length < 2) return name;
+  const last = words[words.length - 1]!;
+  const short = `${words[0]![0]}. ${last}`;
+  return short.length <= 12 ? short : last;
+};
+
+/**
  * The sticker as a player card, "Refletor": a chamfered slab with a static foil rim in the
  * rarity's metal around a night face under a floodlight (index.css `.pcard`, `.rar-*`). The
  * player is his cut-out graded in the rarity's tritone (pre-baked, see TIER) and placed by his
  * face box (`cutoutFace`), so every head lands at one scale; without a cut-out the photo fades
- * into the face. Nothing moves or blends at run time. Top left: the Nota De Cabeça in big condensed numerals, the position and
- * the flag; the tier runs down the right edge. At the foot: the name, fitted to the width, and up
- * to six real numbers in two columns of three (big number, small-caps label); unknown ones are left out, and with none known the rarity takes
- * their place. Fills its parent (which sets the 3:4 box); everything scales with the card's width
- * (container units). Album size keeps rating, position, player and name. The reveal moves
- * `stripRef` and hides the name until it is announced (`showName={false}`); `selected` draws an
- * outline around the slab. `finish` (Clube, Banca) lays a holographic, chrome or Clube layer
- * over the rim and face; the rarity underneath stays as earned.
+ * into the face. Flat and static: no tilt, 3D, blend or animation. Top left: the Nota De Cabeça
+ * in big condensed numerals, the position and the flag; the tier runs down the right edge. At
+ * the foot: the name, its font stepped down to fit (`size="sm"` shows `shortName`), and up to six
+ * real numbers in two columns of three (big number, small-caps label); unknown ones are left
+ * out, and with none known the rarity takes their place. Fills its parent (which sets the 3:4
+ * box); everything scales with the card's width (container units). The reveal hides the name
+ * until it is announced (`showName={false}`); `selected` draws an outline around the slab.
+ * `finish` (Clube, Banca) lays a static holographic, chrome or Clube layer over the rim and
+ * face; the rarity underneath stays as earned.
  */
 export function StickerCard({
   sticker,
   size,
   showName = true,
-  stripRef,
   selected = false,
   finish = null,
 }: {
   sticker: Sticker;
   size: 'sm' | 'lg';
   showName?: boolean;
-  stripRef?: Ref<HTMLDivElement>;
   selected?: boolean;
   finish?: Finish | null;
 }) {
@@ -66,6 +77,7 @@ export function StickerCard({
   const src = [graded, sticker.photo].find((u) => u && u !== broken) ?? null;
   const cut = src !== null && src === graded;
   const face = sticker.cutoutFace;
+  const name = size === 'sm' ? shortName(sticker.name) : sticker.name;
   const attrs = (
     [
       ['JOG', 'Jogos na carreira (ligas)', sticker.games],
@@ -151,10 +163,10 @@ export function StickerCard({
             {style.label}
           </span>
           <p
-            className={`pcard-name font-condensed ${showName ? '' : 'opacity-0'}`}
-            style={{ '--nl': Math.max(7, sticker.name.length) } as CSSProperties}
+            className={`pcard-name ${showName ? '' : 'opacity-0'}`}
+            style={{ '--nl': Math.max(7, name.length) } as CSSProperties}
           >
-            {sticker.name}
+            {name}
           </p>
           {attrs.length > 0 ? (
             <dl className="pcard-attrs">
@@ -183,7 +195,7 @@ export function StickerCard({
               {finish === 'acabamento_clube' && <ClubeSeal className="pcard-fin-seal" />}
             </div>
           )}
-          <div ref={stripRef} aria-hidden="true" className="holo" />
+          <div aria-hidden="true" className="holo" />
         </div>
       </div>
     </div>

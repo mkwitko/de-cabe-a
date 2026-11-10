@@ -273,7 +273,7 @@ export function CareerPathCard({
                 {rarest && (
                   // the rarest sticker, pasted in the corner of the page with its name beside it
                   <figure className="flex shrink-0 items-center gap-2.5">
-                    <div className="aspect-[3/4] w-11 rotate-6 sm:w-12">
+                    <div className="aspect-[3/4] w-11 rotate-1 sm:w-12">
                       <StickerCard
                         sticker={rarest}
                         size="sm"

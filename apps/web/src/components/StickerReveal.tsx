@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { StickerAward } from '@decabeca/contracts';
 import { buzz } from '../lib/haptics';
 import { play } from '../lib/sound';
@@ -37,9 +37,6 @@ export function StickerReveal({
   const level = RARITY_ORDER.indexOf(sticker.rarity);
   const rare = level >= RARE && !short;
   const [phase, setPhase] = useState<'rarity' | 'card' | 'named'>('rarity');
-  const stage = useRef<HTMLDivElement>(null);
-  const strip = useRef<HTMLDivElement>(null);
-  const tilt = useRef<HTMLDivElement>(null);
 
   // Straight on from the broadcast, under the same lit floodlights: the rarity is called at once,
   // the card spins in, then his name lands. Rarer stickers hold the suspense a little longer.
@@ -62,22 +59,10 @@ export function StickerReveal({
     return () => timers.forEach(clearTimeout);
   }, [level, short]);
 
-  const onMove = (e: React.PointerEvent) => {
-    if (phase !== 'named' || reducedMotion() || !stage.current || !tilt.current) return;
-    const follow = stage.current.classList.contains('holo-follow');
-    const r = stage.current.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    tilt.current.style.transform = `rotateY(${(x - 0.5) * 28}deg) rotateX(${(0.5 - y) * 24}deg)`;
-    if (follow && strip.current) strip.current.style.setProperty('--hx', String(0.2 + x * 0.6));
-  };
-
   const revealed = phase === 'card' || phase === 'named';
   const dur = short ? 500 : 1300;
   return (
     <div
-      ref={stage}
-      onPointerMove={onMove}
       role="dialog"
       aria-label="Figurinha nova"
       className={`screen-overlay fixed inset-0 z-50 flex flex-col items-center justify-center gap-[clamp(0.75rem,2.5vh,1.75rem)] overflow-hidden pb-24 bg-[#070b14] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white ${style.className}`}
@@ -103,7 +88,7 @@ export function StickerReveal({
         {isNew ? 'Figurinha ' : upgradedFrom ? 'Upgrade · ' : ''}
         {style.label}
       </p>
-      <div className="relative [perspective:900px]">
+      <div className="relative">
         {rare && (
           <Moment
             art="packBurst"
@@ -112,7 +97,6 @@ export function StickerReveal({
           />
         )}
         <div
-          ref={tilt}
           className={`relative aspect-[3/4] w-[min(62vw,33vh)] ${revealed ? 'motion-safe:animate-[card-in_var(--d)_cubic-bezier(.15,.85,.25,1)_both] motion-reduce:animate-[fade-in_200ms_both]' : 'opacity-0'}`}
           style={{ '--d': `${dur}ms` } as React.CSSProperties}
         >
@@ -120,7 +104,6 @@ export function StickerReveal({
             sticker={sticker}
             size="lg"
             showName={phase === 'named'}
-            stripRef={strip}
             finish={finishOf(sticker.playerId)}
           />
         </div>

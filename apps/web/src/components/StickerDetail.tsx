@@ -55,21 +55,6 @@ export function StickerDetail({
     return () => back?.focus();
   }, []);
 
-  const tilt = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'touch' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    const st = e.currentTarget.style;
-    st.setProperty('--px', x.toFixed(3));
-    st.setProperty('--py', y.toFixed(3));
-    st.setProperty('--ry', `${((x - 0.5) * 18).toFixed(2)}deg`);
-    st.setProperty('--rx', `${((0.5 - y) * 14).toFixed(2)}deg`);
-  };
-  const rest = (e: React.PointerEvent<HTMLDivElement>) => {
-    for (const k of ['--px', '--py', '--rx', '--ry']) e.currentTarget.style.removeProperty(k);
-  };
-
   const attrs: [string, string, number | null | undefined][] = [
     ['JOG', 'Jogos na carreira (ligas)', s.games],
     ['GOL', 'Gols na carreira (ligas)', s.goals],
@@ -109,7 +94,7 @@ export function StickerDetail({
         </button>
 
         <div className="sd-stage">
-          <div className="sd-card" onPointerMove={tilt} onPointerLeave={rest}>
+          <div className="sd-card">
             <StickerCard sticker={s} size="lg" finish={finishOf(owned, s.playerId)} />
           </div>
         </div>
