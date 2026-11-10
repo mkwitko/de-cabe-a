@@ -226,36 +226,35 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       )}
       {/* Asked once; the first-run tutorial asks it as its last step instead. */}
       {!done && !touring && <SoundOffer />}
-      {/* Finished: the result first, the full passport beside it (below on phones). */}
-      <div className={done ? 'grid items-start gap-8 lg:grid-cols-2' : 'contents'}>
-        {done && <LevelEnd data={data} {...resultCopy(data)} />}
-        <section
-          aria-labelledby="path-title"
-          className={done ? 'flex flex-col gap-3 lg:sticky lg:top-6' : 'min-h-0 flex-1'}
-        >
-          <h2
-            id="path-title"
-            className={
-              done ? 'font-condensed text-2xl leading-none font-extrabold uppercase' : 'sr-only'
-            }
-          >
-            {done ? 'O passaporte completo' : 'Trajetória'}
-          </h2>
-          <div
-            data-tour="passport"
-            className={`mx-auto w-full max-w-2xl ${done ? 'h-[28rem] sm:h-[34rem]' : 'h-full'}`}
-          >
+      {done ? (
+        // Finished: the open passport, the verdict stamped on its left page, the stamps on the right.
+        <LevelEnd
+          data={data}
+          {...resultCopy(data)}
+          passport={
             <Passport
               clubs={clubs}
-              total={done ? clubs.length : view.maxAttempts}
-              opened={done || opened}
+              total={clubs.length}
+              opened
               onOpen={() => setTapped(true)}
-              label={done ? 'Trajetória completa' : 'Clubes revelados'}
-              done={done}
+              label="Trajetória completa"
+              done
+            />
+          }
+        />
+      ) : (
+        <section aria-label="Trajetória" className="min-h-0 flex-1">
+          <div data-tour="passport" className="mx-auto h-full w-full max-w-2xl">
+            <Passport
+              clubs={clubs}
+              total={view.maxAttempts}
+              opened={opened}
+              onOpen={() => setTapped(true)}
+              label="Clubes revelados"
             />
           </div>
         </section>
-      </div>
+      )}
 
       {!done && (
         <form

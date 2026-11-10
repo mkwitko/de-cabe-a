@@ -112,9 +112,11 @@ export async function drawResultCard(data: AttemptResponse): Promise<Blob> {
 export function ResultCardButton({
   data,
   onShared,
+  className = btnSecondary,
 }: {
   data: AttemptResponse;
   onShared?: () => void;
+  className?: string;
 }) {
   const [busy, setBusy] = useState(false);
   async function go() {
@@ -131,15 +133,17 @@ export function ResultCardButton({
     }
   }
   return (
-    <button type="button" className={btnSecondary} onClick={() => void go()} disabled={busy}>
+    <button type="button" className={className} onClick={() => void go()} disabled={busy}>
       <Icon name="share" />
-      {busy ? (
-        'Gerando…'
-      ) : (
-        <>
-          Imagem<span className="max-sm:sr-only"> do resultado</span>
-        </>
-      )}
+      <span>
+        {busy ? (
+          'Gerando…'
+        ) : (
+          <>
+            Imagem<span className="max-sm:sr-only"> do resultado</span>
+          </>
+        )}
+      </span>
     </button>
   );
 }

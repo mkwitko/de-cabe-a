@@ -8,11 +8,13 @@ export function ShareButton({
   onShared,
   secondary,
   label = 'Copiar resultado',
+  className,
 }: {
   text: string;
   label?: ReactNode;
   onShared?: (method: 'webshare' | 'clipboard') => void;
   secondary?: boolean;
+  className?: string;
 }) {
   const [state, setState] = useState<'idle' | 'copied' | 'manual'>('idle');
   async function share() {
@@ -36,9 +38,14 @@ export function ShareButton({
   }
   return (
     <div className="flex flex-col gap-2">
-      <button type="button" className={secondary ? btnSecondary : btnPrimary} onClick={share}>
+      <button
+        type="button"
+        className={className ?? (secondary ? btnSecondary : btnPrimary)}
+        onClick={share}
+      >
         <Icon name={state === 'copied' ? 'check' : 'share'} />
-        {state === 'copied' ? 'Copiado!' : label}
+        {/* One flex item, so a split label keeps its spaces. */}
+        <span>{state === 'copied' ? 'Copiado!' : label}</span>
       </button>
       <span className="sr-only" aria-live="polite">
         {state === 'copied' ? 'Resultado copiado.' : ''}

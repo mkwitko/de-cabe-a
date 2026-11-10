@@ -97,13 +97,20 @@ export function LevelError({
 }
 
 /** The sticker this level put in the album, as a small face (finish + portrait), linking to the album. */
-function StickerWon({ award }: { award: NonNullable<AttemptResponse['sticker']> }) {
+function StickerWon({
+  award,
+  onPaper = false,
+}: {
+  award: NonNullable<AttemptResponse['sticker']>;
+  /** Pasted on the passport page: ink on paper, no card. */
+  onPaper?: boolean;
+}) {
   const { sticker, isNew, upgradedFrom } = award;
   const style = RARITY_STYLE[sticker.rarity];
   return (
     <Link
       to="/album"
-      className="group flex items-center gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3 transition-colors duration-150 hover:bg-chalk/[0.09]"
+      className={`group flex items-center gap-3 transition-colors duration-150 ${onPaper ? 'rounded-lg p-1.5 hover:bg-[#1d2a4f]/[0.06]' : 'rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3 hover:bg-chalk/[0.09]'}`}
     >
       <span
         aria-hidden="true"
@@ -128,27 +135,35 @@ function StickerWon({ award }: { award: NonNullable<AttemptResponse['sticker']> 
         <span className="font-condensed truncate text-lg leading-none font-extrabold uppercase">
           {sticker.name}
         </span>
-        <span className="text-xs font-semibold whitespace-nowrap text-chalk-soft">
+        <span
+          className={`text-xs font-semibold whitespace-nowrap ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+        >
           {isNew
             ? `${style.label} · nova`
             : upgradedFrom
               ? `Subiu para ${style.label}`
               : `${style.label} · já colada`}
         </span>
-        <span className="text-sm font-bold text-gold underline underline-offset-4">Álbum</span>
+        <span
+          className={`text-sm font-bold underline underline-offset-4 ${onPaper ? 'text-[#7a2633]' : 'text-gold'}`}
+        >
+          Álbum
+        </span>
       </span>
     </Link>
   );
 }
 
 /** Where the player stands on the title ladder after this level. */
-function TitleProgress({ total }: { total: number }) {
+function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: boolean }) {
   const i = TITLE_LADDER.findLastIndex((t) => total >= t.min);
   const cur = TITLE_LADDER[i]!;
   const next = TITLE_LADDER[i + 1];
   const pct = next ? ((total - cur.min) / (next.min - cur.min)) * 100 : 100;
   return (
-    <div className="flex min-w-0 flex-col justify-center gap-1.5 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3">
+    <div
+      className={`flex min-w-0 flex-col justify-center gap-1.5 ${onPaper ? 'p-1.5' : 'rounded-xl border border-chalk/15 bg-chalk/[0.05] p-3'}`}
+    >
       <p className="flex items-center gap-2">
         <TitleBadge name={cur.name} className="size-7 shrink-0" />
         <span className="font-condensed min-w-0 text-lg leading-none font-extrabold uppercase">
@@ -156,7 +171,7 @@ function TitleProgress({ total }: { total: number }) {
         </span>
       </p>
       <div
-        className="h-2 overflow-hidden rounded-full bg-chalk/15"
+        className={`h-2 overflow-hidden rounded-full ${onPaper ? 'bg-[#1d2a4f]/15' : 'bg-chalk/15'}`}
         role="progressbar"
         aria-label={next ? `Estrelas até ${next.name}` : 'Título máximo'}
         aria-valuemin={cur.min}
@@ -164,16 +179,73 @@ function TitleProgress({ total }: { total: number }) {
         aria-valuenow={total}
       >
         <div
-          className="h-full rounded-full bg-cover transition-[width] duration-700 ease-out-expo"
+          className={`h-full rounded-full transition-[width] duration-700 ease-out-expo ${onPaper ? 'bg-[#1d2a4f]' : 'bg-cover'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-sm leading-tight font-semibold text-chalk-soft">
-        <StarIcon className="inline size-[0.85em] align-[-0.08em] text-gold" />{' '}
-        <span className="tabular font-bold text-chalk">{total}</span>
+      <p
+        className={`text-sm leading-tight font-semibold ${onPaper ? 'text-[#6d5c3a]' : 'text-chalk-soft'}`}
+      >
+        <StarIcon
+          className={`inline size-[0.85em] align-[-0.08em] ${onPaper ? 'text-[#1d2a4f]' : 'text-gold'}`}
+        />{' '}
+        <span className={`tabular font-bold ${onPaper ? 'text-[#1d2a4f]' : 'text-chalk'}`}>
+          {total}
+        </span>
         {next ? ` · faltam ${next.min - total} para ${next.name}` : ' · título máximo'}
       </p>
     </div>
+  );
+}
+
+const PAGE =
+  'rounded-[8px] bg-[#f3ead2] text-[#1d2a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)]';
+const quietLink =
+  'inline-flex min-h-11 items-center gap-2 text-sm font-bold text-chalk-soft underline-offset-4 hover:text-chalk hover:underline';
+
+function Points({ data }: { data: AttemptResponse }) {
+  return (
+    <p className="font-condensed tabular text-right leading-none font-black uppercase">
+      <span className="text-3xl">{data.attempt.score}</span>
+      <span className="ml-1 text-base">pts</span>
+      {data.attempt.durationSec !== null && (
+        <span className="mt-1 block text-sm font-bold normal-case">
+          <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
+          {formatClock(data.attempt.durationSec)}
+          {data.attempt.timed ? ' · contra o relógio' : ''}
+        </span>
+      )}
+    </p>
+  );
+}
+
+/** The way on, as a boarding pass: a stub with the level number, then the action and its arrow. */
+function Ticket({ to, label, stub }: { to: string; label: string; stub: number | null }) {
+  return (
+    <Link
+      to={to}
+      className="group flex min-h-20 items-stretch overflow-hidden rounded-xl bg-cover text-ink shadow-[0_14px_28px_-12px_rgb(0_0_0/0.55)] transition-[transform,box-shadow] duration-200 ease-out-expo hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-12px_rgb(0_0_0/0.6)] active:translate-y-0 motion-reduce:transform-none"
+    >
+      {stub !== null && (
+        <span
+          aria-hidden="true"
+          className="font-condensed flex w-16 shrink-0 flex-col items-center justify-center border-r-2 border-dashed border-ink/35 leading-none font-black uppercase sm:w-24"
+        >
+          <span className="text-xs tracking-[0.2em]">Fase</span>
+          <span className="tabular text-4xl sm:text-5xl">{stub}</span>
+        </span>
+      )}
+      <span className="font-condensed flex flex-1 items-center justify-between gap-3 px-4 text-xl leading-none font-black uppercase sm:px-5 sm:text-3xl">
+        {label}
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className="size-8 shrink-0 fill-none stroke-current stroke-[2.5] [stroke-linecap:round] [stroke-linejoin:round] motion-safe:animate-[nudge-x_1.6s_var(--ease-out-expo)_infinite]"
+        >
+          <path d="M5 12h13M13 6l6 6-6 6" />
+        </svg>
+      </span>
+    </Link>
   );
 }
 
@@ -188,12 +260,16 @@ export function LevelEnd({
   detail,
   answer,
   starRule,
+  passport,
 }: {
   data: AttemptResponse;
   headline: string;
   detail: ReactNode;
   /** How the mode earns its stars, printed under them ("Até 2 tentativas: 3 estrelas…"). */
   starRule?: string;
+  /** The finished passport (Career Path): the end screen becomes its open spread, the verdict
+   * stamped on the left page beside it. */
+  passport?: ReactNode;
   /** The player the level was about (single-answer modes): the broadcast's star. */
   answer?: PlayerRef;
 }) {
@@ -272,108 +348,219 @@ export function LevelEnd({
   const award = data.sticker;
   const total = stats.data?.totalStars;
   const social = !oficina && isPageLaunched('ranking');
+  const primary = oficina
+    ? { to: '/oficina', label: 'Mais desafios da Oficina', stub: null }
+    : daily
+      ? { to: '/d/hoje', label: 'Voltar ao Desafio do Dia', stub: null }
+      : next
+        ? {
+            to: `${GAME_PATH[mode]}/${next.level}`,
+            label: `Próxima fase\u00a0·\u00a0${next.level}`,
+            stub: next.level,
+          }
+        : { to: GAME_PATH[mode], label: 'Ver as fases', stub: null };
   return (
     <section aria-labelledby="level-end" className="flex flex-col gap-5">
-      <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
-        <div className="rounded-[6px] bg-cover px-4 pt-4 pb-3 text-ink sm:px-5 sm:pt-5">
-          <h2
-            id="level-end"
-            className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-5xl"
-          >
-            {headline}
-          </h2>
-          <div className="mt-2 leading-snug font-semibold sm:text-lg">{detail}</div>
-          <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
-            <Stars n={stars} size="size-8 sm:size-9" onCover animate />
-            <p className="font-condensed tabular text-right leading-none font-black uppercase">
-              <span className="text-3xl">{score}</span>
-              <span className="ml-1 text-base">pts</span>
-              {data.attempt.durationSec !== null && (
-                <span className="mt-1 block text-sm font-bold normal-case">
-                  <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
-                  {formatClock(data.attempt.durationSec)}
-                  {data.attempt.timed ? ' · contra o relógio' : ''}
-                </span>
-              )}
-            </p>
+      {passport ? (
+        <>
+          <div className="rounded-[18px] p-2 shadow-[0_30px_60px_-20px_rgb(0_0_0/0.7)] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] sm:p-3">
+            <div className="grid gap-2 lg:grid-cols-2 lg:gap-1">
+              <div className={`${PAGE} flex flex-col gap-4 p-4 sm:p-6 lg:rounded-r-[4px]`}>
+                <p
+                  aria-hidden="true"
+                  className="flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
+                >
+                  <span>Visto de entrada</span>
+                  <span>Fase {level}</span>
+                </p>
+                {/* The verdict, stamped onto the page like an official entry stamp. */}
+                <div
+                  className="stamp-hit relative max-w-full self-start rounded-[10px] border-[3px] border-current px-4 py-3 sm:px-6 sm:py-4"
+                  style={
+                    {
+                      color: stars > 0 ? '#1d3f7a' : '#a3242f',
+                      '--rot': '-2deg',
+                      transform: 'rotate(-2deg)',
+                    } as React.CSSProperties
+                  }
+                >
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-[5px] rounded-[6px] border-[1.5px] border-current opacity-70"
+                  />
+                  <h2
+                    id="level-end"
+                    className="font-condensed text-4xl leading-[0.9] font-black text-balance uppercase sm:text-5xl xl:text-6xl"
+                  >
+                    {headline}
+                  </h2>
+                  <div className="mt-2 leading-snug font-semibold text-[#1d2a4f] sm:text-lg">
+                    {detail}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-current/25 pt-3">
+                    <Stars n={stars} size="size-8 sm:size-9" onCover animate />
+                    <Points data={data} />
+                  </div>
+                </div>
+                {starRule && <p className="text-sm font-semibold text-[#6d5c3a]">{starRule}</p>}
+                {promoted && (
+                  <p
+                    className="flex items-center gap-3 self-start rounded-lg px-4 py-2 text-ink"
+                    style={{ background: titleTone(promoted) }}
+                  >
+                    <TitleBadge name={promoted} className="size-9" />
+                    <span className="font-condensed text-2xl leading-none font-black uppercase">
+                      Promovido a {promoted}
+                    </span>
+                  </p>
+                )}
+                <div className="lg:order-last">
+                  <Ticket to={primary.to} stub={primary.stub} label={primary.label} />
+                </div>
+                {!oficina && (award || total !== undefined) && (
+                  <div
+                    className={`grid gap-3 border-t border-[#c9b98f] pt-3 lg:mt-auto ${award && total !== undefined ? 'grid-cols-2' : ''}`}
+                  >
+                    {award && <StickerWon award={award} onPaper />}
+                    {total !== undefined && <TitleProgress total={total} onPaper />}
+                  </div>
+                )}
+              </div>
+              <div className="h-[28rem] sm:h-[34rem] lg:h-auto lg:min-h-[max(30rem,calc(100dvh-14rem))]">
+                {passport}
+              </div>
+            </div>
           </div>
-          {starRule && <p className="mt-2 text-sm font-semibold text-ink/75">{starRule}</p>}
-        </div>
-      </div>
+          {/* Second things, quietly: share, and keep the progress. */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            {data.share && (
+              <>
+                <ShareButton
+                  className={quietLink}
+                  label="Copiar resultado"
+                  text={data.share.text}
+                  onShared={(method) => track('result_shared', { mode, level, method })}
+                />
+                <ResultCardButton
+                  className={quietLink}
+                  data={data}
+                  onShared={() => track('result_shared', { mode, level, method: 'image' })}
+                />
+              </>
+            )}
+            {showInvite && (
+              <p className="text-sm text-chalk-soft sm:ml-auto">
+                Suas estrelas ficam só neste aparelho.{' '}
+                <SignInButton className="font-bold text-chalk underline underline-offset-4 hover:text-gold" />{' '}
+                para levar a qualquer um.
+              </p>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="-rotate-1 rounded-[12px] bg-paper p-2 shadow-[0_18px_40px_-12px_rgb(0_0_0/0.45),0_2px_4px_rgb(0_0_0/0.2)] motion-safe:animate-[paste_520ms_var(--ease-out-expo)]">
+            <div className="rounded-[6px] bg-cover px-4 pt-4 pb-3 text-ink sm:px-5 sm:pt-5">
+              <h2
+                id="level-end"
+                className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-5xl"
+              >
+                {headline}
+              </h2>
+              <div className="mt-2 leading-snug font-semibold sm:text-lg">{detail}</div>
+              <div className="mt-3 flex items-center justify-between gap-4 border-t-2 border-ink/15 pt-3">
+                <Stars n={stars} size="size-8 sm:size-9" onCover animate />
+                <p className="font-condensed tabular text-right leading-none font-black uppercase">
+                  <span className="text-3xl">{score}</span>
+                  <span className="ml-1 text-base">pts</span>
+                  {data.attempt.durationSec !== null && (
+                    <span className="mt-1 block text-sm font-bold normal-case">
+                      <ClockIcon className="inline size-[0.9em] align-[-0.1em]" />{' '}
+                      {formatClock(data.attempt.durationSec)}
+                      {data.attempt.timed ? ' · contra o relógio' : ''}
+                    </span>
+                  )}
+                </p>
+              </div>
+              {starRule && <p className="mt-2 text-sm font-semibold text-ink/75">{starRule}</p>}
+            </div>
+          </div>
 
-      {promoted && (
-        <p
-          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-ink"
-          style={{ background: titleTone(promoted) }}
-        >
-          <TitleBadge name={promoted} className="size-10" />
-          <span className="font-condensed text-2xl leading-none font-black uppercase">
-            Promovido a {promoted}
-          </span>
-        </p>
-      )}
+          {promoted && (
+            <p
+              className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-ink"
+              style={{ background: titleTone(promoted) }}
+            >
+              <TitleBadge name={promoted} className="size-10" />
+              <span className="font-condensed text-2xl leading-none font-black uppercase">
+                Promovido a {promoted}
+              </span>
+            </p>
+          )}
 
-      {!oficina && (award || total !== undefined) && (
-        <div className={`grid gap-3 ${award && total !== undefined ? 'grid-cols-2' : ''}`}>
-          {award && <StickerWon award={award} />}
-          {total !== undefined && <TitleProgress total={total} />}
-        </div>
-      )}
+          {!oficina && (award || total !== undefined) && (
+            <div className={`grid gap-3 ${award && total !== undefined ? 'grid-cols-2' : ''}`}>
+              {award && <StickerWon award={award} />}
+              {total !== undefined && <TitleProgress total={total} />}
+            </div>
+          )}
 
-      {/* Both shares share a row at every width, so neither falls under the phone's bottom bar. */}
-      <div className="grid grid-cols-2 gap-3">
-        {oficina ? (
-          <Link to="/oficina" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
-            Mais desafios da Oficina
-          </Link>
-        ) : daily ? (
-          <Link to="/d/hoje" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
-            Voltar ao Desafio do Dia
-          </Link>
-        ) : next ? (
-          <Link
-            to={`${GAME_PATH[mode]}/${next.level}`}
-            className={`${btnPrimary} min-h-14 text-xl col-span-2`}
-          >
-            Próxima fase · {next.level}
-          </Link>
-        ) : (
-          <Link to={GAME_PATH[mode]} className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
-            Ver as fases
-          </Link>
-        )}
-        {data.share && (
-          <>
-            <ShareButton
-              secondary
-              label={
-                <>
-                  Copiar<span className="max-sm:sr-only"> resultado</span>
-                </>
-              }
-              text={data.share.text}
-              onShared={(method) => track('result_shared', { mode, level, method })}
-            />
-            <ResultCardButton
-              data={data}
-              onShared={() => track('result_shared', { mode, level, method: 'image' })}
-            />
-          </>
-        )}
-      </div>
+          {/* Both shares share a row at every width, so neither falls under the phone's bottom bar. */}
+          <div className="grid grid-cols-2 gap-3">
+            {oficina ? (
+              <Link to="/oficina" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
+                Mais desafios da Oficina
+              </Link>
+            ) : daily ? (
+              <Link to="/d/hoje" className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
+                Voltar ao Desafio do Dia
+              </Link>
+            ) : next ? (
+              <Link
+                to={`${GAME_PATH[mode]}/${next.level}`}
+                className={`${btnPrimary} min-h-14 text-xl col-span-2`}
+              >
+                Próxima fase · {next.level}
+              </Link>
+            ) : (
+              <Link to={GAME_PATH[mode]} className={`${btnPrimary} min-h-14 text-xl col-span-2`}>
+                Ver as fases
+              </Link>
+            )}
+            {data.share && (
+              <>
+                <ShareButton
+                  secondary
+                  label={
+                    <>
+                      Copiar<span className="max-sm:sr-only"> resultado</span>
+                    </>
+                  }
+                  text={data.share.text}
+                  onShared={(method) => track('result_shared', { mode, level, method })}
+                />
+                <ResultCardButton
+                  data={data}
+                  onShared={() => track('result_shared', { mode, level, method: 'image' })}
+                />
+              </>
+            )}
+          </div>
 
-      {showInvite && (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border-2 border-cover/70 px-4 py-3">
-          <p className="min-w-0 flex-1 basis-56">
-            <span className="font-condensed block text-xl leading-none font-extrabold uppercase">
-              Salve seu progresso
-            </span>
-            <span className="text-sm text-chalk-soft">
-              Crie uma conta e leve suas estrelas e figurinhas para qualquer aparelho.
-            </span>
-          </p>
-          <SignInButton />
-        </div>
+          {showInvite && (
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border-2 border-cover/70 px-4 py-3">
+              <p className="min-w-0 flex-1 basis-56">
+                <span className="font-condensed block text-xl leading-none font-extrabold uppercase">
+                  Salve seu progresso
+                </span>
+                <span className="text-sm text-chalk-soft">
+                  Crie uma conta e leve suas estrelas e figurinhas para qualquer aparelho.
+                </span>
+              </p>
+              <SignInButton />
+            </div>
+          )}
+        </>
       )}
       {stars > 0 && !oficina && isPageLaunched('career') && (
         <Link
