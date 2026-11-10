@@ -135,7 +135,7 @@ export function OficinaPage() {
         <h2 id="lista" className="sr-only">
           Desafios
         </h2>
-        <div role="tablist" aria-label="Ordem" className="flex gap-2">
+        <div role="tablist" aria-label="Ordem" className="flex flex-wrap gap-2">
           {(['recomendados', 'populares', 'novos'] as const).map((k) => (
             <button
               key={k}
@@ -151,7 +151,7 @@ export function OficinaPage() {
         {!q.data ? (
           <Skeleton className="mt-4 h-40" />
         ) : q.data.levels.length ? (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="pin-board mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {q.data.levels.map((l) => (
               <li key={l.id}>
                 <LevelCard l={l} />
@@ -167,7 +167,7 @@ export function OficinaPage() {
           <h2 id="meus" className="font-condensed text-2xl font-extrabold uppercase">
             Meus desafios
           </h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="pin-board mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {mine.data.levels.map((l) => (
               <li key={l.id}>
                 <LevelCard l={l} showState />
@@ -236,9 +236,10 @@ function CriterionField({
         : k === 'position'
           ? { type: 'position', positionGroup: id as 'GK' }
           : { type: k, countryId: id };
-  const select = 'min-h-11 w-full rounded-lg border-2 border-chalk-soft/50 bg-pitch px-2 text-base';
+  const select =
+    'min-h-11 w-full rounded-lg border-2 border-ink/40 bg-paper px-2 text-base text-ink';
   return (
-    <fieldset className="flex flex-col gap-1.5 rounded-xl border border-chalk/15 p-3">
+    <fieldset className="flex flex-col gap-1.5 rounded-xl border border-ink/25 p-3">
       <legend className="px-1 text-sm font-semibold">{label}</legend>
       <select
         aria-label={`${label}: tipo`}
@@ -309,66 +310,68 @@ export function OficinaCreatePage() {
         lado. Cada casa precisa de pelo menos 8 jogadores certos na nossa base; o servidor confere
         na hora e um editor revisa antes de publicar.
       </p>
-      <form onSubmit={submit} className="mt-6 flex flex-col gap-6">
-        <label className="flex max-w-md flex-col gap-1 text-sm font-semibold">
-          Nome do desafio
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            minLength={3}
-            maxLength={60}
-            required
-            placeholder="Os gringos do Brasileirão"
-            className="min-h-11 rounded-lg border-2 border-chalk-soft/50 bg-transparent px-3 text-base font-normal"
-          />
-        </label>
-        <div className="grid gap-6 md:grid-cols-2">
-          {(['row', 'col'] as const).map((axis) => (
-            <div key={axis} className="flex flex-col gap-3">
-              <h2 className="font-condensed text-xl font-extrabold uppercase">
-                {axis === 'row' ? 'Linhas' : 'Colunas'}
-              </h2>
-              {[0, 1, 2].map((i) => (
-                <CriterionField
-                  key={i}
-                  label={`${axis === 'row' ? 'Linha' : 'Coluna'} ${i + 1}`}
-                  value={(axis === 'row' ? rows : cols)[i]!}
-                  onChange={set(axis, i)}
-                  clubs={criteria.data.clubs}
-                  countries={criteria.data.countries}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-        {create.error && (
-          <div role="alert" className="rounded-xl bg-chalk/[0.08] p-4 font-semibold">
-            <p>{reasons.length ? 'Esse Grid ainda não fecha:' : create.error.message}</p>
-            {reasons.length > 0 && (
-              <ul className="mt-2 list-disc pl-5 font-normal">
-                {[...new Set(reasons)].map((r) => (
-                  <li key={r}>
-                    {/^CELL_\d/.test(r) ? `${cellLabel(Number(r[5]))}: ` : ''}
-                    {reasonText(r)}
-                  </li>
+      <div className="clipboard mt-6">
+        <form onSubmit={submit} className="paper-sheet flex flex-col gap-6 text-ink">
+          <label className="flex max-w-md flex-col gap-1 text-sm font-semibold">
+            Nome do desafio
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              minLength={3}
+              maxLength={60}
+              required
+              placeholder="Os gringos do Brasileirão"
+              className="min-h-11 rounded-lg border-2 border-ink/40 bg-transparent px-3 text-base font-normal"
+            />
+          </label>
+          <div className="grid gap-6 md:grid-cols-2">
+            {(['row', 'col'] as const).map((axis) => (
+              <div key={axis} className="flex flex-col gap-3">
+                <h2 className="font-condensed text-xl font-extrabold uppercase">
+                  {axis === 'row' ? 'Linhas' : 'Colunas'}
+                </h2>
+                {[0, 1, 2].map((i) => (
+                  <CriterionField
+                    key={i}
+                    label={`${axis === 'row' ? 'Linha' : 'Coluna'} ${i + 1}`}
+                    value={(axis === 'row' ? rows : cols)[i]!}
+                    onChange={set(axis, i)}
+                    clubs={criteria.data.clubs}
+                    countries={criteria.data.countries}
+                  />
                 ))}
-              </ul>
-            )}
-            {create.error.code === 'NICKNAME_REQUIRED' && (
-              <Link to="/conta" className="mt-2 inline-block underline underline-offset-4">
-                Escolher apelido
-              </Link>
-            )}
+              </div>
+            ))}
           </div>
-        )}
-        <button
-          type="submit"
-          className={`${btnPrimary} self-start`}
-          disabled={!ready || create.isPending}
-        >
-          Enviar para revisão
-        </button>
-      </form>
+          {create.error && (
+            <div role="alert" className="rounded-xl bg-ink/10 p-4 font-semibold">
+              <p>{reasons.length ? 'Esse Grid ainda não fecha:' : create.error.message}</p>
+              {reasons.length > 0 && (
+                <ul className="mt-2 list-disc pl-5 font-normal">
+                  {[...new Set(reasons)].map((r) => (
+                    <li key={r}>
+                      {/^CELL_\d/.test(r) ? `${cellLabel(Number(r[5]))}: ` : ''}
+                      {reasonText(r)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {create.error.code === 'NICKNAME_REQUIRED' && (
+                <Link to="/conta" className="mt-2 inline-block underline underline-offset-4">
+                  Escolher apelido
+                </Link>
+              )}
+            </div>
+          )}
+          <button
+            type="submit"
+            className={`${btnPrimary} self-start`}
+            disabled={!ready || create.isPending}
+          >
+            Enviar para revisão
+          </button>
+        </form>
+      </div>
     </>
   );
 }
@@ -510,7 +513,7 @@ export function CreatorPage() {
         <ShareButton text={share} label="Chamar a audiência" />
       </div>
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
-        <ul className="grid content-start gap-3 sm:grid-cols-2">
+        <ul className="pin-board grid content-start gap-5 sm:grid-cols-2">
           {c.levels.map((l) => (
             <li key={l.id}>
               <LevelCard l={l} />
@@ -554,7 +557,7 @@ export function EventPage() {
         {e.status === 'upcoming' ? (
           <p className="text-chalk-soft">Os desafios abrem quando o evento começar.</p>
         ) : (
-          <ul className="grid content-start gap-3 sm:grid-cols-2">
+          <ul className="pin-board grid content-start gap-5 sm:grid-cols-2">
             {e.levels.map((l) => (
               <li key={l.id}>
                 <LevelCard l={l} />
