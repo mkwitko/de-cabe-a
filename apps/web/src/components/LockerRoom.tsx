@@ -23,6 +23,7 @@ import { Skeleton } from './ui';
 import { Moment } from './Moment';
 import type { VotableMode } from '@decabeca/contracts';
 import { leaderOf, ModeArt, ModeDialog, type Locker } from './ModeDialog';
+import { useFinish } from '../lib/cosmetics';
 
 const reduced = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -218,6 +219,7 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
 }
 
 export function LockerRoom({ lockers }: { lockers: Locker[] }) {
+  const finishOf = useFinish();
   const scene = useRef<HTMLDivElement>(null);
   const track = useTrack('CAREER_PATH');
   const stats = useStats();
@@ -285,7 +287,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                   className="fan-card aspect-[3/4]"
                   style={{ '--i': i, '--n': stickers.length } as React.CSSProperties}
                 >
-                  <StickerCard sticker={s} size="sm" />
+                  <StickerCard sticker={s} size="sm" finish={finishOf(s.playerId)} />
                 </li>
               ))}
             </ul>
@@ -293,7 +295,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
 
           <div className="book relative grid lg:grid-cols-2">
             {/* inside of the cover: the name, the rule and the title in its frame */}
-            <div className="leaf relative flex flex-col gap-3 rounded-t-[14px] p-5 pb-5 text-[#e7c26a] sm:p-7 lg:rounded-l-[14px] lg:rounded-tr-none lg:p-9">
+            <div className="leaf relative flex flex-col gap-3 rounded-t-[14px] p-5 pb-5 text-[var(--pp-foil)] sm:p-7 lg:rounded-l-[14px] lg:rounded-tr-none lg:p-9">
               <i aria-hidden="true" className="leaf-tool" />
               <div className="flex items-center justify-between gap-4">
                 <h2
@@ -302,7 +304,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                 >
                   <Link
                     to="/career-path"
-                    className="rounded-sm focus-visible:outline-[#e7c26a] hover:text-[#f6dc95]"
+                    className="rounded-sm focus-visible:outline-[var(--pp-foil)] hover:text-[var(--pp-foil-hi)]"
                   >
                     Career Path
                   </Link>
@@ -316,7 +318,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                   </p>
                 )}
               </div>
-              <p className="-mt-1 max-w-[30ch] text-base leading-snug font-semibold text-[#f3e3b8] lg:text-lg">
+              <p className="-mt-1 max-w-[30ch] text-base leading-snug font-semibold text-[var(--pp-foil-soft)] lg:text-lg">
                 Adivinhe o jogador pelos clubes.
                 <span className="max-sm:hidden"> Seis chances.</span>
               </p>
@@ -346,7 +348,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
             </div>
 
             {/* the visa page: stamps around the next level and the count */}
-            <div className="page relative flex flex-col gap-3 rounded-b-[14px] p-4 text-[#1d2a4f] sm:p-7 lg:rounded-r-[14px] lg:rounded-bl-none lg:p-9">
+            <div className="page relative flex flex-col gap-3 rounded-b-[14px] p-4 text-[var(--pp-text)] sm:p-7 lg:rounded-r-[14px] lg:rounded-bl-none lg:p-9">
               {!track.data && !track.error ? (
                 <Skeleton className="h-36 w-full" />
               ) : track.error ? (
@@ -374,7 +376,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                       <span className="tabular">{levels.length}</span> fases carimbadas
                     </p>
                     <div
-                      className="h-2 overflow-hidden rounded-full bg-[#1d2a4f]/15"
+                      className="h-2 overflow-hidden rounded-full bg-[var(--pp-text)]/15"
                       role="progressbar"
                       aria-label="Fases concluídas"
                       aria-valuemin={0}
@@ -382,7 +384,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                       aria-valuenow={done}
                     >
                       <div
-                        className="h-full rounded-full bg-[#1d2a4f]"
+                        className="h-full rounded-full bg-[var(--pp-text)]"
                         style={{
                           width: `${Math.max(done ? 2 : 0, (done / levels.length) * 100)}%`,
                         }}
@@ -390,7 +392,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
                     </div>
                     <Link
                       to="/career-path"
-                      className="font-condensed mt-1 inline-flex min-h-11 items-center self-start max-lg:hidden text-base font-extrabold uppercase underline decoration-2 underline-offset-4 hover:decoration-[#7a2633]"
+                      className="font-condensed mt-1 inline-flex min-h-11 items-center self-start max-lg:hidden text-base font-extrabold uppercase underline decoration-2 underline-offset-4 hover:decoration-[var(--pp-leather-1)]"
                     >
                       Ver a trilha de carimbos
                     </Link>

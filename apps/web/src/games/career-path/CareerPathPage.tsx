@@ -43,13 +43,13 @@ function Leaf({ view, won }: { view: CareerPathView; won: boolean }) {
       <p className="font-condensed text-[clamp(2.25rem,7.5cqh,4.25rem)] leading-[0.86] font-black uppercase [text-shadow:0_-1px_0_#0007,0_1px_0_#fff3]">
         De quem é esse passaporte?
       </p>
-      <dl className="flex flex-col gap-3 border-t border-[#e7c26a55] pt-[clamp(0.75rem,2.5cqh,1.5rem)]">
+      <dl className="flex flex-col gap-3 border-t border-[var(--pp-foil)]/33 pt-[clamp(0.75rem,2.5cqh,1.5rem)]">
         {fields.map((f) => (
           <div key={f.label} className="motion-safe:animate-[stamp-fade_420ms_ease-out]">
-            <dt className="text-xs font-bold tracking-[0.2em] text-[#f3e3b8] uppercase">
+            <dt className="text-xs font-bold tracking-[0.2em] text-[var(--pp-foil-soft)] uppercase">
               {f.label}
             </dt>
-            <dd className="font-condensed text-[clamp(1.5rem,4.5cqh,2.25rem)] leading-tight font-black text-[#f6dc95] uppercase">
+            <dd className="font-condensed text-[clamp(1.5rem,4.5cqh,2.25rem)] leading-tight font-black text-[var(--pp-foil-hi)] uppercase">
               {f.value}
             </dd>
           </div>
@@ -57,7 +57,9 @@ function Leaf({ view, won }: { view: CareerPathView; won: boolean }) {
       </dl>
       <div className="mt-auto flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <p className="text-xs font-bold tracking-[0.2em] text-[#f3e3b8] uppercase">Tentativas</p>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--pp-foil-soft)] uppercase">
+            Tentativas
+          </p>
           <div className="[&_[role=img]>span]:size-6">
             <AttemptDots used={view.attemptsUsed} max={view.maxAttempts} won={won} />
           </div>

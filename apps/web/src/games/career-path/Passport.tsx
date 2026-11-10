@@ -33,7 +33,7 @@ function Stamp({
       className={`relative flex h-[92%] w-[94%] max-w-72 flex-col items-center justify-center border-[3px] border-current text-center opacity-90 mix-blend-multiply ${hit ? 'stamp-hit' : ''}`}
       style={
         {
-          color: clubColor(club.clubName, 0.38),
+          color: `var(--pp-ink, ${clubColor(club.clubName, 0.38)})`,
           borderRadius: i % 2 ? '14px' : '999px',
           '--rot': `${ROT[i % ROT.length]}deg`,
           transform: `rotate(${ROT[i % ROT.length]}deg)`,
@@ -131,10 +131,10 @@ export function Passport({
           </div>
         )}
         <div className="cp-right absolute inset-0">
-          <div className="absolute inset-0 overflow-hidden rounded-[6px_14px_14px_6px] bg-[#f3ead2] text-[#1d2a4f] shadow-[0_30px_50px_rgb(0_0_0/0.55),inset_14px_0_18px_-10px_#00000040] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)]">
+          <div className="absolute inset-0 overflow-hidden rounded-[6px_14px_14px_6px] bg-[var(--pp-paper)] text-[var(--pp-text)] shadow-[0_30px_50px_rgb(0_0_0/0.55),inset_14px_0_18px_-10px_#00000040] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,var(--pp-rule)_27px_28px),radial-gradient(circle_at_50%_45%,var(--pp-paper-hi),var(--pp-paper)_60%,var(--pp-paper-lo))]">
             <div
               aria-hidden="true"
-              className="absolute inset-x-5 top-3.5 flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[#6d5c3a] uppercase"
+              className="absolute inset-x-5 top-3.5 flex justify-between gap-3 text-[11px] font-extrabold tracking-[0.18em] text-[var(--pp-label)] uppercase"
             >
               <span className="whitespace-nowrap">Passaporte do jogador</span>
               <span className="cp-brand hidden whitespace-nowrap sm:inline">De Cabeça F.C.</span>
@@ -162,7 +162,7 @@ export function Passport({
                   aria-hidden="true"
                   className="grid min-h-0 place-items-center [container-type:size]"
                 >
-                  <span className="font-condensed grid size-[min(60cqw,88cqh,8rem)] place-items-center rounded-full border-2 border-dashed border-[#6d5c3a66] text-4xl font-black text-[#6d5c3a]/70">
+                  <span className="font-condensed grid size-[min(60cqw,88cqh,8rem)] place-items-center rounded-full border-2 border-dashed border-[var(--pp-label)]/40 text-4xl font-black text-[var(--pp-label)]/70">
                     ?
                   </span>
                 </li>
@@ -175,9 +175,9 @@ export function Passport({
             aria-hidden={opened}
             tabIndex={opened ? -1 : 0}
             onClick={onOpen}
-            className={`passport-cover absolute inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-[min(1rem,3.5cqh)] rounded-[6px_14px_14px_6px] text-[#e7c26a] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [backface-visibility:hidden] [background:radial-gradient(circle_at_30%_20%,#7a2633,#5b1a24_55%,#3d1018)] [container-type:size] ${opened ? 'pointer-events-none [transform:rotateY(-178deg)]' : ''}`}
+            className={`passport-cover absolute inset-0 z-[5] flex origin-left flex-col items-center justify-center gap-[min(1rem,3.5cqh)] rounded-[6px_14px_14px_6px] text-[var(--pp-foil)] shadow-[0_30px_50px_rgb(0_0_0/0.6)] [backface-visibility:hidden] [background:radial-gradient(circle_at_30%_20%,var(--pp-leather-1),var(--pp-leather-2)_55%,var(--pp-leather-3))] [container-type:size] ${opened ? 'pointer-events-none [transform:rotateY(-178deg)]' : ''}`}
           >
-            <span className="font-condensed grid size-[min(6rem,24cqh)] place-items-center rounded-full border-[3px] border-[#e7c26a] text-[min(1.875rem,8cqh)] font-black">
+            <span className="font-condensed grid size-[min(6rem,24cqh)] place-items-center rounded-full border-[3px] border-[var(--pp-foil)] text-[min(1.875rem,8cqh)] font-black">
               DC
             </span>
             <span className="font-condensed text-center text-[min(2.25rem,10cqh)] leading-[0.9] font-black tracking-[0.06em] uppercase">
@@ -188,7 +188,7 @@ export function Passport({
             <span className="text-xs font-bold tracking-[0.3em] uppercase opacity-85">
               República do futebol
             </span>
-            <span className="mt-[min(1.5rem,4cqh)] rounded-full border border-[#e7c26a99] px-4 py-1.5 text-[13px] font-extrabold tracking-[0.2em] text-[#f6dc95] uppercase">
+            <span className="mt-[min(1.5rem,4cqh)] rounded-full border border-[var(--pp-foil)]/60 px-4 py-1.5 text-[13px] font-extrabold tracking-[0.2em] text-[var(--pp-foil-hi)] uppercase">
               Toque para abrir
             </span>
           </button>

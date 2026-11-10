@@ -54,7 +54,7 @@ function VisaPage({
   return (
     <section
       aria-label={`Página ${n}, fases ${levels[0]!.level} a ${levels.at(-1)!.level}`}
-      className={`relative flex flex-col overflow-hidden bg-[#f3ead2] px-5 pt-6 pb-4 text-[#1d2a4f] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,#c9b98f55_27px_28px),radial-gradient(circle_at_50%_45%,#f8f1dc,#f3ead2_60%,#e2d5b3)] sm:px-8 ${side === 'l' ? 'rounded-t-[14px] md:rounded-l-[14px] md:rounded-tr-none md:shadow-[inset_-18px_0_24px_-16px_#00000045]' : 'rounded-b-[14px] md:rounded-r-[14px] md:rounded-bl-none md:shadow-[inset_18px_0_24px_-16px_#00000045]'}`}
+      className={`relative flex flex-col overflow-hidden bg-[var(--pp-paper)] px-5 pt-6 pb-4 text-[var(--pp-text)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,var(--pp-rule)_27px_28px),radial-gradient(circle_at_50%_45%,var(--pp-paper-hi),var(--pp-paper)_60%,var(--pp-paper-lo))] sm:px-8 ${side === 'l' ? 'rounded-t-[14px] md:rounded-l-[14px] md:rounded-tr-none md:shadow-[inset_-18px_0_24px_-16px_#00000045]' : 'rounded-b-[14px] md:rounded-r-[14px] md:rounded-bl-none md:shadow-[inset_18px_0_24px_-16px_#00000045]'}`}
     >
       <ol className="grid flex-1 grid-cols-2 gap-x-6 gap-y-5 sm:gap-x-10">
         {levels.map((l) => (
@@ -65,7 +65,7 @@ function VisaPage({
       </ol>
       <p
         aria-hidden="true"
-        className={`font-condensed tabular mt-4 text-sm font-extrabold text-[#6d5c3a] ${side === 'l' ? 'text-left' : 'text-right'}`}
+        className={`font-condensed tabular mt-4 text-sm font-extrabold text-[var(--pp-label)] ${side === 'l' ? 'text-left' : 'text-right'}`}
       >
         {n}
       </p>

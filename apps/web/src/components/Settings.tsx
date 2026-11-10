@@ -2,7 +2,8 @@
  * Ajustes: one gear in the header opens it (a sheet from the bottom on phones, a panel under the
  * header on wide screens). Música and Efeitos with live volume, the track with a short preview,
  * vibration, reduced motion, and the ways to Conta, Privacidade and cookies. Everything stays on
- * this device (`lib/settings.ts`). A native <dialog>: focus trap, Esc and the backdrop close it.
+ * this device (`lib/settings.ts`), except Aparência: the owned Clube and Banca items worn, saved on
+ * the account (`lib/cosmetics.ts`). A native <dialog>: focus trap, Esc and the backdrop close it.
  */
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -12,6 +13,8 @@ import { play, setSound } from '../lib/sound';
 import { hapticsOn, hapticsSupported, onHapticsChange, setHaptics } from '../lib/haptics';
 import { CONSENT_NEEDED, openConsentPanel } from '../lib/consent';
 import { InstallRow } from './InstallApp';
+import { useOwned } from '../lib/cosmetics';
+import { Wardrobe } from './Wardrobe';
 
 const openers = new Set<() => void>();
 /** Opens Ajustes from anywhere (Conta links here). */
@@ -251,6 +254,7 @@ const linkRow =
 export function SettingsDialog() {
   const ref = useRef<HTMLDialogElement>(null);
   const s = useSettings();
+  const owned = useOwned();
   const systemReduce = systemReducesMotion();
   useEffect(() => {
     const open = () => ref.current?.showModal();
@@ -327,6 +331,12 @@ export function SettingsDialog() {
               onChange={(on) => updateSettings({ reduceMotion: on })}
             />
           </Group>
+          {owned && Wardrobe.owns(owned) && (
+            <Group title="Aparência">
+              <Wardrobe e={owned} />
+              <p className="text-sm text-chalk-soft">Fica na sua conta, em qualquer aparelho.</p>
+            </Group>
+          )}
           <Group title="Conta e privacidade">
             <nav aria-label="Conta e privacidade" className="grid">
               <InstallRow className={linkRow} />
@@ -354,7 +364,11 @@ export function SettingsDialog() {
               )}
             </nav>
           </Group>
-          <p className="text-sm text-chalk-soft">Os ajustes ficam guardados só neste aparelho.</p>
+          <p className="text-sm text-chalk-soft">
+            {owned && Wardrobe.owns(owned)
+              ? 'Os outros ajustes ficam guardados só neste aparelho.'
+              : 'Os ajustes ficam guardados só neste aparelho.'}
+          </p>
         </div>
       </div>
     </dialog>
