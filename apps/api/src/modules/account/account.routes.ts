@@ -182,7 +182,10 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
         userId: req.userId,
       };
       const res = await authRequest.run(store, () => auth.handler(request));
-      if (store.signedIn) await link(req, reply, store.signedIn);
+      // Only a sign-in this device started (POST, or the OAuth callback bound by its state cookie)
+      // takes the guest session: a GET /verify-email link can be opened by someone else's browser.
+      const own = req.method === 'POST' || url.pathname.endsWith('/callback/google');
+      if (store.signedIn && own) await link(req, reply, store.signedIn);
       reply.status(res.status);
       res.headers.forEach((value, key) => {
         if (key !== 'set-cookie') reply.header(key, value);

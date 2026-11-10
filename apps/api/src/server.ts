@@ -57,7 +57,21 @@ const app = buildApp(
   // Behind Caddy + the Pages Function (ADR-010) the client IP comes in X-Forwarded-For.
   // ponytail: the origin is public, so a direct caller can forge it; restrict Caddy to
   // Cloudflare's IP ranges if per-IP limits get abused.
-  { logger: true, trustProxy: process.env.TRUST_PROXY === '1' },
+  {
+    // Auth tokens travel in URLs (reset path, verify-email query) and logs go to Sentry: mask them
+    // and leave the client IP out.
+    logger: {
+      serializers: {
+        req: (req: { method: string; url: string }) => ({
+          method: req.method,
+          url: req.url
+            .replace(/(\/v1\/auth\/reset-password\/)[^/?]+/, '$1[redacted]')
+            .replace(/^(\/v1\/auth\/[^?]*)\?.*/, '$1?[redacted]'),
+        }),
+      },
+    },
+    trustProxy: process.env.TRUST_PROXY === '1',
+  },
   {
     prisma: createPrisma(env('DATABASE_URL')),
     adminToken: env('ADMIN_TOKEN'),

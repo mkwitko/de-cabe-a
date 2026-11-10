@@ -691,6 +691,7 @@ model CommunityLevel {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   votes       CommunityVote[]
+  reportRows  CommunityReport[]
 
   @@index([state, createdAt])
   @@index([authorPk])
@@ -702,6 +703,16 @@ model CommunityVote {
   level       CommunityLevel @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
   pk          String
   up          Boolean
+  createdAt   DateTime       @default(now())
+
+  @@id([challengeId, pk])
+}
+
+/// One report per player on a community level; three distinct reporters flag it for review.
+model CommunityReport {
+  challengeId String
+  level       CommunityLevel @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
+  pk          String
   createdAt   DateTime       @default(now())
 
   @@id([challengeId, pk])

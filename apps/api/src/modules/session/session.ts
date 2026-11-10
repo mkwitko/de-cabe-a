@@ -81,7 +81,12 @@ function creationLimiter(perMinute: number, now: () => Date) {
 
 export function guestSession(
   prisma: PrismaClient,
-  opts: { secureCookie: boolean; now: () => Date; sessionsPerIp: number },
+  opts: {
+    secureCookie: boolean;
+    now: () => Date;
+    sessionsPerIp: number;
+    trustedOrigins: string[];
+  },
 ) {
   const allowCreation = creationLimiter(opts.sessionsPerIp, opts.now);
   return async (req: FastifyRequest, reply: FastifyReply) => {
@@ -99,6 +104,13 @@ export function guestSession(
         return;
       }
     }
+    // A cross-site form POST carries no cookie (SameSite=Lax); it must not replace the victim's.
+    if (
+      !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
+      (req.headers['sec-fetch-site'] === 'cross-site' ||
+        (req.headers.origin !== undefined && !opts.trustedOrigins.includes(req.headers.origin)))
+    )
+      throw new AppError(403, 'FORBIDDEN', 'Origem não permitida.');
     if (!allowCreation(req.ip))
       throw new AppError(429, 'RATE_LIMITED', 'Muitas sessões novas. Tente de novo em um minuto.');
     const s = await newSession(prisma, reply, { secure: opts.secureCookie, now: opts.now() });

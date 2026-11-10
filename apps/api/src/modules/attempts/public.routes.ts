@@ -49,7 +49,12 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   const { prisma, now, secureCookie, limits } = app.deps;
   app.addHook(
     'onRequest',
-    guestSession(prisma, { secureCookie, now, sessionsPerIp: limits.sessionsPerIp }),
+    guestSession(prisma, {
+      secureCookie,
+      now,
+      sessionsPerIp: limits.sessionsPerIp,
+      trustedOrigins: app.deps.auth.options.trustedOrigins as string[],
+    }),
   );
   // After the session hook, so limits are per guest session (the IP only limits session creation).
   await app.register(rateLimit, {

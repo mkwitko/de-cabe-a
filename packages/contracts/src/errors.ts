@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const ErrorCode = z.enum([
   'VALIDATION_ERROR',
   'UNAUTHORIZED',
+  'FORBIDDEN',
   'NOT_FOUND',
   'INTERNAL_ERROR',
   'RATE_LIMITED',

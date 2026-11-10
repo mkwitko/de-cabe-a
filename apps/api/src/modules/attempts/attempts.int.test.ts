@@ -1777,7 +1777,59 @@ describe('Oficina De Cabeça', () => {
     expect(creator.levels).toHaveLength(1);
     expect(creator.ranking[0]).toMatchObject({ nickname: 'Plateia', levels: 1 });
 
-    for (let i = 0; i < 3; i++) await guest().req('POST', `/oficina/${id}/report`);
+    // Reports need a finished attempt, count once per player, and flag at three distinct players.
+    expect((await guest().req('POST', `/oficina/${id}/report`)).statusCode).toBe(409);
+    for (let i = 0; i < 3; i++) await player.req('POST', `/oficina/${id}/report`);
+    expect((await player.req('GET', `/oficina/${id}`)).json().state).toBe('published');
+    for (let i = 0; i < 2; i++) {
+      const p = guest();
+      const a = (await p.req('POST', '/attempts', start)).json();
+      await p.act(a.attempt.id, { kind: 'finish' });
+      expect((await p.req('POST', `/oficina/${id}/report`)).statusCode).toBe(204);
+    }
     expect((await player.req('GET', `/oficina/${id}`)).json().state).toBe('flagged');
+    // A flagged level stays listed and playable.
+    const list2 = (await guest().req('GET', '/oficina?list=novos')).json().levels;
+    expect(list2.some((l: { id: string }) => l.id === id)).toBe(true);
+    expect((await guest().req('POST', '/attempts', start)).statusCode).toBeLessThan(300);
+  });
+});
+
+describe('Security hardening', () => {
+  // Own app: the /auth/* per-IP limit is spent by the sign-in tests above.
+  const sec = testApp({ prisma }).app;
+  const call = (method: 'GET' | 'POST', url: string, payload?: object, cookie = '') =>
+    sec.inject({
+      method,
+      url: `/v1${url}`,
+      headers: { origin: WEB_ORIGIN, ...(cookie ? { cookie } : {}) },
+      ...(payload ? { payload } : {}),
+    });
+
+  it('sign-up checks the nickname; /auth/update-user is disabled, PATCH /me is the way', async () => {
+    const creds = { email: `${randomUUID()}@example.com`, password: 'senha-forte-123' };
+    const bad = await call('POST', '/auth/sign-up/email', { ...creds, name: 'x'.repeat(50) });
+    expect(bad.statusCode).toBe(400);
+    const reg = await call('POST', '/auth/sign-up/email', { ...creds, name: 'Nome Seguro' });
+    expect(reg.statusCode, reg.body).toBe(200);
+    const cookie = [reg.headers['set-cookie']]
+      .flat()
+      .map((c) => String(c).split(';')[0])
+      .join('; ');
+    expect(
+      (await call('POST', '/auth/update-user', { name: 'Outro Nome' }, cookie)).statusCode,
+    ).toBe(404);
+    expect((await call('GET', '/me', undefined, cookie)).json().nickname).toBe('Nome Seguro');
+  });
+
+  it('a cross-site POST without a cookie neither creates a session nor sets dc_session', async () => {
+    const res = await sec.inject({
+      method: 'POST',
+      url: '/v1/auth/logout',
+      headers: { 'sec-fetch-site': 'cross-site', 'content-type': 'text/plain' },
+      payload: 'x',
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.headers['set-cookie']).toBeUndefined();
   });
 });

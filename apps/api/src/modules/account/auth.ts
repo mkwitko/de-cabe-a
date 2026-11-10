@@ -7,6 +7,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { isOffensive, normalizeName } from '@decabeca/engine';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { Nickname } from '@decabeca/contracts';
 import { APIError, createAuthMiddleware } from 'better-auth/api';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { hashPassword, verifyPassword } from './password';
@@ -78,6 +79,8 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
     secret: opts.secret,
     baseURL: opts.baseURL,
     basePath: '/v1/auth',
+    // PATCH /v1/me is the only way to change a nickname (it checks charset, blocklist, uniqueness).
+    disabledPaths: ['/update-user'],
     trustedOrigins: opts.trustedOrigins,
     database: prismaAdapter(prisma, { provider: 'postgresql' }),
     user: {
@@ -105,7 +108,8 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
     },
     emailVerification: {
       sendOnSignUp: true,
-      autoSignInAfterVerification: true,
+      // Off: a verification link must not sign in whoever opens it (login CSRF, security scan F4).
+      autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url }) => {
         void opts.sendEmail({
           to: user.email,
@@ -131,8 +135,23 @@ export function createAuth(prisma: PrismaClient, opts: AuthOptions) {
                 : await freeNickname(prisma, user.name);
               return { data: { ...user, name: picked.nickname, nicknameKey: picked.key } };
             }
-            const key = await assertNicknameFree(prisma, user.name, mine);
-            return { data: { ...user, nicknameKey: key } };
+            const name = Nickname.safeParse(user.name);
+            if (!name.success)
+              throw new APIError('BAD_REQUEST', { message: name.error.issues[0]!.message });
+            const key = await assertNicknameFree(prisma, name.data, mine);
+            return { data: { ...user, name: name.data, nicknameKey: key } };
+          },
+        },
+        // /update-user is disabled; this keeps any other write path from skipping the checks.
+        update: {
+          before: async (data, ctx) => {
+            if (data.name === undefined) return;
+            const name = Nickname.safeParse(data.name);
+            if (!name.success)
+              throw new APIError('BAD_REQUEST', { message: name.error.issues[0]!.message });
+            const id = ctx?.context.session?.user.id ?? null;
+            const key = await assertNicknameFree(prisma, name.data, { sessionId: '', userId: id });
+            return { data: { ...data, name: name.data, nicknameKey: key } };
           },
         },
       },

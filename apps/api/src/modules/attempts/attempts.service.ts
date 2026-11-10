@@ -322,7 +322,7 @@ export async function startAttempt(
           gameMode: mode,
           publicNumber: null,
           status: 'published',
-          community: { state: { in: ['published', 'featured'] } },
+          community: { state: { in: ['published', 'featured', 'flagged'] } },
         },
       })
     : await prisma.challenge.findMany({
