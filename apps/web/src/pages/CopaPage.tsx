@@ -351,7 +351,7 @@ function shareText(run: CopaRunView) {
     (m) =>
       `${m.stage.replace(' · jogo ', ' ')}: ${m.goalsFor}×${m.goalsAgainst} ${sideName(m.opponent)}${m.penalties ? ` (pên. ${m.penalties.mine}×${m.penalties.theirs})` : ''}`,
   );
-  return `Copa dos Sonhos no De Cabeça (${run.formation}, ${run.difficulty === 'raiz' ? 'Raiz' : 'Olheiro'}): ${FINISH_TEXT[run.finish ?? '']}\n${lines.join('\n')}\nMeu time: ${run.xi.map((p) => p.name).join(', ')}\ndecabecafc.com.br/copa?ref=share`;
+  return `Copa dos Sonhos no De Cabeça F.C. (${run.formation}, ${run.difficulty === 'raiz' ? 'Raiz' : 'Olheiro'}): ${FINISH_TEXT[run.finish ?? '']}\n${lines.join('\n')}\nMeu time: ${run.xi.map((p) => p.name).join(', ')}\ndecabecafc.com.br/copa?ref=share`;
 }
 
 export function CopaPage() {

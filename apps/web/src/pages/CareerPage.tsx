@@ -275,7 +275,7 @@ const stamp =
 
 function shareText(c: Career) {
   const clubs = [...new Set(c.path.map((p) => p.club))].join(' → ');
-  return `Meu craque no De Cabeça: ${c.name} (${POSITION_LABEL[c.position]}, geral ${c.overall})\n${clubs}\n${c.totals.goals} gols em ${c.totals.matches} jogos\ndecabecafc.com.br/carreira`;
+  return `Meu craque no De Cabeça F.C.: ${c.name} (${POSITION_LABEL[c.position]}, geral ${c.overall})\n${clubs}\n${c.totals.goals} gols em ${c.totals.matches} jogos\ndecabecafc.com.br/carreira`;
 }
 
 export function CareerPage() {
