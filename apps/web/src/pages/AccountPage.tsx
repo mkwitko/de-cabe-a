@@ -15,16 +15,18 @@ import { AccountData } from '../components/AccountData';
 import { HapticsToggle, MusicToggle, SoundToggle } from '../components/SoundToggle';
 
 const input =
-  'min-h-12 rounded-lg border-2 border-ink/15 bg-paper px-3 text-base text-ink focus:border-ink';
+  'min-h-12 rounded-lg border-2 border-ink/30 bg-white/85 px-3 text-base text-ink focus:border-ink';
 
 function Field({
   label,
+  hint,
   ...props
-}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; hint?: string | undefined } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="flex flex-col gap-1 font-semibold">
       {label}
       <input className={input} {...props} />
+      {hint && <span className="text-sm font-medium opacity-75">{hint}</span>}
     </label>
   );
 }
@@ -61,10 +63,11 @@ export function AccountPage() {
     .slice(0, 2)
     .toUpperCase();
   const h2 = 'font-condensed text-2xl font-extrabold uppercase leading-none';
-  const card = 'flex flex-col gap-3 rounded-xl border border-chalk/15 bg-chalk/[0.05] p-5';
+  const card = 'flex flex-col gap-3 border-t-2 border-dashed border-chalk/20 pt-5';
 
   return (
     <div className="flex flex-col gap-8">
+      <div aria-hidden="true" className="scene-art room-dim" />
       <h1 className="font-condensed text-4xl font-black uppercase">Conta</h1>
       <div className="grid gap-12 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start md:gap-14">
         {/* The player's own sticker: what the ranking shows about you. */}
@@ -94,7 +97,7 @@ export function AccountPage() {
           </p>
         </aside>
 
-        <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-8">
+        <div className="desk grid items-start gap-x-10 gap-y-6 sm:p-6 lg:grid-cols-2">
           <form className={card} onSubmit={(e) => submit(e, '/v1/me', 'PATCH', { nickname })}>
             <h2 className={h2}>
               {m.nickname
@@ -105,6 +108,7 @@ export function AccountPage() {
             </h2>
             <Field
               label="Apelido público"
+              hint="De 3 a 20 caracteres. É o nome no seu cartão de sócio e no perfil."
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               minLength={3}
@@ -148,7 +152,7 @@ export function AccountPage() {
                     })
                   }
                 />
-                Perfil público
+                Mostrar meu perfil
               </label>
               {m.publicProfile && (
                 <div className="flex flex-wrap items-center gap-3">
@@ -171,8 +175,8 @@ export function AccountPage() {
           <section className={card}>
             <h2 className={h2}>Preferências</h2>
             <p className="text-chalk-soft">
-              Música de fundo, apito, torcida, o "uhh" do erro e a vibração. Fica guardado só neste
-              aparelho.
+              Música de fundo, apito, torcida, o "uhh" do erro e a vibração. Ficam guardadas só
+              neste aparelho.
             </p>
             <MusicToggle withLabel />
             <SoundToggle withLabel />
@@ -190,7 +194,7 @@ export function AccountPage() {
 
           {m.account ? (
             <section className={card}>
-              <h2 className={h2}>Sessão</h2>
+              <h2 className={h2}>Sua conta</h2>
               <p className="text-chalk-soft">
                 Seu progresso está salvo na conta e aparece em qualquer aparelho em que você entrar.
               </p>
@@ -222,7 +226,7 @@ export function AccountPage() {
             </section>
           ) : (
             <form
-              className={`${card} order-first border-cover/70 lg:col-span-2`}
+              className="form-slip order-first flex flex-col gap-3 p-5 sm:p-6 lg:col-span-2"
               onSubmit={(e) =>
                 mode === 'forgot'
                   ? submit(e, '/v1/auth/request-password-reset', 'POST', {
@@ -241,14 +245,14 @@ export function AccountPage() {
             >
               <h2 className={h2}>
                 {mode === 'register'
-                  ? 'Criar conta (opcional)'
+                  ? 'Criar conta'
                   : mode === 'login'
                     ? 'Entrar'
                     : 'Esqueci a senha'}
               </h2>
-              <p className="text-chalk-soft">
+              <p className="max-w-[62ch] text-ink/75">
                 {mode === 'register'
-                  ? 'Guarda seu progresso e suas estrelas para jogar em outro aparelho. Sem conta você continua jogando normalmente.'
+                  ? 'Opcional. A conta guarda suas estrelas e figurinhas para você jogar em outro aparelho; sem ela, você continua jogando aqui.'
                   : mode === 'login'
                     ? 'Entre para trazer seu progresso para este aparelho.'
                     : 'Mandamos um link para você criar uma senha nova.'}
@@ -257,14 +261,14 @@ export function AccountPage() {
                 <>
                   <button
                     type="button"
-                    className={`${btnSecondary} w-full gap-3 bg-paper text-ink hover:bg-paper/90`}
+                    className={`${btnSecondary} w-full gap-3 border-ink/30 bg-white text-base text-ink hover:border-ink hover:bg-white sm:max-w-md`}
                     disabled={google.isPending}
                     onClick={() => google.mutate()}
                   >
                     <GoogleMark />
                     Continuar com Google
                   </button>
-                  <p className="flex items-center gap-3 text-sm text-chalk-soft before:h-px before:flex-1 before:bg-chalk/20 after:h-px after:flex-1 after:bg-chalk/20">
+                  <p className="flex items-center gap-3 text-sm text-ink/70 before:h-px before:flex-1 before:bg-ink/20 after:h-px after:flex-1 after:bg-ink/20 sm:max-w-md">
                     ou com e-mail
                   </p>
                 </>
@@ -280,6 +284,7 @@ export function AccountPage() {
               {mode !== 'forgot' && (
                 <Field
                   label="Senha"
+                  hint={mode === 'register' ? 'Pelo menos 8 caracteres.' : undefined}
                   type="password"
                   autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                   minLength={mode === 'register' ? 8 : 1}
@@ -314,8 +319,8 @@ export function AccountPage() {
                 )}
               </div>
               {mode === 'register' && !nickname && !m.nickname && (
-                <p className="text-sm text-chalk-soft">
-                  Preencha o apelido acima: ele vai para a conta.
+                <p className="text-sm text-ink/75">
+                  Escolha também um apelido, no campo logo abaixo: ele vai junto para a conta.
                 </p>
               )}
             </form>

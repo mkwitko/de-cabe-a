@@ -36,14 +36,14 @@ export function Achievements() {
       {GROUPS.filter(([key]) => items.some((x) => x.category === key)).map(([key, label]) => (
         <div key={key} className="flex flex-col gap-3">
           <h3 className="text-xs font-bold tracking-wide text-chalk-soft uppercase">{label}</h3>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 py-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-5">
             {items
               .filter((x) => x.category === key)
               .map((x) => (
                 <li
                   key={x.id}
                   aria-label={`${x.name}: ${x.done ? 'conquistada' : `${x.progress} de ${x.goal}`}. ${x.description}`}
-                  className={`flex min-h-36 flex-col gap-1 rounded-xl p-3 ${
+                  className={`flex min-h-32 w-40 shrink-0 snap-start flex-col gap-1 rounded-xl p-3 sm:min-h-36 sm:w-auto ${
                     x.done
                       ? '-rotate-1 bg-cover text-ink shadow-[0_8px_18px_-8px_rgb(0_0_0/0.55)]'
                       : 'border-2 border-dashed border-chalk-soft/30 text-chalk-soft'
