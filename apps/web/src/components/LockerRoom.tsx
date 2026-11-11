@@ -279,7 +279,7 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
         aria-labelledby="cp-name"
         className="scene-stage relative flex flex-col items-center gap-5 lg:flex-row lg:items-end lg:justify-center lg:gap-0"
       >
-        <div className="scene-tilt relative w-full max-w-xl lg:w-[min(62vw,58rem)] lg:max-w-none">
+        <div className="scene-tilt relative w-full max-w-xl lg:w-[min(62vw,58rem,100%)] lg:max-w-none">
           {/* stickers fanned out from under the passport */}
           {stickers.length > 0 && (
             <ul aria-label="Suas figurinhas do Career Path" className="fan">

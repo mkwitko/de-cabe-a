@@ -4,7 +4,7 @@ import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
-import { AD_SLOTS, AdSlot } from './components/AdSlot';
+import { AD_SLOTS, ADS_ENABLED, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
@@ -349,6 +349,8 @@ export function Home() {
   return <LockerRoom lockers={[...modes, ...extra]} />;
 }
 
+const HOME_AD = ADS_ENABLED && Boolean(AD_SLOTS.home);
+
 function HomeRoute() {
   // Warm the launch level's chunk once the home is idle, so opening it is instant.
   useEffect(() => {
@@ -357,9 +359,16 @@ function HomeRoute() {
   }, []);
   return (
     <>
-      <Home />
-      <div className="mt-10">
-        <AdSlot slot={AD_SLOTS.home} />
+      {/* desktop: the ad rides a sticky rail beside the scene; phone: under it */}
+      <div
+        className={
+          HOME_AD ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-8' : ''
+        }
+      >
+        <Home />
+        <div className="xl:sticky xl:top-4 xl:[&>aside]:mt-4">
+          <AdSlot slot={AD_SLOTS.home} />
+        </div>
       </div>
       <p className="mt-10 text-center text-sm text-chalk-soft">
         {isPageLaunched('daily') && (

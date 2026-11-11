@@ -1,4 +1,5 @@
 /** Public profile (GROWTH_PLAN.md 2.2): only when the player turned it on in /conta. */
+import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import type { ProfileAlbumResponse, ProfileResponse } from '@decabeca/contracts';
@@ -166,6 +167,7 @@ export function ProfilePage() {
           </ul>
         </section>
       )}
+      <AdSlot slot={AD_SLOTS.track} />
     </div>
   );
 }
