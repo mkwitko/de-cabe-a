@@ -7,7 +7,7 @@ import { GAME_MODES, GAME_PATH, type GameMode } from '@decabeca/contracts/modes'
 
 export const LAUNCH_ALL = import.meta.env.VITE_LAUNCH_ALL === '1';
 
-export const LAUNCHED_MODES: readonly GameMode[] = ['CAREER_PATH'];
+export const LAUNCHED_MODES: readonly GameMode[] = ['CAREER_PATH', 'HIGHER_LOWER'];
 
 /** Pages that can be closed. Open pages (album, perfil, conta, entrar, legais, como jogar) are not listed. */
 const GATED_PAGES = [

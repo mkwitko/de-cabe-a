@@ -8,10 +8,11 @@
       "h1": "De Cabeça F.C.: minijogos de futebol",
       "text": [
         "Teste quanto você sabe de futebol de cabeça. Três jogos, centenas de fases, estrelas, títulos e ranking da comunidade.",
-        "Career Path: adivinhe o jogador pela sequência de clubes. Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
+        "Career Path: adivinhe o jogador pela sequência de clubes. Mais ou Menos: quem fez mais gols, ou jogou mais, pelo clube? Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
       ],
       "links": [
         ["/career-path", "Jogar Career Path"],
+        ["/mais-ou-menos", "Jogar Mais ou Menos"],
         ["/grid", "Jogar Football Grid"],
         ["/impostor", "Jogar Impostor"],
         ["/como-jogar", "Como jogar"],

@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { achievementOpen, closedRoute, isModeLaunched, isPageLaunched } from './launch';
 
 describe('launch', () => {
-  it('opens Career Path and its levels, closes the other modes', () => {
+  it('opens Career Path and Mais ou Menos with their levels, closes the other modes', () => {
     expect(closedRoute('/career-path', false)).toBeNull();
     expect(closedRoute('/career-path/3', false)).toBeNull();
+    expect(closedRoute('/mais-ou-menos', false)).toBeNull();
+    expect(closedRoute('/mais-ou-menos/7', false)).toBeNull();
+    expect(isModeLaunched('HIGHER_LOWER', false)).toBe(true);
     expect(closedRoute('/grid/1', false)).toEqual({ name: '', mode: 'FOOTBALL_GRID' });
     expect(closedRoute('/linha-do-tempo', false)?.mode).toBe('TIMELINE');
     expect(isModeLaunched('DRAFT', false)).toBe(false);

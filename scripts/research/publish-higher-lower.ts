@@ -65,7 +65,15 @@ for (const r of pool) {
 const existing = await prisma.challenge.findMany({
   where: { gameMode: 'HIGHER_LOWER', status: { in: ['draft', 'validated', 'published'] } },
 });
+// Duels already live are never drawn again. The draw is seeded, so without this every run (a
+// --replace-unfair pass included) replays the same duels: level 2 once repeated 4 of level 1's.
 const usedPairs = new Set<string>();
+for (const c of existing)
+  if (c.status === 'published')
+    for (const r of (
+      c.snapshot as { rounds?: { a: { playerId: string }; b: { playerId: string } }[] }
+    ).rounds ?? [])
+      usedPairs.add([r.a.playerId, r.b.playerId].sort().join());
 const live = existing.filter((c) => c.status === 'published').length;
 console.log(`Mais ou Menos: ${live} live, ${pool.length} player-club totals`);
 
@@ -140,7 +148,9 @@ if (process.argv.includes('--replace-unfair')) {
     const { replacement } = await retireChallenge(
       prisma,
       c.id,
-      'Duelo apertado demais (jogos/gols da Wikipédia podem ser só da liga ou de todas as competições)',
+      snap.rounds.every(ok)
+        ? 'Substituída a pedido (--levels-to-replace): duelos repetidos ou re-curadoria'
+        : 'Duelo apertado demais (jogos/gols da Wikipédia podem ser só da liga ou de todas as competições)',
       { params: { rounds }, difficultyTier: maxTier === 2 ? 1 : maxTier === 3 ? 2 : 3 },
       'ai-curator',
     );

@@ -23,6 +23,7 @@ import type { VotableMode } from '@decabeca/contracts';
 import { leaderOf, ModeArt, ModeDialog, type Locker } from './ModeDialog';
 import { useFinish } from '../lib/cosmetics';
 import { motionReduced } from '../lib/settings';
+import { isModeLaunched } from '../lib/launch';
 
 export type { Locker };
 
@@ -31,7 +32,6 @@ const HUE: Record<VotableMode, number> = {
   FOOTBALL_GRID: 150,
   IMPOSTOR: 25,
   TIMELINE: 65,
-  HIGHER_LOWER: 95,
   MISSING_XI: 255,
   MYSTERY_PLAYER: 50,
   CONNECTIONS: 200,
@@ -173,6 +173,69 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
         })}
       </ul>
       <ModeDialog locker={open} lockers={lockers} onClose={close} />
+    </section>
+  );
+}
+
+/**
+ * Mais ou Menos on the home: a slice of the stadium scoreboard its levels are played on (the
+ * level's own art, see HigherLowerPage), with the player's progress and the next level.
+ */
+function ScoreboardCard() {
+  const track = useTrack('HIGHER_LOWER');
+  const levels = track.data?.levels ?? [];
+  const done = levels.filter((l) => l.state === 'done').length;
+  const stars = levels.reduce((s, l) => s + l.stars, 0);
+  const next = nextLevel(track.data);
+  if (track.error && !levels.length) return null;
+  return (
+    <section
+      aria-labelledby="hl-name"
+      className="hl-board relative mx-auto mt-8 grid w-full max-w-5xl items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-8 lg:mt-10"
+    >
+      <div className="flex min-w-0 flex-col gap-2">
+        <p className="text-xs font-extrabold tracking-[0.3em] text-[var(--hl-dim)] uppercase">
+          No telão do estádio
+        </p>
+        <h2
+          id="hl-name"
+          className="font-condensed text-[2.6rem] leading-[0.85] font-black uppercase sm:text-[3.6rem]"
+        >
+          <Link to="/mais-ou-menos" className="rounded-sm">
+            <span className="hl-led">Mais ou Menos</span>
+          </Link>
+        </h2>
+        <p className="max-w-[40ch] font-semibold text-chalk">
+          Dois jogadores, um número escondido: quem fez mais gols, ou jogou mais, pelo clube?
+        </p>
+        {levels.length > 0 && (
+          <p className="font-condensed flex flex-wrap items-center gap-x-4 text-lg font-extrabold text-[var(--hl-dim)] uppercase">
+            <span>
+              <span className="tabular text-chalk">{done}</span> de{' '}
+              <span className="tabular">{levels.length}</span> fases
+            </span>
+            <span className="flex items-center gap-1" aria-label={`${stars} estrelas`}>
+              <StarIcon className="size-4 text-[var(--hl-led)]" />
+              <span className="tabular text-chalk">{stars}</span>
+            </span>
+          </p>
+        )}
+      </div>
+      {!track.data ? (
+        <Skeleton className="h-16 w-full sm:w-64" />
+      ) : (
+        <Link
+          to={next ? `/mais-ou-menos/${next.level}` : '/mais-ou-menos'}
+          className="hl-next font-condensed grid min-h-16 place-items-center px-6 text-[1.7rem] sm:min-w-64"
+        >
+          {next
+            ? next.inProgress
+              ? `Continuar a fase ${next.level}`
+              : `Jogar fase ${next.level}`
+            : 'Rever as fases'}
+          <span className="sr-only"> do Mais ou Menos</span>
+        </Link>
+      )}
     </section>
   );
 }
@@ -398,6 +461,8 @@ export function LockerRoom({ lockers }: { lockers: Locker[] }) {
           </div>
         )}
       </section>
+
+      {isModeLaunched('HIGHER_LOWER') && <ScoreboardCard />}
 
       <PosterWall lockers={lockers} />
     </div>

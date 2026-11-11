@@ -5,7 +5,6 @@ export const VotableMode = z.enum([
   'FOOTBALL_GRID',
   'IMPOSTOR',
   'TIMELINE',
-  'HIGHER_LOWER',
   'MISSING_XI',
   'MYSTERY_PLAYER',
   'CONNECTIONS',

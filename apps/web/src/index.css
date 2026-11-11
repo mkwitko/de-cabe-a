@@ -306,15 +306,276 @@
   }
 }
 
-/* Mais ou menos telão: the digits and floodlights simply come on. */
-.led-digit,
-.flood-on {
+/*
+ * Mais ou Menos: a night match played on the stadium's giant scoreboard. All still: the stadium is
+ * gradients (floodlight glow, the stands, the pitch), the LED digits a dot mask over the type, and
+ * the only motion is a digit coming on (150 ms opacity) and a 150 ms press.
+ */
+.led-digit {
   animation: stamp-fade 150ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
-  .flood-on,
   .led-digit {
     animation: none;
+  }
+}
+.hl-stadium {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #000b, transparent 8rem),
+    radial-gradient(ellipse 42% 30% at 4% -6%, oklch(0.97 0.06 95 / 0.32), transparent 70%),
+    radial-gradient(ellipse 42% 30% at 96% -6%, oklch(0.97 0.06 95 / 0.32), transparent 70%),
+    linear-gradient(
+      180deg,
+      #05070a 0%,
+      #0d131a 50%,
+      oklch(0.34 0.09 150) 50.2%,
+      oklch(0.2 0.06 150) 100%
+    );
+}
+/* the stands: rows of crowd under the lights */
+.hl-stadium::before {
+  content: '';
+  position: absolute;
+  inset: 14% 0 50%;
+  background:
+    radial-gradient(#ffffff26 1px, transparent 1.6px) 0 0 / 6px 6px,
+    repeating-linear-gradient(180deg, transparent 0 18px, #0008 18px 22px);
+}
+/* the pitch: mowing stripes and the touchline */
+.hl-stadium::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 0;
+  background:
+    linear-gradient(#ffffffb0, #ffffffb0) 0 2.5rem / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, #ffffff0a 0 9vw, transparent 9vw 18vw);
+}
+.hl-board {
+  --hl-led: #ffd23f;
+  --hl-dim: #9aa3a8;
+  max-width: 84rem;
+  padding: 0.6rem;
+  border: 6px solid #23292d;
+  border-radius: 14px;
+  background:
+    radial-gradient(#ffffff08 1px, transparent 1.4px) 0 0 / 5px 5px,
+    linear-gradient(#121619, #07090a);
+  box-shadow:
+    inset 0 0 0 2px #000,
+    0 30px 50px -30px #000;
+  color: #e9edef;
+}
+/* LED type: the glyphs seen through a grid of round lamps */
+.hl-led {
+  color: var(--hl-led);
+  -webkit-mask: radial-gradient(circle, #000 44%, transparent 50%) 0 0 / 0.1em 0.1em;
+  mask: radial-gradient(circle, #000 44%, transparent 50%) 0 0 / 0.1em 0.1em;
+}
+.hl-led-off {
+  color: #3a4248;
+}
+.hl-field {
+  grid-template-areas: 'a' 'mid' 'b';
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+.hl-a {
+  grid-area: a;
+}
+.hl-b {
+  grid-area: b;
+}
+.hl-mid {
+  grid-area: mid;
+  min-height: 4.75rem;
+  padding: 0.5rem 0.85rem;
+  border: 2px solid #1d2225;
+  border-radius: 10px;
+  background: #07090a;
+}
+.hl-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.85rem 1rem;
+  border: 2px solid #2a3135;
+  border-radius: 10px;
+  background:
+    radial-gradient(#ffffff0c 1px, transparent 1.5px) 0 0 / 5px 5px,
+    #0c0f11;
+  color: var(--hl-led);
+  text-align: left;
+}
+.hl-panel.is-open {
+  cursor: pointer;
+  transition:
+    transform 150ms var(--ease-out-expo),
+    border-color 150ms ease-out;
+}
+.hl-panel.is-open:focus-visible {
+  border-color: var(--hl-led);
+}
+@media (hover: hover) {
+  .hl-panel.is-open:hover {
+    border-color: var(--hl-led);
+  }
+}
+.hl-panel.is-open:active {
+  transform: scale(0.985);
+}
+.hl-panel:disabled {
+  cursor: progress;
+}
+.hl-panel.is-winner {
+  border-color: var(--hl-led);
+  background:
+    radial-gradient(#ffffff0c 1px, transparent 1.5px) 0 0 / 5px 5px,
+    #1b1807;
+}
+.hl-panel.is-loser {
+  border-style: dashed;
+  color: #7d868c;
+}
+.hl-panel.is-loser .hl-led {
+  color: #8d979d;
+}
+.hl-digits {
+  font-size: clamp(3rem, 15vw, 4.75rem);
+}
+.hl-tag {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+/* the keyboard shortcut, only where there is one (a mouse and a wide screen) */
+.hl-key {
+  display: none;
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid #3a4248;
+  border-radius: 4px;
+  color: var(--hl-dim);
+  font-size: 1rem;
+  font-weight: 900;
+}
+.hl-lamp {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid #2a3135;
+  border-radius: 4px;
+  background: #0b0e10;
+  color: #59626a;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+.hl-lamp.is-now {
+  border-color: var(--hl-led);
+  color: var(--hl-led);
+}
+.hl-lamp.is-right {
+  border-color: #2fd27a;
+  background: #2fd27a;
+  color: #062312;
+}
+.hl-lamp.is-wrong {
+  border-color: #ff5a4e;
+  background: #ff5a4e;
+  color: #2a0603;
+}
+/* a duel on the final board: two team lines on a phone, face to face wide */
+.hl-row {
+  display: grid;
+  grid-template-areas: 'n a av' 'n b bv';
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.15rem 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  background: #101416;
+}
+.hl-row > .hl-lamp {
+  align-self: center;
+}
+.hl-next {
+  min-height: 3.25rem;
+  padding: 0 1.25rem;
+  border-radius: 8px;
+  background: var(--hl-led);
+  color: #1a1405;
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: transform 150ms var(--ease-out-expo);
+}
+.hl-next:active {
+  transform: scale(0.97);
+}
+@media (min-width: 40rem) {
+  .hl-board {
+    padding: 1.1rem 1.4rem 1.4rem;
+    border-width: 10px;
+  }
+  .hl-field {
+    grid-template-areas: 'a mid b';
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, 15rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .hl-mid {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .hl-panel {
+    justify-content: center;
+    align-items: center;
+    gap: clamp(1rem, 4vh, 2.5rem);
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .hl-digits {
+    font-size: clamp(4.5rem, 8.5vw, 9rem);
+  }
+  .hl-next {
+    width: 100%;
+  }
+}
+@media (min-width: 40rem) {
+  .hl-row {
+    grid-template-areas: 'n a av x bv b';
+    grid-template-columns: 1.75rem minmax(0, 1fr) 4.5rem 3.5rem 4.5rem minmax(0, 1fr);
+    gap: 0 1rem;
+    padding: 0.5rem 1rem;
+  }
+}
+@media (min-width: 40rem) and (hover: hover) and (pointer: fine) {
+  .hl-key {
+    display: grid;
+    place-items: center;
   }
 }
 
