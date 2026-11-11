@@ -98,3 +98,14 @@ Ferramentas (`scripts/research/`):
 - `live-data-fixes.json`: as correções revisadas (cada uma com o valor esperado antes).
 - `fix-live-data.ts`: aplica o JSON e substitui no lugar as fases afetadas (Carreira: mesma resposta; Mais ou Menos: `publish-higher-lower.ts --replace-unfair`). Idempotente; `--dry` só lista.
 - `publish-higher-lower.ts --replace-unfair --dry`: lista as fases de Mais ou Menos fora das regras.
+
+### Segunda rodada (2026-11-11)
+
+`live-data-fixes-2.json`, aplicado por `fix-live-data.ts --fixes live-data-fixes-2.json`. Uma rodada posterior sempre vence: rodar de novo a primeira não desfaz a segunda.
+
+- Empréstimo do Coutinho ao Espanyol (2012, da Inter); Lekhwiya aparece como Al-Duhail; St. Louis Strikers (era mostrado como o time universitário); Western United da Austrália (Berisha estava no clube das Ilhas Salomão).
+- Os times reserva que a primeira rodada deixou em dúvida foram resolvidos pela ficha em inglês: 13 carreiras refeitas (Negredo, Postiga, Joselu, Llorente, Füllkrug, Konaté, Mikautadze, Huijsen, Diomandé, Vítor Ferreira, Evaldo, Almunia, Goikoetxea); os demais estão certos (times femininos, Mallorca B, Castilla de Benítez, Chicago Fire Sub-23).
+- Nome repetido entre jogadores verificados: todos menos o único mais famoso ganham o clube principal ("Alex (Coritiba)"); o mesmo clube, também o ano de nascimento.
+- Números da liga: a primeira rodada somava células da ficha em inglês fora dos anos da passagem (Friaça 432 jogos pelo Vasco em 1946-49); essas voltam ao valor da fonte e saem do Mais ou Menos. Células sem ligação agora contam quando o texto nomeia o clube. Os que seguem sem confirmação estão em `live-data-unconfirmed.json`, por motivo.
+- País dos clubes conferido com o Wikidata (`check-club-countries.ts`): nenhum divergente.
+- Mais ou Menos com rampa de fama (jogador e clube; fama do clube = jogadores T1/T2 que passaram por ele): fases 1–20 só T1 contra T1 em clubes de fama ≥ 30; 21–50 até T2 em fama ≥ 20; 51–80 até T3 em fama ≥ 8; depois todos em fama ≥ 3.

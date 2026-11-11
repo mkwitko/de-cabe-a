@@ -200,17 +200,26 @@ if (cacheFile && outFile) {
   const unresolved: object[] = [];
   const spellStats: object[] = [];
   const spellLoans: object[] = [];
+  const unconfirmedWhy: {
+    spellId: string;
+    player: string;
+    club: string;
+    years: string;
+    why: string;
+  }[] = [];
   const leagueConfirmed: string[] = [];
   let unconfirmed = 0;
   // --careers 100,175: careers whose club sequence is broken beyond re-attaching (a club merged into
   // another, a missing club) are rebuilt from the English infobox: its linked cells, league numbers
   // and loans. Spell ids are fixed here so every copy of the base gets the same ones.
-  const careerLevels = new Set((arg('--careers') ?? '').split(',').filter(Boolean).map(Number));
-  const rebuild = new Set(
-    levels
-      .filter((l) => careerLevels.has(l.publicNumber!))
+  // Level numbers (live Career Path answers) or player ids.
+  const careerArgs = (arg('--careers') ?? '').split(',').filter(Boolean);
+  const rebuild = new Set([
+    ...levels
+      .filter((l) => careerArgs.includes(String(l.publicNumber)))
       .map((l) => (l.snapshot as { answerPlayerId: string }).answerPlayerId),
-  );
+    ...careerArgs.filter((x) => x.includes('-')),
+  ]);
   const careers: object[] = [];
   const careerMisses: string[] = [];
   for (const playerId of rebuild) {
@@ -347,21 +356,48 @@ if (cacheFile && outFile) {
         clubOf.set(s.id, target.id);
       } else if (isReserveClub(current.name)) unresolved.push({ ...row, linked });
     }
-    // 2. League numbers: English cells linked to the same club, inside the spell's years.
+    // 2. League numbers: English cells of the same club, inside the spell's years. The club is the
+    // cell's link; a cell without a link counts when every word of its text names exactly one of
+    // the player's clubs (and both are, or both are not, a reserve side).
+    const playerClubs = [...new Set(ss.map((s) => clubOf.get(s.id)!))].map((id) =>
+      clubById.get(id)!,
+    );
+    const textClub = (cell: string) => {
+      const ws = words(cell);
+      const hits = playerClubs.filter((c) => {
+        const cw = [...words(c.name), ...words(c.shortName)];
+        return (
+          ws.length > 0 &&
+          ws.every((w) => cw.includes(w)) &&
+          isReserveClub(c.name) === (RESERVE_TEXT.test(cell) || isReserveClub(cell))
+        );
+      });
+      return hits.length === 1 ? hits[0]!.id : undefined;
+    };
     const enEntries = (en?.entries ?? [])
-      .map((e) => ({ e, q: qidOf('en', e) }))
-      .filter((x): x is { e: InfoboxEntry; q: string } => !!x.q && x.e.fromYear !== null);
+      .filter((e) => e.fromYear !== null)
+      .map((e) => {
+        const q = qidOf('en', e);
+        const clubId = q ? clubByQid.get(q)?.id : textClub(e.club);
+        return { e, clubId };
+      })
+      .filter((x): x is { e: InfoboxEntry; clubId: string } => !!x.clubId);
     const sums = new Map<string, { a: number; g: number; ok: boolean; n: number }>();
     const badClub = new Set<string>();
-    for (const { e, q } of enEntries) {
-      const club = clubByQid.get(q);
-      if (!club || (RESERVE_TEXT.test(e.club) && !isReserveClub(club.name))) continue;
+    for (const { e, clubId } of enEntries) {
+      const club = clubById.get(clubId)!;
+      if (RESERVE_TEXT.test(e.club) && !isReserveClub(club.name)) continue;
       const at = ss.filter((s) => clubOf.get(s.id) === club.id);
       if (!at.length) continue;
       const overlap = (s: (typeof ss)[number]) =>
         Math.min(e.toYear ?? 9999, yearOf(s.endDate) ?? 9999) -
         Math.max(e.fromYear!, yearOf(s.startDate)!);
-      const best = at.filter((s) => overlap(s) >= 0).sort((x, y) => overlap(y) - overlap(x))[0];
+      // The cell must lie within the spell (a year of slack each side): a 2014-2019 cell is not part
+      // of a 2013-2014 spell, it is a spell the base lacks.
+      const inside = (s: (typeof ss)[number]) =>
+        e.fromYear! >= yearOf(s.startDate)! - 1 &&
+        (e.toYear ?? 9999) <= (yearOf(s.endDate) ?? 9999) + 1;
+      const best = at.filter(inside).sort((x, y) => overlap(y) - overlap(x))[0];
       if (!best) {
         badClub.add(club.id);
         continue;
@@ -378,9 +414,9 @@ if (cacheFile && outFile) {
     const enLoanAt = (s: (typeof ss)[number]) => {
       const [from, to] = [yearOf(s.startDate)!, yearOf(s.endDate)];
       return enEntries.some(
-        ({ e, q }) =>
+        ({ e, clubId }) =>
           e.isLoan &&
-          clubByQid.get(q)?.id === clubOf.get(s.id) &&
+          clubId === clubOf.get(s.id) &&
           Math.abs(e.fromYear! - from) <= 1 &&
           e.toYear === to,
       );
@@ -410,6 +446,19 @@ if (cacheFile && outFile) {
       const t = sums.get(s.id);
       if (!t || !t.ok || badClub.has(clubOf.get(s.id)!)) {
         unconfirmed++;
+        unconfirmedWhy.push({
+          spellId: s.id,
+          player: s.player.canonicalName,
+          club: clubById.get(clubOf.get(s.id)!)!.shortName,
+          years: `${yearOf(s.startDate)}-${yearOf(s.endDate) ?? ''}`,
+          why: !en
+            ? 'no English infobox'
+            : badClub.has(clubOf.get(s.id)!)
+              ? 'English years differ'
+              : !t
+                ? 'club not in the English infobox'
+                : 'English infobox has no games/goals',
+        });
         continue;
       }
       leagueConfirmed.push(s.id);
@@ -429,7 +478,7 @@ if (cacheFile && outFile) {
   writeFileSync(
     outFile,
     JSON.stringify(
-      { spellClubs, unresolved, spellLoans, spellStats, leagueConfirmed, careers },
+      { spellClubs, unresolved, spellLoans, spellStats, leagueConfirmed, careers, unconfirmedWhy },
       null,
       1,
     ) + '\n',

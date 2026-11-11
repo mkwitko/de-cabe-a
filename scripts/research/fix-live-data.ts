@@ -1,9 +1,10 @@
-// Applies the reviewed fixes of live-data-fixes.json (club names, spells on the wrong club, loans,
-// league games/goals) and replaces in place every live level they change: Career Path levels are
+// Applies the reviewed fixes of one audit round (--fixes, default live-data-fixes.json; round 2 is
+// live-data-fixes-2.json): club names, spells on the wrong club, loans, league games/goals, rebuilt
+// careers, shared display names, noise aliases. Then replaces in place every live level they change: Career Path levels are
 // rebuilt for the same answer, Mais ou Menos levels breaking a rule get new duels
 // (publish-higher-lower.ts --replace-unfair). Idempotent: each fix checks the value it expects to
 // find and is skipped when already applied; a value that is neither is reported, not overwritten.
-// Run: DATABASE_URL=... pnpm --filter @decabeca/api exec tsx ../../scripts/research/fix-live-data.ts [--dry]
+// Run: DATABASE_URL=... pnpm --filter @decabeca/api exec tsx ../../scripts/research/fix-live-data.ts [--fixes live-data-fixes-2.json] [--dry]
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createPrisma } from '../../apps/api/src/db';
@@ -13,7 +14,7 @@ import {
   retireChallenge,
   validateChallenge,
 } from '../../apps/api/src/modules/challenges/challenges.service';
-import { liveDataFixes as fx } from './lib/live-data';
+import { FIX_FILES, loadFixes } from './lib/live-data';
 
 try {
   process.loadEnvFile(new URL('../../.env', import.meta.url));
@@ -22,6 +23,29 @@ try {
 }
 const prisma = createPrisma(process.env.DATABASE_URL!);
 const DRY = process.argv.includes('--dry');
+const fi = process.argv.indexOf('--fixes');
+const file = fi > 0 ? process.argv[fi + 1]! : 'live-data-fixes.json';
+const all = loadFixes(file);
+// A later round wins: re-running an earlier one never undoes it (its spells and the careers it
+// rebuilt are left alone).
+const later = FIX_FILES.slice(FIX_FILES.indexOf(file) + 1).map(loadFixes);
+const laterSpells = new Set(
+  later.flatMap((r) => [
+    ...r.spellStats.map((x) => x.spellId),
+    ...r.spellClubs.map((x) => x.spellId),
+    ...r.spellLoans.map((x) => x.spellId),
+  ]),
+);
+const laterPlayers = new Set(later.flatMap((r) => r.careers.map((c) => c.playerId)));
+const rebuiltLater = new Set(later.flatMap((r) => r.careers.flatMap((c) => c.replaces ?? [])));
+const keep = (id: string) => !laterSpells.has(id) && !rebuiltLater.has(id);
+const fx = {
+  ...all,
+  spellStats: all.spellStats.filter((x) => keep(x.spellId)),
+  spellClubs: all.spellClubs.filter((x) => keep(x.spellId)),
+  spellLoans: all.spellLoans.filter((x) => keep(x.spellId)),
+  careers: all.careers.filter((c) => !laterPlayers.has(c.playerId)),
+};
 const report: string[] = [];
 
 // 1. Club names.
@@ -81,12 +105,36 @@ const stats = fx.spellStats.filter((x) => {
     report.push(`spell ${x.spellId} (${x.player}): games/goals not as expected`);
   return false;
 });
-console.log(
-  `to apply: ${renames.length} club names, ${moves.length} spells to another club, ${loans.length} loans, ${stats.length} league numbers`,
+// Display names and noise aliases.
+const people = new Map(
+  (
+    await prisma.player.findMany({
+      where: { id: { in: (fx.playerNames ?? []).map((p) => p.id) } },
+      select: { id: true, canonicalName: true },
+    })
+  ).map((p) => [p.id, p.canonicalName]),
 );
-const values = (rows: string[][]) =>
+const names = (fx.playerNames ?? []).filter((n) => {
+  const now = people.get(n.id);
+  if (now === n.from) return true;
+  if (now !== n.to) report.push(`player ${n.id}: expected "${n.from}", found "${now}"`);
+  return false;
+});
+const aliasIds = new Set(
+  (
+    await prisma.playerAlias.findMany({
+      where: { id: { in: (fx.aliasDeletes ?? []).map((a) => a.id) } },
+      select: { id: true },
+    })
+  ).map((a) => a.id),
+);
+const aliases = (fx.aliasDeletes ?? []).filter((a) => aliasIds.has(a.id));
+console.log(
+  `to apply: ${renames.length} club names, ${moves.length} spells to another club, ${loans.length} loans, ${stats.length} league numbers, ${names.length} player names, ${aliases.length} aliases to delete`,
+);
+const values = (rows: (string | null)[][]) =>
   rows
-    .map((r) => `(${r.map((v) => (v === 'NULL' ? v : `'${v.replace(/'/g, "''")}'`)).join(',')})`)
+    .map((r) => `(${r.map((v) => (v === null ? 'NULL' : `'${v.replace(/'/g, "''")}'`)).join(',')})`)
     .join(',');
 if (!DRY) {
   await prisma.$transaction(async (tx) => {
@@ -118,8 +166,14 @@ if (!DRY) {
       );
     if (stats.length)
       await tx.$executeRawUnsafe(
-        `UPDATE "CareerSpell" s SET appearances = v.a::int, goals = v.g::int, "updatedAt" = now() FROM (VALUES ${values(stats.map((x) => [x.spellId, String(x.to[0]), String(x.to[1])]))}) v(id, a, g) WHERE s.id = v.id`,
+        `UPDATE "CareerSpell" s SET appearances = v.a::int, goals = v.g::int, "updatedAt" = now() FROM (VALUES ${values(stats.map((x) => [x.spellId, x.to[0] === null ? null : String(x.to[0]), x.to[1] === null ? null : String(x.to[1])]))}) v(id, a, g) WHERE s.id = v.id`,
       );
+    if (names.length)
+      await tx.$executeRawUnsafe(
+        `UPDATE "Player" p SET "canonicalName" = v.n, "updatedAt" = now() FROM (VALUES ${values(names.map((n) => [n.id, n.to]))}) v(id, n) WHERE p.id = v.id`,
+      );
+    if (aliases.length)
+      await tx.playerAlias.deleteMany({ where: { id: { in: aliases.map((a) => a.id) } } });
   });
 }
 
