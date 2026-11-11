@@ -351,14 +351,17 @@ export function Home() {
 
 // Room for a 160px skyscraper beside the 1280px page, 150px from its controls.
 const WIDE = '(min-width: 1880px)';
+const hasMedia = typeof matchMedia === 'function';
+const isWide = () => hasMedia && matchMedia(WIDE).matches;
 const subscribeWide = (cb: () => void) => {
+  if (!hasMedia) return () => {};
   const m = matchMedia(WIDE);
   m.addEventListener('change', cb);
   return () => m.removeEventListener('change', cb);
 };
 
 function HomeRoute() {
-  const wide = useSyncExternalStore(subscribeWide, () => matchMedia(WIDE).matches);
+  const wide = useSyncExternalStore(subscribeWide, isWide, () => false);
   // Warm the launch level's chunk once the home is idle, so opening it is instant.
   useEffect(() => {
     const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 2000));
