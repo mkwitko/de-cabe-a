@@ -1,6 +1,8 @@
 // Builds and publishes Mais ou Menos levels (ADR-011): 5 duels per level between two real spells
-// (verified, with league games and goals), preferably at the same club, else in the same
-// country; a clear winner only. Fame ramp like the other games. Re-runnable up to --levels.
+// at the same club (verified, league games and goals confirmed by the English infobox, see
+// live-data-fixes.json); a clear winner only. No reserve/youth sides and no player whose name is
+// shared with a more famous one ("Marcelo" of Wisła). Fame ramp like the other games.
+// Re-runnable up to --levels. --replace-unfair replaces in place every live level breaking a rule.
 // Run: pnpm --filter @decabeca/api exec tsx ../../scripts/research/publish-higher-lower.ts [--levels 100]
 import { createPrisma } from '../../apps/api/src/db';
 import {
@@ -9,6 +11,9 @@ import {
   validateChallenge,
 } from '../../apps/api/src/modules/challenges/challenges.service';
 import { clearWinner } from '../../apps/api/src/modules/challenges/higher-lower-snapshot';
+import { normalizeName } from '../../packages/engine/src/index';
+import { isReserveClub } from './lib/reserve';
+import { leagueConfirmed } from './lib/live-data';
 
 try {
   process.loadEnvFile(new URL('../../.env', import.meta.url));
@@ -31,36 +36,66 @@ function seeded(seed: string) {
 const rnd = seeded('higher-lower');
 
 // Player × club totals from verified spells with stats (games ≥ 30 so the numbers mean something).
+// Ordered, so the seeded draw gives the same duels on every copy of the same base.
 const rows = await prisma.$queryRaw<
   {
     playerId: string;
     clubId: string;
-    countryId: string;
+    clubName: string;
     tier: string;
     games: bigint;
     goals: bigint;
+    spellIds: string[];
   }[]
 >`
-  SELECT s."playerId", s."clubId", c."countryId", p."notabilityTier" AS tier,
-         SUM(s.appearances) AS games, SUM(s.goals) AS goals
+  SELECT s."playerId", s."clubId", c.name AS "clubName", p."notabilityTier" AS tier,
+         SUM(s.appearances) AS games, SUM(s.goals) AS goals, array_agg(s.id) AS "spellIds"
   FROM "CareerSpell" s
   JOIN "Player" p ON p.id = s."playerId" AND p."verificationStatus" = 'verified'
   JOIN "Club" c ON c.id = s."clubId"
   WHERE s."verificationStatus" = 'verified' AND s."spellType" IN ('professional', 'loan')
   GROUP BY 1, 2, 3, 4
-  HAVING bool_and(s.appearances IS NOT NULL AND s.goals IS NOT NULL) AND SUM(s.appearances) >= 30`;
-const pool = rows.map((r) => ({
-  ...r,
-  games: Number(r.games),
-  goals: Number(r.goals),
-  tierN: Number(r.tier.slice(1)),
-}));
+  HAVING bool_and(s.appearances IS NOT NULL AND s.goals IS NOT NULL) AND SUM(s.appearances) >= 30
+  ORDER BY 1, 2`;
+// A name shared with a player at least as famous is ambiguous: "Marcelo" (Wisła) is not Real
+// Madrid's Marcelo. Aliases count ("Ronaldo" is Ronaldo Nazário's).
+const people = await prisma.player.findMany({
+  where: { verificationStatus: 'verified' },
+  select: {
+    id: true,
+    canonicalName: true,
+    notabilityTier: true,
+    aliases: { select: { normalized: true } },
+  },
+});
+const names = new Map<string, { id: string; tier: string }[]>();
+for (const p of people)
+  for (const n of new Set([normalizeName(p.canonicalName), ...p.aliases.map((a) => a.normalized)]))
+    names.set(n, [...(names.get(n) ?? []), { id: p.id, tier: p.notabilityTier }]);
+const ambiguous = new Set(
+  people
+    .filter((p) =>
+      names
+        .get(normalizeName(p.canonicalName))!
+        .some((o) => o.id !== p.id && o.tier <= p.notabilityTier),
+    )
+    .map((p) => p.id),
+);
+const pool = rows
+  .filter(
+    (r) =>
+      !isReserveClub(r.clubName) &&
+      !ambiguous.has(r.playerId) &&
+      r.spellIds.every((id) => leagueConfirmed.has(id)),
+  )
+  .map((r) => ({
+    ...r,
+    games: Number(r.games),
+    goals: Number(r.goals),
+    tierN: Number(r.tier.slice(1)),
+  }));
 const byClub = new Map<string, typeof pool>();
-const byCountry = new Map<string, typeof pool>();
-for (const r of pool) {
-  byClub.set(r.clubId, [...(byClub.get(r.clubId) ?? []), r]);
-  byCountry.set(r.countryId, [...(byCountry.get(r.countryId) ?? []), r]);
-}
+for (const r of pool) byClub.set(r.clubId, [...(byClub.get(r.clubId) ?? []), r]);
 
 const existing = await prisma.challenge.findMany({
   where: { gameMode: 'HIGHER_LOWER', status: { in: ['draft', 'validated', 'published'] } },
@@ -88,16 +123,18 @@ function buildRounds(level: number) {
     const metric = rnd() < 0.5 ? ('goals' as const) : ('games' as const);
     const v = (x: typeof a) => (metric === 'goals' ? x.goals : x.games);
     if (metric === 'goals' && a.goals < 5) continue; // goals duels between defenders are dull
-    const options = (
-      byClub.get(a.clubId)!.length > 1 ? byClub.get(a.clubId)! : byCountry.get(a.countryId)!
-    ).filter(
-      (b) =>
-        b.playerId !== a.playerId &&
-        !used.has(b.playerId) &&
-        b.tierN <= maxTier &&
-        clearWinner(v(a), v(b)) &&
-        !usedPairs.has([a.playerId, b.playerId].sort().join()),
-    );
+    // Same club only: "who scored more for the club" (a Scunthorpe tally against a Man City one
+    // compared two different questions).
+    const options = byClub
+      .get(a.clubId)!
+      .filter(
+        (b) =>
+          b.playerId !== a.playerId &&
+          !used.has(b.playerId) &&
+          b.tierN <= maxTier &&
+          clearWinner(v(a), v(b)) &&
+          !usedPairs.has([a.playerId, b.playerId].sort().join()),
+      );
     if (!options.length) continue;
     const b = options[Math.floor(rnd() * options.length)]!;
     used.add(a.playerId);
@@ -112,55 +149,91 @@ function buildRounds(level: number) {
   return { rounds, maxTier };
 }
 
-// --replace-unfair: published levels with a duel that fails the current fairness rule are
-// replaced in place (same number) with new duels.
+// --replace-unfair: published levels with a duel that breaks a current rule are replaced in place
+// (same number) with new duels: a duel must still be drawable now (same club, shown name and
+// number equal to the base, confirmed league numbers, no reserve side, no ambiguous name, clear
+// winner) and not repeat a duel of an earlier level. --dry lists them only.
 if (process.argv.includes('--replace-unfair')) {
   const { retireChallenge } =
     await import('../../apps/api/src/modules/challenges/challenges.service');
-  // Also duels showing a club renamed by repair-club-names.ts (its old, wrong name).
-  const renamed = new Set<string>();
-  try {
-    const { readFileSync } = await import('node:fs');
-    const { changes } = JSON.parse(
-      readFileSync(new URL('./club-name-repair.json', import.meta.url), 'utf8'),
-    ) as { changes: { from: string; reason: string }[] };
-    for (const ch of changes) if (ch.reason === 'wrong name') renamed.add(ch.from);
-  } catch {
-    /* no repair report: fairness only */
-  }
   // --levels-to-replace 82,86: also these levels (e.g. no longer valid after a re-curation).
   const li = process.argv.indexOf('--levels-to-replace');
   const forced = new Set(li > 0 ? process.argv[li + 1]!.split(',').map(Number) : []);
-  const published = await prisma.challenge.findMany({
-    where: { gameMode: 'HIGHER_LOWER', status: 'published' },
-    orderBy: { publicNumber: 'asc' },
-  });
+  const dry = process.argv.includes('--dry');
+  const published = existing
+    .filter((c) => c.status === 'published')
+    .sort((x, y) => x.publicNumber! - y.publicNumber!);
+  const names = new Map(
+    (
+      await prisma.club.findMany({
+        where: { id: { in: [...byClub.keys()] } },
+        select: { id: true, shortName: true },
+      })
+    ).map((c) => [c.id, c.shortName]),
+  );
+  const byPlayer = new Map<string, typeof pool>();
+  for (const r of pool) byPlayer.set(r.playerId, [...(byPlayer.get(r.playerId) ?? []), r]);
+  type Side = { playerId: string; clubName: string; value: number };
+  type Round = { metric: 'goals' | 'games'; a: Side; b: Side };
+  const value = (r: (typeof pool)[number], m: Round['metric']) =>
+    m === 'goals' ? r.goals : r.games;
+  const why = (r: Round, seen: Set<string>): string | null => {
+    const pair = [r.a.playerId, r.b.playerId].sort().join();
+    if (seen.has(pair)) return 'duelo repetido de uma fase anterior';
+    if (!clearWinner(r.a.value, r.b.value)) return 'diferença pequena demais';
+    const at = (x: Side) =>
+      (byPlayer.get(x.playerId) ?? []).filter((e) => names.get(e.clubId) === x.clubName);
+    const club = at(r.a).find((e) => at(r.b).some((f) => f.clubId === e.clubId));
+    if (!club)
+      return 'clubes diferentes, nome de clube corrigido, jogador ambíguo ou números sem confirmação';
+    const other = at(r.b).find((f) => f.clubId === club.clubId)!;
+    if (value(club, r.metric) !== r.a.value || value(other, r.metric) !== r.b.value)
+      return 'números corrigidos na base';
+    return null;
+  };
   let replaced = 0;
+  const seen = new Set<string>();
+  const unfair: number[] = [];
   for (const c of published) {
-    const snap = c.snapshot as {
-      rounds: { a: { value: number; clubName: string }; b: { value: number; clubName: string } }[];
-    };
-    const ok = (r: (typeof snap.rounds)[number]) =>
-      clearWinner(r.a.value, r.b.value) && !renamed.has(r.a.clubName) && !renamed.has(r.b.clubName);
-    if (snap.rounds.every(ok) && !forced.has(c.publicNumber!)) continue;
+    const snap = c.snapshot as { rounds: Round[] };
+    const reasons = snap.rounds.map((r) => why(r, seen)).filter((x): x is string => !!x);
+    const keep = () =>
+      snap.rounds.forEach((r) => seen.add([r.a.playerId, r.b.playerId].sort().join()));
+    if (!reasons.length && !forced.has(c.publicNumber!)) {
+      keep();
+      continue;
+    }
+    unfair.push(c.publicNumber!);
+    if (dry) {
+      console.log(`level ${c.publicNumber}: ${reasons.join('; ') || 'forced'}`);
+      keep();
+      continue;
+    }
     const { rounds, maxTier } = buildRounds(c.publicNumber!);
-    if (rounds.length < 5) continue;
+    if (rounds.length < 5) {
+      console.log(`level ${c.publicNumber}: not enough duels for a replacement`);
+      keep();
+      continue;
+    }
     const { replacement } = await retireChallenge(
       prisma,
       c.id,
-      snap.rounds.every(ok)
-        ? 'Substituída a pedido (--levels-to-replace): duelos repetidos ou re-curadoria'
-        : 'Duelo apertado demais (jogos/gols da Wikipédia podem ser só da liga ou de todas as competições)',
+      reasons.length
+        ? `Duelo fora das regras: ${[...new Set(reasons)].join('; ')}`
+        : 'Substituída a pedido (--levels-to-replace): duelos repetidos ou re-curadoria',
       { params: { rounds }, difficultyTier: maxTier === 2 ? 1 : maxTier === 3 ? 2 : 3 },
       'ai-curator',
     );
     await validateChallenge(prisma, replacement!.id);
     await publishChallenge(prisma, replacement!.id, new Date());
+    rounds.forEach((r) => seen.add([r.a.playerId, r.b.playerId].sort().join()));
     replaced++;
   }
-  console.log(`Mais ou Menos: replaced ${replaced} of ${published.length} levels in place`);
+  console.log(
+    `Mais ou Menos: ${unfair.length} of ${published.length} levels break a rule${unfair.length ? ` (${unfair.join(',')})` : ''}; replaced ${replaced} in place`,
+  );
   await prisma.$disconnect();
-  process.exit(0);
+  process.exit(dry && unfair.length ? 1 : 0);
 }
 
 let made = 0;

@@ -80,3 +80,21 @@ Ao terminar uma fase, o jogador pode marcar "Essa fase tem um erro?" (posição,
 Fila em dois lugares, mesma fonte (`LevelReport`):
 - **Painel** `/admin/level-reports`: relatos agrupados por fase, com o jogador da resposta, posições na base e na fase, passagens por clube e a fonte (Wikipedia/Wikidata). Botões "Corrigido" e "Descartar" com o que foi feito.
 - **IA curadora** (terminal): `scripts/research/reports.ts list` dá o mesmo conteúdo em JSON. Fluxo: conferir nas fontes (`Player.notes` tem a página da Wikipedia), corrigir `Player`/`CareerSpell`, substituir a fase no lugar com `scripts/research/replace-level.ts <modo> <fase> "<motivo>"` e fechar com `reports.ts resolve <id> fixed "<o que foi feito>"`.
+
+## Auditoria de Carreira e Mais ou Menos (2026-11-11)
+
+O que o jogador vê nas duas trilhas foi auditado contra as fichas da Wikipédia (ligações de cada célula de clube para o Wikidata) e corrigido na base, de forma reproduzível:
+
+- **Nomes de clube**: nomes jurídicos ("Futbolniy Klub Shakhtar" → "Shakhtar Donetsk"), lixo de wiki ("Pachuca| caps2 =", "AP Leamington cite news"), nome de outro clube (Celta aparecia como "Real Valladolid", Levante como "Desportiva Ferroviária", Marília como "Atlético Paranaense") e times B/sub/feminino sem o sufixo ("Tottenham B" era a base do Tottenham, agora "Tottenham Sub-23").
+- **Passagem no clube errado**: o curador antigo casava nomes por palavra solta, então "Barcelona" caía no Barcelona B, "Atlético de Madrid" no Real Madrid Castilla, "Manchester City" no Manchester United, "São Caetano" no São Paulo. A passagem volta ao clube para o qual a célula da ficha aponta (`curate.ts` agora usa a ligação da célula e nunca casa um time principal com um time reserva). Carreiras com clube fundido ou faltando (Tevez sem o City, Valverde sem o Real Madrid) foram refeitas pela ficha em inglês.
+- **Base dos números**: a ficha em português mistura liga e todas as competições (Eusébio: 472 gols pelo Benfica em todas, 317 na liga). Jogos e gols agora são **só da liga**, pela ficha em inglês (convenção do modelo de lá). O Mais ou Menos só usa passagens confirmadas assim.
+- **Mais ou Menos**: duelo só entre dois jogadores do mesmo clube (Keegan no Scunthorpe contra Lampard no City eram duas perguntas diferentes); sem time reserva; sem jogador cujo nome é de outro mais famoso ("Marcelo" do Wisła); nenhum duelo repetido entre fases.
+- **Empréstimos** listados como transferência foram marcados como empréstimo quando a ficha em inglês os marca.
+
+Ferramentas (`scripts/research/`):
+
+- `fetch-infoboxes.ts <saida.json>`: baixa, em lotes, a ficha usada pelo curador e a em inglês de cada jogador verificado, com o Wikidata de cada célula de clube.
+- `audit-live-data.ts`: confere as 400 fases de Carreira (fase igual à base, nome de clube, time reserva, passagens sobrepostas); sai com erro se houver problema. Com `--infoboxes … --propose …` deriva as correções; `--manual` e `--careers` recebem as decisões revisadas.
+- `live-data-fixes.json`: as correções revisadas (cada uma com o valor esperado antes).
+- `fix-live-data.ts`: aplica o JSON e substitui no lugar as fases afetadas (Carreira: mesma resposta; Mais ou Menos: `publish-higher-lower.ts --replace-unfair`). Idempotente; `--dry` só lista.
+- `publish-higher-lower.ts --replace-unfair --dry`: lista as fases de Mais ou Menos fora das regras.
