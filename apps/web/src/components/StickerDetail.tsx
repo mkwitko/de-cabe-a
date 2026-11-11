@@ -29,7 +29,12 @@ export const RARITY_HOW: Record<StickerRarity, string> = {
   lenda: 'Ídolo acertado no primeiro chute, com 7 dias seguidos de jogo.',
 };
 
-const date = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+/** 10/11/2026: with the mode, one line even on a 360 px phone. */
+const date = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
 
 export function StickerDetail({
   sticker: s,
@@ -151,9 +156,10 @@ export function StickerDetail({
                 {s.nationality}
               </dd>
             </div>
-            <div>
-              <dt>Ganha em</dt>
-              <dd>
+            {/* a row of its own: the mode and the date never wrap */}
+            <div className="col-span-full">
+              <dt>Conquistada</dt>
+              <dd className="whitespace-nowrap">
                 {GAME_NAME[s.mode]} · {date.format(new Date(s.earnedAt))}
               </dd>
             </div>
