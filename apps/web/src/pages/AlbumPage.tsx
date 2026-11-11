@@ -5,6 +5,7 @@
  * is a 150 ms crossfade (click/arrows, the page corner, the group tabs, or a swipe); no 3D, no
  * drag-follow (performance first). A sticker opens in focus (StickerDetail).
  */
+import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import {
   startTransition,
   useCallback,
@@ -603,6 +604,10 @@ export function AlbumPage() {
       </nav>
 
       <DetailHost openRef={openRef} promo={promo} />
+      {/* well clear of the page-turn buttons, so a tap on them never lands on the ad */}
+      <div className="mt-12">
+        <AdSlot slot={AD_SLOTS.track} />
+      </div>
     </div>
   );
 }
