@@ -84,70 +84,79 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(billingRoutes);
   await app.register(modeVoteRoutes);
 
-  /** The player's track of one game: every published level with its state (ADR-007). */
-  async function track(req: { sessionId: string; userId: string | null }, mode: GameMode) {
-    const levels = await prisma.challenge.findMany({
-      // Community (Oficina) levels have no number and live outside the track.
-      where: { gameMode: mode, status: 'published', publicNumber: { not: null } },
-      select: { id: true, publicNumber: true, difficultyTier: true },
-      orderBy: { publicNumber: 'asc' },
-    });
-    // Keyed by level number: an attempt on a version replaced in place still counts.
-    const attempts = await prisma.attempt.findMany({
-      where: {
-        ...playerAttempts(req),
-        challenge: { gameMode: mode, publicNumber: { in: levels.map((l) => l.publicNumber!) } },
-      },
-      select: {
-        completedAt: true,
-        stars: true,
-        score: true,
-        timed: true,
-        _count: { select: { actions: true } },
-        challenge: { select: { publicNumber: true } },
-      },
-    });
-    const best = new Map<number, (typeof attempts)[number]>();
+  /**
+   * The player's tracks of several games: every published level with its state (ADR-007).
+   * Three queries whatever the number of modes (no query per mode: Sentry flagged the N+1).
+   */
+  type TrackLevel = TrackResponse['levels'][number];
+  async function tracks(req: { sessionId: string; userId: string | null }, modes: GameMode[]) {
+    const [levels, attempts, picks] = await Promise.all([
+      prisma.challenge.findMany({
+        // Community (Oficina) levels have no number and live outside the track.
+        where: { gameMode: { in: modes }, status: 'published', publicNumber: { not: null } },
+        select: { gameMode: true, publicNumber: true, difficultyTier: true },
+        orderBy: { publicNumber: 'asc' },
+      }),
+      // Keyed by level number: an attempt on a version replaced in place still counts.
+      prisma.attempt.findMany({
+        where: {
+          ...playerAttempts(req),
+          challenge: { gameMode: { in: modes }, publicNumber: { not: null } },
+        },
+        select: {
+          completedAt: true,
+          stars: true,
+          score: true,
+          timed: true,
+          _count: { select: { actions: true } },
+          challenge: { select: { gameMode: true, publicNumber: true } },
+        },
+      }),
+      // Desafio do Dia levels (today and the archive) open out of order; they never open the next.
+      prisma.dailyPick.findMany({
+        where: { gameMode: { in: modes }, day: { lte: dateColumn(civilDate(now())) } },
+        select: { gameMode: true, level: true },
+      }),
+    ]);
+    const best = new Map<string, (typeof attempts)[number]>();
     for (const a of attempts) {
-      const n = a.challenge.publicNumber!;
-      const prev = best.get(n);
-      if (!prev || (a.completedAt && !prev.completedAt) || a.stars > prev.stars) best.set(n, a);
+      const k = `${a.challenge.gameMode}:${a.challenge.publicNumber}`;
+      const prev = best.get(k);
+      if (!prev || (a.completedAt && !prev.completedAt) || a.stars > prev.stars) best.set(k, a);
     }
-    // Desafio do Dia levels (today and the archive) open out of order; they never open the next.
-    const daily = new Set(
-      (
-        await prisma.dailyPick.findMany({
-          where: { gameMode: mode, day: { lte: dateColumn(civilDate(now())) } },
-          select: { level: true },
-        })
-      ).map((p) => p.level),
-    );
-    let open = true;
-    return levels.map((l) => {
-      const a = best.get(l.publicNumber!);
+    const daily = new Set(picks.map((p) => `${p.gameMode}:${p.level}`));
+    const open = new Set(modes); // a mode leaves the set at its first level not done
+    const out = new Map<GameMode, TrackLevel[]>(modes.map((m) => [m, []]));
+    for (const l of levels) {
+      const k = `${l.gameMode}:${l.publicNumber}`;
+      const a = best.get(k);
       // A level only opened (no guess, no skip, no clock running) is still "Jogar", not "Continuar".
       const state = a?.completedAt
         ? 'done'
         : a && (a.timed || a._count.actions > 0)
           ? 'in_progress'
-          : open || daily.has(l.publicNumber!)
+          : open.has(l.gameMode) || daily.has(k)
             ? 'open'
             : 'locked';
-      if (state !== 'done') open = false;
-      return {
+      if (state !== 'done') open.delete(l.gameMode);
+      out.get(l.gameMode)!.push({
         level: l.publicNumber!,
         state,
         stars: a?.completedAt ? a.stars : 0,
         score: a?.completedAt ? a.score : 0,
         difficultyTier: l.difficultyTier,
-      } as const;
-    });
+      });
+    }
+    return out;
   }
 
   app.get('/games', { schema: { response: { 200: GamesResponse } } }, async (req) => ({
-    games: await Promise.all(
-      GAMES.map(async (g) => {
-        const levels = await track(req, g.mode);
+    games: await tracks(
+      req,
+      GAMES.map((g) => g.mode),
+    ).then((all) =>
+      GAMES.map((g) => {
+        const levels = all.get(g.mode)!;
         return {
           ...g,
           levels: levels.length,
@@ -165,7 +174,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { params: z.object({ mode: GameMode }), response: { 200: TrackResponse } } },
     async (req) => ({
       mode: req.params.mode,
-      levels: await track(req, req.params.mode),
+      levels: (await tracks(req, [req.params.mode])).get(req.params.mode)!,
     }),
   );
 
