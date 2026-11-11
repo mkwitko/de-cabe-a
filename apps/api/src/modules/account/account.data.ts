@@ -200,11 +200,10 @@ export async function erase(tx: Tx, sids: string[], pks: string[], userId: strin
     where: { authorPk: { in: pks } },
     data: { authorPk: DELETED },
   });
-  for (const pk of pks)
-    await tx.challenge.updateMany({
-      where: { createdBy: `oficina:${pk}` },
-      data: { createdBy: `oficina:${DELETED}` },
-    });
+  await tx.challenge.updateMany({
+    where: { createdBy: { in: pks.map((pk) => `oficina:${pk}`) } },
+    data: { createdBy: `oficina:${DELETED}` },
+  });
   await tx.guestSession.deleteMany({ where: { id: { in: sids } } });
   if (userId) {
     const user = await tx.user.findUnique({ where: { id: userId } });

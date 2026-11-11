@@ -64,13 +64,15 @@ export async function applyRoundUpgrades(prisma: PrismaClient, pks: string[], no
       )
     );
   };
-  for (const r of open) {
-    if (topByMonday.get(r.monday) && isPick(r.monday, r.challengeId))
-      await prisma.sticker.updateMany({
-        where: { pk: r.pk, playerId: r.playerId, rarity: { in: [...LOWER] } },
-        data: { rarity: 'destaque_rodada' },
-      });
-  }
+  const upgrade = open.filter((r) => topByMonday.get(r.monday) && isPick(r.monday, r.challengeId));
+  if (upgrade.length)
+    await prisma.sticker.updateMany({
+      where: {
+        OR: upgrade.map((r) => ({ pk: r.pk, playerId: r.playerId })),
+        rarity: { in: [...LOWER] },
+      },
+      data: { rarity: 'destaque_rodada' },
+    });
   const keys = new Set(open.map((r) => `${r.pk}|${r.monday}`));
   await prisma.roundCheck.createMany({
     data: [...keys].map((k) => {
