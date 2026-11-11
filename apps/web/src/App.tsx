@@ -4,9 +4,9 @@ import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
-import { AD_SLOTS, ADS_ENABLED, AdSlot } from './components/AdSlot';
+import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
 import { SignInButton } from './components/SignInButton';
@@ -349,9 +349,19 @@ export function Home() {
   return <LockerRoom lockers={[...modes, ...extra]} />;
 }
 
-const HOME_AD = ADS_ENABLED && Boolean(AD_SLOTS.home);
+// Room for a 160px skyscraper beside the 1280px page, 150px from its controls.
+const WIDE = '(min-width: 1880px)';
+const hasMedia = typeof matchMedia === 'function';
+const isWide = () => hasMedia && matchMedia(WIDE).matches;
+const subscribeWide = (cb: () => void) => {
+  if (!hasMedia) return () => {};
+  const m = matchMedia(WIDE);
+  m.addEventListener('change', cb);
+  return () => m.removeEventListener('change', cb);
+};
 
 function HomeRoute() {
+  const wide = useSyncExternalStore(subscribeWide, isWide, () => false);
   // Warm the launch level's chunk once the home is idle, so opening it is instant.
   useEffect(() => {
     const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 2000));
@@ -359,17 +369,16 @@ function HomeRoute() {
   }, []);
   return (
     <>
-      {/* desktop: the ad rides a sticky rail beside the scene; phone: under it */}
-      <div
-        className={
-          HOME_AD ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start xl:gap-8' : ''
-        }
-      >
-        <Home />
-        <div className="xl:sticky xl:top-4 xl:[&>aside]:mt-4">
+      <Home />
+      {wide ? (
+        // In the empty page margin of very wide screens: takes no room, scrolls with the page,
+        // 150px+ from the scene's controls.
+        <div className="absolute top-24 right-4 w-[160px] [&>aside]:mt-0">
           <AdSlot slot={AD_SLOTS.home} />
         </div>
-      </div>
+      ) : (
+        <AdSlot slot={AD_SLOTS.home} />
+      )}
       <p className="mt-10 text-center text-sm text-chalk-soft">
         {isPageLaunched('daily') && (
           <>

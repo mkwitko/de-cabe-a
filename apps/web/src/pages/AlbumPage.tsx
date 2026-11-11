@@ -604,7 +604,7 @@ export function AlbumPage() {
       </nav>
 
       <DetailHost openRef={openRef} promo={promo} />
-      <AdSlot slot={AD_SLOTS.track} />
+      <AdSlot slot={AD_SLOTS.album} />
     </div>
   );
 }

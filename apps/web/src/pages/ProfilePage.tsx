@@ -167,7 +167,7 @@ export function ProfilePage() {
           </ul>
         </section>
       )}
-      <AdSlot slot={AD_SLOTS.track} />
+      <AdSlot slot={AD_SLOTS.profile} />
     </div>
   );
 }
