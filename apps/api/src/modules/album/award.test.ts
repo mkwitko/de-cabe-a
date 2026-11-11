@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { candidatePlayerIds } from './award';
+import { candidatePlayerIds, earnsSticker } from './award';
 
 describe('candidatePlayerIds', () => {
   it('single-answer modes give their answer', () => {
@@ -33,5 +33,14 @@ describe('candidatePlayerIds', () => {
       'b',
     ]);
     expect(candidatePlayerIds('DRAFT', { rounds: [{ answerId: 'a' }] }, {})).toEqual(['a']);
+  });
+});
+
+describe('earnsSticker', () => {
+  it('scored modes end COMPLETED and still earn a sticker', () => {
+    expect(earnsSticker('COMPLETED', 2)).toBe(true);
+    expect(earnsSticker('WON', 1)).toBe(true);
+    expect(earnsSticker('COMPLETED', 0)).toBe(false);
+    expect(earnsSticker('LOST', 3)).toBe(false);
   });
 });
