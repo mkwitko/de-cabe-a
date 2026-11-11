@@ -50,16 +50,16 @@ function Stamp({
       )}
       <b
         className="font-condensed mt-[2cqh] line-clamp-2 max-w-[86%] leading-[0.95] font-black break-words uppercase"
-        style={{ fontSize: `clamp(0.8rem, min(22cqh, ${140 / longest}cqw), 2.5rem)` }}
+        style={{ fontSize: `clamp(0.75rem, min(18cqh, ${118 / longest}cqw), 2.5rem)` }}
       >
         {club.clubName}
       </b>
       {/* Sized by the slot and wrapped, so an oval stamp at 360px keeps its lines inside the ring. */}
-      <span className="tabular mt-[2cqh] max-w-[78%] text-[clamp(0.625rem,min(6.5cqw,9cqh),1.0625rem)] leading-tight font-bold">
+      <span className="tabular mt-[2cqh] max-w-[78%] text-[clamp(0.625rem,min(5.5cqw,7.5cqh),1.0625rem)] leading-tight font-bold">
         {yearsLabel(club.fromYear, club.toYear)}
       </span>
       {stats && (
-        <span className="tabular max-w-[78%] text-[clamp(0.625rem,min(6.5cqw,9cqh),1.0625rem)] leading-tight font-bold text-balance opacity-85">
+        <span className="tabular max-w-[78%] text-[clamp(0.625rem,min(5.5cqw,7.5cqh),1.0625rem)] leading-tight font-bold text-balance opacity-85">
           {stats}
         </span>
       )}
