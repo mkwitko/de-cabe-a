@@ -39,8 +39,12 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
   await page.getByRole('button', { name: 'Chutar' }).click();
   await expect(revealed.nth(1)).toContainText('PSV');
 
-  // 3. Skip reveals club 3; reload keeps the state
-  await page.getByRole('button', { name: 'Pular' }).click();
+  // 3. Skip (the empty box's action, confirmed inline) reveals club 3; reload keeps the state
+  await page.getByRole('button', { name: 'Pular', exact: true }).click();
+  await page
+    .getByRole('alertdialog', { name: 'Pular esta dica?' })
+    .getByRole('button', { name: 'Confirmar' })
+    .click();
   await expect(revealed.nth(2)).toContainText('Barcelona');
   await page.reload();
   await expect(revealed.nth(2)).toContainText('Barcelona');

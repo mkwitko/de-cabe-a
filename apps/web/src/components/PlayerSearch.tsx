@@ -21,6 +21,8 @@ interface Props {
   /** Open the suggestions above the input (docked at the bottom of the screen; on phones the
    * nearest positioned ancestor, the docked form, sets the list's width). */
   dropUp?: boolean;
+  /** What is typed, as it changes (an empty box can offer another action in the same spot). */
+  onQuery?: (q: string) => void;
 }
 
 export function PlayerSearch({
@@ -31,6 +33,7 @@ export function PlayerSearch({
   autoFocus,
   selected,
   dropUp,
+  onQuery,
 }: Props) {
   const id = useId();
   const listId = `${id}-list`;
@@ -47,6 +50,8 @@ export function PlayerSearch({
   useEffect(() => {
     if (!selected) setQ('');
   }, [selected]);
+
+  useEffect(() => onQuery?.(q), [q, onQuery]);
 
   useEffect(() => {
     const term = q.trim();
@@ -156,7 +161,7 @@ export function PlayerSearch({
         role="listbox"
         aria-label="Jogadores"
         hidden={!showList}
-        className={`absolute inset-x-0 z-30 max-h-[min(26rem,60dvh)] ${dropUp ? 'bottom-full mb-1 max-sm:mx-3' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
+        className={`absolute inset-x-0 z-30 max-h-[min(26rem,calc(var(--app-h,100dvh)*0.6))] ${dropUp ? 'bottom-full mb-1 max-sm:mx-3' : 'top-full mt-1'} overflow-auto rounded-lg bg-paper py-1 text-ink shadow-[0_12px_32px_-8px_rgb(0_0_0/0.45)]`}
       >
         {results.map((p, i) => (
           <li
