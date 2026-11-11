@@ -131,6 +131,47 @@ const faq = seo.faq.filter(
     (isPageLaunched('ranking') || !/relógio/.test(q)),
 );
 
+const HL_STEPS = [
+  ['O duelo', 'Dois jogadores, cada um num clube. O número de gols (ou de jogos) fica escondido.'],
+  ['O palpite', 'Toque em quem tem o número maior. Os dois números acendem no placar.'],
+  ['As estrelas', 'Cinco duelos por fase: 5 acertos valem 3 estrelas, 4 valem 2, 3 valem 1.'],
+] as const;
+
+/** Mais ou Menos in three lines, on its scoreboard, with the player's next level. */
+function HigherLowerHowTo() {
+  const next = nextLevel(useTrack('HIGHER_LOWER').data);
+  return (
+    <section aria-labelledby="como-hl" className="hl-board flex w-full flex-col gap-4">
+      <h2
+        id="como-hl"
+        className="font-condensed text-4xl leading-none font-black uppercase sm:text-5xl"
+      >
+        <span className="hl-led">Mais ou Menos</span>
+      </h2>
+      <ol className="grid gap-3 md:grid-cols-3">
+        {HL_STEPS.map(([name, text], i) => (
+          <li key={name} className="flex flex-col gap-1 rounded-md bg-[#101416] p-4">
+            <h3 className="font-condensed flex items-baseline gap-2 text-2xl leading-none font-extrabold text-chalk uppercase">
+              <span className="tabular text-[var(--hl-led)]">{i + 1}.</span> {name}
+            </h3>
+            <p className="leading-snug text-chalk-soft">{text}</p>
+          </li>
+        ))}
+      </ol>
+      <Link
+        to={next ? `/mais-ou-menos/${next.level}` : '/mais-ou-menos'}
+        className="hl-next font-condensed grid min-h-14 place-items-center self-stretch sm:self-center sm:px-10"
+      >
+        {next
+          ? next.inProgress
+            ? `Continuar a fase ${next.level}`
+            : `Jogar a fase ${next.level} do Mais ou Menos`
+          : 'Ver as fases'}
+      </Link>
+    </section>
+  );
+}
+
 export function HowToPlayPage() {
   const track = useTrack('CAREER_PATH');
   const next = nextLevel(track.data);
@@ -175,6 +216,7 @@ export function HowToPlayPage() {
             ? 'Ver as fases'
             : 'Ir para o Career Path'}
       </Link>
+      {isModeLaunched('HIGHER_LOWER') && <HigherLowerHowTo />}
       <section className="flex flex-col gap-2">
         <h2 className="font-condensed text-2xl leading-none font-extrabold uppercase">
           Perguntas frequentes

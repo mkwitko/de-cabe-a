@@ -52,7 +52,7 @@ describe('mode votes ("Quero esse primeiro")', () => {
     const guest = device();
     const view = (await guest.req('GET', '/mode-votes')).json();
     expect(view).toMatchObject({ total: 0, mine: null });
-    expect(view.modes).toHaveLength(11);
+    expect(view.modes).toHaveLength(10);
     const put = await guest.req('PUT', '/mode-votes', { mode: 'copa' });
     expect(put.statusCode).toBe(401);
     expect(put.json().error.code).toBe('UNAUTHORIZED');
@@ -88,7 +88,7 @@ describe('mode votes ("Quero esse primeiro")', () => {
 
   it('only closed modes can be voted for', async () => {
     const d = await account('Cris Voto');
-    for (const mode of ['CAREER_PATH', 'nope', ''])
+    for (const mode of ['CAREER_PATH', 'HIGHER_LOWER', 'nope', ''])
       expect((await d.req('PUT', '/mode-votes', { mode })).statusCode).toBe(400);
     expect((await d.req('PUT', '/mode-votes', {})).statusCode).toBe(400);
   });

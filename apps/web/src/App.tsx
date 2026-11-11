@@ -318,7 +318,6 @@ const PITCH: Record<VotableMode, string> = {
   FOOTBALL_GRID: 'Um craque por cruzamento',
   IMPOSTOR: 'Ache quem nunca jogou lá',
   TIMELINE: 'Os clubes na ordem certa',
-  HIGHER_LOWER: 'Quem fez mais pelo clube?',
   MISSING_XI: 'O XI de uma final de Copa',
   MYSTERY_PLAYER: 'Cada palpite dá uma pista',
   CONNECTIONS: '16 nomes, 4 grupos',
@@ -334,19 +333,12 @@ const PITCH: Record<VotableMode, string> = {
  * the mode is and a vote for the one that opens next.
  */
 export function Home() {
-  const modes: Locker[] = GAMES.flatMap((g) =>
-    g.mode === 'CAREER_PATH' || isModeLaunched(g.mode)
-      ? []
-      : [
-          {
-            key: g.mode,
-            name: g.name,
-            rule: g.rule,
-            pitch: PITCH[g.mode],
-            howTo: g.howTo,
-          },
-        ],
-  );
+  // a mode that is not launched is still votable (VotableMode lists the closed ones)
+  const modes: Locker[] = GAMES.flatMap((g) => {
+    if (isModeLaunched(g.mode)) return [];
+    const key = g.mode as VotableMode;
+    return [{ key, name: g.name, rule: g.rule, pitch: PITCH[key], howTo: g.howTo }];
+  });
   const extra: Locker[] = SOON_EXTRA.filter((x) => !isPageLaunched(x.page)).map((x) => ({
     key: x.page,
     name: x.name,

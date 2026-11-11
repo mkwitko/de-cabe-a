@@ -26,7 +26,7 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2
-  await page.getByRole('link', { name: 'Jogar fase 1' }).click();
+  await page.getByRole('link', { name: 'Jogar fase 1', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
   // Mode chosen once, before the level starts (ADR-009).
   await page.getByRole('button', { name: /No seu tempo/ }).click();
