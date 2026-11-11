@@ -203,10 +203,13 @@ export function PrivacyPage() {
                 <strong>Música e efeitos sonoros</strong>: as faixas Batucada (&quot;Batucada
                 rehearsal in Chile&quot;), de felix.blume; Hinchada (&quot;Explosions,
                 football&apos;s chants in street celebration (in the Boca Juniors fan national
-                day)&quot;), de bienvenido69; e Murga (&quot;080519-003.wav&quot;), de cabro. Todas
-                em CC0 (domínio público) no Freesound, cortadas e com volume igualado por nós. Os
-                sons de torcida dos pacotes de cosméticos são recortes de gravações CC0 de
-                felix.blume e speedyrce. Os efeitos sonoros são sintetizados no seu aparelho.
+                day)&quot;), de bienvenido69; Murga (&quot;080519-003.wav&quot;), de cabro;
+                Arquibancada carioca (&quot;Maraca_04.aif&quot;, gravada no Maracanã), de _vk; e
+                Torcida mineira (&quot;Soccer game in Brazil, goals and crowd shouting&quot;,
+                gravada no Mineirão), de felix.blume. Todas em CC0 (domínio público) no Freesound,
+                cortadas e com volume igualado por nós. Os sons de torcida dos pacotes de cosméticos
+                são recortes de gravações CC0 de felix.blume e speedyrce. Os efeitos sonoros são
+                sintetizados no seu aparelho.
               </li>
               <li>
                 <strong>Vestiário da página inicial</strong>: as imagens do vestiário (de dia e à

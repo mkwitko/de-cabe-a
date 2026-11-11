@@ -10,6 +10,8 @@ export const TRACKS = [
   { id: 'hinchada', name: 'Hinchada', about: 'Torcida argentina, cantos e festa na rua' },
   { id: 'murga', name: 'Murga', about: 'Bombos e redoblantes de Buenos Aires' },
   { id: 'batucada', name: 'Batucada', about: 'Surdo, caixa e repique' },
+  { id: 'carioca', name: 'Arquibancada carioca', about: 'Gente cantando e vibrando no Maracanã' },
+  { id: 'mineira', name: 'Torcida mineira', about: 'Sessenta mil vozes no Mineirão' },
 ] as const;
 export type TrackId = (typeof TRACKS)[number]['id'];
 /** `auto`: Murga between levels, Batucada inside one. A saved track that no longer exists falls back to `auto`. */
