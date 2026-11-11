@@ -1,6 +1,7 @@
 /* global URL, console -- Node script */
 // After `vite build`: one static HTML per public page, with its own title, description,
-// canonical, structured data and readable text inside #root (React replaces it on load).
+// canonical, structured data and readable text inside #root (React replaces it on load). The
+// text is visually hidden so it never flashes on screen before the app's first paint.
 // Search engines and AI crawlers get real content without running JavaScript.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -49,7 +50,8 @@ for (const p of pages) {
         acceptedAnswer: { '@type': 'Answer', text: a },
       })),
     });
-  const body = `<main style="max-width:1280px;margin:0 auto;padding:24px 16px"><h1>${esc(p.h1)}</h1>${p.text
+  // Visually hidden: crawlers read it, people never see it flash before the app paints.
+  const body = `<main style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0"><h1>${esc(p.h1)}</h1>${p.text
     .map((t) => `<p>${esc(t)}</p>`)
     .join(
       '',
