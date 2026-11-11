@@ -19,6 +19,7 @@ import {
   type WikiLang,
 } from '../../apps/api/src/modules/data-import/wikipedia';
 import { checkPlayer } from '../../apps/api/src/modules/knowledge/quality';
+import { isReserveClub } from './lib/reserve';
 
 try {
   process.loadEnvFile(new URL('../../.env', import.meta.url));
@@ -373,9 +374,21 @@ async function crossCheck(
     // Reserve and B teams are not senior career entries (they matched the first team before).
     if (RESERVE.test(entry.club)) continue;
     // Exact matches first, so Santa Cruz never falls on Santos for a player who had both.
+    // The cell's link names the club exactly; names alone paired "Barcelona" with Barcelona B and
+    // "Atlético de Madrid" with Real Madrid Castilla (shared token "madrid").
+    const k = entry.link ? `${page.lang}:${entry.link}` : null;
+    if (k && !qidByLink.has(k))
+      qidByLink.set(k, (await entityBySitelink(`${page.lang}wiki`, entry.link!))?.id ?? null);
+    const linked = k
+      ? wdClubs.find((c) => c.wikidataId && c.wikidataId === qidByLink.get(k))
+      : null;
+    const senior = wdClubs.filter((c) => !isReserveClub(c.name));
     const fromWikidata =
-      wdClubs.find((c) => exactClub(c, entry.club)) ??
-      wdClubs.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club));
+      linked ??
+      senior.find((c) => normalizeName(c.shortName) === normalizeName(entry.club)) ??
+      senior.find((c) => normalizeName(c.name) === normalizeName(entry.club)) ??
+      senior.find((c) => exactClub(c, entry.club)) ??
+      senior.find((c) => !matched.some((m) => m.club.id === c.id) && fuzzyClub(c, entry.club));
     const club = fromWikidata ?? (await resolveClub(entry, page.lang));
     if (club && !fromWikidata) needsSecondSource.push(club);
     if (!club)

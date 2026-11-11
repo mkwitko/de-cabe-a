@@ -250,8 +250,7 @@ function FinalBoard({ data }: { data: AttemptResponse }) {
         })}
       </ol>
       <p className="text-xs text-[#9aa3a8]">
-        Números da ficha de cada jogador na Wikipédia (às vezes só a liga, às vezes todas as
-        competições).
+        Jogos e gols só na liga nacional, pela ficha de cada jogador na Wikipédia em inglês.
       </p>
     </div>
   );
