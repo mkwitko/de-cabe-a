@@ -7,6 +7,13 @@
 import { normalizeName } from '@decabeca/engine';
 import type { FastifyPluginAsync } from 'fastify';
 import type { PrismaClient } from '../../generated/prisma/client';
+import { commons } from '../knowledge/player-card';
+
+/** AdSense block "jogador" (public ids, ADR-012). Personalised only with the consent stored by the game. */
+const AD_CLIENT = 'ca-pub-3545965778969941';
+const AD_SLOT_PLAYER = '4649178019';
+const AD = `<aside class="ad" aria-label="Publicidade"><span>Publicidade</span><ins class="adsbygoogle" data-ad-client="${AD_CLIENT}" data-ad-slot="${AD_SLOT_PLAYER}" data-ad-format="auto" data-full-width-responsive="true"></ins></aside>
+<script>(function(){var ok=false;try{ok=(JSON.parse(localStorage.getItem('dc_consent_v1')||'null')||{}).ads===true}catch(e){}var a=window.adsbygoogle=window.adsbygoogle||[];a.requestNonPersonalizedAds=ok?0:1;var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}';document.head.appendChild(s);a.push({})})()</script>`;
 
 const POSITION = { GK: 'goleiro', DF: 'defensor', MF: 'meio-campista', FW: 'atacante' } as const;
 const esc = (s: string) =>
@@ -31,18 +38,56 @@ const span = (a: number | null, b: number | null) =>
       : 'anos não informados';
 
 const CSS = `
-:root{--pitch:#1f6b3d;--deep:#17552f;--chalk:#f6faf6;--soft:#cfe3d4;--cover:#f3d54a;--ink:#173a24;--paper:#fbfaf6}
-*{box-sizing:border-box}body{margin:0;background:var(--pitch);color:var(--chalk);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
-a{color:inherit}main{max-width:1280px;margin:0 auto;padding:16px 16px 64px}@media(min-width:640px){main{padding:24px 32px 64px}}
-header.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
-.brand{font-weight:900;text-transform:uppercase;letter-spacing:-.02em;text-decoration:none;font-size:22px}
-h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1;text-transform:uppercase;letter-spacing:-.02em;margin:.2em 0 .4em}
-h2{text-transform:uppercase;font-size:1.3rem;margin-top:2em}.lead{font-size:1.15rem;max-width:62ch;color:var(--soft)}
-table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.15)}
-th{font-size:.85rem;text-transform:uppercase;color:var(--soft)}td.n{font-variant-numeric:tabular-nums}
-.cta{display:inline-block;background:var(--cover);color:var(--ink);font-weight:800;text-transform:uppercase;text-decoration:none;padding:12px 20px;border-radius:10px;margin:8px 0}
-.grid{display:grid;gap:8px 24px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));list-style:none;padding:0}
-.scroll{overflow-x:auto}table{min-width:520px}.src{font-size:.85rem;color:var(--soft);margin-top:3em}nav.letters a{display:inline-block;padding:4px 8px;font-weight:700}`;
+@font-face{font-family:Archivo;src:url(/fonts/archivo-wdth.woff2) format("woff2-variations");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+:root{--pitch:oklch(.22 .045 155);--deep:oklch(.17 .035 155);--chalk:oklch(.95 .015 150);--soft:oklch(.8 .04 150);--paper:oklch(.93 .008 100);--cover:oklch(.84 .15 95);--ink:oklch(.27 .07 152);--line:rgb(255 255 255/.12)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--chalk);font:17px/1.6 Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;background:repeating-linear-gradient(90deg,transparent 0 120px,rgb(255 255 255/.018) 120px 240px),radial-gradient(120% 70% at 50% -10%,var(--pitch),var(--deep) 70%) fixed;background-color:var(--deep);min-height:100dvh}
+a{color:inherit}main{max-width:1280px;margin:0 auto;padding:16px 16px 64px}@media(min-width:640px){main{padding:16px 32px 80px}}
+.c{font-stretch:68%;font-weight:900;text-transform:uppercase;letter-spacing:-.01em}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;height:56px;padding:0 6px 0 16px;margin-bottom:20px;border:1px solid var(--line);border-radius:16px;background:rgb(0 0 0/.25);box-shadow:0 14px 30px -16px rgb(0 0 0/.8)}
+.brand{text-decoration:none;font-size:22px}.brand b{color:var(--cover)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:12px;background:var(--cover);color:var(--ink);text-decoration:none;font-stretch:68%;font-weight:900;text-transform:uppercase;font-size:1.05rem;box-shadow:0 4px 0 oklch(.62 .13 90)}
+.btn.ghost{background:transparent;color:var(--chalk);border:2px solid var(--line);box-shadow:none}
+.crumb{font-size:.9rem;color:var(--soft);margin:0 0 12px}.crumb a{text-underline-offset:3px}
+h1{font-size:clamp(2.6rem,8vw,5rem);line-height:.9;margin:0 0 14px}
+h1 small{display:block;font-size:.3em;letter-spacing:.12em;color:var(--cover);margin-bottom:.5em}
+h2{font-size:clamp(1.5rem,3.5vw,2rem);line-height:1;margin:56px 0 16px}
+.lead{font-size:1.1rem;max-width:62ch;color:var(--soft);margin:0 0 18px}
+.hero{display:grid;gap:28px;align-items:center}@media(min-width:760px){.hero{grid-template-columns:260px minmax(0,1fr);gap:48px}}
+.sticker{margin:0 auto;width:min(240px,70vw);transform:rotate(-2.5deg)}
+.sticker .frame{background:var(--paper);padding:10px;border-radius:14px;box-shadow:0 22px 44px -14px rgb(0 0 0/.65)}
+.sticker .ph{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:3/4;background:var(--pitch)}
+.sticker img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.sticker .ini{display:grid;place-items:center;height:100%;font-size:5rem;color:rgb(255 255 255/.7)}
+.sticker .band{position:absolute;inset:auto 0 0;background:var(--cover);color:var(--ink);text-align:center;padding:6px 8px;font-size:1.25rem;line-height:1.05}
+.sticker figcaption{margin-top:10px;font-size:.72rem;color:var(--soft);text-align:center;transform:rotate(2.5deg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0 0 20px}
+.chips li{border:1px solid var(--line);background:rgb(255 255 255/.05);border-radius:999px;padding:4px 14px;font-size:.92rem}.chips b{color:var(--cover);font-weight:700}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:520px;margin:0 0 22px}
+.board div{background:rgb(0 0 0/.35);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center}
+.board b{display:block;font-size:2.4rem;line-height:1;color:var(--cover);font-variant-numeric:tabular-nums}.board span{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.career{list-style:none;padding:0;margin:0;background:var(--paper);color:var(--ink);border-radius:16px;overflow:hidden;box-shadow:0 22px 44px -18px rgb(0 0 0/.6)}
+.career li{display:grid;grid-template-columns:5.5rem minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:12px 16px;border-bottom:2px dashed oklch(.27 .07 152/.15)}
+.career li:last-child{border-bottom:0}
+.yrs{font-stretch:68%;font-weight:800;font-variant-numeric:tabular-nums;font-size:.95rem;color:oklch(.27 .07 152/.75)}
+.club{font-size:1.35rem;line-height:1.05}.club small{display:block;font:500 .82rem/1.3 Archivo,system-ui,sans-serif;text-transform:none;letter-spacing:0;color:oklch(.27 .07 152/.7)}
+.loan{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:oklch(.27 .07 152/.12);font:700 .7rem/1.6 Archivo,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle}
+.ng{display:flex;gap:14px;font-variant-numeric:tabular-nums;text-align:right}.ng b{display:block;font-size:1.3rem;line-height:1}.ng span{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+.career li.tot{background:var(--ink);color:var(--chalk)}.career li.tot .yrs{color:var(--cover)}
+@media(max-width:520px){.career li{grid-template-columns:minmax(0,1fr) auto}.yrs{grid-column:1/-1}}
+.card{border:1px solid var(--line);background:rgb(0 0 0/.25);border-radius:16px;padding:20px}
+.quiz ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;list-style:none;padding:0;margin:12px 0}
+.quiz li{background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 14px;font-stretch:68%;font-weight:800;text-transform:uppercase;text-align:center}
+.quiz summary{cursor:pointer;font-weight:700;color:var(--cover);min-height:44px;display:flex;align-items:center}
+.cp{display:flex;align-items:center;gap:16px}.cp b{font-size:3rem;line-height:1;color:var(--cover)}
+.mates{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
+.mates a{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgb(255 255 255/.05);text-decoration:none;font-weight:600}.mates a:hover{border-color:var(--cover)}
+.cta{margin-top:56px;display:grid;gap:16px;align-items:center;background:var(--cover);color:var(--ink);border-radius:18px;padding:24px}@media(min-width:760px){.cta{grid-template-columns:minmax(0,1fr) auto;padding:28px 32px}}
+.cta h2{margin:0}.cta p{margin:6px 0 0}.cta .btn{background:var(--ink);color:var(--cover);box-shadow:0 4px 0 rgb(0 0 0/.35)}
+.ad{margin-top:152px}.ad span{display:block;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgb(207 227 212/.7);margin-bottom:4px}.ad ins{display:block;min-height:100px;border-radius:10px;background:rgb(255 255 255/.04)}
+.src{font-size:.82rem;color:var(--soft);margin-top:48px}
+.grid{display:grid;gap:8px 24px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));list-style:none;padding:0}nav.letters a{display:inline-block;padding:4px 8px;font-weight:700}
+:focus-visible{outline:3px solid var(--cover);outline-offset:3px}`;
 
 /**
  * Indexable player pages (thin mass pages hurt the whole domain and AdSense approval): famous
@@ -85,7 +130,7 @@ function page(o: {
 <meta property="og:url" content="${url}"><meta property="og:image" content="${o.origin}/og.png"><meta name="twitter:card" content="summary_large_image">
 ${(o.jsonLd ?? []).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('')}
 <style>${CSS}</style></head><body><main>
-<header class="top"><a class="brand" href="/">De Cabeça F.C.</a><a href="/jogadores">Jogadores</a></header>
+<header class="top"><a class="brand c" href="/">De Cabeça <b>F.C.</b></a><a class="btn" href="/">Jogar</a></header>
 ${o.body}</main></body></html>`;
 }
 
@@ -165,7 +210,7 @@ export const seoRoutes: FastifyPluginAsync = async (app) => {
     const plays = Number(cp?.n ?? 0);
     const statsBlock =
       plays >= 5
-        ? `<h2>No De Cabeça F.C.</h2><p>${Math.round((Number(cp!.won) / plays) * 100)}% dos jogadores acertaram ${esc(p.canonicalName)} pela carreira${cp!.avg ? `, em média na ${Math.round(7 - cp!.avg / 10)}ª tentativa` : ''} (${plays} partidas).</p>`
+        ? `<b class="c">${Math.round((Number(cp!.won) / plays) * 100)}%</b><p style="margin:0">dos jogadores do De Cabeça F.C. acertaram ${esc(p.canonicalName)} pela carreira${cp!.avg ? `, em média na ${Math.round(7 - cp!.avg / 10)}ª tentativa` : ''} (${plays} partidas).</p>`
         : '';
     // Quiz: three of his clubs and one club of the same country he never played for.
     const own = [...new Map(clubs.map((c) => [c.clubId, c.club])).values()];
@@ -189,29 +234,67 @@ export const seoRoutes: FastifyPluginAsync = async (app) => {
         const options = [...three.map((c) => c.shortName), decoy.shortName].sort((a, b) =>
           normalizeName(a + p.id) < normalizeName(b + p.id) ? -1 : 1,
         );
-        quiz = `<h2>Desafio: em qual destes ${esc(p.canonicalName)} nunca jogou?</h2><ul>${options.map((o) => `<li>${esc(o)}</li>`).join('')}</ul><details><summary>Ver resposta</summary><p>${esc(decoy.shortName)}. Quer mais desafios assim? <a href="/impostor">Jogue o Impostor</a>.</p></details>`;
+        quiz = `<h2 class="c" style="margin:0">Desafio: em qual destes ${esc(p.canonicalName)} nunca jogou?</h2><ul>${options.map((o) => `<li>${esc(o)}</li>`).join('')}</ul><details><summary>Ver resposta</summary><p>${esc(decoy.shortName)}. Quer mais desafios assim? <a href="/impostor">Jogue o Impostor</a>.</p></details>`;
       }
     }
     const path = `/jogador/${playerSlug(p)}`;
+    const initials = p.canonicalName
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+    const photo =
+      p.photoFile && p.photoLicense
+        ? {
+            url: commons(p.photoFile, 480),
+            page: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.photoFile)}`,
+            credit: [p.photoAuthor, p.photoLicense].filter(Boolean).join(', '),
+          }
+        : null;
+    const most = [...clubs].sort((a, b) => (b.appearances ?? -1) - (a.appearances ?? -1))[0];
+    const nat = p.nationality.name === 'Brasil' ? 'Brasil' : p.nationality.name;
+    const chips = [
+      ['Posição', pos],
+      ['País', nat],
+      born ? ['Nascido em', String(born)] : null,
+      own.length ? ['Começou no', own[0]!.shortName] : null,
+      most?.appearances ? ['Mais jogos no', most.club.shortName] : null,
+    ].filter((c): c is string[] => c !== null);
+    const sticker = `<figure class="sticker"><div class="frame"><div class="ph">${
+      photo
+        ? `<img src="${esc(photo.url)}" alt="Foto de ${esc(p.canonicalName)}" width="480" height="640" decoding="async">`
+        : `<div class="ini c">${esc(initials)}</div>`
+    }<p class="band c" style="margin:0">${esc(p.canonicalName)}</p></div></div>${
+      photo
+        ? `<figcaption>Foto: <a href="${esc(photo.page)}" rel="nofollow">${esc(photo.credit)}</a>, Wikimedia Commons</figcaption>`
+        : ''
+    }</figure>`;
+    const board = `<div class="board"><div><b class="c">${uniqueClubs.length}</b><span>${uniqueClubs.length === 1 ? 'Clube' : 'Clubes'}</span></div><div><b class="c">${hasStats ? games : '—'}</b><span>Jogos</span></div><div><b class="c">${hasStats ? goals : '—'}</b><span>Gols</span></div></div>`;
     const rows = clubs
       .map(
         (c) =>
-          `<tr><td>${esc(c.club.shortName)}${c.spellType === 'loan' ? ' <small>(empréstimo)</small>' : ''}</td><td>${esc(c.club.country.name)}</td><td class="n">${span(year(c.startDate), c.endDate ? year(c.endDate) : null)}</td><td class="n">${c.appearances ?? '—'}</td><td class="n">${c.goals ?? '—'}</td></tr>`,
+          `<li><span class="yrs">${span(year(c.startDate), c.endDate ? year(c.endDate) : null)}</span><span class="club c">${esc(c.club.shortName)}${c.spellType === 'loan' ? '<span class="loan">empréstimo</span>' : ''}<small>${esc(c.club.country.name)}</small></span><span class="ng"><span><b class="c">${c.appearances ?? '—'}</b><span>jogos</span></span><span><b class="c">${c.goals ?? '—'}</b><span>gols</span></span></span></li>`,
       )
       .join('');
-    const body = `<p><a href="/jogadores">Jogadores</a> › ${esc(p.canonicalName)}</p>
-<h1>Carreira de ${esc(p.canonicalName)}</h1>
+    const total = hasStats
+      ? `<li class="tot"><span class="yrs">Total</span><span class="club c">Carreira profissional</span><span class="ng"><span><b class="c">${games}</b><span>jogos</span></span><span><b class="c">${goals}</b><span>gols</span></span></span></li>`
+      : '';
+    const body = `<p class="crumb"><a href="/jogadores">Jogadores</a> › ${esc(p.canonicalName)}</p>
+<section class="hero">${sticker}<div>
+<h1 class="c"><small>Carreira de </small>${esc(p.canonicalName)}</h1>
 <p class="lead">${esc(answer)}</p>
-<a class="cta" href="/career-path">Você adivinharia pela carreira? Jogar Career Path</a>
-<h2>Clubes, jogos e gols</h2>
-<div class="scroll"><table><thead><tr><th>Clube</th><th>País</th><th>Período</th><th>Jogos</th><th>Gols</th></tr></thead><tbody>${rows}</tbody></table></div>
-${hasStats ? `<p>Total: <strong>${games} jogos</strong> e <strong>${goals} gols</strong>.</p>` : ''}
-${quiz}
-${statsBlock}
-${mates.length ? `<h2>Jogou nos mesmos clubes</h2><ul class="grid">${mates.map((m) => `<li><a href="/jogador/${playerSlug(m)}">${esc(m.canonicalName)}</a></li>`).join('')}</ul>` : ''}
-<h2>Teste seu conhecimento</h2>
-<p>No De Cabeça F.C. você adivinha o jogador pela sequência de clubes, completa a grade de clubes e posições e caça o impostor que nunca jogou no clube.</p>
-<a class="cta" href="/">Jogar agora, é grátis</a>
+<ul class="chips">${chips.map(([k, v]) => `<li>${esc(k!)}: <b>${esc(v!)}</b></li>`).join('')}</ul>
+${board}
+<a class="btn" href="/career-path">Você adivinharia pela carreira? Jogar</a>
+</div></section>
+<h2 class="c">Clubes, jogos e gols</h2>
+<ol class="career">${rows}${total}</ol>
+${quiz ? `<div class="card quiz" style="margin-top:56px">${quiz}</div>` : ''}
+${statsBlock ? `<div class="card cp" style="margin-top:16px">${statsBlock}</div>` : ''}
+${mates.length ? `<h2 class="c">Jogou nos mesmos clubes</h2><ul class="mates">${mates.map((m) => `<li><a href="/jogador/${playerSlug(m)}">${esc(m.canonicalName)}</a></li>`).join('')}</ul>` : ''}
+<section class="cta"><div><h2 class="c">Teste seu conhecimento</h2><p>Adivinhe o jogador pela sequência de clubes, complete a grade e cace o impostor que nunca jogou no clube.</p></div><a class="btn" href="/">Jogar agora, é grátis</a></section>
+${AD}
 <p class="src">Dados conferidos entre Wikidata e Wikipédia${wikiUrl ? ` (<a href="${esc(wikiUrl)}" rel="nofollow">fonte</a>)` : ''}; textos da Wikipédia sob CC BY-SA. Jogos e gols como a ficha da Wikipédia informa (em geral, só pelo campeonato).</p>`;
     const jsonLd = [
       {
