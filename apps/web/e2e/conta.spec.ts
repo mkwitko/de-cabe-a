@@ -37,7 +37,9 @@ test('guest /conta invites to /entrar; signing up lands on Login e segurança', 
   await expect(page.getByRole('heading', { name: 'Jogando sem conta' })).toHaveCount(0);
 
   await page.getByRole('tab', { name: 'Login e segurança' }).click();
-  await expect(page.getByText(email, { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('tabpanel', { name: 'Login e segurança' }).getByText(email, { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText('E-mail e senha')).toBeVisible();
   await page.getByRole('button', { name: 'Sair deste aparelho' }).click();
   await expect(page.getByRole('heading', { name: 'Jogando sem conta' })).toBeVisible();

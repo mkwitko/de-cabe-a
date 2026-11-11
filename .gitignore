@@ -6,6 +6,7 @@ dist/
 !.env.prod.example
 coverage/
 playwright-report/
+dist-e2e-*/
 test-results/
 .remember/
 **/.impeccable/review/
