@@ -73,8 +73,9 @@ export function PrivacyPage() {
                 ocultos. Só depois do seu &quot;Aceitar&quot;. Base: seu consentimento.
               </li>
               <li>
-                <strong>Anúncios (Google AdSense)</strong>: só depois do seu &quot;Aceitar&quot;,
-                fora da hora de jogar. O Google usa cookies para entregar e medir os anúncios; veja{' '}
+                <strong>Anúncios (Google AdSense)</strong>: fora da hora de jogar, personalizados só
+                depois do seu &quot;Aceitar&quot;; sem ele, não personalizados. O Google usa cookies
+                para entregar e medir os anúncios; veja{' '}
                 <A href="https://policies.google.com/technologies/ads?hl=pt-BR">
                   como o Google usa cookies em publicidade
                 </A>

@@ -125,8 +125,8 @@ export function CookiesPage() {
           body: (
             <>
               <p>
-                Só depois do seu Aceitar. Os anúncios aparecem fora da hora de jogar, nunca durante
-                uma fase.
+                Os anúncios aparecem fora da hora de jogar, nunca durante uma fase. Personalizados
+                só depois do seu Aceitar; sem ele, não personalizados.
               </p>
               <Table>
                 <Row
