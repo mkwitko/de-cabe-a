@@ -1,5 +1,5 @@
 /**
- * Mais ou Menos (ADR-011): a night match at the stadium, played on its giant scoreboard. Two real
+ * Quem fez mais? (ADR-011): a night match at the stadium, played on its giant scoreboard. Two real
  * spells face each other like the two teams on the placar, the number hidden behind dark LEDs;
  * tap the one with more goals (or games) at that club, as the player's Wikipedia infobox gives
  * them. Then both numbers light up digit by digit and the duel lamp turns green or red. Five duels;
@@ -29,7 +29,7 @@ const QUESTION = {
 } as const;
 const UNIT = { goals: 'gols', games: 'jogos' } as const;
 const DIGIT_MS = 220;
-const BACK = '/mais-ou-menos';
+const BACK = '/quem-fez-mais';
 
 /** The number lights up digit by digit on the board; a tick per digit. Reduced motion: at once. */
 function LedNumber({ value, unit, start }: { value: number; unit: string; start: number }) {
@@ -282,7 +282,7 @@ export function HigherLowerPage({ level, timed = false }: { level: number; timed
   const [flash, setFlash] = useState(0);
   const data = attempt.data;
   useGameTracking(data);
-  const title = `Mais ou Menos · Fase ${level}`;
+  const title = `Quem fez mais? · Fase ${level}`;
   const view = data?.view as HigherLowerView | undefined;
   const done = !!data && data.attempt.status !== 'IN_PROGRESS';
   const picking = !!view?.current && shown === null && !done;

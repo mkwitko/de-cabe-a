@@ -199,7 +199,7 @@ export const TimelineReveal = z.strictObject({
 });
 export type TimelineReveal = z.infer<typeof TimelineReveal>;
 
-/** Mais ou Menos (ADR-011): two spells, who had more goals or games; values after the pick. */
+/** Quem fez mais? (ADR-011): two spells, who had more goals or games; values after the pick. */
 const HlSide = z.strictObject({
   playerId: z.string(),
   playerName: z.string(),
@@ -416,7 +416,7 @@ const GameEvent = z.union([
     round: z.number(),
     order: z.array(z.string()),
   }),
-  // Mais ou Menos: both values are shown once the round is played.
+  // Quem fez mais?: both values are shown once the round is played.
   z.strictObject({
     type: z.enum(['correct', 'wrong']),
     round: z.number(),

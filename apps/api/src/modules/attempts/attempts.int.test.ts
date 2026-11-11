@@ -1045,7 +1045,7 @@ describe('Modo Carreira', () => {
   });
 });
 
-describe('Mais ou Menos (ADR-011)', () => {
+describe('Quem fez mais? (ADR-011)', () => {
   it('compares real spells, refuses too-close rounds, plays a level', async () => {
     const club = clubs['Santos']!.id;
     const make = async (name: string, games: number, goals: number) => {

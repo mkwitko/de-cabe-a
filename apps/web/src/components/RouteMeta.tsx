@@ -31,8 +31,8 @@ const GAMES: Record<string, Meta> = {
     title: 'Linha do tempo: a carreira na ordem certa',
     description: 'Coloque os clubes de um jogador na ordem em que ele passou por eles.',
   },
-  '/mais-ou-menos': {
-    title: 'Mais ou Menos: quem jogou ou marcou mais?',
+  '/quem-fez-mais': {
+    title: 'Quem fez mais? Jogou ou marcou mais?',
     description: 'Dois jogadores, um clube: quem fez mais jogos ou gols ali?',
   },
   '/escalacao': {

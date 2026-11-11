@@ -41,7 +41,7 @@ const GAMES = [
   { mode: 'FOOTBALL_GRID', name: 'Grid' },
   { mode: 'IMPOSTOR', name: 'Impostor' },
   { mode: 'TIMELINE', name: 'Linha do tempo' },
-  { mode: 'HIGHER_LOWER', name: 'Mais ou Menos' },
+  { mode: 'HIGHER_LOWER', name: 'Quem fez mais?' },
   { mode: 'MISSING_XI', name: 'Escalação' },
   { mode: 'MYSTERY_PLAYER', name: 'Craque Misterioso' },
   { mode: 'CONNECTIONS', name: 'Conexões' },

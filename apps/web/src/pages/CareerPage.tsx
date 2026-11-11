@@ -50,7 +50,7 @@ interface Career {
 }
 
 const ATTR: Record<Attr, { label: string; game: string; path: string }> = {
-  finishing: { label: 'Finalização', game: 'Mais ou Menos', path: '/mais-ou-menos' },
+  finishing: { label: 'Finalização', game: 'Quem fez mais?', path: '/quem-fez-mais' },
   passing: { label: 'Passe', game: 'Football Grid', path: '/grid' },
   vision: { label: 'Visão', game: 'Career Path', path: '/career-path' },
   defending: { label: 'Defesa', game: 'Impostor', path: '/impostor' },

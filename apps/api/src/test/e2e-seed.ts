@@ -250,7 +250,7 @@ for (const [i, slot] of DRAFT_SLOTS.entries()) {
   });
 }
 await live({ mode: 'DRAFT', params: { rounds: draftRounds }, createdBy: 'e2e' });
-// Mais ou Menos level 1: five duels at Flamengo. Side a has the games, side b the goals, so the
+// Quem fez mais? level 1: five duels at Flamengo. Side a has the games, side b the goals, so the
 // goals duels (1, 3, 5) go to b and the games duels (2, 4) to a (e2e/higher-lower.spec.ts).
 const hlRounds = [];
 for (let i = 1; i <= 5; i++) {

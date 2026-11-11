@@ -252,7 +252,7 @@ export function StatsPage() {
     [
       'HIGHER_LOWER',
       'hl-stats',
-      'Mais ou Menos',
+      'Quem fez mais?',
       std(data.HIGHER_LOWER, ['5 de 5', data.HIGHER_LOWER.perfect]),
     ],
     [

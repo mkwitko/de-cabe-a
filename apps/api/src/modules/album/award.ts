@@ -73,7 +73,7 @@ export async function featuredPlayerId(
 }
 
 /**
- * A finished level earns a sticker with at least one star. Scored modes (Mais ou Menos, Timeline,
+ * A finished level earns a sticker with at least one star. Scored modes (Quem fez mais?, Timeline,
  * Draft...) end COMPLETED, never WON, so only a LOST attempt is excluded.
  */
 export const earnsSticker = (status: Attempt['status'], stars: number) =>

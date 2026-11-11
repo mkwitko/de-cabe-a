@@ -1,5 +1,5 @@
 /**
- * Mais ou Menos snapshot (ADR-011): 5 rounds, each two real spells (player at club, all their
+ * Quem fez mais? snapshot (ADR-011): 5 rounds, each two real spells (player at club, all their
  * verified spells there added up) compared by league goals or games, with a clear winner.
  */
 import { z } from 'zod';

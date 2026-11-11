@@ -1,5 +1,5 @@
 /**
- * The site as it ships: Career Path and Mais ou Menos open (no VITE_LAUNCH_ALL). Runs in the "launch"
+ * The site as it ships: Career Path and Quem fez mais? open (no VITE_LAUNCH_ALL). Runs in the "launch"
  * Playwright project against its own web server; the other specs run with everything open.
  */
 import { expect, test } from '@playwright/test';
@@ -41,7 +41,7 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   // Home: the brand, the two open games, the Em breve strip; the bar is Jogar · Álbum · Perfil.
   await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Mais ou Menos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Quem fez mais?' })).toBeVisible();
   await expect(page.getByText('Em breve').first()).toBeVisible();
   const nav = page
     .getByRole('navigation')
@@ -80,8 +80,8 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
   await page.goto('/apoie');
   await expect(page.getByRole('heading', { name: /Apoie chega em breve/i })).toBeVisible();
 
-  // Mais ou Menos is open: its level, not the Em breve screen.
-  await page.goto('/mais-ou-menos/1');
+  // Quem fez mais? is open: its level, not the Em breve screen.
+  await page.goto('/quem-fez-mais/1');
   await expect(page.getByRole('button', { name: /No seu tempo/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: /chega em breve/i })).toHaveCount(0);
 

@@ -137,7 +137,7 @@ const HL_STEPS = [
   ['As estrelas', 'Cinco duelos por fase: 5 acertos valem 3 estrelas, 4 valem 2, 3 valem 1.'],
 ] as const;
 
-/** Mais ou Menos in three lines, on its scoreboard, with the player's next level. */
+/** Quem fez mais? in three lines, on its scoreboard, with the player's next level. */
 function HigherLowerHowTo() {
   const next = nextLevel(useTrack('HIGHER_LOWER').data);
   return (
@@ -146,7 +146,7 @@ function HigherLowerHowTo() {
         id="como-hl"
         className="font-condensed text-4xl leading-none font-black uppercase sm:text-5xl"
       >
-        <span className="hl-led">Mais ou Menos</span>
+        <span className="hl-led">Quem fez mais?</span>
       </h2>
       <ol className="grid gap-3 md:grid-cols-3">
         {HL_STEPS.map(([name, text], i) => (
@@ -159,13 +159,13 @@ function HigherLowerHowTo() {
         ))}
       </ol>
       <Link
-        to={next ? `/mais-ou-menos/${next.level}` : '/mais-ou-menos'}
+        to={next ? `/quem-fez-mais/${next.level}` : '/quem-fez-mais'}
         className="hl-next font-condensed grid min-h-14 place-items-center self-stretch sm:self-center sm:px-10"
       >
         {next
           ? next.inProgress
             ? `Continuar a fase ${next.level}`
-            : `Jogar a fase ${next.level} do Mais ou Menos`
+            : `Jogar a fase ${next.level} do Quem fez mais`
           : 'Ver as fases'}
       </Link>
     </section>

@@ -17,7 +17,7 @@ const ext = () => (new Audio().canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg'
 
 /** /career-path/3, /grid/12, ... are levels; the track page (/career-path) and the rest are menu. */
 const LEVEL_RE =
-  /^\/(career-path|grid|impostor|linha-do-tempo|mais-ou-menos|craque-misterioso|draft|conexoes|escalacao)\/[^/]+\/?$/;
+  /^\/(career-path|grid|impostor|linha-do-tempo|quem-fez-mais|craque-misterioso|draft|conexoes|escalacao)\/[^/]+\/?$/;
 export const sceneFor = (pathname: string): Scene => (LEVEL_RE.test(pathname) ? 'level' : 'menu');
 
 export const trackFor = (choice: TrackId | 'auto', s: Scene): TrackId =>

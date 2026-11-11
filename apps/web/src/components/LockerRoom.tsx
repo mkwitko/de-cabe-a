@@ -178,7 +178,7 @@ function PosterWall({ lockers }: { lockers: Locker[] }) {
 }
 
 /**
- * Mais ou Menos on the home: a slice of the stadium scoreboard its levels are played on (the
+ * Quem fez mais? on the home: a slice of the stadium scoreboard its levels are played on (the
  * level's own art, see HigherLowerPage), with the player's progress and the next level.
  */
 function ScoreboardCard() {
@@ -201,8 +201,8 @@ function ScoreboardCard() {
           id="hl-name"
           className="font-condensed text-[2.6rem] leading-[0.85] font-black uppercase sm:text-[3.6rem]"
         >
-          <Link to="/mais-ou-menos" className="rounded-sm">
-            <span className="hl-led">Mais ou Menos</span>
+          <Link to="/quem-fez-mais" className="rounded-sm">
+            <span className="hl-led">Quem fez mais?</span>
           </Link>
         </h2>
         <p className="max-w-[40ch] font-semibold text-chalk">
@@ -225,7 +225,7 @@ function ScoreboardCard() {
         <Skeleton className="h-16 w-full sm:w-64" />
       ) : (
         <Link
-          to={next ? `/mais-ou-menos/${next.level}` : '/mais-ou-menos'}
+          to={next ? `/quem-fez-mais/${next.level}` : '/quem-fez-mais'}
           className="hl-next font-condensed grid min-h-16 place-items-center px-6 text-[1.7rem] sm:min-w-64"
         >
           {next
@@ -233,7 +233,7 @@ function ScoreboardCard() {
               ? `Continuar a fase ${next.level}`
               : `Jogar fase ${next.level}`
             : 'Rever as fases'}
-          <span className="sr-only"> do Mais ou Menos</span>
+          <span className="sr-only"> do Quem fez mais</span>
         </Link>
       )}
     </section>

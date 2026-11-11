@@ -8,11 +8,11 @@
       "h1": "De Cabeça F.C.: minijogos de futebol",
       "text": [
         "Teste quanto você sabe de futebol de cabeça. Três jogos, centenas de fases, estrelas, títulos e ranking da comunidade.",
-        "Career Path: adivinhe o jogador pela sequência de clubes. Mais ou Menos: quem fez mais gols, ou jogou mais, pelo clube? Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
+        "Career Path: adivinhe o jogador pela sequência de clubes. Quem fez mais? Compare gols ou jogos pelo clube. Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
       ],
       "links": [
         ["/career-path", "Jogar Career Path"],
-        ["/mais-ou-menos", "Jogar Mais ou Menos"],
+        ["/quem-fez-mais", "Jogar Quem fez mais?"],
         ["/grid", "Jogar Football Grid"],
         ["/impostor", "Jogar Impostor"],
         ["/como-jogar", "Como jogar"],
@@ -76,16 +76,16 @@
       ]
     },
     {
-      "path": "/mais-ou-menos",
-      "title": "Mais ou Menos: quem fez mais gols pelo clube? | De Cabeça F.C.",
+      "path": "/quem-fez-mais",
+      "title": "Quem fez mais? Gols ou jogos pelo clube | De Cabeça F.C.",
       "description": "Duas passagens reais de jogadores por clubes. Quem fez mais gols, ou mais jogos? Cinco duelos por fase.",
-      "h1": "Mais ou Menos: quem tem o número maior?",
+      "h1": "Quem fez mais? Quem tem o número maior",
       "text": [
         "Cada rodada mostra dois jogadores em seus clubes e pergunta quem fez mais gols ou mais jogos ali.",
         "Os números aparecem depois da escolha. Acerte os cinco duelos para três estrelas."
       ],
       "links": [
-        ["/mais-ou-menos", "Começar o Mais ou Menos"],
+        ["/quem-fez-mais", "Começar o Quem fez mais?"],
         ["/como-jogar", "Regras e estrelas"]
       ]
     },

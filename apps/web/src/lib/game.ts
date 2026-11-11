@@ -28,7 +28,7 @@ export const GAME_NAME = {
   FOOTBALL_GRID: 'Football Grid',
   IMPOSTOR: 'Impostor',
   TIMELINE: 'Linha do tempo',
-  HIGHER_LOWER: 'Mais ou Menos',
+  HIGHER_LOWER: 'Quem fez mais?',
   MISSING_XI: 'Escalação',
   CONNECTIONS: 'Conexões',
   DRAFT: 'Draft',
