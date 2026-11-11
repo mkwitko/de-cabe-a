@@ -72,7 +72,7 @@ export function ChallengesPage() {
             <option value="FOOTBALL_GRID">Grid</option>
             <option value="IMPOSTOR">Impostor</option>
             <option value="TIMELINE">Linha do tempo</option>
-            <option value="HIGHER_LOWER">Mais ou Menos</option>
+            <option value="HIGHER_LOWER">Quem fez mais?</option>
             <option value="MISSING_XI">Escalação</option>
             <option value="MYSTERY_PLAYER">Craque Misterioso</option>
             <option value="CONNECTIONS">Conexões</option>

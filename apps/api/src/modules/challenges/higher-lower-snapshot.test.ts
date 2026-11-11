@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { clearWinner } from './higher-lower-snapshot';
 
-describe('clearWinner (Mais ou Menos fairness)', () => {
+describe('clearWinner (Quem fez mais? fairness)', () => {
   it('holds even if one number counts all competitions and the other only the league', () => {
     expect(clearWinner(786, 619)).toBe(false); // Totti: all competitions vs league, same player
     expect(clearWinner(100, 75)).toBe(false); // 33% apart: could flip

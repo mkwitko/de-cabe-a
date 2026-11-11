@@ -47,7 +47,7 @@ const NAMES = {
   FOOTBALL_GRID: 'Grid',
   IMPOSTOR: 'Impostor',
   TIMELINE: 'Linha do tempo',
-  HIGHER_LOWER: 'Mais ou Menos',
+  HIGHER_LOWER: 'Quem fez mais?',
   MISSING_XI: 'Escalação',
   MYSTERY_PLAYER: 'Craque Misterioso',
   CONNECTIONS: 'Conexões',

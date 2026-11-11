@@ -306,7 +306,7 @@ ${letters
       '/grid',
       '/impostor',
       '/linha-do-tempo',
-      '/mais-ou-menos',
+      '/quem-fez-mais',
       '/escalacao',
       '/craque-misterioso',
       '/conexoes',
@@ -376,7 +376,7 @@ ${letters
 - [Football Grid](${o}/grid): grade 3×3; cada casa pede um jogador que cumpra a linha e a coluna (clube, país, posição).
 - [Impostor](${o}/impostor): um clube e 4 jogadores; 3 jogaram lá, ache o que nunca jogou.
 - [Linha do tempo](${o}/linha-do-tempo): quatro clubes de um jogador, embaralhados; ponha na ordem da carreira.
-- [Mais ou Menos](${o}/mais-ou-menos): duas passagens reais; quem fez mais gols ou jogos pelo clube.
+- [Quem fez mais?](${o}/quem-fez-mais): duas passagens reais; gols ou jogos pelo clube.
 - [Craque Misterioso](${o}/craque-misterioso): descubra o jogador escondido; cada palpite mostra nacionalidade, posição, idade e clubes em comum; 8 palpites.
 - [Conexões](${o}/conexoes): 16 jogadores em 4 grupos escondidos (mesmo clube, mesma seleção, titulares da mesma final).
 - [Escalação](${o}/escalacao): o time titular de um jogo real (finais de Copa do Mundo, Champions, Libertadores e Copa América; mata-matas de Copa) com nomes escondidos; complete a escalação.

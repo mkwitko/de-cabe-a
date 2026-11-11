@@ -1,5 +1,5 @@
 /**
- * Mais ou Menos (ADR-011): each level has 5 rounds; a round shows two real spells ("Kaká no
+ * Quem fez mais? (ADR-011): each level has 5 rounds; a round shows two real spells ("Kaká no
  * Milan" vs "Adriano na Inter") and asks who had more league goals (or games). Pick a side.
  */
 import { z } from 'zod';

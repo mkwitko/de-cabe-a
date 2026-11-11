@@ -21,7 +21,7 @@ export const GAME_PATH = {
   FOOTBALL_GRID: '/grid',
   IMPOSTOR: '/impostor',
   TIMELINE: '/linha-do-tempo',
-  HIGHER_LOWER: '/mais-ou-menos',
+  HIGHER_LOWER: '/quem-fez-mais',
   MISSING_XI: '/escalacao',
   CONNECTIONS: '/conexoes',
   DRAFT: '/draft',

@@ -35,8 +35,8 @@ describe('higher-lower engine', () => {
     expect(higherLower.score(s, cfg)).toBe(4);
     expect(starsFor('higher-lower', 4)).toBe(2);
     expect(
-      higherLower.buildShareText(s, cfg, { label: 'Mais ou Menos · Fase 1', url: 'x.br' }),
-    ).toBe('De Cabeça F.C. · Mais ou Menos · Fase 1 · 4/5\n✅❌✅✅✅\nx.br');
+      higherLower.buildShareText(s, cfg, { label: 'Quem fez mais? · Fase 1', url: 'x.br' }),
+    ).toBe('De Cabeça F.C. · Quem fez mais? · Fase 1 · 4/5\n✅❌✅✅✅\nx.br');
   });
 
   it('never shows the current values; past rounds show them', () => {

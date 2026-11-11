@@ -165,8 +165,8 @@ export const GAMES = [
     slot: '05',
     mode: 'HIGHER_LOWER',
     facts: ['5 duelos', '1 min'],
-    name: 'Mais ou Menos',
-    path: '/mais-ou-menos',
+    name: 'Quem fez mais?',
+    path: '/quem-fez-mais',
     rule: 'Duas passagens reais: quem fez mais gols, ou mais jogos, pelo clube?',
     howTo: [
       'Cada fase tem 5 duelos entre jogadores em seus clubes.',
@@ -539,8 +539,10 @@ function PublicRoutes() {
             <Route path="/impostor/:level" element={<LevelRoute mode="IMPOSTOR" />} />
             <Route path="/linha-do-tempo" element={<TrackPage mode="TIMELINE" />} />
             <Route path="/linha-do-tempo/:level" element={<LevelRoute mode="TIMELINE" />} />
-            <Route path="/mais-ou-menos" element={<TrackPage mode="HIGHER_LOWER" />} />
-            <Route path="/mais-ou-menos/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
+            <Route path="/mais-ou-menos" element={<Navigate to="/quem-fez-mais" replace />} />
+            <Route path="/mais-ou-menos/:level" element={<OldHigherLowerLevel />} />
+            <Route path="/quem-fez-mais" element={<TrackPage mode="HIGHER_LOWER" />} />
+            <Route path="/quem-fez-mais/:level" element={<LevelRoute mode="HIGHER_LOWER" />} />
             <Route path="/craque-misterioso" element={<TrackPage mode="MYSTERY_PLAYER" />} />
             <Route
               path="/craque-misterioso/:level"
@@ -593,6 +595,11 @@ function PublicRoutes() {
       </AfterPaint>
     </Shell>
   );
+}
+
+/** Old /mais-ou-menos/:level links keep working. */
+function OldHigherLowerLevel() {
+  return <Navigate to={`/quem-fez-mais/${useParams().level}`} replace />;
 }
 
 /** /career-path/:level and /grid/:level; the key remounts the game when the level changes. */

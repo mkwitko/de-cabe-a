@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Mais ou Menos level 1 on a phone, start to finish (seed: src/test/e2e-seed.ts in the API): the
+ * Quem fez mais? level 1 on a phone, start to finish (seed: src/test/e2e-seed.ts in the API): the
  * goals duels (1, 3, 5) go to the right-hand side b, the games duels (2, 4) to side a. The board
  * fits the screen above the tab bar; a key picks a side too; the end is the final scoreboard.
  */
@@ -12,12 +12,12 @@ async function onScreen(page: Page, name: RegExp) {
   expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height - 64);
 }
 
-test('mais ou menos: five duels on the scoreboard, then the final board', async ({ page }) => {
+test('quem fez mais: five duels on the scoreboard, then the final board', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.addInitScript(() => localStorage.setItem('dc_welcomed', '1'));
-  await page.goto('/mais-ou-menos/1');
+  await page.goto('/quem-fez-mais/1');
   await page.getByRole('button', { name: /No seu tempo/ }).click();
-  await expect(page.getByRole('heading', { name: 'Mais ou Menos · Fase 1' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Quem fez mais? · Fase 1' })).toBeVisible();
 
   const board = page.getByRole('region', { name: 'Placar' });
   const live = page.locator('[aria-live="polite"]').first();
@@ -40,6 +40,11 @@ test('mais ou menos: five duels on the scoreboard, then the final board', async 
 
   await page
     .getByRole('dialog', { name: 'Resultado' })
+    .getByRole('button', { name: /Pular|Continuar/ })
+    .click({ timeout: 5000 });
+  // scored modes earn a sticker (PR #97): dismiss its reveal before reading the board
+  await page
+    .getByRole('dialog', { name: 'Figurinha nova' })
     .getByRole('button', { name: /Pular|Continuar/ })
     .click({ timeout: 5000 });
   await expect(page.getByText('Placar final')).toBeVisible();

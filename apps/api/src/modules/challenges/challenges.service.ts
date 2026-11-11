@@ -245,7 +245,7 @@ export async function buildSnapshot(
     const params = HigherLowerParams.parse(input.params);
     const built = await buildHigherLowerSnapshot(prisma, params, input.difficultyTier);
     if (!built.eligible)
-      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase do Mais ou Menos não elegível.', {
+      throw new AppError(422, 'CHALLENGE_NOT_ELIGIBLE', 'Fase do Quem fez mais não elegível.', {
         reasons: built.reasons,
       });
     const config = ENGINES.HIGHER_LOWER.validateConfig(built.config);
