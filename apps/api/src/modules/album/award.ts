@@ -72,6 +72,13 @@ export async function featuredPlayerId(
   return top?.id ?? null;
 }
 
+/**
+ * A finished level earns a sticker with at least one star. Scored modes (Mais ou Menos, Timeline,
+ * Draft...) end COMPLETED, never WON, so only a LOST attempt is excluded.
+ */
+export const earnsSticker = (status: Attempt['status'], stars: number) =>
+  (status === 'WON' || status === 'COMPLETED') && stars >= 1;
+
 /** Sticker for a won level; an existing one is replaced only by a higher rarity. */
 export async function awardSticker(
   prisma: PrismaClient,
@@ -81,7 +88,7 @@ export async function awardSticker(
   now: Date,
 ): Promise<StickerAward | null> {
   const mode = challenge.gameMode as GameModeCode;
-  if (attempt.status !== 'WON' || attempt.stars < 1) return null;
+  if (!earnsSticker(attempt.status, attempt.stars)) return null;
   if (challenge.publicNumber === null) return null; // community levels earn no stickers
   const playerId = await featuredPlayerId(prisma, mode, challenge.snapshot, attempt.state);
   if (!playerId) return null;
