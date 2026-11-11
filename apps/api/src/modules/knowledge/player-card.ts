@@ -8,7 +8,7 @@ import type { PlayerCard } from '@decabeca/contracts';
 import type { PrismaClient } from '../../generated/prisma/client';
 import cutouts from '../album/cutouts.json';
 
-const commons = (file: string, width: number) =>
+export const commons = (file: string, width: number) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
 /**
  * Background-free head-and-shoulders portraits made offline from the same Commons photo
