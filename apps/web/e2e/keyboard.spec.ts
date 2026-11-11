@@ -58,3 +58,27 @@ for (const { width, height, keyboard } of SIZES)
     await expect(confirm).toBeHidden();
     await expect(action).toBeFocused();
   });
+
+test('timed career path keeps the countdown in sight with the keyboard up at 360x740', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/career-path/1');
+  await page.getByRole('button', { name: /Contra o relógio/ }).click();
+  const input = page.getByRole('combobox', { name: 'Quem é o jogador?' });
+  await input.focus();
+  await page.setViewportSize({ width: 360, height: 450 });
+  // the suggestions open upward toward the header: the countdown stays over them
+  await input.fill('Ro');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  const timer = page.getByRole('timer');
+  await inView(page, timer);
+  const box = (await timer.boundingBox())!;
+  const onTop = await page.evaluate(
+    ({ x, y }) => document.elementFromPoint(x, y)?.closest('[role=timer]') != null,
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+  expect(onTop, 'nothing covers the countdown').toBe(true);
+  if (process.env.SHOTS_DIR)
+    await page.screenshot({ path: `${process.env.SHOTS_DIR}/timer-depois-360-teclado.png` });
+});

@@ -2444,6 +2444,14 @@
   :root[data-kb] .app-bar {
     display: none;
   }
+  /* timed levels: the countdown keeps its spot in the header, over the suggestions that open up
+     toward it, and follows the page when iOS pans it up for the keyboard */
+  :root[data-kb] .countdown {
+    position: relative;
+    top: var(--vv-top, 0px);
+    z-index: 40;
+    box-shadow: 0 6px 16px -6px rgb(0 0 0 / 0.7);
+  }
 }
 
 /* ── Header, tab bar and Ajustes: the stadium scoreboard ─────────────────────────────────── */
