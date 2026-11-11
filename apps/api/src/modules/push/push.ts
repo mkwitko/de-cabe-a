@@ -35,12 +35,13 @@ export const SEND_HOUR = 9;
 
 async function deliver(prisma: PrismaClient, send: PushSender, subs: PushTarget[], m: PushMessage) {
   let sent = 0;
+  const gone: string[] = [];
   for (const s of subs) {
     const status = await send(s, m).catch(() => 0);
-    if (status === 404 || status === 410)
-      await prisma.pushSubscription.deleteMany({ where: { endpoint: s.endpoint } });
+    if (status === 404 || status === 410) gone.push(s.endpoint);
     else if (status >= 200 && status < 300) sent++;
   }
+  if (gone.length) await prisma.pushSubscription.deleteMany({ where: { endpoint: { in: gone } } });
   return sent;
 }
 

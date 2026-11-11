@@ -20,20 +20,22 @@ const ARCHIVE_DAYS = 60;
 export async function drawDay(prisma: PrismaClient, day: string) {
   const drawn = await prisma.dailyPick.findMany({ where: { day: dateColumn(day) } });
   const missing = MODES.filter((m) => !drawn.some((d) => d.gameMode === m));
+  if (!missing.length) return;
+  const [published, picked] = await Promise.all([
+    prisma.challenge.findMany({
+      where: { gameMode: { in: missing }, status: 'published' },
+      select: { gameMode: true, publicNumber: true },
+      orderBy: { publicNumber: 'asc' },
+    }),
+    prisma.dailyPick.findMany({
+      where: { gameMode: { in: missing } },
+      select: { gameMode: true, level: true },
+    }),
+  ]);
   for (const mode of missing) {
-    const levels = (
-      await prisma.challenge.findMany({
-        where: { gameMode: mode, status: 'published' },
-        select: { publicNumber: true },
-        orderBy: { publicNumber: 'asc' },
-      })
-    ).map((c) => c.publicNumber!);
+    const levels = published.filter((c) => c.gameMode === mode).map((c) => c.publicNumber!);
     if (!levels.length) continue;
-    const used = new Set(
-      (await prisma.dailyPick.findMany({ where: { gameMode: mode }, select: { level: true } })).map(
-        (p) => p.level,
-      ),
-    );
+    const used = new Set(picked.filter((p) => p.gameMode === mode).map((p) => p.level));
     const fresh = levels.filter((l) => !used.has(l));
     const pool = fresh.length ? fresh : levels;
     const n = createHash('sha256').update(`${day}|${mode}`).digest().readUInt32BE(0);
