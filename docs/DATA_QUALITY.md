@@ -109,3 +109,7 @@ Ferramentas (`scripts/research/`):
 - Números da liga: a primeira rodada somava células da ficha em inglês fora dos anos da passagem (Friaça 432 jogos pelo Vasco em 1946-49); essas voltam ao valor da fonte e saem do Mais ou Menos. Células sem ligação agora contam quando o texto nomeia o clube. Os que seguem sem confirmação estão em `live-data-unconfirmed.json`, por motivo.
 - País dos clubes conferido com o Wikidata (`check-club-countries.ts`): nenhum divergente.
 - Mais ou Menos com rampa de fama (jogador e clube; fama do clube = jogadores T1/T2 que passaram por ele): fases 1–20 só T1 contra T1 em clubes de fama ≥ 30; 21–50 até T2 em fama ≥ 20; 51–80 até T3 em fama ≥ 8; depois todos em fama ≥ 3.
+
+### Quem fez mais? parelho (2026-11-11)
+
+Duelo bom é duelo disputado. Além da diferença mínima (≥ 5 e 40%, por causa da base liga × todas as competições), o maior número fica no máximo 2,5× o menor nas fases 1–20, 2× nas 21–60 e 1,8× depois (`evenDuel` em `higher-lower-snapshot.ts`, conferido na validação com o `level` dos parâmetros). Gols só entre jogadores da mesma posição, nunca goleiro, 5+ gols cada (`comparableGoals`); jogos, qualquer posição. Fases 1–20: um T1 contra um T1 ou T2 nos clubes de fama ≥ 30 (T1 contra T1 só dá uns 45 duelos parelhos, não os 100 dessas fases). `publish-higher-lower.ts --replace-unfair [--dry]` refaz no lugar as fases fora da regra; os duelos das fases refeitas voltam a poder ser sorteados.

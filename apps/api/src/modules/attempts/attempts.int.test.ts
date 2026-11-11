@@ -1046,13 +1046,19 @@ describe('Modo Carreira', () => {
 });
 
 describe('Quem fez mais? (ADR-011)', () => {
-  it('compares real spells, refuses too-close rounds, plays a level', async () => {
+  it('compares real spells, refuses too-close and lopsided rounds, plays a level', async () => {
     const club = clubs['Santos']!.id;
-    const make = async (name: string, games: number, goals: number) => {
+    const make = async (
+      name: string,
+      games: number,
+      goals: number,
+      position: 'GK' | 'MF' = 'MF',
+    ) => {
       const p = await verifiedPlayer(prisma, {
         name,
         clubIds: [club],
         nationalityId: countries.BR!,
+        position,
       });
       await prisma.careerSpell.updateMany({
         where: { playerId: p.id },
@@ -1062,24 +1068,30 @@ describe('Quem fez mais? (ADR-011)', () => {
     };
     const ids = [];
     for (const i of [0, 1, 2, 3, 4])
-      ids.push([await make(`Artilheiro ${i}`, 200, 100), await make(`Reserva ${i}`, 40, 5)]);
+      ids.push([await make(`Artilheiro ${i}`, 200, 18), await make(`Reserva ${i}`, 120, 10)]);
     const round = (a: string, b: string, metric: 'goals' | 'games') => ({
       metric,
       a: { playerId: a, clubId: club },
       b: { playerId: b, clubId: club },
     });
-    const close = await make('Quase Igual', 199, 99);
+    const close = await make('Quase Igual', 199, 17);
+    const far = await make('Banco', 30, 5);
+    const keeper = await make('Goleiro', 121, 10, 'GK');
     const bad = await adminPost('/challenges', {
       mode: 'HIGHER_LOWER',
       params: {
         rounds: [
           round(ids[0]![0]!, close, 'goals'),
-          ...ids.slice(1).map(([a, b]) => round(a!, b!, 'goals')),
+          round(ids[1]![0]!, far, 'games'),
+          round(ids[2]![0]!, keeper, 'goals'),
+          ...ids.slice(3).map(([a, b]) => round(a!, b!, 'goals')),
         ],
       },
     });
     expect(bad.statusCode).toBe(422);
-    expect(bad.json().error.details.reasons).toContain('ROUND_0_TOO_CLOSE');
+    expect(bad.json().error.details.reasons).toEqual(
+      expect.arrayContaining(['ROUND_0_TOO_CLOSE', 'ROUND_1_TOO_FAR', 'ROUND_2_GOALS_MISMATCH']),
+    );
 
     const level = await publish({
       mode: 'HIGHER_LOWER',
@@ -1097,7 +1109,7 @@ describe('Quem fez mais? (ADR-011)', () => {
     let res;
     for (const i of [0, 1, 2, 3, 4])
       res = (await g.act(start.attempt.id, { kind: 'choose', side: i === 4 ? 'b' : 'a' })).json();
-    expect(res.event).toMatchObject({ type: 'wrong', round: 4, values: [100, 5] }); // round 4 compares goals
+    expect(res.event).toMatchObject({ type: 'wrong', round: 4, values: [18, 10] }); // round 4 compares goals
     expect(res.attempt).toMatchObject({ status: 'COMPLETED', score: 4, stars: 2 });
   });
 });
