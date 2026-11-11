@@ -444,7 +444,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   useApplyCosmetics();
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(3rem+var(--nav-room,4rem)+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
       {/* The scoreboard strip, the same 56px on every route: crest, places, Ajustes, Entrar.
           On the phone the places are the bottom bar; inside a level the game owns the phone
           screen (its height is measured without this strip), so only the bottom bar stays. */}
@@ -456,7 +456,7 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
         <nav
           aria-label="Principal"
-          className="scoreboard floodlit fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:static sm:mx-auto sm:self-stretch sm:bg-none sm:pb-0 sm:shadow-none sm:before:hidden"
+          className="app-bar scoreboard floodlit fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:static sm:mx-auto sm:self-stretch sm:bg-none sm:pb-0 sm:shadow-none sm:before:hidden"
         >
           <ul
             className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}

@@ -7,6 +7,7 @@ import { App } from './App';
 import { trackArrival } from './lib/analytics';
 import { initPostHog } from './lib/posthog';
 import { initInstall } from './lib/install';
+import { watchKeyboard } from './lib/keyboard';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1 }, mutations: { retry: 0 } },
@@ -22,6 +23,7 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
+watchKeyboard(); // keeps the docked guess box above the on-screen keyboard
 initInstall(); // a listener for the install prompt; must be early, it is cheap
 trackArrival();
 

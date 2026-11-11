@@ -2434,6 +2434,18 @@
 }
 /* ── end Career Path level ───────────────────────────────────────────────────────────────── */
 
+/* The on-screen keyboard is up on a phone (lib/keyboard.ts): the bottom bar steps aside, its room
+   goes back to the level, and the docked guess box (bottom: --dock-bottom) sits on the keyboard. */
+@media (width < 40rem) {
+  :root[data-kb] {
+    --nav-room: 0px;
+    --dock-bottom: var(--kb, 0px);
+  }
+  :root[data-kb] .app-bar {
+    display: none;
+  }
+}
+
 /* ── Header, tab bar and Ajustes: the stadium scoreboard ─────────────────────────────────── */
 @layer components {
   /* Black glass with a fine LED grid, lit from above; a gold hairline is the floodlight's edge. */

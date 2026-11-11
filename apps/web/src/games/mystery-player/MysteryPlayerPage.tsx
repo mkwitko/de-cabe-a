@@ -257,7 +257,7 @@ export function MysteryPlayerPage({ level, timed = false }: { level: number; tim
 
   return (
     <div
-      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(100dvh-8rem-env(safe-area-inset-bottom)-var(--consent-room,0px))] sm:h-[calc(100dvh-9rem-var(--consent-room,0px))]'}`}
+      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(var(--app-h,100dvh)-4rem-var(--nav-room,4rem)-env(safe-area-inset-bottom)-var(--consent-room,0px))] sm:h-[calc(100dvh-9rem-var(--consent-room,0px))]'}`}
     >
       <GameHeader
         title={title}
@@ -337,7 +337,7 @@ export function MysteryPlayerPage({ level, timed = false }: { level: number; tim
         </div>
       ) : (
         <form
-          className="fixed inset-x-0 bottom-14 z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 sm:relative sm:inset-x-auto sm:bottom-auto sm:mx-auto sm:w-full sm:max-w-5xl sm:shrink-0 sm:rounded-xl sm:border sm:p-4"
+          className="fixed inset-x-0 bottom-(--dock-bottom,3.5rem) z-20 flex flex-col gap-2 border-t border-chalk/15 bg-pitch-deep/95 p-3 sm:relative sm:inset-x-auto sm:bottom-auto sm:mx-auto sm:w-full sm:max-w-5xl sm:shrink-0 sm:rounded-xl sm:border sm:p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (selected) guess(selected);

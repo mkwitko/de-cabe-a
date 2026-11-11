@@ -160,7 +160,7 @@ export function DraftPage({ level, timed = false }: { level: number; timed?: boo
 
   return (
     <div
-      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(100dvh-8rem-env(safe-area-inset-bottom)-var(--consent-room,0px))] sm:h-[calc(100dvh-9rem-var(--consent-room,0px))]'}`}
+      className={`flex flex-col gap-3 ${done ? '' : 'h-[calc(var(--app-h,100dvh)-4rem-var(--nav-room,4rem)-env(safe-area-inset-bottom)-var(--consent-room,0px))] sm:h-[calc(100dvh-9rem-var(--consent-room,0px))]'}`}
     >
       <GameHeader
         title={title}
