@@ -128,13 +128,21 @@ export function Countdown({ data, onTimeUp }: { data: AttemptResponse; onTimeUp:
   }, [running, endAt]);
   if (!running) return null;
   const low = left <= 10;
+  // Screen readers hear the last 10 s at most every 5 s: "10 segundos", then "5 segundos".
+  const said = low && left > 0 ? `${Math.ceil(left / 5) * 5} segundos` : '';
   return (
-    <p
-      role="timer"
-      aria-label={`Tempo restante: ${formatClock(left)}`}
-      className={`font-condensed tabular rounded-full px-3 py-1 text-2xl leading-none font-black ${low ? 'bg-cover text-ink' : 'border-2 border-chalk-soft/60 text-chalk'}`}
-    >
-      <ClockIcon className="inline size-[0.8em] align-[-0.06em]" /> {formatClock(Math.max(0, left))}
-    </p>
+    <>
+      <p
+        role="timer"
+        aria-label={`Tempo restante: ${formatClock(left)}`}
+        className={`countdown font-condensed tabular rounded-full border-2 px-3 py-1 text-[1.75rem] leading-none font-black transition-colors duration-150 ${low ? 'border-[#ff8a80] bg-[#b3261e] text-white' : 'border-chalk/80 bg-pitch-deep text-chalk'}`}
+      >
+        <ClockIcon className="inline size-[0.8em] align-[-0.06em]" />{' '}
+        {formatClock(Math.max(0, left))}
+      </p>
+      <p className="sr-only" aria-live="assertive">
+        {said}
+      </p>
+    </>
   );
 }
