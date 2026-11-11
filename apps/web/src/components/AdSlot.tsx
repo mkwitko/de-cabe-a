@@ -72,4 +72,6 @@ export const AD_SLOTS = {
   track: (import.meta.env.VITE_ADSENSE_SLOT_TRACK as string | undefined) ?? '',
   result: (import.meta.env.VITE_ADSENSE_SLOT_RESULT as string | undefined) ?? '',
   home: (import.meta.env.VITE_ADSENSE_SLOT_HOME as string | undefined) ?? '',
+  album: (import.meta.env.VITE_ADSENSE_SLOT_ALBUM as string | undefined) ?? '',
+  profile: (import.meta.env.VITE_ADSENSE_SLOT_PROFILE as string | undefined) ?? '',
 };
