@@ -343,7 +343,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       {!done && (
         <form
           data-tour="guess"
-          className="fixed inset-x-0 bottom-(--dock-bottom,3.5rem) z-20 flex flex-col gap-1 border-t border-chalk/15 bg-pitch-deep/95 p-3 sm:relative sm:inset-x-auto sm:bottom-auto sm:shrink-0 sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4 lg:fixed lg:inset-x-0 lg:bottom-6 lg:mt-0 lg:w-[min(48rem,calc(100%-4rem))] lg:p-3 lg:shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)]"
+          className="fixed inset-x-0 bottom-(--dock-bottom,calc(4rem+env(safe-area-inset-bottom))) z-20 flex flex-col gap-1 border-t border-chalk/15 bg-pitch-deep/95 p-3 sm:relative sm:inset-x-auto sm:bottom-auto sm:shrink-0 sm:-mt-24 sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl sm:border sm:p-4 lg:fixed lg:inset-x-0 lg:bottom-6 lg:mt-0 lg:w-[min(48rem,calc(100%-4rem))] lg:p-3 lg:shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)]"
           onSubmit={(e) => {
             e.preventDefault();
             if (selected)

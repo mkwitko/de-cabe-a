@@ -127,7 +127,8 @@ export function PlayerSearch({
           aria-autocomplete="list"
           aria-activedescendant={showList && results[active] ? `${listId}-${active}` : undefined}
           autoComplete="off"
-          autoFocus={autoFocus}
+          // Only with a mouse: on a phone autofocus opens the keyboard over the level on arrival.
+          autoFocus={autoFocus && matchMedia('(pointer: fine)').matches}
           disabled={disabled}
           placeholder={label}
           value={q}

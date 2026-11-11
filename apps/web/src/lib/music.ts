@@ -42,7 +42,8 @@ function fade(el: HTMLAudioElement, to: number, pauseAtEnd: boolean) {
   const from = el.volume;
   const t0 = performance.now();
   const step = (now: number) => {
-    const k = Math.min(1, (now - t0) / FADE_MS);
+    // rAF time can precede t0 by a frame; a negative k would push the volume below 0.
+    const k = Math.min(1, Math.max(0, (now - t0) / FADE_MS));
     el.volume = from + (to - from) * k;
     if (k < 1) fades.set(el, requestAnimationFrame(step));
     else {
