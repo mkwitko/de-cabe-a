@@ -256,11 +256,7 @@ const hlRounds = [];
 for (let i = 1; i <= 5; i++) {
   const [a, b] = await Promise.all([byName(`Craque L1C1 ${i}`), byName(`Craque L1C2 ${i}`)]);
   const at = (playerId: string) => ({ playerId, clubId: c('Flamengo') });
-  // Close numbers and goals between same-position players (evenDuel, comparableGoals).
-  await prisma.player.updateMany({
-    where: { id: { in: [a, b] } },
-    data: { primaryPositionGroup: 'FW' },
-  });
+  // Close numbers (evenDuel); both are defenders, so goals compare like with like.
   await prisma.careerSpell.updateMany({ where: at(a), data: { appearances: 100 + i, goals: 14 } });
   await prisma.careerSpell.updateMany({ where: at(b), data: { appearances: 60, goals: 20 + i } });
   hlRounds.push({ metric: i % 2 ? ('goals' as const) : ('games' as const), a: at(a), b: at(b) });
