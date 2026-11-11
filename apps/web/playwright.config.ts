@@ -14,11 +14,16 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? 'github' : 'list',
   globalSetup: './e2e/global-setup.ts',
+  // Last safety net only: the specs are self-contained (own guest/context each) and the suite is
+  // green without it. Runs serially because every test shares one API + DB.
+  retries: process.env.CI ? 1 : 0,
   fullyParallel: false,
   workers: 1,
   use: {
     baseURL: `http://localhost:${WEB_PORT}`,
     permissions: ['clipboard-read', 'clipboard-write'],
+    // The production build registers sw.js; a cache layer has no place in an isolated test.
+    serviceWorkers: 'block',
   },
   projects: [
     {
@@ -52,15 +57,19 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: `pnpm exec vite --port ${WEB_PORT} --strictPort`,
+      // Built + previewed, not `vite dev`: the dev server compiles on the first hit, which made
+      // the first test on each page slow and flaky. VITE_* is baked in at build time, hence two outDirs.
+      command: `pnpm exec vite build --outDir dist-e2e-all --emptyOutDir && pnpm exec vite preview --outDir dist-e2e-all --port ${WEB_PORT} --strictPort`,
       url: `http://localhost:${WEB_PORT}`,
+      timeout: 180_000,
       // Everything open: the e2e still covers the modes that are closed to the public.
       env: { API_URL: `http://127.0.0.1:${API_PORT}`, VITE_LAUNCH_ALL: '1' },
       reuseExistingServer: false,
     },
     {
-      command: `pnpm exec vite --port ${LAUNCH_PORT} --strictPort`,
+      command: `pnpm exec vite build --outDir dist-e2e-launch --emptyOutDir && pnpm exec vite preview --outDir dist-e2e-launch --port ${LAUNCH_PORT} --strictPort`,
       url: `http://localhost:${LAUNCH_PORT}`,
+      timeout: 180_000,
       // A dummy AdSense client turns the consent banner on; AdSense itself loads only after "Aceitar".
       env: {
         API_URL: `http://127.0.0.1:${API_PORT}`,

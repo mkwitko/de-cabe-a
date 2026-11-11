@@ -46,7 +46,8 @@ for (const route of ROUTES)
     await page.goto(route);
     const pick = page.getByRole('button', { name: /No seu tempo/ });
     if (await pick.isVisible().catch(() => false)) await pick.click();
-    await page.waitForLoadState('networkidle');
+    // Lazy screens: wait for the page's own heading, not for the network to go quiet.
+    await expect(page.getByRole('main').getByRole('heading').first()).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
