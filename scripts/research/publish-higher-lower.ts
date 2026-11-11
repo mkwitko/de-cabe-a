@@ -10,7 +10,10 @@ import {
   publishChallenge,
   validateChallenge,
 } from '../../apps/api/src/modules/challenges/challenges.service';
-import { clearWinner } from '../../apps/api/src/modules/challenges/higher-lower-snapshot';
+import {
+  comparableGoals,
+  evenDuel,
+} from '../../apps/api/src/modules/challenges/higher-lower-snapshot';
 import { normalizeName } from '../../packages/engine/src/index';
 import { isReserveClub } from './lib/reserve';
 import { leagueConfirmed } from './lib/live-data';
@@ -43,18 +46,20 @@ const rows = await prisma.$queryRaw<
     clubId: string;
     clubName: string;
     tier: string;
+    position: 'GK' | 'DF' | 'MF' | 'FW' | null;
     games: bigint;
     goals: bigint;
     spellIds: string[];
   }[]
 >`
   SELECT s."playerId", s."clubId", c.name AS "clubName", p."notabilityTier" AS tier,
+         p."primaryPositionGroup"::text AS position,
          SUM(s.appearances) AS games, SUM(s.goals) AS goals, array_agg(s.id) AS "spellIds"
   FROM "CareerSpell" s
   JOIN "Player" p ON p.id = s."playerId" AND p."verificationStatus" = 'verified'
   JOIN "Club" c ON c.id = s."clubId"
   WHERE s."verificationStatus" = 'verified' AND s."spellType" IN ('professional', 'loan')
-  GROUP BY 1, 2, 3, 4
+  GROUP BY 1, 2, 3, 4, 5
   HAVING bool_and(s.appearances IS NOT NULL AND s.goals IS NOT NULL) AND SUM(s.appearances) >= 30
   ORDER BY 1, 2`;
 // A name shared with a player at least as famous is ambiguous: "Marcelo" (Wisła) is not Real
@@ -111,17 +116,21 @@ const fame = new Map(
   ).map((r) => [r.clubId, Number(r.n)]),
 );
 /**
- * Fame ramp: levels 1-20 only T1 against T1 at the top clubs (fame >= 30, about 23 clubs);
- * 21-50 T1/T2 at well-known clubs (>= 20); 51-80 up to T3 (>= 8); then everyone (>= 3).
+ * Fame ramp: levels 1-20 a T1 against a T1 or T2 at the top clubs (fame >= 30, about 23 clubs;
+ * T1 against T1 alone gives about 45 close duels, not the 100 these levels need); 21-50 T1/T2 at
+ * well-known clubs (>= 20); 51-80 up to T3 (>= 8); then everyone (>= 3).
  */
 const ramp = (level: number) =>
   level <= 20
-    ? { maxTier: 1, minFame: 30 }
+    ? { maxTier: 2, minFame: 30, star: true }
     : level <= 50
       ? { maxTier: 2, minFame: 20 }
       : level <= 80
         ? { maxTier: 3, minFame: 8 }
         : { maxTier: 4, minFame: 3 };
+/** Levels 1-20: one of the two is a T1. */
+const starOk = (a: { tierN: number }, b: { tierN: number }, level: number) =>
+  !('star' in ramp(level)) || a.tierN === 1 || b.tierN === 1;
 const inRamp = (r: (typeof pool)[number], level: number) =>
   r.tierN <= ramp(level).maxTier && (fame.get(r.clubId) ?? 0) >= ramp(level).minFame;
 const difficultyOf = (level: number): 1 | 2 | 3 =>
@@ -154,16 +163,17 @@ function buildRounds(level: number) {
     if (metric === 'goals' && a.goals < 5) continue; // goals duels between defenders are dull
     // Same club only: "who scored more for the club" (a Scunthorpe tally against a Man City one
     // compared two different questions).
-    const options = byClub
-      .get(a.clubId)!
-      .filter(
-        (b) =>
-          b.playerId !== a.playerId &&
-          !used.has(b.playerId) &&
-          inRamp(b, level) &&
-          clearWinner(v(a), v(b)) &&
-          !usedPairs.has([a.playerId, b.playerId].sort().join()),
-      );
+    const options = byClub.get(a.clubId)!.filter(
+      (b) =>
+        b.playerId !== a.playerId &&
+        !used.has(b.playerId) &&
+        inRamp(b, level) &&
+        starOk(a, b, level) &&
+        // Close numbers, and goals only between players of the same outfield position.
+        evenDuel(v(a), v(b), level) &&
+        (metric === 'games' || comparableGoals(a, b)) &&
+        !usedPairs.has([a.playerId, b.playerId].sort().join()),
+    );
     if (!options.length) continue;
     const b = options[Math.floor(rnd() * options.length)]!;
     used.add(a.playerId);
@@ -181,7 +191,8 @@ function buildRounds(level: number) {
 // --replace-unfair: published levels with a duel that breaks a current rule are replaced in place
 // (same number) with new duels: a duel must still be drawable now (same club, shown name and
 // number equal to the base, confirmed league numbers, no reserve side, no ambiguous name, clear
-// winner) and not repeat a duel of an earlier level. --dry lists them only.
+// winner but close numbers, goals only within a position) and not repeat a duel of an earlier
+// level. --dry lists them only.
 if (process.argv.includes('--replace-unfair')) {
   const { retireChallenge } =
     await import('../../apps/api/src/modules/challenges/challenges.service');
@@ -210,7 +221,7 @@ if (process.argv.includes('--replace-unfair')) {
   const why = (r: Round, seen: Set<string>, level: number): string | null => {
     const pair = [r.a.playerId, r.b.playerId].sort().join();
     if (seen.has(pair)) return 'duelo repetido de uma fase anterior';
-    if (!clearWinner(r.a.value, r.b.value)) return 'diferença pequena demais';
+    if (!evenDuel(r.a.value, r.b.value, level)) return 'números longe demais ou perto demais';
     const at = (x: Side) =>
       (byPlayer.get(x.playerId) ?? []).filter((e) => names.get(e.clubId) === x.clubName);
     const club = at(r.a).find((e) => at(r.b).some((f) => f.clubId === e.clubId));
@@ -221,9 +232,30 @@ if (process.argv.includes('--replace-unfair')) {
       return 'números corrigidos na base';
     if (shown.get(r.a.playerId) !== r.a.playerName || shown.get(r.b.playerId) !== r.b.playerName)
       return 'nome de jogador corrigido';
-    if (!inRamp(club, level) || !inRamp(other, level)) return 'fora da rampa de fama';
+    if (!inRamp(club, level) || !inRamp(other, level) || !starOk(club, other, level))
+      return 'fora da rampa de fama';
+    if (r.metric === 'goals' && !comparableGoals(club, other))
+      return 'gols entre posições diferentes ou goleiro';
     return null;
   };
+  // Duels of the levels about to be re-drawn are free again: only kept levels block a pair (the
+  // top-club T1 duels of levels 1-20 are few, and the old levels held them all).
+  {
+    const pass = new Set<string>();
+    const kept = new Set<string>();
+    const freed = new Set<string>();
+    for (const c of published) {
+      const snap = c.snapshot as { rounds: Round[] };
+      const bad =
+        forced.has(c.publicNumber!) || snap.rounds.some((r) => why(r, pass, c.publicNumber!));
+      for (const r of snap.rounds) {
+        const k = [r.a.playerId, r.b.playerId].sort().join();
+        pass.add(k);
+        (bad ? freed : kept).add(k);
+      }
+    }
+    for (const k of freed) if (!kept.has(k)) usedPairs.delete(k);
+  }
   let replaced = 0;
   const seen = new Set<string>();
   const unfair: number[] = [];
@@ -256,7 +288,7 @@ if (process.argv.includes('--replace-unfair')) {
       reasons.length
         ? `Duelo fora das regras: ${[...new Set(reasons)].join('; ')}`
         : 'Substituída a pedido (--levels-to-replace): duelos repetidos ou re-curadoria',
-      { params: { rounds }, difficultyTier },
+      { params: { rounds, level: c.publicNumber! }, difficultyTier },
       'ai-curator',
     );
     await validateChallenge(prisma, replacement!.id);
@@ -281,7 +313,7 @@ for (let level = live + 1; level <= TARGET; level++) {
   try {
     const draft = await createChallenge(prisma, {
       mode: 'HIGHER_LOWER',
-      params: { rounds },
+      params: { rounds, level },
       difficultyTier,
       createdBy: 'ai-curator',
     });
