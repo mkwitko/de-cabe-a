@@ -1,5 +1,5 @@
-// The reviewed data fixes for what players see in Career Path and Mais ou Menos
-// (live-data-fixes.json, applied by fix-live-data.ts).
+// The reviewed data fixes for what players see in Career Path and Mais ou Menos, one file per audit
+// round (live-data-fixes.json, live-data-fixes-2.json), applied by fix-live-data.ts.
 import { readFileSync } from 'node:fs';
 
 export interface LiveDataFixes {
@@ -22,7 +22,7 @@ export interface LiveDataFixes {
     player: string;
     club: string;
     from: [number | null, number | null];
-    to: [number, number];
+    to: [number | null, number | null];
   }[];
   /** Careers whose club sequence was broken (a club merged into another, a club missing), rebuilt
    * from the English infobox: they replace the player's senior spells. */
@@ -30,6 +30,8 @@ export interface LiveDataFixes {
     playerId: string;
     player: string;
     sourceRef: string;
+    /** The senior spells it replaces (an earlier round's fixes to them no longer apply). */
+    replaces?: string[];
     spells: {
       id: string;
       clubId: string;
@@ -41,11 +43,24 @@ export interface LiveDataFixes {
       sortIndex: number;
     }[];
   }[];
+  /** Display names shared by verified players, with the main club added ("Alex (Coritiba)"). */
+  playerNames?: { id: string; from: string; to: string; why: string }[];
+  /** Search aliases that are infobox noise ("Pantera NegraKing"). */
+  aliasDeletes?: { id: string; playerId: string; alias: string; why: string }[];
   /** Spells whose league games/goals the English infobox confirms (Mais ou Menos uses only these). */
   leagueConfirmed: string[];
+  /** Spells an earlier round confirmed by mistake. */
+  leagueUnconfirmed?: string[];
 }
 
-export const liveDataFixes = JSON.parse(
-  readFileSync(new URL('../live-data-fixes.json', import.meta.url), 'utf8'),
-) as LiveDataFixes;
-export const leagueConfirmed = new Set(liveDataFixes.leagueConfirmed);
+const load = (file: string) =>
+  JSON.parse(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')) as LiveDataFixes;
+export const FIX_FILES = ['live-data-fixes.json', 'live-data-fixes-2.json'];
+export const loadFixes = load;
+/** Union of every round's confirmations, minus the ones a later round withdrew. */
+export const leagueConfirmed = (() => {
+  const rounds = FIX_FILES.map(load);
+  const out = new Set(rounds.flatMap((r) => r.leagueConfirmed));
+  for (const r of rounds) for (const id of r.leagueUnconfirmed ?? []) out.delete(id);
+  return out;
+})();
