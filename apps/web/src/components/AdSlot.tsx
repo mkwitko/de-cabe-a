@@ -1,8 +1,8 @@
 /**
  * Non-intrusive ad slot (ADR-012): only between moments of play (end of a track page, under a
- * level result, foot of the home), never during a level. Google AdSense: the script is loaded
- * only after the player accepted ads in the consent banner (LGPD); until then, and after a
- * refusal, nothing is requested and the slot renders nothing. Also nothing until
+ * level result, foot of the home), never during a level. Google AdSense for everyone, but
+ * personalised only after the player accepted ads in the consent banner (LGPD); before a choice
+ * and after a refusal, ads are non-personalised (`requestNonPersonalizedAds = 1`). Nothing until
  * VITE_ADSENSE_CLIENT is set, so the layout never shows an empty box.
  */
 import { useEffect, useRef } from 'react';
@@ -22,9 +22,6 @@ let loaded = false;
 function loadAdSense() {
   if (loaded || !CLIENT) return;
   loaded = true;
-  window.adsbygoogle = window.adsbygoogle ?? [];
-  // Only called after the player accepted ads (LGPD), so they may be personalised.
-  window.adsbygoogle.requestNonPersonalizedAds = 0;
   const s = document.createElement('script');
   s.async = true;
   s.crossOrigin = 'anonymous';
@@ -36,21 +33,25 @@ export function AdSlot({ slot }: { slot: string }) {
   const ref = useRef<HTMLModElement>(null);
   const allowed = useConsent()?.ads === true;
   useEffect(() => {
-    if (!CLIENT || !slot || !allowed) return;
+    if (!CLIENT || !slot) return;
+    const ads = (window.adsbygoogle = window.adsbygoogle ?? []);
+    // Read by AdSense on each push: personalised only with consent (LGPD).
+    ads.requestNonPersonalizedAds = allowed ? 0 : 1;
     loadAdSense();
     try {
-      (window.adsbygoogle = window.adsbygoogle ?? []).push({});
+      ads.push({});
     } catch {
       /* ad blocked or not ready: the slot stays empty */
     }
   }, [slot, allowed]);
-  if (!CLIENT || !slot || !allowed) return null;
+  if (!CLIENT || !slot) return null;
   return (
     <aside aria-label="Publicidade" className="mx-auto flex w-full max-w-3xl flex-col gap-1">
       <span className="text-xs font-semibold tracking-wide text-chalk-soft/70 uppercase">
         Publicidade
       </span>
       <ins
+        key={String(allowed)}
         ref={ref}
         className="adsbygoogle block min-h-[100px] overflow-hidden rounded-lg bg-chalk/[0.04]"
         data-ad-client={CLIENT}

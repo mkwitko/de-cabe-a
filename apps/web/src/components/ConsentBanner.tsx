@@ -103,8 +103,8 @@ export function ConsentBanner() {
               ocultos.
             </Choice>
             <Choice checked={ads} onChange={setAds} title="Anúncios">
-              Google AdSense: anúncios fora da hora de jogar, que podem ser do seu interesse. Sem
-              isso, não há anúncios.
+              Google AdSense: anúncios fora da hora de jogar, escolhidos pelo seu interesse. Sem
+              isso, os anúncios não são personalizados.
             </Choice>
           </ul>
           <div className="flex flex-wrap gap-2">
