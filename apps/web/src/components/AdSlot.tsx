@@ -46,7 +46,11 @@ export function AdSlot({ slot }: { slot: string }) {
   }, [slot, allowed]);
   if (!CLIENT || !slot) return null;
   return (
-    <aside aria-label="Publicidade" className="mx-auto flex w-full max-w-3xl flex-col gap-1">
+    // 150px+ clear of any button above it: Google's spacing for ads near games (accidental clicks).
+    <aside
+      aria-label="Publicidade"
+      className="mx-auto mt-[152px] flex w-full max-w-3xl flex-col gap-1"
+    >
       <span className="text-xs font-semibold tracking-wide text-chalk-soft/70 uppercase">
         Publicidade
       </span>

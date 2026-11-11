@@ -604,10 +604,7 @@ export function AlbumPage() {
       </nav>
 
       <DetailHost openRef={openRef} promo={promo} />
-      {/* well clear of the page-turn buttons, so a tap on them never lands on the ad */}
-      <div className="mt-12">
-        <AdSlot slot={AD_SLOTS.track} />
-      </div>
+      <AdSlot slot={AD_SLOTS.track} />
     </div>
   );
 }

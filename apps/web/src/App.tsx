@@ -366,7 +366,7 @@ function HomeRoute() {
         }
       >
         <Home />
-        <div className="mt-10 xl:sticky xl:top-4 xl:mt-4">
+        <div className="xl:sticky xl:top-4 xl:[&>aside]:mt-4">
           <AdSlot slot={AD_SLOTS.home} />
         </div>
       </div>
