@@ -58,7 +58,7 @@ Legenda: ✔ existe e tem teste · ◐ existe sem teste · ✖ falta.
 
 - Convidado: sem dado pessoal (ADR-004). Conta: e-mail; Google: id e e-mail.
 - `/privacidade` explica cookie, conta, Sentry, AdSense e Resend (ADR-012).
-- Anúncios personalizados só com consentimento.
+- Anúncios nunca personalizados (ADR-012).
 - ✖ Exclusão de conta e retenção: regra proposta: excluir conta apaga e-mail e vínculo; tentativas ficam anônimas (ranking histórico não quebra). Sessões de convidado sem uso há 12 meses são apagadas.
 - Perfil público (onda 2): privado por padrão; nada além de apelido, título, estatísticas e conquistas.
 - Menores: sem coleta de idade; sem chat, sem mensagem entre usuários, sem foto pessoal.

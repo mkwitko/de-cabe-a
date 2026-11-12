@@ -27,7 +27,6 @@ export function ConsentBanner() {
   const reopened = useConsentPanelOpen();
   const [configuring, setConfiguring] = useState(false);
   const [analytics, setAnalytics] = useState(choice?.analytics ?? false);
-  const [ads, setAds] = useState(choice?.ads ?? false);
   const box = useRef<HTMLDivElement>(null);
   const onLevel = sceneFor(useLocation().pathname) === 'level';
   const visible = (!choice && CONSENT_NEEDED) || reopened;
@@ -37,7 +36,6 @@ export function ConsentBanner() {
   useEffect(() => {
     if (!reopened) return;
     setAnalytics(choice?.analytics ?? false);
-    setAds(choice?.ads ?? false);
     box.current?.focus();
   }, [reopened, choice]);
   useEffect(() => {
@@ -61,12 +59,9 @@ export function ConsentBanner() {
 
   if (!visible) return null;
 
-  const save = (c: { analytics: boolean; ads: boolean }) => {
-    const hadAds = choice?.ads === true;
+  const save = (c: { analytics: boolean }) => {
     setConsent(c);
     setConfiguring(false);
-    // AdSense stays loaded in the page until it reloads.
-    if (hadAds && !c.ads) location.reload();
   };
 
   return (
@@ -102,13 +97,9 @@ export function ConsentBanner() {
               PostHog: como o jogo é usado, para melhorarmos. Sem cookies, com campos de texto
               ocultos.
             </Choice>
-            <Choice checked={ads} onChange={setAds} title="Anúncios">
-              Google AdSense: anúncios fora da hora de jogar, escolhidos pelo seu interesse. Sem
-              isso, os anúncios não são personalizados.
-            </Choice>
           </ul>
           <div className="flex flex-wrap gap-2">
-            <button className={`${btn} bg-ink text-paper`} onClick={() => save({ analytics, ads })}>
+            <button className={`${btn} bg-ink text-paper`} onClick={() => save({ analytics })}>
               Salvar escolhas
             </button>
             <button
@@ -125,8 +116,8 @@ export function ConsentBanner() {
             {onLevel ? null : (
               <>
                 Usamos um cookie necessário para o jogo funcionar. Com sua permissão, também usamos
-                análise de uso e anúncios, que nunca aparecem durante as fases. Você muda quando
-                quiser.{' '}
+                análise de uso. Os anúncios nunca são personalizados e nunca aparecem durante as
+                fases. Você muda quando quiser.{' '}
               </>
             )}
             {onLevel ? (
@@ -157,11 +148,11 @@ export function ConsentBanner() {
           <div className={onLevel ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
             <button
               className={`${btn} bg-ink text-paper`}
-              onClick={() => save({ analytics: true, ads: true })}
+              onClick={() => save({ analytics: true })}
             >
               Aceitar
             </button>
-            <button className={btn} onClick={() => save({ analytics: false, ads: false })}>
+            <button className={btn} onClick={() => save({ analytics: false })}>
               Recusar<span className={onLevel ? 'sr-only' : undefined}> não essenciais</span>
             </button>
             {!onLevel && (

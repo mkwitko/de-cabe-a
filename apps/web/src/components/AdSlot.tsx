@@ -1,12 +1,11 @@
 /**
  * Non-intrusive ad slot (ADR-012): only between moments of play (end of a track page, under a
- * level result, foot of the home), never during a level. Google AdSense for everyone, but
- * personalised only after the player accepted ads in the consent banner (LGPD); before a choice
- * and after a refusal, ads are non-personalised (`requestNonPersonalizedAds = 1`). Nothing until
+ * level result, foot of the home), never during a level. Google AdSense, never personalised
+ * (`requestNonPersonalizedAds = 1`) for anyone: minors are likely to play, and profiling them for
+ * ads is forbidden (ECA Digital, Lei 15.211/2025, art. 22), consent or not. Nothing until
  * VITE_ADSENSE_CLIENT is set, so the layout never shows an empty box.
  */
 import { useEffect, useRef } from 'react';
-import { useConsent } from '../lib/consent';
 
 const CLIENT = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
 
@@ -31,19 +30,18 @@ function loadAdSense() {
 
 export function AdSlot({ slot }: { slot: string }) {
   const ref = useRef<HTMLModElement>(null);
-  const allowed = useConsent()?.ads === true;
   useEffect(() => {
     if (!CLIENT || !slot) return;
     const ads = (window.adsbygoogle = window.adsbygoogle ?? []);
-    // Read by AdSense on each push: personalised only with consent (LGPD).
-    ads.requestNonPersonalizedAds = allowed ? 0 : 1;
+    // Read by AdSense on each push.
+    ads.requestNonPersonalizedAds = 1;
     loadAdSense();
     try {
       ads.push({});
     } catch {
       /* ad blocked or not ready: the slot stays empty */
     }
-  }, [slot, allowed]);
+  }, [slot]);
   if (!CLIENT || !slot) return null;
   return (
     // 150px+ clear of any button above it: Google's spacing for ads near games (accidental clicks).
@@ -55,7 +53,6 @@ export function AdSlot({ slot }: { slot: string }) {
         Publicidade
       </span>
       <ins
-        key={String(allowed)}
         ref={ref}
         className="adsbygoogle block min-h-[100px] overflow-hidden rounded-lg bg-chalk/[0.04]"
         data-ad-client={CLIENT}

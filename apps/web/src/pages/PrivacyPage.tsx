@@ -73,13 +73,13 @@ export function PrivacyPage() {
                 ocultos. Só depois do seu &quot;Aceitar&quot;. Base: seu consentimento.
               </li>
               <li>
-                <strong>Anúncios (Google AdSense)</strong>: fora da hora de jogar, personalizados só
-                depois do seu &quot;Aceitar&quot;; sem ele, não personalizados. O Google usa cookies
-                para entregar e medir os anúncios; veja{' '}
+                <strong>Anúncios (Google AdSense)</strong>: fora da hora de jogar e nunca
+                personalizados, para ninguém. O Google usa cookies para entregar e medir os
+                anúncios, não para traçar seu perfil; veja{' '}
                 <A href="https://policies.google.com/technologies/ads?hl=pt-BR">
                   como o Google usa cookies em publicidade
                 </A>
-                . Base: seu consentimento.
+                . Base: legítimo interesse em manter o jogo gratuito.
               </li>
             </Ul>
           ),
@@ -92,7 +92,7 @@ export function PrivacyPage() {
               <p>
                 Só com quem faz parte do serviço: hospedagem do site, <strong>Resend</strong> (envia
                 os e-mails de confirmação e de nova senha), <strong>Google</strong> (login com
-                Google e, com seu consentimento, anúncios), <strong>PostHog</strong> (com seu
+                Google e anúncios não personalizados), <strong>PostHog</strong> (com seu
                 consentimento) e <strong>Sentry</strong> (erros). Alguns desses serviços processam
                 dados fora do Brasil, sob as regras de transferência da LGPD (art. 33). Seu apelido
                 e seus resultados são públicos nos rankings; o perfil só é público se você abrir.

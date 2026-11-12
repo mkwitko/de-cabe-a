@@ -6,8 +6,8 @@ describe('consent', () => {
     expect(getConsent()).toBeNull();
     const seen = vi.fn();
     const off = subscribeConsent(seen);
-    setConsent({ analytics: true, ads: false });
-    expect(getConsent()).toEqual({ analytics: true, ads: false });
+    setConsent({ analytics: true });
+    expect(getConsent()).toEqual({ analytics: true });
     expect(seen).toHaveBeenCalledTimes(1);
     off();
   });
