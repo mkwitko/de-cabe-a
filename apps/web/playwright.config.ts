@@ -70,11 +70,8 @@ export default defineConfig({
       command: `pnpm exec vite build --outDir dist-e2e-launch --emptyOutDir && pnpm exec vite preview --outDir dist-e2e-launch --port ${LAUNCH_PORT} --strictPort`,
       url: `http://localhost:${LAUNCH_PORT}`,
       timeout: 180_000,
-      // A dummy AdSense client turns the consent banner on; AdSense itself loads only after "Aceitar".
-      env: {
-        API_URL: `http://127.0.0.1:${API_PORT}`,
-        VITE_ADSENSE_CLIENT: 'ca-pub-0000000000000000',
-      },
+      // A dummy PostHog key turns the consent banner on; PostHog itself loads only after "Aceitar".
+      env: { API_URL: `http://127.0.0.1:${API_PORT}`, VITE_POSTHOG_KEY: 'phc_e2e' },
       reuseExistingServer: false,
     },
   ],
