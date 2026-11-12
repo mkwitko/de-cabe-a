@@ -5,6 +5,7 @@
  * lies open on the bench as a spread (clues and tries on the inside cover) and the guess box sits
  * on the bench edge at the foot of the scene.
  */
+import { AD_SLOTS, AdSlot } from '../../components/AdSlot';
 import { startTransition, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type {
   AttemptResponse,
@@ -139,13 +140,13 @@ function resultCopy(data: AttemptResponse) {
         Era <strong className="font-black">{reveal.answer.name}</strong> ·{' '}
         {reveal.trajectory.length} clubes
         {reveal.answerPage && (
-          <>
-            {' · '}
-            {/* Server-rendered career page (not a SPA route): plain link. */}
-            <a href={reveal.answerPage} className="underline underline-offset-4">
-              Ver a carreira
-            </a>
-          </>
+          // Server-rendered career page (not a SPA route): plain link, dressed as a button.
+          <a
+            href={reveal.answerPage}
+            className="font-condensed mt-2 flex min-h-11 w-fit items-center rounded-lg border-2 border-current px-3 text-base font-extrabold tracking-wide uppercase"
+          >
+            Ver a carreira
+          </a>
         )}
       </p>
     ),
@@ -301,6 +302,15 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
         />
       )}
 
+      {/* A thin strip at the top, the far end of the screen from the guess dock; only on a
+          screen tall enough to spare it, and never while the tutorial points at things. */}
+      {!done && !touring && (
+        <AdSlot
+          slot={AD_SLOTS.level}
+          size="strip"
+          className="shrink-0 [@media(max-height:719px)]:hidden"
+        />
+      )}
       {!done && (
         <div className="mx-auto flex max-h-20 w-full max-w-2xl shrink-0 flex-wrap gap-2 overflow-y-auto lg:hidden">
           <Clues view={view} />

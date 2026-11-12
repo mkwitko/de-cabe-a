@@ -1,13 +1,12 @@
 /**
  * Cookie consent (LGPD): shown on the first visit and whenever the player reopens it (footer,
  * Conta). "Aceitar" and "Recusar não essenciais" weigh the same; "Configurar" picks one by one.
- * It never blocks play: on a level it is a compact strip at the top (one line, two equal buttons) and
- * the page moves down by its height (`--consent-room`), so it covers neither the level header nor
- * the docked guess box; elsewhere it sits at the foot of the screen, above the bottom bar.
+ * It never blocks play: everywhere it is a compact strip at the top (one line, two equal buttons) and
+ * the page moves down by its height (`--consent-room`), so it covers neither the header, the
+ * primary CTA, the docked guess box nor the bottom bar.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { sceneFor } from '../lib/music';
 import { isPageLaunched } from '../lib/launch';
 import { CNPJ } from './Legal';
 import {
@@ -28,7 +27,9 @@ export function ConsentBanner() {
   const [configuring, setConfiguring] = useState(false);
   const [analytics, setAnalytics] = useState(choice?.analytics ?? false);
   const box = useRef<HTMLDivElement>(null);
-  const onLevel = sceneFor(useLocation().pathname) === 'level';
+  // One slim strip at the top on every route; the page moves down by its height (--consent-room),
+  // so it never covers the primary CTA, the guess box or the bottom bar.
+  const onLevel = true;
   const visible = (!choice && CONSENT_NEEDED) || reopened;
   const settings = configuring || reopened;
 
@@ -116,8 +117,8 @@ export function ConsentBanner() {
             {onLevel ? null : (
               <>
                 Usamos um cookie necessário para o jogo funcionar. Com sua permissão, também usamos
-                análise de uso. Os anúncios nunca são personalizados e nunca aparecem durante as
-                fases. Você muda quando quiser.{' '}
+                análise de uso. Os anúncios nunca são personalizados e nunca cobrem o jogo. Você
+                muda quando quiser.{' '}
               </>
             )}
             {onLevel ? (

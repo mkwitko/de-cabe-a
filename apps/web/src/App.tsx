@@ -373,8 +373,8 @@ function HomeRoute() {
       {wide ? (
         // In the empty page margin of very wide screens: takes no room, scrolls with the page,
         // 150px+ from the scene's controls.
-        <div className="absolute top-24 right-4 w-[160px] [&>aside]:mt-0">
-          <AdSlot slot={AD_SLOTS.home} />
+        <div className="absolute top-24 right-4 w-[160px]">
+          <AdSlot slot={AD_SLOTS.home} size="rail" className="" />
         </div>
       ) : (
         <AdSlot slot={AD_SLOTS.home} />
@@ -574,6 +574,7 @@ function PublicRoutes() {
             <Route path="/escalacao/:level" element={<LevelRoute mode="MISSING_XI" />} />
             <Route path="/d" element={<Navigate to="/d/hoje" replace />} />
             <Route path="/d/:date" element={<DailyPage />} />
+            <Route path="/perfil" element={<Navigate to="/stats" replace />} />
             <Route path="/perfil/:nickname" element={<ProfilePage />} />
             <Route path="/ligas" element={<LeaguesPage />} />
             <Route path="/liga/:code" element={<LeaguePage />} />

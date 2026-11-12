@@ -1,3 +1,4 @@
+import { AD_SLOTS, AdSlot } from '../components/AdSlot';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { GameMode, StatsResponse } from '@decabeca/contracts';
@@ -365,6 +366,7 @@ export function StatsPage() {
           ))}
         </div>
       )}
+      <AdSlot slot={AD_SLOTS.profile} />
     </div>
   );
 }

@@ -531,6 +531,12 @@
   white-space: nowrap;
   transition: transform 150ms var(--ease-out-expo);
 }
+/* secondary on the home: the Career Path ticket owns the one yellow button */
+.hl-next-quiet {
+  background: transparent;
+  border: 2px solid var(--hl-led);
+  color: var(--hl-led);
+}
 .hl-next:active {
   transform: scale(0.97);
 }
@@ -916,6 +922,11 @@
     #000 calc(100% - var(--edge)),
     transparent
   );
+}
+@media (width >= 64rem) {
+  .poster-row {
+    justify-content: safe center;
+  }
 }
 .poster-row-wait {
   /* holds the poster row's height until it mounts (AfterPaint), so nothing below shifts */
@@ -2993,4 +3004,13 @@
   .welcome[open] .welcome-body {
     animation: fade-in 150ms ease-out both;
   }
+}
+
+/* Ad slots (AdSlot.tsx): quiet until an ad is really there. The label shows only over a filled
+   ad; a slot AdSense left empty collapses instead of leaving a blank box. */
+.ad-slot:has(ins[data-ad-status='unfilled']) {
+  display: none;
+}
+.ad-slot:not(:has(ins[data-ad-status='filled'])) > span {
+  visibility: hidden;
 }

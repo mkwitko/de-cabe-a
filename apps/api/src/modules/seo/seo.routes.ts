@@ -9,11 +9,12 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { PrismaClient } from '../../generated/prisma/client';
 import { commons } from '../knowledge/player-card';
 
-/** AdSense block "jogador" (public ids, ADR-012). Personalised only with the consent stored by the game. */
+/** AdSense block "jogador" (public ids, ADR-012). Never personalised, for anyone (ECA Digital, same rule as AdSlot.tsx). */
 const AD_CLIENT = 'ca-pub-3545965778969941';
 const AD_SLOT_PLAYER = '4649178019';
-const AD = `<aside class="ad" aria-label="Publicidade"><span>Publicidade</span><ins class="adsbygoogle" data-ad-client="${AD_CLIENT}" data-ad-slot="${AD_SLOT_PLAYER}" data-ad-format="auto" data-full-width-responsive="true"></ins></aside>
-<script>(function(){var ok=false;try{ok=(JSON.parse(localStorage.getItem('dc_consent_v1')||'null')||{}).ads===true}catch(e){}var a=window.adsbygoogle=window.adsbygoogle||[];a.requestNonPersonalizedAds=ok?0:1;var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CLIENT}';document.head.appendChild(s);a.push({})})()</script>`;
+const AD = `<aside class="ad" aria-label="Publicidade"><span>Publicidade</span><ins class="adsbygoogle" data-ad-client="${AD_CLIENT}" data-ad-slot="${AD_SLOT_PLAYER}"></ins></aside>`;
+/** Loads AdSense for every block on the page. A file, not inline: the CSP allows only 'self' scripts. */
+const AD_SCRIPT = `<script src="/ads-player.js" defer></script>`;
 
 const POSITION = { GK: 'goleiro', DF: 'defensor', MF: 'meio-campista', FW: 'atacante' } as const;
 const esc = (s: string) =>
@@ -84,7 +85,7 @@ h2{font-size:clamp(1.5rem,3.5vw,2rem);line-height:1;margin:56px 0 16px}
 .mates a{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgb(255 255 255/.05);text-decoration:none;font-weight:600}.mates a:hover{border-color:var(--cover)}
 .cta{margin-top:56px;display:grid;gap:16px;align-items:center;background:var(--cover);color:var(--ink);border-radius:18px;padding:24px}@media(min-width:760px){.cta{grid-template-columns:minmax(0,1fr) auto;padding:28px 32px}}
 .cta h2{margin:0}.cta p{margin:6px 0 0}.cta .btn{background:var(--ink);color:var(--cover);box-shadow:0 4px 0 rgb(0 0 0/.35)}
-.ad{margin-top:152px}.ad span{display:block;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgb(207 227 212/.7);margin-bottom:4px}.ad ins{display:block;min-height:100px;border-radius:10px;background:rgb(255 255 255/.04)}
+.ad{margin:40px auto 0;width:fit-content;max-width:100%;overflow:hidden;text-align:center}.ad span{display:block;font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgb(207 227 212/.6);margin-bottom:4px}.ad ins{display:inline-block;width:320px;height:100px}@media(min-width:768px){.ad ins{width:728px;height:90px}}.ad:has(ins[data-ad-status=unfilled]){display:none}.ad:not(:has(ins[data-ad-status=filled])) span{visibility:hidden}
 .src{font-size:.82rem;color:var(--soft);margin-top:48px}
 .grid{display:grid;gap:8px 24px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));list-style:none;padding:0}nav.letters a{display:inline-block;padding:4px 8px;font-weight:700}
 :focus-visible{outline:3px solid var(--cover);outline-offset:3px}`;
@@ -290,11 +291,13 @@ ${board}
 </div></section>
 <h2 class="c">Clubes, jogos e gols</h2>
 <ol class="career">${rows}${total}</ol>
+${AD}
 ${quiz ? `<div class="card quiz" style="margin-top:56px">${quiz}</div>` : ''}
 ${statsBlock ? `<div class="card cp" style="margin-top:16px">${statsBlock}</div>` : ''}
 ${mates.length ? `<h2 class="c">Jogou nos mesmos clubes</h2><ul class="mates">${mates.map((m) => `<li><a href="/jogador/${playerSlug(m)}">${esc(m.canonicalName)}</a></li>`).join('')}</ul>` : ''}
 <section class="cta"><div><h2 class="c">Teste seu conhecimento</h2><p>Adivinhe o jogador pela sequência de clubes, complete a grade e cace o impostor que nunca jogou no clube.</p></div><a class="btn" href="/">Jogar agora, é grátis</a></section>
 ${AD}
+${AD_SCRIPT}
 <p class="src">Dados conferidos entre Wikidata e Wikipédia${wikiUrl ? ` (<a href="${esc(wikiUrl)}" rel="nofollow">fonte</a>)` : ''}; textos da Wikipédia sob CC BY-SA. Jogos e gols como a ficha da Wikipédia informa (em geral, só pelo campeonato).</p>`;
     const jsonLd = [
       {

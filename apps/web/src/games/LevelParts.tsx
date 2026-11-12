@@ -211,8 +211,35 @@ function TitleProgress({ total, onPaper = false }: { total: number; onPaper?: bo
 
 const PAGE =
   'rounded-[8px] bg-[var(--pp-paper)] text-[var(--pp-text)] [background-image:repeating-linear-gradient(0deg,transparent_0_27px,var(--pp-rule)_27px_28px),radial-gradient(circle_at_50%_45%,var(--pp-paper-hi),var(--pp-paper)_60%,var(--pp-paper-lo))]';
-const quietLink =
-  'inline-flex min-h-11 items-center gap-2 text-sm font-bold text-chalk-soft underline-offset-4 hover:text-chalk hover:underline';
+/** The player the level was about, as a small pasted sticker: portrait (credited), then name.
+ * Only with a portrait: without one the stamp's "Era …" already says it. */
+function Answer({ hero }: { hero: Hero & { photo: string } }) {
+  return (
+    <figure className="flex items-center gap-3">
+      <div className="w-16 shrink-0 rotate-[-3deg] rounded-[6px] bg-white p-1 shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]">
+        <img
+          src={hero.photo}
+          alt={`Foto de ${hero.name}`}
+          width={112}
+          height={140}
+          loading="lazy"
+          decoding="async"
+          className="aspect-[4/5] w-full rounded-[3px] object-cover object-top"
+        />
+      </div>
+      <figcaption className="min-w-0">
+        <span className="font-condensed block text-2xl leading-none font-black text-[var(--pp-text)] uppercase">
+          {hero.name}
+        </span>
+        {hero.credit && (
+          <span className="mt-1 block text-[11px] leading-tight text-[var(--pp-label)]">
+            Foto: {hero.credit}, Wikimedia Commons
+          </span>
+        )}
+      </figcaption>
+    </figure>
+  );
+}
 
 function Points({ data }: { data: AttemptResponse }) {
   return (
@@ -437,6 +464,8 @@ export function LevelEnd({
                       <Points data={data} />
                     </div>
                   </div>
+                  {/* A loss has no broadcast: the answer is revealed here, face first. */}
+                  {stars === 0 && hero?.photo && <Answer hero={{ ...hero, photo: hero.photo }} />}
                   {starRule && (
                     <p className="text-sm font-semibold text-[var(--pp-label)] max-lg:hidden">
                       {starRule}
@@ -477,18 +506,21 @@ export function LevelEnd({
               </div>
             </div>
           </div>
-          {/* Second things, quietly: share, and keep the progress. */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+          {/* Sharing is half the game: real buttons, one row at every width. */}
+          <div className="grid grid-cols-2 gap-3 sm:max-w-xl">
             {data.share && (
               <>
                 <ShareButton
-                  className={quietLink}
-                  label="Copiar resultado"
+                  secondary
+                  label={
+                    <>
+                      Copiar<span className="max-sm:sr-only"> resultado</span>
+                    </>
+                  }
                   text={data.share.text}
                   onShared={(method) => track('result_shared', { mode, level, method })}
                 />
                 <ResultCardButton
-                  className={quietLink}
                   data={data}
                   onShared={() => track('result_shared', { mode, level, method: 'image' })}
                 />
@@ -600,6 +632,8 @@ export function LevelEnd({
           {offer && <ClubeOffer moment={offer} onDone={() => setOffer(null)} />}
         </>
       )}
+      {/* After the way on and the shares, before the ranking: seen without sitting on a button. */}
+      <AdSlot slot={AD_SLOTS.result} className="mt-6" />
       {stars > 0 && !oficina && isPageLaunched('career') && (
         <Link
           to="/carreira"
@@ -659,7 +693,6 @@ export function LevelEnd({
         </div>
       )}
       {!oficina && <ReportError mode={mode} level={level} />}
-      <AdSlot slot={AD_SLOTS.result} />
     </section>
   );
 }
