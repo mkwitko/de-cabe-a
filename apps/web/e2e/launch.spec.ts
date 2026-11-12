@@ -18,7 +18,7 @@ test('first visit: the welcome, a guest with a nickname, then the home', async (
   const nick = welcome.getByRole('textbox', { name: 'Seu apelido' });
   await expect(nick).not.toHaveValue(''); // a friendly name is already there
   await nick.fill(`Visitante ${Date.now() % 100000}`);
-  await welcome.getByRole('button', { name: 'Jogar como visitante' }).click();
+  await welcome.getByRole('button', { name: 'Jogar', exact: true }).click();
   await expect(welcome).toBeHidden();
   await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
 

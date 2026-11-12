@@ -125,7 +125,7 @@ export function CookiesPage() {
           body: (
             <>
               <p>
-                Os anúncios aparecem fora da hora de jogar, nunca durante uma fase. Nunca são
+                Os anúncios são pequenos e nunca cobrem o jogo nem interrompem uma fase. Nunca são
                 personalizados, para ninguém: o Google não usa seu histórico para escolher o que
                 mostrar.
               </p>

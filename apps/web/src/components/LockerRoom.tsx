@@ -226,7 +226,7 @@ function ScoreboardCard() {
       ) : (
         <Link
           to={next ? `/quem-fez-mais/${next.level}` : '/quem-fez-mais'}
-          className="hl-next font-condensed grid min-h-16 place-items-center px-6 text-[1.7rem] sm:min-w-64"
+          className="hl-next hl-next-quiet font-condensed grid min-h-16 place-items-center px-6 text-[1.7rem] sm:min-w-64"
         >
           {next
             ? next.inProgress

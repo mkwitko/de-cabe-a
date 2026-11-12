@@ -73,9 +73,14 @@ export function ModeGate({
               updateSettings({ clock: o.timed ? 'timed' : 'free' });
               setTimed(o.timed);
             }}
-            className={`flex min-h-40 flex-col gap-3 rounded-xl p-5 text-left transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 ${o.timed ? 'bg-cover text-ink' : 'border-2 border-dashed border-chalk-soft/60 bg-chalk/[0.06] text-chalk'}`}
+            className={`flex min-h-40 flex-col gap-3 rounded-xl p-5 text-left transition-transform duration-150 ease-out-expo hover:-translate-y-0.5 border-2 border-chalk-soft/60 bg-chalk/[0.06] text-chalk hover:border-cover`}
           >
             <span className="font-condensed text-2xl font-black uppercase">{o.name}</span>
+            {!o.timed && (
+              <span className="font-condensed self-start rounded-md border border-chalk-soft/60 px-2 text-sm font-extrabold uppercase">
+                Padrão
+              </span>
+            )}
             <span className="text-base leading-snug font-medium">{o.text}</span>
           </button>
         ))}

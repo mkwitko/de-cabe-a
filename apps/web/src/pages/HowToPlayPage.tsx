@@ -177,7 +177,7 @@ export function HowToPlayPage() {
   const next = nextLevel(track.data);
   const levels = track.data?.levels.length ?? 0;
   return (
-    <article className="flex flex-col gap-8">
+    <article className="flex flex-col gap-8 pt-4 sm:pt-8">
       <header className="flex flex-col gap-2">
         <h1 className="font-condensed text-4xl font-black uppercase sm:text-5xl">Como jogar</h1>
         <p className="max-w-[48ch] text-lg text-chalk-soft">

@@ -1,11 +1,11 @@
 /**
- * Non-intrusive ad slot (ADR-012): only between moments of play (end of a track page, under a
- * level result, foot of the home), never during a level. Google AdSense, never personalised
+ * Discreet ad slot (ADR-012): small fixed sizes, in the pauses and, as a thin strip away from the
+ * controls, at the top of a level. No interstitials, nothing over the game. Google AdSense, never personalised
  * (`requestNonPersonalizedAds = 1`) for anyone: minors are likely to play, and profiling them for
  * ads is forbidden (ECA Digital, Lei 15.211/2025, art. 22), consent or not. Nothing until
  * VITE_ADSENSE_CLIENT is set, so the layout never shows an empty box.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 const CLIENT = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
 
@@ -28,8 +28,26 @@ function loadAdSense() {
   document.head.appendChild(s);
 }
 
-export function AdSlot({ slot }: { slot: string }) {
-  const ref = useRef<HTMLModElement>(null);
+/**
+ * Fixed AdSense sizes, the small ones: the box is reserved before the ad loads (no layout shift)
+ * and never grows past it. `strip` is the quiet one for inside a level; `banner` for pauses;
+ * `rail` only for the empty margin of very wide screens.
+ */
+const SIZE = {
+  strip: 'h-[50px] w-[320px] md:h-[60px] md:w-[468px]',
+  banner: 'h-[100px] w-[320px] md:h-[90px] md:w-[728px]',
+  rail: 'h-[600px] w-[160px]',
+} as const;
+
+export function AdSlot({
+  slot,
+  size = 'banner',
+  className = 'mt-10',
+}: {
+  slot: string;
+  size?: keyof typeof SIZE;
+  className?: string;
+}) {
   useEffect(() => {
     if (!CLIENT || !slot) return;
     const ads = (window.adsbygoogle = window.adsbygoogle ?? []);
@@ -44,21 +62,18 @@ export function AdSlot({ slot }: { slot: string }) {
   }, [slot]);
   if (!CLIENT || !slot) return null;
   return (
-    // 150px+ clear of any button above it: Google's spacing for ads near games (accidental clicks).
+    // `.ad-slot` (index.css): the label shows only over a filled ad; an unfilled slot collapses.
     <aside
       aria-label="Publicidade"
-      className="mx-auto mt-[152px] flex w-full max-w-3xl flex-col gap-1"
+      className={`ad-slot mx-auto flex max-w-full flex-col items-center gap-1 overflow-hidden ${className}`}
     >
-      <span className="text-xs font-semibold tracking-wide text-chalk-soft/70 uppercase">
+      <span className="text-[0.65rem] font-semibold tracking-wide text-chalk-soft/60 uppercase">
         Publicidade
       </span>
       <ins
-        ref={ref}
-        className="adsbygoogle block min-h-[100px] overflow-hidden rounded-lg bg-chalk/[0.04]"
+        className={`adsbygoogle inline-block ${SIZE[size]}`}
         data-ad-client={CLIENT}
         data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
       />
     </aside>
   );
@@ -71,4 +86,6 @@ export const AD_SLOTS = {
   home: (import.meta.env.VITE_ADSENSE_SLOT_HOME as string | undefined) ?? '',
   album: (import.meta.env.VITE_ADSENSE_SLOT_ALBUM as string | undefined) ?? '',
   profile: (import.meta.env.VITE_ADSENSE_SLOT_PROFILE as string | undefined) ?? '',
+  /** Inside a level (AdSense unit "fase"); empty = no ad in the level. */
+  level: (import.meta.env.VITE_ADSENSE_SLOT_LEVEL as string | undefined) ?? '',
 };

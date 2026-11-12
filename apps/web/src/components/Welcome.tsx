@@ -20,9 +20,7 @@ import {
   started,
   welcomed,
 } from '../lib/nudges';
-import { AlbumIcon, RankingIcon, TrophyIcon } from './Icons';
 import { Crest } from './Crest';
-import { MemberCard } from './MemberCard';
 import { Nudge } from './Nudge';
 import { signInHref, signUpHref } from './SignInButton';
 import { btnPrimary, btnSecondary } from './ui';
@@ -87,14 +85,13 @@ async function autoNickname(tries = 3) {
 function Welcome({ onDone }: { onDone: () => void }) {
   const { pathname } = useLocation();
   const dialog = useRef<HTMLDialogElement>(null);
-  const primary = useRef<HTMLAnchorElement>(null);
   const act = useAccount();
   const [nickname, setNickname] = useState(() => suggestNickname());
   useEffect(() => {
     const d = dialog.current;
     if (!d) return;
     d.showModal();
-    primary.current?.focus();
+    document.getElementById('welcome-nick')?.focus();
     return () => d.close();
   }, []);
 
@@ -104,12 +101,6 @@ function Welcome({ onDone }: { onDone: () => void }) {
   };
   const error = act.error as ApiError | null;
   const back = /^\/(conta|entrar)(\/|$)/.test(pathname) ? '/' : pathname;
-  const name = nickname.trim() || 'Seu apelido';
-  const perks = [
-    { Icon: AlbumIcon, title: 'Álbum salvo', text: 'Estrelas e figurinhas em qualquer aparelho' },
-    { Icon: RankingIcon, title: 'Ranking', text: 'Seu apelido na tabela da galera' },
-    { Icon: TrophyIcon, title: 'Voto', text: 'Você escolhe o próximo modo a abrir' },
-  ];
 
   return (
     <dialog
@@ -138,133 +129,90 @@ function Welcome({ onDone }: { onDone: () => void }) {
             id="welcome-lede"
             className="max-w-[40ch] text-base font-medium sm:text-lg text-chalk-soft"
           >
-            Adivinhe o craque pela carreira, ganhe estrelas e cole as figurinhas no álbum. Como você
-            quer entrar em campo?
+            Adivinhe o craque pela carreira, ganhe estrelas e cole as figurinhas no álbum.
           </p>
-          {/* phones: the guest form is below the fold; this takes the player straight to it */}
-          <button
-            type="button"
-            onClick={() => document.getElementById('welcome-nick')?.focus()}
-            className="min-h-11 px-2 font-semibold text-chalk underline underline-offset-4 hover:text-gold lg:hidden"
-          >
-            Ou jogue como visitante
-          </button>
         </header>
 
-        <div className="grid w-full grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2 lg:gap-8">
-          <section
-            aria-labelledby="welcome-member"
-            className="welcome-panel gate-stub flex flex-col gap-4 rounded-[18px] p-5 sm:p-8"
-          >
-            <h3
-              id="welcome-member"
-              className="font-condensed text-3xl leading-none font-black uppercase"
-            >
-              Seja sócio
-            </h3>
-            <ul className="flex flex-col gap-3 lg:my-auto lg:gap-8">
-              {perks.map(({ Icon, title, text }) => (
-                <li key={title} className="flex items-center gap-4">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full border-2 border-gold/50 bg-gold/10 text-gold lg:size-16">
-                    <Icon className="size-5 lg:size-8" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="font-condensed block text-lg leading-none font-extrabold uppercase lg:text-3xl">
-                      {title}
-                    </span>
-                    <span className="mt-0.5 block text-sm text-chalk-soft lg:text-lg">{text}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-sm text-chalk-soft">
-              Grátis. O que você jogar como visitante vai junto para a conta.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                ref={primary}
-                to={signUpHref(back)}
-                onClick={onDone}
-                className={`${btnPrimary} min-h-14 flex-1 text-xl`}
-              >
-                Criar conta
-              </Link>
-              <Link to={signInHref(back)} onClick={onDone} className={`${btnSecondary} min-h-14`}>
-                Já tenho conta · Entrar
-              </Link>
-            </div>
-          </section>
-
-          <section
-            aria-labelledby="welcome-guest"
-            className="welcome-panel scoreboard flex flex-col gap-5 rounded-[18px] p-5 sm:p-8"
-          >
-            <h3
-              id="welcome-guest"
-              className="font-condensed text-3xl leading-none font-black uppercase"
-            >
-              Jogar como visitante
-            </h3>
-            {/* the card as it will read, live from the field below */}
-            <div aria-hidden="true" className="welcome-card self-center">
-              <MemberCard
-                guest
-                heading="h2"
-                name={name}
-                title="Peneira"
-                stars={0}
-                levels={0}
-                className="max-w-sm"
+        <section
+          aria-labelledby="welcome-guest"
+          className="welcome-panel scoreboard mx-auto flex w-full max-w-xl flex-col gap-3 rounded-[18px] p-5 sm:p-8"
+        >
+          <h3 id="welcome-guest" className="sr-only">
+            Jogar como visitante
+          </h3>
+          <form onSubmit={asGuest} className="flex flex-col gap-3">
+            <label htmlFor="welcome-nick" className="font-semibold">
+              Seu apelido
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="welcome-nick"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                minLength={3}
+                maxLength={20}
+                required
+                autoComplete="nickname"
+                aria-describedby="welcome-nick-hint"
+                aria-invalid={error ? true : undefined}
+                className="min-h-12 min-w-0 flex-1 rounded-lg border-2 border-chalk-soft/40 bg-pitch-deep/80 px-2.5 text-base font-semibold sm:px-3 sm:text-lg text-chalk focus:border-cover"
               />
-            </div>
-            <form onSubmit={asGuest} className="flex flex-col gap-3">
-              <label htmlFor="welcome-nick" className="font-semibold">
-                Seu apelido
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="welcome-nick"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  minLength={3}
-                  maxLength={20}
-                  required
-                  autoComplete="nickname"
-                  aria-describedby="welcome-nick-hint"
-                  aria-invalid={error ? true : undefined}
-                  className="min-h-12 min-w-0 flex-1 rounded-lg border-2 border-chalk-soft/40 bg-pitch-deep/80 px-3 text-lg font-semibold text-chalk focus:border-cover"
-                />
-                <button
-                  type="button"
-                  className={btnSecondary}
-                  onClick={() => {
-                    act.reset();
-                    setNickname(suggestNickname());
-                  }}
-                >
-                  Sugerir
-                </button>
-              </div>
-              <p
-                id="welcome-nick-hint"
-                role={error ? 'alert' : undefined}
-                className={`text-sm ${error ? 'font-semibold text-gold' : 'text-chalk-soft'}`}
-              >
-                {error
-                  ? error.code === 'NICKNAME_TAKEN'
-                    ? 'Esse apelido já tem dono. Tente outro ou toque em Sugerir.'
-                    : error.message
-                  : 'De 3 a 20 letras ou números. Dá para trocar e criar a conta depois.'}
-              </p>
               <button
-                className={`${btnSecondary} min-h-14 border-chalk/70 text-xl`}
-                disabled={act.isPending}
+                type="button"
+                className={btnSecondary}
+                onClick={() => {
+                  act.reset();
+                  setNickname(suggestNickname());
+                }}
               >
-                {act.isPending ? 'Entrando em campo…' : 'Jogar como visitante'}
+                Sugerir
               </button>
-            </form>
-          </section>
-        </div>
+            </div>
+            <p
+              id="welcome-nick-hint"
+              role={error ? 'alert' : undefined}
+              className={`text-sm ${error ? 'font-semibold text-gold' : 'text-chalk-soft'}`}
+            >
+              {error
+                ? error.code === 'NICKNAME_TAKEN'
+                  ? 'Esse apelido já tem dono. Tente outro ou toque em Sugerir.'
+                  : error.message
+                : 'Pode trocar depois. Sem cadastro.'}
+            </p>
+            <button className={`${btnPrimary} min-h-14 text-xl`} disabled={act.isPending}>
+              {act.isPending ? 'Entrando em campo…' : 'Jogar'}
+            </button>
+          </form>
+        </section>
+
+        <section
+          aria-labelledby="welcome-member"
+          className="mx-auto flex w-full max-w-xl flex-col items-center gap-2 text-center"
+        >
+          <h3 id="welcome-member" className="font-semibold">
+            Quer guardar o progresso em qualquer aparelho?
+          </h3>
+          <p className="text-sm text-chalk-soft">
+            Conta grátis: álbum salvo, ranking e voto no próximo modo. O que você jogar como
+            visitante vai junto.
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-5">
+            <Link
+              to={signUpHref(back)}
+              onClick={onDone}
+              className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:text-gold"
+            >
+              Criar conta
+            </Link>
+            <Link
+              to={signInHref(back)}
+              onClick={onDone}
+              className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:text-gold"
+            >
+              Já tenho conta · Entrar
+            </Link>
+          </div>
+        </section>
       </div>
     </dialog>
   );
