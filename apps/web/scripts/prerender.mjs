@@ -70,4 +70,24 @@ for (const p of pages) {
   mkdirSync(dir, { recursive: true });
   writeFileSync(new URL('index.html', dir), html);
 }
-console.log(`prerendered ${pages.length} pages`);
+// One template per game for its level links (/career-path/12): the link preview in WhatsApp names
+// the game and the level instead of the home. The web server fills in the level number
+// (deploy/Caddyfile, `templates`), so the shell must hold no other template action.
+if (shell.includes('{{')) throw new Error('index.html has "{{": it would break the level template');
+// Backticks are Go raw strings: nothing for the HTML escaping to touch.
+const N = '{{placeholder `http.regexp.level.2`}}';
+const games = pages.filter((p) => !['/', '/ranking', '/como-jogar'].includes(p.path));
+for (const p of games) {
+  const name = /^[^:?]+\??/.exec(p.title)[0];
+  const title = `${name} · Fase ${N}: você acerta de cabeça?`;
+  const html = shell
+    .replace(/<title>[^<]*<\/title>/, `<title>${esc(name)} · Fase ${N} | De Cabeça F.C.</title>`)
+    .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/, `$1${esc(p.description)}$2`)
+    .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${esc(title)}$2`)
+    .replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/, `$1${esc(p.description)}$2`)
+    .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${site}${p.path}/${N}$2`)
+    // Hundreds of near-identical level pages: kept out of search (Google's scaled-content policy).
+    .replace('</head>', '<meta name="robots" content="noindex,follow" /></head>');
+  writeFileSync(new URL(`.${p.path}/fase.html`, dist), html);
+}
+console.log(`prerendered ${pages.length} pages and ${games.length} level templates`);
