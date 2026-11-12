@@ -14,6 +14,25 @@
 	header @media Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
 	@fresh path /sw.js /index.html /manifest.webmanifest
 	header @fresh Cache-Control "no-cache"
-	try_files {path} /index.html
-	file_server
+	# A level link (/career-path/12): the game's template with the level number filled in, so the
+	# link preview names the game and the level (apps/web/scripts/prerender.mjs).
+	@level path_regexp level ^/([a-z-]+)/(\d{1,4})/?$
+	handle @level {
+		@template file /{re.level.1}/fase.html
+		handle @template {
+			header Cache-Control "no-cache"
+			rewrite * /{re.level.1}/fase.html
+			templates
+			file_server
+		}
+		handle {
+			try_files {path} /index.html
+			file_server
+		}
+	}
+	handle {
+		# {path}/index.html: the prerendered pages (/career-path, /como-jogar) are folders.
+		try_files {path} {path}/index.html /index.html
+		file_server
+	}
 }
