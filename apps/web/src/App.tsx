@@ -6,7 +6,7 @@ import { RouteMeta } from './components/RouteMeta';
 import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
-import { lazy, Suspense, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
 import { SignInButton } from './components/SignInButton';
@@ -349,19 +349,7 @@ export function Home() {
   return <LockerRoom lockers={[...modes, ...extra]} />;
 }
 
-// Room for a 160px skyscraper beside the 1280px page, 150px from its controls.
-const WIDE = '(min-width: 1880px)';
-const hasMedia = typeof matchMedia === 'function';
-const isWide = () => hasMedia && matchMedia(WIDE).matches;
-const subscribeWide = (cb: () => void) => {
-  if (!hasMedia) return () => {};
-  const m = matchMedia(WIDE);
-  m.addEventListener('change', cb);
-  return () => m.removeEventListener('change', cb);
-};
-
 function HomeRoute() {
-  const wide = useSyncExternalStore(subscribeWide, isWide, () => false);
   // Warm the launch level's chunk once the home is idle, so opening it is instant.
   useEffect(() => {
     const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 2000));
@@ -370,15 +358,7 @@ function HomeRoute() {
   return (
     <>
       <Home />
-      {wide ? (
-        // In the empty page margin of very wide screens: takes no room, scrolls with the page,
-        // 150px+ from the scene's controls.
-        <div className="absolute top-24 right-4 w-[160px]">
-          <AdSlot slot={AD_SLOTS.home} size="rail" className="" />
-        </div>
-      ) : (
-        <AdSlot slot={AD_SLOTS.home} />
-      )}
+      <AdSlot slot={AD_SLOTS.home} />
       <p className="mt-10 text-center text-sm text-chalk-soft">
         {isPageLaunched('daily') && (
           <>

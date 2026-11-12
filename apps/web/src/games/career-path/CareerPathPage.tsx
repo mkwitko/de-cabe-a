@@ -307,7 +307,6 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       {!done && !touring && (
         <AdSlot
           slot={AD_SLOTS.level}
-          size="strip"
           className="shrink-0 [@media(max-height:719px)]:hidden"
         />
       )}

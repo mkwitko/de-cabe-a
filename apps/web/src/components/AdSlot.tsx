@@ -29,23 +29,17 @@ function loadAdSense() {
 }
 
 /**
- * Fixed AdSense sizes, the small ones: the box is reserved before the ad loads (no layout shift)
- * and never grows past it. `strip` is the quiet one for inside a level; `banner` for pauses;
- * `rail` only for the empty margin of very wide screens.
+ * One fixed AdSense size everywhere: 320x50 on phones, 468x60 from 768px. The box is reserved
+ * before the ad loads (no layout shift) and never grows past it. The larger sizes (320x100,
+ * 728x90, 160x600) came back unfilled in production, so they are gone.
  */
-const SIZE = {
-  strip: 'h-[50px] w-[320px] md:h-[60px] md:w-[468px]',
-  banner: 'h-[100px] w-[320px] md:h-[90px] md:w-[728px]',
-  rail: 'h-[600px] w-[160px]',
-} as const;
+const SIZE = 'h-[50px] w-[320px] md:h-[60px] md:w-[468px]';
 
 export function AdSlot({
   slot,
-  size = 'banner',
   className = 'mt-10',
 }: {
   slot: string;
-  size?: keyof typeof SIZE;
   className?: string;
 }) {
   useEffect(() => {
@@ -71,7 +65,7 @@ export function AdSlot({
         Publicidade
       </span>
       <ins
-        className={`adsbygoogle inline-block ${SIZE[size]}`}
+        className={`adsbygoogle inline-block ${SIZE}`}
         data-ad-client={CLIENT}
         data-ad-slot={slot}
       />
