@@ -41,7 +41,7 @@ function Current() {
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
       <p>
         {c
-          ? `Sua escolha: análise ${label(c.analytics)}, anúncios ${label(c.ads)}.`
+          ? `Sua escolha: análise ${label(c.analytics)}.`
           : CONSENT_NEEDED
             ? 'Você ainda não escolheu. Nada opcional está ativo.'
             : 'Neste momento nenhum cookie opcional é usado.'}
@@ -125,13 +125,14 @@ export function CookiesPage() {
           body: (
             <>
               <p>
-                Os anúncios aparecem fora da hora de jogar, nunca durante uma fase. Personalizados
-                só depois do seu Aceitar; sem ele, não personalizados.
+                Os anúncios aparecem fora da hora de jogar, nunca durante uma fase. Nunca são
+                personalizados, para ninguém: o Google não usa seu histórico para escolher o que
+                mostrar.
               </p>
               <Table>
                 <Row
                   name="Cookies do Google"
-                  what="Entregar, medir e personalizar anúncios."
+                  what="Entregar e medir anúncios, limitar repetição e barrar fraude."
                   who="Google AdSense"
                   time="definido pelo Google"
                 />
