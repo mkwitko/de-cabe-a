@@ -35,13 +35,7 @@ function loadAdSense() {
  */
 const SIZE = 'h-[50px] w-[320px] md:h-[60px] md:w-[468px]';
 
-export function AdSlot({
-  slot,
-  className = 'mt-10',
-}: {
-  slot: string;
-  className?: string;
-}) {
+export function AdSlot({ slot, className = 'mt-10' }: { slot: string; className?: string }) {
   useEffect(() => {
     if (!CLIENT || !slot) return;
     const ads = (window.adsbygoogle = window.adsbygoogle ?? []);
