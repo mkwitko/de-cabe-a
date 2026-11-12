@@ -12,7 +12,12 @@ import { commons } from '../knowledge/player-card';
 /** AdSense block "jogador" (public ids, ADR-012). Never personalised, for anyone (ECA Digital, same rule as AdSlot.tsx). */
 const AD_CLIENT = 'ca-pub-3545965778969941';
 const AD_SLOT_PLAYER = '4649178019';
-const AD = `<aside class="ad" aria-label="Publicidade"><span>Publicidade</span><ins class="adsbygoogle" data-ad-client="${AD_CLIENT}" data-ad-slot="${AD_SLOT_PLAYER}"></ins></aside>`;
+const AD_SLOT_PLAYER_END = '4468837313';
+const ad = (slot: string) =>
+  `<aside class="ad" aria-label="Publicidade"><span>Publicidade</span><ins class="adsbygoogle" data-ad-client="${AD_CLIENT}" data-ad-slot="${slot}"></ins></aside>`;
+/** After the club list (unit "jogador") and at the foot of the page (unit "jogador-fim"). */
+const AD = ad(AD_SLOT_PLAYER);
+const AD_END = ad(AD_SLOT_PLAYER_END);
 /** Loads AdSense for every block on the page. A file, not inline: the CSP allows only 'self' scripts. */
 const AD_SCRIPT = `<script src="/ads-player.js" defer></script>`;
 
@@ -296,7 +301,7 @@ ${quiz ? `<div class="card quiz" style="margin-top:56px">${quiz}</div>` : ''}
 ${statsBlock ? `<div class="card cp" style="margin-top:16px">${statsBlock}</div>` : ''}
 ${mates.length ? `<h2 class="c">Jogou nos mesmos clubes</h2><ul class="mates">${mates.map((m) => `<li><a href="/jogador/${playerSlug(m)}">${esc(m.canonicalName)}</a></li>`).join('')}</ul>` : ''}
 <section class="cta"><div><h2 class="c">Teste seu conhecimento</h2><p>Adivinhe o jogador pela sequência de clubes, complete a grade e cace o impostor que nunca jogou no clube.</p></div><a class="btn" href="/">Jogar agora, é grátis</a></section>
-${AD}
+${AD_END}
 ${AD_SCRIPT}
 <p class="src">Dados conferidos entre Wikidata e Wikipédia${wikiUrl ? ` (<a href="${esc(wikiUrl)}" rel="nofollow">fonte</a>)` : ''}; textos da Wikipédia sob CC BY-SA. Jogos e gols como a ficha da Wikipédia informa (em geral, só pelo campeonato).</p>`;
     const jsonLd = [
