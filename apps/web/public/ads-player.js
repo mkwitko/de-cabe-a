@@ -1,3 +1,4 @@
+/* global window, document */
 // AdSense for the server-rendered player pages (apps/api seo.routes.ts). A file because the CSP
 // allows only same-origin scripts. Never personalised, for anyone (ECA Digital, as AdSlot.tsx).
 (function () {
