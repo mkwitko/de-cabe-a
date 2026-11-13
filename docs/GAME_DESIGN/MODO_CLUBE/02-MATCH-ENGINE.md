@@ -56,7 +56,7 @@ O estado é serializável e pequeno: retomar um trecho = desserializar e seguir 
 
 ## 4. Movimento
 
-- Aceleração e velocidade máxima por atributo: `vmax = 6,0 + 3,2 × (velocidade/99)` m/s; aceleração `2,5 + 3,0 × (aceleração/99)` m/s² (PARÂMETROS; conferir com dados físicos da pesquisa). Fadiga reduz as duas.
+- Aceleração e velocidade máxima por atributo: `vmax = 6,0 + 3,2 × (velocidade/99)` m/s; aceleração `3,0 + 4,0 × (aceleração/99)` m/s² (PARÂMETROS; revisão de 2026-11-13 na MC-247: a aceleração antiga, até 5,5 m/s², deixava o tempo para 10 m cerca de 15% acima da curva de referência; o teto de 7 m/s² é o do código público de controle de campo). Reação `0,95 − 0,5 × (0,6 antecipação + 0,4 concentração)/99` s (média perto de 0,65 s; referência 0,7 s). Meia-volta `0,9 − 0,5 × agilidade/99` s, proporcional a `(1 − cos θ)/2`. Fadiga abaixo de 0,3 de fôlego reduz velocidade e aceleração até 80% do normal. Código: `packages/match-engine/src/kinematics.ts`; teste contra a curva de Fujimura e Sugihara (pesquisa 11 §3) em `kinematics.test.ts`, com erro abaixo de 12% de 5 a 40 m.
 - Direção: o jogador vira com taxa limitada (agilidade); correr de costas e de lado custa velocidade.
 - Fôlego: custo por passo proporcional ao quadrado da velocidade relativa; recuperação parado ou trotando; `resistência` define o tamanho do tanque. Abaixo de 0,3 cai velocidade máxima, precisão e `focus`.
 - Ocupação e contato: §6.2. Os parâmetros de velocidade, aceleração e fôlego acima são provisórios e são reavaliados por teste contra os dados físicos da pesquisa 01 §5 (distância por jogador, queda de corrida intensa no fim) na tarefa MC-037.

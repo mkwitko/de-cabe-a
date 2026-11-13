@@ -1,4 +1,5 @@
 /** Player movement (02-MATCH-ENGINE.md §4). Speeds are provisional parameters. */
+import { acceleration, topSpeed } from './kinematics';
 import { type Vec2 } from './pitch';
 
 export const DT = 0.25;
@@ -13,8 +14,8 @@ export interface Mover {
   acceleration: number;
 }
 
-export const maxSpeed = (m: Mover) => 6.0 + 3.2 * (m.pace / 99);
-const maxAccel = (m: Mover) => 2.5 + 3.0 * (m.acceleration / 99);
+export const maxSpeed = (m: Mover) => topSpeed(m.pace);
+const maxAccel = (m: Mover) => acceleration(m.acceleration);
 
 /**
  * One step towards `target`: the wanted velocity slows on arrival and the
