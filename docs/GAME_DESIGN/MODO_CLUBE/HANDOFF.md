@@ -82,6 +82,9 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 ### 6.0 Feito depois da sandbox
 
 - **MC-145** (DONE): `packages/match-engine/src/contract.ts` com esquemas zod estritos de `MatchInput` (jogadores com 34 atributos, ocultos, traços, posições, estado; plano tático; técnico; condições; regras), `TimedCommand`, `MatchEvent`, `Frame` (48 inteiros, com altura da bola), `MatchResult`, `Explanation` com fatores e evidência, `Message` (chave, nunca frase). A raiz (`src/index.ts`) exporta só contrato, gerador e `simulateSandbox`; a rota da sandbox virou chamada a `simulateSandbox`. Regra de lint `matchEngineRootOnly` em `eslint.config.js` para `apps/**` e `packages/**` (exceto o próprio pacote). Teste: `src/contract.test.ts` (10 testes). O quadro da sandbox continua com 47 inteiros (sem altura); a sandbox é descartável.
+- **MC-146** (DONE): `apps/web/src/games/manager/i18n/` com `format.ts` (subconjunto ICU sobre `Intl`: argumento, número, moeda em real, data, plural com `#`, select), `pt-BR.ts` (catálogo, `MessageKey`), `index.ts` (`createT`, `t`, `tMessage` para mensagens da engine). Chave ausente é erro de tipo. Teste `i18n/i18n.test.ts`.
+- **MC-147** (DONE): `no-restricted-syntax` em `eslint.config.js` para `apps/web/src/games/manager/**/*.tsx` (texto em JSX, em expressão filha de JSX e em atributos de texto). Teste `apps/web/src/games/manager/lint.test.ts`.
+- **MC-148** (DONE): `SandboxPage.tsx` só com chaves; `e2e/tecnico.spec.ts` passa.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
 
@@ -100,7 +103,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 
 API: `apps/api/src/modules/manager/manager.routes.ts` com `POST /manager/sandbox` (corpo estrito, sem estado, limite de 60 por minuto) e `manager.int.test.ts` (3 testes). Registrado em `apps/api/src/modules/attempts/public.routes.ts`. `apps/api/package.json` ganhou a dependência `@decabeca/match-engine`; `pnpm-lock.yaml` mudou.
 
-Web: `apps/web/src/games/manager/SandboxPage.tsx` (canvas 2D, interpolação por quadro de animação, pausa, 1×, 2× e 4×, três controles) na rota `/tecnico/sandbox` de `apps/web/src/App.tsx`; `apps/web/e2e/tecnico.spec.ts` passa. O texto da página está fixo em português: sai para chaves de tradução na MC-148.
+Web: `apps/web/src/games/manager/SandboxPage.tsx` (canvas 2D, interpolação por quadro de animação, pausa, 1×, 2× e 4×, três controles) na rota `/tecnico/sandbox` de `apps/web/src/App.tsx`; `apps/web/e2e/tecnico.spec.ts` passa. O texto da página sai de chaves de tradução (MC-148).
 
 A sandbox é descartável como produto e útil como base: `random.ts`, `pitch.ts` e a ideia de `frame` continuam; `sandbox.ts` é substituído pela engine de verdade.
 

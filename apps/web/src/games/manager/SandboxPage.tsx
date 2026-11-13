@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
 import { btnSecondary, GameHeader, Notice } from '../../components/ui';
+import { t } from './i18n';
 
 interface Instructions {
   width: number;
@@ -95,7 +96,7 @@ export function SandboxPage() {
   });
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<number>(1);
-  const [status, setStatus] = useState('Carregando a prancheta…');
+  const [status, setStatus] = useState(() => t('sandbox.loading'));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -151,9 +152,8 @@ export function SandboxPage() {
       drawFrame(ctx, k, a, b, head - i);
 
       const minute = Math.floor(a[0]! / TICKS_PER_SECOND / 60);
-      const third =
-        a[1]! < LENGTH / 3 ? 'na defesa' : a[1]! < (LENGTH * 2) / 3 ? 'no meio' : 'no ataque';
-      const text = `Minuto ${minute}. Bola ${third} do time amarelo.`;
+      const third = a[1]! < LENGTH / 3 ? 'defence' : a[1]! < (LENGTH * 2) / 3 ? 'middle' : 'attack';
+      const text = t('sandbox.status', { minute, third });
       if (text !== lastStatus) setStatus((lastStatus = text));
     };
     raf = requestAnimationFrame(tick);
@@ -181,17 +181,14 @@ export function SandboxPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-      <GameHeader title="Prancheta" />
-      <p className="text-chalk-soft">
-        Teste da engine do Modo Clube. O time amarelo segue as instruções abaixo; a bola circula
-        sozinha. Mude uma instrução e veja o time se reposicionar.
-      </p>
-      {error && <Notice title="Não deu para carregar">{error}</Notice>}
+      <GameHeader title={t('sandbox.title')} />
+      <p className="text-chalk-soft">{t('sandbox.intro')}</p>
+      {error && <Notice title={t('sandbox.loadError')}>{error}</Notice>}
       <canvas
         ref={canvasRef}
         className="aspect-[105/68] w-full rounded-lg"
         role="img"
-        aria-label="Campo visto de cima com os 22 jogadores e a bola"
+        aria-label={t('sandbox.pitchLabel')}
       />
       <p aria-live="polite" className="text-sm text-chalk-soft">
         {status}
@@ -206,9 +203,9 @@ export function SandboxPage() {
             setPaused(!paused);
           }}
         >
-          {paused ? 'Continuar' : 'Pausar'}
+          {t(paused ? 'sandbox.resume' : 'sandbox.pause')}
         </button>
-        <div role="group" aria-label="Velocidade" className="flex gap-2">
+        <div role="group" aria-label={t('sandbox.speed')} className="flex gap-2">
           {SPEEDS.map((v) => (
             <button
               key={v}
@@ -220,7 +217,7 @@ export function SandboxPage() {
                 setSpeed(v);
               }}
             >
-              {v}×
+              {t('sandbox.speedValue', { speed: v })}
             </button>
           ))}
         </div>
@@ -228,10 +225,10 @@ export function SandboxPage() {
 
       <fieldset className="grid gap-4 sm:grid-cols-3">
         <legend className="mb-2 font-condensed text-xl font-extrabold uppercase">
-          Instruções do time amarelo
+          {t('sandbox.instructions')}
         </legend>
         <label className="flex flex-col gap-1">
-          Largura: {instructions.width} de 5
+          {t('sandbox.width', { value: instructions.width })}
           <input
             type="range"
             min={1}
@@ -243,7 +240,7 @@ export function SandboxPage() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          Altura da linha de defesa: {instructions.lineHeight} de 5
+          {t('sandbox.lineHeight', { value: instructions.lineHeight })}
           <input
             type="range"
             min={1}
@@ -261,7 +258,7 @@ export function SandboxPage() {
             checked={instructions.inverted === 'R'}
             onChange={(e) => change({ ...instructions, inverted: e.target.checked ? 'R' : null })}
           />
-          Lateral direito por dentro com a bola
+          {t('sandbox.inverted')}
         </label>
       </fieldset>
     </div>
