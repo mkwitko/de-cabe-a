@@ -106,6 +106,8 @@ const BLOCK_TOP: Record<'high' | 'mid' | 'low', Record<Line, number>> = {
   mid: { gk: LENGTH, def: 40, mid: 52, att: 64 },
   low: { gk: LENGTH, def: 26, mid: 37, att: 48 },
 };
+/** A side set to counter leaves its forwards this high without the ball (research 13 §3). PARAMETER. */
+const COUNTER_OUTLET = 60;
 const STEP_UP: Record<Line, number> = { gk: 1.5, def: 4, mid: 3, att: 2 };
 const BLOCK_SHIFT = { high: 9, mid: 0, low: -9 } as const;
 
@@ -158,7 +160,9 @@ export function anchors(
     if (!inPossession)
       x = Math.min(
         Math.max(x, Math.min(FLOOR_OUT[a.line], Math.max(2, focal.x - 3))),
-        BLOCK_TOP[t.block][a.line],
+        a.line === 'att' && t.onWin === 'counter'
+          ? Math.max(BLOCK_TOP[t.block].att, COUNTER_OUTLET)
+          : BLOCK_TOP[t.block][a.line],
       );
     if (inPossession && a.line !== 'gk' && lastLine !== null)
       x = Math.min(x, Math.max(lastLine - 0.8, focal.x - 2));
