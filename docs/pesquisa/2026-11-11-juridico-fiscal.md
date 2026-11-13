@@ -1,0 +1,45 @@
+# Verificação legal/fiscal (pesquisa em 2026-11-11). Não é aconselhamento jurídico.
+
+## 1. MP 1.394/2026 (bets)
+VEREDITO: PARCIALMENTE CONFIRMADO.
+- Confirmado: MP de 25/09/2026 proíbe exploração, oferta, intermediação e publicidade de apostas de quota fixa (art. 1º), inclusive agentes no exterior; arts. 16-18 vedam comunicação/publicidade/marketing/patrocínio em qualquer meio digital ou físico, tratado como publicidade abusiva (CDC); multa até 10% do faturamento no país (limite R$ 50 mi/infração); provedores têm dever de impedir circulação (arts. 19-22); bloqueio de sites via Anatel/CGI.br. Entra em vigor na publicação.
+  https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2026/mpv/mpv1394.htm
+- ERRADO nos detalhes da prorrogação: a prorrogação por 60 dias foi o ATCN 118/2026 de 09/11/2026 (não 11/11). Prazo de deliberação agora até 04/03/2027 (original 23/11/2026). Situação 11/11: "aguardando instalação da comissão"; 99 emendas.
+  https://www.congressonacional.leg.br/materias/medidas-provisorias/-/mpv/175871
+- Afiliados: o texto da MP NÃO cita afiliados. O art. 16 §1º alcança qualquer conteúdo que "ofereça, promova, divulgue ou facilite o acesso" dirigido ao público brasileiro, com ou sem remuneração (leitura de escritório de advocacia; links de afiliado provavelmente se enquadram, mas é inferência). Conclusão prática: hoje, anúncio/link de casa de aposta de quota fixa em site brasileiro = vedado. Loterias tradicionais não são afetadas.
+  https://nossomeio.com.br/a-mp-das-bets-e-o-fim-da-publicidade-de-apostas/
+- ADIs 7.721, 7.723, 7.749 contra a MP (citadas por imprensa/Senado/IGB); NÃO verifiquei decisão do STF. Notícias dizem que a MP segue valendo. NÃO VERIFICADO: status das liminares.
+  https://www12.senado.leg.br/publicacoes/estudos-legislativos/tipos-de-estudos/sumarios-de-proposicoes/mpv1394
+
+## 2. LC 238/2026 (MEI)
+VEREDITO: PARCIALMENTE CONFIRMADO.
+- LC 238 de 21/10/2026: 2026 = R$ 81 mil (sem mudança); 2027 = R$ 110 mil (art. 2º, efeito 01/01/2027); R$ 140 mil a partir de 01/01/2028 (art. 18-A §1º, art. 10). Proporcional no início de atividade: R$ 9.166,67/mês (2027), R$ 11.666,67/mês (2028). Art. 3º: ampliação condicionada à renúncia constar nas LOAs 2027-2029 (R$ 140 mil depende disso). Também remissão de dívidas.
+  https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp238.htm
+- Site de jogos com AdSense + assinaturas como MEI: NÃO encontrei fonte oficial (Portal do Empreendedor) confirmando. Fontes secundárias (contabilidadezen, contabilidade.com) dizem que desenvolvimento de jogos (CNAE 5821-2/00) e programação NÃO estão entre as ocupações MEI; caminho típico = SLU/ME no Simples, CNAE 5821-2/00 (edição de jogos) ou 6201-5/01. Uma página isolada lista 6201-5/01 como permitido: contradição, não confiável. NÃO VERIFICADO na lista oficial. Pesquisa de "o que indies com AdSense usam": só achei a recomendação SLU/Simples dessas fontes secundárias, sem dado estatístico.
+  https://www.contabilidadezen.com.br/blog/dev-jogos-tributacao-publicacao-2026/
+
+## 3. NFS-e Nacional / CBS-IBS
+VEREDITO: CONFIRMADO (fontes secundárias; não abri o texto da resolução).
+- Res. CGSN 191/2026 adiou de 01/09 para 01/11/2026 a obrigatoriedade do Emissor Nacional para ME/EPP do Simples que prestam serviços sujeitos a NFS-e (datas da resolução divergem: 4 ou 10/08). Municípios podem antecipar. Fontes: https://www.legisweb.com.br/noticia/?id=34185 ; https://fenacon.org.br/reforma-tributaria/simples-nacional-nfs-e-nacional-sera-obrigatoria-para-me-e-epp-a-partir-de-1o-de-novembro-de-2026/
+- CBS/IBS 2027: Simples pode apurar IBS/CBS dentro do DAS ou optar pelo regime regular (LC 214/2025; Res. CGSN 190/2026). Prazo da opção diverge entre fontes (30/09 vs 30/10/2026): NÃO VERIFICADO. Crédito ao cliente no modelo "puro" é limitado ao efetivamente recolhido (estimativa de terceiros 0,62%-1,84%, não oficial). https://jornalcontabil.com.br/noticia/simples-nacional-credito-de-impostos-muda-em-2027/ ; https://www.taxgroup.com.br/?p=23936
+
+## 4. ECA Digital (Lei 15.211/2025)
+- Vigência 17/03/2026: CONFIRMADO (art. 41-A, planalto). https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/l15211.htm
+- Art. 22 veda perfilamento para direcionar publicidade comercial a crianças e adolescentes: CONFIRMADO. Art. 20 veda loot boxes em jogos direcionados a, ou de acesso provável por, crianças/adolescentes: CONFIRMADO. Art. 1º abrange serviços de "acesso provável" (3 critérios cumulativos: alta probabilidade de uso/atratividade; facilidade de acesso; risco significativo).
+- Loot box (art. 2º IV): definida como funcionalidade que permite aquisição "mediante pagamento" de itens/vantagens aleatórios sem conhecimento prévio. Figurinha aleatória ganha de graça por jogar: pelo texto literal NÃO se enquadra (falta pagamento); nota técnica do MJ considera pagamento também com moeda virtual comprada. Nenhuma fonte que achei trata expressamente do caso gratuito; é interpretação, NÃO confirmada pela ANPD/MJ. Se houver compra de pacote/moeda que dê figurinhas aleatórias, enquadra. https://www.gov.br/mj/pt-br/assuntos/noticias-1/mjsp-pede-a-anpd-que-monitore-jogos-eletronicos-com-caixas-de-recompensa-que-nao-implementaram-verificacao-de-idade/NotaTcnican55.pdf
+- Verificação de idade: art. 9 §1º exige mecanismo confiável (sem autodeclaração) para conteúdo impróprio/proibido a menores de 18; art. 12 para lojas de apps/SO. Decreto 12.880/2026 regulamenta. ANPD: orientações preliminares (mar/2026), guia de aferição em consulta (22/05-09/07/2026), abordagem baseada em risco, "autodeclaração isolada é insuficiente" (para serviços de maior risco); guia de escopo/obrigações gerais publicado 28/10/2026. NÃO consegui abrir os PDFs da ANPD: NÃO VERIFICADO o que se exige de quiz genérico de futebol sem conteúdo impróprio (provável que o dever central seja prevenção/proteção por padrão, não verificação forte, mas isso é inferência).
+  https://chambers.com/articles/eca-digital-é-regulamentado-e-anpd-publica-orientações-sobre-verificação-etária ; https://www.gov.br/anpd/pt-br/assuntos/noticias/copy_of_anpd-tomada-de-subsidios-afericao-idade
+
+## 5. Taxas de pagamento
+- Stripe BR (stripe.com/br/pricing, lida hoje): cartão nacional 3,99% + R$0,39 (internacional +2%); Pix 1,19% "somente por convite"; boleto R$3,45; Billing +0,7% do volume de assinaturas. CONFIRMADO.
+- Pix Automático na Stripe: CONFLITO. Support PT-BR: "não disponível" para contas brasileiras (Pix só avulso). docs.stripe.com (versão PT) descreve Pix Automático com mandatos/assinaturas sem restrição de país explícita na página lida. NÃO VERIFICADO para conta BR; confirmar com suporte/dashboard. https://support.stripe.com/questions/how-to-enable-pix-as-a-payment-method-in-brazil?locale=pt-BR ; https://docs.stripe.com/payments/pix/pix-automatico
+- Concorrentes (páginas oficiais, parciais): Pagar.me Pix 0,99%, crédito à vista 4,19% (https://www.pagar.me/precos); AbacatePay Pix R$0,80 fixo (https://www.abacatepay.com/), cartão não informado; Asaas Pix/boleto R$0,79 (promo, de R$1,59; outra leitura: R$1,99 normal), débito 1,89%+R$0,35, crédito e Pix Automático não lidos (https://www.asaas.com/precos-e-taxas); Mercado Pago: página oficial bloqueada (403), só fontes secundárias (Pix ~0,99%): NÃO VERIFICADO.
+- Cálculo para R$7,90 Pix: Stripe 1,19% = R$0,09 (se convidado); Pagar.me 0,99% = R$0,08; AbacatePay R$0,80 (10,1%); Asaas R$0,79-1,99. R$9,90 cartão Stripe: 3,99% + 0,39 = R$0,78 (7,9%) (+0,7% Billing = R$0,07). Taxas de Pix Automático e recorrência: NÃO encontradas em nenhum provedor.
+
+## 6. Simples: Fator R e AdSense
+- Fator R >= 28% (folha 12m / receita bruta 12m) => Anexo III (6% inicial); < 28% => Anexo V. 15,5% inicial do Anexo V: não reconfirmado em fonte primária nesta pesquisa (é o valor da LC 123, conhecimento prévio). https://www.contabilidadezen.com.br/blog/dev-jogos-tributacao-publicacao-2026/
+- AdSense NÃO é exportação de serviços se os anúncios são vistos no Brasil: Solução de Consulta Cosit 185/2025 (19/09/2025), Simples; se não der para separar origem geográfica, tudo é receita interna. Logo, para público brasileiro, não há isenção de ISS/PIS/COFINS por exportação. Só li resumos (IBET/APET/Okai), não o texto integral no DOU; vincula só o consulente. https://www.ibet.com.br/sc-185-2025-simples-nacional-exportacao-de-servico-nao-configuracao-hipotese-veiculacao-de-videos-e-anuncios-quando-visualizados-no-brasil/
+
+## 7. AdSense
+- Penalidade de RPM de anúncios não personalizados: NÃO ENCONTREI número oficial do Google. Terceiros dizem só que paga menos. Não chutar.
+- Crianças: tag oficial agora é TFAT (tag for age treatment): `data-tag-for-age-treatment` / google_tag_for_age_treatment, 1=criança, 2=adolescente, 0=nenhum; criança/adolescente desativa anúncios personalizados e remarketing; TFCD/TFUA equivalentes/obsoletos; marcação no site via Search Console ou por requisição; Google pode tratar o site como dirigido a crianças por conta própria. A página não menciona Brasil/ECA Digital nem receita. https://support.google.com/adsense/answer/3248194?hl=en ; https://support.google.com/adsense/answer/9007197
