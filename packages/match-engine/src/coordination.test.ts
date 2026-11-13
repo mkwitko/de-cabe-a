@@ -9,12 +9,15 @@ import { SCENARIOS, play } from './coordination.scenarios';
 import { BANDS, t1, t2, t3, t5, t9 } from './trajectories';
 
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
+/** Ten seconds of samples at DT: below that a share is noise (ADR-018 item 4). */
+const T5_MIN_SAMPLES = 40;
 
 describe('MC-246 coordination proof', () => {
   for (const sc of SCENARIOS) {
     it(sc.name, () => {
       const report: string[] = [];
       const losses: [number[], number[]] = [[], []];
+      const pairs: [number, number] = [0, 0];
       const guard: [[number, number], [number, number]] = [
         [0, 0],
         [0, 0],
@@ -33,20 +36,24 @@ describe('MC-246 coordination proof', () => {
             b.backGapP95 > BANDS.T2backGapP95 && `T2 back gap ${b.backGapP95.toFixed(1)}`,
             b.betweenLinesP95 > BANDS.T2betweenLinesP95[sc.plans[team].team.block] &&
               `T2 lines ${b.betweenLinesP95.toFixed(1)}`,
-            c.per10min > BANDS.T3per10min && `T3 ${c.per10min.toFixed(2)}`,
           ].filter(Boolean);
           if (fail.length)
             report.push(`${sc.name.slice(0, 2)} seed ${seed} team ${team}: ${fail.join(', ')}`);
           losses[team].push(...t9(samples, team).counts);
+          pairs[team] += c.per10min;
           guard[team][0] += d.samples;
           guard[team][1] += d.emptyShare * d.samples;
         }
         expect(w.log.length).toBeGreaterThan(0);
       }
-      // T5 as a share of all eight seeds' time (a single short episode in one seed is noise).
+      // T3 as a rate over all eight seeds' 32 minutes (ADR-018 item 4).
+      for (const team of [0, 1] as const)
+        if (pairs[team] / SEEDS.length > BANDS.T3per10min)
+          report.push(`${sc.name.slice(0, 2)} team ${team}: T3 ${(pairs[team] / SEEDS.length).toFixed(2)}`);
+      // T5 as a share of all eight seeds' time, judged on at least 10 s of it (ADR-018 item 4).
       for (const team of [0, 1] as const) {
         const [n, empty] = guard[team];
-        if (n > 0 && empty / n > BANDS.T5emptyShare)
+        if (n >= T5_MIN_SAMPLES && empty / n > BANDS.T5emptyShare)
           report.push(`${sc.name.slice(0, 2)} team ${team}: T5 ${(empty / n).toFixed(2)} of ${n}`);
       }
       // T9 on the mean over all losses of the eight seeds (02 §5.9: "na média").

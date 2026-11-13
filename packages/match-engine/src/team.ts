@@ -71,7 +71,7 @@ export interface Assignment {
 
 export interface TeamMemory {
   /** Last owner per task key, for hysteresis. */
-  owners: Map<string, number>;
+  owners: Record<string, number>;
 }
 
 export interface BallView {
@@ -95,7 +95,7 @@ const FOLLOW_Y: Record<Line, number> = { gk: 0.08, def: 0.3, mid: 0.4, att: 0.35
 const FOLLOW_Y_OUT: Record<Line, number> = { gk: 0.08, def: 0.5, mid: 0.5, att: 0.35 };
 const NARROW_OUT: Record<Line, number> = { gk: 1, def: 0.8, mid: 0.85, att: 0.9 };
 /** Deepest x a line takes without the ball: the back line holds near the penalty spot, not on the goal line. */
-const FLOOR_OUT: Record<Line, number> = { gk: 0, def: 7, mid: 13, att: 20 };
+const FLOOR_OUT: Record<Line, number> = { gk: 0, def: 10, mid: 16, att: 21 };
 /**
  * Highest x each line takes without the ball, by block: the block's height is
  * where the team defends (research 11 §4.1: low < 37.5 m, mid up to 57.5 m of
@@ -264,7 +264,7 @@ export function tasksFor(
   if (ball.x > 35)
     add('closeLane', 'lane', aboveLine({ x: (focal.x + 18) / 2, y: (focal.y + CENTER.y) / 2 }));
   // Mark the most dangerous options: near our goal and near the ball; a winger idle on the far touchline waits.
-  const marks = 2 + (t.pressIntensity >= 4 ? 1 : 0) + (ball.x < 35 ? 1 : 0);
+  const marks = 2 + (t.pressIntensity >= 4 ? 1 : 0) + (ball.x < 35 ? 1 : 0) + (ball.x < 25 ? 2 : 0);
   const danger = opp
     .map((o, i) => ({ i, o, d: dist(o, goal) + 0.5 * dist(o, focal) }))
     // Opponents next to the ball are the press and cover's job; marking them too makes a swarm.
@@ -291,6 +291,8 @@ const APTITUDE_GAIN = 3;
 /** A defender keeps the last line: he only takes tasks this close to his anchor (02 §5.11, "manter a última linha"). */
 const DEF_RADIUS = 15;
 const OUT_OF_ZONE = 1000;
+/** PARAMETER: marks closer to our goal line than this are box defence, open to defenders. */
+const BOX_MARK_X = 20;
 const CENTRAL_DEF = new Set<RoleId>(['centreBack', 'libero']);
 /** PARAMETER: deepest third plus a margin, where a centre-back still offers a short pass. */
 const BUILD_UP_X = 45;
@@ -314,9 +316,11 @@ export function assign(
   const cost = (p: TeamPlayer, t: Task) =>
     // Without the ball the back line defends its zone as a unit (02 §5.2, §5.11): a defender
     // only steps out to press a ball near his zone; marks and covers are midfield jobs.
+    // Around our box the back line marks too: box defence is man to man near goal.
     (!inPossession &&
     lineOf(p.role) === 'def' &&
-    (t.kind !== 'press' || dist(anchorsByIndex.get(p.index)!, t.point) > DEF_RADIUS)
+    ((t.kind !== 'press' && !(t.kind === 'mark' && t.point.x < BOX_MARK_X)) ||
+      dist(anchorsByIndex.get(p.index)!, t.point) > DEF_RADIUS)
       ? OUT_OF_ZONE
       : 0) +
     // With the ball, centre-backs stay the base of the rest defence: they only offer
@@ -367,7 +371,7 @@ export function assign(
       }
     }
     // Hysteresis (02 §5.5): the previous owner keeps it unless clearly beaten.
-    const prev = memory.owners.get(t.key);
+    const prev = memory.owners[t.key];
     if (keepOwners && prev !== undefined && prev !== best && free.has(prev)) {
       const prevCost = cost(byIndex.get(prev)!, t);
       if (prevCost < bestCost + KEEP_MARGIN) {
@@ -378,7 +382,7 @@ export function assign(
     // Nobody fit for it without breaking the last line: the task stays open (02 §5.3, the gap stays).
     if (best < 0 || bestCost >= OUT_OF_ZONE / 2) continue;
     free.delete(best);
-    memory.owners.set(t.key, best);
+    memory.owners[t.key] = best;
     out.push({ task: t, player: best, cost: bestCost });
   }
   return out;

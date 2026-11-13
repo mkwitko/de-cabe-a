@@ -86,7 +86,7 @@ export function createWorld(seed: Rng, teams: [TeamSetup, TeamSetup], kickoff: 0
     rng: fork(seed, 'world'),
     players,
     plans: [teams[0].plan, teams[1].plan],
-    memory: [{ owners: new Map() }, { owners: new Map() }],
+    memory: [{ owners: {} }, { owners: {} }],
     ball: {
       pos: { ...CENTER },
       focal: { ...CENTER },
@@ -111,6 +111,10 @@ const compliance = (a: Attributes, fam: number) =>
 const BACK_SPACING = 13;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
+/** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
+const URGENT = new Set<WorldPlayer['intent']>(['press', 'receive', 'cover', 'mark', 'closeLane', 'depth', 'carry']);
+const JOG = 1.8;
+const JOG_GAIN = 0.25;
 /** PARAMETER: deepest a player outside the rest defence stays behind the ball with it (T9 counts beyond 12 m). */
 const JOIN_BEHIND = 10;
 
@@ -240,7 +244,11 @@ export function movePlayers(w: World): void {
   for (const p of w.players) {
     if (!p.active || p.index === w.ball.holder) continue;
     const unit = p.intent === 'anchor' && lineOf(p.role) === 'def' && w.ball.possession !== p.team;
-    moveTowards(p, p.target, unit ? lineCap[p.team] : Infinity);
+    // Effort (02 §4 fôlego): urgent jobs at full speed; the rest jog, faster the further off they are.
+    const dx = p.target.x - p.pos.x;
+    const dy = p.target.y - p.pos.y;
+    const effort = URGENT.has(p.intent) ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
+    moveTowards(p, p.target, Math.min(unit ? lineCap[p.team] : Infinity, effort));
   }
   separate(w.players.filter((p) => p.active));
   for (const p of w.players) {
