@@ -66,7 +66,7 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
-| MC-011 | `packages/club-domain`; esquema zod do pacote (`03` §1.1), com `kind`, competições, comissão, governança | P0 | G | 145 | pacote inválido é rejeitado com o caminho do erro | `schema.test.ts` |
+| MC-011 | DONE. `packages/club-domain`; esquema zod do pacote (`03` §1.1), com `kind`, competições, comissão, governança | P0 | G | 145 | pacote inválido é rejeitado com o caminho do erro | `src/pack/schema.test.ts` (8 testes); regras de consistência ficam na MC-017 |
 | MC-012 | Posições, 28 + 6 atributos, nota por função | P0 | M | 011 | nota por função muda com o atributo que a função pesa | unidade |
 | MC-013 | Gerador de jogador, de elenco e de comissão por semente | P0 | M | 012 | mesmo comando, mesmo resultado; elenco passa na validação | unidade |
 | MC-014 | Gerador dos pacotes fictícios `br-dev-1` e `br-dev-mini`, com uma competição de cada tipo de fase | P0 | G | 013, 160 | arquivos idênticos byte a byte entre execuções; volumes do `br-dev-1` dentro de 20% dos reais | teste de `checksum` |
