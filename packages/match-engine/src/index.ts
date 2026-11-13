@@ -14,6 +14,6 @@ export {
   SANDBOX_MAX_TICK,
   type SandboxInstructions,
 } from './sandbox';
-export { FORMATIONS, defaultPlan, type Formation } from './presets';
+export { FORMATIONS, coachOf, defaultPlan, type Formation } from './presets';
 export { simulateMatch } from './match/simulate';
 export { advanceMatch, MATCH_MAX_CHUNK, type MatchChunk } from './match/advance';

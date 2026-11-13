@@ -107,7 +107,15 @@ export function createWorld(seed: Rng, teams: [TeamSetup, TeamSetup], kickoff: 0
  * and familiarity.
  */
 const compliance = (a: Attributes, fam: number) =>
-  0.8 + 0.18 * ((0.5 * a.teamwork + 0.5 * a.positioning) / 99) * fam;
+  0.8 +
+  0.18 *
+    ((0.25 * a.teamwork +
+      0.15 * a.positioning +
+      0.2 * a.discipline +
+      0.2 * a.tacticalReading +
+      0.2 * a.spatialAwareness) /
+      99) *
+    fam;
 
 /** PARAMETER: widest gap between neighbours of a back line without the ball, metres. */
 const BACK_SPACING = 13;
@@ -190,6 +198,8 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     }
     const a = byPlayer.get(p.index);
     let pt = a ? (fresh.get(a.task.key) ?? a.task.point) : anc[p.slot]!;
+    // Timing of the run (ADR-019): a poor sense of it holds the runner back off the last line.
+    if (a && a.task.kind === 'depth') pt = { x: pt.x - 2.5 * (1 - p.attrs.timing / 99), y: pt.y };
     // With the ball, the rest defence is the players the plan leaves behind (02 §5.9);
     // everyone else without a task joins the play instead of idling deep in the shape.
     if (!a && inPossession && lineOf(p.role) !== 'gk')
@@ -261,11 +271,16 @@ export function movePlayers(w: World): void {
   }
   for (const p of w.players) {
     if (!p.active || p.index === w.ball.holder) continue;
-    const unit = p.intent === 'anchor' && lineOf(p.role) === 'def' && w.ball.possession !== p.team;
+    // Recovery run: with the ball behind him (nearer his own goal) a defender sprints back.
+    const behind =
+      w.ball.possession !== p.team && flip(p.team, w.ball.pos).x < flip(p.team, p.pos).x - 2;
+    const unit =
+      !behind && p.intent === 'anchor' && lineOf(p.role) === 'def' && w.ball.possession !== p.team;
     // Effort (02 §4 fôlego): urgent jobs at full speed; the rest jog, faster the further off they are.
     const dx = p.target.x - p.pos.x;
     const dy = p.target.y - p.pos.y;
-    const effort = URGENT.has(p.intent) ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
+    const effort =
+      URGENT.has(p.intent) || behind ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
     moveTowards(p, p.target, Math.min(unit ? lineCap[p.team] : Infinity, effort));
   }
   separate(w.players.filter((p) => p.active));

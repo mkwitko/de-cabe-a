@@ -6,7 +6,7 @@
  * best true utility are kept so the log can tell a bad choice from a bad kick.
  */
 import { exp, gaussian } from '../rules/math';
-import { dribbleChance, norm } from '../rules/duel';
+import { dribbleChance, norm, weighted } from '../rules/duel';
 import { valueAt } from '../rules/value';
 import { goalAngle, xg as chanceOf } from '../rules/xg';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
@@ -17,7 +17,7 @@ import { arrivalTime } from '../kinematics';
 import type { MatchPlayer, MatchState } from './state';
 
 export type ActionKind =
-  'pass' | 'through' | 'long' | 'cross' | 'shot' | 'carry' | 'dribble' | 'hold' | 'clear';
+  'pass' | 'through' | 'long' | 'over' | 'cross' | 'shot' | 'carry' | 'dribble' | 'hold' | 'clear';
 
 export interface Action {
   kind: ActionKind;
@@ -49,7 +49,7 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * A shot ends the move: players keep the ball unless the chance beats what the
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
-const SHOT_RESERVE = -0.022;
+const SHOT_RESERVE = -0.04;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.7;
 const oppValue = (t: Vec2) => valueAt(LENGTH - t.x, WIDTH - t.y);
@@ -86,17 +86,31 @@ export function chanceFrom(s: MatchState, c: MatchPlayer, header = false, afterC
 
 /** Seconds a receiver takes to settle the ball before the next decision (tempo, first touch). */
 export function settleTime(s: MatchState, c: MatchPlayer): number {
-  const tempo = s.plans[c.team].team.tempo;
-  return 1.7 + 0.3 * (5 - tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
+  const plan = s.plans[c.team].team;
+  const base = 2.0 + 0.3 * (5 - plan.tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
+  // Under pressure the ball is played first time; on a counter it goes forward at once (PARAMETERS).
+  const pressed = 1 - 0.65 * pressureOn(s, c);
+  // Receiving half-turned (body orientation) saves the extra touch (ADR-019).
+  const opened = 1.1 - 0.2 * norm(c.attrs.bodyOrientation);
+  return base * pressed * opened * (inCounter(s, c.team) ? 0.4 : 1);
 }
+
+/** Seconds after winning the ball during which a team set to counter attacks at once. PARAMETER. */
+const COUNTER_WINDOW = 6;
+
+/** The team won the ball in the last seconds and its plan says to counter (02 §8.1 onWin). */
+export const inCounter = (s: MatchState, team: 0 | 1) =>
+  s.plans[team].team.onWin === 'counter' &&
+  s.ball.possession === team &&
+  (s.tick - s.possessionSince) * 0.25 < COUNTER_WINDOW;
 
 export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = 'open'): Choice {
   const plan = s.plans[c.team].team;
   const r = s.rngs.decision;
   const me = toTeam(c, c.pos);
   const pressure = pressureOn(s, c);
+  const counter = inCounter(s, c.team);
   const decisions = norm(c.attrs.decisions);
-  const vision = norm(c.attrs.vision);
   // Facing: where he runs, or towards goal when still.
   const sp = Math.sqrt(c.vel.x * c.vel.x + c.vel.y * c.vel.y);
   const face = sp > 0.5 ? { x: c.vel.x / sp, y: c.vel.y / sp } : { x: c.team === 0 ? 1 : -1, y: 0 };
@@ -122,6 +136,12 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     });
   };
 
+  // The opponents' offside line in our frame: how high they defend.
+  const oppXs = opponents(s, c.team)
+    .map((o) => toTeam(c, o.pos).x)
+    .sort((a, b) => b - a);
+  const oppLine = oppXs[1] ?? LENGTH;
+
   // ── Passes to every teammate he perceives ──
   for (const m of mates(s, c.team)) {
     if (m.index === c.index) continue;
@@ -132,7 +152,8 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     if (allowed === 'throwIn' && d > 25) continue;
     // Field of view of 200°: behind him he sees with vision only (02 §5.6).
     const inView = (dx * face.x + dy * face.y) / d > -0.17;
-    const see = inView ? 0.97 : 0.25 + 0.55 * vision;
+    // Behind him he knows only what he checked before receiving (scanning, ADR-019).
+    const see = inView ? 0.97 : 0.25 + 0.55 * weighted(c.attrs, { scanning: 0.6, vision: 0.4 });
     if (next(r) > see) continue;
     const mt = toTeam(c, m.pos);
     const long = d > 32;
@@ -144,6 +165,8 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     const forward = mt.x - me.x;
     let bias = 0;
     if (plan.progression === 'vertical' && forward > 8) bias += 0.004;
+    // On a counter the ball goes forward fast (02 §8.1 onWin), into the space before the block sets.
+    if (counter && forward > 10) bias += 0.008;
     if (plan.progression === 'wide' && (mt.y < 14 || mt.y > WIDTH - 14)) bias += 0.004;
     if (plan.progression === 'central' && Math.abs(mt.y - CENTER.y) < 14) bias += 0.003;
     if (plan.buildUp === 'short' && lofted && me.x < 50) bias -= 0.01;
@@ -159,9 +182,38 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
       bias,
     });
 
+    // Over the top: a lofted ball into the space behind a high line, for a forward to run onto.
+    // It is how a pressed team plays around the press (research 13 §2).
+    if (
+      allowed === 'open' &&
+      lineOf(m.role) === 'att' &&
+      oppLine > 30 &&
+      oppLine < 80 &&
+      mt.x < oppLine - 0.5
+    ) {
+      const space = flip(c.team, {
+        x: Math.min(oppLine + 10, 86),
+        y: clamp(mt.y + (CENTER.y - mt.y) * 0.2, 6, WIDTH - 6),
+      });
+      const od = Math.sqrt((space.x - c.pos.x) ** 2 + (space.y - c.pos.y) ** 2);
+      // Both sides see the ball go: the runner gets no head start over the defenders (reacting: false).
+      const op =
+        passSafety(s, c.team, c.pos, space, 17 + 0.1 * od, true, m, false) * LOFT_RISK * 0.8;
+      const st = toTeam(c, space);
+      push({
+        kind: 'over',
+        target: space,
+        receiver: m,
+        p: op,
+        // Received on the run with defenders turning back: worth less than a settled ball there.
+        win: 0.5 * valueAt(st.x, st.y),
+        lose: oppValue({ x: (me.x + st.x) / 2, y: st.y }),
+      });
+    }
+
     // Through ball into the space ahead of a forward-facing runner (02 §5.6: needs vision).
     if (allowed === 'open' && lineOf(m.role) !== 'def' && mt.x > me.x + 5 && mt.x < 90) {
-      if (next(r) > 0.3 + 0.7 * vision) continue;
+      if (next(r) > 0.3 + 0.7 * weighted(c.attrs, { vision: 0.6, flair: 0.4 })) continue;
       // Space behind the line, short of the keeper's area (he would claim it).
       const ahead = flip(c.team, { x: Math.min(mt.x + 9, 93), y: mt.y + (CENTER.y - mt.y) * 0.15 });
       const td = Math.sqrt((ahead.x - c.pos.x) ** 2 + (ahead.y - c.pos.y) ** 2);
@@ -175,7 +227,7 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
         p: tp * 0.9,
         win: valueAt(at.x, at.y),
         lose: oppValue(at),
-        bias: 0.003 * (plan.finalThird.throughBalls - 3),
+        bias: 0.003 * (plan.finalThird.throughBalls - 3) + (counter ? 0.015 : 0),
       });
     }
   }
@@ -305,7 +357,12 @@ function pick(out: Action[], c: MatchPlayer, pressure: number, r: Rng): Choice {
   const decisions = norm(c.attrs.decisions);
   const composure = norm(c.attrs.composure);
   // Softmax temperature: falls with decisions and composure, rises with pressure (02 §5.4). PARAMETER.
-  const tau = 0.01 * (1.6 - 0.6 * decisions - 0.4 * composure) * (1 + 0.8 * pressure);
+  // Flair widens the choice (creative players try more); decisions and composure narrow it (ADR-019).
+  const tau =
+    0.01 *
+    (1.6 - 0.6 * decisions - 0.4 * composure) *
+    (1 + 0.8 * pressure) *
+    (0.85 + 0.3 * norm(c.attrs.flair));
   const top = Math.max(...out.map((a) => a.ue));
   const w = out.map((a) => exp((a.ue - top) / tau));
   const total = w.reduce((x, y) => x + y, 0);

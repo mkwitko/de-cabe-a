@@ -350,7 +350,9 @@ export function assign(
     arrivalTime(kins.get(p.index)!, t.point, true) +
     ZONE_COST * dist(anchorsByIndex.get(p.index)!, t.point) +
     FATIGUE_COST * (1 - p.stamina) -
-    APTITUDE_GAIN * APTITUDE[t.kind][lineOf(p.role)];
+    APTITUDE_GAIN * APTITUDE[t.kind][lineOf(p.role)] -
+    // A player who reads cover takes the cover job (ADR-019).
+    (t.kind === 'cover' ? (1.5 * p.attrs.covering) / 99 : 0);
 
   // Each player's top-K tasks (by cost) bound what the greedy pass may give him.
   const allowed = new Map<number, Set<string>>();

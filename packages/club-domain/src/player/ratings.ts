@@ -30,6 +30,7 @@ const RAW: Record<RoleId, Weights> = {
     jumping: 1,
   },
   sweeperKeeper: {
+    sweeping: 3,
     reflexes: 4,
     handling: 3,
     oneOnOne: 4,
@@ -42,6 +43,8 @@ const RAW: Record<RoleId, Weights> = {
     acceleration: 1,
   },
   centreBack: {
+    covering: 2,
+    bravery: 1,
     marking: 4,
     tackling: 4,
     heading: 3,
@@ -66,6 +69,7 @@ const RAW: Record<RoleId, Weights> = {
     pace: 1,
   },
   supportFullBack: {
+    recovery: 1,
     tackling: 3,
     marking: 2,
     crossing: 3,
@@ -78,6 +82,7 @@ const RAW: Record<RoleId, Weights> = {
     offTheBall: 1,
   },
   invertedFullBack: {
+    spatialAwareness: 2,
     tackling: 3,
     marking: 2,
     passing: 3,
@@ -90,6 +95,7 @@ const RAW: Record<RoleId, Weights> = {
     vision: 1,
   },
   wingBack: {
+    recovery: 2,
     crossing: 3,
     dribbling: 2,
     pace: 3,
@@ -101,6 +107,9 @@ const RAW: Record<RoleId, Weights> = {
     firstTouch: 1,
   },
   anchor: {
+    covering: 2,
+    discipline: 2,
+    tacticalReading: 2,
     tackling: 4,
     marking: 3,
     positioning: 4,
@@ -112,6 +121,8 @@ const RAW: Record<RoleId, Weights> = {
     decisions: 1,
   },
   deepPlaymaker: {
+    longPassing: 3,
+    scanning: 2,
     passing: 5,
     vision: 4,
     firstTouch: 3,
@@ -122,6 +133,8 @@ const RAW: Record<RoleId, Weights> = {
     positioning: 1,
   },
   boxToBox: {
+    pressing: 2,
+    recovery: 2,
     stamina: 4,
     workRate: 3,
     passing: 2,
@@ -135,6 +148,8 @@ const RAW: Record<RoleId, Weights> = {
     pace: 1,
   },
   playmaker: {
+    scanning: 2,
+    flair: 2,
     passing: 4,
     vision: 5,
     technique: 3,
@@ -145,6 +160,7 @@ const RAW: Record<RoleId, Weights> = {
     offTheBall: 1,
   },
   wideWinger: {
+    flair: 1,
     crossing: 4,
     dribbling: 4,
     pace: 4,
@@ -155,6 +171,8 @@ const RAW: Record<RoleId, Weights> = {
     stamina: 1,
   },
   insideForward: {
+    longShots: 2,
+    flair: 1,
     dribbling: 4,
     finishing: 4,
     acceleration: 3,
@@ -166,6 +184,8 @@ const RAW: Record<RoleId, Weights> = {
     firstTouch: 1,
   },
   targetMan: {
+    shielding: 3,
+    bravery: 1,
     heading: 4,
     strength: 4,
     jumping: 3,
@@ -177,6 +197,8 @@ const RAW: Record<RoleId, Weights> = {
     composure: 1,
   },
   falseNine: {
+    scanning: 2,
+    flair: 1,
     passing: 3,
     vision: 3,
     firstTouch: 3,
@@ -188,6 +210,8 @@ const RAW: Record<RoleId, Weights> = {
     composure: 1,
   },
   advancedForward: {
+    pressing: 1,
+    timing: 2,
     finishing: 5,
     offTheBall: 4,
     acceleration: 3,

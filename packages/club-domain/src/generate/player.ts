@@ -9,6 +9,7 @@ import {
   MENTAL,
   PHYSICAL,
   TECHNICAL,
+  TACTICAL,
   between,
   fork,
   next,
@@ -64,7 +65,7 @@ const PEAK: Record<Position, number> = {
 
 const GK_SET = new Set<AttributeId>(GOALKEEPING);
 const PHYS_SET = new Set<AttributeId>(PHYSICAL);
-const MENTAL_SET = new Set<AttributeId>(MENTAL);
+const MENTAL_SET = new Set<AttributeId>([...MENTAL, ...TACTICAL]); // perception and tactics grow like the mind (ADR-019)
 const TECH_SET = new Set<AttributeId>(TECHNICAL);
 
 /**

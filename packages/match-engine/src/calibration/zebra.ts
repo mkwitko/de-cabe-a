@@ -91,26 +91,22 @@ async function main() {
   );
 
   // MC-045: preset tournament, every preset against every other, both sides.
+  const style = (f: string, team: Partial<TacticalPlan['team']>) => () => {
+    const p = defaultPlan(f);
+    p.team = { ...p.team, ...team };
+    return p;
+  };
   const presets: [string, () => TacticalPlan][] = [
-    ['4-3-3', () => defaultPlan('4-3-3')],
-    ['4-4-2', () => defaultPlan('4-4-2')],
-    ['4-2-3-1', () => defaultPlan('4-2-3-1')],
-    [
-      '4-3-3 high press',
-      () => ({
-        ...defaultPlan('4-3-3'),
-        team: { ...defaultPlan('4-3-3').team, block: 'high', pressIntensity: 5, lineHeight: 4 },
-      }),
-    ],
-    [
-      '4-4-2 low block',
-      () => ({
-        ...defaultPlan('4-4-2'),
-        team: { ...defaultPlan('4-4-2').team, block: 'low', lineHeight: 2 },
-      }),
-    ],
+    ['4-3-3', style('4-3-3', {})],
+    ['4-4-2', style('4-4-2', {})],
+    ['4-2-3-1', style('4-2-3-1', {})],
+    ['4-1-4-1', style('4-1-4-1', {})],
+    ['3-5-2', style('3-5-2', {})],
+    ['4-4-2 losango', style('4-4-2 losango', {})],
+    ['4-3-3 pressão alta', style('4-3-3', { block: 'high', pressIntensity: 5, lineHeight: 4 })],
+    ['4-4-2 bloco baixo', style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter' })],
   ];
-  const per = Math.max(20, Math.round(n / 5));
+  const per = Math.max(20, Math.round(n / 4));
   for (const [a, pa] of presets) {
     const row: string[] = [];
     let worst = 0;

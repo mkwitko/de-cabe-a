@@ -25,3 +25,21 @@ export function drain(p: Tired, speed: number, dt: number): void {
 export function recover(p: Tired, seconds: number): void {
   p.stamina = Math.min(1, p.stamina + RECOVER * seconds);
 }
+
+/**
+ * Acute load (research 14 §2): rises with running above 75% of top speed and
+ * decays with a half-life near 60 s, faster with a bigger tank. 0..1. PARAMETERS.
+ */
+export function acuteLoad(
+  acute: number,
+  speed: number,
+  pace: number,
+  staminaAttr: number,
+  dt: number,
+): number {
+  const vmax = 6.0 + 3.2 * norm(pace);
+  const r = speed / vmax;
+  const rise = r > 0.75 ? (r - 0.75) * 0.9 * dt : 0;
+  const tau = 70 + 40 * (1 - norm(staminaAttr)); // seconds
+  return Math.min(1, Math.max(0, acute + rise - (acute * dt) / tau));
+}

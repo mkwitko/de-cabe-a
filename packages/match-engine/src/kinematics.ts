@@ -32,6 +32,8 @@ export interface PhysicalAttrs {
   agility: number;
   anticipation: number;
   concentration: number;
+  /** ADR-019; absent in older inputs. */
+  deceleration?: number;
 }
 
 export const topSpeed = (pace: number) => 6.0 + 3.2 * (pace / 99);
@@ -44,17 +46,24 @@ export const halfTurnTime = (agility: number) => 0.9 - (0.5 * agility) / 99;
  * Fatigue below 0.3 stamina lowers top speed and acceleration (02 §4).
  * PARAMETER: at stamina 0 both are 80% of fresh.
  */
-const fatigue = (stamina: number) => (stamina >= 0.3 ? 1 : 0.8 + (0.2 * stamina) / 0.3);
+export const fatigue = (stamina: number) => (stamina >= 0.3 ? 1 : 0.8 + (0.2 * stamina) / 0.3);
 
-export function kinOf(a: PhysicalAttrs, pos: Vec2, vel: Vec2, stamina = 1): Kin {
-  const f = fatigue(stamina);
+/**
+ * Acute fatigue (research 14 §2): after a burst of intense running, top speed
+ * and acceleration drop for a minute or so. PARAMETER: at most 15%.
+ */
+export const ACUTE_LOSS = 0.15;
+
+export function kinOf(a: PhysicalAttrs, pos: Vec2, vel: Vec2, stamina = 1, acute = 0): Kin {
+  const f = fatigue(stamina) * (1 - ACUTE_LOSS * acute);
   return {
     pos,
     vel,
     vmax: topSpeed(a.pace) * f,
     accel: acceleration(a.acceleration) * f,
     reaction: reactionTime(a),
-    halfTurn: halfTurnTime(a.agility),
+    // Turning needs braking first (ADR-019): agility and deceleration.
+    halfTurn: halfTurnTime(0.6 * a.agility + 0.4 * (a.deceleration ?? a.agility)),
   };
 }
 

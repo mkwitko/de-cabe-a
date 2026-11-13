@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { generateMiniPack, teamForMatch } from '@decabeca/club-domain';
 import {
   CommandSchema,
+  coachOf,
   FORMATIONS,
   MATCH_MAX_CHUNK,
   MatchInputSchema,
@@ -81,7 +82,8 @@ function friendlyInput(b: z.infer<typeof FriendlyBody>) {
   return MatchInputSchema.parse({
     engineVersion: 0,
     seed: b.seed,
-    teams: [side(b.home), side(b.away)],
+    // The person commands the home side live; its coach never changes the plan on his own (02 §10).
+    teams: [{ ...side(b.home), coach: coachOf(60, { flexibility: 0 }) }, side(b.away)],
     conditions: {
       crowd: 0.7,
       altitudeM: 0,

@@ -66,10 +66,54 @@ export function substitute(s: MatchState, team: 0 | 1, outIndex: number, benchId
     distance: 0,
     score: 0,
     injured: false,
+    acute: 0,
   };
   s.offPitch.push({ ...out, active: false });
   s.players[out.index] = fresh;
   s.events.at(-1)!.otherId = inP.id;
   t.subsLeft--;
   s.stoppage += 20000;
+}
+
+const BLOCKS = ['low', 'mid', 'high'] as const;
+const up = (v: number, d: number) => Math.max(1, Math.min(5, v + d));
+
+/**
+ * The coach reads the score (02 §10; research 13 §5): from the hour a side
+ * that is behind takes more risk, plays faster and presses higher; a side ahead
+ * late on drops its block. Same rule for both teams; a coach with flexibility
+ * below 30 (or the person's own team, which sends commands instead) keeps the plan.
+ * Runs every 5 minutes of the clock. PARAMETERS: timing and steps.
+ */
+export function readTheGame(s: MatchState): void {
+  const minute = s.clockMs / 60000;
+  const slot = Math.floor(minute / 5);
+  if (minute < 60 || slot === s.coachSlot) return;
+  s.coachSlot = slot;
+  for (const team of [0, 1] as const) {
+    if (s.coaches[team].flexibility < 30) continue;
+    // A coach who reads the game reacts sooner; a poor reader up to ten minutes later (ADR-019).
+    if (minute < 70 + (99 - s.coaches[team].gameReading) / 10) continue;
+    const diff = s.teams[team].score - s.teams[team === 0 ? 1 : 0].score;
+    // Adjustments are set from the plan the coach started with, never stacked.
+    const base = (s.basePlans ??= [
+      structuredClone(s.plans[0].team),
+      structuredClone(s.plans[1].team),
+    ])[team];
+    const t = { ...base, finalThird: { ...base.finalThird } };
+    const before = JSON.stringify(s.plans[team].team);
+    if (diff < 0 && minute >= 70) {
+      // Behind: more risk and tempo from 70', more pressure from 80', the block up from 85' (one goal down).
+      t.risk = up(t.risk, 1);
+      t.tempo = up(t.tempo, 1);
+      if (minute >= 80) t.pressIntensity = up(t.pressIntensity, 1);
+      if (minute >= 85 && diff === -1) t.block = BLOCKS[Math.min(2, BLOCKS.indexOf(t.block) + 1)]!;
+    } else if (diff > 0 && minute >= 85) {
+      // Ahead late: one more player stays back.
+      t.restDefence = Math.min(5, t.restDefence + 1);
+    }
+    s.plans[team].team = t;
+    if (JSON.stringify(t) !== before)
+      emit(s, 'command', team, null, null, null, { coach: 1, diff });
+  }
 }

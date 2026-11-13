@@ -3,7 +3,12 @@
  * coach picks the eleven that fit the plan's roles best, then a bench of seven
  * with a keeper. Greedy by role rating, deterministic (ties by player id).
  */
-import type { PlayerInput, TacticalPlan, TeamInput } from '@decabeca/match-engine';
+import {
+  coachOf,
+  type PlayerInput,
+  type TacticalPlan,
+  type TeamInput,
+} from '@decabeca/match-engine';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { roleRating } from '../player/ratings';
 
@@ -59,7 +64,7 @@ export function teamForMatch(pack: Pack, clubId: string, plan: TacticalPlan): Te
   return {
     players: [...xi, ...bench].map(toInput),
     plan,
-    coach: { gameReading: 60, flexibility: 60 },
+    coach: coachOf(60),
   };
 }
 

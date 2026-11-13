@@ -7,8 +7,10 @@
 import type { MatchEvent, MatchInput, PlayerInput, TeamStats, TimedCommand } from '../contract';
 import type { Ball } from '../ball';
 import { CENTER, flip } from '../pitch';
-import { fork, rngFrom, type Rng } from '../random';
-import type { RoleId } from '../contract';
+import { fork, next, rngFrom, type Rng } from '../random';
+import { formOfTheDay } from '../rules/duel';
+import { gaussian } from '../rules/math';
+import type { RoleId, TacticalPlan } from '../contract';
 import type { World, WorldPlayer } from '../world';
 
 export const PERIOD_TICKS = 45 * 60 * 4; // 45 minutes at DT = 0.25 s
@@ -27,6 +29,8 @@ export interface MatchPlayer extends WorldPlayer {
   /** Rating accumulator (MC-042). */
   score: number;
   injured: boolean;
+  /** Acute fatigue after bursts of intense running, 0..1 (research 14 §2). */
+  acute: number;
 }
 
 export type RestartKind = 'kickOff' | 'throwIn' | 'corner' | 'goalKick' | 'freeKick' | 'penalty';
@@ -93,6 +97,11 @@ export interface MatchState extends World {
   offPitch: MatchPlayer[];
   commands: TimedCommand[];
   input: Pick<MatchInput, 'conditions' | 'rules' | 'seed' | 'engineVersion'>;
+  /** Each side's coach (02 §10), the same rule for both; flexibility 0 never changes the plan. */
+  coaches: [MatchInput['teams'][0]['coach'], MatchInput['teams'][1]['coach']];
+  /** Last 5-minute slot the coaches read the game in, and the plans they started from. */
+  coachSlot: number;
+  basePlans?: [TacticalPlan['team'], TacticalPlan['team']];
   finished: boolean;
 }
 
@@ -114,10 +123,11 @@ const emptyStats = (): TeamStats => ({
 export function createMatch(input: MatchInput, commands: TimedCommand[] = []): MatchState {
   const root = rngFrom(input.seed);
   const players: MatchPlayer[] = [];
+  const formRng = fork(root, 'form');
   for (const team of [0, 1] as const) {
     const t = input.teams[team];
     for (let slot = 0; slot < 11; slot++) {
-      const p = t.players[slot]!;
+      const p = withForm(t.players[slot]!, formRng);
       const home = t.plan.shapes.outOfPossession[slot]!;
       const pos = flip(team, { x: Math.min(home.x, 50), y: home.y });
       players.push({
@@ -143,6 +153,7 @@ export function createMatch(input: MatchInput, commands: TimedCommand[] = []): M
         tackleAt: 0,
         score: 0,
         injured: false,
+        acute: 0,
       });
     }
   }
@@ -196,7 +207,21 @@ export function createMatch(input: MatchInput, commands: TimedCommand[] = []): M
       engineVersion: input.engineVersion,
     },
     finished: false,
+    coaches: [input.teams[0].coach, input.teams[1].coach],
+    coachSlot: -1,
   };
+}
+
+/** The player as he turns up today (research 13 §6 item 7); height does not vary. */
+function withForm(p: PlayerInput, r: Rng): PlayerInput {
+  const f = formOfTheDay(
+    p.hidden.consistency,
+    gaussian(() => next(r)),
+  );
+  const attributes = { ...p.attributes };
+  for (const k of Object.keys(attributes) as (keyof typeof attributes)[])
+    attributes[k] = Math.max(1, Math.min(99, Math.round(attributes[k] * f)));
+  return { ...p, attributes };
 }
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;

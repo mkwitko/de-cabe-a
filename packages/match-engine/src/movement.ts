@@ -12,10 +12,12 @@ export interface Mover {
   pace: number;
   /** 1..99 */
   acceleration: number;
+  /** Share of top speed and acceleration left by fatigue, 0..1 (1 when absent). */
+  sharp?: number;
 }
 
-export const maxSpeed = (m: Mover) => topSpeed(m.pace);
-const maxAccel = (m: Mover) => acceleration(m.acceleration);
+export const maxSpeed = (m: Mover) => topSpeed(m.pace) * (m.sharp ?? 1);
+const maxAccel = (m: Mover) => acceleration(m.acceleration) * (m.sharp ?? 1);
 
 /**
  * One step towards `target`: the wanted velocity slows on arrival and the

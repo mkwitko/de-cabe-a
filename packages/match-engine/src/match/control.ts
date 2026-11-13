@@ -9,7 +9,7 @@ import { logistic } from '../rules/math';
 import type { Vec2 } from '../pitch';
 import type { MatchPlayer, MatchState } from './state';
 
-export const kin = (p: MatchPlayer): Kin => kinOf(p.attrs, p.pos, p.vel, p.stamina);
+export const kin = (p: MatchPlayer): Kin => kinOf(p.attrs, p.pos, p.vel, p.stamina, p.acute);
 
 export const opponents = (s: MatchState, team: 0 | 1) =>
   s.players.filter((p) => p.active && p.team !== team);
@@ -61,6 +61,8 @@ export function passSafety(
   speed: number,
   lofted: boolean,
   receiver: MatchPlayer | null,
+  /** The receiver already knows where the ball goes (a pass to feet or a timed run). */
+  receiverKnows = true,
 ): number {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
@@ -91,7 +93,7 @@ export function passSafety(
   }
   if (receiver) {
     // The receiver must beat the nearest opponent to the end point.
-    const tr = arrivalTime(kin(receiver), to, true);
+    const tr = arrivalTime(kin(receiver), to, receiverKnows);
     const tOpp = firstArrival(opp, to);
     safe *= logistic((tOpp - tr + 0.2) / 0.3);
   }

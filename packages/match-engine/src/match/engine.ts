@@ -5,7 +5,15 @@
  */
 import { advanceBall, firstContact, PLAYABLE_HEIGHT, type Ball, type Reacher } from '../ball';
 import { arrivalTime } from '../kinematics';
-import { aerialScore, contest, dribbleChance, norm, tackleChance, weighted } from '../rules/duel';
+import {
+  aerialScore,
+  contest,
+  dribbleChance,
+  norm,
+  pressSync,
+  tackleChance,
+  weighted,
+} from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { DT, moveTowards, maxSpeed } from '../movement';
 import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
@@ -17,14 +25,15 @@ import { kin, mates, opponents, pressureOn } from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
-import { drain, recover } from '../rules/stamina';
+import { acuteLoad, drain, recover } from '../rules/stamina';
+import { ACUTE_LOSS, fatigue } from '../kinematics';
 import { foulChance, cardFor } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
-import { substitute, substitutions } from './coach';
+import { readTheGame, substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
-const TACKLE_RATE = 0.07;
+const TACKLE_RATE = 0.12;
 /** World-frame x direction a team attacks. */
 const fwdOf = (team: 0 | 1) => (team === 0 ? 1 : -1);
 const inOwnBox = (team: 0 | 1, p: Vec2) => {
@@ -316,14 +325,27 @@ function tackles(s: MatchState) {
     if (d.intent !== 'press' && dist(d.pos, c.pos) > 1.0) continue;
     // Chance per step that a close defender commits to a tackle. PARAMETER (tackles per match, 02 §11).
     // A booked player goes into tackles more carefully (PARAMETER).
-    if (next(s.rngs.execution) > TACKLE_RATE * (d.cards === 1 ? 0.4 : 1)) continue;
+    // A drilled pressing side commits together; a loose one arrives late (research 13 §1).
+    // Coaching that teaches and communicates well makes the press move as one (ADR-019).
+    const coach = s.coaches[d.team];
+    const taught = 0.85 + 0.3 * ((coach.teaching + coach.communication) / 198);
+    // Just lost it: players quick to react hunt the ball straight away (counter-press).
+    const justLost = s.ball.possession !== d.team && s.tick - s.possessionSince < 12;
+    const reaction = justLost
+      ? 0.8 + 0.6 * norm(d.attrs.lossReaction)
+      : 0.7 + 0.6 * norm(d.attrs.pressing);
+    const sync = (0.5 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction;
+    // In his own box a defender stays on his feet: a foul there is a penalty (PARAMETERS).
+    const box = inOwnBox(d.team, c.pos);
+    if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.35 : 1))
+      continue;
     d.tackleAt = s.tick + 4;
     // Behind: the defender is on the far side of the carrier from the carrier's own goal direction.
     const cg = flip(c.team, c.pos);
     const dg = flip(c.team, d.pos);
     const behind = dg.x < cg.x - 0.3;
     const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
-    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1);
+    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.4 : 1);
     if (next(s.rngs.referee) < pf) {
       foul(s, d, c, behind);
       return;
@@ -406,7 +428,7 @@ function reachers(s: MatchState): Reacher[] {
             ? 1.8 + 1.2 * norm(p.attrs.commandOfArea)
             : 2.2;
     else if (f.kind === 'shot')
-      reach = 0.45; // a block needs the body in the line
+      reach = 0.35 + 0.2 * norm(p.attrs.bravery); // a block needs the body in the line
     else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
       reach = 0.8 + 0.4 * norm(p.attrs.anticipation);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };
@@ -554,7 +576,12 @@ function touch(s: MatchState, p: MatchPlayer) {
   const touchSkill = weighted(p.attrs, { firstTouch: 0.6, technique: 0.4 });
   const hard = clamp((speed - 8) / 20, 0, 1);
   const pressure = pressureOn(s, p);
-  const clean = contest(touchSkill - 0.4, 0.25 * hard + 0.15 * pressure - (same ? 0.25 : 0), 0.1);
+  // An open body shape takes the ball cleanly under pressure (ADR-019).
+  const clean = contest(
+    touchSkill - 0.4 + 0.1 * (norm(p.attrs.bodyOrientation) - 0.5),
+    0.25 * hard + 0.15 * pressure - (same ? 0.25 : 0),
+    0.1,
+  );
   if (next(s.rngs.execution) < clean || gk) {
     if (f.kind === 'pass' && f.to !== null) {
       if (same) {
@@ -780,7 +807,11 @@ function chaseLooseBall(s: MatchState) {
     let bp: Vec2 | null = null;
     for (const p of mates(s, team)) {
       const m = meetPoint(p, f.ball, false);
-      if ((lineOf(p.role) === 'gk') !== inOwnBox(team, m.pt)) continue;
+      // The keeper comes for balls in his box, and beyond it as far as his sweeping allows (ADR-019).
+      const g = flip(team, m.pt);
+      const sweeper = g.x < 16.5 + 15 * norm(p.attrs.sweeping) && Math.abs(g.y - CENTER.y) < 25;
+      if (lineOf(p.role) === 'gk' ? !(inOwnBox(team, m.pt) || sweeper) : inOwnBox(team, m.pt))
+        continue;
       if (m.t < bt) {
         bt = m.t;
         best = p;
@@ -800,13 +831,29 @@ function endStep(s: MatchState, opts: StepOptions) {
     p.ticksOn++;
     const v = Math.sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
     p.distance += v * DT;
-    drain(p, v, DT);
+    // Pressing costs (02 §8.3: pressão 5 gasta fôlego): the whole block works harder without the ball.
+    const t = s.plans[p.team].team;
+    const load =
+      s.ball.possession === p.team
+        ? 1
+        : 1 +
+          0.18 * (t.pressIntensity - 3) +
+          (t.block === 'high' ? 0.12 : t.block === 'low' ? -0.08 : 0);
+    // Determination keeps a player going when it hurts (ADR-019).
+    drain(p, v, DT * load * (1.1 - 0.2 * norm(p.attrs.determination)));
+    p.acute = acuteLoad(p.acute, v, p.attrs.pace, p.attrs.recovery, DT);
+    p.sharp = fatigue(p.stamina) * (1 - ACUTE_LOSS * p.acute);
     if (!p.injured && next(s.rngs.injury) < injuryRisk(p, DT)) injure(s, p, false);
   }
   if (s.ball.possession !== null && !s.restart) s.teams[s.ball.possession].possessionTicks++;
   if (opts.onFrame) opts.onFrame(frameOf(s));
   s.tick++;
   s.periodTick++;
+  // The benches every 10 s; the coaches read the score every 5 minutes (02 §10).
+  if (s.tick % 40 === 0) {
+    substitutions(s, false);
+    readTheGame(s);
+  }
   s.clockMs += DT * 1000;
   clock(s);
 }
@@ -852,8 +899,5 @@ function clock(s: MatchState) {
 }
 
 export function stepUntilEnd(s: MatchState, opts: StepOptions = {}) {
-  while (!s.finished) {
-    step(s, opts);
-    if (s.tick % 40 === 0) substitutions(s, false);
-  }
+  while (!s.finished) step(s, opts);
 }

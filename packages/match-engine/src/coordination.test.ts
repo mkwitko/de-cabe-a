@@ -8,7 +8,8 @@ import { DT } from './movement';
 import { SCENARIOS, play } from './coordination.scenarios';
 import { BANDS, t1, t2, t3, t5, t9 } from './trajectories';
 
-const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
+// Twelve seeds: enough established losses for T9 in every scenario (sample size, not a band).
+const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 /** Ten seconds of samples at DT: below that a share is noise (ADR-018 item 4). */
 const T5_MIN_SAMPLES = 40;
 
