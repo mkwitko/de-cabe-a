@@ -38,6 +38,9 @@ importers:
       '@decabeca/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@decabeca/match-engine':
+        specifier: workspace:*
+        version: link:../../packages/match-engine
       '@fastify/rate-limit':
         specifier: ^10.3.0
         version: 10.3.0
@@ -138,6 +141,12 @@ importers:
         version: 4.6.7
 
   packages/engine:
+    dependencies:
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+
+  packages/match-engine:
     dependencies:
       zod:
         specifier: ^4.6.7
