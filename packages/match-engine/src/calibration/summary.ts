@@ -20,6 +20,8 @@ export interface Summary {
   factors: string[];
   distance: number;
   stamina: number;
+  /** Balls won within 35 m of the opponents' goal. */
+  highWins: [number, number];
 }
 
 export function summary(r: MatchResult): Summary {
@@ -63,5 +65,15 @@ export function summary(r: MatchResult): Summary {
     factors: r.explanation.factors.map((f) => f.message.key),
     distance: r.players.reduce((a, p) => a + p.distanceM, 0) / r.players.length,
     stamina: r.players.reduce((a, p) => a + p.stamina, 0) / r.players.length,
+    highWins: pair(
+      (t) =>
+        r.events.filter(
+          (e) =>
+            e.kind === 'phaseChange' &&
+            e.team === t &&
+            e.at &&
+            (t === 0 ? e.at[0] : 1050 - e.at[0]) > 700,
+        ).length,
+    ),
   };
 }

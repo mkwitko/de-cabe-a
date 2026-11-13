@@ -49,9 +49,14 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * A shot ends the move: players keep the ball unless the chance beats what the
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
-const SHOT_RESERVE = -0.04;
+const SHOT_RESERVE = -0.034;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.7;
+/**
+ * A ball over the top lands with error, bounces and meets a keeper coming out:
+ * measured success near 25% to 35% (calibration run, 2026-11-13). PARAMETER.
+ */
+const OVER_RISK = 0.45;
 const oppValue = (t: Vec2) => valueAt(LENGTH - t.x, WIDTH - t.y);
 
 /** Pressure on the shooter for xG: nearest opponent between him and goal. */
@@ -198,7 +203,7 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
       const od = Math.sqrt((space.x - c.pos.x) ** 2 + (space.y - c.pos.y) ** 2);
       // Both sides see the ball go: the runner gets no head start over the defenders (reacting: false).
       const op =
-        passSafety(s, c.team, c.pos, space, 17 + 0.1 * od, true, m, false) * LOFT_RISK * 0.8;
+        passSafety(s, c.team, c.pos, space, 17 + 0.1 * od, true, m, false) * LOFT_RISK * OVER_RISK;
       const st = toTeam(c, space);
       push({
         kind: 'over',
@@ -212,7 +217,13 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     }
 
     // Through ball into the space ahead of a forward-facing runner (02 §5.6: needs vision).
-    if (allowed === 'open' && lineOf(m.role) !== 'def' && mt.x > me.x + 5 && mt.x < 90) {
+    if (
+      allowed === 'open' &&
+      lineOf(m.role) !== 'def' &&
+      me.x > 35 &&
+      mt.x > me.x + 5 &&
+      mt.x < 90
+    ) {
       if (next(r) > 0.3 + 0.7 * weighted(c.attrs, { vision: 0.6, flair: 0.4 })) continue;
       // Space behind the line, short of the keeper's area (he would claim it).
       const ahead = flip(c.team, { x: Math.min(mt.x + 9, 93), y: mt.y + (CENTER.y - mt.y) * 0.15 });
@@ -344,6 +355,23 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     // Upfield and wide: safety first, often into touch (PARAMETER).
     const t = flip(c.team, { x: 60, y: me.y < CENTER.y ? 4 : WIDTH - 4 });
     push({ kind: 'clear', target: t, receiver: null, p: 0.45, win: 0.012, lose: 0.01 });
+  }
+  // Pressed in his own half, he can go long beyond the press to the forwards' zone:
+  // the ball is contested up there, far from his goal (research 13 §2: teams go long against a press).
+  if (me.x < 50 && pressure > 0.3 && allowed === 'open') {
+    const t = flip(c.team, {
+      x: Math.min(me.x + 45, 80),
+      y: clamp(me.y + (CENTER.y - me.y) * 0.5, 8, WIDTH - 8),
+    });
+    const tt = toTeam(c, t);
+    push({
+      kind: 'clear',
+      target: t,
+      receiver: null,
+      p: 0.45,
+      win: 0.5 * valueAt(tt.x, tt.y),
+      lose: oppValue(tt),
+    });
   }
   return pick(out, c, pressure, r);
 }

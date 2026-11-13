@@ -101,7 +101,7 @@ function beside(s: MatchState, c: MatchPlayer, ux: number, uy: number): number[]
       if (d < 1e-6 || (dx * ux + dy * uy) / d < 0.7) return true;
       // In front of the kick: a leg gets to it only part of the time (PARAMETER, anticipation helps).
       // A press-resistant passer disguises it; a drilled presser reads it (research 13 §2).
-      const block = (0.3 + 0.25 * (o.attrs.anticipation / 99)) * (1.45 - pressResistance(c.attrs));
+      const block = (0.2 + 0.2 * (o.attrs.anticipation / 99)) * (1.45 - pressResistance(c.attrs));
       return next(s.rngs.execution) > block;
     })
     .map((o) => o.index);

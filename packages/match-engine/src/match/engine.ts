@@ -334,7 +334,8 @@ function tackles(s: MatchState) {
     const reaction = justLost
       ? 0.8 + 0.6 * norm(d.attrs.lossReaction)
       : 0.7 + 0.6 * norm(d.attrs.pressing);
-    const sync = (0.5 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction;
+    // Centred near 1 for an average side (press sync about 0.65).
+    const sync = (0.35 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction;
     // In his own box a defender stays on his feet: a foul there is a penalty (PARAMETERS).
     const box = inOwnBox(d.team, c.pos);
     if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.35 : 1))
@@ -430,7 +431,7 @@ function reachers(s: MatchState): Reacher[] {
     else if (f.kind === 'shot')
       reach = 0.35 + 0.2 * norm(p.attrs.bravery); // a block needs the body in the line
     else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
-      reach = 0.8 + 0.4 * norm(p.attrs.anticipation);
+      reach = 0.6 + 0.35 * norm(p.attrs.anticipation);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };
   });
 }
