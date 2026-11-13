@@ -38,28 +38,36 @@ export function substitutions(s: MatchState, interval: boolean): void {
           f: fit(b, out) + (b.positions.GK && lineOf(out.role) !== 'gk' ? -10 : 0),
         }))
         .sort((a, b) => b.f - a.f || a.i - b.i)[0]!.i;
-      const inP = t.bench.splice(pickIdx, 1)[0]!;
-      emit(s, 'substitution', team, out.index, null, out.pos, { minute: Math.round(minute) });
-      const fresh: MatchPlayer = {
-        ...out,
-        id: inP.id,
-        input: inP,
-        attrs: inP.attributes,
-        pace: inP.attributes.pace,
-        acceleration: inP.attributes.acceleration,
-        stamina: inP.condition,
-        cards: 0,
-        ticksOn: 0,
-        distance: 0,
-        score: 0,
-        injured: false,
-      };
-      s.offPitch.push({ ...out, active: false });
-      s.players[out.index] = fresh;
-      s.events.at(-1)!.otherId = inP.id;
-      t.subsLeft--;
-      s.stoppage += 20000;
+      substitute(s, team, out.index, pickIdx);
     }
     if (!interval) t.windowsLeft = Math.max(0, t.windowsLeft - 1);
   }
+}
+
+/** Player `outIndex` leaves; bench player `benchIdx` takes his slot, role and spot (02 §6.5). */
+export function substitute(s: MatchState, team: 0 | 1, outIndex: number, benchIdx: number): void {
+  const t = s.teams[team];
+  const out = s.players[outIndex]!;
+  if (t.subsLeft === 0 || !out.active || !t.bench[benchIdx]) return;
+  const inP = t.bench.splice(benchIdx, 1)[0]!;
+  emit(s, 'substitution', team, out.index, null, out.pos, { minute: Math.round(s.clockMs / 60000) });
+  const fresh: MatchPlayer = {
+    ...out,
+    id: inP.id,
+    input: inP,
+    attrs: inP.attributes,
+    pace: inP.attributes.pace,
+    acceleration: inP.attributes.acceleration,
+    stamina: inP.condition,
+    cards: 0,
+    ticksOn: 0,
+    distance: 0,
+    score: 0,
+    injured: false,
+  };
+  s.offPitch.push({ ...out, active: false });
+  s.players[out.index] = fresh;
+  s.events.at(-1)!.otherId = inP.id;
+  t.subsLeft--;
+  s.stoppage += 20000;
 }

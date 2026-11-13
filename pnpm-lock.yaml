@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@decabeca/club-domain':
+        specifier: workspace:*
+        version: link:../../packages/club-domain
       '@decabeca/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

@@ -20,7 +20,7 @@ import { PENALTY_XG } from '../rules/xg';
 import { drain, recover } from '../rules/stamina';
 import { foulChance, cardFor } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
-import { substitutions } from './coach';
+import { substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
@@ -444,7 +444,9 @@ function outOfPlay(s: MatchState, side: 'goal0' | 'goal1' | 'byline0' | 'byline1
     s.teams[team].score++;
     s.teams[team].stats.goals++;
     const own = scorer.team !== team;
-    const assist = own ? null : lastPasser(s, scorer);
+    const found = own ? null : lastPasser(s, scorer);
+    // The passer may have been substituted off since: no assist then.
+    const assist = found !== null && found >= 0 && found !== scorer.index ? found : null;
     emit(s, 'goal', team, scorer.index, assist, at, { own: own ? 1 : 0, xg: f.shot?.xg ?? 0 });
     if (!own) scorer.score += 1.2;
     if (assist !== null) s.players[assist]!.score += 0.6;
@@ -689,8 +691,22 @@ function aerial(s: MatchState, first: MatchPlayer) {
 
 // ── The step ────────────────────────────────────────────────────────────────
 
+/** Live commands due by now (02 §9): the server stamps them with the match clock. */
+function applyCommands(s: MatchState) {
+  while (s.commands.length > 0 && s.commands[0]!.atMs <= s.clockMs) {
+    const { team, command: c } = s.commands.shift()!;
+    if (c.kind === 'team') s.plans[team].team = { ...s.plans[team].team, ...c.set } as typeof s.plans[0]['team'];
+    else if (c.kind === 'sub') {
+      const i = s.teams[team].bench.findIndex((b) => b.id === c.inPlayerId);
+      if (i >= 0) substitute(s, team, team * 11 + c.out, i);
+    }
+    emit(s, 'command', team, null, null, null, { kind: ['team', 'player', 'mark', 'swap', 'sub', 'shout'].indexOf(c.kind) });
+  }
+}
+
 export function step(s: MatchState, opts: StepOptions = {}): void {
   if (s.finished) return;
+  applyCommands(s);
   let restartAllowed: Allowed | null = null;
   if (s.restart) restartAllowed = takeRestart(s);
   const before = s.ball.possession;
