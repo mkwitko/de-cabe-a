@@ -28,7 +28,12 @@ export interface MatchChunk {
   result: MatchResult | null;
 }
 
-export function advanceMatch(input: MatchInput, commands: TimedCommand[], from: number, count: number): MatchChunk {
+export function advanceMatch(
+  input: MatchInput,
+  commands: TimedCommand[],
+  from: number,
+  count: number,
+): MatchChunk {
   const s = createMatch(input, commands);
   const tick = () => {
     step(s);

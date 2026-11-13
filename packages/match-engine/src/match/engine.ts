@@ -695,12 +695,15 @@ function aerial(s: MatchState, first: MatchPlayer) {
 function applyCommands(s: MatchState) {
   while (s.commands.length > 0 && s.commands[0]!.atMs <= s.clockMs) {
     const { team, command: c } = s.commands.shift()!;
-    if (c.kind === 'team') s.plans[team].team = { ...s.plans[team].team, ...c.set } as typeof s.plans[0]['team'];
+    if (c.kind === 'team')
+      s.plans[team].team = { ...s.plans[team].team, ...c.set } as (typeof s.plans)[0]['team'];
     else if (c.kind === 'sub') {
       const i = s.teams[team].bench.findIndex((b) => b.id === c.inPlayerId);
       if (i >= 0) substitute(s, team, team * 11 + c.out, i);
     }
-    emit(s, 'command', team, null, null, null, { kind: ['team', 'player', 'mark', 'swap', 'sub', 'shout'].indexOf(c.kind) });
+    emit(s, 'command', team, null, null, null, {
+      kind: ['team', 'player', 'mark', 'swap', 'sub', 'shout'].indexOf(c.kind),
+    });
   }
 }
 

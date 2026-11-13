@@ -50,7 +50,9 @@ export function substitute(s: MatchState, team: 0 | 1, outIndex: number, benchId
   const out = s.players[outIndex]!;
   if (t.subsLeft === 0 || !out.active || !t.bench[benchIdx]) return;
   const inP = t.bench.splice(benchIdx, 1)[0]!;
-  emit(s, 'substitution', team, out.index, null, out.pos, { minute: Math.round(s.clockMs / 60000) });
+  emit(s, 'substitution', team, out.index, null, out.pos, {
+    minute: Math.round(s.clockMs / 60000),
+  });
   const fresh: MatchPlayer = {
     ...out,
     id: inP.id,
