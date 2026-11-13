@@ -206,6 +206,8 @@ O princípio: **o erro entra na execução, não num sorteio de resultado.** O p
 
 Forma logística padrão: `P = 1 / (1 + e^(−(Δ − d)/k))`, com `Δ` = diferença ponderada de atributos, `d` = dificuldade do contexto, `k` = dispersão (PARÂMETRO por disputa).
 
+Implementação (MC-256): núcleo `packages/match-engine/src/rules/`. `math.ts` calcula exponencial, logística, arco tangente e desvio normal só com `+ − × ÷` (redução de intervalo e série; normal como soma de seis uniformes), o que cumpre o objetivo do ADR-013 item 6 sem tabela; `duel.ts` tem a escala de atributo (0 a 1), a média ponderada e `contest(Δ, d, k)`. `rules.test.ts` proíbe o núcleo de importar fora de si (exceto contrato e gerador), proíbe outro arquivo da engine de redefinir um nome exportado pelo núcleo e proíbe função transcendental de `Math` em arquivo de simulação.
+
 ### 6.1 Bola
 Estados: `presa` (acompanha o dono), `rolando` (atrito linear: perde velocidade a taxa constante por segundo), `no ar` (parábola com altura; só pode ser disputada abaixo de 2,6 m; quica com perda), `parada`. Passe rasteiro, passe alto, cruzamento e chute definem velocidade e ângulo iniciais com o erro de execução. A bola é integrada com o mesmo `DT`, mas alcance e interceptação usam tempo de chegada calculado em forma fechada sobre o segmento, para não depender do tamanho do passo. Trave, saída de campo e linha do gol são testes geométricos sobre o segmento do passo.
 
