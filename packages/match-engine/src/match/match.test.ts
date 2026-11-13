@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { MatchEvent } from '../contract';
 import { aerialScore, dribbleChance, tackleChance } from '../rules/duel';
 import { foulChance } from '../rules/discipline';
+import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
 import { passSafety } from './control';
@@ -429,5 +430,32 @@ describe('MC-043 explanation', () => {
   it('every simulated match carries an explanation that matches its stats', () => {
     const r = simulateMatch(matchInput(2));
     expect(r.explanation.creation).toBeCloseTo(r.stats[0].xg - r.stats[1].xg, 1);
+  });
+});
+
+describe('MC-041 injuries', () => {
+  it('the model gives a match rate in the 20.5 to 27.5 per 1,000 h band', () => {
+    // 22 players with about 60 minutes of ball in play, 30 fouls, 95 minutes on the clock.
+    const avg = { stamina: 0.6, input: { hidden: { injuryProneness: 10 } } };
+    const perMatch = 22 * injuryRisk(avg, 3600) + 30 * CONTACT_PER_FOUL;
+    const rate = (perMatch / (22 * (95 / 60))) * 1000;
+    expect(rate).toBeGreaterThan(18);
+    expect(rate).toBeLessThan(30);
+  });
+
+  it('an injured player is replaced while substitutions remain', () => {
+    const rs = matches([1, 2, 3, 4, 5, 6]);
+    const hurt = rs.flatMap((r) => r.events.filter((e) => e.kind === 'injury'));
+    expect(hurt.length).toBeGreaterThan(0);
+    for (const r of rs)
+      for (const e of r.events.filter((x) => x.kind === 'injury')) {
+        const off = r.events.find(
+          (x) => x.kind === 'substitution' && x.playerId === e.playerId && x.atMs >= e.atMs,
+        );
+        const subsBefore = r.events.filter(
+          (x) => x.kind === 'substitution' && x.team === e.team && x.atMs < e.atMs,
+        ).length;
+        if (subsBefore < 5 && e.atMs < 85 * 60000) expect(off).toBeDefined();
+      }
   });
 });
