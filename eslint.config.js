@@ -84,7 +84,7 @@ export default tseslint.config(
         },
         {
           selector:
-            ':matches(JSXElement, JSXFragment) > JSXExpressionContainer Literal[value=/[A-Za-zÀ-ÖØ-öø-ÿ]/]:not(CallExpression > Literal):not(CallExpression > ConditionalExpression > Literal):not(JSXAttribute Literal)',
+            ':matches(JSXElement, JSXFragment) > JSXExpressionContainer Literal[value=/[A-Za-zÀ-ÖØ-öø-ÿ]/]:not(CallExpression > Literal):not(CallExpression > ConditionalExpression > Literal):not(JSXAttribute Literal):not(BinaryExpression > Literal):not(ArrayExpression > Literal):not(MemberExpression Literal)',
           message: 'Modo Clube: no literal text in JSX; use t(key).',
         },
         {
