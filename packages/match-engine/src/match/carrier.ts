@@ -97,7 +97,7 @@ export function settleTime(s: MatchState, c: MatchPlayer): number {
   const pressed = 1 - 0.65 * pressureOn(s, c);
   // Receiving half-turned (body orientation) saves the extra touch (ADR-019).
   const opened = 1.1 - 0.2 * norm(c.attrs.bodyOrientation);
-  return base * pressed * opened * (inCounter(s, c.team) ? 0.4 : 1);
+  return base * pressed * opened * (inCounter(s, c.team) ? 0.7 : 1);
 }
 
 /** Seconds after winning the ball during which a team set to counter attacks at once. PARAMETER. */
@@ -122,13 +122,21 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
   const face = sp > 0.5 ? { x: c.vel.x / sp, y: c.vel.y / sp } : { x: c.team === 0 ? 1 : -1, y: 0 };
   // Risk shifts the weight of losing the ball (02 §5.4); 1 careful, 5 bold.
   // Near our own goal nobody gambles (PARAMETER: up to 2.5 times the weight in our box).
-  const lossW = (1.4 - 0.2 * (plan.risk - 1)) * (1 + 1.5 * clamp((30 - me.x) / 20, 0, 1));
+  // weighted by where the ball would be lost, not where the passer stands: a clearance from
+  // the box loses it in midfield (2026-11-13 calibration finding).
+  const lossW = (lossX: number) =>
+    (1.4 - 0.2 * (plan.risk - 1)) * (1 + 1.5 * clamp((30 - lossX) / 20, 0, 1));
   // Misjudging each option (02 §5.4). Kept small: with many options the best-looking one is
   // the most overrated (winner's curse), so a large spread makes everyone gamble. PARAMETER.
   const noise = 0.06 * (1.15 - decisions);
   const out: Action[] = [];
   const push = (
-    a: Omit<Action, 'est' | 'u' | 'ue'> & { win: number; lose: number; bias?: number },
+    a: Omit<Action, 'est' | 'u' | 'ue'> & {
+      win: number;
+      lose: number;
+      bias?: number;
+      lossX?: number;
+    },
   ) => {
     const est = clamp(a.p + gaussian(() => next(r)) * noise, 0.01, 0.99);
     const bias = a.bias ?? 0;
@@ -139,8 +147,8 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       p: a.p,
       est,
       chance: a.chance,
-      u: a.p * a.win - (1 - a.p) * a.lose * lossW + bias,
-      ue: est * a.win - (1 - est) * a.lose * lossW + bias,
+      u: a.p * a.win - (1 - a.p) * a.lose * lossW(a.lossX ?? me.x) + bias,
+      ue: est * a.win - (1 - est) * a.lose * lossW(a.lossX ?? me.x) + bias,
     });
   };
 
@@ -187,6 +195,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       p,
       win,
       lose: oppValue({ x: (me.x + mt.x) / 2, y: (me.y + mt.y) / 2 }),
+      lossX: lofted ? mt.x : (me.x + mt.x) / 2,
       bias,
     });
 
@@ -216,6 +225,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
         // Received on the run with defenders turning back: worth less than a settled ball there.
         win: 0.5 * valueAt(st.x, st.y),
         lose: oppValue({ x: (me.x + st.x) / 2, y: st.y }),
+        lossX: st.x,
       });
     }
 
@@ -241,6 +251,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
         p: tp * 0.9,
         win: valueAt(at.x, at.y),
         lose: oppValue(at),
+        lossX: (me.x + at.x) / 2,
         bias: 0.003 * (plan.finalThird.throughBalls - 3) + (counter ? 0.015 : 0),
       });
     }
@@ -357,7 +368,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
   if (me.x < 30 && pressure > 0.1) {
     // Upfield and wide: safety first, often into touch (PARAMETER).
     const t = flip(c.team, { x: 60, y: me.y < CENTER.y ? 4 : WIDTH - 4 });
-    push({ kind: 'clear', target: t, receiver: null, p: 0.45, win: 0.012, lose: 0.01 });
+    push({ kind: 'clear', target: t, receiver: null, p: 0.45, win: 0.012, lose: 0.01, lossX: 60 });
   }
   // Pressed in his own half, he can go long beyond the press to the forwards' zone:
   // the ball is contested up there, far from his goal (research 13 §2: teams go long against a press).
@@ -374,6 +385,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       p: 0.45,
       win: 0.5 * valueAt(tt.x, tt.y),
       lose: oppValue(tt),
+      lossX: tt.x,
     });
   }
   return out;

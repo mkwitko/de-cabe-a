@@ -46,7 +46,9 @@ export const halfTurnTime = (agility: number) => 0.9 - (0.5 * agility) / 99;
  * Fatigue below 0.3 stamina lowers top speed and acceleration (02 §4).
  * PARAMETER: at stamina 0 both are 80% of fresh.
  */
-export const fatigue = (stamina: number) => (stamina >= 0.3 ? 1 : 0.8 + (0.2 * stamina) / 0.3);
+export const fatigue = (stamina: number) =>
+  // Progressive (research 13 §1: sprint distance falls about 43% in the last 15 minutes): from 0.75 down.
+  stamina >= 0.75 ? 1 : 0.8 + (0.2 * stamina) / 0.75;
 
 /**
  * Acute fatigue (research 14 §2): after a burst of intense running, top speed

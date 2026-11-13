@@ -294,7 +294,9 @@ export function tasksFor(
     )
     .sort((a, b) => a.d - b.d || a.i - b.i)
     .slice(0, marks);
-  for (const c of danger) add('mark', `mark${c.i}`, aboveLine(toGoal(c.o, 2)));
+  // Tight near the ball, looser further away (a marker 2 m off every option kills every pass). PARAMETER.
+  for (const c of danger)
+    add('mark', `mark${c.i}`, aboveLine(toGoal(c.o, Math.min(6, 2 + 0.12 * dist(c.o, focal)))));
   return tasks;
 }
 
