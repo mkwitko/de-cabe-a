@@ -46,12 +46,7 @@ export const halfTurnTime = (agility: number) => 0.9 - (0.5 * agility) / 99;
  */
 const fatigue = (stamina: number) => (stamina >= 0.3 ? 1 : 0.8 + (0.2 * stamina) / 0.3);
 
-export function kinOf(
-  a: PhysicalAttrs,
-  pos: Vec2,
-  vel: Vec2,
-  stamina = 1,
-): Kin {
+export function kinOf(a: PhysicalAttrs, pos: Vec2, vel: Vec2, stamina = 1): Kin {
   const f = fatigue(stamina);
   return {
     pos,

@@ -21,7 +21,7 @@ DECISÃO (revisão 4): a engine tem **três relógios**, e não um passo único.
 | Percepção | a cada 0,5 s por jogador, escalonado; atraso de reação por atributo entre o fato e o jogador "saber" | o que cada jogador acredita sobre bola, companheiros e adversários (§5.6) |
 | Coordenação | a cada 1 s e em todo evento de posse | atribuição de tarefas coletivas do time (§5.11) |
 
-Os períodos são PARÂMETROS medidos na bancada (`TEST_STRATEGY.md` §4.2) contra `DT = 0,1 s`: aceita-se o passo maior se as distribuições de eventos não diferem pelo protocolo de equivalência (`TEST_STRATEGY.md` §2.1). Determinismo: a ordem de resolução dentro de um passo é fixa (por instante, depois por índice do jogador).
+Implementação: `packages/match-engine/src/ball.ts` (`firstContact`, `advanceBall`, `due`). Dentro do passo, a velocidade da bola relativa ao jogador é a média do passo; com desaceleração de rolagem de 3 m/s² (PARÂMETRO) o erro de posição fica abaixo de 0,02 m. Os períodos são PARÂMETROS medidos na bancada (`TEST_STRATEGY.md` §4.2) contra `DT = 0,1 s`: aceita-se o passo maior se as distribuições de eventos não diferem pelo protocolo de equivalência (`TEST_STRATEGY.md` §2.1). Determinismo: a ordem de resolução dentro de um passo é fixa (por instante, depois por índice do jogador).
 
 - Bola parada não é simulada passo a passo: o relógio salta um atraso sorteado por tipo de reinício e os jogadores vão às posições da rotina. Meta de bola rolando: 52 a 58 minutos por partida (PARÂMETRO).
 - Acréscimos: função do tempo parado (substituições, lesões, gols, cartões).

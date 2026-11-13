@@ -3,7 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { arrivalTime, kinOf, reach, travelTime, type PhysicalAttrs } from './kinematics';
 
-const mid: PhysicalAttrs = { pace: 60, acceleration: 60, agility: 60, anticipation: 60, concentration: 60 };
+const mid: PhysicalAttrs = {
+  pace: 60,
+  acceleration: 60,
+  agility: 60,
+  anticipation: 60,
+  concentration: 60,
+};
 const at = (x: number, y: number) => ({ x, y });
 
 /** Fujimura and Sugihara, as reported in research 11 §3: alpha 1.3, Vmax 7.8 m/s (test only: uses exp). */
