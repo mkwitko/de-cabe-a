@@ -305,11 +305,7 @@ export function CareerPathPage({ level, timed = false }: { level: number; timed?
       {/* A thin strip at the top, the far end of the screen from the guess dock; only on a
           screen tall enough to spare it, and never while the tutorial points at things. */}
       {!done && !touring && (
-        <AdSlot
-          slot={AD_SLOTS.level}
-          size="strip"
-          className="shrink-0 [@media(max-height:719px)]:hidden"
-        />
+        <AdSlot slot={AD_SLOTS.level} className="shrink-0 [@media(max-height:719px)]:hidden" />
       )}
       {!done && (
         <div className="mx-auto flex max-h-20 w-full max-w-2xl shrink-0 flex-wrap gap-2 overflow-y-auto lg:hidden">
