@@ -16,7 +16,12 @@ const files = (dir: string): string[] =>
     return statSync(p).isDirectory() ? files(p) : p.endsWith('.ts') ? [p] : [];
   });
 const simulation = files(SRC).filter(
-  (f) => !f.endsWith('.test.ts') && !f.endsWith('bench.ts') && !f.includes('scenarios'),
+  // Analysis scripts (bench, calibration) are not the simulation path.
+  (f) =>
+    !f.endsWith('.test.ts') &&
+    !f.endsWith('bench.ts') &&
+    !f.includes('scenarios') &&
+    !f.includes('/calibration/'),
 );
 const rules = simulation.filter((f) => relative(SRC, f).startsWith('rules'));
 
