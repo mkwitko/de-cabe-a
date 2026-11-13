@@ -7,7 +7,7 @@ import { matchInput, teamInput } from '../match/fixture';
 import { defaultPlan } from '../presets';
 import { runMany } from './runner';
 
-const n = Number(process.argv[2] ?? 60);
+const n = Number(process.argv[2] ?? 300);
 const style = (f: string, team: Partial<TacticalPlan['team']>) => () => {
   const p = defaultPlan(f);
   p.team = { ...p.team, ...team };
@@ -32,6 +32,20 @@ async function main() {
       return i % 2 === 0 ? matchInput(9000 + i, A, B) : matchInput(9000 + i, B, A);
     });
     const rs = await runMany(inputs);
+    let xa = 0,
+      xb = 0,
+      sa = 0,
+      sb = 0;
+    rs.forEach((s, i) => {
+      const ai = i % 2 === 0 ? 0 : 1;
+      xa += s.xg[ai]!;
+      xb += s.xg[1 - ai]!;
+      sa += s.shots[ai]!;
+      sb += s.shots[1 - ai]!;
+    });
+    console.log(
+      `  ${a}: xG ${(xa / n).toFixed(2)} from ${(sa / n).toFixed(1)} shots | ${b}: xG ${(xb / n).toFixed(2)} from ${(sb / n).toFixed(1)} shots`,
+    );
     let w = 0,
       d = 0,
       ga = 0,
@@ -48,8 +62,16 @@ async function main() {
       ha += s.highWins[ai]!;
       hb += s.highWins[bi]!;
     });
+    // 95% margins: a share ± 1.96·sqrt(p(1−p)/n); a mean ± 1.96·sd/sqrt(n).
+    const pm = (k: number) => {
+      const p = k / n;
+      return `${(p * 100).toFixed(0)}% ±${(196 * Math.sqrt((p * (1 - p)) / n)).toFixed(0)}`;
+    };
+    const goalsA = rs.map((s, i) => s.score[i % 2 === 0 ? 0 : 1]!);
+    const mean = ga / n;
+    const sd = Math.sqrt(goalsA.reduce((acc, g) => acc + (g - mean) ** 2, 0) / (n - 1));
     console.log(
-      `${a} vs ${b}: ${a} wins ${((w / n) * 100).toFixed(0)}% draws ${((d / n) * 100).toFixed(0)}% | goals ${(ga / n).toFixed(2)}-${(gb / n).toFixed(2)} | high wins ${(ha / n).toFixed(1)}-${(hb / n).toFixed(1)}`,
+      `${a} vs ${b} (${n}): ${a} wins ${pm(w)}, draws ${pm(d)} | goals ${mean.toFixed(2)} ±${((1.96 * sd) / Math.sqrt(n)).toFixed(2)} - ${(gb / n).toFixed(2)} | high wins ${(ha / n).toFixed(1)}-${(hb / n).toFixed(1)}`,
     );
   }
 }

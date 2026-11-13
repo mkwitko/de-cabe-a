@@ -49,7 +49,7 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * A shot ends the move: players keep the ball unless the chance beats what the
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
-const SHOT_RESERVE = -0.034;
+const SHOT_RESERVE = 0.01;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.7;
 /**
