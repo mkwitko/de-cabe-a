@@ -6,7 +6,7 @@
  * best true utility are kept so the log can tell a bad choice from a bad kick.
  */
 import { exp, gaussian } from '../rules/math';
-import { contest, norm, weighted } from '../rules/duel';
+import { dribbleChance, norm } from '../rules/duel';
 import { valueAt } from '../rules/value';
 import { goalAngle, xg as chanceOf } from '../rules/xg';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
@@ -16,7 +16,8 @@ import { groundSpeed, kin, opponents, passSafety, pressureOn, mates } from './co
 import { arrivalTime } from '../kinematics';
 import type { MatchPlayer, MatchState } from './state';
 
-export type ActionKind = 'pass' | 'through' | 'long' | 'cross' | 'shot' | 'carry' | 'dribble' | 'hold' | 'clear';
+export type ActionKind =
+  'pass' | 'through' | 'long' | 'cross' | 'shot' | 'carry' | 'dribble' | 'hold' | 'clear';
 
 export interface Action {
   kind: ActionKind;
@@ -40,14 +41,15 @@ export interface Choice {
 }
 
 /** What the restart allows: a throw-in cannot be a shot; a corner is a cross. */
-export type Allowed = 'open' | 'throwIn' | 'corner' | 'goalKick' | 'freeKick' | 'kickOff' | 'keeper';
+export type Allowed =
+  'open' | 'throwIn' | 'corner' | 'goalKick' | 'freeKick' | 'kickOff' | 'keeper';
 
 const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
 /**
  * A shot ends the move: players keep the ball unless the chance beats what the
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
-const SHOT_RESERVE = -0.04;
+const SHOT_RESERVE = -0.036;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.7;
 const oppValue = (t: Vec2) => valueAt(LENGTH - t.x, WIDTH - t.y);
@@ -85,7 +87,7 @@ export function chanceFrom(s: MatchState, c: MatchPlayer, header = false, afterC
 /** Seconds a receiver takes to settle the ball before the next decision (tempo, first touch). */
 export function settleTime(s: MatchState, c: MatchPlayer): number {
   const tempo = s.plans[c.team].team.tempo;
-  return 1.4 + 0.3 * (5 - tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
+  return 1.7 + 0.3 * (5 - tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
 }
 
 export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = 'open'): Choice {
@@ -103,7 +105,9 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
   const lossW = (1.4 - 0.2 * (plan.risk - 1)) * (1 + 1.5 * clamp((30 - me.x) / 20, 0, 1));
   const noise = 0.14 * (1.15 - decisions);
   const out: Action[] = [];
-  const push = (a: Omit<Action, 'est' | 'u' | 'ue'> & { win: number; lose: number; bias?: number }) => {
+  const push = (
+    a: Omit<Action, 'est' | 'u' | 'ue'> & { win: number; lose: number; bias?: number },
+  ) => {
     const est = clamp(a.p + gaussian(() => next(r)) * noise, 0.01, 0.99);
     const bias = a.bias ?? 0;
     out.push({
@@ -134,7 +138,7 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     const long = d > 32;
     // Nobody lofts the ball back towards his own goal: back passes to the box are short and along the ground.
     if (mt.x < 20 && mt.x < me.x && (long || d > 25)) continue;
-    const lofted = long || allowed === 'throwIn' || allowed === 'goalKick' && d > 30;
+    const lofted = long || allowed === 'throwIn' || (allowed === 'goalKick' && d > 30);
     const speed = lofted ? 16 + 0.1 * d : groundSpeed(d);
     const p = passSafety(s, c.team, c.pos, m.pos, speed, lofted, m) * (lofted ? LOFT_RISK : 1);
     const forward = mt.x - me.x;
@@ -177,7 +181,11 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
   }
 
   // ── Cross into the box from a wide spot in the final third ──
-  if ((allowed === 'open' || allowed === 'corner' || allowed === 'freeKick') && me.x > 75 && (me.y < 20 || me.y > WIDTH - 20)) {
+  if (
+    (allowed === 'open' || allowed === 'corner' || allowed === 'freeKick') &&
+    me.x > 75 &&
+    (me.y < 20 || me.y > WIDTH - 20)
+  ) {
     const inBox = mates(s, c.team).filter((m) => {
       const t = toTeam(c, m.pos);
       return t.x > 88.5 && t.y > 14 && t.y < WIDTH - 14 && m.index !== c.index;
@@ -188,7 +196,11 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
       return t.x > 88.5 && t.y > 14 && t.y < WIDTH - 14;
     });
     // A cross works when attackers in the box outnumber defenders there.
-    const p = clamp(0.18 + 0.08 * (inBox.length - opp.length) + 0.25 * norm(c.attrs.crossing), 0.05, 0.6);
+    const p = clamp(
+      0.18 + 0.08 * (inBox.length - opp.length) + 0.25 * norm(c.attrs.crossing),
+      0.05,
+      0.6,
+    );
     push({
       kind: 'cross',
       target: spot,
@@ -210,7 +222,16 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     let bias = SHOT_RESERVE;
     if (far) bias += 0.006 * (plan.finalThird.shootFromDistance - 3);
     if (c.input.traits.includes('shootsFromDistance') && far) bias += 0.008;
-    push({ kind: 'shot', target: flip(c.team, { x: LENGTH, y: CENTER.y }), receiver: null, p: chance, win: 1, lose: 0.012, chance, bias });
+    push({
+      kind: 'shot',
+      target: flip(c.team, { x: LENGTH, y: CENTER.y }),
+      receiver: null,
+      p: chance,
+      win: 1,
+      lose: 0.012,
+      chance,
+      bias,
+    });
   }
 
   if (allowed === 'open') {
@@ -224,8 +245,10 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
       const wt = flip(c.team, t);
       const mine = arrivalTime(kin(c), wt, true) * 1.15;
       let theirs = Infinity;
-      for (const o of opponents(s, c.team)) theirs = Math.min(theirs, arrivalTime(kin(o), wt, false));
-      const keep = clamp(0.5 + (theirs - mine) * 0.6, 0.05, 0.97) * (0.85 + 0.15 * norm(c.attrs.dribbling));
+      for (const o of opponents(s, c.team))
+        theirs = Math.min(theirs, arrivalTime(kin(o), wt, false));
+      const keep =
+        clamp(0.5 + (theirs - mine) * 0.6, 0.05, 0.97) * (0.85 + 0.15 * norm(c.attrs.dribbling));
       push({
         kind: 'carry',
         target: wt,
@@ -242,7 +265,7 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
       .filter(({ t }) => t.x > me.x - 0.5 && Math.abs(t.y - me.y) < 3 && t.x - me.x < 4)
       .sort((a, b) => a.t.x - b.t.x)[0];
     if (front) {
-      const p = dribbleChance(c, front.o);
+      const p = dribbleChance(c.attrs, front.o.attrs);
       const past = { x: clamp(me.x + 8, 1, LENGTH - 1), y: me.y };
       push({
         kind: 'dribble',
@@ -254,22 +277,23 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
         bias: c.input.traits.includes('triesDribbles') ? 0.006 : 0,
       });
     }
-    push({ kind: 'hold', target: { ...c.pos }, receiver: null, p: 1 - 0.5 * pressure, win: valueAt(me.x, me.y) * 0.97, lose: oppValue(me) });
+    push({
+      kind: 'hold',
+      target: { ...c.pos },
+      receiver: null,
+      p: 1 - 0.5 * pressure,
+      win: valueAt(me.x, me.y) * 0.97,
+      lose: oppValue(me),
+    });
   }
 
   // ── Clear the ball away under pressure near our goal ──
   if (me.x < 30 && pressure > 0.1) {
-    const t = flip(c.team, { x: 62, y: me.y < CENTER.y ? 12 : WIDTH - 12 });
+    // Upfield and wide: safety first, often into touch (PARAMETER).
+    const t = flip(c.team, { x: 60, y: me.y < CENTER.y ? 4 : WIDTH - 4 });
     push({ kind: 'clear', target: t, receiver: null, p: 0.45, win: 0.012, lose: 0.01 });
   }
   return pick(out, c, pressure, r);
-}
-
-/** Chance that `c` beats `d` in a dribble (02 §6, logistic of the attribute difference). PARAMETERS. */
-export function dribbleChance(c: MatchPlayer, d: MatchPlayer): number {
-  const att = weighted(c.attrs, { dribbling: 0.45, agility: 0.2, balance: 0.15, acceleration: 0.2 });
-  const def = weighted(d.attrs, { tackling: 0.4, anticipation: 0.25, positioning: 0.2, pace: 0.15 });
-  return contest(att - def, 0.12, 0.12);
 }
 
 function pick(out: Action[], c: MatchPlayer, pressure: number, r: Rng): Choice {

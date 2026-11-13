@@ -11,7 +11,8 @@ import type { MatchPlayer, MatchState } from './state';
 
 const fit = (b: PlayerInput, out: MatchPlayer) => {
   let s = 0;
-  for (const [pos, lvl] of Object.entries(out.input.positions)) s += Math.min(lvl, b.positions[pos as keyof PlayerInput['positions']] ?? 0);
+  for (const [pos, lvl] of Object.entries(out.input.positions))
+    s += Math.min(lvl, b.positions[pos as keyof PlayerInput['positions']] ?? 0);
   return s;
 };
 
@@ -25,13 +26,16 @@ export function substitutions(s: MatchState, interval: boolean): void {
     if (t.windowsLeft === 0 && !interval && injured.length === 0) continue;
     const tired = s.players
       .filter((p) => p.team === team && p.active && lineOf(p.role) !== 'gk' && !p.injured)
-      .filter((p) => p.stamina < 0.42 - 0.04 * Math.max(0, 75 - minute) / 15)
+      .filter((p) => p.stamina < 0.42 - (0.04 * Math.max(0, 75 - minute)) / 15)
       .sort((a, b) => a.stamina - b.stamina || a.index - b.index);
     const going = [...injured, ...tired].slice(0, Math.min(3, t.subsLeft));
     if (going.length === 0) continue;
     for (const out of going) {
       const pickIdx = t.bench
-        .map((b, i) => ({ i, f: fit(b, out) + (b.positions.GK && lineOf(out.role) !== 'gk' ? -10 : 0) }))
+        .map((b, i) => ({
+          i,
+          f: fit(b, out) + (b.positions.GK && lineOf(out.role) !== 'gk' ? -10 : 0),
+        }))
         .sort((a, b) => b.f - a.f || a.i - b.i)[0]!.i;
       const inP = t.bench.splice(pickIdx, 1)[0]!;
       emit(s, 'substitution', team, out.index, null, out.pos, { minute: Math.round(minute) });

@@ -85,25 +85,25 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 
 | ID | Tarefa | P | Tam | Dep | Aceite e teste |
 | --- | --- | --- | --- | --- | --- |
-| MC-031 | Estado completo e serialização (`02` §3) | P0 | M | 145 | desserializar e seguir = seguir direto |
-| MC-032 | Controle de campo e grade de valor de posse | P0 | M | 022 | ponto atrás da defesa vale mais para o atacante mais rápido |
-| MC-033 | Alvo sem bola por utilidade; cobertura e compensação | P0 | G | 032 | cenário: lateral sobe, volante cobre |
+| MC-031 | DONE (2026-11-13; `src/match/state.ts`, `match.test.ts`). Estado completo e serialização (`02` §3) | P0 | M | 145 | desserializar e seguir = seguir direto |
+| MC-032 | DONE (2026-11-13; `src/match/control.ts`). Controle de campo e grade de valor de posse | P0 | M | 022 | ponto atrás da defesa vale mais para o atacante mais rápido |
+| MC-033 | DONE (2026-11-13; atribuição de tarefas da MC-246, cenário S2 de `coordination.test.ts`). Alvo sem bola por utilidade; cobertura e compensação | P0 | G | 032 | cenário: lateral sobe, volante cobre |
 | MC-158 | Histerese de alvos (`02` §5.5) | P0 | M | 033 | trocas de alvo por jogador por minuto abaixo do teto; nenhuma oscilação A-B-A em menos de 2 s |
 | MC-159 | Percepção limitada: campo visual, memória envelhecida, atraso de reação, lapso (`02` §5.6) | P0 | G | 033 | jogador não reage a adversário fora do campo visual até vê-lo; `antecipação` alta reduz o atraso |
-| MC-034 | Ação com bola: candidatos, softmax; decisão separada de execução com marca no log (`02` §5.7) | P0 | G | 032, 159 | `visão` baixa reduz passes em profundidade tentados; log distingue "escolheu mal" de "executou mal" |
-| MC-161 | Bola: rolando com atrito, no ar com altura e quique, tempo de chegada em forma fechada (`02` §6.1) | P0 | G | 031 | interceptação independe do tamanho do passo (teste com `DT` de 0,1 e 0,25) |
-| MC-035 | Passe com erro de execução, recepção, interceptação | P0 | G | 034, 161 | acerto de passe cai com distância e pressão |
-| MC-162 | Ocupação e contato: discos, proteção de bola, carga (`02` §6.2) | P0 | M | 035 | desarme por trás é mais difícil e gera mais falta |
-| MC-036 | Condução, drible × desarme, falta | P0 | M | 162 | drible alto vence mais em 1×1 isolado |
-| MC-163 | Disputa aérea e segunda bola (`02` §6.3) | P0 | M | 161 | `impulsão` e altura maiores vencem mais; perdedor disputa o rebote |
-| MC-037 | Pressão com gatilhos; fôlego; reavaliação dos parâmetros físicos contra a pesquisa | P0 | G | 033 | pressão 5 gasta mais fôlego e recupera mais alto; distância por jogador e queda no fim na faixa |
-| MC-038 | Finalização e `xG` | P0 | G | 035 | conversão por distância na faixa de referência |
-| MC-164 | Goleiro: posicionamento, alcance, reação, rebote, saída (`02` §6.4) | P0 | G | 038 | chute fora do alcance não é defendido; `reflexos` desloca a taxa de defesa |
-| MC-039 | Árbitro: falta, cartão, vantagem, pênalti, reinícios, substituições (`02` §6.5) | P0 | G | 036 | cada regra com cenário próprio |
-| MC-165 | Impedimento completo: instante do passe, penúltimo adversário, participação, exceções | P0 | M | 039 | seis cenários de regra, incluindo exceções de tiro de meta, lateral e escanteio |
-| MC-040 | Bola parada básica; relógio e acréscimos; prorrogação e pênaltis | P0 | M | 039 | bola rolando entre 52 e 58 minutos |
+| MC-034 | DONE (2026-11-13; `src/match/carrier.ts`). Ação com bola: candidatos, softmax; decisão separada de execução com marca no log (`02` §5.7) | P0 | G | 032, 159 | `visão` baixa reduz passes em profundidade tentados; log distingue "escolheu mal" de "executou mal" |
+| MC-161 | DONE (2026-11-13; `ball.ts`, `ball.test.ts` com `DT` 0,1 e 0,25). Bola: rolando com atrito, no ar com altura e quique, tempo de chegada em forma fechada (`02` §6.1) | P0 | G | 031 | interceptação independe do tamanho do passo (teste com `DT` de 0,1 e 0,25) |
+| MC-035 | DONE (2026-11-13; `src/match/kick.ts`). Passe com erro de execução, recepção, interceptação | P0 | G | 034, 161 | acerto de passe cai com distância e pressão |
+| MC-162 | DONE (2026-11-13; `rules/duel.ts` `tackleChance`, `rules/discipline.ts`). Ocupação e contato: discos, proteção de bola, carga (`02` §6.2) | P0 | M | 035 | desarme por trás é mais difícil e gera mais falta |
+| MC-036 | DONE (2026-11-13; `rules/duel.ts` `dribbleChance`). Condução, drible × desarme, falta | P0 | M | 162 | drible alto vence mais em 1×1 isolado |
+| MC-163 | DONE (2026-11-13; `rules/duel.ts` `aerialScore`, perdedor segue no lance com a bola solta). Disputa aérea e segunda bola (`02` §6.3) | P0 | M | 161 | `impulsão` e altura maiores vencem mais; perdedor disputa o rebote |
+| MC-037 | DOING (fôlego e distância na faixa; falta o teste de pressão 5 e a queda no fim). Pressão com gatilhos; fôlego; reavaliação dos parâmetros físicos contra a pesquisa | P0 | G | 033 | pressão 5 gasta mais fôlego e recupera mais alto; distância por jogador e queda no fim na faixa |
+| MC-038 | DONE (2026-11-13; `rules/xg.ts`, `kick.ts` `shoot`). Finalização e `xG` | P0 | G | 035 | conversão por distância na faixa de referência |
+| MC-164 | DONE (2026-11-13; posição na linha bola-gol, defesa, rebote, saída no um contra um). Goleiro: posicionamento, alcance, reação, rebote, saída (`02` §6.4) | P0 | G | 038 | chute fora do alcance não é defendido; `reflexos` desloca a taxa de defesa |
+| MC-039 | DOING (falta, pênalti, cartões, segundo amarelo, reinícios e substituições feitos; falta vantagem). Árbitro: falta, cartão, vantagem, pênalti, reinícios, substituições (`02` §6.5) | P0 | G | 036 | cada regra com cenário próprio |
+| MC-165 | DONE (2026-11-13; `kick.ts` `offsideNow`, seis cenários). Impedimento completo: instante do passe, penúltimo adversário, participação, exceções | P0 | M | 039 | seis cenários de regra, incluindo exceções de tiro de meta, lateral e escanteio |
+| MC-040 | DOING (reinícios, relógio, acréscimos e prorrogação feitos; bola rolando em ~60 min, acima da faixa; pênaltis de desempate não feitos). Bola parada básica; relógio e acréscimos; prorrogação e pênaltis | P0 | M | 039 | bola rolando entre 52 e 58 minutos |
 | MC-041 | Lesão e substituição | P0 | M | 037 | taxas por 1.000 h na faixa de `03` §4 |
-| MC-042 | Eventos, estatísticas, mapas, matriz de duelos | P0 | M | 035–041 | soma dos eventos fecha com o placar |
+| MC-042 | DOING (eventos e estatísticas fecham com o placar; faltam mapas por zona e matriz de duelos). Eventos, estatísticas, mapas, matriz de duelos | P0 | M | 035–041 | soma dos eventos fecha com o placar |
 | MC-043 | Explicação: criação × conversão, fatores com número, chaves de mensagem (`02` §11) | P0 | G | 042, 149 | cenário montado devolve a causa montada; partida decidida por conversão diz isso |
 | MC-044 | Bancada estatística contra `02` §11 | P0 | M | 042 | todas as linhas na faixa |
 | MC-166 | Suíte de zebra Z1 a Z12 (`TEST_STRATEGY.md` §4) | P0 | G | 043, 044 | doze cenários verdes; a engine não recebe qual time é do usuário |

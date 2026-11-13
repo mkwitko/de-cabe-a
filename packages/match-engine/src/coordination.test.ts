@@ -49,7 +49,9 @@ describe('MC-246 coordination proof', () => {
       // T3 as a rate over all eight seeds' 32 minutes (ADR-018 item 4).
       for (const team of [0, 1] as const)
         if (pairs[team] / SEEDS.length > BANDS.T3per10min)
-          report.push(`${sc.name.slice(0, 2)} team ${team}: T3 ${(pairs[team] / SEEDS.length).toFixed(2)}`);
+          report.push(
+            `${sc.name.slice(0, 2)} team ${team}: T3 ${(pairs[team] / SEEDS.length).toFixed(2)}`,
+          );
       // T5 as a share of all eight seeds' time, judged on at least 10 s of it (ADR-018 item 4).
       for (const team of [0, 1] as const) {
         const [n, empty] = guard[team];

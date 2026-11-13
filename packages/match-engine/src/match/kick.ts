@@ -5,7 +5,7 @@
  * and the ball is then sent where that outcome puts it (wide, saved or in).
  */
 import { GRAVITY, groundPass, type Ball } from '../ball';
-import { norm, weighted } from '../rules/duel';
+import { weighted } from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
@@ -38,7 +38,14 @@ function lofted(from: Vec2, to: Vec2, h: number): Ball {
   const dy = to.y - from.y;
   const d = Math.sqrt(dx * dx + dy * dy) || 1;
   const t = d / h;
-  return { x: from.x, y: from.y, z: 0.1, vx: (dx / d) * h, vy: (dy / d) * h, vz: (GRAVITY * t) / 2 };
+  return {
+    x: from.x,
+    y: from.y,
+    z: 0.1,
+    vx: (dx / d) * h,
+    vy: (dy / d) * h,
+    vz: (GRAVITY * t) / 2,
+  };
 }
 
 /** Offside positions when a team-mate of `c` plays the ball (02 §6.5): in the opponents' half, ahead of ball and second-last opponent. */
@@ -80,7 +87,10 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     const r = a.receiver;
     const d0 = Math.sqrt((r.pos.x - from.x) ** 2 + (r.pos.y - from.y) ** 2);
     const lead = Math.min(1.5, d0 / (a.kind === 'long' ? 18 : 14));
-    a.target = { x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5), y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5) };
+    a.target = {
+      x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5),
+      y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5),
+    };
   }
   const dx = a.target.x - from.x;
   const dy = a.target.y - from.y;
@@ -103,7 +113,8 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
         ? weighted(c.attrs, { crossing: 0.7, technique: 0.3 })
         : weighted(c.attrs, { passing: 0.6, technique: 0.4 });
     // Landing error grows with distance and falls with skill (PARAMETERS).
-    const err = (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) * d * (a.kind === 'clear' ? 2 : 1);
+    const err =
+      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) * d * (a.kind === 'clear' ? 2 : 1);
     const land = {
       x: clamp(a.target.x + g(s) * err * 0.6, 0.5, LENGTH - 0.5),
       y: clamp(a.target.y + g(s) * err * 0.6, 0.5, WIDTH - 0.5),
@@ -120,11 +131,14 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
       p: Math.round(a.p * 100),
       chosen: Math.round(a.u * 1000),
       kind: ['pass', 'through', 'long', 'cross', 'clear'].indexOf(a.kind),
+      pr: Math.round(pressureOn(s, c) * 10),
     });
   } else if (kind === 'cross') {
     emit(s, 'pass', team, c.index, null, from, { d: Math.round(d), cross: 1 });
     // A defender closing the crosser blocks it, often behind (PARAMETER).
-    const closer = opponents(s, team).find((o) => Math.sqrt((o.pos.x - from.x) ** 2 + (o.pos.y - from.y) ** 2) < 2.5);
+    const closer = opponents(s, team).find(
+      (o) => Math.sqrt((o.pos.x - from.x) ** 2 + (o.pos.y - from.y) ** 2) < 2.5,
+    );
     if (closer && next(s.rngs.execution) < 0.35) blocked = closer.index;
   }
   return {
@@ -174,22 +188,44 @@ export function shoot(
   // On target (PARAMETERS): a third of shots on average (02 §11).
   const pOn = opts.penalty
     ? 0.92
-    : clamp(Math.max(pGoal + 0.04, 0.28 + 0.3 * (skill - 0.6) - 0.08 * pressureOn(s, c) + 0.6 * chance), 0, 0.98);
+    : clamp(
+        Math.max(pGoal + 0.04, 0.28 + 0.3 * (skill - 0.6) - 0.08 * pressureOn(s, c) + 0.6 * chance),
+        0,
+        0.98,
+      );
   const onTarget = next(s.rngs.execution) < pOn;
   const goal = onTarget && next(s.rngs.execution) < pGoal / pOn;
   const me = flip(team, c.pos);
   // Where the ball goes, in the team frame.
   const side = next(s.rngs.execution) < 0.5 ? -1 : 1;
   let aim: Vec2;
-  if (!onTarget) aim = { x: LENGTH + 0.2, y: CENTER.y + side * (3.66 + 0.5 + 3 * next(s.rngs.execution)) };
-  else aim = { x: LENGTH + 0.2, y: CENTER.y + side * (goal ? 1.5 + 1.9 * next(s.rngs.execution) : 2.5 * next(s.rngs.execution)) };
+  if (!onTarget)
+    aim = { x: LENGTH + 0.2, y: CENTER.y + side * (3.66 + 0.5 + 3 * next(s.rngs.execution)) };
+  else
+    aim = {
+      x: LENGTH + 0.2,
+      y:
+        CENTER.y +
+        side * (goal ? 1.5 + 1.9 * next(s.rngs.execution) : 2.5 * next(s.rngs.execution)),
+    };
   const target = flip(team, aim);
   const from = { ...c.pos };
   const dx = target.x - from.x;
   const dy = target.y - from.y;
   const d = Math.sqrt(dx * dx + dy * dy) || 1;
-  const spd = opts.penalty ? 24 : header ? 13 : 19 + 8 * weighted(c.attrs, { finishing: 0.5, technique: 0.5 });
-  const ball: Ball = { x: from.x, y: from.y, z: header ? 2 : 0.2, vx: (dx / d) * spd, vy: (dy / d) * spd, vz: header ? -0.5 : 1 + 2 * next(s.rngs.execution) };
+  const spd = opts.penalty
+    ? 24
+    : header
+      ? 13
+      : 19 + 8 * weighted(c.attrs, { finishing: 0.5, technique: 0.5 });
+  const ball: Ball = {
+    x: from.x,
+    y: from.y,
+    z: header ? 2 : 0.2,
+    vx: (dx / d) * spd,
+    vy: (dy / d) * spd,
+    vz: header ? -0.5 : 1 + 2 * next(s.rngs.execution),
+  };
   const st = s.teams[team].stats;
   st.shots++;
   st.xg += chance;

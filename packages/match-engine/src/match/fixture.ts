@@ -2,7 +2,14 @@
  * Synthetic teams for tests, the bench and calibration runs (not a data pack:
  * real players come from club-domain packs). Deterministic by seed.
  */
-import { ATTRIBUTES, GOALKEEPING, type MatchInput, type PlayerInput, type TacticalPlan, type TeamInput } from '../contract';
+import {
+  ATTRIBUTES,
+  GOALKEEPING,
+  type MatchInput,
+  type PlayerInput,
+  type TacticalPlan,
+  type TeamInput,
+} from '../contract';
 import { defaultPlan } from '../presets';
 import { between, fork, rngFrom } from '../random';
 
@@ -19,9 +26,22 @@ const POS: PlayerInput['positions'][] = [
   { ST: 3 },
   { LW: 3, LM: 2 },
 ];
-const BENCH_POS: PlayerInput['positions'][] = [{ GK: 3 }, { CB: 3 }, { RB: 3, LB: 2 }, { CM: 3 }, { AM: 3 }, { RW: 3, LW: 3 }, { ST: 3 }];
+const BENCH_POS: PlayerInput['positions'][] = [
+  { GK: 3 },
+  { CB: 3 },
+  { RB: 3, LB: 2 },
+  { CM: 3 },
+  { AM: 3 },
+  { RW: 3, LW: 3 },
+  { ST: 3 },
+];
 
-export function teamInput(seed: number, strength = 65, plan: TacticalPlan = defaultPlan(), prefix = `t${seed}`): TeamInput {
+export function teamInput(
+  seed: number,
+  strength = 65,
+  plan: TacticalPlan = defaultPlan(),
+  prefix = `t${seed}`,
+): TeamInput {
   const r = rngFrom(seed);
   const players = [...POS, ...BENCH_POS].map((positions, i): PlayerInput => {
     const pr = fork(r, `p${i}`);
@@ -49,12 +69,28 @@ export function teamInput(seed: number, strength = 65, plan: TacticalPlan = defa
   return { players, plan, coach: { gameReading: 60, flexibility: 60 } };
 }
 
-export function matchInput(seed: number, home = teamInput(seed * 2 + 1), away = teamInput(seed * 2 + 2)): MatchInput {
+export function matchInput(
+  seed: number,
+  home = teamInput(seed * 2 + 1),
+  away = teamInput(seed * 2 + 2),
+): MatchInput {
   return {
     engineVersion: 0,
     seed,
     teams: [home, away],
-    conditions: { crowd: 0.7, altitudeM: 0, pitch: 'good', weather: 'clear', refereeStrictness: 0.5 },
-    rules: { substitutions: 5, substitutionWindows: 3, extraTime: false, penalties: false, videoReferee: true },
+    conditions: {
+      crowd: 0.7,
+      altitudeM: 0,
+      pitch: 'good',
+      weather: 'clear',
+      refereeStrictness: 0.5,
+    },
+    rules: {
+      substitutions: 5,
+      substitutionWindows: 3,
+      extraTime: false,
+      penalties: false,
+      videoReferee: true,
+    },
   };
 }

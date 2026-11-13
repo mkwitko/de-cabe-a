@@ -4,13 +4,7 @@
  * any tick and resumed: deserialise and continue = continue directly.
  * Positions are in the world frame; team 1 attacks towards x = 0.
  */
-import type {
-  MatchEvent,
-  MatchInput,
-  PlayerInput,
-  TeamStats,
-  TimedCommand,
-} from '../contract';
+import type { MatchEvent, MatchInput, PlayerInput, TeamStats, TimedCommand } from '../contract';
 import type { Ball } from '../ball';
 import { CENTER, flip } from '../pitch';
 import { fork, rngFrom, type Rng } from '../random';

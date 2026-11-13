@@ -112,7 +112,15 @@ const BACK_SPACING = 13;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
 /** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
-const URGENT = new Set<WorldPlayer['intent']>(['press', 'receive', 'cover', 'mark', 'closeLane', 'depth', 'carry']);
+const URGENT = new Set<WorldPlayer['intent']>([
+  'press',
+  'receive',
+  'cover',
+  'mark',
+  'closeLane',
+  'depth',
+  'carry',
+]);
 const JOG = 1.8;
 const JOG_GAIN = 0.25;
 /** PARAMETER: deepest a player outside the rest defence stays behind the ball with it (T9 counts beyond 12 m). */

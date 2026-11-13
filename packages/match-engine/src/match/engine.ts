@@ -5,14 +5,14 @@
  */
 import { advanceBall, firstContact, PLAYABLE_HEIGHT, type Ball, type Reacher } from '../ball';
 import { arrivalTime } from '../kinematics';
-import { contest, norm, weighted } from '../rules/duel';
+import { aerialScore, contest, dribbleChance, norm, tackleChance, weighted } from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { DT, moveTowards, maxSpeed } from '../movement';
 import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
 import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
-import { chanceFrom, chooseAction, dribbleChance, settleTime, type Allowed } from './carrier';
+import { chanceFrom, chooseAction, settleTime, type Allowed } from './carrier';
 import { kin, mates, opponents, pressureOn } from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
@@ -23,7 +23,7 @@ import { substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
-const TACKLE_RATE = 0.1;
+const TACKLE_RATE = 0.07;
 /** World-frame x direction a team attacks. */
 const fwdOf = (team: 0 | 1) => (team === 0 ? 1 : -1);
 const inOwnBox = (team: 0 | 1, p: Vec2) => {
@@ -33,13 +33,13 @@ const inOwnBox = (team: 0 | 1, p: Vec2) => {
 
 /** PARAMETERS: seconds the clock runs while the ball is dead, by restart (02 §2: ball in play 52 to 58 min). */
 const DEAD: Record<RestartKind | 'goal', [number, number]> = {
-  kickOff: [8, 12],
-  goal: [40, 65],
-  throwIn: [7, 14],
-  corner: [20, 32],
-  goalKick: [16, 26],
-  freeKick: [18, 32],
-  penalty: [50, 80],
+  kickOff: [10, 15],
+  goal: [45, 70],
+  throwIn: [10, 18],
+  corner: [26, 40],
+  goalKick: [22, 34],
+  freeKick: [24, 40],
+  penalty: [55, 85],
 };
 
 export interface StepOptions {
@@ -49,7 +49,13 @@ export interface StepOptions {
 
 // ── Restarts ────────────────────────────────────────────────────────────────
 
-export function setRestart(s: MatchState, kind: RestartKind, team: 0 | 1, at: Vec2, why: 'goal' | null = null) {
+export function setRestart(
+  s: MatchState,
+  kind: RestartKind,
+  team: 0 | 1,
+  at: Vec2,
+  why: 'goal' | null = null,
+) {
   s.owner = null;
   s.flight = null;
   s.restart = { kind, team, at: { x: clamp(at.x, 0, LENGTH), y: clamp(at.y, 0, WIDTH) } };
@@ -67,7 +73,13 @@ export function setRestart(s: MatchState, kind: RestartKind, team: 0 | 1, at: Ve
     }
   const stat = kind === 'corner' ? 'corners' : null;
   if (stat) s.teams[team].stats.corners++;
-  if (kind === 'corner' || kind === 'throwIn' || kind === 'goalKick' || kind === 'freeKick' || kind === 'penalty')
+  if (
+    kind === 'corner' ||
+    kind === 'throwIn' ||
+    kind === 'goalKick' ||
+    kind === 'freeKick' ||
+    kind === 'penalty'
+  )
     emit(s, kind, team, null, null, s.restart.at);
 }
 
@@ -82,12 +94,18 @@ function takeRestart(s: MatchState): Allowed {
   let taker: MatchPlayer;
   if (r.kind === 'goalKick') taker = team.find((p) => lineOf(p.role) === 'gk') ?? team[0]!;
   else if (r.kind === 'penalty' || r.kind === 'freeKick') {
-    const best = (p: MatchPlayer) => weighted(p.attrs, { setPieces: 0.5, finishing: 0.3, technique: 0.2 });
+    const best = (p: MatchPlayer) =>
+      weighted(p.attrs, { setPieces: 0.5, finishing: 0.3, technique: 0.2 });
     const outfield = team.filter((p) => lineOf(p.role) !== 'gk');
     taker = [...outfield].sort((a, b) => best(b) - best(a) || a.index - b.index)[0]!;
     if (r.kind === 'freeKick' && flip(r.team, r.at).x < 75)
-      taker = [...outfield].sort((a, b) => dist(a.pos, r.at) - dist(b.pos, r.at) || a.index - b.index)[0]!;
-  } else taker = [...team].filter((p) => lineOf(p.role) !== 'gk').sort((a, b) => dist(a.pos, r.at) - dist(b.pos, r.at) || a.index - b.index)[0]!;
+      taker = [...outfield].sort(
+        (a, b) => dist(a.pos, r.at) - dist(b.pos, r.at) || a.index - b.index,
+      )[0]!;
+  } else
+    taker = [...team]
+      .filter((p) => lineOf(p.role) !== 'gk')
+      .sort((a, b) => dist(a.pos, r.at) - dist(b.pos, r.at) || a.index - b.index)[0]!;
   // Clock jumped: players take their places for the restart (02 §2).
   s.ball.holder = taker.index;
   coordinate(s, 0, true);
@@ -104,11 +122,18 @@ function takeRestart(s: MatchState): Allowed {
       if (t.x > LENGTH - BOX) pos = flip(r.team, { x: LENGTH - BOX - 1, y: t.y });
     }
     // Opponents 9.15 m from a free kick or corner.
-    if ((r.kind === 'freeKick' || r.kind === 'corner') && p.team !== r.team && dist(pos, r.at) < 9.15) {
+    if (
+      (r.kind === 'freeKick' || r.kind === 'corner') &&
+      p.team !== r.team &&
+      dist(pos, r.at) < 9.15
+    ) {
       const dx = pos.x - r.at.x;
       const dy = pos.y - r.at.y;
       const d = Math.sqrt(dx * dx + dy * dy) || 1;
-      pos = { x: clamp(r.at.x + (dx / d) * 9.2, 0.5, LENGTH - 0.5), y: clamp(r.at.y + (dy / d) * 9.2, 0.5, WIDTH - 0.5) };
+      pos = {
+        x: clamp(r.at.x + (dx / d) * 9.2, 0.5, LENGTH - 0.5),
+        y: clamp(r.at.y + (dy / d) * 9.2, 0.5, WIDTH - 0.5),
+      };
     }
     p.pos = pos;
     p.vel = { x: 0, y: 0 };
@@ -116,7 +141,9 @@ function takeRestart(s: MatchState): Allowed {
   taker.pos = { ...r.at };
   if (r.kind === 'kickOff') {
     // A team-mate stands next to the taker for the first pass.
-    const mate = team.filter((p) => p.index !== taker.index && lineOf(p.role) !== 'gk').sort((a, b) => dist(a.pos, r.at) - dist(b.pos, r.at) || a.index - b.index)[0];
+    const mate = team
+      .filter((p) => p.index !== taker.index && lineOf(p.role) !== 'gk')
+      .sort((a, b) => dist(a.pos, r.at) - dist(b.pos, r.at) || a.index - b.index)[0];
     if (mate) mate.pos = flip(r.team, { x: CENTER.x - 6, y: CENTER.y + 4 });
   }
   if (r.kind === 'penalty') {
@@ -163,11 +190,32 @@ function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number
 
 function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   const c = s.players[s.owner!]!;
-  const allowed: Allowed = restartAllowed ?? (lineOf(c.role) === 'gk' && inOwnBox(c.team, c.pos) && s.tick - s.ownedSince < 40 && s.events.at(-1)?.kind === 'save' ? 'keeper' : 'open');
+  const allowed: Allowed =
+    restartAllowed ??
+    (lineOf(c.role) === 'gk' &&
+    inOwnBox(c.team, c.pos) &&
+    s.tick - s.ownedSince < 40 &&
+    s.events.at(-1)?.kind === 'save'
+      ? 'keeper'
+      : 'open');
   if (s.tick < c.decideAt && restartAllowed === null) return;
   // Penalty: the shot is the only option.
   if (restartAllowed === 'open' && s.events.at(-1)?.kind === 'penalty') {
-    s.flight = shoot(s, c, { kind: 'shot', target: flip(c.team, { x: LENGTH, y: CENTER.y }), receiver: null, p: PENALTY_XG, est: PENALTY_XG, u: 0, ue: 0 }, [], { penalty: true, chance: PENALTY_XG });
+    s.flight = shoot(
+      s,
+      c,
+      {
+        kind: 'shot',
+        target: flip(c.team, { x: LENGTH, y: CENTER.y }),
+        receiver: null,
+        p: PENALTY_XG,
+        est: PENALTY_XG,
+        u: 0,
+        ue: 0,
+      },
+      [],
+      { penalty: true, chance: PENALTY_XG },
+    );
     s.owner = null;
     return;
   }
@@ -183,14 +231,17 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
     if (a.kind === 'dribble') dribble(s, c);
     return;
   }
-  const noOffside = restartAllowed === 'throwIn' || restartAllowed === 'goalKick' || restartAllowed === 'corner';
+  const noOffside =
+    restartAllowed === 'throwIn' || restartAllowed === 'goalKick' || restartAllowed === 'corner';
   s.flight = kick(s, c, a, noOffside);
   if (s.flight.blocked !== undefined && s.flight.blocked >= 0) {
     s.lastTouch = s.flight.blocked;
-    setRestart(s, 'corner', c.team, { x: c.team === 0 ? LENGTH : 0, y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
+    setRestart(s, 'corner', c.team, {
+      x: c.team === 0 ? LENGTH : 0,
+      y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
+    });
     return;
   }
-  if (a.kind === 'shot') s.flight = s.flight; // shot flight already resolved in kick()
   s.owner = null;
   s.ball.holder = a.receiver?.index ?? null;
   s.ball.focal = { ...a.target };
@@ -204,7 +255,7 @@ function dribble(s: MatchState, c: MatchPlayer) {
     .filter((o) => dist(o.pos, c.pos) < 3.5)
     .sort((a, b) => dist(a.pos, c.pos) - dist(b.pos, c.pos) || a.index - b.index)[0];
   if (!d) return;
-  const p = dribbleChance(c, d);
+  const p = dribbleChance(c.attrs, d.attrs);
   const won = next(s.rngs.execution) < p;
   emit(s, 'dribble', c.team, c.index, d.index, c.pos, { won: won ? 1 : 0 });
   if (won) {
@@ -218,6 +269,22 @@ function dribble(s: MatchState, c: MatchPlayer) {
 function tackleWins(s: MatchState, d: MatchPlayer, c: MatchPlayer, emitTackle = true) {
   if (emitTackle) emit(s, 'tackle', d.team, d.index, c.index, c.pos, { won: 1 });
   d.score += 0.12;
+  // Near a line, a tackle often knocks the ball out of play (PARAMETER: throw-ins and corners per match, 02 §11).
+  const toTouch = Math.min(c.pos.y, WIDTH - c.pos.y);
+  if (toTouch < 8 && next(s.rngs.execution) < 0.45) {
+    s.lastTouch = d.index;
+    setRestart(s, 'throwIn', c.team, { x: c.pos.x, y: c.pos.y < CENTER.y ? 0 : WIDTH });
+    return;
+  }
+  const cg = flip(c.team, c.pos);
+  if (cg.x > LENGTH - 12 && next(s.rngs.execution) < 0.3) {
+    s.lastTouch = d.index;
+    setRestart(s, 'corner', c.team, {
+      x: c.team === 0 ? LENGTH : 0,
+      y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
+    });
+    return;
+  }
   if (next(s.rngs.execution) < 0.55 + 0.3 * norm(d.attrs.technique)) gainBall(s, d);
   else {
     const ang = gaussian(() => next(s.rngs.execution));
@@ -232,7 +299,9 @@ function tackles(s: MatchState) {
   // The keeper comes out at a carrier close to him in his box (02 §6.4 um contra um). PARAMETERS.
   const k = opponents(s, c.team).find((o) => lineOf(o.role) === 'gk' && inOwnBox(o.team, o.pos));
   if (k && inOwnBox(k.team, c.pos) && dist(k.pos, c.pos) < 3 && next(s.rngs.execution) < 0.6) {
-    const won = next(s.rngs.execution) < contest(norm(k.attrs.oneOnOne) - norm(c.attrs.dribbling), -0.1, 0.12);
+    const won =
+      next(s.rngs.execution) <
+      contest(norm(k.attrs.oneOnOne) - norm(c.attrs.dribbling), -0.1, 0.12);
     emit(s, 'save', k.team, k.index, c.index, c.pos, { smother: 1, won: won ? 1 : 0 });
     if (won) {
       gainBall(s, k);
@@ -251,9 +320,7 @@ function tackles(s: MatchState) {
     const cg = flip(c.team, c.pos);
     const dg = flip(c.team, d.pos);
     const behind = dg.x < cg.x - 0.3;
-    const att = weighted(d.attrs, { tackling: 0.5, anticipation: 0.2, strength: 0.15, aggression: 0.15 });
-    const def = weighted(c.attrs, { dribbling: 0.35, balance: 0.25, strength: 0.2, technique: 0.2 });
-    const won = next(s.rngs.execution) < contest(att - def, behind ? 0.15 : 0, 0.12);
+    const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
     const pf = foulChance(d, behind, won);
     if (next(s.rngs.referee) < pf) {
       foul(s, d, c, behind);
@@ -267,16 +334,22 @@ function tackles(s: MatchState) {
   }
 }
 
-function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: boolean) {
+export function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: boolean) {
   s.teams[d.team].stats.fouls++;
   emit(s, 'foul', d.team, d.index, c.index, c.pos, { behind: behind ? 1 : 0 });
   const cg = flip(c.team, c.pos);
   // Promising attack and last man (02 §6.5 cartão).
-  const goalSide = opponents(s, c.team).filter((o) => flip(c.team, o.pos).x > cg.x && o.index !== d.index).length;
+  const goalSide = opponents(s, c.team).filter(
+    (o) => flip(c.team, o.pos).x > cg.x && o.index !== d.index,
+  ).length;
   const card = cardFor(
     s.input.conditions.refereeStrictness,
     d,
-    { behind, promising: cg.x > 70, lastMan: goalSide === 0 && cg.x > 75 && Math.abs(cg.y - CENTER.y) < 20 },
+    {
+      behind,
+      promising: cg.x > 70,
+      lastMan: goalSide === 0 && cg.x > 75 && Math.abs(cg.y - CENTER.y) < 20,
+    },
     next(s.rngs.referee),
     next(s.rngs.referee),
   );
@@ -284,7 +357,10 @@ function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: boolean) {
     const prev = d.cards;
     const red = card === 2 || prev === 1;
     d.cards = red ? 2 : 1;
-    emit(s, 'card', d.team, d.index, null, d.pos, { card: red ? 2 : 1 });
+    emit(s, 'card', d.team, d.index, null, d.pos, {
+      card: red ? 2 : 1,
+      second: prev === 1 ? 1 : 0,
+    });
     s.stoppage += 15000;
     if (red) {
       s.teams[d.team].stats.redCards++;
@@ -293,7 +369,8 @@ function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: boolean) {
     } else s.teams[d.team].stats.yellowCards++;
   }
   d.score -= card === 2 ? 1.5 : card === 1 ? 0.3 : 0.05;
-  if (inOwnBox(d.team, c.pos)) setRestart(s, 'penalty', c.team, flip(c.team, { x: LENGTH - 11, y: CENTER.y }));
+  if (inOwnBox(d.team, c.pos))
+    setRestart(s, 'penalty', c.team, flip(c.team, { x: LENGTH - 11, y: CENTER.y }));
   else setRestart(s, 'freeKick', c.team, c.pos);
 }
 
@@ -305,9 +382,19 @@ function reachers(s: MatchState): Reacher[] {
     if (!p.active) return { pos: { x: -999, y: -999 }, vel: { x: 0, y: 0 }, reach: 0, height: 0 };
     const gk = lineOf(p.role) === 'gk' && inOwnBox(p.team, p.pos);
     let reach = 1.0;
-    if (gk) reach = f.kind === 'shot' ? (f.beaten ? 0 : 4) : f.kind === 'cross' ? 1.8 + 1.2 * norm(p.attrs.commandOfArea) : 2.2;
-    else if (f.kind === 'shot') reach = 0.45; // a block needs the body in the line
-    else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team) reach = 0.8 + 0.4 * norm(p.attrs.anticipation);
+    if (gk)
+      reach =
+        f.kind === 'shot'
+          ? f.beaten
+            ? 0
+            : 4
+          : f.kind === 'cross'
+            ? 1.8 + 1.2 * norm(p.attrs.commandOfArea)
+            : 2.2;
+    else if (f.kind === 'shot')
+      reach = 0.45; // a block needs the body in the line
+    else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
+      reach = 0.8 + 0.4 * norm(p.attrs.anticipation);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };
   });
 }
@@ -347,7 +434,9 @@ function outOfPlay(s: MatchState, side: 'goal0' | 'goal1' | 'byline0' | 'byline1
     emit(s, 'goal', team, scorer.index, assist, at, { own: own ? 1 : 0, xg: f.shot?.xg ?? 0 });
     if (!own) scorer.score += 1.2;
     if (assist !== null) s.players[assist]!.score += 0.6;
-    for (const p of s.players) if (p.team !== team && p.active && (lineOf(p.role) === 'gk' || lineOf(p.role) === 'def')) p.score -= 0.25;
+    for (const p of s.players)
+      if (p.team !== team && p.active && (lineOf(p.role) === 'gk' || lineOf(p.role) === 'def'))
+        p.score -= 0.25;
     s.flight = null;
     setRestart(s, 'kickOff', team === 0 ? 1 : 0, { ...CENTER }, 'goal');
     return;
@@ -362,14 +451,20 @@ function outOfPlay(s: MatchState, side: 'goal0' | 'goal1' | 'byline0' | 'byline1
   if (last.team === defending) {
     const x = side === 'byline1' ? LENGTH : 0;
     setRestart(s, 'corner', defending === 0 ? 1 : 0, { x, y: at.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
-  } else setRestart(s, 'goalKick', defending, { x: side === 'byline1' ? LENGTH - 5.5 : 5.5, y: CENTER.y });
+  } else
+    setRestart(s, 'goalKick', defending, {
+      x: side === 'byline1' ? LENGTH - 5.5 : 5.5,
+      y: CENTER.y,
+    });
 }
 
 function lastPasser(s: MatchState, scorer: MatchPlayer): number | null {
   for (let i = s.events.length - 1; i >= 0 && i > s.events.length - 12; i--) {
     const e = s.events[i]!;
-    if (e.kind === 'pass' && e.team === scorer.team && e.otherId === scorer.id) return s.players.findIndex((p) => p.id === e.playerId);
-    if (e.kind === 'pass' && e.team === scorer.team && e.data.cross === 1) return s.players.findIndex((p) => p.id === e.playerId);
+    if (e.kind === 'pass' && e.team === scorer.team && e.otherId === scorer.id)
+      return s.players.findIndex((p) => p.id === e.playerId);
+    if (e.kind === 'pass' && e.team === scorer.team && e.data.cross === 1)
+      return s.players.findIndex((p) => p.id === e.playerId);
     if (e.kind === 'phaseChange') break;
   }
   return null;
@@ -394,7 +489,11 @@ function touch(s: MatchState, p: MatchPlayer) {
   // An attacker receiving next to the keeper in the six-yard area is smothered (02 §6.4 um contra um). PARAMETER.
   if (!gk && f.kind !== 'shot') {
     const k = opponents(s, p.team).find((o) => lineOf(o.role) === 'gk' && inOwnBox(o.team, o.pos));
-    if (k && dist(k.pos, p.pos) < 2.5 && next(s.rngs.execution) < 0.4 + 0.4 * norm(k.attrs.oneOnOne)) {
+    if (
+      k &&
+      dist(k.pos, p.pos) < 2.5 &&
+      next(s.rngs.execution) < 0.4 + 0.4 * norm(k.attrs.oneOnOne)
+    ) {
       emit(s, 'save', k.team, k.index, p.index, k.pos, { smother: 1 });
       gainBall(s, k);
       k.decideAt = s.tick + 12;
@@ -408,7 +507,10 @@ function touch(s: MatchState, p: MatchPlayer) {
     p.score += 0.1;
     // A blocked shot goes behind for a corner a good share of the time (PARAMETER, corners per match 02 §11).
     if (next(s.rngs.execution) < 0.4) {
-      setRestart(s, 'corner', kicker.team, { x: p.team === 0 ? 0 : LENGTH, y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
+      setRestart(s, 'corner', kicker.team, {
+        x: p.team === 0 ? 0 : LENGTH,
+        y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
+      });
       return;
     }
     const keep = 0.3 + 0.4 * next(s.rngs.execution);
@@ -420,7 +522,9 @@ function touch(s: MatchState, p: MatchPlayer) {
   if (b.z > 1.0 && !gk) return aerial(s, p);
   if (gk && b.z > 0.5) {
     // Keeper claims a cross.
-    const ok = next(s.rngs.execution) < 0.55 + 0.35 * weighted(p.attrs, { commandOfArea: 0.6, handling: 0.4 });
+    const ok =
+      next(s.rngs.execution) <
+      0.55 + 0.35 * weighted(p.attrs, { commandOfArea: 0.6, handling: 0.4 });
     if (ok) {
       emit(s, 'save', p.team, p.index, null, p.pos, { claim: 1 });
       gainBall(s, p);
@@ -452,14 +556,21 @@ function touch(s: MatchState, p: MatchPlayer) {
   }
   // Heavy touch: the ball runs loose a few metres.
   const k = 0.25 + 0.3 * next(s.rngs.execution);
-  looseBall(s, p.index, p.pos, b.vx * k + gaussian(() => next(s.rngs.execution)) * 1.5, b.vy * k + gaussian(() => next(s.rngs.execution)) * 1.5);
+  looseBall(
+    s,
+    p.index,
+    p.pos,
+    b.vx * k + gaussian(() => next(s.rngs.execution)) * 1.5,
+    b.vy * k + gaussian(() => next(s.rngs.execution)) * 1.5,
+  );
 }
 
 function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']>) {
   const shooter = s.players[f.from]!;
   emit(s, 'save', k.team, k.index, shooter.index, k.pos, { xg: f.shot?.xg ?? 0 });
   k.score += 0.35;
-  const hold = next(s.rngs.execution) < 0.35 + 0.45 * weighted(k.attrs, { handling: 0.7, reflexes: 0.3 });
+  const hold =
+    next(s.rngs.execution) < 0.35 + 0.45 * weighted(k.attrs, { handling: 0.7, reflexes: 0.3 });
   if (hold) {
     gainBall(s, k);
     k.decideAt = s.tick + 16;
@@ -471,20 +582,34 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
   const fwd = fwdOf(k.team);
   if (wide) {
     s.lastTouch = k.index;
-    setRestart(s, 'corner', shooter.team, { x: k.team === 0 ? 0 : LENGTH, y: side < 0 ? 0.5 : WIDTH - 0.5 });
+    setRestart(s, 'corner', shooter.team, {
+      x: k.team === 0 ? 0 : LENGTH,
+      y: side < 0 ? 0.5 : WIDTH - 0.5,
+    });
     return;
   }
-  looseBall(s, k.index, k.pos, fwd * (5 + 5 * next(s.rngs.execution)), side * (3 + 6 * next(s.rngs.execution)));
+  looseBall(
+    s,
+    k.index,
+    k.pos,
+    fwd * (5 + 5 * next(s.rngs.execution)),
+    side * (3 + 6 * next(s.rngs.execution)),
+  );
 }
 
 function aerial(s: MatchState, first: MatchPlayer) {
   const f = s.flight!;
   const at = { x: f.ball.x, y: f.ball.y };
-  const near = s.players.filter((p) => p.active && dist(p.pos, at) < 1.8 && lineOf(p.role) !== 'gk');
+  const near = s.players.filter(
+    (p) => p.active && dist(p.pos, at) < 1.8 && lineOf(p.role) !== 'gk',
+  );
   // Uncontested and not too high: chest or thigh control (02 §6 recepção). PARAMETER.
   if (!near.some((p) => p.team !== first.team)) {
     const kicker = s.players[f.from]!;
-    if (next(s.rngs.execution) < 0.55 + 0.4 * weighted(first.attrs, { firstTouch: 0.6, technique: 0.4 })) {
+    if (
+      next(s.rngs.execution) <
+      0.55 + 0.4 * weighted(first.attrs, { firstTouch: 0.6, technique: 0.4 })
+    ) {
       if (f.kind === 'pass' && f.to !== null && kicker.team === first.team) {
         s.teams[first.team].stats.passesCompleted++;
         emit(s, 'reception', first.team, first.index, kicker.index, first.pos);
@@ -494,9 +619,7 @@ function aerial(s: MatchState, first: MatchPlayer) {
     }
   }
   const score = (p: MatchPlayer) =>
-    weighted(p.attrs, { heading: 0.3, jumping: 0.35, strength: 0.15, positioning: 0.2 }) +
-    (p.input.heightCm - 180) / 200 +
-    0.08 * gaussian(() => next(s.rngs.execution));
+    aerialScore(p.attrs, p.input.heightCm) + 0.08 * gaussian(() => next(s.rngs.execution));
   let win = first;
   let best = -Infinity;
   for (const p of near) {
@@ -512,18 +635,42 @@ function aerial(s: MatchState, first: MatchPlayer) {
   // Attacking header near goal: a shot (02 §6.3).
   if (win.team === kicker.team && t.x > LENGTH - 14 && Math.abs(t.y - CENTER.y) < 10) {
     const chance = chanceFrom(s, win, true, f.kind === 'cross');
-    s.flight = shoot(s, win, { kind: 'shot', target: flip(win.team, { x: LENGTH, y: CENTER.y }), receiver: null, p: chance, est: chance, u: 0, ue: 0 }, [], { header: true, chance });
+    s.flight = shoot(
+      s,
+      win,
+      {
+        kind: 'shot',
+        target: flip(win.team, { x: LENGTH, y: CENTER.y }),
+        receiver: null,
+        p: chance,
+        est: chance,
+        u: 0,
+        ue: 0,
+      },
+      [],
+      { header: true, chance },
+    );
     return;
   }
   // A defender under pressure in his own box sometimes heads it behind (02 §6.3). PARAMETER.
   if (win.team !== kicker.team && inOwnBox(win.team, win.pos) && next(s.rngs.execution) < 0.3) {
-    setRestart(s, 'corner', kicker.team, { x: win.team === 0 ? 0 : LENGTH, y: win.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
+    setRestart(s, 'corner', kicker.team, {
+      x: win.team === 0 ? 0 : LENGTH,
+      y: win.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
+    });
     return;
   }
   // Otherwise the winner heads it on or away.
   const fwd = fwdOf(win.team);
   const pw = win.team === kicker.team ? 6 : 12;
-  looseBall(s, win.index, win.pos, fwd * (pw + 4 * next(s.rngs.execution)), gaussian(() => next(s.rngs.execution)) * 5, win.team === kicker.team ? 0 : 4);
+  looseBall(
+    s,
+    win.index,
+    win.pos,
+    fwd * (pw + 4 * next(s.rngs.execution)),
+    gaussian(() => next(s.rngs.execution)) * 5,
+    win.team === kicker.team ? 0 : 4,
+  );
 }
 
 // ── The step ────────────────────────────────────────────────────────────────
@@ -575,7 +722,10 @@ function meetPoint(p: MatchPlayer, ball: Ball, reacting: boolean): { pt: Vec2; t
     const pt = { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) };
     if (b.z < PLAYABLE_HEIGHT && arrivalTime(k, pt, reacting) <= t) return { pt, t };
   }
-  return { pt: { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) }, t: 4 + arrivalTime(k, b, reacting) };
+  return {
+    pt: { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) },
+    t: 4 + arrivalTime(k, b, reacting),
+  };
 }
 
 /** Without an owner, the intended receiver and the quickest player of each side go to meet the ball (02 §6: whoever arrives first gets it). */
@@ -637,7 +787,8 @@ export function frameOf(s: MatchState): number[] {
 /** Period ends at 45 minutes plus stoppage (extra time 15); halves restart with a kick-off (02 §6.5). */
 function clock(s: MatchState) {
   const regular = s.period <= 2 ? 45 * 60000 : 15 * 60000;
-  const start = s.period === 1 ? 0 : s.period === 2 ? 45 * 60000 : s.period === 3 ? 90 * 60000 : 105 * 60000;
+  const start =
+    s.period === 1 ? 0 : s.period === 2 ? 45 * 60000 : s.period === 3 ? 90 * 60000 : 105 * 60000;
   // Clock of the period counts from its start; earlier stoppage was already played.
   const into = s.clockMs - (s.periodStartMs || start);
   if (into < regular + s.stoppage) {
@@ -646,7 +797,10 @@ function clock(s: MatchState) {
   }
   // Do not stop in the middle of a shot.
   if (s.flight?.kind === 'shot') return;
-  emit(s, 'periodEnd', null, null, null, null, { period: s.period, stoppage: Math.round(s.stoppage / 60000) });
+  emit(s, 'periodEnd', null, null, null, null, {
+    period: s.period,
+    stoppage: Math.round(s.stoppage / 60000),
+  });
   const tied = s.teams[0].score === s.teams[1].score;
   const extra = s.input.rules.extraTime && tied;
   if (s.period === 1 || s.period === 3 || (s.period === 2 && extra)) {
