@@ -67,9 +67,9 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
 | MC-011 | DONE. `packages/club-domain`; esquema zod do pacote (`03` §1.1), com `kind`, competições, comissão, governança | P0 | G | 145 | pacote inválido é rejeitado com o caminho do erro | `src/pack/schema.test.ts` (8 testes); regras de consistência ficam na MC-017 |
-| MC-012 | Posições, 28 + 6 atributos, nota por função | P0 | M | 011 | nota por função muda com o atributo que a função pesa | unidade |
-| MC-013 | Gerador de jogador, de elenco e de comissão por semente | P0 | M | 012 | mesmo comando, mesmo resultado; elenco passa na validação | unidade |
-| MC-014 | Gerador dos pacotes fictícios `br-dev-1` e `br-dev-mini`, com uma competição de cada tipo de fase | P0 | G | 013, 160 | arquivos idênticos byte a byte entre execuções; volumes do `br-dev-1` dentro de 20% dos reais | teste de `checksum` |
+| MC-012 | DONE. Posições, 28 + 6 atributos, nota por função | P0 | M | 011 | nota por função muda com o atributo que a função pesa | `src/player/ratings.test.ts` (4 testes); pesos por função são PARÂMETRO |
+| MC-013 | DONE. Gerador de jogador, de elenco e de comissão por semente | P0 | M | 012 | mesmo comando, mesmo resultado; elenco passa na validação | `src/generate/generate.test.ts` |
+| MC-014 | DOING (`br-dev-mini` pronto para o corte 0,5, 8 clubes; `br-dev-1` e competições com fases dependem da MC-160). Gerador dos pacotes fictícios `br-dev-1` e `br-dev-mini`, com uma competição de cada tipo de fase | P0 | G | 013, 160 | arquivos idênticos byte a byte entre execuções; volumes do `br-dev-1` dentro de 20% dos reais | teste de `checksum` |
 | MC-015 | Importador CSV e JSON com arquivo de mapeamento | P1 | G | 011 | fixture de CSV e de JSON viram o mesmo pacote | unidade |
 | MC-016 | Normalização e deduplicação com relatório de conflito | P1 | M | 015 | duplicata nunca é resolvida em silêncio | unidade |
 | MC-017 | Validação de consistência (`03` §1.3) | P0 | M | 011 | cada regra tem um caso que falha | unidade |
