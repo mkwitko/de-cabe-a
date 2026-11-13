@@ -34,6 +34,8 @@ import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
 const TACKLE_RATE = 0.12;
+/** Ticks to control a ball just won (0.5 s). */
+const WIN_CONTROL = 2;
 /** World-frame x direction a team attacks. */
 const fwdOf = (team: 0 | 1) => (team === 0 ? 1 : -1);
 const inOwnBox = (team: 0 | 1, p: Vec2) => {
@@ -178,7 +180,9 @@ function gainBall(s: MatchState, p: MatchPlayer, restart = false) {
   s.ball.focal = { ...p.pos };
   s.ownedSince = s.tick;
   if (changed || restart) s.possessionSince = s.tick;
-  p.decideAt = s.tick + Math.max(1, Math.round(settleTime(s, p) / DT));
+  // A ball just won (tackle, interception, loose ball) still has to be brought under control. PARAMETER.
+  const regain = changed && !restart ? WIN_CONTROL : 0;
+  p.decideAt = s.tick + Math.max(1, Math.round(settleTime(s, p) / DT)) + regain;
   if (changed && !restart) emit(s, 'phaseChange', p.team, p.index, null, p.pos, { won: 1 });
 }
 

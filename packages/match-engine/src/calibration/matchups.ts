@@ -46,6 +46,16 @@ async function main() {
     console.log(
       `  ${a}: xG ${(xa / n).toFixed(2)} from ${(sa / n).toFixed(1)} shots | ${b}: xG ${(xb / n).toFixed(2)} from ${(sb / n).toFixed(1)} shots`,
     );
+    const by = (k: 'setPiece' | 'transition' | 'positional', side: 0 | 1) =>
+      (
+        rs.reduce(
+          (acc, s, i) => acc + s.xgBy[k][side === 0 ? (i % 2 === 0 ? 0 : 1) : i % 2 === 0 ? 1 : 0],
+          0,
+        ) / n
+      ).toFixed(2);
+    console.log(
+      `  xG by origin, ${a} / ${b}: set piece ${by('setPiece', 0)} / ${by('setPiece', 1)}, transition ${by('transition', 0)} / ${by('transition', 1)}, positional ${by('positional', 0)} / ${by('positional', 1)}`,
+    );
     let w = 0,
       d = 0,
       ga = 0,

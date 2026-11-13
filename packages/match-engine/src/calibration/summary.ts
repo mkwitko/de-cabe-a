@@ -1,5 +1,6 @@
 /** What calibration and zebra runs keep of a match (small enough to batch thousands). */
 import type { MatchResult } from '../contract';
+import { shotOrigins } from '../rules/explain';
 
 export interface Summary {
   score: [number, number];
@@ -20,6 +21,8 @@ export interface Summary {
   factors: string[];
   distance: number;
   stamina: number;
+  /** xG by where the chance came from (rules/explain.ts origins). */
+  xgBy: Record<'setPiece' | 'transition' | 'positional', [number, number]>;
   /** Balls won within 35 m of the opponents' goal. */
   highWins: [number, number];
 }
@@ -65,6 +68,13 @@ export function summary(r: MatchResult): Summary {
     factors: r.explanation.factors.map((f) => f.message.key),
     distance: r.players.reduce((a, p) => a + p.distanceM, 0) / r.players.length,
     stamina: r.players.reduce((a, p) => a + p.stamina, 0) / r.players.length,
+    xgBy: (() => {
+      const o = shotOrigins(r.events);
+      const out = { setPiece: [0, 0], transition: [0, 0], positional: [0, 0] } as Summary['xgBy'];
+      for (const e of r.events)
+        if (e.kind === 'shot' && e.team !== null) out[o.get(e.id)!][e.team] += e.data.xg ?? 0;
+      return out;
+    })(),
     highWins: pair(
       (t) =>
         r.events.filter(

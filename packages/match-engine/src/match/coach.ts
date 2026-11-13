@@ -88,10 +88,12 @@ const up = (v: number, d: number) => Math.max(1, Math.min(5, v + d));
 export function readTheGame(s: MatchState): void {
   const minute = s.clockMs / 60000;
   const slot = Math.floor(minute / 5);
-  if (minute < 60 || slot === s.coachSlot) return;
+  if (minute < 15 || slot === s.coachSlot) return;
   s.coachSlot = slot;
   for (const team of [0, 1] as const) {
     if (s.coaches[team].flexibility < 30) continue;
+    beatThePress(s, team, minute);
+    if (minute < 60) continue;
     // A coach who reads the game reacts sooner; a poor reader up to ten minutes later (ADR-019).
     if (minute < 70 + (99 - s.coaches[team].gameReading) / 10) continue;
     const diff = s.teams[team].score - s.teams[team === 0 ? 1 : 0].score;
@@ -116,4 +118,30 @@ export function readTheGame(s: MatchState): void {
     if (JSON.stringify(t) !== before)
       emit(s, 'command', team, null, null, null, { coach: 1, diff });
   }
+}
+
+/**
+ * Being pressed (research 14 §4, Dortmund x Atlético): a coach who sees his side
+ * lose the ball in its own third again and again widens the build-up and goes
+ * longer. How soon he sees it depends on his game reading. PARAMETERS: window,
+ * threshold.
+ */
+function beatThePress(s: MatchState, team: 0 | 1, minute: number): void {
+  const t = s.plans[team].team;
+  if (t.buildUp === 'long') return;
+  const window = 10 + (99 - s.coaches[team].gameReading) / 10; // minutes he needs to notice
+  const since = s.clockMs - window * 60000;
+  let lost = 0;
+  for (let i = s.events.length - 1; i >= 0; i--) {
+    const e = s.events[i]!;
+    if (e.atMs < since) break;
+    if (e.kind !== 'phaseChange' || e.team === team || !e.at) continue;
+    const x = team === 0 ? e.at[0] / 10 : 105 - e.at[0] / 10;
+    if (x < 35) lost++;
+  }
+  if (lost < 3 || minute < window) return;
+  t.buildUp = 'long';
+  t.width = Math.min(5, t.width + 1);
+  if (s.basePlans) s.basePlans[team] = { ...s.basePlans[team], buildUp: 'long', width: t.width };
+  emit(s, 'command', team, null, null, null, { coach: 2, lost });
 }
