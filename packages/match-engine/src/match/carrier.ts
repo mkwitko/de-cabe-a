@@ -47,7 +47,7 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * A shot ends the move: players keep the ball unless the chance beats what the
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
-const SHOT_RESERVE = -0.025;
+const SHOT_RESERVE = -0.04;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.7;
 const oppValue = (t: Vec2) => valueAt(LENGTH - t.x, WIDTH - t.y);
@@ -85,7 +85,7 @@ export function chanceFrom(s: MatchState, c: MatchPlayer, header = false, afterC
 /** Seconds a receiver takes to settle the ball before the next decision (tempo, first touch). */
 export function settleTime(s: MatchState, c: MatchPlayer): number {
   const tempo = s.plans[c.team].team.tempo;
-  return 0.5 + 0.18 * (5 - tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
+  return 1.4 + 0.3 * (5 - tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
 }
 
 export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = 'open'): Choice {

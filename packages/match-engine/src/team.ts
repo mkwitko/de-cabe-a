@@ -132,9 +132,18 @@ export function anchors(
       ? CENTER.y + (b.y - CENTER.y) * widthScale + (focal.y - CENTER.y) * FOLLOW_Y[line]
       : CENTER.y + (b.y - CENTER.y) * NARROW_OUT[line] + (focal.y - CENTER.y) * FOLLOW_Y_OUT[line];
     if (line === 'gk') {
-      // Keeper on the line between the ball and the goal centre, deeper when the ball is near.
-      x = inPossession ? clamp(6 + focal.x * 0.12, 6, 20) : clamp(2.5 + focal.x * 0.06, 2.5, 9);
-      y = CENTER.y + (focal.y - CENTER.y) * 0.12;
+      if (inPossession) {
+        x = clamp(6 + focal.x * 0.12, 6, 20);
+        y = CENTER.y + (focal.y - CENTER.y) * 0.12;
+      } else {
+        // On the line from the goal centre to the ball (02 §6.4), a quarter of the way, at most 6 m out.
+        const dx = focal.x;
+        const dy = focal.y - CENTER.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+        const out = clamp(0.25 * d, 1, 6);
+        x = Math.max(0.5, (dx / d) * out);
+        y = CENTER.y + (dy / d) * out;
+      }
     }
     return { x, y, line };
   });
@@ -145,7 +154,12 @@ export function anchors(
   const k = inPossession ? 1.15 - 0.075 * t.compactness : 1.0 - 0.06 * t.compactness;
   return out.map((a) => {
     let x = a.line === 'gk' ? a.x : cx + (a.x - cx) * k;
-    if (!inPossession) x = Math.min(Math.max(x, FLOOR_OUT[a.line]), BLOCK_TOP[t.block][a.line]);
+    // The floor gives way when the ball is deeper than it: the line stays goal-side of the ball.
+    if (!inPossession)
+      x = Math.min(
+        Math.max(x, Math.min(FLOOR_OUT[a.line], Math.max(2, focal.x - 3))),
+        BLOCK_TOP[t.block][a.line],
+      );
     if (inPossession && a.line !== 'gk' && lastLine !== null)
       x = Math.min(x, Math.max(lastLine - 0.8, focal.x - 2));
     return { x: clamp(x, 1, LENGTH - 1), y: clamp(a.y, 1, WIDTH - 1) };
@@ -194,11 +208,13 @@ export function tasksFor(
 ): Task[] {
   const t = plan.team;
   const tasks: Task[] = [];
+  // With the ball nobody waits on the goal line: tasks stop at the six-yard line (PARAMETER).
+  const maxX = inPossession ? LENGTH - 5.5 : LENGTH - 1;
   const add = (kind: TaskKind, key: string, point: Vec2) =>
     tasks.push({
       kind,
       key,
-      point: { x: clamp(point.x, 1, LENGTH - 1), y: clamp(point.y, 1, WIDTH - 1) },
+      point: { x: clamp(point.x, 1, maxX), y: clamp(point.y, 1, WIDTH - 1) },
       priority: tasks.length,
     });
   const side = focal.y < CENTER.y ? -1 : 1;

@@ -73,7 +73,7 @@ export function t1(samples: Sample[], team: 0 | 1, dt: number) {
   const near = samples.map((s) => {
     let n = 0;
     s.players.forEach((p, i) => {
-      if (!inTeam(team)(i) || i === s.holder) return;
+      if (!inTeam(team)(i) || i === s.holder || i % 11 === 0) return; // the keeper is not a swarm
       const dx = p.x - s.ball.x;
       const dy = p.y - s.ball.y;
       if (dx * dx + dy * dy < 25) n++;

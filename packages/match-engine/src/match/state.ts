@@ -58,6 +58,8 @@ export interface Flight {
   beaten: boolean;
   /** Shot data for the event when it ends. */
   shot: { xg: number; event: number } | null;
+  /** Cross blocked at the source by this defender (goes behind for a corner). */
+  blocked?: number;
 }
 
 export interface TeamState {

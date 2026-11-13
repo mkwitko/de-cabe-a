@@ -89,6 +89,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
   const offside = noOffside ? [] : offsideNow(s, c);
   let ball: Ball;
   let kind: Flight['kind'] = 'pass';
+  let blocked = -1;
   if (a.kind === 'pass' || a.kind === 'through') {
     const spd = groundSpeed(d) * (a.kind === 'through' ? 0.95 : 1) * (1 + 0.06 * g(s));
     const target = { x: from.x + (dx / d) * d, y: from.y + (dy / d) * d };
@@ -120,7 +121,12 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
       chosen: Math.round(a.u * 1000),
       kind: ['pass', 'through', 'long', 'cross', 'clear'].indexOf(a.kind),
     });
-  } else if (kind === 'cross') emit(s, 'pass', team, c.index, null, from, { d: Math.round(d), cross: 1 });
+  } else if (kind === 'cross') {
+    emit(s, 'pass', team, c.index, null, from, { d: Math.round(d), cross: 1 });
+    // A defender closing the crosser blocks it, often behind (PARAMETER).
+    const closer = opponents(s, team).find((o) => Math.sqrt((o.pos.x - from.x) ** 2 + (o.pos.y - from.y) ** 2) < 2.5);
+    if (closer && next(s.rngs.execution) < 0.35) blocked = closer.index;
+  }
   return {
     ball,
     from: c.index,
@@ -130,6 +136,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     offside,
     beaten: false,
     shot: null,
+    blocked,
   };
 }
 

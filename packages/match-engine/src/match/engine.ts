@@ -23,7 +23,7 @@ import { substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
-const TACKLE_RATE = 0.15;
+const TACKLE_RATE = 0.1;
 /** World-frame x direction a team attacks. */
 const fwdOf = (team: 0 | 1) => (team === 0 ? 1 : -1);
 const inOwnBox = (team: 0 | 1, p: Vec2) => {
@@ -185,6 +185,11 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   }
   const noOffside = restartAllowed === 'throwIn' || restartAllowed === 'goalKick' || restartAllowed === 'corner';
   s.flight = kick(s, c, a, noOffside);
+  if (s.flight.blocked !== undefined && s.flight.blocked >= 0) {
+    s.lastTouch = s.flight.blocked;
+    setRestart(s, 'corner', c.team, { x: c.team === 0 ? LENGTH : 0, y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
+    return;
+  }
   if (a.kind === 'shot') s.flight = s.flight; // shot flight already resolved in kick()
   s.owner = null;
   s.ball.holder = a.receiver?.index ?? null;
@@ -224,6 +229,17 @@ function tackles(s: MatchState) {
   if (s.owner === null) return;
   const c = s.players[s.owner]!;
   if (lineOf(c.role) === 'gk' && inOwnBox(c.team, c.pos)) return; // ball in the keeper's hands
+  // The keeper comes out at a carrier close to him in his box (02 §6.4 um contra um). PARAMETERS.
+  const k = opponents(s, c.team).find((o) => lineOf(o.role) === 'gk' && inOwnBox(o.team, o.pos));
+  if (k && inOwnBox(k.team, c.pos) && dist(k.pos, c.pos) < 3 && next(s.rngs.execution) < 0.6) {
+    const won = next(s.rngs.execution) < contest(norm(k.attrs.oneOnOne) - norm(c.attrs.dribbling), -0.1, 0.12);
+    emit(s, 'save', k.team, k.index, c.index, c.pos, { smother: 1, won: won ? 1 : 0 });
+    if (won) {
+      gainBall(s, k);
+      k.decideAt = s.tick + 12;
+      return;
+    }
+  }
   for (const d of opponents(s, c.team)) {
     if (s.owner === null) return;
     if (d.tackleAt > s.tick || dist(d.pos, c.pos) > 1.4 || lineOf(d.role) === 'gk') continue;
@@ -390,6 +406,11 @@ function touch(s: MatchState, p: MatchPlayer) {
     // Block: the ball keeps part of its pace and changes direction (often behind for a corner).
     emit(s, 'save', p.team, p.index, kicker.index, p.pos, { block: 1 });
     p.score += 0.1;
+    // A blocked shot goes behind for a corner a good share of the time (PARAMETER, corners per match 02 §11).
+    if (next(s.rngs.execution) < 0.4) {
+      setRestart(s, 'corner', kicker.team, { x: p.team === 0 ? 0 : LENGTH, y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
+      return;
+    }
     const keep = 0.3 + 0.4 * next(s.rngs.execution);
     const side = gaussian(() => next(s.rngs.execution));
     looseBall(s, p.index, p.pos, b.vx * keep - b.vy * side * 0.6, b.vy * keep + b.vx * side * 0.6);
@@ -445,7 +466,7 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
     return;
   }
   // Parry: wide for a corner a third of the time, otherwise a rebound in front (02 §6.4). PARAMETERS.
-  const wide = next(s.rngs.execution) < 0.35;
+  const wide = next(s.rngs.execution) < 0.45;
   const side = k.pos.y < CENTER.y ? -1 : 1;
   const fwd = fwdOf(k.team);
   if (wide) {
@@ -495,7 +516,7 @@ function aerial(s: MatchState, first: MatchPlayer) {
     return;
   }
   // A defender under pressure in his own box sometimes heads it behind (02 §6.3). PARAMETER.
-  if (win.team !== kicker.team && inOwnBox(win.team, win.pos) && next(s.rngs.execution) < 0.22) {
+  if (win.team !== kicker.team && inOwnBox(win.team, win.pos) && next(s.rngs.execution) < 0.3) {
     setRestart(s, 'corner', kicker.team, { x: win.team === 0 ? 0 : LENGTH, y: win.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5 });
     return;
   }

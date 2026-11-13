@@ -29,10 +29,10 @@ export interface FoulContext {
 
 /** 0 no card, 1 yellow, 2 straight red. `u` and `v` are two uniform draws. */
 export function cardFor(strictness: number, d: Tackler, c: FoulContext, u: number, v: number): 0 | 1 | 2 {
-  if (c.lastMan && v < 0.3) return 2;
+  if (c.lastMan && v < 0.1) return 2;
   if (v < 0.003) return 2;
   const p =
-    (0.07 + (c.behind ? 0.12 : 0) + (c.promising ? 0.12 : 0) + 0.06 * norm(d.attrs.aggression)) *
+    (0.05 + (c.behind ? 0.1 : 0) + (c.promising ? 0.1 : 0) + 0.05 * norm(d.attrs.aggression)) *
     (0.7 + 0.6 * strictness);
   return u < p ? 1 : 0;
 }
