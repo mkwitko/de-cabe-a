@@ -33,7 +33,7 @@ import { readTheGame, substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
-const TACKLE_RATE = 0.12;
+const TACKLE_RATE = 0.16;
 /** Ticks to control a ball just won (0.5 s). */
 const WIN_CONTROL = 2;
 /** World-frame x direction a team attacks. */
@@ -466,6 +466,18 @@ function outOfPlay(s: MatchState, side: 'goal0' | 'goal1' | 'byline0' | 'byline1
   const last = s.players[s.lastTouch]!;
   const at = { x: f.ball.x, y: f.ball.y };
   if (side === 'goal0' || side === 'goal1') {
+    // A pass, clearance or loose ball rolling or dropping into the net: a keeper near his goal
+    // gathers it (only shots and deflections beat him). PARAMETER: 12 m.
+    if (f.kind !== 'shot') {
+      const defending: 0 | 1 = side === 'goal1' ? 1 : 0;
+      const k = s.players.find((p) => p.active && p.team === defending && lineOf(p.role) === 'gk');
+      if (k && dist(k.pos, { x: defending === 0 ? 0 : LENGTH, y: CENTER.y }) < 12) {
+        emit(s, 'save', k.team, k.index, null, k.pos, { claim: 1 });
+        gainBall(s, k);
+        k.decideAt = s.tick + 12;
+        return;
+      }
+    }
     const scorer = s.players[f.from]!;
     const team = side === 'goal1' ? 0 : 1; // goal1 is the goal at x = 105, attacked by team 0
     s.teams[team].score++;
@@ -549,7 +561,7 @@ function touch(s: MatchState, p: MatchPlayer) {
     emit(s, 'save', p.team, p.index, kicker.index, p.pos, { block: 1 });
     p.score += 0.1;
     // A blocked shot goes behind for a corner a good share of the time (PARAMETER, corners per match 02 §11).
-    if (next(s.rngs.execution) < 0.65) {
+    if (next(s.rngs.execution) < 0.72) {
       setRestart(s, 'corner', kicker.team, {
         x: p.team === 0 ? 0 : LENGTH,
         y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,

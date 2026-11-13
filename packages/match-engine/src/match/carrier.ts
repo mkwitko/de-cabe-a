@@ -92,7 +92,7 @@ export function chanceFrom(s: MatchState, c: MatchPlayer, header = false, afterC
 /** Seconds a receiver takes to settle the ball before the next decision (tempo, first touch). */
 export function settleTime(s: MatchState, c: MatchPlayer): number {
   const plan = s.plans[c.team].team;
-  const base = 2.0 + 0.3 * (5 - plan.tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
+  const base = 1.5 + 0.3 * (5 - plan.tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
   // Under pressure the ball is played first time; on a counter it goes forward at once (PARAMETERS).
   const pressed = 1 - 0.65 * pressureOn(s, c);
   // Receiving half-turned (body orientation) saves the extra touch (ADR-019).

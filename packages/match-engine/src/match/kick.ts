@@ -23,7 +23,7 @@ const g = (s: MatchState) => gaussian(() => next(s.rngs.execution));
  * PARAMETERS: base and crowd share.
  */
 export const homeEdge = (s: MatchState, team: 0 | 1) =>
-  team === 0 ? 0.05 + 0.1 * s.input.conditions.crowd : 0;
+  team === 0 ? 0.08 + 0.14 * s.input.conditions.crowd : 0;
 
 /** Rotates (vx, vy) by a small angle θ and renormalises (no trigonometry). */
 function turn(vx: number, vy: number, theta: number): [number, number] {
@@ -166,7 +166,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     const closer = opponents(s, team).find(
       (o) => Math.sqrt((o.pos.x - from.x) ** 2 + (o.pos.y - from.y) ** 2) < 2.5,
     );
-    if (closer && next(s.rngs.execution) < 0.5) blocked = closer.index;
+    if (closer && next(s.rngs.execution) < 0.58) blocked = closer.index;
   }
   return {
     ball,

@@ -38,7 +38,7 @@ export function cardFor(
   if (c.lastMan && v < 0.02) return 2;
   if (v < 0.0008) return 2;
   const p =
-    (0.056 + (c.behind ? 0.11 : 0) + (c.promising ? 0.11 : 0) + 0.05 * norm(d.attrs.aggression)) *
+    (0.06 + (c.behind ? 0.12 : 0) + (c.promising ? 0.12 : 0) + 0.05 * norm(d.attrs.aggression)) *
     (0.7 + 0.6 * strictness);
   return u < p ? 1 : 0;
 }

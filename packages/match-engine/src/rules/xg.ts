@@ -43,7 +43,7 @@ export const goalDistance = (x: number, y: number) =>
 export function xg(c: ShotContext): number {
   const d = goalDistance(c.x, c.y);
   const z =
-    -1.22 +
+    -1.45 +
     1.25 * goalAngle(c.x, c.y) -
     0.105 * d -
     (c.header ? 0.9 : 0) -
