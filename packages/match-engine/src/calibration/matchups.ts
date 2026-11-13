@@ -18,14 +18,14 @@ const plans: Record<string, () => TacticalPlan> = {
   press: style('4-3-3', { block: 'high', pressIntensity: 5, lineHeight: 4 }),
   low: style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter' }),
   433: style('4-3-3', {}),
+  highOnly: style('4-3-3', { block: 'high', lineHeight: 4 }),
+  intensityOnly: style('4-3-3', { pressIntensity: 5 }),
 };
 async function main() {
-  for (const [a, b] of [
-    ['press', 'mid'],
-    ['low', 'mid'],
-    ['press', 'low'],
-    ['433', 'mid'],
-  ] as const) {
+  const pairs = (process.argv[3] ?? 'press:mid,low:mid,press:low,433:mid')
+    .split(',')
+    .map((x) => x.split(':') as [string, string]);
+  for (const [a, b] of pairs) {
     const inputs = Array.from({ length: n }, (_, i) => {
       const A = teamInput(9000 + i, 65, plans[a]!(), `a${i}`);
       const B = teamInput(9500 + i, 65, plans[b]!(), `b${i}`);

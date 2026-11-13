@@ -92,6 +92,14 @@ export function passSafety(
     safe *= 1 - worst;
   }
   if (receiver) {
+    // A marker tight on the receiver (within 3 m) can step in front of the ball (PARAMETER).
+    let tight = Infinity;
+    for (const o of opp) {
+      const dx = o.pos.x - receiver.pos.x;
+      const dy = o.pos.y - receiver.pos.y;
+      tight = Math.min(tight, Math.sqrt(dx * dx + dy * dy));
+    }
+    if (tight < 3) safe *= 0.82 + 0.06 * tight;
     // The receiver must beat the nearest opponent to the end point.
     const tr = arrivalTime(kin(receiver), to, receiverKnows);
     const tOpp = firstArrival(opp, to);

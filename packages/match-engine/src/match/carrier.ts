@@ -109,7 +109,8 @@ export const inCounter = (s: MatchState, team: 0 | 1) =>
   s.ball.possession === team &&
   (s.tick - s.possessionSince) * 0.25 < COUNTER_WINDOW;
 
-export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = 'open'): Choice {
+/** Every action the carrier perceives, scored (exported for the decision log and diagnostics). */
+export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'open'): Action[] {
   const plan = s.plans[c.team].team;
   const r = s.rngs.decision;
   const me = toTeam(c, c.pos);
@@ -122,7 +123,9 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
   // Risk shifts the weight of losing the ball (02 §5.4); 1 careful, 5 bold.
   // Near our own goal nobody gambles (PARAMETER: up to 2.5 times the weight in our box).
   const lossW = (1.4 - 0.2 * (plan.risk - 1)) * (1 + 1.5 * clamp((30 - me.x) / 20, 0, 1));
-  const noise = 0.14 * (1.15 - decisions);
+  // Misjudging each option (02 §5.4). Kept small: with many options the best-looking one is
+  // the most overrated (winner's curse), so a large spread makes everyone gamble. PARAMETER.
+  const noise = 0.06 * (1.15 - decisions);
   const out: Action[] = [];
   const push = (
     a: Omit<Action, 'est' | 'u' | 'ue'> & { win: number; lose: number; bias?: number },
@@ -275,7 +278,7 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
     });
   }
 
-  if (allowed === 'corner') return pick(out, c, pressure, r);
+  if (allowed === 'corner') return out;
 
   // ── Shot ──
   const angle = goalAngle(me.x, me.y);
@@ -373,7 +376,12 @@ export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = '
       lose: oppValue(tt),
     });
   }
-  return pick(out, c, pressure, r);
+  return out;
+}
+
+export function chooseAction(s: MatchState, c: MatchPlayer, allowed: Allowed = 'open'): Choice {
+  const out = candidates(s, c, allowed);
+  return pick(out, c, pressureOn(s, c), s.rngs.decision);
 }
 
 function pick(out: Action[], c: MatchPlayer, pressure: number, r: Rng): Choice {
@@ -389,7 +397,7 @@ function pick(out: Action[], c: MatchPlayer, pressure: number, r: Rng): Choice {
   const tau =
     0.01 *
     (1.6 - 0.6 * decisions - 0.4 * composure) *
-    (1 + 0.8 * pressure) *
+    (1 + 0.6 * pressure * (1 - composure)) *
     (0.85 + 0.3 * norm(c.attrs.flair));
   const top = Math.max(...out.map((a) => a.ue));
   const w = out.map((a) => exp((a.ue - top) / tau));
