@@ -73,6 +73,29 @@ export default tseslint.config(
     rules: { 'no-restricted-imports': ['error', { patterns: [noApps, matchEngineRootOnly] }] },
   },
   {
+    // Modo Clube (ADR-017 item 4, MC-147): text the person reads comes from t(key).
+    files: ['apps/web/src/games/manager/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXText[value=/[A-Za-zÀ-ÖØ-öø-ÿ]/]',
+          message: 'Modo Clube: no literal text in JSX; use t(key).',
+        },
+        {
+          selector:
+            ':matches(JSXElement, JSXFragment) > JSXExpressionContainer Literal[value=/[A-Za-zÀ-ÖØ-öø-ÿ]/]:not(CallExpression > Literal):not(CallExpression > ConditionalExpression > Literal):not(JSXAttribute Literal)',
+          message: 'Modo Clube: no literal text in JSX; use t(key).',
+        },
+        {
+          selector:
+            'JSXAttribute[name.name=/^(aria-label|aria-description|title|alt|placeholder|label|description|message)$/] Literal[value=/[A-Za-zÀ-ÖØ-öø-ÿ]/]:not(CallExpression > Literal):not(CallExpression > ConditionalExpression > Literal)',
+          message: 'Modo Clube: no literal text in attributes; use t(key).',
+        },
+      ],
+    },
+  },
+  {
     files: ['apps/api/**'],
     rules: { 'no-restricted-imports': ['error', { patterns: [matchEngineRootOnly] }] },
   },
