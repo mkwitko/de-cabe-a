@@ -105,10 +105,10 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 | MC-041 | DONE (2026-11-13; `rules/injury.ts`: 0,017 por hora sem contato e 1,2% por falta, perto de 23 por 1.000 h; o banco substitui o lesionado). Lesão e substituição | P0 | M | 037 | taxas por 1.000 h na faixa de `03` §4 |
 | MC-042 | DOING (eventos e estatísticas fecham com o placar; faltam mapas por zona e matriz de duelos). Eventos, estatísticas, mapas, matriz de duelos | P0 | M | 035–041 | soma dos eventos fecha com o placar |
 | MC-043 | DONE (2026-11-13; `rules/explain.ts`: origem dos chutes particiona o saldo de `xG`; conversão por finalização e goleiro; ponto de vista do mandante). Explicação: criação × conversão, fatores com número, chaves de mensagem (`02` §11) | P0 | G | 042, 149 | cenário montado devolve a causa montada; partida decidida por conversão diz isso |
-| MC-044 | Bancada estatística contra `02` §11 | P0 | M | 042 | todas as linhas na faixa |
+| MC-044 | DOING (bancada `src/calibration/calibrate.ts` em paralelo; 200 partidas: na faixa passes, xG por finalização, faltas, impedimentos, distância e mandante/empate/visitante 47/27/27; fora por pouco gols 2,59, finalizações 12,3, no alvo 3,97, acerto de passe 77%, amarelos 2,0, vermelhos 0,075, escanteios 4,6 por time). Bancada estatística contra `02` §11 | P0 | M | 042 | todas as linhas na faixa |
 | MC-166 | Suíte de zebra Z1 a Z12 (`TEST_STRATEGY.md` §4) | P0 | G | 043, 044 | doze cenários verdes; a engine não recebe qual time é do usuário |
 | MC-045 | Torneio de presets | P0 | M | 044 | nenhum preset acima de 60% contra todos |
-| MC-047 | Desempenho: partida do usuário até 1 s | P0 | M | 044 | benchmark registrado com ambiente |
+| MC-047 | DONE (2026-11-13; `pnpm --filter @decabeca/match-engine bench`: média 860 ms, p90 1,1 s, Intel Core 7 250U, Node 24.12, um núcleo). Desempenho: partida do usuário até 1 s | P0 | M | 044 | benchmark registrado com ambiente |
 | MC-048 | **Portão**: dono assiste a 10 partidas | P0 | — | 044–047, 166 | aprovado ou lista de defeitos |
 
 ## Engine por posses (nível 2)

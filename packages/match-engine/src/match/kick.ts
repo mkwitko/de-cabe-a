@@ -17,6 +17,14 @@ import type { Flight, MatchPlayer, MatchState } from './state';
 
 const g = (s: MatchState) => gaussian(() => next(s.rngs.execution));
 
+/**
+ * Home advantage (02 §11: about 47.6% home wins; without a crowd it shrinks by a
+ * sixth to a third, never to zero): the home side executes a little better.
+ * PARAMETERS: base and crowd share.
+ */
+export const homeEdge = (s: MatchState, team: 0 | 1) =>
+  team === 0 ? 0.05 + 0.1 * s.input.conditions.crowd : 0;
+
 /** Rotates (vx, vy) by a small angle θ and renormalises (no trigonometry). */
 function turn(vx: number, vy: number, theta: number): [number, number] {
   const nx = vx - theta * vy;
@@ -29,7 +37,8 @@ function turn(vx: number, vy: number, theta: number): [number, number] {
 export function passError(s: MatchState, c: MatchPlayer, d: number): number {
   const skill = weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
   const sigma =
-    0.012 + 0.05 * (1 - skill) + 0.025 * pressureOn(s, c) + 0.0006 * d + 0.03 * (1 - c.stamina);
+    (0.012 + 0.05 * (1 - skill) + 0.025 * pressureOn(s, c) + 0.0006 * d + 0.03 * (1 - c.stamina)) *
+    (1 - homeEdge(s, c.team));
   return g(s) * sigma;
 }
 
@@ -139,7 +148,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     const closer = opponents(s, team).find(
       (o) => Math.sqrt((o.pos.x - from.x) ** 2 + (o.pos.y - from.y) ** 2) < 2.5,
     );
-    if (closer && next(s.rngs.execution) < 0.35) blocked = closer.index;
+    if (closer && next(s.rngs.execution) < 0.5) blocked = closer.index;
   }
   return {
     ball,
@@ -181,7 +190,14 @@ export function shoot(
   const header = opts.header ?? false;
   const chance = opts.chance ?? a.chance ?? 0.05;
   const keeper = opponents(s, team).find((p) => lineOf(p.role) === 'gk');
-  const pGoal = clamp(chance * finisherFactor(c, header) * keeperFactor(keeper), 0.002, 0.97);
+  const pGoal = clamp(
+    chance *
+      finisherFactor(c, header) *
+      keeperFactor(keeper) *
+      (1 + homeEdge(s, team) - homeEdge(s, team === 0 ? 1 : 0)),
+    0.002,
+    0.97,
+  );
   const skill = header
     ? weighted(c.attrs, { heading: 0.7, jumping: 0.3 })
     : weighted(c.attrs, { finishing: 0.6, technique: 0.4 });

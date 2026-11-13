@@ -70,7 +70,7 @@ export function setRestart(
     if (p.active) {
       recover(p, ms / 1000);
       // Walking back into place while the ball is dead (PARAMETER: about 1 m/s).
-      p.distance += (0.7 * ms) / 1000;
+      p.distance += (0.85 * ms) / 1000;
     }
   const stat = kind === 'corner' ? 'corners' : null;
   if (stat) s.teams[team].stats.corners++;
@@ -278,7 +278,7 @@ function tackleWins(s: MatchState, d: MatchPlayer, c: MatchPlayer, emitTackle = 
     return;
   }
   const cg = flip(c.team, c.pos);
-  if (cg.x > LENGTH - 12 && next(s.rngs.execution) < 0.3) {
+  if (cg.x > LENGTH - 12 && next(s.rngs.execution) < 0.5) {
     s.lastTouch = d.index;
     setRestart(s, 'corner', c.team, {
       x: c.team === 0 ? LENGTH : 0,
@@ -315,14 +315,15 @@ function tackles(s: MatchState) {
     if (d.tackleAt > s.tick || dist(d.pos, c.pos) > 1.4 || lineOf(d.role) === 'gk') continue;
     if (d.intent !== 'press' && dist(d.pos, c.pos) > 1.0) continue;
     // Chance per step that a close defender commits to a tackle. PARAMETER (tackles per match, 02 §11).
-    if (next(s.rngs.execution) > TACKLE_RATE) continue;
+    // A booked player goes into tackles more carefully (PARAMETER).
+    if (next(s.rngs.execution) > TACKLE_RATE * (d.cards === 1 ? 0.4 : 1)) continue;
     d.tackleAt = s.tick + 4;
     // Behind: the defender is on the far side of the carrier from the carrier's own goal direction.
     const cg = flip(c.team, c.pos);
     const dg = flip(c.team, d.pos);
     const behind = dg.x < cg.x - 0.3;
     const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
-    const pf = foulChance(d, behind, won);
+    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1);
     if (next(s.rngs.referee) < pf) {
       foul(s, d, c, behind);
       return;
@@ -393,7 +394,8 @@ function reachers(s: MatchState): Reacher[] {
   return s.players.map((p) => {
     if (!p.active) return { pos: { x: -999, y: -999 }, vel: { x: 0, y: 0 }, reach: 0, height: 0 };
     const gk = lineOf(p.role) === 'gk' && inOwnBox(p.team, p.pos);
-    let reach = 1.0;
+    // The intended receiver reaches for the ball he expects (PARAMETER).
+    let reach = f.to === p.index ? 1.3 : 1.0;
     if (gk)
       reach =
         f.kind === 'shot'
@@ -518,7 +520,7 @@ function touch(s: MatchState, p: MatchPlayer) {
     emit(s, 'save', p.team, p.index, kicker.index, p.pos, { block: 1 });
     p.score += 0.1;
     // A blocked shot goes behind for a corner a good share of the time (PARAMETER, corners per match 02 §11).
-    if (next(s.rngs.execution) < 0.4) {
+    if (next(s.rngs.execution) < 0.65) {
       setRestart(s, 'corner', kicker.team, {
         x: p.team === 0 ? 0 : LENGTH,
         y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
@@ -589,7 +591,7 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
     return;
   }
   // Parry: wide for a corner a third of the time, otherwise a rebound in front (02 §6.4). PARAMETERS.
-  const wide = next(s.rngs.execution) < 0.45;
+  const wide = next(s.rngs.execution) < 0.55;
   const side = k.pos.y < CENTER.y ? -1 : 1;
   const fwd = fwdOf(k.team);
   if (wide) {
@@ -665,7 +667,7 @@ function aerial(s: MatchState, first: MatchPlayer) {
     return;
   }
   // A defender under pressure in his own box sometimes heads it behind (02 §6.3). PARAMETER.
-  if (win.team !== kicker.team && inOwnBox(win.team, win.pos) && next(s.rngs.execution) < 0.3) {
+  if (win.team !== kicker.team && inOwnBox(win.team, win.pos) && next(s.rngs.execution) < 0.4) {
     setRestart(s, 'corner', kicker.team, {
       x: win.team === 0 ? 0 : LENGTH,
       y: win.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,

@@ -35,10 +35,10 @@ export function cardFor(
   u: number,
   v: number,
 ): 0 | 1 | 2 {
-  if (c.lastMan && v < 0.05) return 2;
-  if (v < 0.0015) return 2;
+  if (c.lastMan && v < 0.02) return 2;
+  if (v < 0.0008) return 2;
   const p =
-    (0.05 + (c.behind ? 0.1 : 0) + (c.promising ? 0.1 : 0) + 0.05 * norm(d.attrs.aggression)) *
+    (0.056 + (c.behind ? 0.11 : 0) + (c.promising ? 0.11 : 0) + 0.05 * norm(d.attrs.aggression)) *
     (0.7 + 0.6 * strictness);
   return u < p ? 1 : 0;
 }
