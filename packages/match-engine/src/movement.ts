@@ -21,11 +21,11 @@ const maxAccel = (m: Mover) => acceleration(m.acceleration);
  * One step towards `target`: the wanted velocity slows on arrival and the
  * change of velocity is capped by acceleration, which also limits turning.
  */
-export function moveTowards(m: Mover, target: Vec2): void {
+export function moveTowards(m: Mover, target: Vec2, speedCap = Infinity): void {
   const dx = target.x - m.pos.x;
   const dy = target.y - m.pos.y;
   const d = Math.sqrt(dx * dx + dy * dy);
-  const speed = Math.min(maxSpeed(m), d * 2);
+  const speed = Math.min(maxSpeed(m), speedCap, d * 2);
   const wantX = d > 0 ? (dx / d) * speed : 0;
   const wantY = d > 0 ? (dy / d) * speed : 0;
 
