@@ -109,6 +109,10 @@ const compliance = (a: Attributes, fam: number) =>
 
 /** PARAMETER: widest gap between neighbours of a back line without the ball, metres. */
 const BACK_SPACING = 13;
+/** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
+const PERSONAL_SPACE = 3;
+/** PARAMETER: deepest a player outside the rest defence stays behind the ball with it (T9 counts beyond 12 m). */
+const JOIN_BEHIND = 10;
 
 /** Runs the team layer for `team`: tasks on the coordination clock or on an event, targets every step. */
 export function coordinate(w: World, team: 0 | 1, event: boolean): void {
@@ -163,7 +167,11 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       continue;
     }
     const a = byPlayer.get(p.index);
-    const pt = a ? (fresh.get(a.task.key) ?? a.task.point) : anc[p.slot]!;
+    let pt = a ? (fresh.get(a.task.key) ?? a.task.point) : anc[p.slot]!;
+    // With the ball, the rest defence is the players the plan leaves behind (02 §5.9);
+    // everyone else without a task joins the play instead of idling deep in the shape.
+    if (!a && inPossession && lineOf(p.role) !== 'gk')
+      pt = { x: Math.max(pt.x, focal.x - JOIN_BEHIND), y: pt.y };
     p.intent = a ? a.task.kind : 'anchor';
     targets.push({ ...pt });
   }
@@ -189,6 +197,33 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     .map((p, i) => ({ p, t: targets[i]! }))
     .filter(({ p }) => lineOf(p.role) !== 'gk' && p.index !== w.ball.holder);
   spreadTargets(movable.map((m) => m.t));
+  // Two teammates running side by side (02 §5.11 point 6): the later one in priority
+  // order steers away from the other, so distinct targets do not end in one moving pair.
+  // The carrier counts as an obstacle too.
+  const holder = mine.find((p) => p.index === w.ball.holder);
+  for (let i = 0; i < movable.length; i++) {
+    const others = movable.slice(0, i).map((m) => m.p);
+    if (holder) others.push(holder);
+    for (const o of others) {
+      const a = flip(team, o.pos);
+      const b = flip(team, movable[i]!.p.pos);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d >= PERSONAL_SPACE) continue;
+      // Step aside first, then keep heading for the target: away plus at most PERSONAL_SPACE of progress.
+      const ux = d > 1e-6 ? dx / d : 0;
+      const uy = d > 1e-6 ? dy / d : 1;
+      const t = movable[i]!.t;
+      const vx = t.x - b.x;
+      const vy = t.y - b.y;
+      const v = Math.sqrt(vx * vx + vy * vy);
+      const s = v > PERSONAL_SPACE ? PERSONAL_SPACE / v : 1;
+      t.x = clamp(b.x + ux * PERSONAL_SPACE + vx * s, 1, LENGTH - 1);
+      t.y = clamp(b.y + uy * PERSONAL_SPACE + vy * s, 1, WIDTH - 1);
+      break;
+    }
+  }
   ordered.forEach((p, i) => (p.target = flip(team, targets[i]!)));
 }
 

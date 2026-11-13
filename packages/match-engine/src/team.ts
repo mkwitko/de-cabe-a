@@ -241,12 +241,21 @@ export function tasksFor(
     const l = Math.sqrt(dx * dx + dy * dy) || 1;
     return { x: p.x + (dx / l) * d, y: p.y + (dy / l) * d };
   };
-  // Engaging the carrier, or holding off 6 m goal-side when the block does not press there.
-  add('press', 'press', engage ? focal : toGoal(focal, 6));
-  // Below the back line nobody is marked; above the block's reach nobody either (mid and low blocks wait).
-  const top = t.block === 'high' ? LENGTH : pressReach[t.block] + 5;
+  // Below the back line nobody is marked; above the block's top nobody either (mid and low blocks wait).
+  const top = BLOCK_TOP[t.block].mid;
+  // Engaging the carrier, or holding off goal-side at the block's front when the block does not press there.
+  const hold = toGoal(focal, 6);
+  add(
+    'press',
+    'press',
+    engage ? focal : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
+  );
   const aboveLine = (q: Vec2) => ({ x: clamp(q.x, ourLine - 2, top), y: q.y });
-  if (t.pressIntensity >= 3 || ball.x < 40) add('cover', 'cover', aboveLine(toGoal(focal, 9)));
+  // The cover stays a step deeper than the block's front, so it never shares the lane-closer's line.
+  if (t.pressIntensity >= 3 || ball.x < 40) {
+    const c = aboveLine(toGoal(focal, 9));
+    add('cover', 'cover', { x: Math.min(c.x, top - 6), y: c.y });
+  }
   if (ball.x < 60)
     add('guardZone', 'guard', {
       x: 20 + Math.max(0, ball.x - 30) * 0.15,
@@ -282,6 +291,9 @@ const APTITUDE_GAIN = 3;
 /** A defender keeps the last line: he only takes tasks this close to his anchor (02 §5.11, "manter a última linha"). */
 const DEF_RADIUS = 15;
 const OUT_OF_ZONE = 1000;
+const CENTRAL_DEF = new Set<RoleId>(['centreBack', 'libero']);
+/** PARAMETER: deepest third plus a margin, where a centre-back still offers a short pass. */
+const BUILD_UP_X = 45;
 const KEEP_MARGIN = 0.6; // a task changes owner only if the new cost is this much lower
 /** Each defender considers only its three cheapest tasks (research 11 §1.7). */
 const TOP_K = 3;
@@ -305,6 +317,14 @@ export function assign(
     (!inPossession &&
     lineOf(p.role) === 'def' &&
     (t.kind !== 'press' || dist(anchorsByIndex.get(p.index)!, t.point) > DEF_RADIUS)
+      ? OUT_OF_ZONE
+      : 0) +
+    // With the ball, centre-backs stay the base of the rest defence: they only offer
+    // a short option in the build-up, never join the attack (02 §5.9).
+    (inPossession &&
+    CENTRAL_DEF.has(p.role) &&
+    t.kind !== 'restDefence' &&
+    (t.kind !== 'support' || t.point.x > BUILD_UP_X)
       ? OUT_OF_ZONE
       : 0) +
     arrivalTime(kins.get(p.index)!, t.point, true) +
