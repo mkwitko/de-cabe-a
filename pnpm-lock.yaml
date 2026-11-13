@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@decabeca/club-domain':
+        specifier: workspace:*
+        version: link:../../packages/club-domain
       '@decabeca/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -133,6 +136,15 @@ importers:
       vite:
         specifier: ^8.3.6
         version: 8.3.6(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+
+  packages/club-domain:
+    dependencies:
+      '@decabeca/match-engine':
+        specifier: workspace:*
+        version: link:../match-engine
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
 
   packages/contracts:
     dependencies:

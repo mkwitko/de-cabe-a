@@ -26,6 +26,8 @@ describe('MC-147 no literal text in apps/web/src/games/manager', () => {
     "export const A = () => <canvas aria-label={t('sandbox.pitchLabel')} />;",
     "export const A = (p: { x: boolean }) => <p>{t(p.x ? 'sandbox.resume' : 'sandbox.pause')}</p>;",
     "export const A = (p: { v: number[] }) => <p>{p.v.map((v) => <b key={v} className={v ? 'text-cover' : ''} />)}</p>;",
+    "export const A = (p: { s: string }) => <div>{p.s === 'setup' && <b />}</div>;",
+    "export const A = () => <div>{(['low', 'mid'] as const).map((b) => <b key={b} />)}</div>;",
   ])('passes: %s', async (code) => {
     expect(await errors(code)).toBe(0);
   });

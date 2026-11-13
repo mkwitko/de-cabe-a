@@ -5,9 +5,12 @@ Data: 2026-11-13, revisão 4. Base: ADR-014 e ADR-016. Evidência e números: `d
 ## 1. Pacote de dados
 
 ### 1.1 Esquema (zod, `packages/club-domain/src/pack/schema.ts`)
+
+O esquema de verdade é `PackSchema` em `packages/club-domain/src/pack/schema.ts` (MC-011), com identificadores em inglês (`foot: 'right' | 'left' | 'both'`, origem `'imported' | 'estimated' | 'adjusted' | 'generated'` com confiança `'high' | 'medium' | 'low'` por campo). O bloco abaixo é o desenho; competições ganham fases em MC-160.
+
 ```ts
 interface Pack {
-  id: string; version: number; kind: 'real' | 'dev'; region: 'BR'; season: number; createdAt: string; checksum: string;
+  id: string; version: number; kind: 'real' | 'fictional'; region: 'BR'; season: number; createdAt: string; checksum: string;
   manifest: Array<{ file: string; sha256: string; rows: number; importedAt: string; note?: string }>;
   competitions: PackCompetition[];   // fases, vagas, desempates, inscrição, TV, premiação, regras financeiras (ADR-016, `05`)
   clubs: PackClub[];                 // identidade, cidade, estádio, estrutura, torcida, perfil, caixa, contratos de patrocínio
@@ -45,7 +48,7 @@ Por clube e por divisão: jogadores, origem por campo (% importado, gerado, ajus
 
 ### 1.5 Pacote fictício de desenvolvimento
 
-`br-dev-1` (`kind: 'dev'`): clubes, pessoas, cidades e competições inventados, gerados por semente fixa. Mesmo comando, mesmo arquivo, byte a byte. Tem pelo menos uma competição de cada tipo de fase (liga, grupos, mata-mata de jogo único e de ida e volta) e volumes próximos dos reais, para que testes de calendário e de custo valham. Existe uma variante pequena (`br-dev-mini`) para testes rápidos; a suíte roda nas duas para provar que nada depende de tamanho.
+`br-dev-1` (`kind: 'fictional'`): clubes, pessoas, cidades e competições inventados, gerados por semente fixa. Mesmo comando, mesmo arquivo, byte a byte. Tem pelo menos uma competição de cada tipo de fase (liga, grupos, mata-mata de jogo único e de ida e volta) e volumes próximos dos reais, para que testes de calendário e de custo valham. Existe uma variante pequena (`br-dev-mini`) para testes rápidos; a suíte roda nas duas para provar que nada depende de tamanho.
 
 ### 1.6 Pacote real e critério de publicação
 
@@ -53,8 +56,8 @@ Três pacotes diferentes, que não se confundem (revisão 4):
 
 | Pacote | `kind` | Para que serve | Quem vê |
 | --- | --- | --- | --- |
-| Desenvolvimento (`br-dev-1`, `br-dev-mini`) | `ficticio` | testes, calibragem, bancada; nomes gerados sem cuidado editorial | só o time |
-| Lançamento fictício | `ficticio` | pacote público com clubes, cidades e jogadores inventados e revisados (nomes, escudos, rivalidades, história) | usuários; é o pacote do lançamento (decisão do dono em 2026-11-13, `ROADMAP.md` §4, questão 14) |
+| Desenvolvimento (`br-dev-1`, `br-dev-mini`) | `fictional` | testes, calibragem, bancada; nomes gerados sem cuidado editorial | só o time |
+| Lançamento fictício | `fictional` | pacote público com clubes, cidades e jogadores inventados e revisados (nomes, escudos, rivalidades, história) | usuários; é o pacote do lançamento (decisão do dono em 2026-11-13, `ROADMAP.md` §4, questão 14) |
 | Real | `real` | jogadores reais nas quatro divisões, sob o critério abaixo | usuários |
 
 O jogo inteiro é desenvolvido e aprovado no pacote de desenvolvimento. O pacote de lançamento é uma decisão de produto separada, e nenhuma tarefa de jogo depende dela.

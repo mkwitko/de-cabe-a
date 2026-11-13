@@ -26,3 +26,24 @@ console.log(
     `frames ${(json.length / 1024).toFixed(0)} KB raw, ${(gzipSync(json).length / 1024).toFixed(0)} KB gzip; ` +
     `5 min chunk ${(gzipSync(fiveMin).length / 1024).toFixed(0)} KB gzip`,
 );
+
+// ── Level 1 match (MC-047): the user's match must take at most 1 s. ──
+import('./match/fixture').then(async ({ matchInput }) => {
+  const { simulateMatch } = await import('./match/simulate');
+  const { cpus } = await import('node:os');
+  simulateMatch(matchInput(0)); // warm-up
+  const n = 10;
+  const times: number[] = [];
+  let frames = 0;
+  for (let seed = 1; seed <= n; seed++) {
+    const t0 = performance.now();
+    simulateMatch(matchInput(seed), [], { onFrame: () => frames++ });
+    times.push(performance.now() - t0);
+  }
+  times.sort((a, b) => a - b);
+  console.log(
+    `level 1 match: mean ${(times.reduce((a, b) => a + b, 0) / n).toFixed(0)} ms, ` +
+      `p90 ${times[Math.floor(0.9 * n)]!.toFixed(0)} ms, ${Math.round(frames / n)} frames; ` +
+      `${cpus()[0]?.model ?? 'cpu'}, Node ${process.versions.node}`,
+  );
+});

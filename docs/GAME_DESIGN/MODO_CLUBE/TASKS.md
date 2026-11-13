@@ -52,7 +52,7 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
 | MC-145 | DONE. `match-engine/src/contract.ts`: tipos e esquemas de `MatchInput`, `MatchResult`, eventos, quadros; raiz do pacote exporta só contrato e funções `simulate*` | P0 | M | 025 | `club-domain` e API compilam importando só a raiz; importação profunda falha no lint | `contract.test.ts` (10 testes, inclui caso de lint que falha); `club-domain` ainda não existe, a regra já cobre `packages/**` |
-| MC-262 | Direção visual imersiva e premium do modo (`00` §7.1): paleta, tipografia, campo, componentes base, em 360 px e 1.280 px | P0 | M | 146 | aprovada pelo dono antes de MC-250; nenhuma tela do modo fora dela | captura de tela nas duas larguras revisada |
+| MC-262 | DOING (direção proposta na tela do amistoso: campo noturno com faixas de corte e luz de refletor, placar de transmissão, cores dos clubes nos jogadores, formas diferentes por time; aguarda o dono). Direção visual imersiva e premium do modo (`00` §7.1): paleta, tipografia, campo, componentes base, em 360 px e 1.280 px | P0 | M | 146 | aprovada pelo dono antes de MC-250; nenhuma tela do modo fora dela | captura de tela nas duas larguras revisada |
 | MC-146 | DONE. `t(key, params)` do modo sobre `Intl` (plural, número, moeda, data) e arquivo `pt-BR` | P0 | M | — | plural e moeda corretos em `pt-BR` e em `en` de teste; chave ausente falha no build | `i18n/i18n.test.ts` (7 testes; chave ausente é erro de tipo, coberto por `@ts-expect-error` no `typecheck`) |
 | MC-147 | DONE. Regra de lint: texto literal em `apps/web/src/games/manager/**` é erro | P0 | P | 146 | componente com texto fixo falha | `lint.test.ts` (5 casos que falham, 5 que passam, 1 fora do modo) |
 | MC-148 | DONE. Passar a página da sandbox para chaves de tradução | P0 | P | 146, 147 | nenhuma exceção à regra MC-147 no modo | lint e `e2e/tecnico.spec.ts` |
@@ -66,10 +66,10 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
-| MC-011 | `packages/club-domain`; esquema zod do pacote (`03` §1.1), com `kind`, competições, comissão, governança | P0 | G | 145 | pacote inválido é rejeitado com o caminho do erro | `schema.test.ts` |
-| MC-012 | Posições, 28 + 6 atributos, nota por função | P0 | M | 011 | nota por função muda com o atributo que a função pesa | unidade |
-| MC-013 | Gerador de jogador, de elenco e de comissão por semente | P0 | M | 012 | mesmo comando, mesmo resultado; elenco passa na validação | unidade |
-| MC-014 | Gerador dos pacotes fictícios `br-dev-1` e `br-dev-mini`, com uma competição de cada tipo de fase | P0 | G | 013, 160 | arquivos idênticos byte a byte entre execuções; volumes do `br-dev-1` dentro de 20% dos reais | teste de `checksum` |
+| MC-011 | DONE. `packages/club-domain`; esquema zod do pacote (`03` §1.1), com `kind`, competições, comissão, governança | P0 | G | 145 | pacote inválido é rejeitado com o caminho do erro | `src/pack/schema.test.ts` (8 testes); regras de consistência ficam na MC-017 |
+| MC-012 | DONE. Posições, 28 + 6 atributos, nota por função | P0 | M | 011 | nota por função muda com o atributo que a função pesa | `src/player/ratings.test.ts` (4 testes); pesos por função são PARÂMETRO |
+| MC-013 | DONE. Gerador de jogador, de elenco e de comissão por semente | P0 | M | 012 | mesmo comando, mesmo resultado; elenco passa na validação | `src/generate/generate.test.ts` |
+| MC-014 | DOING (`br-dev-mini` pronto para o corte 0,5, 8 clubes; `br-dev-1` e competições com fases dependem da MC-160). Gerador dos pacotes fictícios `br-dev-1` e `br-dev-mini`, com uma competição de cada tipo de fase | P0 | G | 013, 160 | arquivos idênticos byte a byte entre execuções; volumes do `br-dev-1` dentro de 20% dos reais | teste de `checksum` |
 | MC-015 | Importador CSV e JSON com arquivo de mapeamento | P1 | G | 011 | fixture de CSV e de JSON viram o mesmo pacote | unidade |
 | MC-016 | Normalização e deduplicação com relatório de conflito | P1 | M | 015 | duplicata nunca é resolvida em silêncio | unidade |
 | MC-017 | Validação de consistência (`03` §1.3) | P0 | M | 011 | cada regra tem um caso que falha | unidade |
@@ -85,30 +85,30 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 
 | ID | Tarefa | P | Tam | Dep | Aceite e teste |
 | --- | --- | --- | --- | --- | --- |
-| MC-031 | Estado completo e serialização (`02` §3) | P0 | M | 145 | desserializar e seguir = seguir direto |
-| MC-032 | Controle de campo e grade de valor de posse | P0 | M | 022 | ponto atrás da defesa vale mais para o atacante mais rápido |
-| MC-033 | Alvo sem bola por utilidade; cobertura e compensação | P0 | G | 032 | cenário: lateral sobe, volante cobre |
-| MC-158 | Histerese de alvos (`02` §5.5) | P0 | M | 033 | trocas de alvo por jogador por minuto abaixo do teto; nenhuma oscilação A-B-A em menos de 2 s |
+| MC-031 | DONE (2026-11-13; `src/match/state.ts`, `match.test.ts`). Estado completo e serialização (`02` §3) | P0 | M | 145 | desserializar e seguir = seguir direto |
+| MC-032 | DONE (2026-11-13; `src/match/control.ts`). Controle de campo e grade de valor de posse | P0 | M | 022 | ponto atrás da defesa vale mais para o atacante mais rápido |
+| MC-033 | DONE (2026-11-13; atribuição de tarefas da MC-246, cenário S2 de `coordination.test.ts`). Alvo sem bola por utilidade; cobertura e compensação | P0 | G | 032 | cenário: lateral sobe, volante cobre |
+| MC-158 | DOING (histerese por dono da tarefa existe; medido 7 trocas por jogador por minuto e cerca de 140 oscilações A-B-A em menos de 2 s por partida; duração mínima e bônus de permanência quebram a prova MC-246, então ficaram de fora). Histerese de alvos (`02` §5.5) | P0 | M | 033 | trocas de alvo por jogador por minuto abaixo do teto; nenhuma oscilação A-B-A em menos de 2 s |
 | MC-159 | Percepção limitada: campo visual, memória envelhecida, atraso de reação, lapso (`02` §5.6) | P0 | G | 033 | jogador não reage a adversário fora do campo visual até vê-lo; `antecipação` alta reduz o atraso |
-| MC-034 | Ação com bola: candidatos, softmax; decisão separada de execução com marca no log (`02` §5.7) | P0 | G | 032, 159 | `visão` baixa reduz passes em profundidade tentados; log distingue "escolheu mal" de "executou mal" |
-| MC-161 | Bola: rolando com atrito, no ar com altura e quique, tempo de chegada em forma fechada (`02` §6.1) | P0 | G | 031 | interceptação independe do tamanho do passo (teste com `DT` de 0,1 e 0,25) |
-| MC-035 | Passe com erro de execução, recepção, interceptação | P0 | G | 034, 161 | acerto de passe cai com distância e pressão |
-| MC-162 | Ocupação e contato: discos, proteção de bola, carga (`02` §6.2) | P0 | M | 035 | desarme por trás é mais difícil e gera mais falta |
-| MC-036 | Condução, drible × desarme, falta | P0 | M | 162 | drible alto vence mais em 1×1 isolado |
-| MC-163 | Disputa aérea e segunda bola (`02` §6.3) | P0 | M | 161 | `impulsão` e altura maiores vencem mais; perdedor disputa o rebote |
-| MC-037 | Pressão com gatilhos; fôlego; reavaliação dos parâmetros físicos contra a pesquisa | P0 | G | 033 | pressão 5 gasta mais fôlego e recupera mais alto; distância por jogador e queda no fim na faixa |
-| MC-038 | Finalização e `xG` | P0 | G | 035 | conversão por distância na faixa de referência |
-| MC-164 | Goleiro: posicionamento, alcance, reação, rebote, saída (`02` §6.4) | P0 | G | 038 | chute fora do alcance não é defendido; `reflexos` desloca a taxa de defesa |
-| MC-039 | Árbitro: falta, cartão, vantagem, pênalti, reinícios, substituições (`02` §6.5) | P0 | G | 036 | cada regra com cenário próprio |
-| MC-165 | Impedimento completo: instante do passe, penúltimo adversário, participação, exceções | P0 | M | 039 | seis cenários de regra, incluindo exceções de tiro de meta, lateral e escanteio |
-| MC-040 | Bola parada básica; relógio e acréscimos; prorrogação e pênaltis | P0 | M | 039 | bola rolando entre 52 e 58 minutos |
-| MC-041 | Lesão e substituição | P0 | M | 037 | taxas por 1.000 h na faixa de `03` §4 |
-| MC-042 | Eventos, estatísticas, mapas, matriz de duelos | P0 | M | 035–041 | soma dos eventos fecha com o placar |
-| MC-043 | Explicação: criação × conversão, fatores com número, chaves de mensagem (`02` §11) | P0 | G | 042, 149 | cenário montado devolve a causa montada; partida decidida por conversão diz isso |
-| MC-044 | Bancada estatística contra `02` §11 | P0 | M | 042 | todas as linhas na faixa |
+| MC-034 | DONE (2026-11-13; `src/match/carrier.ts`). Ação com bola: candidatos, softmax; decisão separada de execução com marca no log (`02` §5.7) | P0 | G | 032, 159 | `visão` baixa reduz passes em profundidade tentados; log distingue "escolheu mal" de "executou mal" |
+| MC-161 | DONE (2026-11-13; `ball.ts`, `ball.test.ts` com `DT` 0,1 e 0,25). Bola: rolando com atrito, no ar com altura e quique, tempo de chegada em forma fechada (`02` §6.1) | P0 | G | 031 | interceptação independe do tamanho do passo (teste com `DT` de 0,1 e 0,25) |
+| MC-035 | DONE (2026-11-13; `src/match/kick.ts`). Passe com erro de execução, recepção, interceptação | P0 | G | 034, 161 | acerto de passe cai com distância e pressão |
+| MC-162 | DONE (2026-11-13; `rules/duel.ts` `tackleChance`, `rules/discipline.ts`). Ocupação e contato: discos, proteção de bola, carga (`02` §6.2) | P0 | M | 035 | desarme por trás é mais difícil e gera mais falta |
+| MC-036 | DONE (2026-11-13; `rules/duel.ts` `dribbleChance`). Condução, drible × desarme, falta | P0 | M | 162 | drible alto vence mais em 1×1 isolado |
+| MC-163 | DONE (2026-11-13; `rules/duel.ts` `aerialScore`, perdedor segue no lance com a bola solta). Disputa aérea e segunda bola (`02` §6.3) | P0 | M | 161 | `impulsão` e altura maiores vencem mais; perdedor disputa o rebote |
+| MC-037 | DOING (fôlego e distância na faixa; falta o teste de pressão 5 e a queda no fim). Pressão com gatilhos; fôlego; reavaliação dos parâmetros físicos contra a pesquisa | P0 | G | 033 | pressão 5 gasta mais fôlego e recupera mais alto; distância por jogador e queda no fim na faixa |
+| MC-038 | DONE (2026-11-13; `rules/xg.ts`, `kick.ts` `shoot`). Finalização e `xG` | P0 | G | 035 | conversão por distância na faixa de referência |
+| MC-164 | DONE (2026-11-13; posição na linha bola-gol, defesa, rebote, saída no um contra um). Goleiro: posicionamento, alcance, reação, rebote, saída (`02` §6.4) | P0 | G | 038 | chute fora do alcance não é defendido; `reflexos` desloca a taxa de defesa |
+| MC-039 | DOING (falta, pênalti, cartões, segundo amarelo, reinícios e substituições feitos; falta vantagem). Árbitro: falta, cartão, vantagem, pênalti, reinícios, substituições (`02` §6.5) | P0 | G | 036 | cada regra com cenário próprio |
+| MC-165 | DONE (2026-11-13; `kick.ts` `offsideNow`, seis cenários). Impedimento completo: instante do passe, penúltimo adversário, participação, exceções | P0 | M | 039 | seis cenários de regra, incluindo exceções de tiro de meta, lateral e escanteio |
+| MC-040 | DOING (reinícios, relógio, acréscimos e prorrogação feitos; bola rolando em ~60 min, acima da faixa; pênaltis de desempate não feitos). Bola parada básica; relógio e acréscimos; prorrogação e pênaltis | P0 | M | 039 | bola rolando entre 52 e 58 minutos |
+| MC-041 | DONE (2026-11-13; `rules/injury.ts`: 0,017 por hora sem contato e 1,2% por falta, perto de 23 por 1.000 h; o banco substitui o lesionado). Lesão e substituição | P0 | M | 037 | taxas por 1.000 h na faixa de `03` §4 |
+| MC-042 | DOING (eventos e estatísticas fecham com o placar; faltam mapas por zona e matriz de duelos). Eventos, estatísticas, mapas, matriz de duelos | P0 | M | 035–041 | soma dos eventos fecha com o placar |
+| MC-043 | DONE (2026-11-13; `rules/explain.ts`: origem dos chutes particiona o saldo de `xG`; conversão por finalização e goleiro; ponto de vista do mandante). Explicação: criação × conversão, fatores com número, chaves de mensagem (`02` §11) | P0 | G | 042, 149 | cenário montado devolve a causa montada; partida decidida por conversão diz isso |
+| MC-044 | DOING (bancada `src/calibration/calibrate.ts` em paralelo; 200 partidas: na faixa passes, xG por finalização, faltas, impedimentos, distância e mandante/empate/visitante 47/27/27; fora por pouco gols 2,59, finalizações 12,3, no alvo 3,97, acerto de passe 77%, amarelos 2,0, vermelhos 0,075, escanteios 4,6 por time). Bancada estatística contra `02` §11 | P0 | M | 042 | todas as linhas na faixa |
 | MC-166 | Suíte de zebra Z1 a Z12 (`TEST_STRATEGY.md` §4) | P0 | G | 043, 044 | doze cenários verdes; a engine não recebe qual time é do usuário |
 | MC-045 | Torneio de presets | P0 | M | 044 | nenhum preset acima de 60% contra todos |
-| MC-047 | Desempenho: partida do usuário até 1 s | P0 | M | 044 | benchmark registrado com ambiente |
+| MC-047 | DONE (2026-11-13; `pnpm --filter @decabeca/match-engine bench`: média 860 ms, p90 1,1 s, Intel Core 7 250U, Node 24.12, um núcleo). Desempenho: partida do usuário até 1 s | P0 | M | 044 | benchmark registrado com ambiente |
 | MC-048 | **Portão**: dono assiste a 10 partidas | P0 | — | 044–047, 166 | aprovado ou lista de defeitos |
 
 ## Engine por posses (nível 2)
@@ -226,17 +226,17 @@ Tarefas herdadas da revisão 1. Entram em detalhe (aceite e teste por linha) qua
 
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
-| MC-246 | Prova de coordenação: forma do time, atribuição de tarefas coletivas (`02` §5.11) e bola por roteiro, em seis cenários fixos, antes de qualquer instrução tática | P0 | G | 145, 247 | T1, T2, T3, T5 e T9 dentro das faixas nos seis cenários; nenhum enxame; tarefas atribuídas aparecem no registro | `coordination.test.ts` |
-| MC-247 | Modelo de chegada único (`02` §4.1): reação, giro, aceleração, velocidade máxima; usado por interceptação, cobertura, linha de passe e controle de campo | P0 | M | 145 | nenhuma estimativa de chegada por distância sobre velocidade no código; valores conferidos contra a referência da pesquisa 11 | unidade e lint próprio |
-| MC-248 | Relógios separados de física, decisão, percepção e coordenação; contato da bola resolvido de forma analítica dentro do passo | P0 | G | 031 | bola a 30 m/s não atravessa jogador nem linha; `DT` 0,25 s equivalente a 0,1 s pelo protocolo §2.1 | determinismo e equivalência |
+| MC-246 | DONE (2026-11-13; opção A do dono, células em ADR-018). Prova de coordenação: forma do time, atribuição de tarefas coletivas (`02` §5.11) e bola por roteiro, em seis cenários fixos, antes de qualquer instrução tática | P0 | G | 145, 247 | T1, T2, T3, T5 e T9 dentro das faixas nos seis cenários; nenhum enxame; tarefas atribuídas aparecem no registro | `coordination.test.ts` |
+| MC-247 | DONE. Modelo de chegada único (`02` §4.1): reação, giro, aceleração, velocidade máxima; usado por interceptação, cobertura, linha de passe e controle de campo | P0 | M | 145 | nenhuma estimativa de chegada por distância sobre velocidade no código; valores conferidos contra a referência da pesquisa 11 | `kinematics.test.ts` (7 testes, inclui varredura do código contra `/ vmax`) |
+| MC-248 | DONE no nível da bola e dos relógios (a equivalência de partida inteira entre `DT` 0,25 e 0,1 roda pelo protocolo na MC-252, quando a engine completa existir). Relógios separados de física, decisão, percepção e coordenação; contato da bola resolvido de forma analítica dentro do passo | P0 | G | 031 | bola a 30 m/s não atravessa jogador nem linha; `DT` 0,25 s equivalente a 0,1 s pelo protocolo §2.1 | `ball.test.ts`: 30 m/s sem túnel; 500 passes aleatórios com o mesmo contato em `DT` 0,25 e 0,1 (≥ 495, diferença de instante < 0,05 s); relógios escalonados |
 | MC-249 | Contrato de evidência da explicação (`02` §11): fator com métrica, valor, referência, eventos e peso; parcela "não explicado" | P0 | M | 045 | 500 relatórios recalculados a partir do registro sem divergência; nenhuma frase causal fora da lista com teste causal | `explain.evidence.test.ts` |
-| MC-250 | Tela de partida avulsa do corte 0,5: escolher dois times, formação e instruções, assistir, relatório, repetir | P0 | M | 061, 065 | fluxo completo em 360 px e 1.280 px, só com chaves de tradução | Playwright |
+| MC-250 | DOING (2026-11-13; `/tecnico/amistoso`: escolha de clubes do pacote fictício, formação e cinco instruções, partida ao vivo com placar, ajuste ao vivo, ir para o fim, relatório com explicação; Playwright em 360 e 1.280 px verde. Falta aprovação da direção visual MC-262 e o portão MC-048). Tela de partida avulsa do corte 0,5: escolher dois times, formação e instruções, assistir, relatório, repetir | P0 | M | 061, 065 | fluxo completo em 360 px e 1.280 px, só com chaves de tradução | Playwright |
 | MC-251 | Zebras Z13 a Z22 e invariância por troca de identificadores, ordem de elenco e lado | P0 | G | 047 | dez cenários e a invariância verdes | `zebra.test.ts`, `permutation.test.ts` |
 | MC-252 | Arcabouço do protocolo de equivalência (`TEST_STRATEGY.md` §2.1): conjuntos de sementes, `equivalence.ts` com margens e justificativas, cálculo de amostra, relatório por métrica e célula | P0 | G | 046 | relatório gerado para nível 2 contra nível 1 e para os dois valores de `DT` | o próprio comando |
 | MC-253 | Manifesto de parâmetros da economia com origem, confiança, faixa e versão; lint contra número econômico fora do manifesto | P0 | M | 087 | todo número de `04`, `07` e `06` no manifesto; fatos das pesquisas 07, 09 e 10 com fonte | lint e esquema |
 | MC-254 | Sensibilidade de ±20% por parâmetro e Monte Carlo de 200 mundos (`TEST_STRATEGY.md` §5.2), com verificação de equilíbrio contábil do mundo | P1 | G | 253, 179 | tabela de parâmetros críticos; aceite do Monte Carlo | `test:world` |
 | MC-255 | Cinco políticas automáticas e corrida de 50 temporadas (`TEST_STRATEGY.md` §5.1) | P1 | G | 179 | indicadores por política; nenhuma acima de 40% dos títulos depois do ano 15; nenhuma dominada em tudo | `test:world` |
-| MC-256 | Núcleo de regras compartilhado (`rules/`) entre os dois níveis, com teste que proíbe cópia de fórmula no nível 2 | P0 | M | 145 | nível 2 importa disputas, `xG`, fôlego, árbitro e eventos do núcleo | teste de dependência |
+| MC-256 | DONE (2026-11-13; o nível 2 ainda não existe, a proibição de cópia vale para todo arquivo fora do núcleo). Núcleo de regras compartilhado (`rules/`) entre os dois níveis, com teste que proíbe cópia de fórmula no nível 2 | P0 | M | 145 | nível 2 importa disputas, `xG`, fôlego, árbitro e eventos do núcleo | teste de dependência |
 | MC-257 | Métricas de trajetória T11 a T13 e normalização por contexto (fase, bloco, zona, placar, número de jogadores) | P1 | M | 203 | faixas por célula de contexto registradas | `trajectories.test.ts` |
 | MC-258 | Teto combinado do efeito da comissão sobre a força do time | P1 | P | 186 | todos os departamentos no máximo não passam do teto | unidade e simulação |
 | MC-259 | Safra anual mínima e aposentadoria como mecânica de mundo do corte 1 (`03` §7) | P0 | M | 084 | 30 temporadas sem usuário mantêm tamanho de elenco e curva de idade | `test:world` |
