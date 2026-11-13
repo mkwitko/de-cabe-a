@@ -34,6 +34,8 @@ export interface TaskLog {
   player: number;
   task: TaskKind;
   key: string;
+  /** Assigned on a possession change, restart or command (hysteresis does not apply). */
+  event: boolean;
 }
 
 export interface World {
@@ -154,8 +156,16 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       const p = w.players[a.player]!;
       const isNew = !old || old.task.key !== a.task.key;
       if (isNew && !event && next(w.rng) > compliance(p.attrs, w.familiarity[team])) continue;
-      if (isNew)
-        w.log.push({ tick: w.tick, team, player: a.player, task: a.task.kind, key: a.task.key });
+      if (isNew) {
+        w.log.push({
+          tick: w.tick,
+          team,
+          player: a.player,
+          task: a.task.kind,
+          key: a.task.key,
+          event,
+        });
+      }
       kept.push(a);
     }
     w.assignments[team] = kept;

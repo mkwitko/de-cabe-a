@@ -19,6 +19,7 @@ import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
 import { drain, recover } from '../rules/stamina';
 import { foulChance, cardFor } from '../rules/discipline';
+import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
@@ -369,9 +370,20 @@ export function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: bool
     } else s.teams[d.team].stats.yellowCards++;
   }
   d.score -= card === 2 ? 1.5 : card === 1 ? 0.3 : 0.05;
+  if (next(s.rngs.injury) < CONTACT_PER_FOUL) injure(s, c, true);
   if (inOwnBox(d.team, c.pos))
     setRestart(s, 'penalty', c.team, flip(c.team, { x: LENGTH - 11, y: CENTER.y }));
   else setRestart(s, 'freeKick', c.team, c.pos);
+}
+
+/** An injured player keeps limping (slow and spent) until the bench replaces him (MC-041). */
+function injure(s: MatchState, p: MatchPlayer, contact: boolean) {
+  p.injured = true;
+  p.stamina = Math.min(p.stamina, 0.15);
+  p.pace = Math.round(p.pace * 0.6);
+  p.acceleration = Math.round(p.acceleration * 0.6);
+  emit(s, 'injury', p.team, p.index, null, p.pos, { contact: contact ? 1 : 0 });
+  s.stoppage += 60000;
 }
 
 // ── Ball in flight ──────────────────────────────────────────────────────────
@@ -768,6 +780,7 @@ function endStep(s: MatchState, opts: StepOptions) {
     const v = Math.sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
     p.distance += v * DT;
     drain(p, v, DT);
+    if (!p.injured && next(s.rngs.injury) < injuryRisk(p, DT)) injure(s, p, false);
   }
   if (s.ball.possession !== null && !s.restart) s.teams[s.ball.possession].possessionTicks++;
   if (opts.onFrame) opts.onFrame(frameOf(s));

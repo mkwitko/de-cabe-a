@@ -18,13 +18,14 @@ const fit = (b: PlayerInput, out: MatchPlayer) => {
 
 export function substitutions(s: MatchState, interval: boolean): void {
   const minute = s.clockMs / 60000;
-  if (!interval && minute < 58) return;
+  const anyInjured = s.players.some((p) => p.active && p.injured);
+  if (!interval && minute < 58 && !anyInjured) return;
   for (const team of [0, 1] as const) {
     const t = s.teams[team];
     if (t.subsLeft === 0 || t.bench.length === 0) continue;
     const injured = s.players.filter((p) => p.team === team && p.active && p.injured);
     if (t.windowsLeft === 0 && !interval && injured.length === 0) continue;
-    const tired = s.players
+    const tired = (minute < 58 && !interval ? [] : s.players)
       .filter((p) => p.team === team && p.active && lineOf(p.role) !== 'gk' && !p.injured)
       .filter((p) => p.stamina < 0.42 - (0.04 * Math.max(0, 75 - minute)) / 15)
       .sort((a, b) => a.stamina - b.stamina || a.index - b.index);

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { MatchEvent } from '../contract';
 import { aerialScore, dribbleChance, tackleChance } from '../rules/duel';
 import { foulChance } from '../rules/discipline';
+import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
 import { passSafety } from './control';
 import { foul, stepUntilEnd, step } from './engine';
@@ -366,5 +367,67 @@ describe('MC-042 events and statistics', () => {
       expect(shots).toEqual([r.stats[0].shots, r.stats[1].shots]);
       expect(r.stats[0].possession + r.stats[1].possession).toBeCloseTo(1, 2);
     }
+  });
+});
+
+describe('MC-043 explanation', () => {
+  const ev = (
+    id: number,
+    kind: MatchEvent['kind'],
+    team: 0 | 1,
+    atMs: number,
+    data: Record<string, number> = {},
+  ): MatchEvent => ({
+    id,
+    kind,
+    atMs,
+    team,
+    playerId: null,
+    otherId: null,
+    at: null,
+    data,
+  });
+  it('a match decided by conversion says so first', () => {
+    // Team 0 creates 0.6 and scores 2; team 1 creates 2.4 and scores 0.
+    const events = [
+      ev(0, 'shot', 0, 60_000, { xg: 0.3, psxg: 0.6 }),
+      ev(1, 'goal', 0, 61_000),
+      ev(2, 'shot', 0, 600_000, { xg: 0.3, psxg: 0.6 }),
+      ev(3, 'goal', 0, 601_000),
+      ...[4, 5, 6, 7, 8, 9].map((i) =>
+        ev(i, 'shot', 1, 1_000_000 + i * 100_000, { xg: 0.4, psxg: 0.5 }),
+      ),
+    ];
+    const e = explain(events);
+    expect(e.creation).toBeCloseTo(-1.8, 5);
+    expect(e.conversion).toBeCloseTo(3.8, 5);
+    expect(['match.explain.finishing', 'match.explain.keeper']).toContain(
+      e.factors[0]!.message.key,
+    );
+  });
+
+  it('a set-piece-made result points at set pieces with its evidence', () => {
+    const events = [
+      ev(0, 'corner', 0, 100_000),
+      ev(1, 'shot', 0, 104_000, { xg: 0.5 }),
+      ev(2, 'freeKick', 0, 900_000),
+      ev(3, 'shot', 0, 905_000, { xg: 0.4 }),
+      ev(4, 'shot', 1, 1_500_000, { xg: 0.1 }),
+    ];
+    const e = explain(events);
+    const f = e.factors.find((x) => x.message.key === 'match.explain.setPieces')!;
+    expect(f.weight).toBeCloseTo(0.9, 5);
+    expect(f.evidence.events).toEqual([1, 3]);
+    expect(f.decision).toBe('setPieces');
+    // Origins partition the shots: cited creation plus unexplained is the creation.
+    const cited = e.factors
+      .filter((x) => x.evidence.metric.startsWith('xg.'))
+      .reduce((s, x) => s + x.weight, 0);
+    expect(cited + e.unexplained).toBeCloseTo(e.creation, 5);
+  });
+
+  it('every simulated match carries an explanation that matches its stats', () => {
+    const r = simulateMatch(matchInput(2));
+    expect(r.explanation.creation).toBeCloseTo(r.stats[0].xg - r.stats[1].xg, 1);
   });
 });

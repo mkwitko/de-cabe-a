@@ -3,6 +3,7 @@
  * (01-ARQUITETURA.md §2; 02 §11). The explanation is filled by MC-043.
  */
 import type { MatchInput, MatchResult, TimedCommand } from '../contract';
+import { explain } from '../rules/explain';
 import { stepUntilEnd, type StepOptions } from './engine';
 import { createMatch, type MatchState } from './state';
 
@@ -27,7 +28,7 @@ export function resultOf(s: MatchState): MatchResult {
       distanceM: Math.round(p.distance),
     })),
     events: s.events,
-    explanation: { creation: 0, conversion: 0, factors: [], unexplained: 0 },
+    explanation: explain(s.events, Math.round(s.clockMs / 60000)),
   };
 }
 
