@@ -22,7 +22,7 @@ Antes de qualquer carreira: a pessoa escolhe dois times do pacote fictício, esc
 
 Por que existe: é o menor produto que prova a aposta inteira (a engine parece futebol, a tática muda o jogo, a explicação é verdadeira) e é onde o portão do dono (MC-048) acontece. Tudo o que ele usa é reaproveitado no corte 1 sem retrabalho. Se a partida avulsa não for boa, nenhum sistema de gestão salva o modo, e descobre-se isso meses antes.
 
-Tarefas: MC-145, MC-146, MC-147, MC-011, MC-014 (versão mini), prova de coordenação MC-246, engine nível 1 (MC-031 a MC-045, MC-047, MC-158 a MC-166), MC-203, MC-248, MC-249, tática rasa (MC-050 a MC-052), partida ao vivo (MC-061, MC-065), relatório, MC-030, portão MC-048, tela de partida avulsa MC-250.
+Tarefas: MC-145, MC-146, MC-147, MC-011, MC-014 (versão mini), prova de coordenação MC-246, engine nível 1 (MC-031 a MC-045, MC-047, MC-158 a MC-166), MC-203, MC-248, MC-249, tática rasa (MC-050 a MC-052), partida ao vivo (MC-061, MC-065), direção visual imersiva e premium (MC-262), relatório, MC-030, portão MC-048, tela de partida avulsa MC-250.
 
 Critério de saída: dez partidas assistidas pelo dono com lista de defeitos fechada; suíte de zebra Z1 a Z12 verde; T1 a T10 verdes; FPS medido em celular real.
 

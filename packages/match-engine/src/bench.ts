@@ -1,6 +1,7 @@
 /** Cost of 90 simulated minutes of the sandbox (TASKS.md MC-028). Run: pnpm --filter @decabeca/match-engine bench */
 import { gzipSync } from 'node:zlib';
-import { DT, createSandbox, simulate, step } from './index';
+import { DT } from './movement';
+import { createSandbox, simulate, step } from './sandbox';
 
 const ticks = (90 * 60) / DT;
 const runs = 20;

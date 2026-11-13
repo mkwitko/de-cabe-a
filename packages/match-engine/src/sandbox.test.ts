@@ -1,34 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { BOX_DEPTH, CENTER, LENGTH, WIDTH, dist, flip, laneOf, zoneOf } from './pitch';
+import { DT, maxSpeed, moveTowards, separate, type Mover } from './movement';
+import { between, fork, next, rngFrom } from './random';
 import {
-  BOX_DEPTH,
-  CENTER,
   DEFAULT_INSTRUCTIONS,
   DEFENDERS,
-  DT,
   InstructionsSchema,
-  LENGTH,
   SLOTS,
-  WIDTH,
   anchor,
-  between,
-  createSandbox,
-  dist,
-  flip,
-  fork,
-  frame,
-  laneOf,
-  maxSpeed,
-  moveTowards,
-  next,
-  rngFrom,
-  separate,
-  simulate,
-  step,
-  teamOf,
-  zoneOf,
   type Instructions,
-  type Mover,
-} from './index';
+} from './shape';
+import { createSandbox, frame, simulate, step, teamOf } from './sandbox';
 
 const MINUTE = 60 / DT;
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;

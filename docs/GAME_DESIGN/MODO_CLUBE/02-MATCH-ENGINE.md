@@ -254,6 +254,9 @@ Coeficientes: PARÂMETROS iniciais da literatura (pesquisa 01), ajustados até a
 ## 8. Tática
 
 ### 8.1 Plano tático (dado)
+
+O esquema de verdade é `TacticalPlanSchema` em `packages/match-engine/src/contract.ts` (MC-145). Lá os valores são identificadores em inglês (`'short' | 'mixed' | 'long'`, `'counterPress' | 'regroup'`…), traduzidos na tela por chave; o bloco abaixo mostra o desenho em português. O contrato acrescenta `restDefence` (2 a 5, §5.9) às instruções de time; formações por fase são 11 pontos no referencial do time; funções e instruções individuais são listas de 11, na ordem dos slots.
+
 ```ts
 interface TacticalPlan {
   shapes: Record<'inPossession' | 'outOfPossession' | 'buildUp' | 'lowBlock', Shape>; // 2 obrigatórias

@@ -156,6 +156,15 @@ DECISÃO: delegação. Cada sistema tem um responsável na comissão; "deixar co
 
 Meta de tempo: quem delega tudo menos tática e mercado fecha uma semana de jogo em menos de 5 minutos.
 
+### 7.1 Direção visual: imersiva e premium
+
+DECISÃO do dono (2026-11-13): o Modo Clube tem design **imersivo e premium**, não de painel administrativo.
+
+- **Imersivo**: o modo tem palco próprio em tela cheia, sem colunas laterais do site nem anúncio dentro da partida; o campo 2D é a peça central da partida e ocupa o máximo da tela em 360 px e em 1.280 px.
+- **Premium**: identidade visual própria do modo (paleta, tipografia, iluminação do campo, escudos e uniformes do pacote), acabamento consistente em toda tela, hierarquia clara das três camadas de leitura (§7), transições curtas com propósito.
+- **Limites que continuam valendo**: desempenho vale mais que animação (60 quadros por segundo no campo, 30 como piso, `01` §7); `prefers-reduced-motion` respeitado; contraste e forma distinta das cores de time (`02` §13); só chaves de tradução.
+- A direção visual é fixada uma vez (MC-262) antes da primeira tela de produto (MC-250) e vale para todas as telas seguintes; a sandbox não é referência visual.
+
 ## 8. Zebras e explicação
 
 FATO: em 38 jogos, o acaso desloca a tabela em cerca de 7 pontos, contra 6 de habilidade (`docs/pesquisa/modo-clube/01-engine-de-partida.md` §6). Futebol tem zebra, e time pior ganha na raça.

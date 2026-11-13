@@ -51,7 +51,8 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
-| MC-145 | `match-engine/src/contract.ts`: tipos e esquemas de `MatchInput`, `MatchResult`, eventos, quadros; raiz do pacote exporta só contrato e funções `simulate*` | P0 | M | 025 | `club-domain` e API compilam importando só a raiz; importação profunda falha no lint | regra de lint com caso que falha |
+| MC-145 | DONE. `match-engine/src/contract.ts`: tipos e esquemas de `MatchInput`, `MatchResult`, eventos, quadros; raiz do pacote exporta só contrato e funções `simulate*` | P0 | M | 025 | `club-domain` e API compilam importando só a raiz; importação profunda falha no lint | `contract.test.ts` (10 testes, inclui caso de lint que falha); `club-domain` ainda não existe, a regra já cobre `packages/**` |
+| MC-262 | Direção visual imersiva e premium do modo (`00` §7.1): paleta, tipografia, campo, componentes base, em 360 px e 1.280 px | P0 | M | 146 | aprovada pelo dono antes de MC-250; nenhuma tela do modo fora dela | captura de tela nas duas larguras revisada |
 | MC-146 | `t(key, params)` do modo sobre `Intl` (plural, número, moeda, data) e arquivo `pt-BR` | P0 | M | — | plural e moeda corretos em `pt-BR` e em `en` de teste; chave ausente falha no build | `i18n.test.ts` |
 | MC-147 | Regra de lint: texto literal em `apps/web/src/games/manager/**` é erro | P0 | P | 146 | componente com texto fixo falha | caso que falha no lint |
 | MC-148 | Passar a página da sandbox para chaves de tradução | P0 | P | 146, 147 | nenhuma exceção à regra MC-147 no modo | lint e `e2e/tecnico.spec.ts` |

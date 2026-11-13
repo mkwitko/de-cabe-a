@@ -48,6 +48,7 @@ Tomadas em conversa, em ordem de data; todas refletidas nas specs.
     - dinastia permitida até 40% dos títulos depois do ano 15, sem equilíbrio artificial;
     - imprensa e memória tática ficam fora **num primeiro momento** (podem voltar; o desenho está guardado);
     - o **corte 0,5** (partida avulsa jogável) é a primeira entrega.
+12. Design **imersivo e premium** em todo o modo (2026-11-13): `00-VISAO-E-PRODUTO.md` §7.1, tarefa MC-262 antes da primeira tela de produto.
 
 Questões 1 a 13 do roteiro (§4) não foram respondidas uma a uma. Vale a proposta registrada na tabela até o dono dizer o contrário. Nenhuma trava o corte 0,5.
 
@@ -76,7 +77,11 @@ Questões 1 a 13 do roteiro (§4) não foram respondidas uma a uma. Vale a propo
 
 Monorepo pnpm: `apps/api` (Fastify 5, zod 4, Prisma 7, Postgres), `apps/web` (React 19, Vite 8, Tailwind 4, TanStack Query 5, Playwright), `packages/engine`, `packages/contracts`, e o novo `packages/match-engine`. TypeScript 5.9, vitest, Node 24.12.
 
-Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. **Tudo abaixo está sem commit.**
+Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit decidida pelo dono (2026-11-13): um commit por tarefa DONE neste ramo, com push; PR para `main` ao fim de cada passo do §9, juntado se verde. Specs, ADRs, pesquisas e sandbox commitados em `f75d854`.
+
+### 6.0 Feito depois da sandbox
+
+- **MC-145** (DONE): `packages/match-engine/src/contract.ts` com esquemas zod estritos de `MatchInput` (jogadores com 34 atributos, ocultos, traços, posições, estado; plano tático; técnico; condições; regras), `TimedCommand`, `MatchEvent`, `Frame` (48 inteiros, com altura da bola), `MatchResult`, `Explanation` com fatores e evidência, `Message` (chave, nunca frase). A raiz (`src/index.ts`) exporta só contrato, gerador e `simulateSandbox`; a rota da sandbox virou chamada a `simulateSandbox`. Regra de lint `matchEngineRootOnly` em `eslint.config.js` para `apps/**` e `packages/**` (exceto o próprio pacote). Teste: `src/contract.test.ts` (10 testes). O quadro da sandbox continua com 47 inteiros (sem altura); a sandbox é descartável.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
 
@@ -156,7 +161,7 @@ A pessoa escolhe dois times fictícios, formação e instruções, assiste à pa
 | 5 | **MC-246** | prova de coordenação: forma do time e atribuição de tarefas, com bola por roteiro, em seis cenários; T1, T2, T3, T5 e T9 dentro das faixas. **Se falhar, pare e relate ao dono antes de seguir**: a arquitetura de decisão muda |
 | 6 | MC-256, MC-031 a MC-045, MC-047, MC-158 a MC-166 | núcleo de regras e engine nível 1: decisão, execução, disputas, bola, goleiro, árbitro, `xG`, fôlego, substituições, explicação |
 | 7 | MC-203, MC-249, MC-200 | testes de trajetória T1 a T10, contrato de evidência, bancada por etapa |
-| 8 | MC-050 a MC-052, MC-061, MC-065, MC-250 | tática rasa, partida ao vivo, tela de partida avulsa |
+| 8 | MC-050 a MC-052, MC-061, MC-065, MC-262, MC-250 | tática rasa, partida ao vivo, direção visual imersiva e premium, tela de partida avulsa |
 | 9 | MC-030, MC-048 | quadros por segundo em celular real; **portão do dono**: dez partidas assistidas, lista de defeitos fechada |
 
 Critério de saída: portão do dono aprovado; zebras Z1 a Z12 verdes; T1 a T10 verdes. O portão é do dono, não do assistente: ao chegar nele, entregue o link e a lista do que observar, e espere.

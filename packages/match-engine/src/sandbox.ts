@@ -112,13 +112,50 @@ export function step(s: SandboxState): void {
   }
 }
 
-/** One frame: [tick, ballX, ballY, p0x, p0y, …] in decimetres (ADR-015 §2). One frame per step = 4 Hz. */
-export type Frame = number[];
+/**
+ * Sandbox frame: [tick, ballX, ballY, p0x, p0y, …] in decimetres, 47 values, one per
+ * step = 4 Hz. The real engine uses the contract's 48-value `Frame` (with ball height).
+ */
+type Frame = number[];
 
 export function frame(s: SandboxState): Frame {
   const out = [s.tick, Math.round(s.ball.x * 10), Math.round(s.ball.y * 10)];
   for (const p of s.players) out.push(Math.round(p.pos.x * 10), Math.round(p.pos.y * 10));
   return out;
+}
+
+export const SANDBOX_MAX_TICK = (90 * 60) / DT;
+/** Ten minutes of play per request keeps the response under 300 KB gzipped. */
+export const SANDBOX_MAX_CHUNK = (10 * 60) / DT;
+export {
+  InstructionsSchema as SandboxInstructionsSchema,
+  type Instructions as SandboxInstructions,
+} from './shape';
+
+/**
+ * Frames for ticks from+1 … from+count of the sandbox match with this seed.
+ * Each command changes team 0's instructions from its tick on.
+ * ponytail: stateless, so every call re-simulates from tick 0 (about 100 ms for a
+ * whole match). Real matches persist the state between chunks (ADR-015 §4).
+ */
+export function simulateSandbox(req: {
+  seed: number;
+  from: number;
+  count: number;
+  commands: { tick: number; instructions: Instructions }[];
+}) {
+  const commands = [...req.commands].sort((a, b) => a.tick - b.tick);
+  const end = Math.min(req.from + req.count, SANDBOX_MAX_TICK);
+  const s = createSandbox(req.seed);
+  const frames: Frame[] = [];
+  let next = 0;
+  while (s.tick < end) {
+    while (next < commands.length && commands[next]!.tick <= s.tick)
+      s.instructions[0] = commands[next++]!.instructions;
+    step(s);
+    if (s.tick > req.from) frames.push(frame(s));
+  }
+  return { dt: DT, defaults: DEFAULT_INSTRUCTIONS, frames, done: end >= SANDBOX_MAX_TICK };
 }
 
 /** Runs `ticks` steps and returns their frames. Mutates `s`, so calls chain into one match. */
