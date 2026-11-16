@@ -41,6 +41,8 @@ export const EntrantRuleSchema = z.discriminatedUnion('from', [
     phaseId: id,
     ...SelectorSchema.shape,
   }),
+  /** Clubs given a place in this phase by another competition's `slot` outcome. */
+  z.strictObject({ from: z.literal('slots') }),
   /** The N best of the national ranking not already entered (supplied by the world). */
   z.strictObject({ from: z.literal('ranking'), count }),
 ]);
@@ -168,6 +170,11 @@ export const CompetitionSchema = z
     priority: z.number().int().min(0),
     /** Members this season; the turnover checks it (size change = transition rule, 05 §3). */
     size: z.number().int().min(2),
+    /**
+     * Places left open at the turnover (a size change, promotion without
+     * relegation) are filled from the national ranking; null = must balance.
+     */
+    refill: z.enum(['ranking']).nullable(),
     /** Members in the pack's own season; empty for a later season (they come from the turnover). */
     clubIds: z.array(id),
     registration: z.strictObject({

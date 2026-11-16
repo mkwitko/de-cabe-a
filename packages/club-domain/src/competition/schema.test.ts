@@ -59,6 +59,7 @@ function comp(id: string, size: number, phases: Phase[], extra: Partial<Competit
     category: 'profissional',
     priority: 1,
     size,
+    refill: null,
     clubIds: [],
     registration: {
       maxSquad: 50,

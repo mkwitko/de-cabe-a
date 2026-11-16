@@ -27,6 +27,7 @@ export function regulation(b: Base, phases: Phase[]): Competition {
     category: 'profissional',
     priority: 1,
     size: b.clubIds.length,
+    refill: null,
     registration: {
       maxSquad: 50,
       changes: 8,
