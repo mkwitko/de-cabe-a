@@ -28,6 +28,8 @@ async function main() {
   for (const [a, b] of pairs) {
     const inputs = Array.from({ length: n }, (_, i) => {
       const A = teamInput(9000 + i, 65, plans[a]!(), `a${i}`);
+      // Optional familiarity of side A with its plan (argv[4], 0..1).
+      if (process.argv[4]) for (const p of A.players) p.familiarity = Number(process.argv[4]);
       const B = teamInput(9500 + i, 65, plans[b]!(), `b${i}`);
       return i % 2 === 0 ? matchInput(9000 + i, A, B) : matchInput(9000 + i, B, A);
     });

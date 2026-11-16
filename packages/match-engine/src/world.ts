@@ -123,6 +123,8 @@ const compliance = (a: Attributes, fam: number) =>
 
 /** PARAMETER: widest gap between neighbours of a back line without the ball, metres. */
 const BACK_SPACING = 13;
+/** PARAMETER: compliance lost per unit of plan demand when the side is not drilled at all. */
+const DEMAND_COST = 0.35;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
 /** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
@@ -176,7 +178,19 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       const old = prev.get(a.player);
       const p = w.players[a.player]!;
       const isNew = !old || old.task.key !== a.task.key;
-      if (isNew && !event && next(w.rng) > compliance(p.attrs, w.familiarity[team])) continue;
+      // A demanding plan (hard press, high block) needs drilling: without familiarity
+      // the task is missed more often (research 16 §1.1, team B and C). PARAMETER.
+      const demand = inPossession
+        ? 0
+        : Math.max(0, plan.team.pressIntensity - 3) / 2 + (plan.team.block === 'high' ? 0.5 : 0);
+      const drilled = w.familiarity[team] * (0.5 + 0.5 * (p.attrs.teamwork / 99));
+      if (
+        isNew &&
+        !event &&
+        next(w.rng) >
+          compliance(p.attrs, w.familiarity[team]) - DEMAND_COST * demand * (1 - drilled)
+      )
+        continue;
       if (isNew) {
         w.log.push({
           tick: w.tick,
