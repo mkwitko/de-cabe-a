@@ -309,9 +309,7 @@ export function tasksFor(
     'press',
     'press',
     engage
-      ? ball.x < 30
-        ? toGoal(focal, 2)
-        : focal
+      ? shepherd(ball.x < 30 ? toGoal(focal, 2) : focal, t.forceDirection, focal)
       : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
   );
   if (counterPress) add('press', 'press2', toGoal(focal, 3));
@@ -381,6 +379,19 @@ export function freeSpot(base: Vec2, opp: Vec2[], maxX = LENGTH): Vec2 {
     }
   }
   return best;
+}
+
+/**
+ * Showing the carrier one way (02 §8.1 forceDirection): the presser stands on the
+ * shoulder he must not go past: the inside one to send him outside, the outside one to
+ * send him in (PARAMETER: SHEPHERD metres).
+ */
+const SHEPHERD = 3;
+function shepherd(pt: Vec2, dir: 'inside' | 'outside' | null, focal: Vec2): Vec2 {
+  if (dir === null) return pt;
+  const towardCentre = focal.y < CENTER.y ? 1 : -1;
+  const s = dir === 'outside' ? towardCentre : -towardCentre;
+  return { x: pt.x, y: clamp(pt.y + SHEPHERD * s, 1, WIDTH - 1) };
 }
 
 /** PARAMETERS of the cost (seconds). */

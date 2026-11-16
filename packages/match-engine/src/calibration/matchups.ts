@@ -21,6 +21,9 @@ const plans: Record<string, () => TacticalPlan> = {
   low: style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter', onLoss: 'regroup' }),
   regroup: style('4-4-2', { onLoss: 'regroup' }),
   noTriggers: style('4-4-2', { pressTriggers: [] }),
+  trap: style('4-4-2', { offsideTrap: true }),
+  outside: style('4-4-2', { forceDirection: 'outside' }),
+  inside: style('4-4-2', { forceDirection: 'inside' }),
   allTriggers: style('4-4-2', {
     pressTriggers: ['backPass', 'poorTouch', 'ballOnTouchline', 'receiverFacingOwnGoal'],
   }),

@@ -130,6 +130,8 @@ const compliance = (a: Attributes, fam: number) =>
 const BACK_SPACING = 13;
 /** PARAMETER: compliance lost per unit of plan demand when the side is not drilled at all. */
 const DEMAND_COST = 0.35;
+/** PARAMETER: metres the back line steps up on an offside trap. */
+const TRAP_STEP = 5;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
 /** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
@@ -279,8 +281,23 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       const cy = ys.reduce((a, b) => a + b, 0) / ys.length;
       const cx = line.reduce((a, { p }) => a + anc[p.slot]!.x, 0) / line.length;
       const spacing = Math.min(BACK_SPACING, (ys[ys.length - 1]! - ys[0]!) / (line.length - 1));
-      line.forEach(({ i }, k) => {
-        targets[i] = { x: cx, y: clamp(cy + (k - (line.length - 1) / 2) * spacing, 2, WIDTH - 2) };
+      // Offside trap (02 §8.1): on a press trigger the line steps up together; a defender
+      // who is slow to read it or new to the plan steps less and plays the runner onside.
+      // The classic moment: the passer is closed down (one of ours within 2.5 m of him).
+      const holder = w.ball.holder !== null ? w.players[w.ball.holder] : undefined;
+      const closed =
+        holder !== undefined &&
+        holder.team !== team &&
+        mine.some((q) => dist(q.pos, holder.pos) < 2.5);
+      const trap = plan.team.offsideTrap && ((w.triggered?.[team] ?? false) || closed);
+      line.forEach(({ p, i }, k) => {
+        const step = trap
+          ? TRAP_STEP * w.familiarity[team] * (0.5 + 0.5 * (p.attrs.concentration / 99))
+          : 0;
+        targets[i] = {
+          x: cx + step,
+          y: clamp(cy + (k - (line.length - 1) / 2) * spacing, 2, WIDTH - 2),
+        };
       });
     }
   }
