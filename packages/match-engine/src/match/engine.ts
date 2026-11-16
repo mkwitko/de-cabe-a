@@ -344,7 +344,10 @@ function tackles(s: MatchState) {
       ? 0.8 + 0.6 * norm(d.attrs.lossReaction)
       : 0.7 + 0.6 * norm(d.attrs.pressing);
     // Centred near 1 for an average side (press sync about 0.65).
-    const sync = (0.35 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction;
+    // A tired presser arrives late and commits less (research 13 §1: intense running
+    // falls sharply late in the match). PARAMETER: from 0.75 stamina down to 40% at 0.
+    const fresh = 0.4 + 0.6 * Math.min(1, d.stamina / 0.75);
+    const sync = (0.35 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction * fresh;
     // In his own box a defender stays on his feet: a foul there is a penalty (PARAMETERS).
     const box = inOwnBox(d.team, c.pos);
     if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.7 : 1))
@@ -868,8 +871,8 @@ function endStep(s: MatchState, opts: StepOptions) {
       s.ball.possession === p.team
         ? 1
         : 1 +
-          0.18 * (t.pressIntensity - 3) +
-          (t.block === 'high' ? 0.12 : t.block === 'low' ? -0.08 : 0);
+          0.28 * (t.pressIntensity - 3) +
+          (t.block === 'high' ? 0.2 : t.block === 'low' ? -0.08 : 0);
     // Determination keeps a player going when it hurts (ADR-019).
     drain(p, v, DT * load * (1.1 - 0.2 * norm(p.attrs.determination)));
     p.acute = acuteLoad(p.acute, v, p.attrs.pace, p.attrs.recovery, DT);

@@ -184,11 +184,15 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
         ? 0
         : Math.max(0, plan.team.pressIntensity - 3) / 2 + (plan.team.block === 'high' ? 0.5 : 0);
       const drilled = w.familiarity[team] * (0.5 + 0.5 * (p.attrs.teamwork / 99));
+      const missDemand = DEMAND_COST * demand * (1 - drilled);
+      // On a pass the press must shift together on the trigger: an undrilled side
+      // misses that shift too (research 13 §1, 15 pressão coordenada). Ordinary
+      // reactions to the ball stay instant.
       if (
         isNew &&
-        !event &&
-        next(w.rng) >
-          compliance(p.attrs, w.familiarity[team]) - DEMAND_COST * demand * (1 - drilled)
+        (event
+          ? missDemand > 0 && next(w.rng) < missDemand
+          : next(w.rng) > compliance(p.attrs, w.familiarity[team]) - missDemand)
       )
         continue;
       if (isNew) {
