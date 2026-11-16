@@ -56,6 +56,8 @@ export interface World {
   lostAt?: [number, number];
   /** Per team: just won the ball and set to counter (the match engine sets it each step). */
   counter?: [boolean, boolean];
+  /** Per team without the ball: one of its press triggers is on (the match engine sets it). */
+  triggered?: [boolean, boolean];
 }
 
 export interface TeamSetup {
@@ -181,6 +183,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       ourLine,
       w.counter?.[team] ?? false,
       afterLoss,
+      w.triggered?.[team] ?? false,
     );
     // The carrier (or the intended receiver) is not available for tasks.
     const pool = mine.filter((p) => p.index !== w.ball.holder);
@@ -243,6 +246,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       ourLine,
       w.counter?.[team] ?? false,
       afterLoss,
+      w.triggered?.[team] ?? false,
     ).map((t) => [t.key, t.point]),
   );
   const targets: Vec2[] = [];

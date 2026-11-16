@@ -20,6 +20,10 @@ const plans: Record<string, () => TacticalPlan> = {
   press: style('4-3-3', { block: 'high', pressIntensity: 5, lineHeight: 4 }),
   low: style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter', onLoss: 'regroup' }),
   regroup: style('4-4-2', { onLoss: 'regroup' }),
+  noTriggers: style('4-4-2', { pressTriggers: [] }),
+  allTriggers: style('4-4-2', {
+    pressTriggers: ['backPass', 'poorTouch', 'ballOnTouchline', 'receiverFacingOwnGoal'],
+  }),
   433: style('4-3-3', {}),
   highOnly: style('4-3-3', { block: 'high', lineHeight: 4 }),
   intensityOnly: style('4-3-3', { pressIntensity: 5 }),

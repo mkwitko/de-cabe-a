@@ -323,6 +323,41 @@ function tackleWins(s: MatchState, d: MatchPlayer, c: MatchPlayer, emitTackle = 
   }
 }
 
+/**
+ * The plan's press triggers (02 §8.1; research 13 §1): the cue that tells a block to step out
+ * together. Seen by the defending team now; the block keeps going for 2 s (PARAMETERS:
+ * 5 m back, 6 m from the touchline, 2 s).
+ */
+function pressTriggered(s: MatchState, team: 0 | 1): boolean {
+  const on = s.plans[team].team.pressTriggers;
+  const st = (s.triggerUntil ??= [-1, -1]);
+  if (s.ball.possession === team || on.length === 0) return false;
+  const f = s.flight;
+  const kicker = f ? s.players[f.from] : undefined;
+  const theirs = kicker !== undefined && kicker.team !== team;
+  let fire = false;
+  if (theirs && f!.kind === 'pass') {
+    // A real back pass: most of the ball's pace goes towards their own goal.
+    const v = Math.sqrt(f!.ball.vx * f!.ball.vx + f!.ball.vy * f!.ball.vy);
+    const back = flip(kicker!.team, { x: f!.ball.vx, y: f!.ball.vy }).x < -0.7 * v;
+    if (on.includes('backPass') && back && v > 3) fire = true;
+    const r = f!.to !== null ? s.players[f!.to] : undefined;
+    if (on.includes('receiverFacingOwnGoal') && r && flip(r.team, r.vel).x < -1) fire = true;
+  }
+  if (on.includes('poorTouch') && theirs && f!.kind === 'loose' && f!.from === s.lastTouch)
+    fire = true;
+  const c = s.owner !== null ? s.players[s.owner] : undefined;
+  if (
+    on.includes('ballOnTouchline') &&
+    c &&
+    c.team !== team &&
+    (c.pos.y < 6 || c.pos.y > WIDTH - 6)
+  )
+    fire = true;
+  if (fire) st[team] = s.tick + 8;
+  return s.tick <= st[team];
+}
+
 /** PARAMETERS: counter window 8 s, from 45 m, at most 4 goal-side, chance per step. */
 const TACTICAL_FOUL = 0.25;
 function tacticalFoul(s: MatchState, d: MatchPlayer, c: MatchPlayer): boolean {
@@ -844,6 +879,7 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
   } else if (s.flight) s.ball.pos = { x: s.flight.ball.x, y: s.flight.ball.y };
   const carrierTarget = s.owner !== null ? { ...s.players[s.owner]!.target } : null;
   s.counter = [inCounter(s, 0), inCounter(s, 1)];
+  s.triggered = [pressTriggered(s, 0), pressTriggered(s, 1)];
   coordinate(s, 0, event);
   coordinate(s, 1, event);
   if (s.owner !== null && carrierTarget) s.players[s.owner]!.target = carrierTarget;

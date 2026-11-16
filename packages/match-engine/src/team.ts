@@ -203,6 +203,8 @@ export const REST_BEHIND = 16;
 const pressReach = { high: LENGTH, mid: 70, low: 40 } as const;
 /** Bauer and Anzer (2021): a counter-press succeeds within 5 s or is over. */
 export const COUNTERPRESS_WINDOW = 5;
+/** PARAMETER: metres further up the pitch a block steps out on a press trigger. */
+const TRIGGER_REACH = 20;
 /** How far behind the ball (towards the opponents' goal) a block still marks options. */
 const MARK_BEHIND = { high: 25, mid: 6, low: 3 } as const;
 
@@ -223,6 +225,8 @@ export function tasksFor(
   counter = false,
   /** In the seconds after losing the ball: hunt it (numbers at the ball) or drop (`onLoss`). */
   afterLoss: 'counterPress' | 'regroup' | null = null,
+  /** A press trigger of the plan is on: the block steps out further than its usual reach. */
+  triggered = false,
 ): Task[] {
   const t = plan.team;
   const tasks: Task[] = [];
@@ -286,7 +290,7 @@ export function tasksFor(
     ? true
     : afterLoss === 'regroup'
       ? ball.x <= 35
-      : ball.x <= pressReach[t.block] || t.pressIntensity >= 5;
+      : ball.x <= pressReach[t.block] + (triggered ? TRIGGER_REACH : 0) || t.pressIntensity >= 5;
   const goal = { x: 0, y: CENTER.y };
   const toGoal = (p: Vec2, d: number) => {
     const dx = goal.x - p.x;
