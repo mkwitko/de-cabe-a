@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ATTRIBUTES } from '@decabeca/match-engine';
+import { simpleLeague } from '../generate/competitions';
 import { DEPARTMENTS, PackSchema, type Pack } from './schema';
 
 const sha = 'a'.repeat(64);
@@ -111,15 +112,7 @@ function pack(): Pack {
     checksum: sha,
     manifest: [],
     competitions: [
-      {
-        id: 'l1',
-        name: 'Liga',
-        type: 'league',
-        tier: 1,
-        season: 2026,
-        clubIds: ['a', 'b'],
-        phases: [],
-      },
+      simpleLeague({ id: 'l1', name: 'Liga', season: 2026, tier: 1, clubIds: ['a', 'b'] }),
     ],
     clubs: [club('a'), club('b')],
     players: [player('p1', 'a'), player('p2', 'b')],
@@ -216,7 +209,7 @@ describe('MC-011 pack schema', () => {
 
   it('competition with an unknown club', () => {
     const p = pack();
-    p.competitions[0]!.clubIds.push('zz');
-    expect(paths(p)).toEqual(['competitions.0.clubIds.2']);
+    p.competitions[0]!.clubIds[1] = 'zz';
+    expect(paths(p)).toEqual(['competitions.0.clubIds.1']);
   });
 });

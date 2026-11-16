@@ -7,6 +7,7 @@
 import { createHash } from 'node:crypto';
 import { between, fork, next, pick, rngFrom, type Rng } from '@decabeca/match-engine';
 import { DEPARTMENTS, PackSchema, type Pack, type PackClub } from '../pack/schema';
+import { simpleLeague } from './competitions';
 import { generateSquad } from './player';
 import { CITIES, CLUB_PREFIXES, FIRST_NAMES, LAST_NAMES, NICKNAMES } from './names';
 
@@ -174,15 +175,13 @@ export function generateMiniPack(seed = 20261113): Pack {
     checksum: '0'.repeat(64),
     manifest: [],
     competitions: [
-      {
+      simpleLeague({
         id: 'dev-league',
         name: 'Liga de Desenvolvimento',
-        type: 'league',
-        tier: 1,
         season: SEASON,
+        tier: 1,
         clubIds: clubs.map((c) => c.id),
-        phases: [],
-      },
+      }),
     ],
     clubs,
     players,
@@ -194,8 +193,10 @@ export function generateMiniPack(seed = 20261113): Pack {
     youthCompetitions: [],
     names: { first: FIRST_NAMES, last: LAST_NAMES, nicknames: NICKNAMES },
   };
-  pack.checksum = packChecksum(pack);
-  return PackSchema.parse(pack);
+  // Checksum of the parsed pack: parsing fixes the key order.
+  const parsed = PackSchema.parse(pack);
+  parsed.checksum = packChecksum(parsed);
+  return parsed;
 }
 
 /** sha256 of the pack's JSON with the checksum field blanked. */
