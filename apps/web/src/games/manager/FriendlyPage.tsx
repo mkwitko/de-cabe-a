@@ -9,7 +9,7 @@ import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
-import { drawPlayers, LENGTH, pitchLayer, WIDTH, type Kit } from './pitch';
+import { ASPECT, drawPlayers, pitchLayer, view, type Kit, type View } from './pitch';
 
 interface Club {
   id: string;
@@ -88,6 +88,12 @@ export function FriendlyPage() {
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9));
   const [error, setError] = useState<string | null>(null);
 
+  // The mode's own stage: night ground under the whole page while it is open.
+  useEffect(() => {
+    document.documentElement.classList.add('club-stage');
+    return () => document.documentElement.classList.remove('club-stage');
+  }, []);
+
   useEffect(() => {
     api<{ clubs: Club[]; formations: string[] }>('/v1/manager/friendly/clubs')
       .then((r) => {
@@ -164,7 +170,7 @@ function Range({
         max={5}
         step={1}
         value={value}
-        className="min-h-11 w-full accent-cover"
+        className="min-h-11 w-full accent-club-gold"
         onChange={(e) => onChange(Number(e.target.value))}
       />
     </label>
@@ -188,7 +194,7 @@ function PlanFields({
               key={b}
               type="button"
               aria-pressed={value.block === b}
-              className={`${btnSecondary} flex-1 ${value.block === b ? 'border-cover text-cover' : ''}`}
+              className={`${btnSecondary} flex-1 ${value.block === b ? 'border-club-gold text-club-gold' : ''}`}
               onClick={() => onChange({ ...value, block: b })}
             >
               {t('friendly.blockValue', { v: b })}
@@ -232,7 +238,7 @@ function SideCard(props: {
   const club = props.clubs.find((c) => c.id === side.clubId)!;
   return (
     <section
-      className="flex min-w-0 flex-col gap-4 rounded-2xl border border-chalk/10 bg-pitch-deep/80 p-4 shadow-[0_20px_40px_-20px_rgb(0_0_0/0.6)] sm:p-5"
+      className="flex min-w-0 flex-col gap-4 rounded-2xl border border-chalk/10 bg-club-panel/80 p-4 shadow-[0_20px_40px_-20px_rgb(0_0_0/0.6)] sm:p-5"
       style={{ borderTop: `4px solid ${club.colours[0]}` }}
     >
       <p className="font-condensed text-sm font-extrabold tracking-widest text-chalk-soft uppercase">
@@ -244,7 +250,7 @@ function SideCard(props: {
         <select
           value={side.clubId}
           onChange={(e) => set({ ...side, clubId: e.target.value })}
-          className="min-h-11 min-w-0 flex-1 truncate rounded-lg border border-chalk/20 bg-pitch px-3 font-condensed text-lg font-extrabold uppercase sm:text-xl"
+          className="min-h-11 min-w-0 flex-1 truncate rounded-lg border border-chalk/20 bg-club-night px-3 font-condensed text-lg font-extrabold uppercase sm:text-xl"
         >
           {props.clubs.map((c) => (
             <option key={c.id} value={c.id}>
@@ -255,13 +261,13 @@ function SideCard(props: {
       </label>
       <fieldset className="flex flex-col gap-1 text-sm">
         <legend>{t('friendly.formation')}</legend>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {props.formations.map((f) => (
             <button
               key={f}
               type="button"
               aria-pressed={side.formation === f}
-              className={`${btnSecondary} flex-1 tabular-nums ${side.formation === f ? 'border-cover text-cover' : ''}`}
+              className={`${btnSecondary} px-2 leading-tight tabular-nums ${side.formation === f ? 'border-club-gold text-club-gold' : ''}`}
               onClick={() => set({ ...side, formation: f })}
             >
               {f}
@@ -289,7 +295,7 @@ function Setup(props: {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="font-condensed text-sm font-extrabold tracking-widest text-gold uppercase">
+        <p className="font-condensed text-sm font-extrabold tracking-widest text-club-gold uppercase">
           {t('friendly.kicker')}
         </p>
         <p className="max-w-2xl text-chalk-soft">{t('friendly.intro')}</p>
@@ -377,6 +383,7 @@ function Match(props: {
     const s = sim.current;
     const still = motionReduced();
     let layer: HTMLCanvasElement | null = null;
+    let v: View | null = null;
     let raf = 0;
     let last = performance.now();
     let shown = '';
@@ -432,19 +439,20 @@ function Match(props: {
       }
 
       const width = canvas.clientWidth;
+      if (width === 0) return; // not laid out yet
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      if (canvas.width !== Math.round(width * dpr) || !layer) {
+      if (canvas.width !== Math.round(width * dpr) || !layer || !v) {
         canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(((width * WIDTH) / LENGTH) * dpr);
+        canvas.height = Math.round(width * ASPECT * dpr);
         layer = pitchLayer(canvas.width, canvas.height);
+        v = view(canvas.width, canvas.height);
       }
-      const k = canvas.width / LENGTH;
       const head = still ? Math.floor(s.head / TPS) * TPS : s.head;
       const i = Math.floor(head);
       ctx.drawImage(layer, 0, 0);
       drawPlayers(
         ctx,
-        k,
+        v,
         s.frames[i]!,
         s.frames[Math.min(i + 1, s.frames.length - 1)]!,
         head - i,
@@ -516,10 +524,10 @@ function Match(props: {
   return (
     <div className="flex flex-col gap-3">
       {error && <Notice title={t('friendly.loadError')}>{error}</Notice>}
-      <div className="relative overflow-hidden rounded-2xl bg-pitch-deep shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-chalk/10">
+      <div className="relative overflow-hidden rounded-2xl bg-club-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-chalk/10">
         <canvas
           ref={canvasRef}
-          className="block aspect-[105/68] w-full"
+          className="block aspect-[100/56] w-full"
           role="img"
           aria-label={t('friendly.pitchLabel', { home: hc.shortName, away: ac.shortName })}
         />
@@ -553,7 +561,7 @@ function Match(props: {
               key={v}
               type="button"
               aria-pressed={speed === v}
-              className={`${btnSecondary} tabular-nums ${speed === v ? 'border-cover text-cover' : ''}`}
+              className={`${btnSecondary} tabular-nums ${speed === v ? 'border-club-gold text-club-gold' : ''}`}
               onClick={() => {
                 sim.current.speed = v;
                 setSpeed(v);
@@ -577,7 +585,7 @@ function Match(props: {
           {t('friendly.skip')}
         </button>
       </div>
-      <details className="rounded-2xl border border-chalk/10 bg-pitch-deep/70 p-4" open>
+      <details className="rounded-2xl border border-chalk/10 bg-club-panel/70 p-4" open>
         <summary className="min-h-11 cursor-pointer font-condensed text-xl font-extrabold uppercase">
           {t('friendly.tactics')}{' '}
           <span className="font-sans text-sm font-normal normal-case text-chalk-soft">
@@ -602,7 +610,7 @@ function Scoreboard({
   minute: number;
 }) {
   return (
-    <div className="pointer-events-none absolute top-2 left-2 flex items-stretch overflow-hidden rounded-lg bg-[oklch(0.15_0.03_155/0.88)] font-condensed text-base font-extrabold uppercase shadow-lg sm:top-4 sm:left-4 sm:text-xl">
+    <div className="pointer-events-none absolute top-2 left-2 flex items-stretch overflow-hidden rounded-lg bg-club-night/90 font-condensed text-base font-extrabold uppercase shadow-lg sm:top-4 sm:left-4 sm:text-xl">
       {clubs.map((c, i) => (
         <span
           key={c.id}
@@ -612,7 +620,7 @@ function Scoreboard({
           {c.shortName}
         </span>
       ))}
-      <span className="order-2 flex items-center bg-cover px-2 text-ink tabular-nums sm:px-3">
+      <span className="order-2 flex items-center bg-club-gold px-2 text-ink tabular-nums sm:px-3">
         {score[0]}–{score[1]}
       </span>
       <span className="order-4 flex items-center bg-chalk/10 px-2 tabular-nums sm:px-3">
@@ -666,20 +674,20 @@ function Report(props: {
   ];
   return (
     <div className="flex flex-col gap-5">
-      <section className="flex flex-col items-center gap-2 rounded-2xl bg-pitch-deep/80 p-6 ring-1 ring-chalk/10">
-        <p className="font-condensed text-sm font-extrabold tracking-widest text-gold uppercase">
+      <section className="flex flex-col items-center gap-2 rounded-2xl bg-club-panel/80 p-6 ring-1 ring-chalk/10">
+        <p className="font-condensed text-sm font-extrabold tracking-widest text-club-gold uppercase">
           {t('friendly.fullTime')}
         </p>
         <p className="flex items-center gap-2 font-condensed text-2xl font-extrabold whitespace-nowrap uppercase sm:gap-4 sm:text-5xl">
           <Crest club={clubs[0]} /> {clubs[0].shortName}
-          <span className="rounded-lg bg-cover px-3 text-ink tabular-nums">
+          <span className="rounded-lg bg-club-gold px-3 text-ink tabular-nums">
             {result.score[0]}–{result.score[1]}
           </span>
           {clubs[1].shortName} <Crest club={clubs[1]} />
         </p>
       </section>
       <div className="grid gap-5 md:grid-cols-2">
-        <section className="flex flex-col gap-2 rounded-2xl bg-pitch-deep/70 p-4 ring-1 ring-chalk/10">
+        <section className="flex flex-col gap-2 rounded-2xl bg-club-panel/70 p-4 ring-1 ring-chalk/10">
           <h2 className="font-condensed text-xl font-extrabold uppercase">
             {t('friendly.report')}
           </h2>
@@ -719,7 +727,7 @@ function Report(props: {
             })}
           </dl>
         </section>
-        <section className="flex flex-col gap-3 rounded-2xl bg-pitch-deep/70 p-4 ring-1 ring-chalk/10">
+        <section className="flex flex-col gap-3 rounded-2xl bg-club-panel/70 p-4 ring-1 ring-chalk/10">
           <h2 className="font-condensed text-xl font-extrabold uppercase">{t('friendly.why')}</h2>
           {result.explanation.factors.length === 0 ? (
             <p className="text-chalk-soft">{t('friendly.noFactor')}</p>

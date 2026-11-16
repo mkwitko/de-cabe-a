@@ -21,7 +21,7 @@ for (const width of [360, 1280]) {
     await page.screenshot({ path: `test-results/amistoso-setup-${width}.png`, fullPage: true });
     await page.getByRole('button', { name: 'Começar a partida' }).click();
 
-    await expect(page.getByRole('img', { name: /Campo visto de cima/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /Campo da partida/ })).toBeVisible();
     await expect.poll(() => requests.length, { timeout: 20_000 }).toBeGreaterThan(0);
     await page.waitForTimeout(2500);
     await page.screenshot({ path: `test-results/amistoso-match-${width}.png`, fullPage: true });
@@ -40,7 +40,7 @@ for (const width of [360, 1280]) {
     );
     expect(overflow).toBeLessThanOrEqual(0);
     await page.getByRole('button', { name: 'Jogar de novo' }).click();
-    await expect(page.getByRole('img', { name: /Campo visto de cima/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /Campo da partida/ })).toBeVisible();
     expect(errors).toEqual([]);
   });
 }

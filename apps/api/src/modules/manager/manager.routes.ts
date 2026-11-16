@@ -82,8 +82,9 @@ function friendlyInput(b: z.infer<typeof FriendlyBody>) {
   return MatchInputSchema.parse({
     engineVersion: 0,
     seed: b.seed,
-    // The person commands the home side live; its coach never changes the plan on his own (02 §10).
-    teams: [{ ...side(b.home), coach: coachOf(60, { flexibility: 0 }) }, side(b.away)],
+    // The person commands the home side live; its coach never changes the plan on his own (02 §10):
+    // attributes run 1 to 100 and a coach below 30 of flexibility keeps the plan.
+    teams: [{ ...side(b.home), coach: coachOf(60, { flexibility: 1 }) }, side(b.away)],
     conditions: {
       crowd: 0.7,
       altitudeM: 0,

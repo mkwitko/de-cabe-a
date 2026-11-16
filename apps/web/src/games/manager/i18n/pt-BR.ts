@@ -37,7 +37,7 @@ export const ptBR = {
   'friendly.play': 'Começar a partida',
   'friendly.loading': 'Preparando o jogo…',
   'friendly.loadError': 'Não deu para carregar a partida',
-  'friendly.pitchLabel': 'Campo visto de cima: {home} de círculos, {away} de quadrados, e a bola',
+  'friendly.pitchLabel': 'Campo da partida: {home} de círculos, {away} de quadrados, e a bola',
   'friendly.clock': "{minute}'",
   'friendly.period': '{p, select, 1 {1º tempo} 2 {2º tempo} other {Prorrogação}}',
   'friendly.pause': 'Pausar',
