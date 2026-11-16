@@ -9,12 +9,10 @@
 export const LENGTH = 1050; // decimetres, as in the frames
 export const WIDTH = 680;
 
-/** Canvas height over width. */
-export const ASPECT = 0.56;
 /** Far touchline width over near touchline width (camera tilt). */
 const FAR = 0.74;
-/** Pitch depth on screen over its top-down depth. */
-const TILT = 0.62;
+/** Pitch depth on screen over the canvas height; the rest is the stand. */
+const DEPTH = 0.72;
 /** Margin at each side of the near touchline, over the canvas width. */
 const SIDE = 0.035;
 
@@ -23,6 +21,8 @@ export interface View {
   h: number;
   /** Pixels per decimetre on the near touchline. */
   k: number;
+  /** Players and ball drawn larger on a small canvas, so they stay readable. */
+  size: number;
   /** Screen point of a pitch point, and the scale there (1 near, FAR far). */
   at(x: number, y: number): { x: number; y: number; s: number };
 }
@@ -30,11 +30,12 @@ export interface View {
 /**
  * Homography of the ground plane: depth z grows linearly from the near (1) to
  * the far touchline (1 / FAR); the screen scale is 1 / z and the screen row is
- * linear in 1 / z, which is what a pinhole camera sees.
+ * linear in 1 / z, which is what a pinhole camera sees. The canvas shape sets
+ * the tilt: a taller canvas (phone) looks down more steeply and closer.
  */
 export function view(w: number, h: number): View {
   const k = (w * (1 - 2 * SIDE)) / LENGTH;
-  const depth = WIDTH * k * TILT;
+  const depth = h * DEPTH;
   const bottom = h - h * 0.05;
   const top = bottom - depth;
   const zFar = 1 / FAR;
@@ -42,6 +43,7 @@ export function view(w: number, h: number): View {
     w,
     h,
     k,
+    size: Math.min(1.5, Math.max(1, 1100 / w)),
     at(x, y) {
       const z = zFar + (1 - zFar) * (y / WIDTH);
       const s = 1 / z;
@@ -201,8 +203,8 @@ export function pitchLayer(w: number, h: number): HTMLCanvasElement {
   for (const x of [0, LENGTH]) {
     const a = p(x, WIDTH / 2 - 36.6);
     const b = p(x, WIDTH / 2 + 36.6);
-    const ha = 24.4 * v.k * a.s * TILT * 1.2;
-    const hb = 24.4 * v.k * b.s * TILT * 1.2;
+    const ha = 24.4 * v.k * a.s * 0.75;
+    const hb = 24.4 * v.k * b.s * 0.75;
     const back = (x === 0 ? -1 : 1) * 14 * v.k;
     c.fillStyle = 'rgba(240,241,233,0.12)';
     c.beginPath();
@@ -249,7 +251,7 @@ export function drawPlayers(
   const z = Math.max(0, lerp(3));
   let ballDrawn = false;
   const drawBall = () => {
-    const br = Math.max(2.5, 5.5 * v.k * ball.s);
+    const br = Math.max(2.5, 5.5 * v.k * ball.s * v.size);
     const lift = z * v.k * ball.s;
     c.fillStyle = `rgba(0,0,0,${Math.max(0.12, 0.38 - z / 400)})`;
     c.beginPath();
@@ -268,7 +270,7 @@ export function drawPlayers(
   for (const p of order) {
     const o = v.at(lerp(4 + p * 2), lerp(5 + p * 2));
     if (!ballDrawn && ball.y < o.y) drawBall();
-    const r = Math.max(4, 11 * v.k * o.s);
+    const r = Math.max(4, 11 * v.k * o.s * v.size);
     const kit = kits[p < 11 ? 0 : 1];
     // Shadow on the grass, then the body standing on it.
     c.fillStyle = 'rgba(0,0,0,0.38)';

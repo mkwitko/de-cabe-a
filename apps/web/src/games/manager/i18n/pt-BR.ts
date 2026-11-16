@@ -78,6 +78,8 @@ export const ptBR = {
     'Seu time fez {goals} gols com {xg, number} de gols esperados: a finalização decidiu.',
   'match.explain.keeper':
     '{team, select, 0 {Seu goleiro evitou {saved, number} gols além do esperado.} other {O goleiro deles evitou {saved, number} gols além do esperado.}}',
+  'match.explain.keeperConceded':
+    '{team, select, 0 {Seu goleiro sofreu {conceded, number} gols além do esperado.} other {O goleiro deles sofreu {conceded, number} gols além do esperado.}}',
   'match.explain.setPieces':
     'Bola parada: {xgFor, number} de gols esperados a favor contra {xgAgainst, number}.',
   'match.explain.transition':

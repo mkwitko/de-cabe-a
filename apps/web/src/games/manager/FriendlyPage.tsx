@@ -9,7 +9,7 @@ import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
-import { ASPECT, drawPlayers, pitchLayer, view, type Kit, type View } from './pitch';
+import { drawPlayers, pitchLayer, view, type Kit, type View } from './pitch';
 
 interface Club {
   id: string;
@@ -440,10 +440,11 @@ function Match(props: {
 
       const width = canvas.clientWidth;
       if (width === 0) return; // not laid out yet
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      // ponytail: at most 2.000 device pixels across, the blit is the frame cost on a wide screen.
+      const dpr = Math.min(2, window.devicePixelRatio || 1, 2000 / width);
       if (canvas.width !== Math.round(width * dpr) || !layer || !v) {
         canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(width * ASPECT * dpr);
+        canvas.height = Math.round(canvas.clientHeight * dpr);
         layer = pitchLayer(canvas.width, canvas.height);
         v = view(canvas.width, canvas.height);
       }
@@ -527,7 +528,7 @@ function Match(props: {
       <div className="relative overflow-hidden rounded-2xl bg-club-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-chalk/10">
         <canvas
           ref={canvasRef}
-          className="block aspect-[100/56] w-full"
+          className="block aspect-[4/3] w-full sm:aspect-[100/56]"
           role="img"
           aria-label={t('friendly.pitchLabel', { home: hc.shortName, away: ac.shortName })}
         />
@@ -632,6 +633,13 @@ function Scoreboard({
 
 // ── Report ──────────────────────────────────────────────────────────────────
 
+/** The engine reports a keeper below expectation as negative goals saved; say it the other way. */
+export function signed(m: Message): Message {
+  const saved = Number(m.params.saved);
+  if (m.key !== 'match.explain.keeper' || !(saved < 0)) return m;
+  return { key: 'match.explain.keeperConceded', params: { ...m.params, conceded: -saved } };
+}
+
 function Report(props: {
   result: Result;
   clubs: [Club, Club];
@@ -734,7 +742,7 @@ function Report(props: {
           ) : (
             <ol className="flex list-decimal flex-col gap-2 pl-5">
               {result.explanation.factors.slice(0, 4).map((f, i) => (
-                <li key={i}>{tMessage(f.message)}</li>
+                <li key={i}>{tMessage(signed(f.message))}</li>
               ))}
             </ol>
           )}

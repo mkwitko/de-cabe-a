@@ -3,9 +3,11 @@
 Status: aceito pelo dono em 2026-11-13 (specs aprovadas, MC-010). A escolha da biblioteca de desenho depende da prova técnica MC-023.
 
 ## Contexto
+
 O usuário pode só ver o placar, assistir à partida ou intervir (instrução, substituição, grito). O resultado não pode ser decidido pelo navegador. O projeto não tem WebSocket e não precisa ganhar um por causa disso.
 
 ## Decisão
+
 1. **O servidor é a única autoridade.** O cliente envia comandos; nunca envia placar, posição ou estado.
 2. **Partida em trechos por HTTP.** `POST /v1/manager/match/:id/advance { até: minuto | 'fim', comandos: [...] }` simula do ponto atual até o limite pedido e devolve os quadros daquele trecho (posições a 4 Hz, quantizadas em inteiros, mais eventos). O cliente reproduz o trecho com interpolação. Para intervir, o usuário pausa; o comando vai no pedido do trecho seguinte e vale a partir do instante da pausa.
 3. **Três modos, um caminho de código**: rápido = um pedido `até: 'fim'` sem quadros; acompanhado = o mesmo pedido com quadros; interativo = vários pedidos com comandos. Sem comando, os três dão o mesmo placar (teste).
@@ -14,10 +16,26 @@ O usuário pode só ver o placar, assistir à partida ou intervir (instrução, 
 6. **Limites**: uma partida aberta por carreira; trecho mínimo de 1 minuto de jogo; no máximo 40 comandos por partida; limite de taxa na rota.
 
 ## Consequências
+
 - Sem infraestrutura nova (sem WebSocket, sem fila).
 - Latência de um pedido a cada pausa; aceitável porque a intervenção já pede pausa.
 - Tamanho do trecho: 90 minutos a 4 Hz × 23 objetos × 2 inteiros ≈ 1 MB bruto; com delta e gzip, medir. Se passar de 300 KB, cair para 2 Hz.
 
 ## Alternativas
+
 - WebSocket com fluxo contínuo: intervenção sem pausa, mas infraestrutura e estado de conexão novos.
 - Simular no navegador e validar no servidor repetindo a simulação: dobra o custo e exige determinismo entre motores em tudo.
+
+## Medição preliminar (2026-11-16, emulada, não substitui MC-030)
+
+Campo 2,5D em `<canvas>` 2D puro (`apps/web/src/games/manager/pitch.ts`), Chromium sem GPU via Playwright (Pixel 7), média de 4 s de partida a 8×:
+
+| Largura  | CPU           | Média | Quadro p95 |
+| -------- | ------------- | ----- | ---------- |
+| 360 px   | 1×            | 60    | 60         |
+| 360 px   | 4× mais lenta | 60    | 60         |
+| 360 px   | 6× mais lenta | 57    | 60         |
+| 1.280 px | 1×            | 59    | 60         |
+| 1.280 px | 4× mais lenta | 44    | 30         |
+
+O script do quadro gasta cerca de 5% do tempo; o resto é rasterização em software do navegador sem GPU, então o número de 1.280 px com CPU lenta é pessimista. O piso de 30 quadros se manteve. PixiJS continua sem motivo para entrar. MC-030 segue aberta: falta medir num celular intermediário real.
