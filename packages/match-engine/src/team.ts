@@ -201,6 +201,8 @@ export const REST_BEHIND = 16;
 
 /** Where `us` would press: does the block allow engaging the ball at `ballX` (team frame)? */
 const pressReach = { high: LENGTH, mid: 70, low: 40 } as const;
+/** Bauer and Anzer (2021): a counter-press succeeds within 5 s or is over. */
+export const COUNTERPRESS_WINDOW = 5;
 /** How far behind the ball (towards the opponents' goal) a block still marks options. */
 const MARK_BEHIND = { high: 25, mid: 6, low: 3 } as const;
 
@@ -219,6 +221,8 @@ export function tasksFor(
   ourLine = 0,
   /** Just won it and set to counter: runners attack the space ahead of the ball (research 13 §3). */
   counter = false,
+  /** In the seconds after losing the ball: hunt it (numbers at the ball) or drop (`onLoss`). */
+  afterLoss: 'counterPress' | 'regroup' | null = null,
 ): Task[] {
   const t = plan.team;
   const tasks: Task[] = [];
@@ -274,7 +278,15 @@ export function tasksFor(
   }
 
   // Out of possession.
-  const engage = ball.x <= pressReach[t.block] || t.pressIntensity >= 5;
+  // Reaction to the loss (02 §8.1 onLoss; research 18 §1.2): for a few seconds a counter-pressing
+  // side hunts the ball wherever it is, with a second presser; a regrouping side drops into its
+  // block and only engages near its own goal (PARAMETERS: 5 s window, 35 m).
+  const counterPress = afterLoss === 'counterPress';
+  const engage = counterPress
+    ? true
+    : afterLoss === 'regroup'
+      ? ball.x <= 35
+      : ball.x <= pressReach[t.block] || t.pressIntensity >= 5;
   const goal = { x: 0, y: CENTER.y };
   const toGoal = (p: Vec2, d: number) => {
     const dx = goal.x - p.x;
@@ -298,6 +310,7 @@ export function tasksFor(
         : focal
       : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
   );
+  if (counterPress) add('press', 'press2', toGoal(focal, 3));
   const aboveLine = (q: Vec2) => ({ x: clamp(q.x, ourLine - 2, top), y: q.y });
   // The cover stays a step deeper than the block's front, so it never shares the lane-closer's line.
   if (t.pressIntensity >= 3 || ball.x < 40) {

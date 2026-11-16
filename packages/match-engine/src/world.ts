@@ -6,10 +6,11 @@
 import type { Attributes, RoleId, TacticalPlan } from './contract';
 import { due } from './ball';
 import { maxSpeed, moveTowards, separate, type Mover } from './movement';
-import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from './pitch';
+import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from './pitch';
 import { fork, next, type Rng } from './random';
 import {
   anchors,
+  COUNTERPRESS_WINDOW,
   assign,
   lineOf,
   offsideLine,
@@ -158,6 +159,17 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
   const defX = mine.filter((p) => lineOf(p.role) === 'def').map((p) => anc[p.slot]!.x);
   const ourLine = defX.length ? Math.min(...defX) : 0;
 
+  // Seconds since we lost the ball (ticks of 0.25 s), for the plan's reaction to the loss.
+  const lost = w.lostAt?.[team];
+  const sinceLoss = !inPossession && lost !== undefined ? (w.tick - lost) / 4 : Infinity;
+  // Counter-press only with numbers at the ball (Bauer and Anzer 2021: superiority within 10 m).
+  const near = (ps: Vec2[]) => ps.filter((q) => dist(q, ball) < 10).length;
+  const afterLoss =
+    sinceLoss >= COUNTERPRESS_WINDOW
+      ? null
+      : plan.team.onLoss === 'counterPress' && near(mine.map((p) => flip(team, p.pos))) >= near(opp)
+        ? ('counterPress' as const)
+        : ('regroup' as const);
   if (event || due('coordination', w.tick)) {
     const tasks = tasksFor(
       plan,
@@ -168,6 +180,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       lastLine,
       ourLine,
       w.counter?.[team] ?? false,
+      afterLoss,
     );
     // The carrier (or the intended receiver) is not available for tasks.
     const pool = mine.filter((p) => p.index !== w.ball.holder);
@@ -229,6 +242,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       lastLine,
       ourLine,
       w.counter?.[team] ?? false,
+      afterLoss,
     ).map((t) => [t.key, t.point]),
   );
   const targets: Vec2[] = [];

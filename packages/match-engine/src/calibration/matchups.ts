@@ -18,7 +18,8 @@ const style = (f: string, team: Partial<TacticalPlan['team']>) => () => {
 const plans: Record<string, () => TacticalPlan> = {
   mid: style('4-4-2', {}),
   press: style('4-3-3', { block: 'high', pressIntensity: 5, lineHeight: 4 }),
-  low: style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter' }),
+  low: style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter', onLoss: 'regroup' }),
+  regroup: style('4-4-2', { onLoss: 'regroup' }),
   433: style('4-3-3', {}),
   highOnly: style('4-3-3', { block: 'high', lineHeight: 4 }),
   intensityOnly: style('4-3-3', { pressIntensity: 5 }),
