@@ -20,7 +20,7 @@ import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
 import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
-import { chanceFrom, chooseAction, settleTime, type Allowed } from './carrier';
+import { chanceFrom, chooseAction, inCounter, settleTime, type Allowed } from './carrier';
 import { kin, mates, opponents, pressureOn } from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
@@ -33,7 +33,7 @@ import { readTheGame, substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
-const TACKLE_RATE = 0.16;
+const TACKLE_RATE = 0.17;
 /** Ticks to control a ball just won (0.5 s). */
 const WIN_CONTROL = 2;
 /** World-frame x direction a team attacks. */
@@ -183,7 +183,10 @@ function gainBall(s: MatchState, p: MatchPlayer, restart = false) {
   // A ball just won (tackle, interception, loose ball) still has to be brought under control. PARAMETER.
   const regain = changed && !restart ? WIN_CONTROL : 0;
   p.decideAt = s.tick + Math.max(1, Math.round(settleTime(s, p) / DT)) + regain;
-  if (changed && !restart) emit(s, 'phaseChange', p.team, p.index, null, p.pos, { won: 1 });
+  if (changed && !restart) {
+    emit(s, 'phaseChange', p.team, p.index, null, p.pos, { won: 1 });
+    (s.lostAt ??= [-99, -99])[p.team === 0 ? 1 : 0] = s.tick;
+  }
 }
 
 function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number, vz = 0) {
@@ -342,7 +345,7 @@ function tackles(s: MatchState) {
     const sync = (0.35 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction;
     // In his own box a defender stays on his feet: a foul there is a penalty (PARAMETERS).
     const box = inOwnBox(d.team, c.pos);
-    if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.35 : 1))
+    if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.2 : 1))
       continue;
     d.tackleAt = s.tick + 4;
     // Behind: the defender is on the far side of the carrier from the carrier's own goal direction.
@@ -350,7 +353,7 @@ function tackles(s: MatchState) {
     const dg = flip(c.team, d.pos);
     const behind = dg.x < cg.x - 0.3;
     const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
-    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.4 : 1);
+    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.25 : 1);
     if (next(s.rngs.referee) < pf) {
       foul(s, d, c, behind);
       return;
@@ -435,7 +438,7 @@ function reachers(s: MatchState): Reacher[] {
     else if (f.kind === 'shot')
       reach = 0.35 + 0.2 * norm(p.attrs.bravery); // a block needs the body in the line
     else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
-      reach = 0.6 + 0.35 * norm(p.attrs.anticipation);
+      reach = 0.55 + 0.35 * norm(p.attrs.anticipation);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };
   });
 }
@@ -769,6 +772,7 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
     s.ball.focal = { ...s.ball.pos };
   } else if (s.flight) s.ball.pos = { x: s.flight.ball.x, y: s.flight.ball.y };
   const carrierTarget = s.owner !== null ? { ...s.players[s.owner]!.target } : null;
+  s.counter = [inCounter(s, 0), inCounter(s, 1)];
   coordinate(s, 0, event);
   coordinate(s, 1, event);
   if (s.owner !== null && carrierTarget) s.players[s.owner]!.target = carrierTarget;

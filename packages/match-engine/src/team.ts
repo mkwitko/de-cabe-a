@@ -209,6 +209,8 @@ export function tasksFor(
   lastLine: number,
   /** Our back line's x (team frame), out of possession: nobody is marked below it. */
   ourLine = 0,
+  /** Just won it and set to counter: runners attack the space ahead of the ball (research 13 §3). */
+  counter = false,
 ): Task[] {
   const t = plan.team;
   const tasks: Task[] = [];
@@ -235,11 +237,17 @@ export function tasksFor(
     }
     add('support', 'supportA', { x: focal.x + 2, y: focal.y - 11 });
     add('support', 'supportB', { x: focal.x + 2, y: focal.y + 11 });
-    const wideX = Math.min(focal.x + 6, lastLine - 1);
+    // On a counter the runners go for the space behind, not for the ball (PARAMETERS: 65 and 80 m).
+    const wideX = counter
+      ? Math.max(Math.min(focal.x + 6, lastLine - 1), Math.min(65, lastLine - 1))
+      : Math.min(focal.x + 6, lastLine - 1);
     const edge = 3 + (3 - t.width) * 2.5;
     add('width', 'widthR', { x: wideX, y: edge });
     add('width', 'widthL', { x: wideX, y: WIDTH - edge });
-    add('depth', 'depth', { x: Math.max(lastLine - 1, focal.x + 4), y: CENTER.y + side * 6 });
+    add('depth', 'depth', {
+      x: counter ? Math.max(lastLine - 1, focal.x + 4) : Math.max(lastLine - 1, focal.x + 4),
+      y: CENTER.y + side * 6,
+    });
     if (focal.x > 70) {
       add('box', 'boxNear', { x: 95, y: CENTER.y + side * 4 });
       if (t.finalThird.boxPresence >= 3) add('box', 'boxFar', { x: 92, y: CENTER.y - side * 6 });

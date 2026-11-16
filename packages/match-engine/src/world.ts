@@ -49,6 +49,10 @@ export interface World {
   familiarity: [number, number];
   assignments: [Assignment[], Assignment[]];
   log: TaskLog[];
+  /** Tick each team last lost the ball (the match engine sets it). */
+  lostAt?: [number, number];
+  /** Per team: just won the ball and set to counter (the match engine sets it each step). */
+  counter?: [boolean, boolean];
 }
 
 export interface TeamSetup {
@@ -151,7 +155,16 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
   const ourLine = defX.length ? Math.min(...defX) : 0;
 
   if (event || due('coordination', w.tick)) {
-    const tasks = tasksFor(plan, inPossession, ball, focal, opp, lastLine, ourLine);
+    const tasks = tasksFor(
+      plan,
+      inPossession,
+      ball,
+      focal,
+      opp,
+      lastLine,
+      ourLine,
+      w.counter?.[team] ?? false,
+    );
     // The carrier (or the intended receiver) is not available for tasks.
     const pool = mine.filter((p) => p.index !== w.ball.holder);
     const prev = new Map(w.assignments[team].map((a) => [a.player, a]));
@@ -187,7 +200,16 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     return pa - pb || a.index - b.index;
   });
   const fresh = new Map(
-    tasksFor(plan, inPossession, ball, focal, opp, lastLine, ourLine).map((t) => [t.key, t.point]),
+    tasksFor(
+      plan,
+      inPossession,
+      ball,
+      focal,
+      opp,
+      lastLine,
+      ourLine,
+      w.counter?.[team] ?? false,
+    ).map((t) => [t.key, t.point]),
   );
   const targets: Vec2[] = [];
   for (const p of ordered) {
@@ -256,7 +278,18 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       break;
     }
   }
-  ordered.forEach((p, i) => (p.target = flip(team, targets[i]!)));
+  ordered.forEach((p, i) => {
+    // Switching from attack to defence takes a moment (research 13 §3: counters live on it):
+    // a player keeps his attacking run for up to a second, less with quick loss reaction.
+    const lost = w.lostAt?.[team];
+    if (
+      !inPossession &&
+      lost !== undefined &&
+      w.tick - lost < 1 + Math.round(3 * (1 - p.attrs.lossReaction / 99))
+    )
+      return;
+    p.target = flip(team, targets[i]!);
+  });
 }
 
 /** Moves every active player one step towards his target. The carrier is moved by the caller. */
