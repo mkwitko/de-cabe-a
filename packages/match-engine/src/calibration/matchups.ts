@@ -5,7 +5,9 @@
 import type { TacticalPlan } from '../contract';
 import { matchInput, teamInput } from '../match/fixture';
 import { defaultPlan } from '../presets';
+import { writeFileSync } from 'node:fs';
 import { runMany } from './runner';
+import type { Summary } from './summary';
 
 const n = Number(process.argv[2] ?? 300);
 const style = (f: string, team: Partial<TacticalPlan['team']>) => () => {
@@ -25,6 +27,8 @@ async function main() {
   const pairs = (process.argv[3] ?? 'press:mid,low:mid,press:low,433:mid')
     .split(',')
     .map((x) => x.split(':') as [string, string]);
+  // DUMP=file keeps every match (side A index and summary) for paired.ts.
+  const dump: Record<string, { ai: number[]; s: Summary[] }> = {};
   for (const [a, b] of pairs) {
     const inputs = Array.from({ length: n }, (_, i) => {
       const A = teamInput(9000 + i, 65, plans[a]!(), `a${i}`);
@@ -34,6 +38,7 @@ async function main() {
       return i % 2 === 0 ? matchInput(9000 + i, A, B) : matchInput(9000 + i, B, A);
     });
     const rs = await runMany(inputs);
+    dump[`${a}:${b}`] = { ai: rs.map((_, i) => (i % 2 === 0 ? 0 : 1)), s: rs };
     let xa = 0,
       xb = 0,
       sa = 0,
@@ -86,5 +91,6 @@ async function main() {
       `${a} vs ${b} (${n}): ${a} wins ${pm(w)}, draws ${pm(d)} | goals ${mean.toFixed(2)} ±${((1.96 * sd) / Math.sqrt(n)).toFixed(2)} - ${(gb / n).toFixed(2)} | high wins ${(ha / n).toFixed(1)}-${(hb / n).toFixed(1)}`,
     );
   }
+  if (process.env.DUMP) writeFileSync(process.env.DUMP, JSON.stringify(dump));
 }
 void main();
