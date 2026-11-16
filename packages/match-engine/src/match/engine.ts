@@ -21,7 +21,7 @@ import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
 import { chanceFrom, chooseAction, inCounter, settleTime, type Allowed } from './carrier';
-import { kin, mates, opponents, pressureOn } from './control';
+import { kin, mates, opponents, pressureOn, readTime } from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
@@ -251,6 +251,10 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   const noOffside =
     restartAllowed === 'throwIn' || restartAllowed === 'goalKick' || restartAllowed === 'corner';
   s.flight = kick(s, c, a, noOffside);
+  // Opponents need their reaction time to read a pass (02 §4.1 arrival model; anticipation and
+  // concentration shorten it). The passer's estimate uses the same delay (passSafety).
+  if (s.flight.kind !== 'shot')
+    for (const o of opponents(s, c.team)) o.reactUntil = s.tick + Math.round(readTime(o) / DT);
   if (s.flight.blocked !== undefined && s.flight.blocked >= 0) {
     s.lastTouch = s.flight.blocked;
     setRestart(s, 'corner', c.team, {
@@ -457,7 +461,8 @@ function flightStep(s: MatchState) {
   }
   const skip = new Set(f.skip);
   const hit = firstContact(f.ball, reachers(s), DT, skip);
-  f.skip = [];
+  // PARAMETER: a pass is out of reach of those beside the kick once 2.5 m clear of it.
+  if (!f.origin || dist(f.ball, f.origin) > 2.5) f.skip = [];
   if (!hit) {
     advanceBall(f.ball, DT);
     s.ball.pos = { x: f.ball.x, y: f.ball.y };

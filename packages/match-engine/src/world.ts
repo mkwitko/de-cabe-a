@@ -26,6 +26,8 @@ export interface WorldPlayer extends TeamPlayer, Mover {
   /** Current target, world frame, and why. */
   target: Vec2;
   intent: TaskKind | 'anchor' | 'carry';
+  /** Until this tick the player is still reading a pass just played: he keeps his course. */
+  reactUntil?: number;
 }
 
 export interface TaskLog {
@@ -332,7 +334,10 @@ export function movePlayers(w: World): void {
     const dy = p.target.y - p.pos.y;
     const effort =
       URGENT.has(p.intent) || behind ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
-    moveTowards(p, p.target, Math.min(unit ? lineCap[p.team] : Infinity, effort));
+    // Reading the pass (kinematics reaction time): he carries on where he was going.
+    const course =
+      (p.reactUntil ?? 0) > w.tick ? { x: p.pos.x + p.vel.x, y: p.pos.y + p.vel.y } : p.target;
+    moveTowards(p, course, Math.min(unit ? lineCap[p.team] : Infinity, effort));
   }
   separate(w.players.filter((p) => p.active));
   for (const p of w.players) {

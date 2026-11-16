@@ -48,8 +48,12 @@ export interface Flight {
   from: number;
   to: number | null;
   kind: 'pass' | 'cross' | 'shot' | 'clear' | 'loose';
-  /** Players that cannot touch it this step (the kicker right after the kick). */
+  /**
+   * Players that cannot touch it yet: the kicker and opponents beside the kick, until
+   * the ball is clear of the kick point (`origin`), else for one step.
+   */
   skip: number[];
+  origin?: { x: number; y: number };
   /** Attackers in an offside position when it was played (02 §6.5). */
   offside: number[];
   /** Shot already decided past the keeper: he does not reach it (02 §7). */

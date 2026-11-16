@@ -10,7 +10,7 @@ import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
 import { lineOf } from '../team';
-import { groundSpeed, opponents, pressureOn } from './control';
+import { footBlock, groundSpeed, opponents, pressureOn } from './control';
 import { emit } from './events';
 import type { Action } from './carrier';
 import type { Flight, MatchPlayer, MatchState } from './state';
@@ -99,10 +99,8 @@ function beside(s: MatchState, c: MatchPlayer, ux: number, uy: number): number[]
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d >= 1.6) return false;
       if (d < 1e-6 || (dx * ux + dy * uy) / d < 0.7) return true;
-      // In front of the kick: a leg gets to it only part of the time (PARAMETER, anticipation helps).
-      // A press-resistant passer disguises it; a drilled presser reads it (research 13 §2).
-      const block = (0.2 + 0.2 * (o.attrs.anticipation / 99)) * (1.45 - pressResistance(c.attrs));
-      return next(s.rngs.execution) > block;
+      // In front of the kick: a leg gets to it only part of the time (footBlock).
+      return next(s.rngs.execution) > footBlock(o, c, ux, uy);
     })
     .map((o) => o.index);
 }
@@ -174,6 +172,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     to: a.receiver?.index ?? null,
     kind,
     skip: [c.index, ...beside(s, c, dx / d, dy / d)],
+    origin: from,
     offside,
     beaten: false,
     shot: null,
