@@ -85,7 +85,7 @@ export function passSafety(
       const pt = { x: from.x + dx * f, y: from.y + dy * f };
       const tb = lofted ? d / speed : rollTime(speed, d * f);
       if (!Number.isFinite(tb)) continue;
-      const to_ = arrivalTime(kin(o), pt, false);
+      const to_ = arrivalTime(kin(o), pt, true);
       const r = logistic((tb - to_ + CUT_MARGIN) / CUT_SPREAD);
       if (r > worst) worst = r;
     }
@@ -102,7 +102,7 @@ export function passSafety(
     if (tight < 3) safe *= 0.82 + 0.06 * tight;
     // The receiver must beat the nearest opponent to the end point.
     const tr = arrivalTime(kin(receiver), to, receiverKnows);
-    const tOpp = firstArrival(opp, to);
+    const tOpp = firstArrival(opp, to, true);
     safe *= logistic((tOpp - tr + 0.2) / 0.3);
   }
   return safe;

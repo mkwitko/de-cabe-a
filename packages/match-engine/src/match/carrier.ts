@@ -53,7 +53,7 @@ const SHOT_RESERVE = 0;
 /** Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER. */
 const SHOT_FOLLOW_UP = 1.6;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
-const LOFT_RISK = 0.7;
+const LOFT_RISK = 0.55;
 /**
  * A ball over the top lands with error, bounces and meets a keeper coming out:
  * measured success near 25% to 35% (calibration run, 2026-11-13). PARAMETER.
