@@ -372,7 +372,11 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
   }
   // Pressed in his own half, he can go long beyond the press to the forwards' zone:
   // the ball is contested up there, far from his goal (research 13 §2: teams go long against a press).
-  if (me.x < 50 && pressure > 0.3 && allowed === 'open') {
+  // The keeper and a goal kick have the same way out when the press comes high.
+  const pressedHigh =
+    opponents(s, c.team).filter((o) => toTeam(c, o.pos).x < 30).length >= 2 &&
+    (allowed === 'goalKick' || allowed === 'keeper');
+  if (me.x < 50 && ((pressure > 0.3 && allowed === 'open') || pressedHigh)) {
     const t = flip(c.team, {
       x: Math.min(me.x + 45, 80),
       y: clamp(me.y + (CENTER.y - me.y) * 0.5, 8, WIDTH - 8),
