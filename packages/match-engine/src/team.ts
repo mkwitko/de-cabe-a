@@ -108,6 +108,8 @@ const BLOCK_TOP: Record<'high' | 'mid' | 'low', Record<Line, number>> = {
 };
 /** A side set to counter leaves its forwards this high without the ball (research 13 §3). PARAMETER. */
 const COUNTER_OUTLET = 60;
+/** A low block holds its line at the edge of the box, not on the penalty spot (research 13 §3). PARAMETERS. */
+const LOW_FLOOR_EXTRA: Record<Line, number> = { gk: 0, def: 4, mid: 3, att: 0 };
 const STEP_UP: Record<Line, number> = { gk: 1.5, def: 4, mid: 3, att: 2 };
 const BLOCK_SHIFT = { high: 9, mid: 0, low: -9 } as const;
 
@@ -159,7 +161,13 @@ export function anchors(
     // The floor gives way when the ball is deeper than it: the line stays goal-side of the ball.
     if (!inPossession)
       x = Math.min(
-        Math.max(x, Math.min(FLOOR_OUT[a.line], Math.max(2, focal.x - 3))),
+        Math.max(
+          x,
+          Math.min(
+            FLOOR_OUT[a.line] + (t.block === 'low' ? LOW_FLOOR_EXTRA[a.line] : 0),
+            Math.max(2, focal.x - 3),
+          ),
+        ),
         a.line === 'att' && t.onWin === 'counter'
           ? Math.max(BLOCK_TOP[t.block].att, COUNTER_OUTLET)
           : BLOCK_TOP[t.block][a.line],
