@@ -5,7 +5,7 @@
  * and the ball is then sent where that outcome puts it (wide, saved or in).
  */
 import { GRAVITY, groundPass, type Ball } from '../ball';
-import { pressResistance, weighted } from '../rules/duel';
+import { norm, pressResistance, weighted } from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
@@ -51,7 +51,9 @@ export function passError(s: MatchState, c: MatchPlayer, d: number): number {
       0.04 * pressureOn(s, c) * (1.3 - pressResistance(c.attrs)) +
       0.0006 * d +
       0.03 * (1 - c.stamina)) *
-    (1 - homeEdge(s, c.team));
+    (1 - homeEdge(s, c.team)) *
+    // First time is harder; technique makes it clean (PARAMETER).
+    (c.firstTime ? 1.5 - 0.5 * norm(c.attrs.technique) : 1);
   return g(s) * sigma * footFactor(s, c);
 }
 
@@ -157,6 +159,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
       chosen: Math.round(a.u * 1000),
       kind: ['pass', 'through', 'long', 'cross', 'clear', 'over'].indexOf(a.kind),
       pr: Math.round(pressureOn(s, c) * 10),
+      ...(c.firstTime ? { firstTime: 1 } : {}),
     });
   } else if (kind === 'cross') {
     emit(s, 'pass', team, c.index, null, from, { d: Math.round(d), cross: 1 });
@@ -274,6 +277,7 @@ export function shoot(
     penalty: opts.penalty ? 1 : 0,
     x: Math.round(me.x),
     decided: goal ? 1 : 0,
+    ...(c.firstTime ? { firstTime: 1 } : {}),
   });
   return {
     ball,

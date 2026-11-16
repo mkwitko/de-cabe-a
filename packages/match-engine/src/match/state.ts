@@ -24,6 +24,12 @@ export interface MatchPlayer extends WorldPlayer {
   distance: number;
   /** Tick of the next with-ball decision while carrying. */
   decideAt: number;
+  /**
+   * Pressure arrives before he can settle the ball: he may play it first time
+   * (research 18 §2.4). `settleAt` is when he would decide after controlling it.
+   */
+  firstTime?: boolean;
+  settleAt?: number;
   /** A defender who just tried a tackle waits until this tick before another. */
   tackleAt: number;
   /** Rating accumulator (MC-042). */

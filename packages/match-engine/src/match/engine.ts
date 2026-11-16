@@ -21,7 +21,7 @@ import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
 import { chanceFrom, chooseAction, inCounter, settleTime, type Allowed } from './carrier';
-import { kin, mates, opponents, pressureOn, readTime } from './control';
+import { firstArrival, kin, mates, opponents, pressureOn, readTime } from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
@@ -205,6 +205,9 @@ function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number
 
 // ── Carrier ───────────────────────────────────────────────────────────────
 
+/** What can be played without controlling the ball first. */
+const FIRST_TIME_KINDS = new Set(['pass', 'through', 'long', 'over', 'cross', 'clear', 'shot']);
+
 function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   const c = s.players[s.owner!]!;
   const allowed: Allowed =
@@ -238,6 +241,12 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   }
   const choice = chooseAction(s, c, allowed === 'keeper' ? 'goalKick' : allowed);
   const a = choice.action;
+  if (c.firstTime && FIRST_TIME_KINDS.has(a.kind) === false) {
+    // Nothing worth playing first time: he controls it after all.
+    c.firstTime = false;
+    c.decideAt = c.settleAt ?? s.tick + 2;
+    return;
+  }
   c.decideAt = s.tick + 2; // re-decide every 0.5 s while carrying (02 §2)
   if (a.kind === 'carry' || a.kind === 'hold' || a.kind === 'dribble') {
     if (restartAllowed !== null) {
@@ -251,6 +260,7 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   const noOffside =
     restartAllowed === 'throwIn' || restartAllowed === 'goalKick' || restartAllowed === 'corner';
   s.flight = kick(s, c, a, noOffside);
+  c.firstTime = false;
   // Opponents need their reaction time to read a pass (02 §4.1 arrival model; anticipation and
   // concentration shorten it). The passer's estimate uses the same delay (passSafety).
   if (s.flight.kind !== 'shot')
@@ -625,6 +635,15 @@ function touch(s: MatchState, p: MatchPlayer) {
     }
     gainBall(s, p);
     if (gk) p.decideAt = s.tick + 10;
+    // The press gets to him before he can settle it: he looks to play it first time.
+    else if (same && f.kind === 'pass') {
+      const tPress = firstArrival(opponents(s, p.team), p.pos, true);
+      if (tPress < (p.decideAt - s.tick) * DT) {
+        p.settleAt = p.decideAt;
+        p.decideAt = s.tick + 1;
+        p.firstTime = true;
+      }
+    }
     return;
   }
   // Heavy touch: the ball runs loose a few metres.
