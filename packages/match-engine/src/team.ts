@@ -281,10 +281,17 @@ export function tasksFor(
   const top = BLOCK_TOP[t.block].mid;
   // Engaging the carrier, or holding off goal-side at the block's front when the block does not press there.
   const hold = toGoal(focal, 6);
+  // Near our goal the presser engages from the goal side, in the carrier's path:
+  // a defender who is already goal-side takes the job ahead of a team-mate chasing
+  // from behind, who never catches a carrier running at goal (PARAMETERS: 30 m, 2 m).
   add(
     'press',
     'press',
-    engage ? focal : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
+    engage
+      ? ball.x < 30
+        ? toGoal(focal, 2)
+        : focal
+      : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
   );
   const aboveLine = (q: Vec2) => ({ x: clamp(q.x, ourLine - 2, top), y: q.y });
   // The cover stays a step deeper than the block's front, so it never shares the lane-closer's line.

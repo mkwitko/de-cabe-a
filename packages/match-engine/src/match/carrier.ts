@@ -50,6 +50,8 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
 const SHOT_RESERVE = 0;
+/** Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER. */
+const SHOT_FOLLOW_UP = 1.6;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.7;
 /**
@@ -138,7 +140,14 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       lossX?: number;
     },
   ) => {
-    const est = clamp(a.p + gaussian(() => next(r)) * noise, 0.01, 0.99);
+    // A shot's payoff is the whole goal, so an absolute error would make a 1% chance
+    // look like 6% and beat every pass: a shooter misjudges his chance in proportion
+    // to it (PARAMETER: about 30% for an average decider).
+    const g = gaussian(() => next(r));
+    const est =
+      a.kind === 'shot'
+        ? clamp(a.p * (1 + 8 * noise * g), 0, 0.99)
+        : clamp(a.p + g * noise, 0.01, 0.99);
     const bias = a.bias ?? 0;
     out.push({
       kind: a.kind,
@@ -304,7 +313,9 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       target: flip(c.team, { x: LENGTH, y: CENTER.y }),
       receiver: null,
       p: chance,
-      win: 1,
+      // A shot is worth the goal plus what it leaves behind: rebounds and corners come
+      // in proportion to its danger (PARAMETER, shots per match and by distance, 02 §11).
+      win: SHOT_FOLLOW_UP,
       lose: 0.012,
       chance,
       bias,

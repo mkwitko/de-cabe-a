@@ -253,7 +253,7 @@ logit(xG) = b0 + b1 × distância + b2 × ângulo de visão do gol + b3 × cabec
 
 Avaliação: finalizador = `xG pós-chute` menos `xG` (coloca a bola melhor ou pior do que a chance valia); goleiro = `xG pós-chute` sofrido menos gols sofridos (gols evitados). O relatório usa os três números: "criaram pouco, chutaram bem, e o seu goleiro não ajudou" é uma frase que o jogo consegue dizer com fato.
 
-Coeficientes: PARÂMETROS iniciais da literatura (pesquisa 01), ajustados até a conversão por faixa de distância bater com a referência. Por construção, para finalizador e goleiro medianos a taxa de gol média de um conjunto de chances iguala o `xG`; `finalização` e `compostura` deslocam a conversão de forma moderada (PARÂMETRO: de −25% a +25% relativos entre 40 e 90 de atributo).
+Coeficientes: PARÂMETROS iniciais da literatura (pesquisa 01), ajustados até a conversão por faixa de distância bater com a referência. DECISÃO (2026-11-16): a fórmula do `xG` não é usada para acertar a média de gols; quando sobra gol, corrige-se o excesso de chances no jogo (defesa, decisão de chutar). Entre 2026-11-13 e 2026-11-16 o intercepto foi baixado de −1,1 para −1,4 para esse fim e foi revertido. Por construção, para finalizador e goleiro medianos a taxa de gol média de um conjunto de chances iguala o `xG`; `finalização` e `compostura` deslocam a conversão de forma moderada (PARÂMETRO: de −25% a +25% relativos entre 40 e 90 de atributo).
 
 ## 8. Tática
 

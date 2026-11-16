@@ -329,7 +329,9 @@ function tackles(s: MatchState) {
   for (const d of opponents(s, c.team)) {
     if (s.owner === null) return;
     if (d.tackleAt > s.tick || dist(d.pos, c.pos) > 1.4 || lineOf(d.role) === 'gk') continue;
-    if (d.intent !== 'press' && dist(d.pos, c.pos) > 1.0) continue;
+    // Near his own goal every defender the carrier runs at engages, whatever his task.
+    const ownThird = flip(d.team, c.pos).x < 30;
+    if (d.intent !== 'press' && !ownThird && dist(d.pos, c.pos) > 1.0) continue;
     // Chance per step that a close defender commits to a tackle. PARAMETER (tackles per match, 02 §11).
     // A booked player goes into tackles more carefully (PARAMETER).
     // A drilled pressing side commits together; a loose one arrives late (research 13 §1).
@@ -345,7 +347,7 @@ function tackles(s: MatchState) {
     const sync = (0.35 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction;
     // In his own box a defender stays on his feet: a foul there is a penalty (PARAMETERS).
     const box = inOwnBox(d.team, c.pos);
-    if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.2 : 1))
+    if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.7 : 1))
       continue;
     d.tackleAt = s.tick + 4;
     // Behind: the defender is on the far side of the carrier from the carrier's own goal direction.
@@ -353,7 +355,7 @@ function tackles(s: MatchState) {
     const dg = flip(c.team, d.pos);
     const behind = dg.x < cg.x - 0.3;
     const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
-    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.25 : 1);
+    const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.15 : 1);
     if (next(s.rngs.referee) < pf) {
       foul(s, d, c, behind);
       return;
@@ -667,8 +669,17 @@ function aerial(s: MatchState, first: MatchPlayer) {
     (p) => p.active && dist(p.pos, at) < 1.8 && lineOf(p.role) !== 'gk',
   );
   // Uncontested and not too high: chest or thigh control (02 §6 recepção). PARAMETER.
-  if (!near.some((p) => p.team !== first.team)) {
-    const kicker = s.players[f.from]!;
+  // Above the chest in the shooting zone an attacker heads it first time: there
+  // is no time to bring a cross down in the box (research 01: headers are about
+  // a sixth of shots).
+  const kicker = s.players[f.from]!;
+  const zone = flip(first.team, first.pos);
+  const headIt =
+    first.team === kicker.team &&
+    f.ball.z > 1.4 &&
+    zone.x > LENGTH - 14 &&
+    Math.abs(zone.y - CENTER.y) < 10;
+  if (!headIt && !near.some((p) => p.team !== first.team)) {
     if (
       next(s.rngs.execution) <
       0.55 + 0.4 * weighted(first.attrs, { firstTouch: 0.6, technique: 0.4 })
@@ -693,7 +704,6 @@ function aerial(s: MatchState, first: MatchPlayer) {
     }
   }
   s.lastTouch = win.index;
-  const kicker = s.players[f.from]!;
   const t = flip(win.team, win.pos);
   // Attacking header near goal: a shot (02 §6.3).
   if (win.team === kicker.team && t.x > LENGTH - 14 && Math.abs(t.y - CENTER.y) < 10) {

@@ -106,7 +106,7 @@ async function main() {
     ['4-3-3 pressão alta', style('4-3-3', { block: 'high', pressIntensity: 5, lineHeight: 4 })],
     ['4-4-2 bloco baixo', style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter' })],
   ];
-  const per = Math.max(20, Math.round(n / 4));
+  const per = n;
   for (const [a, pa] of presets) {
     const row: string[] = [];
     let worst = 0;
