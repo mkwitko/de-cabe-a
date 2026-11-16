@@ -2,5 +2,22 @@
 export * from './pack/schema';
 export * from './player/ratings';
 export { generateAttributes, generatePlayer, generateSquad, SQUAD } from './generate/player';
-export { generateMiniPack, packChecksum } from './generate/pack';
+export { generateDevPack, generateMiniPack, packChecksum } from './generate/pack';
 export { teamForMatch } from './match/lineup';
+export * from './competition/schema';
+export { roundRobin, standings, type Played, type Row } from './competition/league';
+export { applyOutcomes, regulationsFor, type Turnover } from './competition/outcomes';
+export { dayOf, isoOf } from './competition/calendar';
+export {
+  checkSeason,
+  finishSeason,
+  matchCount,
+  matchesOn,
+  nextDay,
+  record,
+  runSeason,
+  startSeason,
+  type Outcome,
+  type SeasonState,
+} from './competition/season';
+export { matchInputFor, outcomeOf } from './match/fixture-input';

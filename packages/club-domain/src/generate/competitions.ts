@@ -142,7 +142,6 @@ export const miniCup = (clubIds: string[]): Competition =>
     [
       ligaPhase('liga', dateWindow(2026, '02-01', '04-30'), {
         legs: 1,
-        outcomes: [{ kind: 'title', positions: [1, 1] }],
       }),
       knockoutPhase('semi', 'mata-mata', dateWindow(2026, '05-03', '05-10'), {
         entrants: [{ from: 'phase', phaseId: 'liga', positions: [1, 4] }],

@@ -137,7 +137,7 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 | MC-176 | Início por escolha livre (`free_choice`) | P0 | M | 081 | qualquer clube das divisões nacionais do pacote; estado inicial igual ao do pacote |
 | MC-177 | Início por propostas (`job_offers`): gerador de três propostas distintas em orçamento, torcida, estrutura, comissão, elenco e ambição | P0 | M | 081 | três clubes da última divisão com perfis diferentes segundo uma métrica de distância; reprodutível por semente |
 | MC-178 | Propostas dependem de reputação e experiência do treinador | P1 | M | 177, 190 | reputação maior abre clubes de divisão acima |
-| MC-179 | Temporada completa sem usuário em `br-dev-1` e `br-dev-mini` | P0 | M | 084 | suíte de `TEST_STRATEGY.md` §6 verde nos dois |
+| MC-179 | DONE no domínio (2026-11-16; `competition/season.ts` passo a passo por dia, `match/fixture-input.ts`, `season.test.ts` com placar roteirizado, `pnpm --filter @decabeca/club-domain season mini|dev` com a engine real em workers: `br-dev-mini` 31 de 31 partidas, `br-dev-1` 1.586 de 1.586 em 727 s com 10 núcleos, suíte de `TEST_STRATEGY.md` §6 sem problemas nos dois). A dependência MC-084 (avanço pela API) continua aberta; estado de jogador entre partidas (lesão, suspensão, fadiga) não é carregado ainda. Temporada completa sem usuário em `br-dev-1` e `br-dev-mini` | P0 | M | 084 | suíte de `TEST_STRATEGY.md` §6 verde nos dois |
 | MC-180 | Copa nacional e supercopa (conteúdo do corte 3) | P2 | M | 171, 156 | formato confere com `05` |
 | MC-181 | Estaduais e copas regionais (corte 4) | P3 | XG | 172, dados | depende da questão aberta 3 |
 | MC-182 | Continentais (corte 5) | P3 | XG | 171, pacote sul-americano | formato confere com `05` |

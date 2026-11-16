@@ -88,7 +88,7 @@ function put(cal: Calendar, m: Scheduled): void {
     set.add(m);
   }
 }
-function take(cal: Calendar, m: Scheduled): void {
+export function take(cal: Calendar, m: Scheduled): void {
   cal.matches.delete(m.id);
   for (const club of [m.home, m.away]) cal.byClub.get(club)?.delete(m);
 }
