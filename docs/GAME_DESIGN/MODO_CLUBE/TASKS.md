@@ -125,7 +125,7 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 | ID | Tarefa | P | Tam | Dep | Aceite e teste |
 | --- | --- | --- | --- | --- | --- |
 | MC-160 | DONE (2026-11-16; `club-domain/src/competition/schema.ts`, `schema.test.ts` com as 15 competições de `05` §8). Esquema de competição como dado: fases, origem e destino de participantes, desempates, inscrição (ADR-016) | P0 | G | 011 | as competições de `05` §8 são representáveis sem campo livre |
-| MC-169 | Interpretador de fase `liga` (turno único e returno) com critérios de desempate em ordem | P0 | M | 160 | tabela conhecida com empate em cada critério |
+| MC-169 | DONE (2026-11-16; `competition/league.ts`, `league.test.ts`; confronto direto só entre dois, como no regulamento da CBF; critério que já separou não volta). Interpretador de fase `liga` (turno único e returno) com critérios de desempate em ordem | P0 | M | 160 | tabela conhecida com empate em cada critério |
 | MC-170 | Fase `grupos` | P0 | M | 169 | classificados e melhores colocados entre grupos |
 | MC-171 | Fase `mata-mata`: jogo único, ida e volta, prorrogação, pênaltis, vantagem | P0 | M | 160 | cada regra de desempate com caso próprio |
 | MC-172 | Destinos: acesso, descenso, vaga em outra competição, transição de tamanho entre temporadas | P0 | G | 169–171 | toda vaga preenchida uma vez; Série C de 20 para 24 por regra do pacote |
