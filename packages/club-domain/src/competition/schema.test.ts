@@ -458,6 +458,14 @@ describe('MC-160 competition as data', () => {
     const reversed = { ...base, phases: [base.phases[1], base.phases[0]] };
     const r = CompetitionSchema.safeParse(reversed);
     expect(r.error?.issues[0]?.message).toBe('phase liga not before');
+    // A knockout must end in a rule that always decides (penalties or better campaign).
+    const open = {
+      ...base,
+      phases: [base.phases[0], { ...base.phases[1], tieBreakers: ['awayGoals'] }],
+    };
+    expect(CompetitionSchema.safeParse(open).error?.issues[0]?.message).toBe(
+      'knockout tie can stay level',
+    );
     const wrongSize = { ...base, clubIds: ['a', 'b'] };
     expect(CompetitionSchema.safeParse(wrongSize).error?.issues[0]?.message).toBe(
       'clubIds differ from size',

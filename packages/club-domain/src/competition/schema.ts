@@ -222,6 +222,15 @@ export const CompetitionSchema = z
       if ((p.kind === 'liga' || p.kind === 'grupos') && p.carryFrom)
         earlier(p.carryFrom, ['phases', i, 'carryFrom']);
       seen.add(p.id);
+      if (p.kind === 'mata-mata' || p.kind === 'final') {
+        const last = p.tieBreakers.at(-1);
+        if (last !== 'penalties' && last !== 'betterCampaign')
+          ctx.addIssue({
+            code: 'custom',
+            message: 'knockout tie can stay level',
+            path: ['phases', i, 'tieBreakers'],
+          });
+      }
       p.outcomes.forEach((o, j) => {
         if (o.kind === 'slot')
           o.candidates.forEach((k, n) => {
