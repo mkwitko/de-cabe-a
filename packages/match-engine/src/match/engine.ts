@@ -323,6 +323,24 @@ function tackleWins(s: MatchState, d: MatchPlayer, c: MatchPlayer, emitTackle = 
   }
 }
 
+/** PARAMETERS: counter window 8 s, from 45 m, at most 4 goal-side, chance per step. */
+const TACTICAL_FOUL = 0.25;
+function tacticalFoul(s: MatchState, d: MatchPlayer, c: MatchPlayer): boolean {
+  if (s.tick - s.possessionSince > 32) return false;
+  const cg = flip(c.team, c.pos);
+  if (cg.x < 45 || flip(c.team, c.vel).x < 2) return false;
+  const goalSide = opponents(s, c.team).filter(
+    (o) => lineOf(o.role) !== 'gk' && flip(c.team, o.pos).x > cg.x,
+  ).length;
+  if (goalSide > 4) return false;
+  const p =
+    TACTICAL_FOUL *
+    (0.4 + 0.6 * norm(d.attrs.tacticalReading)) *
+    (d.cards === 1 ? 0.2 : 1) *
+    (0.6 + 0.4 * (1 - goalSide / 4));
+  return next(s.rngs.referee) < p;
+}
+
 function tackles(s: MatchState) {
   if (s.owner === null) return;
   const c = s.players[s.owner]!;
@@ -364,6 +382,12 @@ function tackles(s: MatchState) {
     const sync = (0.35 + pressSync(d.attrs, s.familiarity[d.team]) * taught) * reaction * fresh;
     // In his own box a defender stays on his feet: a foul there is a penalty (PARAMETERS).
     const box = inOwnBox(d.team, c.pos);
+    // Tactical foul (research 18 §1.2 C): a counter just started, running at our half with
+    // few of us goal-side; a player who reads the game stops it, less so on a yellow.
+    if (!box && tacticalFoul(s, d, c)) {
+      foul(s, d, c, false, true);
+      return;
+    }
     if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.7 : 1))
       continue;
     d.tackleAt = s.tick + 4;
@@ -385,9 +409,18 @@ function tackles(s: MatchState) {
   }
 }
 
-export function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: boolean) {
+export function foul(
+  s: MatchState,
+  d: MatchPlayer,
+  c: MatchPlayer,
+  behind: boolean,
+  tactical = false,
+) {
   s.teams[d.team].stats.fouls++;
-  emit(s, 'foul', d.team, d.index, c.index, c.pos, { behind: behind ? 1 : 0 });
+  emit(s, 'foul', d.team, d.index, c.index, c.pos, {
+    behind: behind ? 1 : 0,
+    ...(tactical ? { tactical: 1 } : {}),
+  });
   const cg = flip(c.team, c.pos);
   // Promising attack and last man (02 §6.5 cartão).
   const goalSide = opponents(s, c.team).filter(
@@ -400,6 +433,7 @@ export function foul(s: MatchState, d: MatchPlayer, c: MatchPlayer, behind: bool
       behind,
       promising: cg.x > 70,
       lastMan: goalSide === 0 && cg.x > 75 && Math.abs(cg.y - CENTER.y) < 20,
+      tactical,
     },
     next(s.rngs.referee),
     next(s.rngs.referee),
