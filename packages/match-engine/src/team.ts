@@ -243,8 +243,8 @@ export function tasksFor(
       const y = CENTER.y + (i - (n - 1) / 2) * (n <= 2 ? 16 : 13);
       add('restDefence', `rest${i}`, { x: restX - (i === 0 || i === n - 1 ? 0 : 4), y });
     }
-    add('support', 'supportA', { x: focal.x + 2, y: focal.y - 11 });
-    add('support', 'supportB', { x: focal.x + 2, y: focal.y + 11 });
+    add('support', 'supportA', freeSpot({ x: focal.x + 2, y: focal.y - 11 }, opp));
+    add('support', 'supportB', freeSpot({ x: focal.x + 2, y: focal.y + 11 }, opp));
     // On a counter the runners go for the space behind, not for the ball (PARAMETERS: 65 and 80 m).
     const wideX = counter
       ? Math.max(Math.min(focal.x + 6, lastLine - 1), Math.min(65, lastLine - 1))
@@ -260,10 +260,15 @@ export function tasksFor(
       add('box', 'boxNear', { x: 95, y: CENTER.y + side * 4 });
       if (t.finalThird.boxPresence >= 3) add('box', 'boxFar', { x: 92, y: CENTER.y - side * 6 });
     } else {
-      add('betweenLines', 'between', {
-        x: Math.min(focal.x + 14, lastLine - 3),
-        y: CENTER.y - side * 8,
-      });
+      add(
+        'betweenLines',
+        'between',
+        freeSpot(
+          { x: Math.min(focal.x + 14, lastLine - 3), y: CENTER.y - side * 8 },
+          opp,
+          lastLine - 2,
+        ),
+      );
     }
     return tasks;
   }
@@ -328,6 +333,38 @@ export function tasksFor(
 }
 
 // ── Assignment ───────────────────────────────────────────────────────────────
+
+/**
+ * A support player looks for the free pocket near his spot, away from the
+ * opponents (research 18 §2.4: the free man, the third man). PARAMETERS:
+ * offsets up to 5 m, distance counted up to 8 m, 0.25 per metre moved.
+ */
+const POCKETS: Vec2[] = [
+  { x: 0, y: 0 },
+  { x: 4, y: 0 },
+  { x: -4, y: 0 },
+  { x: 0, y: 4 },
+  { x: 0, y: -4 },
+  { x: 3.5, y: 3.5 },
+  { x: 3.5, y: -3.5 },
+  { x: -3.5, y: 3.5 },
+  { x: -3.5, y: -3.5 },
+];
+export function freeSpot(base: Vec2, opp: Vec2[], maxX = LENGTH): Vec2 {
+  let best = base;
+  let bestScore = -Infinity;
+  for (const o of POCKETS) {
+    const q = { x: Math.min(base.x + o.x, maxX), y: clamp(base.y + o.y, 1, WIDTH - 1) };
+    let near = 8;
+    for (const p of opp) near = Math.min(near, dist(p, q));
+    const score = near - 0.25 * Math.sqrt(o.x * o.x + o.y * o.y);
+    if (score > bestScore) {
+      bestScore = score;
+      best = q;
+    }
+  }
+  return best;
+}
 
 /** PARAMETERS of the cost (seconds). */
 const ZONE_COST = 0.08; // per metre the task drags the player away from his anchor
