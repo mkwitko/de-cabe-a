@@ -152,3 +152,88 @@ export const CLUB_PREFIXES = [
   'Associação',
   'União',
 ];
+
+const CITY_HEADS = [
+  'Serra',
+  'Porto',
+  'Rio',
+  'Campo',
+  'Pedra',
+  'Lagoa',
+  'Barra',
+  'Monte',
+  'Vale',
+  'Ilha',
+  'Cachoeira',
+  'Vila',
+  'Ponte',
+  'Morro',
+  'Colina',
+  'Arraial',
+];
+const CITY_TAILS = [
+  'Bonita',
+  'Velha',
+  'do Leste',
+  'Dourada',
+  'das Pedras',
+  'Verde',
+  'do Oeste',
+  'Comprida',
+  'das Flores',
+  'Branca',
+  'do Campo',
+  'Serena',
+  'Nova',
+  'Escura',
+];
+const STATES = [
+  'SP',
+  'RJ',
+  'MG',
+  'ES',
+  'PR',
+  'SC',
+  'RS',
+  'GO',
+  'MT',
+  'MS',
+  'DF',
+  'BA',
+  'PE',
+  'CE',
+  'RN',
+  'PB',
+  'AL',
+  'SE',
+  'PI',
+  'MA',
+  'PA',
+  'AM',
+  'AP',
+  'RR',
+  'RO',
+  'AC',
+  'TO',
+];
+
+/**
+ * `n` invented cities: the twelve above first, then head + tail pairs that
+ * are not in that list. States cycle so every state has clubs.
+ */
+export function devCities(n: number): [string, string, number][] {
+  const out: [string, string, number][] = [...CITIES];
+  const used = new Set(out.map(([name]) => name));
+  for (let k = 0; out.length < n; k++) {
+    const name = `${CITY_HEADS[k % CITY_HEADS.length]} ${CITY_TAILS[Math.floor(k / CITY_HEADS.length) % CITY_TAILS.length]}`;
+    if (k >= CITY_HEADS.length * CITY_TAILS.length) throw new Error('not enough city names');
+    if (used.has(name)) continue;
+    used.add(name);
+    out.push([
+      name,
+      STATES[out.length % STATES.length]!,
+      40_000 + ((out.length * 7919) % 900) * 1000,
+    ]);
+  }
+  return out.slice(0, n);
+}

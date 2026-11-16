@@ -3,7 +3,8 @@ import { rngFrom } from '@decabeca/match-engine';
 import { roleRating } from '../player/ratings';
 import { PackSchema } from '../pack/schema';
 import { SQUAD, generatePlayer, generateSquad } from './player';
-import { generateMiniPack, packChecksum } from './pack';
+import { matchCount } from '../competition/season';
+import { generateDevPack, generateMiniPack, packChecksum } from './pack';
 
 describe('MC-013 generators', () => {
   it('same command, same result', () => {
@@ -61,5 +62,57 @@ describe('MC-014 mini pack', () => {
     expect(avg(p.clubs.at(-1)!.id)).toBeGreaterThan(avg(p.clubs[0]!.id) + 15);
     expect(p.clubs).toHaveLength(8);
     expect(new Set(p.clubs.map((c) => c.name)).size).toBe(8);
+  });
+});
+
+describe('MC-014 br-dev-1', () => {
+  const p = generateDevPack();
+
+  it('is identical byte for byte between runs, with a valid checksum', () => {
+    expect(JSON.stringify(generateDevPack())).toBe(JSON.stringify(p));
+    expect(packChecksum(p)).toBe(p.checksum);
+    expect(PackSchema.safeParse(p).success).toBe(true);
+    expect(p.id).toBe('br-dev-1');
+  });
+
+  it('four divisions with the real sizes (05 §8): 20, 20, 20 and 96 clubs', () => {
+    const div = p.competitions.filter((c) => c.tier !== null).sort((a, b) => a.tier! - b.tier!);
+    expect(div.map((c) => c.clubIds.length)).toEqual([20, 20, 20, 96]);
+    expect(p.clubs).toHaveLength(156);
+    expect(new Set(div.flatMap((c) => c.clubIds)).size).toBe(156);
+    expect(new Set(p.clubs.map((c) => c.name)).size).toBe(156);
+  });
+
+  it('one competition phase of each kind', () => {
+    const kinds = new Set(p.competitions.flatMap((c) => c.phases.map((x) => x.kind)));
+    expect([...kinds].sort()).toEqual(['final', 'grupos', 'liga', 'mata-mata']);
+  });
+
+  it('match volumes within 20% of the real ones (05 §8)', () => {
+    const real: Record<number, number> = { 1: 380, 2: 384, 3: 216, 4: 610 };
+    for (const c of p.competitions.filter((x) => x.tier !== null)) {
+      const n = matchCount(c);
+      expect(Math.abs(n - real[c.tier!]!) / real[c.tier!]!).toBeLessThanOrEqual(0.2);
+    }
+  });
+
+  it('divisions get weaker going down; squads cover every club', () => {
+    const strength = (tier: number) => {
+      const ids = new Set(p.competitions.find((c) => c.tier === tier)!.clubIds);
+      const st = p.players.filter((x) => ids.has(x.clubId!) && x.positions[0]!.position === 'ST');
+      return st.reduce((s, x) => s + roleRating(x.attributes, 'advancedForward'), 0) / st.length;
+    };
+    expect(strength(1)).toBeGreaterThan(strength(2));
+    expect(strength(2)).toBeGreaterThan(strength(3));
+    expect(strength(3)).toBeGreaterThan(strength(4));
+    expect(p.players).toHaveLength(156 * SQUAD.length);
+  });
+});
+
+describe('MC-014 mini pack competitions', () => {
+  it('a short league, a play-off and a final', () => {
+    const c = generateMiniPack().competitions[0]!;
+    expect(c.phases.map((x) => x.kind)).toEqual(['liga', 'mata-mata', 'final']);
+    expect(matchCount(c)).toBe(28 + 2 + 1);
   });
 });

@@ -134,3 +134,98 @@ export const knockoutPhase = (
 /** One double round-robin league, Série A dates (05 §8: late January to early December). */
 export const simpleLeague = (b: Base): Competition =>
   regulation(b, [ligaPhase('liga', dateWindow(b.season, '01-27', '12-01'))]);
+
+/** `br-dev-mini`: a short league, semi-finals in one game, a final. 28 + 2 + 1 matches. */
+export const miniCup = (clubIds: string[]): Competition =>
+  regulation(
+    { id: 'dev-league', name: 'Liga de Desenvolvimento', season: 2026, tier: 1, clubIds },
+    [
+      ligaPhase('liga', dateWindow(2026, '02-01', '04-30'), {
+        legs: 1,
+        outcomes: [{ kind: 'title', positions: [1, 1] }],
+      }),
+      knockoutPhase('semi', 'mata-mata', dateWindow(2026, '05-03', '05-10'), {
+        entrants: [{ from: 'phase', phaseId: 'liga', positions: [1, 4] }],
+        legs: 1,
+        survivors: 2,
+        tieBreakers: ['extraTime', 'penalties'],
+      }),
+      knockoutPhase('final', 'final', dateWindow(2026, '05-17', '05-24'), {
+        entrants: [{ from: 'phase', phaseId: 'semi', positions: [1, 2] }],
+        legs: 1,
+        tieBreakers: ['extraTime', 'penalties'],
+        outcomes: [{ kind: 'title', positions: [1, 1] }],
+      }),
+    ],
+  );
+
+/**
+ * `br-dev-1` divisions, shaped like the 2026 national series (05 §8) at a
+ * steady state: four up and four down between every pair of divisions
+ * (the real Série C sends two down; the fictional pack keeps the sizes
+ * fixed). Fictional names; dates inside the real season.
+ */
+export function devDivisions(season: number, [a, b, c, d]: string[][]): Competition[] {
+  const w = (from: string, to: string, days?: number[]) => dateWindow(season, from, to, days);
+  const div = (tier: number, clubIds: string[], name: string) => ({
+    id: `div-${tier}`,
+    name,
+    season,
+    tier,
+    clubIds: clubIds,
+  });
+  return [
+    regulation(div(1, a!, 'Primeira Divisão'), [
+      ligaPhase('liga', w('01-27', '12-01'), {
+        outcomes: [
+          { kind: 'title', positions: [1, 1] },
+          { kind: 'relegation', target: 'div-2', positions: [17, 20] },
+        ],
+      }),
+    ]),
+    regulation(div(2, b!, 'Segunda Divisão'), [
+      ligaPhase('liga', w('03-21', '11-15', [6, 2]), {
+        outcomes: [
+          { kind: 'title', positions: [1, 1] },
+          { kind: 'promotion', target: 'div-1', positions: [1, 2] },
+          { kind: 'relegation', target: 'div-3', positions: [17, 20] },
+        ],
+      }),
+      // 3rd v 6th and 4th v 5th over two legs; the better campaign goes through on a level aggregate.
+      knockoutPhase('acesso', 'mata-mata', w('11-21', '12-06', [6, 3]), {
+        entrants: [{ from: 'phase', phaseId: 'liga', positions: [3, 6] }],
+        survivors: 2,
+        tieBreakers: ['betterCampaign'],
+        outcomes: [{ kind: 'promotion', target: 'div-1', positions: [1, 2] }],
+      }),
+    ]),
+    regulation(div(3, c!, 'Terceira Divisão'), [
+      ligaPhase('liga', w('04-05', '08-30', [0]), {
+        legs: 1,
+        tieBreakers: ['wins', 'goalDifference', 'goalsFor', 'redCards', 'yellowCards', 'draw'],
+        outcomes: [{ kind: 'relegation', target: 'div-4', positions: [17, 20] }],
+      }),
+      gruposPhase('quadrangular', 2, w('09-06', '10-25', [0]), {
+        entrants: [{ from: 'phase', phaseId: 'liga', positions: [1, 8] }],
+        outcomes: [{ kind: 'promotion', target: 'div-2', positions: [1, 2] }],
+      }),
+      knockoutPhase('final', 'final', w('11-01', '11-15', [0]), {
+        entrants: [{ from: 'phase', phaseId: 'quadrangular', positions: [1, 1] }],
+        outcomes: [{ kind: 'title', positions: [1, 1] }],
+      }),
+    ]),
+    regulation(div(4, d!, 'Quarta Divisão'), [
+      gruposPhase('grupos', 16, w('04-12', '07-12', [0]), { draw: 'regional' }),
+      // Round of 64 to the last four, who go up.
+      knockoutPhase('mata-mata', 'mata-mata', w('07-19', '09-13'), {
+        entrants: [{ from: 'phase', phaseId: 'grupos', positions: [1, 4] }],
+        survivors: 4,
+        outcomes: [{ kind: 'promotion', target: 'div-3', positions: [1, 4] }],
+      }),
+      knockoutPhase('final', 'final', w('09-16', '10-11'), {
+        entrants: [{ from: 'phase', phaseId: 'mata-mata', positions: [1, 4] }],
+        outcomes: [{ kind: 'title', positions: [1, 1] }],
+      }),
+    ]),
+  ];
+}
