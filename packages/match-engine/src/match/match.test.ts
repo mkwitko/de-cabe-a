@@ -15,6 +15,7 @@ import { foul, stepUntilEnd, step } from './engine';
 import { matchInput, teamInput } from './fixture';
 import { finisherFactor, keeperFactor, kick, offsideNow, shoot } from './kick';
 import { resultOf, simulateMatch } from './simulate';
+import { dist } from '../pitch';
 import { createMatch, deserialize, serialize, type MatchState } from './state';
 
 const base = (over: Partial<Record<string, number>> = {}) => {
@@ -476,6 +477,33 @@ describe('MC-165 offside', () => {
     s.ball.possession = 0;
     for (let i = 0; i < 20 && s.flight; i++) step(s);
     expect(s.events.some((e) => e.kind === 'offside')).toBe(false);
+  });
+});
+
+describe('containment of a carrier in our half', () => {
+  const run = (defenderAt: [number, number]) => {
+    const s = bare();
+    const c = place(s, 9, 70, 34);
+    c.vel = { x: 5, y: 0 };
+    s.owner = 9;
+    s.ball.holder = 9;
+    s.ball.possession = 0;
+    s.ball.pos = { ...c.pos };
+    place(s, 11, 103, 34);
+    const d = place(s, 13, defenderAt[0], defenderAt[1]);
+    step(s);
+    return { c, d };
+  };
+  it('the nearest goal-side defender within 6 m steps into his path', () => {
+    const { c, d } = run([75, 36]);
+    expect(d.intent).toBe('press');
+    // Goal-side of where the carrier stood when the step began (he then moves on).
+    expect(d.target.x).toBeGreaterThan(70);
+    expect(dist(d.target, { x: 70, y: 34 })).toBeLessThan(2);
+    expect(c.pos.x).toBeGreaterThan(70);
+  });
+  it('a defender further off keeps his own job', () => {
+    expect(run([84, 40]).d.intent).not.toBe('press');
   });
 });
 

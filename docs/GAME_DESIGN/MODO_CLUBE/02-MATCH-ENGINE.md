@@ -269,6 +269,26 @@ Em todas as variações o marcador segue a 7–8 m do ponto. Trocar quem marca n
 
 **Leitura do passe separada.** Com tempo de leitura zero só no movimento, os gols ficam em 3,19. Com tempo zero só na estimativa do passador, ficam em 3,39. As duas partes contam. O tempo atual (0,4 × reação, cerca de 0,24 s) é realista e fica como está.
 
+**Contenção do condutor (DECISÃO, 2026-11-17).**
+
+- Regra: na nossa metade, o defensor de linha mais próximo do condutor, que esteja do lado do gol e a até 6 m dele, sai para fechá-lo.
+- Ponto alvo: 1,2 m à frente do condutor, na linha entre ele e o gol.
+- Ele corre e pode dar o bote como o pressionador.
+- PARÂMETROS: 6 m e 1,2 m.
+- Motivo: os desarmes só aconteciam a até 1,4 m, e o defensor da linha só entrava no lance a até 1,0 m. O condutor passava por 2 a 3 defensores (5 conduções de cerca de 20 m até o chute por time por jogo).
+- Raio medido em 600 partidas: 4 m deu 3,48 gols; 6 m deu 3,36; 8 m deu 3,56; base 3,63. A prova de coordenação passa com 6 m.
+
+Confirmação em 2000 partidas, mesmas sementes:
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Gols por jogo | 3,61 | 3,44 |
+| Chutes por time | 17,5 | 16,9 |
+| Faltas por time | 10,9 | 12,3 |
+| Amarelos por time | 2,47 | 2,91 |
+
+Os amarelos saem da faixa (2,15 a 2,59) porque a taxa de cartão por falta já era alta: 0,23 contra cerca de 0,16 na Série A (2,37 amarelos para 14,6 faltas). Corrigir essa taxa é o próximo passo. Testes em `match.test.ts` ("containment of a carrier in our half").
+
 **Critérios de aceite.**
 - Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
 - Marcador a menos de 2 m do próprio ponto na maior parte do tempo.

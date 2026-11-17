@@ -1018,6 +1018,7 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
   coordinate(s, 1, event);
   if (s.owner !== null && carrierTarget) s.players[s.owner]!.target = carrierTarget;
   chaseLooseBall(s);
+  engageCarrier(s);
   // movePlayers leaves the holder to the caller; in flight nobody holds the ball.
   const intended = s.ball.holder;
   if (s.owner === null) s.ball.holder = null;
@@ -1051,6 +1052,39 @@ function meetPoint(p: MatchPlayer, ball: Ball, reacting: boolean): { pt: Vec2; t
 }
 
 /** Without an owner, the intended receiver and the quickest player of each side go to meet the ball (02 §6: whoever arrives first gets it). */
+/**
+ * Containment (02 §5.12): in our half, the nearest goal-side outfield defender within
+ * ENGAGE metres of the carrier steps into his path towards goal, CONTAIN_GAP ahead of him,
+ * and may tackle him like the presser. PARAMETERS.
+ */
+const ENGAGE = 6;
+const CONTAIN_GAP = 1.2;
+const ENGAGE_HALF = LENGTH / 2;
+function engageCarrier(s: MatchState) {
+  if (s.owner === null) return;
+  const c = s.players[s.owner]!;
+  const def: 0 | 1 = c.team === 0 ? 1 : 0;
+  const cg = flip(def, c.pos);
+  if (cg.x > ENGAGE_HALF) return;
+  let best: MatchPlayer | null = null;
+  let bd = ENGAGE;
+  for (const d of opponents(s, c.team)) {
+    if (lineOf(d.role) === 'gk' || d.intent === 'press' || d.tackleAt > s.tick) continue;
+    const dd = dist(d.pos, c.pos);
+    if (flip(def, d.pos).x > cg.x - 0.5 || dd >= bd) continue;
+    best = d;
+    bd = dd;
+  }
+  if (!best) return;
+  const gx = def === 0 ? 0 : LENGTH;
+  const l = dist({ x: gx, y: CENTER.y }, c.pos) || 1;
+  best.target = {
+    x: c.pos.x + ((gx - c.pos.x) / l) * CONTAIN_GAP,
+    y: c.pos.y + ((CENTER.y - c.pos.y) / l) * CONTAIN_GAP,
+  };
+  best.intent = 'press';
+}
+
 function chaseLooseBall(s: MatchState) {
   const f = s.flight;
   if (!f || f.kind === 'shot') return;
