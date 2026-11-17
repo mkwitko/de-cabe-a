@@ -205,9 +205,9 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     // Runs into space start from where he is now.
     const now = toTeam(c, m.pos);
     // A team-mate in an offside position is not an option: the passer sees it, more surely
-    // the further off he is (PARAMETERS: 30% at the line, sure 2 m beyond; 02 §6.5).
+    // the further off he is (PARAMETERS: 10% at the line, sure 3.6 m beyond, calibrated on offsides per match; 02 §6.5).
     const beyond = now.x - Math.max(oppLine, me.x, LENGTH / 2);
-    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.3 + 0.35 * beyond)) continue;
+    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.1 + 0.25 * beyond)) continue;
     // Nobody lofts the ball back towards his own goal: back passes to the box are short and along the ground.
     if (mt.x < 20 && mt.x < me.x && (long || d > 25)) continue;
     const lofted = long || allowed === 'throwIn' || (allowed === 'goalKick' && d > 30);
