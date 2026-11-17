@@ -50,13 +50,18 @@ test('friendly: highlights play moment by moment and end in the report', async (
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  const requests: { from: number; commands: unknown[] }[] = [];
+  page.on('request', (r) => {
+    if (r.url().endsWith('/v1/manager/friendly/moment')) requests.push(r.postDataJSON());
+  });
   await page.goto('/tecnico/amistoso');
   await page.getByRole('button', { name: 'Melhores momentos', exact: true }).click();
   await page.getByRole('button', { name: 'Começar a partida' }).click();
-  await expect(page.getByText(/Lance 1 de \d+/)).toBeVisible({ timeout: 30_000 });
-  // Live adjustment belongs to the whole match only.
-  await expect(page.getByText('Ajustar o time')).toHaveCount(0);
+  await expect(page.getByText('Lance 1', { exact: true })).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(1500);
+  // The plan can change between moments too: the next moment comes with the command.
+  await page.getByRole('button', { name: 'Alto' }).click();
+  await expect.poll(() => requests.at(-1)?.commands.length, { timeout: 20_000 }).toBe(1);
   await page.screenshot({ path: 'test-results/amistoso-highlights-390.png' });
   await page.getByRole('button', { name: '16×' }).click();
   await expect(page.getByText('Fim de jogo')).toBeVisible({ timeout: 90_000 });

@@ -1,8 +1,8 @@
 /**
  * Watching modes of a match (MC-250): the whole match, extended highlights,
- * highlights or goals only. The match is simulated once; only the frames
- * around the chosen events go to the client, each moment from a little before
- * the event (the build-up) to a little after it.
+ * highlights or goals only. The server simulates on to the next moment and
+ * sends only its frames, from a little before the event (the build-up) to a
+ * little after it; the plan can change between moments (match-jobs.ts).
  */
 export type MomentMode = 'extended' | 'highlights' | 'goals';
 
@@ -20,6 +20,8 @@ const TPS = 4;
  */
 const BEFORE = { goal: 14, other: 8 };
 const AFTER = 5;
+/** Frames to simulate past a moment before it is final: a goal close after would join it. */
+export const MOMENT_LOOKAHEAD = BEFORE.goal * TPS;
 /** PARÂMETRO: a shot this likely (xg) is a highlight even when it misses. */
 const BIG_CHANCE_XG = 0.15;
 

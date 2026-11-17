@@ -73,10 +73,11 @@ const SPEEDS = [1, 2, 4, 8, 16] as const;
 /** How to watch: the whole match, three cuts of moments, or straight to the report. */
 const WATCH = ['full', 'extended', 'highlights', 'goals', 'result'] as const;
 type Watch = (typeof WATCH)[number];
-interface Moments {
-  moments: { frames: number[][]; clocks: number[] }[];
-  events: MatchEvent[];
-  result: Result;
+/** The next moment from a tick on, in the moment modes (the server simulates up to it). */
+interface Moment {
+  frames: number[][];
+  clocks: number[];
+  chunk: Omit<Chunk, 'frames' | 'clocks'>;
 }
 const PLAN: Instructions = { block: 'mid', pressIntensity: 3, tempo: 3, width: 3, risk: 3 };
 
@@ -397,7 +398,8 @@ function Match(props: {
   const [plan, setPlan] = useState<Instructions>(props.home.instructions);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(props.watch === 'full' ? 8 : 2);
-  const [moment, setMoment] = useState<[number, number] | null>(null);
+  const [moment, setMoment] = useState<number | null>(null);
+  const [waiting, setWaiting] = useState(false);
   const [board, setBoard] = useState({
     score: [0, 0] as [number, number],
     minute: 1,
@@ -406,6 +408,7 @@ function Match(props: {
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const names: [string, string] = [hc.shortName, ac.shortName];
+  const moments = props.watch !== 'full' && props.watch !== 'result';
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -417,58 +420,47 @@ function Match(props: {
     let raf = 0;
     let last = performance.now();
     let shown = '';
+    let waitingNow = false;
 
-    const body = (from: number, count: number) => ({
-      seed: props.seed,
-      home: props.home,
-      away: props.away,
-      from,
-      count,
-      commands: s.commands,
-    });
-    const moments = props.watch !== 'full' && props.watch !== 'result';
-    if (moments) {
-      s.loading = true;
-      api<Moments>('/v1/manager/friendly/moments', {
-        method: 'POST',
-        json: { seed: props.seed, home: props.home, away: props.away, mode: props.watch },
-      })
-        .then((m) => {
-          for (const x of m.moments) {
-            s.cuts.push(s.frames.length);
-            s.frames.push(...x.frames);
-            s.clocks.push(...x.clocks);
-          }
-          s.events = m.events;
-          s.result = m.result;
-          s.finished = true;
-          // Nothing to show in this cut (a goalless match in "goals"): straight to the report.
-          if (s.frames.length < 2) s.skip = true;
-        })
-        .catch((e: Error) => setError(e.message));
-    }
+    // Both modes ask from the tick after the last frame held, with the plan changes so far.
     const load = () => {
-      if (moments || s.loading || s.finished) return;
+      if (s.loading || s.finished) return;
       s.loading = true;
       const generation = s.generation;
-      const from = s.skip ? 40000 : (s.frames.at(-1)?.[0] ?? -1) + 1;
-      api<Chunk>('/v1/manager/friendly/advance', {
-        method: 'POST',
-        json: body(from, s.skip ? 1 : CHUNK),
-      })
-        .then((c) => {
-          if (generation !== s.generation) return;
-          if (!s.skip) {
-            s.frames.push(...c.frames);
-            s.clocks.push(...c.clocks);
-          }
-          s.events = c.events;
-          s.finished = c.finished;
-          s.result = c.result;
-        })
+      const base = {
+        seed: props.seed,
+        home: props.home,
+        away: props.away,
+        commands: s.commands,
+        from: s.skip ? 40000 : (s.frames.at(-1)?.[0] ?? -1) + 1,
+      };
+      const done = (c: Omit<Chunk, 'frames' | 'clocks'>, frames: number[][], clocks: number[]) => {
+        if (generation !== s.generation) return;
+        if (!s.skip && frames.length > 0) {
+          if (moments) s.cuts.push(s.frames.length);
+          s.frames.push(...frames);
+          s.clocks.push(...clocks);
+        }
+        s.events = c.events;
+        s.finished = c.finished;
+        s.result = c.result;
+        // Nothing to show in this cut (a goalless match in "goals"): straight to the report.
+        if (s.finished && s.frames.length < 2) s.skip = true;
+      };
+      const request =
+        moments && !s.skip
+          ? api<Moment>('/v1/manager/friendly/moment', {
+              method: 'POST',
+              json: { ...base, mode: props.watch },
+            }).then((m) => done(m.chunk, m.frames, m.clocks))
+          : api<Chunk>('/v1/manager/friendly/advance', {
+              method: 'POST',
+              json: { ...base, count: s.skip ? 1 : CHUNK },
+            }).then((c) => done(c, c.frames, c.clocks));
+      request
         .catch((e: Error) => setError(e.message))
         .finally(() => {
-          s.loading = false;
+          if (generation === s.generation) s.loading = false;
         });
     };
 
@@ -476,7 +468,8 @@ function Match(props: {
       raf = requestAnimationFrame(tick);
       const seconds = Math.min(0.1, (now - last) / 1000);
       last = now;
-      if (!s.finished && s.frames.length - s.head < 600) load();
+      // A moment is ~80 frames: keep the next one ready while this one plays.
+      if (!s.finished && s.frames.length - s.head < (moments ? 160 : 600)) load();
       if (s.skip && s.result) {
         setResult(s.result);
         cancelAnimationFrame(raf);
@@ -492,6 +485,8 @@ function Match(props: {
         layer = pitchLayer(canvas.width, canvas.height, kits[0]);
         v = view(canvas.width, canvas.height);
       }
+      const behind = !s.finished && s.head >= s.frames.length - 1;
+      if (behind !== waitingNow) setWaiting((waitingNow = behind));
       if (s.frames.length < 2) {
         ctx.drawImage(layer, 0, 0);
         return;
@@ -514,7 +509,7 @@ function Match(props: {
         still ? 0 : now,
       );
       const at = s.cuts.findLastIndex((c) => c <= i);
-      const shownMoment = at < 0 ? '' : `${at + 1}/${s.cuts.length}`;
+      const shownMoment = at < 0 ? '' : String(at + 1);
 
       // Scoreboard and feed: only what has happened by the frame on screen.
       const clock = s.clocks[i]!;
@@ -547,7 +542,7 @@ function Match(props: {
       if (key !== shown) {
         shown = key;
         setBoard({ score, minute, feed });
-        setMoment(at < 0 ? null : [at + 1, s.cuts.length]);
+        setMoment(at < 0 ? null : at + 1);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -568,6 +563,7 @@ function Match(props: {
     ].slice(-60);
     s.frames.length = keep;
     s.clocks.length = keep;
+    s.cuts = s.cuts.filter((c) => c < keep);
     s.generation++;
     s.loading = false;
     s.finished = false;
@@ -592,7 +588,15 @@ function Match(props: {
         <Scoreboard clubs={[hc, ac]} score={board.score} minute={board.minute} />
         {moment && (
           <span className="pointer-events-none absolute top-2 right-2 rounded-lg bg-club-night/90 px-2 py-1 font-condensed text-base font-extrabold text-club-gold uppercase tabular-nums sm:top-4 sm:right-4 sm:text-xl">
-            {t('friendly.moment', { n: moment[0], total: moment[1] })}
+            {t('friendly.moment', { n: moment })}
+          </span>
+        )}
+        {waiting && (
+          <span
+            role="status"
+            className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-lg bg-club-night/90 px-3 py-1 text-sm text-chalk"
+          >
+            {t(moments ? 'friendly.preparingMoment' : 'friendly.preparing')}
           </span>
         )}
       </div>
@@ -648,7 +652,7 @@ function Match(props: {
           {t('friendly.skip')}
         </button>
       </div>
-      {props.watch === 'full' && (
+      {props.watch !== 'result' && (
         <details className="rounded-2xl border border-chalk/10 bg-club-panel/70 p-4" open>
           <summary className="min-h-11 cursor-pointer font-condensed text-xl font-extrabold uppercase">
             {t('friendly.tactics')}{' '}
