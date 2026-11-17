@@ -12,6 +12,7 @@ import type { CareerWorld } from './advance';
 import type { Lineup } from './squad';
 import { clubLevels, type Training } from './training';
 import { withMoves, type Moves } from './market';
+import type { Board } from './board';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
@@ -30,6 +31,7 @@ interface Saved {
   training?: Training;
   /** Transfers so far (market.ts); the pack is rebuilt from them on load. */
   moves?: Moves;
+  board?: Board;
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -52,6 +54,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.lineup && { lineup: w.lineup }),
     ...(w.training && { training: w.training }),
     ...(w.moves && { moves: w.moves }),
+    ...(w.board && { board: w.board }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -82,5 +85,6 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
     ...(saved.moves && { moves: saved.moves }),
+    ...(saved.board && { board: saved.board }),
   };
 }

@@ -29,5 +29,6 @@ export * from './career/save';
 export * from './career/squad';
 export * from './career/training';
 export * from './career/market';
+export * from './career/board';
 export { attendance, tierOf } from './career/finance';
 export * from './match/moments';

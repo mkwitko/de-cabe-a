@@ -25,6 +25,7 @@ import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import type { Moves } from './market';
+import { boardAfterMatch, boardAfterSeason, goalFor, type Board } from './board';
 import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
@@ -56,6 +57,8 @@ export interface CareerWorld {
   training?: Training;
   /** Transfers so far; `pack` already carries them (market.ts). */
   moves?: Moves;
+  /** The board's goal and confidence; absent before the person's first match (board.ts). */
+  board?: Board;
 }
 
 export type Decision =
@@ -67,7 +70,9 @@ export type Decision =
       home: string;
       away: string;
     }
-  | { kind: 'seasonOver' };
+  | { kind: 'seasonOver' }
+  /** The board ended the job: nothing else to decide in this career. */
+  | { kind: 'fired' };
 
 function playDay(
   w: CareerWorld,
@@ -91,6 +96,7 @@ function playDay(
     if (m.home === w.clubId || m.away === w.clubId) {
       postHomeMatch(w, id, day);
       training = tire(training, lineupOf(w).xi);
+      w.board = boardAfterMatch(w, m, o);
     }
   }
   w.training = training;
@@ -119,6 +125,7 @@ export function openCareer(pack: Pack, seed: number, clubId: string, day = 0): C
  * Returns the decision; `w.day` is the last day played.
  */
 export function nextDecision(w: CareerWorld): Decision {
+  if (w.board?.fired) return { kind: 'fired' };
   for (let d = nextDay(w.season); d !== null; d = nextDay(w.season)) {
     const id = clubPlays(w, d);
     if (id) {
@@ -212,6 +219,7 @@ export interface SeasonTurn {
  */
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
+  const judged = boardAfterSeason(w);
   const year = w.season.season + 1;
   const t = finishSeason(w.season, regulationsFor(w.pack.competitions, year));
   w.season = startSeason(w.pack, {
@@ -222,6 +230,8 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     previous: w.season.results,
     ranking: w.season.ranking,
   });
+  // The goal is set again for the table the club is now in.
+  w.board = { ...judged, goal: goalFor(w) };
   // A new season starts with everyone rested; the drill carries over.
   if (w.training) w.training = { ...w.training, fresh: {}, day: w.day };
   return {

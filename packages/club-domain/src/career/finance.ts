@@ -77,7 +77,8 @@ export function postHomeMatch(w: CareerWorld, matchId: string, day: number) {
   if (m.home !== w.clubId) return;
   const amount = attendance(w) * BY_TIER[tierOf(w)]!.ticket;
   postEntry(w.ledger, {
-    key: `tickets:${matchId}`,
+    // Match ids repeat every season: the season is part of the key.
+    key: `tickets:${w.season.season}:${matchId}`,
     kind: 'tickets',
     ref: matchId,
     amount,
