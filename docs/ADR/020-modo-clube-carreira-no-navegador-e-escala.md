@@ -107,6 +107,18 @@ Como entra:
 4. **Para depois, a avaliar quando chegar o multiplayer:** Durable Objects (uma liga = um objeto com SQLite, WebSocket e alarme para a rodada marcada; o plano grátis só aceita os de SQLite, até 5 GB no total). Também Cron Triggers para disparar rodadas e Turnstile contra robôs na criação de carreira.
 5. **Fora do plano:** Workers no plano grátis tem 10 ms de CPU por pedido, pouco para refazer partidas. A conferência continua nos processos auxiliares da VM.
 
+## Versões: o que já foi jogado não muda (MC-084, 2026-11-17)
+
+Guardar só o dia faria o navegador recalcular a temporada inteira a cada abertura. Assim, qualquer mudança de código (modelo de placar, calendário, desempate) ou de pacote reescreveria resultados já jogados. Por isso:
+
+1. **Fotografia a cada passo.** Cada avanço envia o dia e a fotografia juntos (`PUT /v1/manager/career/world?from&to`, gzip de `saveCareer`, 45 a 71 KB no pacote grande), com trava no dia. Ao abrir, o navegador carrega a fotografia e nunca refaz dias já gravados.
+2. **`CAREER_RULES_VERSION`** (`packages/club-domain/src/career/save.ts`): sobe quando uma mudança daria outro resultado para o mesmo mundo, semente e dia. Fotografia de versão anterior é carregada, nunca refeita; de versão mais nova é recusada.
+3. **Pacotes nunca somem.** A fotografia guarda o estado da temporada e o livro-caixa, mas o pacote (clubes, jogadores) continua sendo lido pela versão (`packVersion`).
+   - **Regra:** todo pacote publicado fica publicado.
+   - **Antes de haver jogadores reais:** o deploy copia cada `/packs/<id>.<checksum>.json` para um bucket R2 só de pacotes, sem nunca apagar, e o site busca lá a versão que não estiver no build atual. Hoje só o build atual publica o pacote; enquanto o jogo não tem jogadores, trocar o pacote invalida carreiras de teste e nada mais.
+   - **Quando o mundo da carreira guardar jogadores mudados** (03 §9): a fotografia passa a levar a diferença sobre o pacote, e a dependência do pacote antigo diminui.
+4. **Onde fica a fotografia:** no Postgres (`ClubWorld.data`) até o deploy ter o bucket. A troca para R2 com envio assinado é local à rota.
+
 ## Capacidade estimada
 
 Premissa: uma temporada jogada em ~5 horas, ou seja, um dia de jogo a cada ~55 s por carreira ativa. Com 10.000 carreiras ativas, isso dá ~180 avanços por segundo.

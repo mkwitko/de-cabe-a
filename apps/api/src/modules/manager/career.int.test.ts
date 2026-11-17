@@ -150,3 +150,57 @@ describe('Modo Clube career start (MC-176, MC-177)', () => {
     expect(ok.json().career.clubId).toBe(o.offers[1].id);
   });
 });
+
+describe('Modo Clube calendar advance (MC-084)', () => {
+  it('keeps the day and the snapshot together, once, and refuses a step from a stale day', async () => {
+    const { gzipSync, gunzipSync } = await import('node:zlib');
+    let cookie = '';
+    const d = async (method: 'GET' | 'POST' | 'PUT', url: string, payload?: object | Buffer) => {
+      const res = await app.inject({
+        method,
+        url: `/v1${url}`,
+        headers: {
+          origin: WEB_ORIGIN,
+          ...(cookie ? { cookie } : {}),
+          ...(payload instanceof Buffer ? { 'content-type': 'application/octet-stream' } : {}),
+        },
+        ...(payload ? { payload } : {}),
+      });
+      const set = res.headers['set-cookie'];
+      if (set) cookie = String([set].flat()[0]).split(';')[0]!;
+      return res;
+    };
+    const snap = (day: number) => gzipSync(JSON.stringify({ v: 1, day }));
+    expect((await d('PUT', '/manager/career/world?from=0&to=5', snap(5))).statusCode).toBe(404);
+    const o = (await d('GET', '/manager/career/options')).json();
+    await d('POST', '/manager/career', { startMode: 'job_offers', clubId: o.offers[0].id });
+    expect((await d('GET', '/manager/career/world')).rawPayload.length).toBe(0);
+
+    const step = await d('PUT', '/manager/career/world?from=0&to=20500', snap(20500));
+    expect(step.statusCode, step.body).toBe(200);
+    expect(step.json().career.day).toBe(20500);
+    const back = await d('GET', '/manager/career/world');
+    expect(JSON.parse(gunzipSync(back.rawPayload).toString())).toEqual({ v: 1, day: 20500 });
+    // A retry answers the same; a step from the old day is a conflict.
+    expect((await d('PUT', '/manager/career/world?from=0&to=20500', snap(20500))).json()).toEqual(
+      step.json(),
+    );
+    expect((await d('PUT', '/manager/career/world?from=0&to=20510', snap(20510))).statusCode).toBe(
+      409,
+    );
+    expect((await d('PUT', '/manager/career/world?from=20500&to=20400', snap(1))).statusCode).toBe(
+      400,
+    );
+    expect((await d('PUT', '/manager/career/world?from=20500&to=21000', snap(1))).statusCode).toBe(
+      400,
+    );
+    expect(
+      (await d('PUT', '/manager/career/world?from=20500&to=20507', Buffer.from('{}'))).statusCode,
+    ).toBe(400);
+    expect(
+      (await d('PUT', '/manager/career/world?from=20500&to=20507', Buffer.alloc(600_000, 0x1f)))
+        .statusCode,
+    ).toBe(413);
+    expect((await d('GET', '/manager/career')).json().career.day).toBe(20500);
+  });
+});

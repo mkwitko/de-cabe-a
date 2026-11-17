@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
-import type { SimRequest, SimSummary } from './sim.worker';
+import type { SimReply, SimRequest, SimView } from './sim.worker';
 
 interface ClubOption {
   id: string;
@@ -18,6 +18,7 @@ interface ClubOption {
 }
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
 type Axis = (typeof AXES)[number];
+const COLS = ['pos', 'club', 'played', 'gd', 'points'] as const;
 interface Options {
   packId: string;
   packVersion: string;
@@ -204,24 +205,53 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
 // ── Home ────────────────────────────────────────────────────────────────────
 
 function Home({ career }: { career: Career }) {
-  const [sim, setSim] = useState<SimSummary | null>(null);
+  const [sim, setSim] = useState<SimView | null>(null);
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [worker, setWorker] = useState<Worker | null>(null);
 
   useEffect(() => {
     const w = new Worker(new URL('./sim.worker.ts', import.meta.url), { type: 'module' });
-    w.onmessage = (e: MessageEvent<{ ok?: SimSummary; error?: string }>) => {
-      if (e.data.ok) setSim(e.data.ok);
-      else setError(e.data.error ?? '');
+    let alive = true;
+    w.onmessage = async (e: MessageEvent<SimReply>) => {
+      if (e.data.error !== undefined) return setError(e.data.error);
+      // The server keeps the day and the snapshot together, before the screen moves on.
+      const save = e.data.save;
+      if (save)
+        await api(`/v1/manager/career/world?from=${save.from}&to=${save.to}`, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/octet-stream' },
+          body: save.bytes,
+        }).catch((err: Error) => alive && setError(err.message));
+      if (!alive) return;
+      setSim(e.data.view ?? null);
+      setBusy(false);
     };
-    const req: SimRequest = {
-      packId: career.packId,
-      packVersion: career.packVersion,
-      seed: career.seed,
-      clubId: career.clubId,
+    fetch('/v1/manager/career/world', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+      .then((snapshot) => {
+        const req: SimRequest = {
+          type: 'open',
+          packId: career.packId,
+          packVersion: career.packVersion,
+          seed: career.seed,
+          clubId: career.clubId,
+          snapshot,
+        };
+        w.postMessage(req, [snapshot]);
+      })
+      .catch((err: Error) => setError(err.message));
+    setWorker(w);
+    return () => {
+      alive = false;
+      w.terminate();
     };
-    w.postMessage(req);
-    return () => w.terminate();
   }, [career]);
+
+  const play = () => {
+    setBusy(true);
+    worker?.postMessage({ type: 'play' } satisfies SimRequest);
+  };
 
   if (error) return <Notice title={t('career.loadError')}>{error}</Notice>;
   if (!sim)
@@ -231,35 +261,88 @@ function Home({ career }: { career: Career }) {
       </p>
     );
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
-        <Crest colours={sim.club.colours} />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-condensed text-3xl font-extrabold uppercase">{sim.club.name}</h2>
-          <p className="text-chalk-soft">
-            {t('career.where', { division: sim.division, season: career.season })}
+    <section className="grid gap-4 lg:grid-cols-[1fr_minmax(0,22rem)]">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
+          <Crest colours={sim.club.colours} />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-condensed text-3xl font-extrabold uppercase">{sim.club.name}</h2>
+            <p className="text-chalk-soft">
+              {t('career.where', { division: sim.division, season: career.season })}
+            </p>
+          </div>
+          <p className="w-full font-condensed text-2xl font-extrabold text-club-gold tabular-nums sm:w-auto">
+            {t('career.cash', { value: sim.cash })}
           </p>
         </div>
-        <p className="w-full font-condensed text-2xl font-extrabold text-club-gold tabular-nums sm:w-auto">
-          {t('career.cash', { value: sim.cash })}
-        </p>
+
+        {sim.last && (
+          <p
+            aria-live="polite"
+            className="rounded-2xl bg-club-panel/70 p-4 font-condensed text-2xl font-extrabold uppercase ring-1 ring-chalk/10"
+          >
+            {t('career.lastResult', {
+              home: sim.last.home,
+              away: sim.last.away,
+              a: sim.last.goals[0],
+              b: sim.last.goals[1],
+            })}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-3 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
+          <h3 className="font-condensed text-xl font-extrabold uppercase">{t('career.next')}</h3>
+          {sim.next ? (
+            <>
+              <p className="flex flex-wrap items-baseline gap-x-3 text-lg">
+                <span className="text-sm text-chalk-soft tabular-nums">
+                  {t('career.date', { d: new Date(`${sim.next.iso}T12:00:00Z`) })}
+                </span>
+                <span className={sim.next.atHome ? 'font-bold' : ''}>{sim.next.home}</span>
+                <span className="text-chalk-soft">×</span>
+                <span className={sim.next.atHome ? '' : 'font-bold'}>{sim.next.away}</span>
+              </p>
+              <button type="button" disabled={busy} className={btnPrimary} onClick={play}>
+                {t('career.play')}
+              </button>
+            </>
+          ) : (
+            <p>{t('career.seasonOver')}</p>
+          )}
+        </div>
+        <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
       </div>
+
       <div className="rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
-        <h3 className="mb-2 font-condensed text-xl font-extrabold uppercase">{t('career.next')}</h3>
-        <ol className="flex flex-col divide-y divide-chalk/10">
-          {sim.upcoming.map((m) => (
-            <li key={m.iso + m.home} className="flex items-center gap-3 py-2">
-              <span className="w-24 text-sm text-chalk-soft tabular-nums">
-                {t('career.date', { d: new Date(`${m.iso}T12:00:00Z`) })}
-              </span>
-              <span className={m.atHome ? 'font-bold' : ''}>{m.home}</span>
-              <span className="text-chalk-soft">×</span>
-              <span className={m.atHome ? '' : 'font-bold'}>{m.away}</span>
-            </li>
-          ))}
-        </ol>
+        <h3 className="mb-2 font-condensed text-xl font-extrabold uppercase">
+          {t('career.table')}
+        </h3>
+        <table className="w-full text-sm tabular-nums">
+          <thead className="text-chalk-soft">
+            <tr>
+              {COLS.map((c, k) => (
+                <th key={c} scope="col" className={`py-1 ${k < 2 ? 'text-left' : 'text-right'}`}>
+                  {t('career.col', { c })}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sim.table.map((r, i) => (
+              <tr
+                key={r.clubId}
+                className={`border-t border-chalk/10 ${r.clubId === career.clubId ? 'font-bold text-club-gold' : ''}`}
+              >
+                <td className="py-1">{i + 1}</td>
+                <td>{r.name}</td>
+                <td className="text-right">{r.played}</td>
+                <td className="text-right">{r.gd}</td>
+                <td className="text-right">{r.points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
     </section>
   );
 }

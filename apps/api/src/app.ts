@@ -111,6 +111,8 @@ export function buildApp(
         void track(app.deps.prisma, req.sessionId, 'action_rejected', { code: err.code });
       return reply.code(409).send(body(err.code, err.message));
     }
+    if ((err as { statusCode?: number }).statusCode === 413)
+      return reply.code(413).send(body('VALIDATION_ERROR', 'Envio grande demais.'));
     if ((err as { statusCode?: number }).statusCode === 429)
       return reply
         .code(429)

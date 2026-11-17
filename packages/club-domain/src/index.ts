@@ -23,3 +23,6 @@ export {
 export { matchInputFor, outcomeOf } from './match/fixture-input';
 export * from './finance/ledger';
 export * from './career/start';
+export * from './career/advance';
+export { clubStrength, quickResult } from './match/quick';
+export * from './career/save';

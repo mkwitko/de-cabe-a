@@ -5,9 +5,7 @@ test.beforeEach(({ context }) =>
   context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
 );
 
-test('career: accept one of three offers and see the season built on the phone', async ({
-  page,
-}) => {
+test('career: accept an offer, play two matches, reload and find them saved', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -17,17 +15,23 @@ test('career: accept one of three offers and see the season built on the phone',
   await expect(accept).toHaveCount(3);
   await page.screenshot({ path: 'test-results/carreira-ofertas-390.png', fullPage: true });
   await accept.first().click();
-  await expect(page.getByRole('heading', { name: 'Próximos jogos' })).toBeVisible({
-    timeout: 30_000,
-  });
-  await expect(page.getByRole('listitem').filter({ hasText: '×' })).toHaveCount(5);
-  await expect(page.getByText(/Temporada montada neste aparelho em \d+ ms/)).toBeVisible();
+  const play = page.getByRole('button', { name: 'Jogar a partida' });
+  await expect(play).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
+  await play.click();
+  await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeVisible({ timeout: 30_000 });
+  await expect(play).toBeEnabled();
+  await play.click();
+  await expect(play).toBeEnabled({ timeout: 30_000 });
+  const mine = page.locator('tbody tr.text-club-gold');
+  await expect(mine.locator('td').nth(2)).toHaveText('2');
   await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
-  // Reloading keeps the same career (the server holds it; the browser rebuilds the world).
+  // Reloading opens the saved snapshot: the two matches are still there.
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Próximos jogos' })).toBeVisible({
+  await expect(page.getByRole('button', { name: 'Jogar a partida' })).toBeEnabled({
     timeout: 30_000,
   });
+  await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('2');
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
@@ -43,4 +47,6 @@ test('career: free choice of a first-division club at 1280 px', async ({ page })
   await page.screenshot({ path: 'test-results/carreira-escolha-1280.png', fullPage: true });
   await page.getByRole('listitem').getByRole('button').first().click();
   await expect(page.getByText(/Primeira Divisão · temporada/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('tbody tr')).toHaveCount(20);
+  await page.screenshot({ path: 'test-results/carreira-casa-1280.png', fullPage: true });
 });

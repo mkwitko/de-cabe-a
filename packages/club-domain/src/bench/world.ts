@@ -5,56 +5,10 @@
  * Not used by the game; `storage.ts` (Node) and the browser page call it.
  */
 import { fork, next, rngFrom } from '@decabeca/match-engine';
+import { clubStrength, quickResult } from '../match/quick';
 import { generateDevPack } from '../generate/pack';
-import { bestRoles } from '../player/ratings';
-import { matchesOn, nextDay, record, startSeason, type Outcome } from '../competition/season';
+import { matchesOn, nextDay, record, startSeason } from '../competition/season';
 import type { Pack } from '../pack/schema';
-
-/** e^x by its series, with + × ÷ only: the same bits in every browser (ADR-020). x in [0, 10]. */
-function expSeries(x: number): number {
-  let sum = 1;
-  let term = 1;
-  for (let k = 1; k < 40; k++) sum += term *= x / k;
-  return sum;
-}
-
-/** Score-only result (level 3): Poisson goals from the two squads' strength. PARÂMETRO. */
-export function quickResult(seed: number, home: number, away: number): Outcome {
-  const r = rngFrom(seed);
-  const goals = (mean: number) => {
-    // Knuth: fine for means under 5.
-    let k = 0;
-    for (let p = next(r), l = 1 / expSeries(mean); p > l; p *= next(r)) k++;
-    return k;
-  };
-  const d = (home - away) / 10;
-  return {
-    goals: [goals(Math.max(0.2, 1.45 + 0.35 * d)), goals(Math.max(0.2, 1.1 - 0.3 * d))],
-    shootout: null,
-    cards: [
-      [Math.floor(next(r) * 3), next(r) < 0.05 ? 1 : 0],
-      [Math.floor(next(r) * 3), next(r) < 0.05 ? 1 : 0],
-    ],
-  };
-}
-
-export function clubStrength(pack: Pack): Map<string, number> {
-  const by = new Map<string, number[]>();
-  for (const p of pack.players)
-    if (p.clubId)
-      (by.get(p.clubId) ?? by.set(p.clubId, []).get(p.clubId)!).push(
-        bestRoles(p.attributes, 1)[0]!.rating,
-      );
-  return new Map(
-    [...by].map(([c, rs]) => [
-      c,
-      rs
-        .sort((a, b) => b - a)
-        .slice(0, 16)
-        .reduce((a, b) => a + b, 0) / 16,
-    ]),
-  );
-}
 
 /** JSON with Maps as entry lists. */
 export const toJson = (x: unknown) =>
