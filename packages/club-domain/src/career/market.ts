@@ -58,47 +58,59 @@ export function withMoves(pack: Pack, moves: Moves): Pack {
 }
 
 /**
- * Moves a player to another club on a new contract: the world gets a new pack object, the two
- * clubs' readings and strengths are rebuilt, and a picked eleven that lost him goes back to the
- * coach. No money here: the callers post it.
+ * Applies several moves at once: the world gets one new pack object, the clubs that gained or
+ * lost a player have their readings and strengths rebuilt once, and a picked eleven that lost
+ * someone goes back to the coach. No money here: the callers post it.
  */
+export function applyMoves(w: CareerWorld, changes: Moves): void {
+  const ids = Object.keys(changes);
+  if (ids.length === 0) return;
+  const season = w.season.season;
+  const touched = new Set<string>();
+  const left = new Set<string>();
+  const stamped: Moves = {};
+  const byId = new Map(w.pack.players.map((p) => [p.id, p]));
+  for (const id of ids) {
+    const from = byId.get(id)?.clubId ?? null;
+    const to = changes[id]!.clubId;
+    stamped[id] = { ...changes[id]!, season };
+    // A renewal changes neither squad.
+    if (from === to) continue;
+    if (from) touched.add(from);
+    if (to) touched.add(to);
+    left.add(id);
+  }
+  w.moves = { ...w.moves, ...stamped };
+  const before = w.pack;
+  w.pack = withMoves(before, stamped);
+  carryCache(before, w.pack, [...touched]);
+  for (const id of left)
+    // A new club starts to know him now.
+    if (stamped[id]!.clubId) markArrival(w.pack, id, season);
+  for (const clubId of touched) {
+    const level = clubLevel(w.pack, clubId);
+    w.strength.set(clubId, level.strength);
+    w.eleven.set(clubId, level.eleven);
+  }
+  if (w.lineup?.xi.some((id) => left.has(id))) delete w.lineup;
+}
+
+/** Moves a player to another club (or renews him where he is) on a new contract. */
 export function movePlayer(
   w: CareerWorld,
   p: PackPlayer,
   to: string,
   contract: { wage: number; until: string; release?: number | null },
 ): void {
-  // A free agent comes from no club; a renewal stays where he is.
-  const from = p.clubId;
-  const touched = [...new Set([from, to])].filter((x): x is string => x !== null);
-  const moved = { clubId: to, ...contract, season: w.season.season };
-  w.moves = { ...w.moves, [p.id]: moved };
-  const before = w.pack;
-  w.pack = withMoves(before, { [p.id]: moved });
-  carryCache(before, w.pack, touched);
-  // A new club starts to know him now; a renewal changes nothing of what his own knows.
-  if (from !== to) markArrival(w.pack, p.id, w.season.season);
-  for (const clubId of touched) {
-    const level = clubLevel(w.pack, clubId);
-    w.strength.set(clubId, level.strength);
-    w.eleven.set(clubId, level.eleven);
-  }
-  if (w.lineup?.xi.includes(p.id)) delete w.lineup;
+  applyMoves(w, { [p.id]: { clubId: to, ...contract } });
 }
 
 /** Lets a player go at the end of his contract: he has no club until one signs him. */
 export function releasePlayer(w: CareerWorld, p: PackPlayer): void {
-  const from = p.clubId!;
-  const gone = { clubId: null, wage: 0, until: '', season: w.season.season };
-  w.moves = { ...w.moves, [p.id]: gone };
-  const before = w.pack;
-  w.pack = withMoves(before, { [p.id]: gone });
-  carryCache(before, w.pack, [from]);
-  const level = clubLevel(w.pack, from);
-  w.strength.set(from, level.strength);
-  w.eleven.set(from, level.eleven);
-  if (w.lineup?.xi.includes(p.id)) delete w.lineup;
+  applyMoves(w, { [p.id]: RELEASED });
 }
+/** The move of a player who is let go. */
+export const RELEASED = { clubId: null, wage: 0, until: '' } as const;
 
 /**
  * The person's side of a deal: the fee through the ledger and the note in the inbox. `what`

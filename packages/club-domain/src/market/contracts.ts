@@ -8,7 +8,7 @@
  */
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
-import { movePlayer, releasePlayer } from '../career/market';
+import { RELEASED, applyMoves, movePlayer, type Moves } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
 import { wageRoom } from './books';
@@ -86,33 +86,42 @@ export function expireContracts(w: CareerWorld): Expiry {
         use(b) - use(a) || read.get(b.id)!.level - read.get(a.id)!.level || (a.id < b.id ? -1 : 1)
       );
     });
+    // Decided player by player against the squad as it shrinks, applied to the club at once.
+    const changes: Moves = {};
+    let size = squadPlayers(c).length;
+    let keepers = squadPlayers(c).filter((x) => read.get(x.id)!.keeper).length;
+    let room = mine ? 0 : wageRoom(w, club.id);
     for (const p of ranked) {
-      const now = squadPlayers({ pack: w.pack, clubId: club.id });
-      const keepers = now.filter((x) => read.get(x.id)!.keeper).length;
-      const needed = now.length <= KEEP || (read.get(p.id)!.keeper && keepers <= KEEP_KEEPERS);
+      const keeper = read.get(p.id)!.keeper;
+      const needed = size <= KEEP || (keeper && keepers <= KEEP_KEEPERS);
       const terms = renewalTerms(w, p);
       const used = plan.xi.includes(p.id) || plan.cover.includes(p.id);
       const raise = terms.wage - (p.contract?.wage ?? 0);
       // A rival club renews who its plan uses, is not past it, and fits the wage room.
-      const wants = !mine && used && ageOf(p, season) <= 34 && raise <= wageRoom(w, club.id);
-      if (wants) {
-        renew(w, p, terms);
+      const wants = !mine && used && ageOf(p, season) <= 34 && raise <= room;
+      if (wants || needed) {
+        // Kept because the squad cannot lose him: one more year, no raise asked.
+        const signed = wants
+          ? terms
+          : { ...terms, wage: Math.max(p.contract?.wage ?? 0, terms.wage - raise), years: 1 };
+        changes[p.id] = {
+          clubId: club.id,
+          wage: signed.wage,
+          until: `${season + signed.years}-12-31`,
+          release: marketValue(w.pack, p, season) * CLAUSE_TIMES,
+        };
+        if (wants) room -= raise;
         out.renewed++;
-      } else if (needed) {
-        // The squad cannot lose him: one more year on the going wage, no raise asked.
-        renew(w, p, {
-          ...terms,
-          wage: Math.max(p.contract?.wage ?? 0, terms.wage - raise),
-          years: 1,
-        });
-        out.renewed++;
-        if (mine) out.kept.push(p.knownAs ?? p.name);
+        if (!wants && mine) out.kept.push(p.knownAs ?? p.name);
       } else {
-        releasePlayer(w, p);
+        changes[p.id] = RELEASED;
+        size--;
+        if (keeper) keepers--;
         out.released++;
         if (mine) out.left.push(p.knownAs ?? p.name);
       }
     }
+    applyMoves(w, changes);
   }
   for (const player of out.left) note(w, { day: w.day, kind: 'contractEnded', player });
   for (const player of out.kept) note(w, { day: w.day, kind: 'contractKept', player });
