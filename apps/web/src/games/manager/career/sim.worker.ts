@@ -64,12 +64,24 @@ export interface SimView {
   turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
   division: string;
   cash: number;
-  next: { iso: string; home: string; away: string; atHome: boolean } | null;
-  last: { home: string; away: string; goals: [number, number] } | null;
-  table: { clubId: string; name: string; played: number; points: number; gd: number }[];
+  next: { iso: string; home: ClubFace; away: ClubFace; atHome: boolean } | null;
+  last: { home: ClubFace; away: ClubFace; goals: [number, number] } | null;
+  table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
   /** ms the last step took on this device. */
   ms: number;
 }
+
+/** What the screen draws for a club: names and the colour badge. */
+export interface ClubFace {
+  name: string;
+  shortName: string;
+  colours: [string, string];
+}
+const face = (c: ClubFace): ClubFace => ({
+  name: c.name,
+  shortName: c.shortName,
+  colours: c.colours,
+});
 
 export interface MatchClub {
   id: string;
@@ -122,22 +134,22 @@ function view(w: CareerWorld, ms: number): SimView {
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
     turn,
-    club: { name: club.name, shortName: club.shortName, colours: club.colours },
+    club: face(club),
     division: table.name,
     cash: w.ledger.cash,
     next:
       pending?.kind === 'match'
         ? {
             iso: isoOf(pending.day),
-            home: byId.get(pending.home)!.shortName,
-            away: byId.get(pending.away)!.shortName,
+            home: face(byId.get(pending.home)!),
+            away: face(byId.get(pending.away)!),
             atHome: pending.home === w.clubId,
           }
         : null,
     last,
     table: table.rows.map((r) => ({
       clubId: r.clubId,
-      name: byId.get(r.clubId)!.shortName,
+      ...face(byId.get(r.clubId)!),
       played: r.played,
       points: r.points,
       gd: r.goalsFor - r.goalsAgainst,
@@ -173,8 +185,8 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const from = world.day;
       const d = pending;
       const o = playDecision(world, d);
-      const byId = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
-      last = { home: byId.get(d.home)!, away: byId.get(d.away)!, goals: o.goals };
+      const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
+      last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
       const after = await toNextDecision(world);
       save = {
         from,
@@ -239,8 +251,8 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const from = world.day;
       const d = pending;
       const o = playDecision(world, d, outcomeOf(result));
-      const byId = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
-      last = { home: byId.get(d.home)!, away: byId.get(d.away)!, goals: o.goals };
+      const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
+      last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
       const after = await toNextDecision(world);
       save = {
         from,

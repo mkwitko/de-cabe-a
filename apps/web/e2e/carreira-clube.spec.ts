@@ -19,7 +19,7 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await expect(play).toBeEnabled({ timeout: 30_000 });
   await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
   await play.click();
-  await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByLabel(/^\S+ \d+ × \d+ \S+$/)).toBeVisible({ timeout: 30_000 });
   await expect(play).toBeEnabled();
   await play.click();
   await expect(play).toBeEnabled({ timeout: 30_000 });
@@ -46,7 +46,7 @@ test('career: free choice of a first-division club at 1280 px', async ({ page })
   await page.getByRole('button', { name: 'Primeira Divisão' }).click();
   await page.screenshot({ path: 'test-results/carreira-escolha-1280.png', fullPage: true });
   await page.getByRole('listitem').getByRole('button').first().click();
-  await expect(page.getByText(/Primeira Divisão · temporada/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Primeira Divisão, temporada/)).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('tbody tr')).toHaveCount(20);
   await page.screenshot({ path: 'test-results/carreira-casa-1280.png', fullPage: true });
 });
@@ -74,9 +74,9 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await expect(page.getByText(/^Temporada 2026: \S+ campeão da divisão\./)).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByText(/· temporada 2027/)).toBeVisible();
+  await expect(page.getByText(/, temporada 2027/)).toBeVisible();
   await page.reload();
-  await expect(page.getByText(/· temporada 2027/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/, temporada 2027/)).toBeVisible({ timeout: 30_000 });
 });
 
 test('career: watch the club’s own match, change the plan, and its result counts', async ({
@@ -102,7 +102,7 @@ test('career: watch the club’s own match, change the plan, and its result coun
   await page.getByRole('button', { name: 'Continuar' }).click();
   // The watched score is the one recorded, and the table counts the match.
   const [a, b] = score.split('–');
-  await expect(page.getByText(new RegExp(`^\\S+ ${a} × ${b} \\S+$`))).toBeVisible({
+  await expect(page.getByLabel(new RegExp(`^\\S+ ${a} × ${b} \\S+$`))).toBeVisible({
     timeout: 30_000,
   });
   await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('1');
