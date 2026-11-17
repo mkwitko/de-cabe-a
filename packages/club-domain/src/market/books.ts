@@ -30,7 +30,18 @@ export function tierOfClub(w: CareerWorld, clubId: string): number {
   return div?.tier ?? 4;
 }
 
+/** A season's budgets, read once per club: the division and the income do not change in it. */
+const budgets = new WeakMap<object, Map<string, Budget>>();
+
 export function budgetOf(w: CareerWorld, clubId: string): Budget {
+  let by = budgets.get(w.season);
+  if (!by) budgets.set(w.season, (by = new Map()));
+  let b = by.get(clubId);
+  if (!b) by.set(clubId, (b = readBudget(w, clubId)));
+  return b;
+}
+
+function readBudget(w: CareerWorld, clubId: string): Budget {
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
   const tier = BY_TIER[tierOfClub(w, clubId)]!;
   const gate =

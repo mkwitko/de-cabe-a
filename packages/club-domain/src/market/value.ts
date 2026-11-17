@@ -77,7 +77,18 @@ export const yearsLeft = (p: PackPlayer, season: number) =>
  * Market value: the going wage for his level × months by age × what he may still grow (only
  * while young) × what his contract still protects. In hundredths to stay exact.
  */
+/** A player object does not change (a move makes a new one): his value is read once a season. */
+const values = new WeakMap<PackPlayer, { season: number; value: number }>();
+
 export function marketValue(pack: Pack, p: PackPlayer, season: number): number {
+  const known = values.get(p);
+  if (known?.season === season) return known.value;
+  const value = readValue(pack, p, season);
+  values.set(p, { season, value });
+  return value;
+}
+
+function readValue(pack: Pack, p: PackPlayer, season: number): number {
   const r = readingsOf(pack).get(p.id)!;
   const age = ageOf(p, season);
   // Up to +100% for 20 points of room at 21 or under, fading to nothing at 27.

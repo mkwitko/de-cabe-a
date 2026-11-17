@@ -33,19 +33,30 @@ import {
   squadOf,
   bestLineup,
   slotLevels,
-  askingPrice,
-  buy,
-  cannotBuy,
-  cannotSell,
-  sell,
-  offerFor,
   windowOpen,
+  answerBid,
+  bidFee,
+  bidTerms,
+  cannotTalk,
+  dropTalk,
+  listPlayer,
+  marketValue,
+  openTalk,
+  squadPlanOf,
+  MAX_ROUNDS,
+  type BidAnswer,
+  type FeeAnswer,
+  type Role,
+  type SellerMood,
+  type TalkNo,
+  type Terms,
+  type TermsAnswer,
+  type Why,
   boardOf,
   positionOf,
   type BoardReason,
   type Note,
   bestRoles,
-  type Refusal,
   DRILL_TARGET,
   INTENSITIES,
   MATCH_COST,
@@ -86,9 +97,7 @@ export type SimRequest = { id: number } & (
   | { type: 'training' }
   | { type: 'train'; intensity: Intensity }
   /** The market: the person's players to sell and the best of the others, by position. */
-  | { type: 'market'; position: string | null }
-  | { type: 'buy'; playerId: string; position: string | null }
-  | { type: 'sell'; playerId: string; position: string | null }
+  | { type: 'market'; position: string | null; act?: MarketAct }
   | { type: 'nextSeason' }
   /** Watch the person's next match with the match engine (level 1). */
   | { type: 'matchStart' }
@@ -217,7 +226,16 @@ function trainingView(w: CareerWorld): TrainingView {
   };
 }
 
-/** A player as the market lists him. `no` says why the deal cannot go through now. */
+/** What the person does at the market. */
+export type MarketAct =
+  | { do: 'open' | 'drop'; playerId: string }
+  | { do: 'fee'; playerId: string; fee: number }
+  | { do: 'terms'; playerId: string; terms: Terms }
+  | { do: 'list'; playerId: string; on: boolean }
+  | { do: 'bid'; bidId: string; answer: 'accept' | 'refuse' }
+  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number };
+
+/** A player as the market lists him. */
 export interface MarketPlayer {
   id: string;
   name: string;
@@ -225,64 +243,168 @@ export interface MarketPlayer {
   position: string;
   rating: number;
   wage: number;
-  price: number;
+  /** His market value. */
+  value: number;
   club: ClubFace;
-  no: Refusal | null;
 }
 export interface MarketView {
   open: boolean;
   cash: number;
-  mine: MarketPlayer[];
-  /** Forty of the other clubs' players for the position asked: those the cash reaches first. */
-  targets: MarketPlayer[];
-  /** The deal just closed, for the screen to announce. */
-  deal?: { kind: 'buy' | 'sell'; name: string; club: string; fee: number };
+  /** Forty of the other clubs' players for the position asked: those within reach first. */
+  targets: (MarketPlayer & { no: TalkNo | null })[];
+  /** The person's squad: what each is to the plan, and who is on the list. */
+  mine: (MarketPlayer & { part: SellerMood; listed: boolean })[];
+  /** Talks open to buy. */
+  talks: {
+    player: MarketPlayer;
+    mood: SellerMood;
+    stage: 'fee' | 'terms';
+    /** Offers left before the other side walks away. */
+    left: number;
+    asking: number;
+    fee: number | null;
+    wants: Terms | null;
+  }[];
+  /** Bids waiting for an answer. */
+  bids: { id: string; player: MarketPlayer; from: ClubFace; fee: number }[];
+  /** The latest deals between clubs, newest first, with the buyer's reasons. */
+  news: {
+    iso: string;
+    name: string;
+    from: string;
+    to: string;
+    fee: number;
+    role: Role;
+    for: 'starter' | 'cover';
+    why: Why;
+  }[];
+  /** The other side's answer to what the person just did. */
+  said?:
+    | { at: 'fee'; answer: FeeAnswer }
+    | { at: 'terms'; answer: TermsAnswer; name: string }
+    | { at: 'bid'; answer: BidAnswer; name: string }
+    /** What the person asked could not be done; the reason, for the screen to say. */
+    | { at: 'no'; reason: string };
 }
 const MARKET_ROWS = 40;
+const NEWS_ROWS = 15;
 
 function marketView(w: CareerWorld, position: string | null): MarketView {
   const season = w.season.season;
   const clubs = new Map(w.pack.clubs.map((c) => [c.id, c]));
-  const row = (p: Pack['players'][number], own: boolean): MarketPlayer => ({
+  const byId = new Map(w.pack.players.map((p) => [p.id, p]));
+  const row = (p: Pack['players'][number]): MarketPlayer => ({
     id: p.id,
     name: p.knownAs ?? p.name,
     age: season - Number(p.birthDate.slice(0, 4)),
     position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
     rating: bestRoles(p.attributes, 1)[0]!.rating,
-    wage: own ? (p.contract?.wage ?? 0) : Math.round(((p.contract?.wage ?? 0) * 110) / 100),
-    price: own ? (offerFor(w, p)?.fee ?? 0) : askingPrice(p, season),
+    wage: p.contract?.wage ?? 0,
+    value: marketValue(w.pack, p, season),
     club: face(clubs.get(p.clubId!)!),
-    no: own ? cannotSell(w, p) : cannotBuy(w, p),
   });
-  const byRating = (a: MarketPlayer, b: MarketPlayer) =>
-    b.rating - a.rating || (a.id < b.id ? -1 : 1);
+  const plan = squadPlanOf({ pack: w.pack, clubId: w.clubId });
+  const topWage = Math.max(
+    0,
+    ...w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.contract?.wage ?? 0),
+  );
+  const reach = (p: MarketPlayer & { no: TalkNo | null }) =>
+    // A club asks up to 1.7 times the value for a starter it cannot replace.
+    p.no === null && p.value * 17 <= w.ledger.cash * 10 && p.wage <= topWage * 2;
+  const listed = new Set(w.listed ?? []);
   return {
     open: windowOpen(w.day),
     cash: w.ledger.cash,
     mine: w.pack.players
       .filter((p) => p.clubId === w.clubId)
-      .map((p) => row(p, true))
-      .sort(byRating),
+      .map((p) => ({
+        ...row(p),
+        part: plan.xi.includes(p.id)
+          ? ('starter' as const)
+          : plan.cover.includes(p.id)
+            ? ('cover' as const)
+            : ('surplus' as const),
+        listed: listed.has(p.id),
+      }))
+      .sort((a, b) => b.rating - a.rating || (a.id < b.id ? -1 : 1)),
     targets: w.pack.players
       .filter(
         (p) =>
           p.clubId &&
           p.clubId !== w.clubId &&
+          !w.talks?.[p.id] &&
           (!position || p.positions.some((x) => x.position === position && x.level === 3)),
       )
-      .map((p) => ({
-        p,
-        rating: bestRoles(p.attributes, 1)[0]!.rating,
-        // Within the club's means first: a list of stars nobody here can pay is no market.
-        within: askingPrice(p, season) <= w.ledger.cash,
-      }))
+      .map((p) => ({ ...row(p), no: cannotTalk(w, p) }))
+      // Within reach first: willing to talk, a value the cash covers and a wage near what the
+      // club pays. A list of stars nobody here can sign is no market.
       .sort(
         (a, b) =>
-          Number(b.within) - Number(a.within) || b.rating - a.rating || (a.p.id < b.p.id ? -1 : 1),
+          Number(reach(b)) - Number(reach(a)) || b.rating - a.rating || (a.id < b.id ? -1 : 1),
       )
-      .slice(0, MARKET_ROWS)
-      .map((x) => row(x.p, false)),
+      .slice(0, MARKET_ROWS),
+    talks: Object.values(w.talks ?? {}).map((t) => ({
+      player: row(byId.get(t.player)!),
+      mood: t.mood,
+      stage: t.stage,
+      left: MAX_ROUNDS - t.round,
+      asking: t.asking,
+      fee: t.fee ?? null,
+      wants: t.wants ?? null,
+    })),
+    bids: (w.bids ?? []).map((b) => ({
+      id: b.id,
+      player: row(byId.get(b.player)!),
+      from: face(clubs.get(b.from)!),
+      fee: b.fee,
+    })),
+    news: (w.deals ?? [])
+      .slice(-NEWS_ROWS)
+      .reverse()
+      .map((d) => ({
+        iso: isoOf(d.day),
+        name: d.name,
+        from: clubs.get(d.from)?.shortName ?? '',
+        to: clubs.get(d.to)?.shortName ?? '',
+        fee: d.fee,
+        role: d.role,
+        for: d.for,
+        why: d.why,
+      })),
   };
+}
+
+/** Does what the person asked at the market; the other side's answer, if it gave one. */
+function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
+  const name = (id: string) => {
+    const p = w.pack.players.find((x) => x.id === id);
+    return p?.knownAs ?? p?.name ?? '';
+  };
+  switch (act.do) {
+    case 'open':
+      openTalk(w, act.playerId);
+      return undefined;
+    case 'drop':
+      dropTalk(w, act.playerId);
+      return undefined;
+    case 'list':
+      listPlayer(w, act.playerId, act.on);
+      return undefined;
+    case 'fee':
+      return { at: 'fee', answer: bidFee(w, act.playerId, act.fee) };
+    case 'terms': {
+      const who = name(act.playerId);
+      return { at: 'terms', answer: bidTerms(w, act.playerId, act.terms), name: who };
+    }
+    case 'bid': {
+      const who = name((w.bids ?? []).find((b) => b.id === act.bidId)?.player ?? '');
+      const answer =
+        act.answer === 'counter'
+          ? answerBid(w, act.bidId, { kind: 'counter', fee: act.fee })
+          : answerBid(w, act.bidId, { kind: act.answer });
+      return { at: 'bid', answer, name: who };
+    }
+  }
 }
 
 function squadView(w: CareerWorld): SquadView {
@@ -399,7 +521,7 @@ function view(w: CareerWorld, ms: number): SimView {
           byId.get(
             n.kind === 'result'
               ? n.opponent
-              : n.kind === 'bought' || n.kind === 'sold'
+              : n.kind === 'bought' || n.kind === 'sold' || n.kind === 'bid'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion
@@ -498,27 +620,19 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         bytes: await gzip(saveCareer(world)),
       };
     }
-    if (world && (r.type === 'market' || r.type === 'buy' || r.type === 'sell')) {
-      let deal: MarketView['deal'];
-      if (r.type !== 'market') {
-        const p = world.pack.players.find((x) => x.id === r.playerId);
-        const name = p?.knownAs ?? p?.name ?? '';
-        const names = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
-        if (r.type === 'buy') {
-          const fee = p ? askingPrice(p, world.season.season) : 0;
-          const from = names.get(p?.clubId ?? '') ?? '';
-          buy(world, r.playerId);
-          deal = { kind: 'buy', name, club: from, fee };
-        } else {
-          const sold = sell(world, r.playerId);
-          deal = { kind: 'sell', name, club: names.get(sold.buyer) ?? '', fee: sold.fee };
-        }
+    if (world && r.type === 'market') {
+      let said: MarketView['said'];
+      try {
+        said = r.act && marketAct(world, r.act);
+      } catch (err) {
+        // A refused move (no cash, a talk already closed) is an answer, not a broken career.
+        said = { at: 'no', reason: String(err).replace(/^Error: \w+: /, '') };
       }
       const market = marketView(world, r.position);
-      if (deal) market.deal = deal;
+      if (said) market.said = said;
       const reply: SimReply = { id: r.id, market };
-      if (deal) {
-        // The squad and the cash changed: the hub's view and the snapshot follow.
+      if (r.act) {
+        // Something changed (a talk, the list, a deal): the hub's view and the snapshot follow.
         reply.view = view(world, Math.round(performance.now() - t));
         reply.save = {
           from: world.day,

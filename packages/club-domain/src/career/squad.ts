@@ -129,7 +129,14 @@ export function setLineup(w: CareerWorld, l: Lineup): void {
  * The positions that count as "his position" in each slot: from the slot's role and the side of
  * the pitch it stands on (low y is the team's right, FORMATIONS).
  */
+const slotPositionsBy = new Map<string, Position[][]>();
 export function slotPositions(formation: string): Position[][] {
+  let known = slotPositionsBy.get(formation);
+  if (!known) slotPositionsBy.set(formation, (known = readSlotPositions(formation)));
+  return known;
+}
+
+function readSlotPositions(formation: string): Position[][] {
   const f = FORMATIONS[formation]!;
   return f.roles.map((role, i) => {
     const { x, y } = f.inPossession[i]!;

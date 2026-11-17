@@ -28,6 +28,7 @@ import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import type { Books } from '../market/books';
+import type { Bid, Talk } from '../market/talks';
 import { postPrize } from './finance';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
 import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
@@ -69,6 +70,16 @@ export interface CareerWorld {
   books?: Record<string, Books>;
   /** The market's deals between clubs, newest last (market/rounds.ts). */
   deals?: Deal[];
+  /** Talks the person opened to buy, by player (market/talks.ts). */
+  talks?: Record<string, Talk>;
+  /** Bids from other clubs for the person's players, waiting for an answer. */
+  bids?: Bid[];
+  /** The person's players put up for sale. */
+  listed?: string[];
+  /** Doors shut for a season: a player, or `club:player` for a bidder. */
+  cold?: Record<string, number>;
+  /** Clubs that found nobody worth buying in the window `span` and sit the rest of it out. */
+  idle?: { span: string; clubs: string[] };
 }
 
 export type Decision =
@@ -283,8 +294,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   });
   // The goal is set again for the table the club is now in.
   w.board = { ...judged, goal: goalFor(w) };
-  // Every club's market season starts again.
+  // Every club's market season starts again; open talks and bids do not cross the year.
   delete w.books;
+  delete w.talks;
+  delete w.bids;
+  delete w.cold;
   // A new season starts with everyone rested; the drill carries over.
   if (w.training) w.training = { ...w.training, fresh: {}, day: w.day };
   return {

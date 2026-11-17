@@ -36,5 +36,6 @@ export * from './market/plan';
 export * from './market/deals';
 export * from './market/books';
 export * from './market/rounds';
+export * from './market/talks';
 export { attendance, tierOf } from './career/finance';
 export * from './match/moments';

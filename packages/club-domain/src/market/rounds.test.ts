@@ -10,22 +10,22 @@ import { dayOf } from '../competition/calendar';
 
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 5)[0]!.clubId;
-const ROUND = dayOf('2026-04-09');
+const ROUND = dayOf('2026-04-16');
 
 describe('the market between clubs (07 §6, 04 §8)', () => {
-  it('rounds fall every seven days inside a window and nowhere else', () => {
+  it('rounds fall every fourteen days inside a window and nowhere else', () => {
     const april = roundsBetween(dayOf('2026-04-01'), dayOf('2026-04-30'));
-    expect(april.length).toBe(4);
-    expect(april.every((d) => d % 7 === 0)).toBe(true);
+    expect(april.length).toBe(2);
+    expect(april.every((d) => d % 14 === 0)).toBe(true);
     expect(roundsBetween(dayOf('2026-05-02'), dayOf('2026-06-28'))).toEqual([]);
-    // The turn of the year plays its last four weeks, not every week since December.
+    // The turn of the year plays its last four rounds, not every one since December.
     expect(roundsBetween(dayOf('2026-12-06'), dayOf('2027-04-05')).length).toBe(4);
   });
 
   it('clubs buy for a need, inside their budget, and nobody is left short', () => {
     const w = openCareer(pack, 91, clubId);
     const before = new Map(pack.players.map((p) => [p.id, p.clubId]));
-    const deals = [0, 7, 14, 21].flatMap((k) => marketRound(w, ROUND + k));
+    const deals = [0, 14, 28, 42].flatMap((k) => marketRound(w, ROUND + k));
     expect(deals.length).toBeGreaterThan(20);
     const read = readingsOf(w.pack);
     for (const c of pack.clubs) {

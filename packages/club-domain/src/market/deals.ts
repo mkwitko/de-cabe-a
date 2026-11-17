@@ -6,6 +6,7 @@
  * PARÂMETRO, not calibrated.
  */
 import type { ClubIn } from '../career/squad';
+import { cached } from '../lib/pack-cache';
 import type { Pack, PackClub, PackPlayer } from '../pack/schema';
 import { squadPlanOf } from './plan';
 import { ageOf, goingWage, marketValue, readingsOf, thousands, yearsLeft } from './value';
@@ -38,12 +39,17 @@ export function sellerStance(
   const plan = squadPlanOf(seller);
   const slot = plan.xi.indexOf(p.id);
   const mood: SellerMood = slot >= 0 ? 'starter' : plan.cover.includes(p.id) ? 'cover' : 'surplus';
-  const club = seller.pack.clubs.find((c) => c.id === seller.clubId)!;
+  const rivals = cached(
+    seller.pack,
+    'rivals',
+    seller.clubId,
+    () => seller.pack.clubs.find((c) => c.id === seller.clubId)!.rivals,
+  );
   const why = {
     plan: mood === 'starter' ? 35 : mood === 'cover' ? 5 : -20,
     noCover: slot >= 0 && plan.cover[slot] === null ? 25 : 0,
     contract: yearsLeft(p, season) <= 1 ? -20 : 0,
-    rival: club.rivals.includes(buyerId) ? 20 : 0,
+    rival: rivals.includes(buyerId) ? 20 : 0,
   };
   const value = marketValue(seller.pack, p, season);
   const floor = thousands(

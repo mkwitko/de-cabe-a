@@ -3,7 +3,7 @@
  * by one of three offers from the last one; then the career home. The world is built in the
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
@@ -290,14 +290,25 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   } | null>(null);
 
   // What every step answers: the server keeps the day and the snapshot, then the screen moves.
+  // Snapshots go to the server one at a time, in the order they were made: two sent at once
+  // could land out of order and the older one would be what stays.
+  const saving = useRef<Promise<unknown>>(Promise.resolve());
+  const put = (save: NonNullable<SimReply['save']>, still: boolean) => {
+    const sent = saving.current.then(() =>
+      api(
+        `/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}${still ? STILL : ''}`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/octet-stream' },
+          body: save.bytes,
+        },
+      ),
+    );
+    saving.current = sent.catch(() => undefined);
+    return sent;
+  };
   const apply = async (reply: SimReply) => {
-    const save = reply.save;
-    if (save)
-      await api(`/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/octet-stream' },
-        body: save.bytes,
-      });
+    if (reply.save) await put(reply.save, false);
     if (reply.view) setSim(reply.view);
     setBusy(false);
   };
@@ -337,13 +348,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   // A line-up pick: the same day's snapshot. A later step already carries it, so a pick that
   // arrives after the day moved is not an error.
   const keep = useCallback((reply: SimReply) => {
-    const save = reply.save;
-    if (!save) return;
-    api(`/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}${STILL}`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/octet-stream' },
-      body: save.bytes,
-    }).catch(() => undefined);
+    if (reply.save) put(reply.save, true).catch(() => undefined);
   }, []);
 
   // A transfer: the snapshot is kept and the hub shows the new cash and squad.
@@ -806,6 +811,7 @@ const FROM = {
   bought: 'market',
   sold: 'market',
   window: 'market',
+  bid: 'market',
   prize: 'finance',
   season: 'press',
 } as const;
@@ -845,6 +851,12 @@ function noteText(n: InboxItem, sim: SimView): string {
         name: n.player,
         club: n.clubName,
         price: t('career.cash', { value: n.fee }),
+      });
+    case 'bid':
+      return t('inbox.bid', {
+        club: n.clubName,
+        fee: t('career.cash', { value: n.fee }),
+        name: n.player,
       });
     case 'window':
       return t('inbox.window', { open: BOOL[Number(n.open)]! });

@@ -8,11 +8,15 @@
  * `U = N + F + D + R − C − W`: need of the position, fit, growth expected, resale expected,
  * cost against the budget, weight on the wage bill. Every number is a PARÂMETRO.
  */
+import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { movePlayer, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
+import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
-import type { PackPlayer } from '../pack/schema';
+import { note } from '../career/inbox';
+import { WHOLE, cached } from '../lib/pack-cache';
+import type { Pack, PackPlayer } from '../pack/schema';
 import { available, book, wageRoom } from './books';
 import {
   MAX_ROUNDS,
@@ -24,7 +28,7 @@ import {
   type Terms,
 } from './deals';
 import { fitFor, squadPlanOf, type Need } from './plan';
-import { ageOf, levelIn, readingsOf, thousands } from './value';
+import { ageOf, levelIn, marketValue, readingsOf, thousands } from './value';
 
 /** The terms of a buying club's choice, in points. */
 export interface Why {
@@ -52,13 +56,19 @@ export interface Deal {
 }
 
 /** Days between rounds inside a window. */
-export const ROUND_DAYS = 7;
+export const ROUND_DAYS = 14;
 /** Signings a club makes in a season, at most. */
 const SIGNINGS = 4;
 /** A choice must be worth this many points to go to the table. */
 const WORTH_IT = 36;
 /** And the need itself must carry at least this much of it: no buying on promise alone. */
 const REAL_NEED = 14;
+/** Bids for the person's players that may wait for an answer at once. */
+const OPEN_BIDS = 3;
+/** Points a listed player gains in a buyer's eyes. */
+const LISTED = 15;
+/** Days a bid for one of the person's players waits for an answer. */
+export const BID_DAYS = 14;
 /** Deals kept for the market's news. */
 const KEPT = 80;
 const MIN_SQUAD = 20;
@@ -75,6 +85,11 @@ export function utility(
   need: Need,
   price: number,
   wage: number,
+  /** What the club can still pay in fees and add in wages (books.ts), read once by the caller. */
+  means: { money: number; room: number } = {
+    money: available(w, buyerId),
+    room: wageRoom(w, buyerId),
+  },
 ): Why {
   const buyer = { pack: w.pack, clubId: buyerId };
   const club = w.pack.clubs.find((c) => c.id === buyerId)!;
@@ -90,8 +105,8 @@ export function utility(
     // A club that buys ready players (readyVsYoung high) discounts what he may become.
     growth: Math.round((Math.max(0, rise) * 4 * (100 - club.profile.market.readyVsYoung)) / 100),
     resale: age <= 25 ? Math.max(0, rise) * 2 : age > 29 ? -(age - 29) * 3 : 0,
-    cost: Math.round((price * 60) / Math.max(1, available(w, buyerId))),
-    wages: Math.round((wage * 40) / Math.max(1, wageRoom(w, buyerId))),
+    cost: Math.round((price * 60) / Math.max(1, means.money)),
+    wages: Math.round((wage * 40) / Math.max(1, means.room)),
   };
 }
 
@@ -102,6 +117,35 @@ const canLose = (w: CareerWorld, p: PackPlayer) => {
     squad.length > MIN_SQUAD &&
     (!keeper || squad.filter((x) => readingsOf(w.pack).get(x.id)!.keeper).length > MIN_KEEPERS)
   );
+};
+
+/**
+ * Who can play where, best first: for each position, the players who know it (natural or
+ * competent) with their level. Built once per pack and carried across transfers, since a move
+ * changes neither. A club looking for a centre-back reads a few dozen names, not the whole pack.
+ */
+const byPosition = (pack: Pack) =>
+  cached(pack, 'byPosition', WHOLE, () => {
+    const read = readingsOf(pack);
+    const by = new Map<string, { id: string; level: number }[]>();
+    for (const p of pack.players)
+      for (const x of p.positions)
+        if (x.level >= 2)
+          (by.get(x.position) ?? by.set(x.position, []).get(x.position)!).push({
+            id: p.id,
+            level: read.get(p.id)!.level,
+          });
+    for (const list of by.values())
+      list.sort((a, b) => b.level - a.level || (a.id < b.id ? -1 : 1));
+    return by;
+  });
+
+/** The pack's players by id; rebuilt for each pack object (a transfer makes a new one). */
+const byIds = new WeakMap<Pack, Map<string, PackPlayer>>();
+const playersById = (pack: Pack) => {
+  let by = byIds.get(pack);
+  if (!by) byIds.set(pack, (by = new Map(pack.players.map((p) => [p.id, p]))));
+  return by;
 };
 
 interface Choice {
@@ -122,24 +166,49 @@ function choose(
   const clubs = new Map(w.pack.clubs.map((c) => [c.id, c]));
   const money = available(w, buyerId);
   const room = wageRoom(w, buyerId);
+  const bidOn = new Set((w.bids ?? []).map((b) => b.player));
+  const listed = new Set(w.listed ?? []);
   let best: Choice | null = null;
   let score = WORTH_IT - 1;
-  for (const p of w.pack.players) {
-    if (!p.clubId || p.clubId === buyerId || p.clubId === w.clubId || skip.has(p.id)) continue;
+  // Only those who know one of the positions and sit in the level the need asks for.
+  const players = playersById(w.pack);
+  const index = byPosition(w.pack);
+  const seen = new Set<string>();
+  const pool: PackPlayer[] = [];
+  for (const position of need.positions)
+    for (const x of index.get(position) ?? []) {
+      if (x.level > need.wanted + 12) continue;
+      if (x.level < need.wanted - 3) break;
+      if (!seen.has(x.id)) {
+        seen.add(x.id);
+        pool.push(players.get(x.id)!);
+      }
+    }
+  pool.sort((a, b) => (a.id < b.id ? -1 : 1));
+  for (const p of pool) {
+    if (!p.clubId || p.clubId === buyerId || skip.has(p.id)) continue;
+    const theirs = p.clubId === w.clubId;
+    // One bid at a time for a player of the person's, and none from a club already turned away.
+    if (
+      theirs &&
+      (bidOn.size >= OPEN_BIDS || bidOn.has(p.id) || w.cold?.[`${buyerId}:${p.id}`] === season)
+    )
+      continue;
     const r = read.get(p.id)!;
     if (r.keeper !== need.keeper) continue;
-    if (r.level < need.wanted - 3 || r.level > need.wanted + 12) continue;
-    if (!p.positions.some((x) => need.positions.includes(x.position) && x.level >= 2)) continue;
     // Just arrived somewhere: not for sale again this season.
     if (w.moves?.[p.id]?.season === season) continue;
+    // Out of reach whatever the club's mood: a spare still costs 80% of his value.
+    if (marketValue(w.pack, p, season) * 8 > money * 10) continue;
     if (!canLose(w, p)) continue;
     const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, buyerId, season);
     if (stance.floor > money) continue;
     const wants = playerStance(w.pack, p, clubs.get(p.clubId)!, clubs.get(buyerId)!, season);
     if (wants.no || wants.wage > room) continue;
-    const why = utility(w, buyerId, p, need, stance.floor, wants.wage);
+    const why = utility(w, buyerId, p, need, stance.floor, wants.wage, { money, room });
     if (why.need < REAL_NEED) continue;
-    const u = total(why);
+    // A player on the list is easier to get: clubs come for him sooner.
+    const u = total(why) + (theirs && listed.has(p.id) ? LISTED : 0);
     if (u > score || (u === score && best && p.id < best.p.id))
       [best, score] = [{ p, need, why }, u];
   }
@@ -200,26 +269,65 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   };
 }
 
+/** The window a day falls in, as a label: the year and its half. */
+const windowOf = (day: number) => {
+  const iso = isoOf(day);
+  return `${iso.slice(0, 4)}-${iso.slice(5, 7) <= '06' ? 1 : 2}`;
+};
+
 /** One round of the market: each club, in the seed's order, tries one signing. */
 export function marketRound(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
+  if (w.bids?.length) w.bids = w.bids.filter((b) => day - b.day <= BID_DAYS);
   const done: Deal[] = [];
   const signed = new Map<string, number>();
   for (const d of w.deals ?? [])
     if (d.day >= day - 366 && w.moves?.[d.player]?.season === season)
       signed.set(d.to, (signed.get(d.to) ?? 0) + 1);
+  // One draw per round sets the order of the clubs: a number each, in the pack's order.
+  const draw = rngFrom(seedOf(w.seed, `round:${day}`));
   const order = w.pack.clubs
+    .map((c) => ({ id: c.id, at: next(draw) }))
     .filter((c) => c.id !== w.clubId)
-    .map((c) => ({ id: c.id, at: seedOf(w.seed, `round:${day}:${c.id}`) }))
     .sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1));
+  // A club that found nobody worth the table sits out the rest of the window: the market it
+  // read does not change enough in a few weeks to look again.
+  const span = windowOf(day);
+  const idle = new Set(w.idle?.span === span ? w.idle.clubs : []);
   for (const { id } of order) {
-    if ((signed.get(id) ?? 0) >= SIGNINGS) continue;
+    if (idle.has(id) || (signed.get(id) ?? 0) >= SIGNINGS) continue;
     if (squadPlayers({ pack: w.pack, clubId: id }).length >= MAX_SQUAD) continue;
     const tried = new Set<string>();
+    let found = false;
     for (const need of squadPlanOf({ pack: w.pack, clubId: id }).needs.slice(0, 2)) {
       const choice = choose(w, id, need, tried);
       if (!choice) continue;
+      found = true;
       tried.add(choice.p.id);
+      if (choice.p.clubId === w.clubId) {
+        // The person's player: the club bids and waits for the answer.
+        const value = sellerStance({ pack: w.pack, clubId: w.clubId }, choice.p, id, season).value;
+        const most = Math.min(
+          available(w, id),
+          thousands((value * (100 + Math.round(need.urgency / 2))) / 100),
+        );
+        const fee = Math.min(most, thousands((value * 90) / 100));
+        w.bids = [
+          ...(w.bids ?? []),
+          {
+            id: `${day}:${id}:${choice.p.id}`,
+            player: choice.p.id,
+            from: id,
+            fee,
+            most,
+            round: 1,
+            day,
+            why: choice.why,
+          },
+        ];
+        note(w, { day, kind: 'bid', player: choice.p.knownAs ?? choice.p.name, club: id, fee });
+        break;
+      }
       const deal = negotiate(w, id, choice);
       if (!deal) continue;
       movePlayer(w, choice.p, id, {
@@ -231,7 +339,9 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
       signed.set(id, (signed.get(id) ?? 0) + 1);
       break;
     }
+    if (!found) idle.add(id);
   }
+  w.idle = { span, clubs: [...idle].sort() };
   if (done.length) w.deals = [...(w.deals ?? []), ...done].slice(-KEPT);
   return done;
 }
@@ -239,7 +349,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
 /** The rounds due between two days: one every `ROUND_DAYS` while a window is open. */
 export function roundsBetween(from: number, to: number): number[] {
   const days: number[] = [];
-  // A long gap (the turn of the year) plays its last four weeks only.
+  // A long gap (the turn of the year) plays its last four rounds only.
   const start = Math.max(from, to - 4 * ROUND_DAYS);
   for (let k = Math.floor(start / ROUND_DAYS) + 1; k * ROUND_DAYS <= to; k++)
     if (windowOpen(k * ROUND_DAYS)) days.push(k * ROUND_DAYS);

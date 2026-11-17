@@ -36,6 +36,11 @@ interface Saved {
   inbox?: Note[];
   books?: CareerWorld['books'];
   deals?: CareerWorld['deals'];
+  talks?: CareerWorld['talks'];
+  bids?: CareerWorld['bids'];
+  listed?: CareerWorld['listed'];
+  cold?: CareerWorld['cold'];
+  idle?: CareerWorld['idle'];
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -62,6 +67,11 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.inbox && { inbox: w.inbox }),
     ...(w.books && { books: w.books }),
     ...(w.deals && { deals: w.deals }),
+    ...(w.talks && { talks: w.talks }),
+    ...(w.bids && { bids: w.bids }),
+    ...(w.listed && { listed: w.listed }),
+    ...(w.cold && { cold: w.cold }),
+    ...(w.idle && { idle: w.idle }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -96,5 +106,10 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.inbox && { inbox: saved.inbox }),
     ...(saved.books && { books: saved.books }),
     ...(saved.deals && { deals: saved.deals }),
+    ...(saved.talks && { talks: saved.talks }),
+    ...(saved.bids && { bids: saved.bids }),
+    ...(saved.listed && { listed: saved.listed }),
+    ...(saved.cold && { cold: saved.cold }),
+    ...(saved.idle && { idle: saved.idle }),
   };
 }

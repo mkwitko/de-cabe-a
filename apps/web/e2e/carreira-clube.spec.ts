@@ -242,7 +242,9 @@ for (const width of [360, 1280]) {
 }
 
 for (const width of [360, 1280]) {
-  test(`career: buy a player and sell another in the market at ${width} px`, async ({ page }) => {
+  test(`career: negotiate a signing at two tables in the market at ${width} px`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 800 });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -256,41 +258,70 @@ for (const width of [360, 1280]) {
       timeout: 30_000,
     });
     await expect(page.getByText('Janela aberta')).toBeVisible();
-    const market = page.locator('section > div > div').filter({ hasText: 'Jogadores no mercado' });
-    const squad = page.locator('section > div > div').filter({ hasText: 'Seu elenco' });
+    const slab = (title: string) =>
+      page.locator('div.sala-slab').filter({ has: page.getByRole('heading', { name: title }) });
+    const squad = slab('Seu elenco');
     const size = await squad.getByRole('listitem').count();
 
-    // Keepers only, then the first one the cash reaches: two taps close the deal.
-    await market.getByRole('button', { name: 'GOL', exact: true }).click();
-    await expect(market.getByRole('listitem').filter({ hasNotText: 'GOL' })).toHaveCount(0);
-    const first = market.getByRole('listitem').getByRole('button', { disabled: false }).first();
-    const name = (await first.getAttribute('aria-label'))!.split(',')[0]!;
-    const target = market.getByRole('listitem').filter({ hasText: name }).getByRole('button');
-    await target.click();
-    await expect(target).toHaveText(/^Pagar R\$/);
-    const kept = page.waitForResponse(
-      (r) => r.url().includes('still=1') && r.request().method() === 'PUT',
-    );
-    await target.click();
-    await expect(page.getByText(new RegExp(`^${name} contratado junto ao `))).toBeVisible();
-    expect((await kept).status()).toBe(200);
-    await expect(squad.getByRole('listitem')).toHaveCount(size + 1);
-    await expect(squad.getByRole('listitem').filter({ hasText: name })).not.toHaveCount(0);
+    // Keepers only, then the first one willing to talk: the club names its price.
+    await slab('Jogadores no mercado').getByRole('button', { name: 'GOL', exact: true }).click();
+    const rows = slab('Jogadores no mercado').getByRole('listitem');
+    await expect(rows.filter({ hasNotText: 'GOL' })).toHaveCount(0);
+    const open = rows.getByRole('button', { name: /^Negociar / }).and(page.locator(':enabled'));
+    const name = (await open.first().getAttribute('aria-label'))!.split(',')[0]!.slice(9);
+    await open.first().click();
+    const talk = slab('Negociações').getByRole('listitem').filter({ hasText: name });
+    await expect(talk.getByText(/ pede R\$/)).toBeVisible();
 
-    // The signing is in the snapshot: a reload still has him, and he can be sold on.
+    // An offer under the asking price draws a lower counter; paying it closes the fee.
+    const asked = async () =>
+      Number(
+        (await talk.getByText(/ pede R\$/).innerText())
+          .match(/R\$\s?([\d.]+),/)![1]!
+          .replace(/\./g, ''),
+      );
+    const first = await asked();
+    await talk.getByLabel('Sua oferta em reais').fill(String(Math.round(first * 0.75)));
+    await talk.getByRole('button', { name: 'Oferecer' }).click();
+    await expect(page.getByText('O clube não aceitou e fez um novo pedido.')).toBeVisible();
+    expect(await asked()).toBeLessThan(first);
+    await talk.getByRole('button', { name: 'Pagar o pedido' }).click();
+    await expect(page.getByText('Preço fechado. Agora o contrato com o jogador.')).toBeVisible();
+    await expect(talk.getByText(/^Preço fechado com o /)).toBeVisible();
+
+    // The contract: a low wage draws his counter; his ask signs him.
+    await talk.getByLabel('Salário por mês em reais').fill('100');
+    await talk.getByRole('button', { name: 'Propor' }).click();
+    await expect(
+      page.getByText(new RegExp(`${name} não aceitou e fez um novo pedido\\.`)),
+    ).toBeVisible();
+    await talk.getByRole('button', { name: 'Aceitar o pedido' }).click();
+    await expect(page.getByText(`${name} assinou. Negócio fechado.`)).toBeVisible();
+    await expect(squad.getByRole('listitem')).toHaveCount(size + 1);
+    // The snapshots are sent in order; give the last one time to land before the reload.
+    await page.waitForTimeout(1500);
+    await expect(squad.getByRole('listitem')).toHaveCount(size + 1);
+
+    // The signing is in the snapshot and in the accounts.
     await page.reload();
     await page.getByRole('button', { name: 'Mercado' }).click();
     await expect(squad.getByRole('listitem')).toHaveCount(size + 1, { timeout: 30_000 });
-    const mine = squad.getByRole('listitem').filter({ hasText: name }).getByRole('button');
-    await mine.click();
-    await expect(mine).toHaveText(/^Aceitar R\$/);
-    await mine.click();
-    await expect(page.getByText(new RegExp(`^${name} vendido ao `))).toBeVisible();
-    await expect(squad.getByRole('listitem')).toHaveCount(size);
-
-    // The money shows in the season's accounts and the next match still plays.
+    await expect(squad.getByRole('listitem').filter({ hasText: name })).not.toHaveCount(0);
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
     await expect(page.getByText('Transferências')).toBeVisible();
+    await page.getByRole('button', { name: 'Mercado' }).click();
+
+    // Putting a player up for sale marks him; the other clubs' deals are told with their reasons.
+    const mine = squad.getByRole('listitem').first();
+    await mine.getByRole('button', { name: /^Pôr .+ à venda$/ }).click();
+    await expect(mine.getByText('À venda')).toBeVisible();
+    await expect(
+      slab('Negócios entre clubes')
+        .getByText(/^Por quê: necessidade \d+/)
+        .first(),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Sala do técnico' }).click();
     await page.getByRole('button', { name: 'Só o resultado' }).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     const overflow = await page.evaluate(
@@ -349,16 +380,20 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
     .locator('section')
     .filter({ has: page.getByRole('heading', { name: 'Mensagens' }) })
     .last();
-  await expect(inbox.getByRole('listitem')).toHaveCount(1, { timeout: 30_000 });
-  await expect(inbox.getByText('Diretoria')).toBeVisible();
+  // The board's welcome is there from the start (other clubs' bids may be too).
+  await expect(inbox.getByRole('listitem').filter({ hasText: 'Diretoria' })).not.toHaveCount(0, {
+    timeout: 30_000,
+  });
   await page.getByRole('button', { name: 'Só o resultado' }).click();
   const result = inbox.getByRole('listitem').filter({ hasText: 'Imprensa' });
   await expect(result).toHaveCount(1, { timeout: 30_000 });
   const told = await result.innerText();
   const fact = /(Vitória por|Empate em|Derrota por) \d+ a \d+ [^.]+\./.exec(told)?.[0];
   expect(fact).toBeTruthy();
+  const count = await inbox.getByRole('listitem').count();
+  await page.waitForTimeout(1000);
   await page.reload();
-  await expect(inbox.getByRole('listitem')).toHaveCount(2, { timeout: 30_000 });
+  await expect(inbox.getByRole('listitem')).toHaveCount(count, { timeout: 30_000 });
   await expect(inbox.getByRole('listitem').filter({ hasText: 'Imprensa' })).toContainText(fact!);
   expect(errors).toEqual([]);
 });

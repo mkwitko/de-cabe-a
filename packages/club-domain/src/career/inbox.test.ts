@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { nextDecision, openCareer, playDecision, startNextSeason } from './advance';
 import { positionOf } from './board';
-import { cannotBuy, buy, askingPrice } from './market';
+import { sellerStance } from '../market/deals';
+import { bidFee, bidTerms, cannotTalk, openTalk } from '../market/talks';
 import { loadCareer, saveCareer } from './save';
 import { jobOffers } from './start';
 
@@ -23,10 +24,18 @@ describe('the inbox', () => {
       opponent: atHome ? d.away : d.home,
       goals: atHome ? o.goals : [o.goals[1], o.goals[0]],
     });
+    // A signing closed at the two tables is told too.
     const target = w.pack.players
-      .filter((x) => x.clubId && x.clubId !== clubId && cannotBuy(w, x) === null)
-      .sort((a, b) => askingPrice(a, 2026) - askingPrice(b, 2026) || (a.id < b.id ? -1 : 1))[0]!;
-    buy(w, target.id);
+      .filter((x) => x.clubId && x.clubId !== clubId && cannotTalk(w, x) === null)
+      .map((x) => ({
+        x,
+        ask: sellerStance({ pack: w.pack, clubId: x.clubId! }, x, clubId, 2026).asking,
+      }))
+      .filter((t) => t.ask > 0 && t.ask <= w.ledger.cash)
+      .sort((a, b) => a.ask - b.ask || (a.x.id < b.x.id ? -1 : 1))[0]!.x;
+    const talk = openTalk(w, target.id);
+    bidFee(w, target.id, talk.asking);
+    bidTerms(w, target.id, w.talks![target.id]!.wants!);
     expect(w.inbox!.at(-1)).toMatchObject({ kind: 'bought', club: target.clubId, day: w.day });
     expect(loadCareer(pack, 81, clubId, saveCareer(w)).inbox).toEqual(w.inbox);
   });
