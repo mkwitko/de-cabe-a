@@ -129,6 +129,16 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 
     No total os gols ficam perto do `xG`, mas a divisão pela parte livre (`shotClear`) desloca gol de perto para longe. Não muda a média. Fica para depois.
   - **Achado principal em aberto: conduções longas até o chute.** São 5,0 por time por jogo, de 20 m em 4,4 s, a 4,8 m/s. No caminho, os defensores do lado do gol caem de 4,2 para 1,6. A primeira medida (6,7) contava através de bola parada e foi corrigida. Em geral o pressionador está a 1–3 m, mas o desarme só acontece a até 1,4 m (só 9% do tempo da condução no campo adversário). Os defensores da linha só entram no lance a até 1,0 m fora do terço defensivo. Ampliar essa zona para 45 m e 60 m mudou pouco (3,60 e 3,54 contra 3,69, em 300 partidas). Também em aberto: só 3,6 passes completos para dentro da área por time, contra 9,8 chutes de dentro dela. Quem chega à área chuta quase sempre.
+- **Contenção do condutor** (2026-11-17, `58f31ad`, `02` §5.12). Na nossa metade, o defensor de linha mais próximo do lado do gol, a até 6 m, sai para fechar o condutor. Em 2000 partidas: gols 3,61 para 3,44, faltas 10,9 para 12,3, amarelos 2,47 para 2,91 (fora da faixa). Ruído com 600 partidas: cerca de ±0,1 gol. Uma instrumentação que consome sorteio muda a amostra inteira. Cartões por tipo de falta (200 partidas, por time):
+
+  | Tipo | Faltas | Taxa de cartão | Amarelos |
+  |---|---|---|---|
+  | De frente | 5,1 | 0,13 | 0,65 |
+  | Por trás | 4,7 | 0,25 | 1,15 |
+  | Tática | 1,95 | 0,60 | 1,16 |
+  | Aérea | 0,56 | 0,11 | 0,06 |
+
+  Ordem proposta: primeiro as faltas de disputa aérea, que estão baixas. Depois calibrar o cartão por falta, com a Série A em cerca de 0,16 amarelo por falta.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
