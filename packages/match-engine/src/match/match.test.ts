@@ -205,6 +205,41 @@ describe('crosses (02 §6.3)', () => {
   });
 });
 
+describe('the passer judges the pass he plays', () => {
+  it('a pass to a running team-mate is rated where the kick sends it, ahead of him', () => {
+    const s = bare();
+    const c = place(s, 7, 40, 34);
+    const m = place(s, 9, 55, 34);
+    m.vel = { x: 0, y: 6 };
+    // An opponent standing where the ball will meet the runner, nowhere near his current spot.
+    const lead = Math.min(1.5, 15 / 14);
+    place(s, 13, 55, 34 + 6 * lead);
+    const pass = candidates(s, c, 'open').find((a) => a.kind === 'pass' && a.receiver === m)!;
+    expect(pass.target.y).toBeCloseTo(34 + 6 * lead, 1);
+    expect(pass.p).toBeLessThan(0.3);
+  });
+
+  it('nobody plays a team-mate clearly offside', () => {
+    const s = bare();
+    const c = place(s, 7, 60, 34);
+    const m = place(s, 9, 90, 30);
+    place(s, 12, 84, 40);
+    place(s, 13, 84, 28);
+    place(s, 11, 103, 34);
+    const to = candidates(s, c, 'open').filter((a) => a.receiver === m);
+    expect(to).toEqual([]);
+  });
+
+  it('a defender behind a receiver who already stands on the ball does not cut the pass', () => {
+    const s = bare();
+    const c = place(s, 7, 40, 34);
+    const m = place(s, 9, 55, 34);
+    place(s, 13, 58.5, 34);
+    // The race at the end point is the receiver's against the nearest opponent, counted once.
+    expect(passSafety(s, 0, c.pos, m.pos, 12, false, m)).toBeGreaterThan(0.7);
+  });
+});
+
 describe('MC-162, MC-036, MC-163 contests', () => {
   it('a tackle from behind is harder and fouls more', () => {
     const a = base();

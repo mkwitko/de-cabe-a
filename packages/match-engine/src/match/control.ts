@@ -8,7 +8,7 @@ import { rollTime, ROLL_DECEL } from '../ball';
 import { logistic } from '../rules/math';
 import { lineOf } from '../team';
 import { pressResistance } from '../rules/duel';
-import { CENTER, LENGTH, flip, type Vec2 } from '../pitch';
+import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import type { MatchPlayer, MatchState } from './state';
 
 export const kin = (p: MatchPlayer): Kin => kinOf(p.attrs, p.pos, p.vel, p.stamina, p.acute);
@@ -142,7 +142,15 @@ export function passSafety(
     Math.abs(c.pos.x - from.x) + Math.abs(c.pos.y - from.y) < 0.01
   )
     for (const o of opp) safe *= 1 - footBlock(o, c, dx / d, dy / d);
-  const samples = lofted ? [1] : [0.25, 0.5, 0.75, 1];
+  // The end point is a race between the receiver and the nearest opponent (below), counted
+  // once: along the path only the points before it, unless nobody is there to receive.
+  const samples = receiver
+    ? lofted
+      ? []
+      : [0.25, 0.5, 0.75]
+    : lofted
+      ? [1]
+      : [0.25, 0.5, 0.75, 1];
   for (const o of opp) {
     let worst = 0;
     // Already standing in the lane: the ball meets his reach without him moving.
@@ -185,6 +193,20 @@ export function passSafety(
     safe *= logistic((tOpp - tr + 0.2) / 0.3);
   }
   return safe;
+}
+
+/**
+ * Where a pass to a moving team-mate is aimed: where he will be when the ball arrives,
+ * at most 1.5 s ahead (PARAMETERS: 14 m/s along the ground, 18 m/s lofted). The kick and
+ * the passer's estimate both use it, so the passer judges the pass he actually plays.
+ */
+export function leadTarget(from: Vec2, r: MatchPlayer, long: boolean): Vec2 {
+  const d0 = Math.sqrt((r.pos.x - from.x) ** 2 + (r.pos.y - from.y) ** 2);
+  const lead = Math.min(1.5, d0 / (long ? 18 : 14));
+  return {
+    x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5),
+    y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5),
+  };
 }
 
 /** Speed for a ground pass of `d` metres, arriving firm but controllable. PARAMETERS. */

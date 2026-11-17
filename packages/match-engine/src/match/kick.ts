@@ -10,7 +10,7 @@ import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
 import { lineOf } from '../team';
-import { footBlock, groundSpeed, opponents, pressureOn, shotClear } from './control';
+import { footBlock, groundSpeed, leadTarget, opponents, pressureOn, shotClear } from './control';
 import { emit } from './events';
 import type { Action } from './carrier';
 import type { Flight, MatchPlayer, MatchState } from './state';
@@ -117,15 +117,8 @@ const CROSS_ERROR = 1.8;
 export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolean): Flight {
   const from = { ...c.pos };
   // Lead a moving receiver: aim where he will be when the ball arrives (at most 1.5 s ahead).
-  if ((a.kind === 'pass' || a.kind === 'long') && a.receiver) {
-    const r = a.receiver;
-    const d0 = Math.sqrt((r.pos.x - from.x) ** 2 + (r.pos.y - from.y) ** 2);
-    const lead = Math.min(1.5, d0 / (a.kind === 'long' ? 18 : 14));
-    a.target = {
-      x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5),
-      y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5),
-    };
-  }
+  if ((a.kind === 'pass' || a.kind === 'long') && a.receiver)
+    a.target = leadTarget(from, a.receiver, a.kind === 'long');
   const dx = a.target.x - from.x;
   const dy = a.target.y - from.y;
   const d = Math.sqrt(dx * dx + dy * dy) || 1;

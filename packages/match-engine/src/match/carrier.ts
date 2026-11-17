@@ -15,6 +15,7 @@ import { lineOf } from '../team';
 import {
   groundSpeed,
   kin,
+  leadTarget,
   opponents,
   passSafety,
   pressureOn,
@@ -191,13 +192,22 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     // Behind him he knows only what he checked before receiving (scanning, ADR-019).
     const see = inView ? 0.97 : 0.25 + 0.55 * weighted(c.attrs, { scanning: 0.6, vision: 0.4 });
     if (next(r) > see) continue;
-    const mt = toTeam(c, m.pos);
     const long = d > 32;
+    // Judged where the kick sends it: ahead of a moving receiver (leadTarget).
+    const aim = leadTarget(c.pos, m, long);
+    const mt = toTeam(c, aim);
+    // Runs into space start from where he is now.
+    const now = toTeam(c, m.pos);
+    // A team-mate in an offside position is not an option: the passer sees it, more surely
+    // the further off he is (PARAMETERS: 30% at the line, sure 2 m beyond; 02 §6.5).
+    const beyond = now.x - Math.max(oppLine, me.x, LENGTH / 2);
+    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.3 + 0.35 * beyond)) continue;
     // Nobody lofts the ball back towards his own goal: back passes to the box are short and along the ground.
     if (mt.x < 20 && mt.x < me.x && (long || d > 25)) continue;
     const lofted = long || allowed === 'throwIn' || (allowed === 'goalKick' && d > 30);
-    const speed = lofted ? 16 + 0.1 * d : groundSpeed(d);
-    const p = passSafety(s, c.team, c.pos, m.pos, speed, lofted, m) * (lofted ? LOFT_RISK : 1);
+    const ad = Math.sqrt((aim.x - c.pos.x) ** 2 + (aim.y - c.pos.y) ** 2);
+    const speed = lofted ? 16 + 0.1 * ad : groundSpeed(ad);
+    const p = passSafety(s, c.team, c.pos, aim, speed, lofted, m) * (lofted ? LOFT_RISK : 1);
     const forward = mt.x - me.x;
     let bias = 0;
     if (plan.progression === 'vertical' && forward > 8) bias += 0.004;
@@ -210,7 +220,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     const win = valueAt(mt.x, mt.y) * (1 - 0.3 * pressureOn(s, m));
     push({
       kind: lofted ? 'long' : 'pass',
-      target: { ...m.pos },
+      target: aim,
       receiver: m,
       p,
       win,
@@ -226,11 +236,11 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       lineOf(m.role) === 'att' &&
       oppLine > 30 &&
       oppLine < 80 &&
-      mt.x < oppLine - 0.5
+      now.x < oppLine - 0.5
     ) {
       const space = flip(c.team, {
         x: Math.min(oppLine + 10, 86),
-        y: clamp(mt.y + (CENTER.y - mt.y) * 0.2, 6, WIDTH - 6),
+        y: clamp(now.y + (CENTER.y - now.y) * 0.2, 6, WIDTH - 6),
       });
       const od = Math.sqrt((space.x - c.pos.x) ** 2 + (space.y - c.pos.y) ** 2);
       // Both sides see the ball go: the runner gets no head start over the defenders (reacting: false).
@@ -254,12 +264,15 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       allowed === 'open' &&
       lineOf(m.role) !== 'def' &&
       me.x > 35 &&
-      mt.x > me.x + 5 &&
-      mt.x < 90
+      now.x > me.x + 5 &&
+      now.x < 90
     ) {
       if (next(r) > 0.3 + 0.7 * weighted(c.attrs, { vision: 0.6, flair: 0.4 })) continue;
       // Space behind the line, short of the keeper's area (he would claim it).
-      const ahead = flip(c.team, { x: Math.min(mt.x + 9, 93), y: mt.y + (CENTER.y - mt.y) * 0.15 });
+      const ahead = flip(c.team, {
+        x: Math.min(now.x + 9, 93),
+        y: now.y + (CENTER.y - now.y) * 0.15,
+      });
       const td = Math.sqrt((ahead.x - c.pos.x) ** 2 + (ahead.y - c.pos.y) ** 2);
       const ts = groundSpeed(td) * 0.95;
       const tp = passSafety(s, c.team, c.pos, ahead, ts, false, m);
