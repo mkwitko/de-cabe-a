@@ -73,20 +73,29 @@ export function t1(samples: Sample[], team: 0 | 1, dt: number) {
   let sum = 0;
   let count = 0;
   // In a penalty area a player tight on an opponent (within MARKED m) is marking, not
-  // swarming: the box cell counts only the extra bodies (ADR-020).
+  // swarming: the box cell counts only the extra bodies (ADR-020). Each opponent
+  // excuses one player only, so three around one attacker leave two extra.
+  // ponytail: greedy pairing in index order, may count one extra too many in rare
+  // overlaps (stricter, never hides a swarm); use bipartite matching if it matters.
   const counts = samples.map((s) => {
     let n = 0;
     let extra = 0;
+    const used = new Set<number>();
     s.players.forEach((p, i) => {
       if (!inTeam(team)(i) || i === s.holder || i % 11 === 0) return; // the keeper is not a swarm
       const dx = p.x - s.ball.x;
       const dy = p.y - s.ball.y;
       if (dx * dx + dy * dy >= 25) return;
       n++;
-      const marking = s.players.some(
-        (q, j) => !inTeam(team)(j) && (q.x - p.x) ** 2 + (q.y - p.y) ** 2 < MARKED * MARKED,
-      );
-      if (!marking) extra++;
+      let best = -1;
+      let bestD = MARKED * MARKED;
+      s.players.forEach((q, j) => {
+        if (inTeam(team)(j) || used.has(j)) return;
+        const d = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
+        if (d < bestD) [best, bestD] = [j, d];
+      });
+      if (best < 0) extra++;
+      else used.add(best);
     });
     return { n, extra };
   });

@@ -10,9 +10,14 @@ O desenho da defesa perto do gol (`02` §5.12) marca colado, 1 m entre cada atac
 
 ## Decisão
 
-Dentro das áreas, T1 conta só o **excesso**: jogadores a menos de 5 m da bola sem nenhum adversário a menos de `MARKED` (2 m, PARÂMETRO) deles. Quem está colado num adversário está marcando. Fora das áreas T1 não muda. A faixa (4) não muda.
+Dentro das áreas, T1 conta só o **excesso**: jogadores a menos de 5 m da bola sem nenhum adversário a menos de `MARKED` (2 m, PARÂMETRO) deles. Quem está colado num adversário está marcando. Cada adversário vale para um jogador só: três defensores em volta do mesmo atacante contam dois de excesso. Fora das áreas T1 não muda. A faixa (4) não muda.
 
-Teste: cinco defensores, cada um colado num atacante perto da bola na área, dão T1 na área 0; os mesmos cinco sem atacantes dão 5 (`coordination.test.ts`).
+Testes (`coordination.test.ts`):
+
+- Cinco defensores, cada um colado num atacante perto da bola na área, dão T1 na área 0. Os mesmos cinco sem atacantes dão 5.
+- Três defensores em volta de um só atacante dão 2.
+
+O pareamento é guloso, na ordem dos índices. Num caso raro de sobreposição, ele pode contar um excesso a mais. O erro vai para o lado rígido, então nunca esconde um enxame.
 
 ## Consequências
 

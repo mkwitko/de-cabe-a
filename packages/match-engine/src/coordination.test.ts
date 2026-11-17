@@ -129,4 +129,26 @@ describe('T1 in the box counts extra bodies, not markers (ADR-020)', () => {
     expect(t1(run(true), 0, 0.25).maxInBox).toBe(0);
     expect(t1(run(false), 0, 0.25).maxInBox).toBe(5);
   });
+  it('one attacker excuses one defender: three around the same attacker leave two extra', () => {
+    const players = Array.from({ length: 22 }, () => ({ x: 50, y: 34 }));
+    players[1] = { x: 9, y: 33 };
+    players[2] = { x: 10, y: 34 };
+    players[3] = { x: 9, y: 35 };
+    players[12] = { x: 9.2, y: 34 }; // one attacker, within MARKED of all three
+    const s: Sample = {
+      t: 0,
+      ball: { x: 9, y: 34 },
+      possession: 1,
+      holder: null,
+      inFlight: false,
+      players,
+    };
+    expect(
+      t1(
+        Array.from({ length: 12 }, () => s),
+        0,
+        0.25,
+      ).maxInBox,
+    ).toBe(2);
+  });
 });
