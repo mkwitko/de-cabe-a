@@ -87,9 +87,7 @@ Regras:
 
 1. **Lint** (`eslint.config.js`): em `packages/match-engine/src` e `packages/club-domain/src`, fora testes, calibração e scripts, `Math.exp`, `log`, `pow`, trigonometria, `hypot` e `**` com expoente não inteiro são erro. O caminho de jogo da engine já não usava nenhuma; o domínio tinha um `Math.log2`, trocado por um laço exato.
 2. **Script** `pnpm --filter @decabeca/web determinism`: empacota 5 partidas inteiras e uma temporada do pacote grande, roda em Node, Chromium, WebKit e Firefox e compara os hashes. Sai com erro se houver diferença.
-   - Resultado em 2026-11-17: mesmos bits em Node, Chromium e Firefox.
-   - WebKit (o motor do Safari) ainda não rodou: falta instalar dependências do sistema com `sudo npx playwright install-deps webkit`.
-   - Um iPhone real continua sendo a prova final.
+   - Resultado em 2026-11-17: mesmos bits em Node, Chromium, WebKit (o motor do Safari) e Firefox. Um iPhone real continua sendo a prova final.
 3. Ordem de iteração e ordenação já são definidas pela especificação da linguagem (ordenação estável desde 2019). `toString` de números e `Intl` não entram em decisão de jogo.
 
 ## Onde ficam os arquivos: Cloudflare R2 (decidido com o dono em 2026-11-17)
