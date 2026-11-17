@@ -36,7 +36,7 @@ const ROOMS = ['sala', 'vestiario', 'treino', 'mercado', 'diretoria'] as const;
 /** Rooms still waiting for their own plate borrow another room's. */
 const PLATE: Partial<Record<string, string>> = { mercado: 'sala', diretoria: 'sala' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
-const NO_PORTRAIT: readonly string[] = ['treino'];
+const NO_PORTRAIT: readonly string[] = [];
 const STILL = '&still=1';
 const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
