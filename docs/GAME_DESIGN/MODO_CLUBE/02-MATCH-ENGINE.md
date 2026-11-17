@@ -224,6 +224,8 @@ Regras de referência adotadas da simulação 2D da RoboCup (`docs/pesquisa/modo
 
 **Primeira tentativa (2026-11-17, revertida).** Diagnóstico da rotatividade: 0,53 troca de dono por segundo; 56% porque a tarefa some (a lista de perigo muda de membros), 21% troca entre marcadores, 19% jogador sem tarefa. Zona de perigo com marcação colada: gols 3,86 → 3,50 (300 partidas), marcadores a 8,3 m do próprio ponto (antes 9), sem mudança no defensor mais próximo da recepção (3,8 m). Zagueiros marcando na zona: pior (3,68; defensores na área 3,5 → 2,7). Conflito: a prova de coordenação reprova S2 e S3 (T1 na área chega a 5 e 6, faixa ≤ 4) mesmo excluindo da marcação quem está a menos de 8 m da bola, porque marcar colado na área põe defensores junto de atacantes que estão perto da bola. A faixa de T1 na área não tem referência publicada; mudá-la depois de ver o resultado é o tipo de decisão do ADR-018 e fica com o dono. Também em aberto: o marcador segue o atacante em vez de antecipar a corrida (alvo = posição atual), por isso não chega.
 
+**Segunda tentativa (2026-11-17, não entrou).** Com T1 na área contando só excesso (ADR-020, aceito pelo dono), a zona de perigo passa em T1 na área, mas reprova T1 fora da área (4 contra 3) em S2 e o vão da última linha (22,4 a 24,8 m contra 22) em S2 e S3. Começar a zona com a bola mais perto do gol (25 m, 20 m) reduz as falhas e também o ganho (gols 3,61 e 3,75 em 150 partidas). Conclusão: a marcação colada sozinha rende cerca de 10%; o excesso de gols tem outra origem principal ainda não achada.
+
 **Critérios de aceite.**
 - Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
 - Marcador a menos de 2 m do próprio ponto na maior parte do tempo.

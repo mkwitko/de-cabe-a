@@ -8,7 +8,7 @@ import { DT } from './movement';
 import { defaultPlan } from './presets';
 import { anchors, lineOf } from './team';
 import { SCENARIOS, play } from './coordination.scenarios';
-import { BANDS, t1, t2, t3, t5, t9 } from './trajectories';
+import { BANDS, t1, t2, t3, t5, t9, type Sample } from './trajectories';
 
 // Twelve seeds: enough established losses for T9 in every scenario (sample size, not a band).
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -111,5 +111,22 @@ describe('box defence (research 18 H5)', () => {
     const width = (a: { y: number }[]) =>
       Math.max(...a.map((p) => p.y)) - Math.min(...a.map((p) => p.y));
     expect(width(def(near))).toBeLessThan(width(def(far)));
+  });
+});
+
+describe('T1 in the box counts extra bodies, not markers (ADR-020)', () => {
+  const sample = (marked: boolean): Sample => {
+    const players = Array.from({ length: 22 }, () => ({ x: 50, y: 34 }));
+    // Five team-0 outfield players within 5 m of the ball in team 0's box.
+    for (let k = 1; k <= 5; k++) {
+      players[k] = { x: 8 + k * 0.5, y: 32 + k * 0.5 };
+      if (marked) players[11 + k] = { x: 8.8 + k * 0.5, y: 32.6 + k * 0.5 };
+    }
+    return { t: 0, ball: { x: 9, y: 34 }, possession: 1, holder: null, inFlight: false, players };
+  };
+  it('five defenders each tight on an attacker are not a swarm; five loose ones are', () => {
+    const run = (m: boolean) => Array.from({ length: 12 }, () => sample(m));
+    expect(t1(run(true), 0, 0.25).maxInBox).toBe(0);
+    expect(t1(run(false), 0, 0.25).maxInBox).toBe(5);
   });
 });
