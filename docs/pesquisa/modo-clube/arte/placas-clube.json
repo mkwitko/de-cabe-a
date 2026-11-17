@@ -1,0 +1,65 @@
+{
+ "version": 1,
+ "assets": {
+  "sala_h": {
+   "path": "~/de-cabeca-arte/clube/sala-h.png",
+   "width": 1920,
+   "height": 1088,
+   "density": 1,
+   "generate": {
+    "prompt": "Football coach's office at night inside an old stadium, seen from behind the desk. A wide window looks down on an empty floodlit football pitch with mowing stripes; the stands are dark and four floodlight towers glow cold white. Inside the room: a dark wooden desk across the foreground, a green enamel desk lamp on the left casting one warm amber pool of light, a magnetic tactics board on the right wall, a shelf with plain unengraved trophies. Warm lamp against cold floodlight. The window fills the upper half; the lower third is the dark desk top, uncluttered. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 101
+   }
+  },
+  "sala_v": {
+   "path": "~/de-cabeca-arte/clube/sala-v.png",
+   "width": 1088,
+   "height": 1920,
+   "density": 1,
+   "generate": {
+    "prompt": "Football coach's office at night inside an old stadium, seen from behind the desk. A wide window looks down on an empty floodlit football pitch with mowing stripes; the stands are dark and four floodlight towers glow cold white. Inside the room: a dark wooden desk across the foreground, a green enamel desk lamp on the left casting one warm amber pool of light, a magnetic tactics board on the right wall, a shelf with plain unengraved trophies. Warm lamp against cold floodlight. Vertical framing: the window and the pitch fill the upper 40 percent; the lower 60 percent is the dark desk top and shadow, uncluttered. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 102
+   }
+  },
+  "tunel_h": {
+   "path": "~/de-cabeca-arte/clube/tunel-h.png",
+   "width": 1920,
+   "height": 1088,
+   "density": 1,
+   "generate": {
+    "prompt": "Players' tunnel of an old football stadium at night, looking straight out toward the pitch. Concrete walls in dark green paint, a damp concrete floor with soft reflections, one caged wall lamp. At the far end, centred, the bright opening shows the green pitch and a blaze of white floodlights. The opening sits in the centre; the left and right thirds are dark wall. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 103
+   }
+  },
+  "tunel_v": {
+   "path": "~/de-cabeca-arte/clube/tunel-v.png",
+   "width": 1088,
+   "height": 1920,
+   "density": 1,
+   "generate": {
+    "prompt": "Players' tunnel of an old football stadium at night, looking straight out toward the pitch. Concrete walls in dark green paint, a damp concrete floor with soft reflections, one caged wall lamp. At the far end, centred, the bright opening shows the green pitch and a blaze of white floodlights. Vertical framing: the opening sits in the upper third; the lower half is dark floor with a faint reflection. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 104
+   }
+  },
+  "campo_h": {
+   "path": "~/de-cabeca-arte/clube/campo-h.png",
+   "width": 1920,
+   "height": 1088,
+   "density": 1,
+   "generate": {
+    "prompt": "View from the dugout of a football stadium at night, at pitch level. The empty pitch with mowing stripes and white lines stretches away to the far goal; the stands are dark and empty; four floodlight towers shine cold white with soft beams in light haze. The dark edge of the dugout roof frames the top. The horizon sits in the upper third; the lower half is dark grass in shadow. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 105
+   }
+  },
+  "campo_v": {
+   "path": "~/de-cabeca-arte/clube/campo-v.png",
+   "width": 1088,
+   "height": 1920,
+   "density": 1,
+   "generate": {
+    "prompt": "View from the dugout of a football stadium at night, at pitch level. The empty pitch with mowing stripes and white lines stretches away to the far goal; the stands are dark and empty; four floodlight towers shine cold white with soft beams in light haze. The dark edge of the dugout roof frames the top. Vertical framing: floodlights and far stand in the upper third; the lower two thirds are grass falling into shadow. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 106
+   }
+  }
+ }
+}
