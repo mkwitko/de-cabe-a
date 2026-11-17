@@ -17,11 +17,13 @@ import {
   sellerStance,
   type FeeAnswer,
   type PlayerNo,
+  type PlayerStance,
   type SellerMood,
   type Terms,
   type TermsAnswer,
 } from './deals';
 import type { Why } from './rounds';
+import { renew, renewalTerms } from './contracts';
 import { seenLevel } from './judgement';
 import { readingsOf, thousands } from './value';
 
@@ -31,7 +33,8 @@ const MAX_SQUAD = 35;
 /** A talk the person opened to buy a player. */
 export interface Talk {
   player: string;
-  seller: string;
+  /** The club he is at: another club, none (a free agent), or the person's own (a renewal). */
+  seller: string | null;
   /** What he is to the selling club: why the price sits where it does. */
   mood: SellerMood;
   stage: 'fee' | 'terms';
@@ -61,6 +64,9 @@ export interface Bid {
 
 export type TalkNo = 'window' | 'squadFull' | 'theirSquad' | 'cold' | 'justMoved' | PlayerNo;
 
+/** Monthly wage the person's club can still add (books.ts): the board's ceiling. */
+export const myWageRoom = (w: CareerWorld) => wageRoom(w, w.clubId);
+
 const playerOf = (w: CareerWorld, id: string) => w.pack.players.find((p) => p.id === id);
 const clubOf = (w: CareerWorld, id: string) => w.pack.clubs.find((c) => c.id === id)!;
 const keepers = (w: CareerWorld, clubId: string) =>
@@ -78,28 +84,79 @@ const cool = (w: CareerWorld, playerId: string) => {
 
 /** Why the person cannot open a talk for this player now; null when they can. */
 export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
-  if (!windowOpen(w.day)) return 'window';
+  const season = w.season.season;
   if (squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD) return 'squadFull';
-  if (w.cold?.[p.id] === w.season.season) return 'cold';
-  if (w.moves?.[p.id]?.season === w.season.season) return 'justMoved';
+  if (w.cold?.[p.id] === season) return 'cold';
+  // A free agent signs in or out of a window, and asks no club's leave.
+  if (p.clubId === null) return playerStance(w.pack, p, null, clubOf(w, w.clubId), season).no;
+  if (!windowOpen(w.day)) return 'window';
+  if (w.moves?.[p.id]?.season === season) return 'justMoved';
   if (!canLose(w, p)) return 'theirSquad';
-  return playerStance(w.pack, p, clubOf(w, p.clubId!), clubOf(w, w.clubId), w.season.season).no;
+  return playerStance(w.pack, p, clubOf(w, p.clubId), clubOf(w, w.clubId), season).no;
 }
 
-/** Opens a talk: the selling club names its price. */
+/** The contract a player opens with: ten percent over what he would take. */
+const opening = (t: { wage: number; years: number }, role: Terms['role']): Terms => ({
+  wage: Math.round((t.wage * 110) / 100),
+  years: t.years,
+  role,
+});
+
+/**
+ * Opens a talk. For a player of another club, that club names its price; a free agent goes
+ * straight to his contract.
+ */
 export function openTalk(w: CareerWorld, playerId: string): Talk {
   const p = playerOf(w, playerId);
-  if (!p?.clubId || p.clubId === w.clubId) throw new Error('talk: not for sale');
+  if (!p || p.clubId === w.clubId) throw new Error('talk: not for sale');
   const no = cannotTalk(w, p);
   if (no) throw new Error(`talk: ${no}`);
-  const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, w.season.season);
+  const season = w.season.season;
+  let talk: Talk;
+  if (p.clubId === null) {
+    const wants = playerStance(w.pack, p, null, clubOf(w, w.clubId), season);
+    talk = {
+      player: p.id,
+      seller: null,
+      mood: 'surplus',
+      stage: 'terms',
+      round: 0,
+      asking: 0,
+      fee: 0,
+      wants: opening(wants, wants.fair),
+      day: w.day,
+    };
+  } else {
+    const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season);
+    talk = {
+      player: p.id,
+      seller: p.clubId,
+      mood: stance.mood,
+      stage: 'fee',
+      round: 0,
+      asking: stance.asking,
+      day: w.day,
+    };
+  }
+  w.talks = { ...w.talks, [p.id]: talk };
+  return talk;
+}
+
+/** Opens a renewal with one of the person's players: he names what he wants to stay. */
+export function openRenewal(w: CareerWorld, playerId: string): Talk {
+  const p = playerOf(w, playerId);
+  if (p?.clubId !== w.clubId) throw new Error('talk: not yours');
+  if (w.cold?.[p.id] === w.season.season) throw new Error('talk: cold');
+  const wants = renewalTerms(w, p);
   const talk: Talk = {
     player: p.id,
-    seller: p.clubId,
-    mood: stance.mood,
-    stage: 'fee',
+    seller: w.clubId,
+    mood: 'starter',
+    stage: 'terms',
     round: 0,
-    asking: stance.asking,
+    asking: 0,
+    fee: 0,
+    wants: opening(wants, wants.role),
     day: w.day,
   };
   w.talks = { ...w.talks, [p.id]: talk };
@@ -136,18 +193,21 @@ export function bidFee(w: CareerWorld, playerId: string, fee: number): FeeAnswer
         round: 0,
         fee: a.fee,
         // He opens over what he would take, like the club did.
-        wants: { wage: Math.round((wants.wage * 110) / 100), years: wants.years, role: wants.fair },
+        wants: opening(wants, wants.fair),
       },
     };
   }
   return a;
 }
 
-/** The person offers the contract. Agreement closes the deal: fee, wage and all. */
+/**
+ * The person offers the contract. Agreement closes the deal: the fee is paid, he moves (or, in
+ * a renewal, stays) and the new wage starts. The board refuses a wage the bill cannot take.
+ */
 export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsAnswer {
   const talk = w.talks?.[playerId];
   const p = playerOf(w, playerId);
-  if (!talk || talk.stage !== 'terms' || talk.fee === undefined || !p?.clubId)
+  if (!talk || talk.stage !== 'terms' || talk.fee === undefined || !p)
     throw new Error('talk: no fee agreed');
   if (
     !Number.isSafeInteger(terms.wage) ||
@@ -158,18 +218,40 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
   )
     throw new Error('talk: terms');
   if (talk.fee > w.ledger.cash) throw new Error('talk: cash');
+  const renewal = talk.seller === w.clubId;
+  const added = terms.wage - (renewal ? (p.contract?.wage ?? 0) : 0);
+  if (added > myWageRoom(w)) throw new Error('talk: wageCap');
   const season = w.season.season;
-  const wants = playerStance(w.pack, p, clubOf(w, p.clubId), clubOf(w, w.clubId), season);
+  let wants: PlayerStance;
+  if (renewal) {
+    // To stay he asks for his terms and nothing less in role than the plan gives him.
+    const asks = renewalTerms(w, p);
+    wants = {
+      fair: asks.role,
+      wants: 'backup',
+      wage: asks.wage,
+      years: asks.years,
+      no: null,
+      why: { ambition: 0, step: 0, raise: 0 },
+    };
+  } else {
+    const from = talk.seller === null ? null : clubOf(w, talk.seller);
+    wants = playerStance(w.pack, p, from, clubOf(w, w.clubId), season);
+  }
   const round = talk.round + 1;
   const a = answerTerms(wants, terms, round);
   if (a.kind === 'refuse') cool(w, playerId);
   else if (a.kind === 'counter')
     w.talks = { ...w.talks, [playerId]: { ...talk, round, wants: a.terms } };
   else {
-    const seller = p.clubId;
-    settle(w, p, seller, talk.fee, 'buy');
-    movePlayer(w, p, w.clubId, { wage: a.terms.wage, until: `${season + a.terms.years}-12-31` });
-    book(w, seller, w.clubId, talk.fee);
+    if (renewal) renew(w, p, a.terms);
+    else {
+      if (talk.seller !== null) {
+        settle(w, p, talk.seller, talk.fee, 'buy');
+        book(w, talk.seller, w.clubId, talk.fee);
+      }
+      movePlayer(w, p, w.clubId, { wage: a.terms.wage, until: `${season + a.terms.years}-12-31` });
+    }
     dropTalk(w, playerId);
   }
   return a;

@@ -15,6 +15,8 @@ export type Note = { day: number } & (
   | { kind: 'tired'; players: number }
   | { kind: 'bought' | 'sold'; player: string; club: string; fee: number }
   | { kind: 'window'; open: boolean }
+  | { kind: 'contractEnded' | 'contractKept'; player: string }
+  | { kind: 'contractsEnding'; players: number }
   | { kind: 'bid'; player: string; club: string; fee: number }
   | { kind: 'prize'; position: number; amount: number }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }

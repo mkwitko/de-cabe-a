@@ -7,7 +7,16 @@ import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { sellerStance } from './deals';
 import { marketRound } from './rounds';
-import { answerBid, bidFee, bidTerms, cannotTalk, listPlayer, openTalk } from './talks';
+import {
+  answerBid,
+  bidFee,
+  bidTerms,
+  cannotTalk,
+  listPlayer,
+  myWageRoom,
+  openRenewal,
+  openTalk,
+} from './talks';
 
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 5)[0]!.clubId;
@@ -19,7 +28,13 @@ const target = (w: CareerWorld) =>
   w.pack.players
     .filter((p) => p.clubId && !mine(p) && cannotTalk(w, p) === null)
     .map((p) => ({ p, s: sellerStance({ pack: w.pack, clubId: p.clubId! }, p, clubId, 2026) }))
-    .filter((x) => x.s.asking <= w.ledger.cash && x.s.floor > 0)
+    // Affordable at the asking price, and on a wage the board's ceiling takes.
+    .filter(
+      (x) =>
+        x.s.asking <= w.ledger.cash &&
+        x.s.floor > 0 &&
+        (x.p.contract?.wage ?? 0) * 2 <= myWageRoom(w),
+    )
     .sort((a, b) => b.s.asking - a.s.asking || (a.p.id < b.p.id ? -1 : 1))[0]!;
 
 describe('the person buys at two tables', () => {
@@ -70,6 +85,32 @@ describe('the person buys at two tables', () => {
     openTalk(w, p.id);
     expect(() => bidFee(w, p.id, w.ledger.cash + 1000)).toThrow(/cash/);
     expect(w.talks![p.id]).toMatchObject({ stage: 'fee', round: 0 });
+  });
+
+  it('the board refuses a wage the bill cannot take', () => {
+    const w = openCareer(pack, 95, clubId);
+    const { p, s } = target(w);
+    openTalk(w, p.id);
+    bidFee(w, p.id, s.asking);
+    const wants = w.talks![p.id]!.wants!;
+    expect(() => bidTerms(w, p.id, { ...wants, wage: myWageRoom(w) + 1 })).toThrow(/wageCap/);
+    expect(w.talks![p.id]).toMatchObject({ stage: 'terms', round: 0 });
+  });
+
+  it("a renewal is the player's table alone: his ask, a counter, a new end to the contract", () => {
+    const w = openCareer(pack, 95, clubId);
+    const p = w.pack.players.find((x) => x.clubId === clubId)!;
+    const talk = openRenewal(w, p.id);
+    expect(talk).toMatchObject({ seller: clubId, stage: 'terms', fee: 0 });
+    const cash = w.ledger.cash;
+    expect(bidTerms(w, p.id, { ...talk.wants!, wage: 1 }).kind).toBe('counter');
+    const ask = w.talks![p.id]!.wants!;
+    if (ask.wage - p.contract!.wage > myWageRoom(w)) return;
+    expect(bidTerms(w, p.id, ask)).toEqual({ kind: 'accept', terms: ask });
+    const now = w.pack.players.find((x) => x.id === p.id)!;
+    expect(now.clubId).toBe(clubId);
+    expect(now.contract).toMatchObject({ wage: ask.wage, until: `${2026 + ask.years}-12-31` });
+    expect(w.ledger.cash).toBe(cash);
   });
 
   it('an insulting offer shuts the door for the season; talks survive the save', () => {

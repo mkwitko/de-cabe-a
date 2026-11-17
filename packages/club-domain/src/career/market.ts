@@ -16,7 +16,14 @@ import { clubLevel } from './training';
 /** A player's club and contract after a move, by player id. */
 export type Moves = Record<
   string,
-  { clubId: string; wage: number; until: string; /** Season of the move. */ season?: number }
+  {
+    /** His club after the move; null when he was released and has none. */
+    clubId: string | null;
+    wage: number;
+    until: string;
+    /** Season of the move. */
+    season?: number;
+  }
 >;
 
 /** The windows: from the turn of the year to the end of April, and all of July. */
@@ -32,13 +39,17 @@ export function withMoves(pack: Pack, moves: Moves): Pack {
     ...pack,
     players: pack.players.map((p) => {
       const m = moves[p.id];
-      return m
-        ? {
-            ...p,
-            clubId: m.clubId,
-            contract: { wage: m.wage, until: m.until, releaseFee: null },
-          }
-        : p;
+      if (!m) return p;
+      if (m.clubId === null) {
+        // Released: no club and no contract.
+        const { contract: _ended, ...free } = p;
+        return { ...free, clubId: null };
+      }
+      return {
+        ...p,
+        clubId: m.clubId,
+        contract: { wage: m.wage, until: m.until, releaseFee: null },
+      };
     }),
   };
 }
@@ -54,17 +65,33 @@ export function movePlayer(
   to: string,
   contract: { wage: number; until: string },
 ): void {
-  const from = p.clubId!;
+  // A free agent comes from no club; a renewal stays where he is.
+  const from = p.clubId;
+  const touched = [...new Set([from, to])].filter((x): x is string => x !== null);
   const moved = { clubId: to, ...contract, season: w.season.season };
   w.moves = { ...w.moves, [p.id]: moved };
   const before = w.pack;
   w.pack = withMoves(before, { [p.id]: moved });
-  carryCache(before, w.pack, [from, to]);
-  for (const clubId of [from, to]) {
+  carryCache(before, w.pack, touched);
+  for (const clubId of touched) {
     const level = clubLevel(w.pack, clubId);
     w.strength.set(clubId, level.strength);
     w.eleven.set(clubId, level.eleven);
   }
+  if (w.lineup?.xi.includes(p.id)) delete w.lineup;
+}
+
+/** Lets a player go at the end of his contract: he has no club until one signs him. */
+export function releasePlayer(w: CareerWorld, p: PackPlayer): void {
+  const from = p.clubId!;
+  const gone = { clubId: null, wage: 0, until: '', season: w.season.season };
+  w.moves = { ...w.moves, [p.id]: gone };
+  const before = w.pack;
+  w.pack = withMoves(before, { [p.id]: gone });
+  carryCache(before, w.pack, [from]);
+  const level = clubLevel(w.pack, from);
+  w.strength.set(from, level.strength);
+  w.eleven.set(from, level.eleven);
   if (w.lineup?.xi.includes(p.id)) delete w.lineup;
 }
 

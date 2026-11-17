@@ -29,6 +29,8 @@ import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
+import { endingSoon, expireContracts } from '../market/contracts';
+import { isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
 import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
@@ -106,8 +108,13 @@ function playDay(
   const strength = (clubId: string) =>
     clubId === w.clubId ? myStrength(w, training) : rivalStrength(w, clubId, day);
   const cashBefore = w.ledger.cash;
-  if (windowOpen(w.day) !== windowOpen(day))
+  if (windowOpen(w.day) !== windowOpen(day)) {
     note(w, { day, kind: 'window', open: windowOpen(day) });
+    // The last window of the year: a reminder of who is running out of contract.
+    const ending = endingSoon(w).length;
+    if (windowOpen(day) && isoOf(day).slice(5, 7) === '07' && ending > 0)
+      note(w, { day, kind: 'contractsEnding', players: ending });
+  }
   // The clubs trade among themselves before the day's matches: the rounds due since the last day.
   for (const round of roundsBetween(w.day, day)) marketRound(w, round);
   postMonths(w, w.day, day);
@@ -262,6 +269,8 @@ export interface SeasonTurn {
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
   const judged = boardAfterSeason(w);
+  // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
+  expireContracts(w);
   const position = positionOf(w);
   if (!judged.fired)
     note(w, {

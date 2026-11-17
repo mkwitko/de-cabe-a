@@ -45,7 +45,8 @@ export interface Deal {
   day: number;
   player: string;
   name: string;
-  from: string;
+  /** The club he left; null when he was a free agent. */
+  from: string | null;
   to: string;
   fee: number;
   wage: number;
@@ -191,8 +192,10 @@ function choose(
     }
   pool.sort((a, b) => (a.id < b.id ? -1 : 1));
   for (const p of pool) {
-    if (!p.clubId || p.clubId === buyerId || skip.has(p.id)) continue;
+    if (p.clubId === buyerId || skip.has(p.id)) continue;
     const theirs = p.clubId === w.clubId;
+    // Without a club he costs no fee and asks nobody's leave.
+    const free = p.clubId === null;
     // One bid at a time for a player of the person's, and none from a club already turned away.
     if (
       theirs &&
@@ -205,15 +208,23 @@ function choose(
     const sees = r.level + levelError(w.pack, buyerId, p);
     if (sees < need.wanted - 3 || sees > need.wanted + 12) continue;
     // Just arrived somewhere: not for sale again this season.
-    if (w.moves?.[p.id]?.season === season) continue;
+    if (!free && w.moves?.[p.id]?.season === season) continue;
     // Out of reach whatever the club's mood: a spare still costs 80% of his value.
-    if (marketValue(w.pack, p, season) * 6 > money * 10) continue;
-    if (!canLose(w, p)) continue;
-    const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, buyerId, season);
-    if (stance.floor > money) continue;
-    const wants = playerStance(w.pack, p, clubs.get(p.clubId)!, clubs.get(buyerId)!, season);
+    if (!free && marketValue(w.pack, p, season) * 6 > money * 10) continue;
+    if (!free && !canLose(w, p)) continue;
+    const price = free
+      ? 0
+      : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season).floor;
+    if (price > money) continue;
+    const wants = playerStance(
+      w.pack,
+      p,
+      free ? null : clubs.get(p.clubId!)!,
+      clubs.get(buyerId)!,
+      season,
+    );
     if (wants.no || wants.wage > room) continue;
-    const why = utility(w, buyerId, p, need, stance.floor, wants.wage, { money, room });
+    const why = utility(w, buyerId, p, need, price, wants.wage, { money, room });
     if (why.need < REAL_NEED) continue;
     // A player on the list is easier to get: clubs come for him sooner.
     const u = total(why) + (theirs && listed.has(p.id) ? LISTED : 0);
@@ -227,31 +238,39 @@ function choose(
 function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   const season = w.season.season;
   const { p, need } = c;
-  const from = p.clubId!;
+  const from = p.clubId;
   const clubs = new Map(w.pack.clubs.map((x) => [x.id, x]));
-  const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season);
-  // The most the club pays: over what it thinks he is worth by how much it needs him and by
-  // how loose its office is at the table, never over its budget.
-  const hand = bargaining(w.pack, buyerId);
-  const worth = seenValue(w.pack, buyerId, p, season);
-  const most = Math.min(
-    available(w, buyerId),
-    thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
-  );
-  let offer = Math.min(most, thousands((worth * hand.opens) / 100));
-  let fee = -1;
-  for (let round = 1; round <= MAX_ROUNDS && fee < 0; round++) {
-    const a = answerFee(stance, offer, round);
-    if (a.kind === 'accept') fee = a.fee;
-    else if (a.kind === 'refuse') return null;
-    // A sharp office answers a counter with one of its own; the others take a price they can pay.
-    else if (a.fee <= most && round > hand.haggles) offer = a.fee;
-    else if (offer >= most) return null;
-    else offer = Math.min(most, thousands((offer + a.fee) / 2));
+  let fee = from === null ? 0 : -1;
+  if (from !== null) {
+    const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season);
+    // The most the club pays: over what it thinks he is worth by how much it needs him and by
+    // how loose its office is at the table, never over its budget.
+    const hand = bargaining(w.pack, buyerId);
+    const worth = seenValue(w.pack, buyerId, p, season);
+    const most = Math.min(
+      available(w, buyerId),
+      thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
+    );
+    let offer = Math.min(most, thousands((worth * hand.opens) / 100));
+    for (let round = 1; round <= MAX_ROUNDS && fee < 0; round++) {
+      const a = answerFee(stance, offer, round);
+      if (a.kind === 'accept') fee = a.fee;
+      else if (a.kind === 'refuse') return null;
+      // A sharp office answers a counter with one of its own; the others take a price they can pay.
+      else if (a.fee <= most && round > hand.haggles) offer = a.fee;
+      else if (offer >= most) return null;
+      else offer = Math.min(most, thousands((offer + a.fee) / 2));
+    }
   }
   if (fee < 0) return null;
 
-  const wants = playerStance(w.pack, p, clubs.get(from)!, clubs.get(buyerId)!, season);
+  const wants = playerStance(
+    w.pack,
+    p,
+    from === null ? null : clubs.get(from)!,
+    clubs.get(buyerId)!,
+    season,
+  );
   const room = wageRoom(w, buyerId);
   let terms: Terms = {
     wage: Math.min(room, Math.round((wants.wage * 95) / 100)),
@@ -348,7 +367,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         wage: deal.wage,
         until: `${season + deal.years}-12-31`,
       });
-      book(w, deal.from, id, deal.fee);
+      if (deal.from !== null) book(w, deal.from, id, deal.fee);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);
       break;
