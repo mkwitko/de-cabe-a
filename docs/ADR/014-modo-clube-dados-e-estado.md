@@ -26,3 +26,5 @@ Uma carreira tem mais de cem clubes e alguns milhares de jogadores profissionais
 ## Alternativas
 - Linhas por jogador e por carreira: consultável, mas milhares de linhas por carreira e escrita em massa a cada dia de jogo.
 - Documento único com tudo: simples, mas leitura e gravação pesadas em cada toque e sem auditoria financeira.
+
+> Revisado pelo ADR-020 (2026-11-17, MC-201): carreira solo no navegador; o servidor guarda decisões e fotografias compactas.

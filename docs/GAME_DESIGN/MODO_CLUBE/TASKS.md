@@ -179,7 +179,7 @@ Tarefas herdadas da revisão 1. Entram em detalhe (aceite e teste por linha) qua
 | ID | Tarefa | P | Tam | Dep | Aceite | Teste |
 | --- | --- | --- | --- | --- | --- | --- |
 | MC-200 | Bancada de desempenho por etapa acumulada, com processador e memória, em quatro cenários (`TEST_STRATEGY.md` §4.2) | P0 | M | 031 | relatório por etapa com ambiente; falha em piora acima de 15% | o próprio comando |
-| MC-201 | Medir três formas de guardar o mundo (documento único, híbrido relacional, documento partido) com o pacote fictício grande | P0 | G | 014, 081 | tabela com tamanho, tempo de avanço de um dia e de uma temporada, tempo de abertura, custo por mil carreiras; decisão registrada no ADR-014 | script de medição |
+| MC-201 | DONE (2026-11-17; quatro formas medidas, mais a carreira no navegador; decisão no ADR-020; `packages/club-domain/src/bench/world.ts`, `apps/api/src/bench/mc201-storage.ts`). Medir três formas de guardar o mundo (documento único, híbrido relacional, documento partido) com o pacote fictício grande | P0 | G | 014, 081 | tabela com tamanho, tempo de avanço de um dia e de uma temporada, tempo de abertura, custo por mil carreiras; decisão registrada no ADR-014 | script de medição |
 | MC-202 | Atualizações periódicas como funções puras que aceitam intervalo de vários dias (`01` §5.1) | P0 | M | 084 | avançar 30 dias de uma vez = avançar 30 vezes 1 dia, byte a byte | propriedade em teste |
 | MC-203 | Testes de plausibilidade de movimento T1 a T10 sobre quadros | P0 | G | 042 | dez métricas dentro das faixas em 200 partidas | `trajectories.test.ts` |
 | MC-204 | Faixas de referência de forma do time, velocidades e sequências a partir de dados públicos de rastreamento e de eventos | P1 | M | 245 | faixas com fonte e licença registradas; limites declarados | script de extração |
@@ -251,7 +251,7 @@ Retiradas na revisão 4: MC-211 (memória tática) e MC-242 (imprensa), cortadas
 - Economia das Séries B, C e D com fonte só para cotas, público, ingresso e poucos balanços; patrocínio, salários por divisão, juros e transferências abaixo do topo seguem sem fonte.
 - Efeito de comissão sem evidência numérica; pesos fechados por simulação.
 - Formato da Série D de 2027 não publicado.
-- Forma de guardar o mundo ainda não decidida (MC-201).
+- Forma de guardar o mundo decidida no ADR-020 (MC-201): carreira solo no navegador, decisões e fotografias no servidor.
 - Dados públicos de rastreamento têm licença que não cobre uso comercial (MC-245); sem permissão, a calibragem de forma do time depende só de literatura.
 - Taxa de abandono na base brasileira sem fonte; comissão de agente sem teto de regra no Brasil (parâmetro de jogo).
 - Dezessete sistemas, quase todos com versão funda especificada: o risco de escopo cresceu de novo; o corte 1 não mudou de tamanho.
