@@ -340,10 +340,10 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     if (c.input.traits.includes('shootsFromDistance') && far) bias += 0.008;
     // Bodies between him and the goal block part of the mouth (shotClear, the flight's block
     // reach); the keeper is left to the save. He reads that only in part, better with good
-    // decisions (PARAMETER: 30% to 80%, shots per match and xG per shot, 02 §11). xG stays the chance.
+    // decisions (PARAMETER: 0% to 40%, shots per match, 02 §11). xG stays the chance.
     const goal = flip(c.team, { x: LENGTH, y: CENTER.y });
     const clear = shotClear(s, c);
-    const reads = 0.3 + 0.5 * decisions;
+    const reads = 0.4 * decisions;
     push({
       kind: 'shot',
       target: goal,

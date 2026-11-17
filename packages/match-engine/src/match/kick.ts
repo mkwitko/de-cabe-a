@@ -10,7 +10,7 @@ import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
 import { lineOf } from '../team';
-import { footBlock, groundSpeed, opponents, pressureOn } from './control';
+import { footBlock, groundSpeed, opponents, pressureOn, shotClear } from './control';
 import { emit } from './events';
 import type { Action } from './carrier';
 import type { Flight, MatchPlayer, MatchState } from './state';
@@ -223,8 +223,12 @@ export function shoot(
   const header = opts.header ?? false;
   const chance = opts.chance ?? a.chance ?? 0.05;
   const keeper = opponents(s, team).find((p) => lineOf(p.role) === 'gk');
+  // xG already counts the shots that bodies block (the published models are fitted on all
+  // shots); the flight blocks them physically, so a shot that gets through scores at
+  // chance / clear and goals match xG on average (02 §7). Not for a penalty or a header.
+  const through = opts.penalty || header ? 1 : Math.max(0.3, shotClear(s, c));
   const pGoal = clamp(
-    chance *
+    (chance / through) *
       finisherFactor(c, header, flip(team, c.pos).x < LENGTH - 18) *
       (header ? 1 : 1 / footFactor(s, c)) *
       keeperFactor(keeper) *

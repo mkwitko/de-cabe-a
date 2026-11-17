@@ -10,7 +10,8 @@ export const BANDS_11: Record<string, [number, number]> = {
   goals: [2.2, 2.5],
   shotsPerTeam: [12.6, 13.6],
   onTargetPerTeam: [4.0, 4.6],
-  xgPerShot: [0.1, 0.12],
+  // Série A: goals over shots (02 §11; Premier League 0.10 to 0.12 is the secondary reference).
+  xgPerShot: [0.085, 0.1],
   passesPerTeam: [415, 428],
   passCompletion: [0.78, 0.82],
   foulsPerTeam: [13.4, 15.9],

@@ -249,7 +249,7 @@ logit(xG) = b0 + b1 × distância + b2 × ângulo de visão do gol + b3 × cabec
           + b7 × contra-ataque + b8 × bola parada direta
 ```
 
-1a. **Decisão de chutar**: o finalizador decide pela chance vezes a parte da boca do gol que ele vê livre (`shotClear`): cada corpo de linha entre ele e o gol projeta na linha do gol a sombra do mesmo alcance de bloqueio do voo (0,35 a 0,55 m pela `bravura`), mais o passo que dá enquanto a bola viaja (PARÂMETRO: 2 m/s a 23 m/s de chute); o goleiro fica para a defesa. Ele lê essa parte só em parte: de 30% a 80% pela `decisões` (PARÂMETRO calibrado em chutes por jogo e `xG` por chute). O `xG` registrado continua sendo a chance. Calibração (2026-11-16): chutes vistos 80–100% livres são bloqueados 13% das vezes; bloqueios em 26% dos chutes (referência perto de 25%); chutes de fora da área 36% (referência 35 a 40%).
+1a. **Decisão de chutar**: o finalizador decide pela chance vezes a parte da boca do gol que ele vê livre (`shotClear`): cada corpo de linha entre ele e o gol projeta na linha do gol a sombra do mesmo alcance de bloqueio do voo (0,35 a 0,55 m pela `bravura`), mais o passo que dá enquanto a bola viaja (PARÂMETRO: 2 m/s a 23 m/s de chute); o goleiro fica para a defesa. Ele lê essa parte só em parte: de 0% a 40% pela `decisões` (PARÂMETRO calibrado em chutes por jogo da Série A). Como os modelos publicados de `xG` são ajustados sobre todos os chutes, bloqueados inclusive, e o voo bloqueia de verdade, o chute que passa pelos corpos converte a chance dividida pela parte livre (`shotClear`, mínimo 0,3; não vale para pênalti e cabeceio): na média, gols ≈ `xG` (medido: 0,99). O `xG` registrado continua sendo a chance. Calibração (2026-11-16): chutes vistos 80–100% livres são bloqueados 13% das vezes; bloqueios em 26% dos chutes (referência perto de 25%); chutes de fora da área 36% (referência 35 a 40%).
 2. **Execução do chute**: o finalizador escolhe alvo e força; o erro de execução (`finalização`, `técnica`, `compostura`, pé, pressão, fôlego) desloca direção e velocidade. O chute pode sair para fora, ser bloqueado por oclusão ou ir no gol.
 3. **`xG pós-chute`** (FATO: modelo pós-chute, de 0 a 1 por chute no alvo; gols evitados = `xG pós-chute` sofrido menos gols sofridos): probabilidade de gol dada a trajetória real em direção ao gol (colocação, velocidade, distância do goleiro ao ponto de cruzamento). Só existe para chutes no alvo.
 4. **Defesa**: o goleiro resolve contra a trajetória (§6.4).
@@ -372,6 +372,8 @@ Toda frase do relatório é uma afirmação verificável. Cada fator devolvido t
 O time pior pode ganhar, e a engine não protege ninguém (`00-VISAO-E-PRODUTO.md` §8). Caminhos legítimos modelados: bloco baixo e transição contra linha alta; bola parada; goleiro; eficiência acima do `xG`; estado mental (intensidade, compostura, concentração, resposta a jogo grande e a estádio cheio); expulsão e lesão do adversário. A engine não recebe a informação de qual time é do usuário. Suíte Z1 a Z22 em `TEST_STRATEGY.md` §4.
 
 ### Faixas-alvo de calibragem (PARÂMETROS; gols e resultado fechados em `docs/pesquisa/modo-clube/12-calibragem-dados-proprios.md`)
+
+DECISÃO do dono (2026-11-16): a referência de todas as faixas é o Brasileirão Série A; outras ligas entram como referência secundária, citada ao lado, quando faltar dado da Série A ou para comparar. Faixa sem dado da Série A diz de onde veio.
 | Métrica (por partida, times equilibrados) | Faixa inicial |
 |---|---|
 | Gols, primeira divisão | 2,2 a 2,5 por temporada simulada; média de longo prazo 2,40 (FATO: 3.317 partidas da Série A, 2018 a 2026; temporadas entre 2,18 e 2,52) |
@@ -386,7 +388,7 @@ O time pior pode ganhar, e a engine não protege ninguém (`00-VISAO-E-PRODUTO.m
 | Mandante vence, terceira e quarta divisões | C 47,4%; D 45,2%; o mandante faz cerca de 59% dos gols nas quatro divisões (FATO, mesma contagem) |
 | Finalizações por time | 12,6 a 13,6 (FATO: Série A, 2017 a 2023, conjunto de dados comunitário; 2024 e 2025 não encontrados) |
 | No alvo por time | 4,0 a 4,6 (FATO, mesma fonte: cerca de um terço das finalizações) |
-| `xG` por finalização | 0,10 a 0,12 (FATO: conversão de 10,3% a 11,9% na Premier League) |
+| `xG` por finalização | 0,085 a 0,10 (derivado da Série A: 2,2 a 2,5 gols em 12,6 a 13,6 finalizações por time dão conversão de 8,1% a 9,9%, e a longo prazo `xG` ≈ gols; referência secundária, Premier League: 0,10 a 0,12) |
 | `xG` do pênalti | 0,77 a 0,79 (FATO) |
 | Expulsão cedo | cerca de +0,6 `xG` para quem fica com 11 e −0,5 para quem fica com 10 (FATO; teste de cenário) |
 | Corrida intensa nos 15 min finais | queda de cerca de 26% (FATO; valida o modelo de fôlego) |
