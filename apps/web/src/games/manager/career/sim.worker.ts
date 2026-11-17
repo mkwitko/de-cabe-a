@@ -42,6 +42,9 @@ import {
   listPlayer,
   marketValue,
   openTalk,
+  openRenewal,
+  openingWage,
+  myWageRoom,
   squadPlanOf,
   eyeOf,
   MAX_ROUNDS,
@@ -229,7 +232,7 @@ function trainingView(w: CareerWorld): TrainingView {
 
 /** What the person does at the market. */
 export type MarketAct =
-  | { do: 'open' | 'drop'; playerId: string }
+  | { do: 'open' | 'drop' | 'renew'; playerId: string }
   | { do: 'fee'; playerId: string; fee: number }
   | { do: 'terms'; playerId: string; terms: Terms }
   | { do: 'list'; playerId: string; on: boolean }
@@ -247,18 +250,27 @@ export interface MarketPlayer {
   /** His market value. */
   value: number;
   club: ClubFace;
+  /** Without a club: no fee to pay. */
+  free: boolean;
+  /** The year his contract ends; null without one. */
+  until: number | null;
 }
 export interface MarketView {
   open: boolean;
   cash: number;
+  /** Monthly wage the board still lets the club add. */
+  wageRoom: number;
   /** Forty of the other clubs' players for the position asked: those within reach first. */
-  targets: (MarketPlayer & { no: TalkNo | null })[];
+  /** `asks`: the monthly wage he would open with at the person's table. */
+  targets: (MarketPlayer & { no: TalkNo | null; asks: number })[];
   /** The person's squad: what each is to the plan, and who is on the list. */
   mine: (MarketPlayer & { part: SellerMood; listed: boolean })[];
   /** Talks open to buy. */
   talks: {
     player: MarketPlayer;
     mood: SellerMood;
+    /** `buy` from a club, `free` agent, or `renew` one of the person's own. */
+    kind: 'buy' | 'free' | 'renew';
     stage: 'fee' | 'terms';
     /** Offers left before the other side walks away. */
     left: number;
@@ -291,6 +303,8 @@ export interface MarketView {
     | { at: 'no'; reason: string };
 }
 const MARKET_ROWS = 40;
+/** The badge of a player without a club: no name, neutral colours. */
+const NO_CLUB: ClubFace = { name: '', shortName: '', colours: ['#3a4a42', '#9aa59f'] };
 const NEWS_ROWS = 15;
 
 function marketView(w: CareerWorld, position: string | null): MarketView {
@@ -305,20 +319,21 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     rating: bestRoles(p.attributes, 1)[0]!.rating,
     wage: p.contract?.wage ?? 0,
     value: marketValue(w.pack, p, season),
-    club: face(clubs.get(p.clubId!)!),
+    club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
+    free: p.clubId === null,
+    until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
   });
   const plan = squadPlanOf({ pack: w.pack, clubId: w.clubId });
-  const topWage = Math.max(
-    0,
-    ...w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.contract?.wage ?? 0),
-  );
-  const reach = (p: MarketPlayer & { no: TalkNo | null }) =>
-    // A club asks up to 1.7 times the value for a starter it cannot replace.
-    p.no === null && p.value * 17 <= w.ledger.cash * 10 && p.wage <= topWage * 2;
+  const room = myWageRoom(w);
+  // Within reach: willing to talk, a price the cash covers (a club asks up to 1.7 times the
+  // value for a starter it cannot replace) and an asking wage the board's ceiling takes.
+  const reach = (p: MarketPlayer & { no: TalkNo | null; asks: number }) =>
+    p.no === null && (p.free || p.value * 17 <= w.ledger.cash * 10) && p.asks <= room;
   const listed = new Set(w.listed ?? []);
   return {
     open: windowOpen(w.day),
     cash: w.ledger.cash,
+    wageRoom: myWageRoom(w),
     mine: w.pack.players
       .filter((p) => p.clubId === w.clubId)
       .map((p) => ({
@@ -334,12 +349,11 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     targets: w.pack.players
       .filter(
         (p) =>
-          p.clubId &&
           p.clubId !== w.clubId &&
           !w.talks?.[p.id] &&
           (!position || p.positions.some((x) => x.position === position && x.level === 3)),
       )
-      .map((p) => ({ ...row(p), no: cannotTalk(w, p) }))
+      .map((p) => ({ ...row(p), no: cannotTalk(w, p), asks: openingWage(w, p) }))
       // Within reach first: willing to talk, a value the cash covers and a wage near what the
       // club pays. A list of stars nobody here can sign is no market.
       .sort(
@@ -350,6 +364,12 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     talks: Object.values(w.talks ?? {}).map((t) => ({
       player: row(byId.get(t.player)!),
       mood: t.mood,
+      kind:
+        t.seller === null
+          ? ('free' as const)
+          : t.seller === w.clubId
+            ? ('renew' as const)
+            : ('buy' as const),
       stage: t.stage,
       left: MAX_ROUNDS - t.round,
       asking: t.asking,
@@ -368,7 +388,7 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
       .map((d) => ({
         iso: isoOf(d.day),
         name: d.name,
-        from: clubs.get(d.from)?.shortName ?? '',
+        from: d.from === null ? '' : (clubs.get(d.from)?.shortName ?? ''),
         to: clubs.get(d.to)?.shortName ?? '',
         fee: d.fee,
         role: d.role,
@@ -392,6 +412,9 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       return undefined;
     case 'drop':
       dropTalk(w, act.playerId);
+      return undefined;
+    case 'renew':
+      openRenewal(w, act.playerId);
       return undefined;
     case 'list':
       listPlayer(w, act.playerId, act.on);

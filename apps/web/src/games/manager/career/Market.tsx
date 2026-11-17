@@ -38,12 +38,15 @@ function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
             className="size-3 shrink-0 rounded-full border"
             style={{ background: p.club.colours[0], borderColor: p.club.colours[1] }}
           />
-          <span className="font-bold text-chalk">{p.club.shortName}</span>
+          <span className="font-bold text-chalk">
+            {p.free ? t('market.noClub') : p.club.shortName}
+          </span>
         </>
       )}
       <span>{t('squad.age', { n: p.age })}</span>
       <span>{t('market.wage', { wage: money(p.wage) })}</span>
       <span>{t('market.value', { value: money(p.value) })}</span>
+      {p.until !== null && <span>{t('market.until', { year: p.until })}</span>}
     </span>
   );
 }
@@ -123,7 +126,9 @@ function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
           <>
             <p>
               <span className="font-semibold">
-                {t('market.agreed', { club: p.club.shortName, fee: money(talk.fee ?? 0) })}
+                {talk.kind === 'buy'
+                  ? t('market.agreed', { club: p.club.shortName, fee: money(talk.fee ?? 0) })
+                  : t(talk.kind === 'free' ? 'market.freeTalk' : 'market.renewTalk')}
               </span>{' '}
               {t('market.wants', {
                 name: p.name,
@@ -314,6 +319,9 @@ export function Market(props: {
           {view.open ? t('market.open') : t('market.closed')}
         </p>
         <p className="font-semibold tabular-nums">{t('market.cash', { cash: money(view.cash) })}</p>
+        <p className="font-semibold tabular-nums">
+          {t('market.wageRoom', { room: money(Math.max(0, view.wageRoom)) })}
+        </p>
         <p aria-live="polite" className="basis-full font-semibold empty:hidden">
           {view.said && saidText(view.said)}
         </p>
@@ -405,7 +413,10 @@ export function Market(props: {
             <h3 className={LABEL}>{t('market.mine')}</h3>
             <ul>
               {view.mine.map((p) => (
-                <li key={p.id} className="flex items-center gap-3 border-t border-chalk/10 py-2">
+                <li
+                  key={p.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+                >
                   <span className="min-w-0 flex-1">
                     <Head p={p} club={false} />
                     <span className="ml-12 block text-xs font-bold text-chalk">
@@ -415,15 +426,28 @@ export function Market(props: {
                       )}
                     </span>
                   </span>
-                  <button
-                    type="button"
-                    aria-pressed={p.listed}
-                    aria-label={t('market.listFor', { on: BOOL[Number(p.listed)]!, name: p.name })}
-                    className={`min-h-11 w-28 shrink-0 rounded-lg px-2 font-condensed text-base leading-tight font-extrabold uppercase ${p.listed ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk hover:bg-chalk/20'}`}
-                    onClick={() => act({ do: 'list', playerId: p.id, on: !p.listed })}
-                  >
-                    {p.listed ? t('market.unlist') : t('market.list')}
-                  </button>
+                  <span className="flex basis-full gap-2 sm:basis-auto">
+                    <button
+                      type="button"
+                      aria-label={t('market.renewFor', { name: p.name })}
+                      className="min-h-11 flex-1 rounded-lg bg-chalk/10 px-3 font-condensed text-base leading-tight font-extrabold text-chalk uppercase hover:bg-chalk/20"
+                      onClick={() => act({ do: 'renew', playerId: p.id })}
+                    >
+                      {t('market.renew')}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={p.listed}
+                      aria-label={t('market.listFor', {
+                        on: BOOL[Number(p.listed)]!,
+                        name: p.name,
+                      })}
+                      className={`min-h-11 flex-1 rounded-lg px-3 font-condensed whitespace-nowrap text-base leading-tight font-extrabold uppercase ${p.listed ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk hover:bg-chalk/20'}`}
+                      onClick={() => act({ do: 'list', playerId: p.id, on: !p.listed })}
+                    >
+                      {p.listed ? t('market.unlist') : t('market.list')}
+                    </button>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -450,6 +474,7 @@ export function Market(props: {
                       })}
                     </p>
                     <p className="text-sm text-chalk-soft tabular-nums">
+                      {t('market.judged', { seen: d.seen, office: d.office })}{' '}
                       {t('market.why', { ...d.why })}
                     </p>
                   </li>

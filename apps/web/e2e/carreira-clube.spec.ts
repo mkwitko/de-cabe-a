@@ -311,13 +311,19 @@ for (const width of [360, 1280]) {
     await expect(page.getByText('Transferências')).toBeVisible();
     await page.getByRole('button', { name: 'Mercado' }).click();
 
+    // A renewal opens the player's table alone: he says what he wants to stay.
+    const own = squad.getByRole('listitem').nth(1);
+    await own.getByRole('button', { name: /^Renovar o contrato de / }).click();
+    await expect(page.getByText('Renovação: ele diz quanto quer para ficar.')).toBeVisible();
+    await expect(page.getByText(/^Folha: cabe mais R\$/)).toBeVisible();
+
     // Putting a player up for sale marks him; the other clubs' deals are told with their reasons.
     const mine = squad.getByRole('listitem').first();
     await mine.getByRole('button', { name: /^Pôr .+ à venda$/ }).click();
     await expect(mine.getByText('À venda')).toBeVisible();
     await expect(
       slab('Negócios entre clubes')
-        .getByText(/^Por quê: necessidade \d+/)
+        .getByText(/Por quê: necessidade \d+/)
         .first(),
     ).toBeVisible();
 

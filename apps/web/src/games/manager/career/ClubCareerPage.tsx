@@ -33,8 +33,9 @@ const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as c
 type Axis = (typeof AXES)[number];
 const VENUE = ['away', 'home'] as const;
 const ROOMS = ['sala', 'vestiario', 'treino', 'mercado', 'diretoria'] as const;
-/** Rooms still waiting for their own plate borrow another room's. */
-const PLATE: Partial<Record<string, string>> = { mercado: 'sala', diretoria: 'sala' };
+type Plate = Room | 'campo' | 'olheiro';
+/** A room whose plate has another name: the market happens in the scouts' office. */
+const PLATE: Partial<Record<string, Plate>> = { mercado: 'olheiro' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
 const NO_PORTRAIT: readonly string[] = [];
 const STILL = '&still=1';
@@ -460,7 +461,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
   return (
     <div className="flex flex-col gap-5">
-      <Scene plate={(PLATE[room] ?? room) as Room} />
+      <Scene plate={PLATE[room] ?? room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       <ClubBar sim={sim} />
       <nav
@@ -555,7 +556,7 @@ const RESULT_TONE = {
 } as const;
 
 /** One still plate behind the whole page: the coach's office (hub) or the pitch (start). */
-function Scene({ plate }: { plate: Room | 'campo' }) {
+function Scene({ plate }: { plate: Plate }) {
   return (
     <div aria-hidden className="sala-scene">
       <picture>
@@ -812,6 +813,9 @@ const FROM = {
   sold: 'market',
   window: 'market',
   bid: 'market',
+  contractEnded: 'staff',
+  contractKept: 'staff',
+  contractsEnding: 'staff',
   prize: 'finance',
   season: 'press',
 } as const;
@@ -858,6 +862,12 @@ function noteText(n: InboxItem, sim: SimView): string {
         fee: t('career.cash', { value: n.fee }),
         name: n.player,
       });
+    case 'contractEnded':
+      return t('inbox.contractEnded', { name: n.player });
+    case 'contractKept':
+      return t('inbox.contractKept', { name: n.player });
+    case 'contractsEnding':
+      return t('inbox.contractsEnding', { n: n.players });
     case 'window':
       return t('inbox.window', { open: BOOL[Number(n.open)]! });
     case 'prize':

@@ -95,6 +95,13 @@ export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
   return playerStance(w.pack, p, clubOf(w, p.clubId), clubOf(w, w.clubId), season).no;
 }
 
+/** The monthly wage he would open with if the person sat at his table now. */
+export function openingWage(w: CareerWorld, p: PackPlayer): number {
+  const from = p.clubId === null ? null : clubOf(w, p.clubId);
+  const wants = playerStance(w.pack, p, from, clubOf(w, w.clubId), w.season.season);
+  return Math.round((wants.wage * 110) / 100);
+}
+
 /** The contract a player opens with: ten percent over what he would take. */
 const opening = (t: { wage: number; years: number }, role: Terms['role']): Terms => ({
   wage: Math.round((t.wage * 110) / 100),

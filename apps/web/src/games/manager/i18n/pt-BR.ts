@@ -79,6 +79,13 @@ export const ptBR = {
   'market.open': 'Janela aberta',
   'market.closed': 'Janela fechada. Abre de janeiro a abril e em julho.',
   'market.cash': 'Caixa {cash}',
+  'market.wageRoom': 'Folha: cabe mais {room} por mês',
+  'market.noClub': 'Sem clube',
+  'market.until': 'Contrato até {year}',
+  'market.renew': 'Renovar',
+  'market.renewFor': 'Renovar o contrato de {name}',
+  'market.freeTalk': 'Sem clube: não há taxa de transferência.',
+  'market.renewTalk': 'Renovação: ele diz quanto quer para ficar.',
   'market.mine': 'Seu elenco',
   'market.targets': 'Jogadores no mercado',
   'market.position': 'Posição',
@@ -126,7 +133,7 @@ export const ptBR = {
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
-    '{r, select, cash {Seu caixa não cobre esse valor.} window {A janela está fechada.} other {Não foi possível fazer isso agora.}}',
+    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
@@ -136,6 +143,10 @@ export const ptBR = {
     'Por quê: necessidade {need}, encaixe {fit}, evolução {growth}, revenda {resale}, custo −{cost}, folha −{wages}.',
   'market.bought': '{name} contratado junto ao {club} por {price}.',
   'market.sold': '{name} vendido ao {club} por {price}.',
+  'inbox.contractEnded': 'O contrato de {name} acabou e ele deixou o clube.',
+  'inbox.contractKept': '{name} ficou mais um ano: sem ele o elenco não teria gente para jogar.',
+  'inbox.contractsEnding':
+    '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
   'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
   'inbox.empty': 'Nenhuma mensagem ainda.',
   'inbox.ultimatum':
