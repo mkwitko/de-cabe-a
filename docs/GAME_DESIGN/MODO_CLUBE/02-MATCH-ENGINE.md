@@ -192,6 +192,42 @@ Regras de referência adotadas da simulação 2D da RoboCup (`docs/pesquisa/modo
 
 **Prova de coordenação antes de crescer** (MC-246): antes de implementar a tabela de instruções inteira, a engine precisa passar nos testes de trajetória T1, T2, T3, T5 e T9 só com forma do time, atribuição de tarefas e bola por roteiro, em seis cenários fixos. Sem isso, cada instrução nova é ajustada em cima de um movimento coletivo errado. Mecanismos de referência (simulação 2D da RoboCup e outros): `docs/pesquisa/modo-clube/11-simulacao-e-coordenacao.md` itens 1 e 2.
 
+### 5.12 Defesa perto do gol (DESENHO, 2026-11-17; ainda não implementado)
+
+**Por quê.** Com a estimativa de passe corrigida (§5.4), a defesa perto do gol ficou exposta: 3,86 gols por jogo na bancada. Ajustes isolados (segundo pressionador, recomposição, marcação mais colada) tiraram no máximo 10% cada (HANDOFF, 2026-11-17). A causa está na coordenação, não num parâmetro.
+
+**Linha de base medida (bola a até 35 m do nosso gol, sem a bola).**
+- Recepção do adversário a até 22 m do gol: defensor mais próximo a 3,7 m; 1,2 defensor a até 5 m; 3,7 defensores na área; 5,4 defensores não estão entre o recebedor e o gol.
+- Marcação: 1,6 a 2,3 marcadores por instante; cada marcador fica 6,3 m do atacante mais próximo e 9 m do próprio ponto de marcação; 0,8 a 1,1 marcação nova por segundo (cada uma dura 2 a 3 s); só 10% dessas trocas vêm de um evento (passe).
+- Condutor no terço final: defensor mais próximo a 3,7 m, alguém a distância de desarme só 14% do tempo; o pressionador está a 6,1 m e entre o condutor e o gol em 43% das vezes.
+
+**Causas no código.**
+1. A marcação exclui quem está a menos de 8 m da bola e quem está atrás da nossa última linha (`tasksFor`), e o ponto de marcação não desce abaixo da linha (`aboveLine`). Perto do gol, isso deixa sem marcação justamente o recebedor e o atacante entre a linha e o gol.
+2. Zagueiro só marca a menos de 20 m do gol e perto da própria âncora (`assign`, `BOX_MARK_X`, `DEF_RADIUS`). Os meio-campistas pegam pressão, cobertura e zona antes; as marcações sobram sem dono.
+3. A atribuição é gulosa e refeita a cada segundo; a marcação muda de dono antes de o marcador chegar. Causa exata da rotatividade ainda em aberto: candidatas são a lista de perigo que muda de ordem e o erro coletivo (`compliance`) que faz a tarefa reaparecer como nova.
+
+**Regras propostas** (DECISÃO de desenho, PARÂMETROS a calibrar).
+- **Zona de perigo**: com a bola a até 35 m do nosso gol, todo adversário a até 25 m do gol e a até 22 m do eixo do campo é marcado, inclusive o recebedor e quem está atrás da nossa linha. O portador é do pressionador.
+- **Marcação individual que dura**: o dono de uma marcação na zona só a perde quando o marcado sai da zona ou outro companheiro chega claramente antes (margem maior que a da histerese comum, também em evento).
+- **Ponto de marcação**: 1 m entre o atacante e o gol, deslocado 0,8 m para o lado da bola, sem limite pela altura da linha.
+- **Quem pode marcar**: qualquer jogador de linha, zagueiros inclusive; a linha de defesa deixa de defender só por zona dentro da zona de perigo.
+- **Contenção e cobertura**: o defensor mais próximo que já está entre o condutor e o gol fica com a pressão; a cobertura fica 4 a 5 m atrás dele, na linha até o gol.
+- **Zona restante**: quem sobra protege primeiro poste, marca do pênalti e entrada da área.
+
+**Ordem de implementação** (um passo por commit, cada um com teste e comparação pareada contra o anterior).
+1. Instrumentação: as medidas da linha de base viram métricas do resumo da bancada.
+2. Rotatividade: achar a causa e fazer a marcação na zona durar.
+3. Zona de perigo e ponto de marcação.
+4. Zagueiros marcando na zona.
+5. Contenção e cobertura.
+6. Recalibrar a decisão de chutar e a defesa da área (`shotClear`, `SHOT_FOLLOW_UP`), que foram ajustadas sobre o erro de passe.
+
+**Critérios de aceite.**
+- Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
+- Marcador a menos de 2 m do próprio ponto na maior parte do tempo.
+- Gols, chutes e `xG` por chute voltam às faixas de §11.
+- Prova de coordenação (T1 a T10) segue verde: marcar mais não pode virar aglomeração.
+
 ## 6. Execução e disputas
 
 O princípio: **o erro entra na execução, não num sorteio de resultado.** O passe sai com desvio de direção e força; a bola viaja; quem chega primeiro fica com ela.
