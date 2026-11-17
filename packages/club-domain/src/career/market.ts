@@ -15,6 +15,7 @@ import type { Pack, PackPlayer } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
 import type { CareerWorld } from './advance';
 import { clubLevel } from './training';
+import { note } from './inbox';
 
 /** A player's club and contract after a move, by player id. */
 export type Moves = Record<string, { clubId: string; wage: number; until: string }>;
@@ -94,6 +95,13 @@ function move(w: CareerWorld, p: PackPlayer, to: string, fee: number, kind: 'buy
     amount: kind === 'buy' ? -fee : fee,
     day: w.ledger.today,
     dueDay: w.ledger.today,
+  });
+  note(w, {
+    day: w.day,
+    kind: kind === 'buy' ? 'bought' : 'sold',
+    player: p.knownAs ?? p.name,
+    club: kind === 'buy' ? from : to,
+    fee,
   });
   for (const clubId of [from, to]) {
     const level = clubLevel(w.pack, clubId);

@@ -51,7 +51,10 @@ describe('season turn (MC-172 in the career)', () => {
     expect(turn.titles.length).toBeGreaterThanOrEqual(4);
     expect(w.season.season).toBe(2027);
     expect(Object.values(w.season.members).flat().length).toBeGreaterThanOrEqual(156);
-    expect(w.ledger.cash).toBe(cash);
+    // The money carries over; the only new entry is the prize for the final position.
+    const prize = w.ledger.entries.filter((e) => e.kind === 'prize');
+    expect(prize).toHaveLength(1);
+    expect(w.ledger.cash).toBe(cash + prize[0]!.amount);
     const d = nextDecision(w);
     expect(d.kind).toBe('match');
     if (d.kind === 'match') expect(isoOf(d.day).startsWith('2027')).toBe(true);

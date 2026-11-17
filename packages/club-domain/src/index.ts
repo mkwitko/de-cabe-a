@@ -30,5 +30,6 @@ export * from './career/squad';
 export * from './career/training';
 export * from './career/market';
 export * from './career/board';
+export * from './career/inbox';
 export { attendance, tierOf } from './career/finance';
 export * from './match/moments';

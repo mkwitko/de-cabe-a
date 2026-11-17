@@ -24,8 +24,10 @@ import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
-import type { Moves } from './market';
-import { boardAfterMatch, boardAfterSeason, goalFor, type Board } from './board';
+import { windowOpen, type Moves } from './market';
+import { note, type Note } from './inbox';
+import { postPrize } from './finance';
+import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
 import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
@@ -59,6 +61,8 @@ export interface CareerWorld {
   moves?: Moves;
   /** The board's goal and confidence; absent before the person's first match (board.ts). */
   board?: Board;
+  /** What happened, newest last (inbox.ts). */
+  inbox?: Note[];
 }
 
 export type Decision =
@@ -84,6 +88,9 @@ function playDay(
   let training = trainingOn(w, day);
   const strength = (clubId: string) =>
     clubId === w.clubId ? myStrength(w, training) : rivalStrength(w, clubId, day);
+  const cashBefore = w.ledger.cash;
+  if (windowOpen(w.day) !== windowOpen(day))
+    note(w, { day, kind: 'window', open: windowOpen(day) });
   postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
@@ -96,12 +103,27 @@ function playDay(
     if (m.home === w.clubId || m.away === w.clubId) {
       postHomeMatch(w, id, day);
       training = tire(training, lineupOf(w).xi);
+      const atHome = m.home === w.clubId;
+      note(w, {
+        day,
+        kind: 'result',
+        opponent: atHome ? m.away : m.home,
+        goals: atHome ? [o.goals[0], o.goals[1]] : [o.goals[1], o.goals[0]],
+      });
+      const spent = Object.values(training.fresh).filter((f) => f < 0.5).length;
+      if (spent >= 3) note(w, { day, kind: 'tired', players: spent });
+      const before = w.board;
       w.board = boardAfterMatch(w, m, o);
+      if (w.board.ultimatum && !before?.ultimatum)
+        note(w, { day, kind: 'ultimatum', ...w.board.ultimatum });
+      if (w.board.last?.some((r) => r.kind === 'ultimatumMet'))
+        note(w, { day, kind: 'ultimatumMet' });
     }
   }
   w.training = training;
   w.day = day;
   advanceLedger(w.ledger, day);
+  if (cashBefore >= 0 && w.ledger.cash < 0) note(w, { day, kind: 'cashRed' });
   return out;
 }
 
@@ -115,6 +137,7 @@ const clubPlays = (w: CareerWorld, day: number) =>
 export function openCareer(pack: Pack, seed: number, clubId: string, day = 0): CareerWorld {
   const start = startCareer(pack, seed, clubId);
   const w: CareerWorld = { pack, seed, ...start, day: 0, ...clubLevels(pack) };
+  note(w, { day: 0, kind: 'welcome' });
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
   w.day = day;
   return w;
@@ -220,6 +243,19 @@ export interface SeasonTurn {
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
   const judged = boardAfterSeason(w);
+  const position = positionOf(w);
+  if (!judged.fired)
+    note(w, {
+      day: w.day,
+      kind: 'goal',
+      met: position <= judged.goal,
+      position,
+      goal: judged.goal,
+    });
+  const prize = postPrize(w, position, divisionTable(w).rows.length);
+  if (prize > 0) note(w, { day: w.day, kind: 'prize', position, amount: prize });
+  const played = w.season.season;
+  const divisionId = w.season.competitions.find((c) => c.name === divisionTable(w).name)?.id;
   const year = w.season.season + 1;
   const t = finishSeason(w.season, regulationsFor(w.pack.competitions, year));
   w.season = startSeason(w.pack, {
@@ -229,6 +265,13 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     slots: t.slots,
     previous: w.season.results,
     ranking: w.season.ranking,
+  });
+  note(w, {
+    day: w.day,
+    kind: 'season',
+    season: played,
+    champion: t.titles.find((x) => x.competitionId === divisionId)?.clubId ?? '',
+    move: t.moves.find((m) => m.clubId === w.clubId)?.kind ?? 'stay',
   });
   // The goal is set again for the table the club is now in.
   w.board = { ...judged, goal: goalFor(w) };

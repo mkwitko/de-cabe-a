@@ -13,6 +13,9 @@ import { nationalDivisions } from './start';
  * PARÂMETRO by national tier (04 §4, table "Milhões de reais por temporada", middle of each
  * range): TV and quotas per season, and the average ticket price.
  */
+/** Share of a season's TV money paid as prize to the champion; the last place gets 1/n of it. */
+const PRIZE_SHARE = 4;
+
 const BY_TIER: Record<number, { tv: number; ticket: number }> = {
   1: { tv: 120_000_000, ticket: 60 },
   2: { tv: 14_500_000, ticket: 30 },
@@ -85,4 +88,24 @@ export function postHomeMatch(w: CareerWorld, matchId: string, day: number) {
     day,
     dueDay: day,
   });
+}
+
+/**
+ * Prize for the final position in the division (or the group), paid at the season's end: the
+ * champion takes a quarter of the tier's TV money, each place below a step less. Returns it.
+ */
+export function postPrize(w: CareerWorld, position: number, places: number): number {
+  if (position < 1 || places < 1) return 0;
+  const top = BY_TIER[tierOf(w)]!.tv / PRIZE_SHARE;
+  const amount = Math.round((top * (places - position + 1)) / places / 1000) * 1000;
+  if (amount > 0)
+    postEntry(w.ledger, {
+      key: `prize:${w.season.season}`,
+      kind: 'prize',
+      ref: `season:${w.season.season}`,
+      amount,
+      day: w.ledger.today,
+      dueDay: w.ledger.today,
+    });
+  return amount;
 }
