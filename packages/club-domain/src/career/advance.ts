@@ -20,10 +20,12 @@ import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { clubStrength, quickResult } from '../match/quick';
 import { matchInputFor } from '../match/fixture-input';
-import { coachOf } from '@decabeca/match-engine';
+import { coachOf, defaultPlan } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
+import { lineupStrength, type Lineup } from './squad';
+import { teamForMatch } from '../match/lineup';
 
 export interface CareerWorld {
   pack: Pack;
@@ -34,6 +36,8 @@ export interface CareerWorld {
   /** Last day whose matches are all played (0 before the first). */
   day: number;
   strength: Map<string, number>;
+  /** The eleven the person picked; absent while the coach's choice stands (squad.ts). */
+  lineup?: Lineup;
 }
 
 export type Decision =
@@ -53,17 +57,15 @@ function playDay(
   given?: { id: string; outcome: Outcome },
 ): Map<string, Outcome> {
   const out = new Map<string, Outcome>();
+  const strength = (clubId: string) =>
+    clubId === w.clubId && w.lineup ? lineupStrength(w, w.lineup) : (w.strength.get(clubId) ?? 50);
   postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     const o =
       given?.id === id
         ? given.outcome
-        : quickResult(
-            seedOf(w.seed, id),
-            w.strength.get(m.home) ?? 50,
-            w.strength.get(m.away) ?? 50,
-          );
+        : quickResult(seedOf(w.seed, id), strength(m.home), strength(m.away));
     record(w.season, id, o);
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) postHomeMatch(w, id, day);
@@ -127,12 +129,15 @@ export function playDecision(
 /**
  * The person's match for the match engine (level 1): the same input every club gets
  * (fixture-input.ts), with the person's coach keeping the plan, since they command it live
- * (02 §10). `mine` is the person's side in the input.
+ * (02 §10), and with the eleven they picked, if any. `mine` is the person's side in the input.
  */
 export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>) {
   const input = matchInputFor(w.pack, w.season, d.matchId);
   const mine: 0 | 1 = d.home === w.clubId ? 0 : 1;
-  input.teams[mine] = { ...input.teams[mine], coach: coachOf(60, { flexibility: 1 }) };
+  const team = w.lineup
+    ? teamForMatch(w.pack, w.clubId, defaultPlan(w.lineup.formation), w.lineup.xi)
+    : input.teams[mine];
+  input.teams[mine] = { ...team, coach: coachOf(60, { flexibility: 1 }) };
   return { input, mine };
 }
 

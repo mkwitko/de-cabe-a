@@ -17,7 +17,7 @@ import { teamForMatch } from './lineup';
 
 /** PARÂMETRO until the tactics tasks: each club keeps one of the three presets, by id. */
 const PRESETS = ['4-3-3', '4-4-2', '4-2-3-1'] as const;
-const formationOf = (clubId: string) =>
+export const formationOf = (clubId: string) =>
   PRESETS[[...clubId].reduce((s, ch) => s + ch.charCodeAt(0), 0) % PRESETS.length]!;
 
 export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInput {

@@ -2,6 +2,7 @@
  * From a pack club to the engine's team input (corte 0,5 friendly match): the
  * coach picks the eleven that fit the plan's roles best, then a bench of seven
  * with a keeper. Greedy by role rating, deterministic (ties by player id).
+ * `xi` (career/squad.ts) names the eleven instead, one per role of the plan, in order.
  */
 import {
   coachOf,
@@ -29,7 +30,12 @@ const toInput = (p: PackPlayer): PlayerInput => ({
   familiarity: 1,
 });
 
-export function teamForMatch(pack: Pack, clubId: string, plan: TacticalPlan): TeamInput {
+export function teamForMatch(
+  pack: Pack,
+  clubId: string,
+  plan: TacticalPlan,
+  chosen?: readonly string[],
+): TeamInput {
   const squad = pack.players
     .filter((p) => p.clubId === clubId)
     .sort((a, b) => (a.id < b.id ? -1 : 1));
@@ -37,10 +43,12 @@ export function teamForMatch(pack: Pack, clubId: string, plan: TacticalPlan): Te
   const left = new Set(squad.map((p) => p.id));
   const xi: PackPlayer[] = [];
   // Slots in plan order; the keeper slot first so nobody else is spent there.
-  for (const role of plan.roles) {
-    let best: PackPlayer | null = null;
+  for (const [slot, role] of plan.roles.entries()) {
+    let best: PackPlayer | null =
+      squad.find((p) => p.id === chosen?.[slot] && left.has(p.id)) ?? null;
+    if (chosen && !best) throw new Error(`lineup: no player for slot ${slot}`);
     let score = -Infinity;
-    for (const p of squad) {
+    for (const p of chosen ? [] : squad) {
       if (!left.has(p.id)) continue;
       const keeper = p.positions.some((x) => x.position === 'GK');
       if ((role === 'goalkeeper' || role === 'sweeperKeeper') !== keeper) continue;

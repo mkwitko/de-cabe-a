@@ -10,6 +10,7 @@ import { createLedger, type LedgerEntry } from '../finance/ledger';
 import { clubStrength } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import type { CareerWorld } from './advance';
+import type { Lineup } from './squad';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
@@ -22,6 +23,8 @@ interface Saved {
   day: number;
   season: unknown;
   ledger: { today: number; entries: LedgerEntry[] };
+  /** The person's eleven; absent while the coach picks (squad.ts). */
+  lineup?: Lineup;
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -41,6 +44,7 @@ export function saveCareer(w: CareerWorld): string {
     day: w.day,
     season: { ...w.season, calendar },
     ledger: { today: w.ledger.today, entries: w.ledger.entries },
+    ...(w.lineup && { lineup: w.lineup }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -67,5 +71,6 @@ export function loadCareer(pack: Pack, seed: number, clubId: string, json: strin
     ledger: createLedger(saved.ledger.today, saved.ledger.entries),
     day: saved.day,
     strength: clubStrength(pack),
+    ...(saved.lineup && { lineup: saved.lineup }),
   };
 }
