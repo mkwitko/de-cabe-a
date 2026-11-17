@@ -35,7 +35,7 @@ import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
 import { acuteLoad, drain, recover } from '../rules/stamina';
 import { ACUTE_LOSS, fatigue } from '../kinematics';
-import { foulChance, cardFor } from '../rules/discipline';
+import { aerialFoulChance, foulChance, cardFor } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { readTheGame, substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
@@ -458,11 +458,13 @@ export function foul(
   c: MatchPlayer,
   behind: boolean,
   tactical = false,
+  aerial = false,
 ) {
   s.teams[d.team].stats.fouls++;
   emit(s, 'foul', d.team, d.index, c.index, c.pos, {
     behind: behind ? 1 : 0,
     ...(tactical ? { tactical: 1 } : {}),
+    ...(aerial ? { aerial: 1 } : {}),
   });
   const cg = flip(c.team, c.pos);
   // Promising attack and last man (02 §6.5 cartão).
@@ -765,11 +767,18 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
   );
 }
 
+const AERIAL_CLOSE = 0.5;
 function aerial(s: MatchState, first: MatchPlayer) {
   const f = s.flight!;
   const at = { x: f.ball.x, y: f.ball.y };
+  // In the duel: those within reach, and opponents who get under the ball while it drops
+  // (PARAMETER: AERIAL_CLOSE seconds of arrival, the time a high ball takes to come down).
   const near = s.players.filter(
-    (p) => p.active && dist(p.pos, at) < 1.8 && lineOf(p.role) !== 'gk',
+    (p) =>
+      p.active &&
+      lineOf(p.role) !== 'gk' &&
+      (dist(p.pos, at) < 1.8 ||
+        (p.team !== first.team && arrivalTime(kin(p), at, true) < AERIAL_CLOSE)),
   );
   // Uncontested and not too high: chest or thigh control (02 §6 recepção). PARAMETER.
   // Above the chest in the shooting zone an attacker heads it first time: there
@@ -807,6 +816,21 @@ function aerial(s: MatchState, first: MatchPlayer) {
     }
   }
   s.lastTouch = win.index;
+  // Contested: the nearest opponent of the winner may push or climb on him (02 §6.5).
+  // In his own box a defender holds back: it would be a penalty (as in the tackle, 0.15).
+  const loser = near
+    .filter((p) => p.team !== win.team)
+    .sort((a, b) => dist(a.pos, win.pos) - dist(b.pos, win.pos) || a.index - b.index)[0];
+  if (
+    loser &&
+    next(s.rngs.referee) <
+      aerialFoulChance(loser) *
+        (loser.cards === 1 ? 0.6 : 1) *
+        (inOwnBox(loser.team, win.pos) ? 0.15 : 1)
+  ) {
+    foul(s, loser, win, false, false, true);
+    return;
+  }
   const t = flip(win.team, win.pos);
   // Attacking header near goal: a shot (02 §6.3).
   if (win.team === kicker.team && t.x > LENGTH - 14 && Math.abs(t.y - CENTER.y) < 10) {
@@ -945,8 +969,7 @@ function chaseLooseBall(s: MatchState) {
       // The keeper comes for balls in his box, and beyond it as far as his sweeping allows (ADR-019).
       const g = flip(team, m.pt);
       const sweeper = g.x < 16.5 + 15 * norm(p.attrs.sweeping) && Math.abs(g.y - CENTER.y) < 25;
-      if (lineOf(p.role) === 'gk' ? !(inOwnBox(team, m.pt) || sweeper) : inOwnBox(team, m.pt))
-        continue;
+      if (lineOf(p.role) === 'gk' && !(inOwnBox(team, m.pt) || sweeper)) continue;
       if (m.t < bt) {
         bt = m.t;
         best = p;

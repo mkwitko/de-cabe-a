@@ -21,6 +21,14 @@ export function foulChance(d: Tackler, behind: boolean, won: boolean): number {
   );
 }
 
+/**
+ * Chance the loser of a contested aerial duel fouls (02 §6.5 carga, puxão): a push or
+ * a climb on the opponent. PARAMETERS calibrated on fouls per team (02 §11).
+ */
+export function aerialFoulChance(d: Tackler): number {
+  return 0.06 + 0.1 * norm(d.attrs.aggression);
+}
+
 export interface FoulContext {
   behind: boolean;
   promising: boolean;
