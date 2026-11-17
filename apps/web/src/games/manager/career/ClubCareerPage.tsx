@@ -329,16 +329,32 @@ function Home({ career }: { career: Career }) {
       .catch((err: Error) => setError(err.message));
   };
 
+  const [tunnel, setTunnel] = useState(false);
   const watch = (mode: Watch) => {
     if (!ask) return;
     setBusy(true);
-    ask({ type: 'matchStart' })
-      .then((r) => {
+    setTunnel(true);
+    // The walk out of the tunnel covers the worker getting the match ready; never shorter.
+    const walk = new Promise((r) => setTimeout(r, reducedMotion() ? 300 : 1100));
+    Promise.all([ask({ type: 'matchStart' }), walk])
+      .then(([r]) => {
         if (!r.match) throw new Error('no match');
         setWatching({ watch: mode, ...r.match, key: Date.now() });
       })
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setTunnel(false));
   };
+
+  // The club's colour lights the stage behind every panel.
+  const colour = sim?.club.colours[0];
+  useEffect(() => {
+    if (!colour) return;
+    const root = document.documentElement;
+    root.style.setProperty('--club-a', colour);
+    return () => {
+      root.style.removeProperty('--club-a');
+    };
+  }, [colour]);
 
   const source = useMemo<MatchSource | null>(
     () =>
@@ -383,154 +399,43 @@ function Home({ career }: { career: Career }) {
     );
   const net = sim.money.reduce((sum, m) => sum + m.amount, 0);
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
-  const label = 'font-condensed text-sm font-extrabold tracking-wide text-club-gold uppercase';
   return (
-    <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="flex min-w-0 flex-col gap-4">
-        <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <Crest club={sim.club} size="xl" />
-          <div className="min-w-0 flex-1">
-            <h2 className="font-condensed text-3xl leading-[0.9] font-black uppercase sm:text-5xl">
-              {sim.club.name}
-            </h2>
-            <p className="mt-1 text-chalk-soft">
-              {t('career.where', { division: sim.division, season: sim.season })}
-            </p>
-          </div>
-          <p className="flex basis-full flex-col sm:basis-auto sm:items-end">
-            <span className={label}>{t('career.cashLabel')}</span>
-            <span
-              className={`font-condensed text-3xl font-extrabold tabular-nums ${sim.cash < 0 ? 'text-club-danger' : ''}`}
+    <div className="flex flex-col gap-4">
+      {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
+      <ClubBar sim={sim} />
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex min-w-0 flex-col gap-4">
+          {sim.turn && (
+            <p
+              aria-live="polite"
+              className="rounded-2xl border-l-4 border-club-gold bg-club-panel p-4 text-lg"
             >
-              {t('career.cash', { value: sim.cash })}
-            </span>
-          </p>
-        </header>
-
-        {sim.turn && (
-          <p
-            aria-live="polite"
-            className="rounded-2xl border-l-4 border-club-gold bg-club-panel p-4 text-lg"
-          >
-            {t('career.turn', {
-              season: sim.turn.season,
-              champion: sim.turn.champion,
-              move: sim.turn.move,
-            })}
-          </p>
-        )}
-
-        <section
-          aria-labelledby="career-next"
-          className="relative overflow-hidden rounded-2xl bg-club-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-chalk/10"
-        >
-          {sim.next && (
-            <div
-              aria-hidden
-              className="absolute inset-0 opacity-90"
-              style={slabs(sim.next.home, sim.next.away)}
-            />
+              {t('career.turn', {
+                season: sim.turn.season,
+                champion: sim.turn.champion,
+                move: sim.turn.move,
+              })}
+            </p>
           )}
-          <div className="relative flex flex-col gap-5 bg-club-night/55 p-4 sm:p-6">
-            <h3 id="career-next" className={label}>
-              {t('career.next')}
-            </h3>
-            {sim.next ? (
-              <>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
-                  {[sim.next.home, sim.next.away].map((c, k) => (
-                    <div
-                      key={k}
-                      className={`flex flex-col items-center gap-2 text-center ${k === 0 ? 'order-1' : 'order-3'}`}
-                    >
-                      <Crest club={c} size="xl" />
-                      <span className="font-condensed text-lg leading-tight font-extrabold uppercase sm:text-2xl">
-                        <span className="sm:hidden">{c.shortName}</span>
-                        <span className="hidden sm:inline">{c.name}</span>
-                      </span>
-                    </div>
-                  ))}
-                  <div className="order-2 flex flex-col items-center gap-1 rounded-xl bg-club-night/90 px-3 py-2 text-center">
-                    <span className="font-condensed text-3xl font-black text-club-gold">×</span>
-                    <span className="text-sm font-bold">
-                      {t('career.dateLong', { d: new Date(`${sim.next.iso}T12:00:00Z`) })}
-                    </span>
-                    <span className="text-xs text-chalk-soft">
-                      {t('career.venue', { v: VENUE[Number(sim.next.atHome)]! })}
-                    </span>
-                  </div>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={btnPrimary}
-                    onClick={() => watch('full')}
-                  >
-                    {t('career.watchFull')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={`${btnSecondary} bg-club-night/80`}
-                    onClick={() => watch('highlights')}
-                  >
-                    {t('career.watchHighlights')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={`${btnSecondary} bg-club-night/80`}
-                    onClick={() => step('play')}
-                  >
-                    {t('career.play')}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-lg">{t('career.seasonOver')}</p>
-                <button
-                  type="button"
-                  disabled={busy}
-                  className={`${btnPrimary} sm:w-fit`}
-                  onClick={() => step('nextSeason')}
-                >
-                  {t('career.nextSeason', { season: sim.season + 1 })}
-                </button>
-              </>
-            )}
+          <Stadium
+            sim={sim}
+            busy={busy}
+            onWatch={watch}
+            onPlay={() => step('play')}
+            onNextSeason={() => step('nextSeason')}
+          />
+          <div className="grid items-start gap-4 md:grid-cols-2">
+            <Form sim={sim} />
+            <Fixtures sim={sim} />
           </div>
-        </section>
+          <Inbox sim={sim} net={net} />
+          <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
+        </div>
 
-        <div className="grid items-start gap-4 md:grid-cols-2">
-          {sim.last && (
-            <section className="flex flex-col gap-3 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
-              <h3 className={label}>{t('career.last')}</h3>
-              <p
-                aria-live="polite"
-                aria-label={t('career.lastResult', {
-                  home: sim.last.home.shortName,
-                  away: sim.last.away.shortName,
-                  a: sim.last.goals[0],
-                  b: sim.last.goals[1],
-                })}
-                className="flex items-center justify-center gap-3 font-condensed text-2xl font-extrabold uppercase"
-              >
-                <Crest club={sim.last.home} />
-                <span>{sim.last.home.shortName}</span>
-                <span className="rounded-lg bg-club-gold px-3 text-ink tabular-nums">
-                  {t('career.score', { a: sim.last.goals[0], b: sim.last.goals[1] })}
-                </span>
-                <span>{sim.last.away.shortName}</span>
-                <Crest club={sim.last.away} />
-              </p>
-            </section>
-          )}
-          <section
-            className={`flex flex-col gap-3 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10 ${sim.last ? '' : 'md:col-span-2'}`}
-          >
-            <h3 className={label}>{t('career.money', { season: sim.season })}</h3>
+        <div className="flex flex-col gap-4">
+          <Table sim={sim} clubId={career.clubId} />
+          <section className={PANEL}>
+            <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
             <dl className="flex flex-col gap-2 tabular-nums">
               {sim.money.map((m) => (
                 <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4">
@@ -555,52 +460,355 @@ function Home({ career }: { career: Career }) {
             </dl>
           </section>
         </div>
-        <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
-      </div>
-
-      <section className="self-start rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
-        <h3 className={`${label} mb-1`}>{t('career.table')}</h3>
-        <p className="mb-3 font-condensed text-xl font-extrabold uppercase">{sim.division}</p>
-        <table className="w-full text-sm tabular-nums">
-          <thead className="text-chalk-soft">
-            <tr>
-              {COLS.map((c, k) => (
-                <th
-                  key={c}
-                  scope="col"
-                  className={`pb-1 font-normal ${k < 2 ? 'text-left' : 'text-right'} ${k === 0 ? 'w-7' : ''}`}
-                >
-                  {t('career.col', { c })}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sim.table.map((r, i) => (
-              <tr
-                key={r.clubId}
-                aria-current={r.clubId === career.clubId || undefined}
-                className={
-                  r.clubId === career.clubId
-                    ? 'bg-club-gold/15 font-bold text-club-gold'
-                    : 'border-t border-chalk/10'
-                }
-              >
-                <td className="py-1.5 pl-1">{i + 1}</td>
-                <td>
-                  <span className="flex items-center gap-2">
-                    <Crest club={r} size="sm" />
-                    {r.shortName}
-                  </span>
-                </td>
-                <td className="text-right">{r.played}</td>
-                <td className="text-right">{r.gd}</td>
-                <td className="pr-1 text-right font-bold">{r.points}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </section>
+    </div>
+  );
+}
+
+const PANEL = 'flex min-w-0 flex-col gap-3 rounded-2xl bg-club-panel/90 p-4 ring-1 ring-chalk/10';
+const LABEL = 'font-condensed text-sm font-extrabold tracking-wide text-club-gold uppercase';
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RESULT_TONE = {
+  W: 'bg-club-turf text-chalk',
+  D: 'bg-club-slate text-ink',
+  L: 'bg-club-danger text-chalk',
+} as const;
+
+/** The club's own band, in its colours, like the top bar of a club's matchday programme. */
+function ClubBar({ sim }: { sim: SimView }) {
+  const [a, b] = sim.club.colours;
+  return (
+    <header
+      className={`relative flex flex-wrap items-center gap-x-5 gap-y-3 overflow-hidden rounded-2xl p-4 shadow-[0_20px_40px_-24px_rgb(0_0_0/0.9)] sm:p-5 ${inkOn(a)}`}
+      style={{
+        background: `linear-gradient(110deg, ${a} 0 74%, ${b} 74% 76%, ${a} 76% 80%, ${b} 80% 81%, color-mix(in oklab, ${a} 70%, black) 81%)`,
+      }}
+    >
+      <Crest club={sim.club} size="xl" />
+      <div className="min-w-0 flex-1">
+        <h2 className="font-condensed text-3xl leading-[0.9] font-black uppercase sm:text-5xl">
+          {sim.club.name}
+        </h2>
+        <p className="mt-1 font-semibold opacity-85">
+          {t('career.where', { division: sim.division, season: sim.season })}
+        </p>
+      </div>
+      <dl className="flex basis-full gap-6 rounded-xl bg-club-night/85 px-4 py-2 text-chalk sm:basis-auto">
+        <div>
+          <dt className={LABEL}>{t('career.today')}</dt>
+          <dd className="font-condensed text-xl font-extrabold">
+            {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
+          </dd>
+        </div>
+        <div>
+          <dt className={LABEL}>{t('career.cashLabel')}</dt>
+          <dd
+            className={`font-condensed text-xl font-extrabold tabular-nums ${sim.cash < 0 ? 'text-club-danger' : ''}`}
+          >
+            {t('career.cash', { value: sim.cash })}
+          </dd>
+        </div>
+      </dl>
+    </header>
+  );
+}
+
+/**
+ * The next match as a floodlit stadium: stands in both clubs' colours, a pitch laid in
+ * perspective and both badges standing on it. CSS 3D only: one transformed plane, static light,
+ * one short entrance (index.css, "club-stadium").
+ */
+function Stadium(props: {
+  sim: SimView;
+  busy: boolean;
+  onWatch: (w: Watch) => void;
+  onPlay: () => void;
+  onNextSeason: () => void;
+}) {
+  const { sim, busy } = props;
+  const next = sim.next;
+  return (
+    <section
+      key={next?.iso ?? 'over'}
+      aria-labelledby="career-next"
+      className="club-stadium relative overflow-hidden rounded-2xl ring-1 ring-chalk/10"
+      style={
+        {
+          '--home': next?.home.colours[0] ?? sim.club.colours[0],
+          '--away': next?.away.colours[0] ?? sim.club.colours[1],
+        } as React.CSSProperties
+      }
+    >
+      <div aria-hidden className="club-stands" />
+      <div aria-hidden className="club-lights" />
+      <div aria-hidden className="club-pitch-wrap">
+        <div className="club-pitch" />
+      </div>
+      <div className="relative flex min-h-[21rem] flex-col gap-4 p-4 sm:min-h-[24rem] sm:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 id="career-next" className={LABEL}>
+            {t('career.next')}
+          </h3>
+          {next && <span className="text-sm font-semibold text-chalk/85">{next.competition}</span>}
+        </div>
+        {next ? (
+          <>
+            <div className="grid flex-1 grid-cols-[1fr_auto_1fr] items-end gap-2 sm:gap-4">
+              {[next.home, next.away].map((c, k) => (
+                <div
+                  key={c.shortName}
+                  className={`club-standing flex flex-col items-center gap-2 text-center ${k === 0 ? 'order-1' : 'order-3 [animation-delay:380ms]'}`}
+                >
+                  <Crest club={c} size="xl" />
+                  <span className="rounded-md bg-club-night/80 px-2 font-condensed text-lg leading-tight font-extrabold uppercase sm:text-2xl">
+                    <span className="sm:hidden">{c.shortName}</span>
+                    <span className="hidden sm:inline">{c.name}</span>
+                  </span>
+                </div>
+              ))}
+              <div className="order-2 mb-2 flex flex-col items-center gap-1 rounded-xl bg-club-night/90 px-3 py-2 text-center ring-1 ring-club-gold/40">
+                <span className="font-condensed text-3xl leading-none font-black text-club-gold">
+                  ×
+                </span>
+                <span className="text-sm font-bold">
+                  {t('career.dateLong', { d: new Date(`${next.iso}T12:00:00Z`) })}
+                </span>
+                <span className="text-xs text-chalk-soft">
+                  {t('career.venue', { v: VENUE[Number(next.atHome)]! })}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <button
+                type="button"
+                disabled={busy}
+                className={btnPrimary}
+                onClick={() => props.onWatch('full')}
+              >
+                {t('career.watchFull')}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                className={`${btnSecondary} bg-club-night/85`}
+                onClick={() => props.onWatch('highlights')}
+              >
+                {t('career.watchHighlights')}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                className={`${btnSecondary} bg-club-night/85`}
+                onClick={props.onPlay}
+              >
+                {t('career.play')}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-auto flex flex-col gap-3">
+            <p className="w-fit rounded-lg bg-club-night/85 px-3 py-2 text-lg">
+              {t('career.seasonOver')}
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnPrimary} sm:w-fit`}
+              onClick={props.onNextSeason}
+            >
+              {t('career.nextSeason', { season: sim.season + 1 })}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** The walk out of the tunnel: both clubs' colours close in, badges meet in the middle. */
+function Tunnel({ home, away }: { home: ClubFace; away: ClubFace }) {
+  return (
+    <div
+      role="status"
+      className="club-tunnel fixed inset-0 z-50 grid place-items-center bg-club-night"
+    >
+      <div aria-hidden className="club-tunnel-l" style={{ background: home.colours[0] }} />
+      <div aria-hidden className="club-tunnel-r" style={{ background: away.colours[0] }} />
+      <div className="relative flex flex-col items-center gap-5">
+        <div className="flex items-center gap-4 sm:gap-8">
+          <span className="club-tunnel-crest">
+            <Crest club={home} size="xl" />
+          </span>
+          <span className="font-condensed text-5xl font-black text-club-gold">×</span>
+          <span className="club-tunnel-crest [animation-delay:120ms]">
+            <Crest club={away} size="xl" />
+          </span>
+        </div>
+        <p className="rounded-lg bg-club-night/85 px-4 py-1 font-condensed text-2xl font-extrabold uppercase">
+          {t('career.tunnel')}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Form({ sim }: { sim: SimView }) {
+  return (
+    <section className={PANEL}>
+      <h3 className={LABEL}>{t('career.form')}</h3>
+      {sim.form.length === 0 ? (
+        <p className="text-chalk-soft">{t('career.formEmpty')}</p>
+      ) : (
+        <ol className="flex gap-2">
+          {sim.form.map((f, i) => (
+            <li
+              key={`${sim.today}-${i}`}
+              className={`flex flex-1 flex-col items-center gap-1 ${i === sim.form.length - 1 ? 'club-flip' : ''}`}
+              aria-label={t('career.formLabel', {
+                r: f.result,
+                a: f.goals[0],
+                b: f.goals[1],
+                opp: f.opponent.shortName,
+              })}
+            >
+              <span
+                className={`grid size-9 place-items-center rounded-lg font-condensed text-lg font-black ${RESULT_TONE[f.result]}`}
+              >
+                {t('career.formResult', { r: f.result })}
+              </span>
+              <span className="text-xs text-chalk-soft tabular-nums">
+                {t('career.score', { a: f.goals[0], b: f.goals[1] })}
+              </span>
+              <Crest club={f.opponent} size="sm" />
+            </li>
+          ))}
+        </ol>
+      )}
+      {sim.last && (
+        <p className="sr-only" aria-live="polite">
+          {t('career.lastResult', {
+            home: sim.last.home.shortName,
+            away: sim.last.away.shortName,
+            a: sim.last.goals[0],
+            b: sim.last.goals[1],
+          })}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Fixtures({ sim }: { sim: SimView }) {
+  if (sim.fixtures.length === 0) return null;
+  return (
+    <section className={PANEL}>
+      <h3 className={LABEL}>{t('career.fixtures')}</h3>
+      <ol className="flex flex-col">
+        {sim.fixtures.slice(0, 4).map((f) => (
+          <li
+            key={f.iso + f.opponent.shortName}
+            className="flex items-center gap-3 border-t border-chalk/10 py-1.5 first:border-0"
+          >
+            <span className="w-20 text-sm text-chalk-soft tabular-nums">
+              {t('career.date', { d: new Date(`${f.iso}T12:00:00Z`) })}
+            </span>
+            <Crest club={f.opponent} size="sm" />
+            <span className="min-w-0 flex-1 truncate font-semibold">{f.opponent.name}</span>
+            <span className="text-xs font-bold text-chalk-soft uppercase">
+              {t('career.venueShort', { v: VENUE[Number(f.atHome)]! })}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/** What the club is told, newest first: board, press and finance, from the career's own facts. */
+function Inbox({ sim, net }: { sim: SimView; net: number }) {
+  const notes: { from: 'board' | 'press' | 'finance'; text: string }[] = [];
+  const latest = sim.form.at(-1);
+  if (latest) {
+    const r = { a: latest.goals[0], b: latest.goals[1], opp: latest.opponent.name };
+    notes.push({ from: 'press', text: t(MSG_RESULT[latest.result], r) });
+  }
+  if (sim.cash < 0) notes.push({ from: 'board', text: t('career.msgCash') });
+  else if (net < 0 && sim.form.length >= 3)
+    notes.push({ from: 'finance', text: t('career.msgDeficit', { value: net }) });
+  if (sim.form.length === 0 && !sim.turn)
+    notes.push({
+      from: 'board',
+      text: t('career.msgWelcome', { club: sim.club.name, division: sim.division }),
+    });
+  if (notes.length === 0) return null;
+  return (
+    <section className={PANEL}>
+      <h3 className={LABEL}>{t('career.inbox')}</h3>
+      <ul className="flex flex-col gap-2">
+        {notes.map((n) => (
+          <li key={n.from + n.text} className="flex gap-3 rounded-xl bg-club-night/60 p-3">
+            <span
+              aria-hidden
+              className={`mt-1 size-2.5 shrink-0 rounded-full ${n.from === 'press' ? 'bg-club-blue' : n.from === 'board' ? 'bg-club-gold' : 'bg-club-danger'}`}
+            />
+            <p>
+              <span className="mr-2 font-condensed font-extrabold uppercase">
+                {t('career.from', { f: n.from })}
+              </span>
+              {n.text}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+const MSG_RESULT = { W: 'career.msgWin', D: 'career.msgDraw', L: 'career.msgLoss' } as const;
+
+function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
+  return (
+    <section className="self-stretch rounded-2xl bg-club-panel/90 p-4 ring-1 ring-chalk/10">
+      <h3 className={`${LABEL} mb-1`}>{t('career.table')}</h3>
+      <p className="mb-3 font-condensed text-xl font-extrabold uppercase">{sim.division}</p>
+      <table className="w-full text-sm tabular-nums">
+        <thead className="text-chalk-soft">
+          <tr>
+            {COLS.map((c, k) => (
+              <th
+                key={c}
+                scope="col"
+                className={`pb-1 font-normal ${k < 2 ? 'text-left' : 'text-right'} ${k === 0 ? 'w-7' : ''}`}
+              >
+                {t('career.col', { c })}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sim.table.map((r, i) => (
+            <tr
+              key={r.clubId}
+              aria-current={r.clubId === clubId || undefined}
+              className={
+                r.clubId === clubId
+                  ? 'bg-club-gold/15 font-bold text-club-gold'
+                  : 'border-t border-chalk/10'
+              }
+            >
+              <td className="py-1.5 pl-1">{i + 1}</td>
+              <td>
+                <span className="flex items-center gap-2">
+                  <Crest club={r} size="sm" />
+                  {r.shortName}
+                </span>
+              </td>
+              <td className="text-right">{r.played}</td>
+              <td className="text-right">{r.gd}</td>
+              <td className="pr-1 text-right font-bold">{r.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }

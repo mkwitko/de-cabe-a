@@ -24,6 +24,7 @@ import {
   outcomeOf,
   type Moment,
   type MomentMode,
+  upcomingFor,
 } from '@decabeca/club-domain';
 import {
   advanceLiveMatch,
@@ -64,7 +65,19 @@ export interface SimView {
   turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
   division: string;
   cash: number;
-  next: { iso: string; home: ClubFace; away: ClubFace; atHome: boolean } | null;
+  /** The world's date. */
+  today: string;
+  next: {
+    iso: string;
+    home: ClubFace;
+    away: ClubFace;
+    atHome: boolean;
+    competition: string;
+  } | null;
+  /** The club's next matches after this one, by date. */
+  fixtures: { iso: string; opponent: ClubFace; atHome: boolean; competition: string }[];
+  /** The club's last five results, oldest first, from the club's side. */
+  form: { result: 'W' | 'D' | 'L'; goals: [number, number]; opponent: ClubFace; atHome: boolean }[];
   last: { home: ClubFace; away: ClubFace; goals: [number, number] } | null;
   table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
   /** ms the last step took on this device. */
@@ -128,8 +141,42 @@ function view(w: CareerWorld, ms: number): SimView {
     dayOf(`${w.season.season}-01-01`),
     dayOf(`${w.season.season}-12-31`),
   );
+  const s = w.season;
+  const competition = (id: string) => s.competitions.find((c) => c.id === id)?.name ?? '';
+  const form = [...(s.calendar.byClub.get(w.clubId) ?? [])]
+    .filter((m) => m.played)
+    .sort((a, b) => b.day - a.day)
+    .slice(0, 5)
+    .reverse()
+    .map((m) => {
+      const meta = s.meta.get(m.id)!;
+      const g = s.outcomes.get(m.id)!.goals;
+      const atHome = meta.home === w.clubId;
+      const goals: [number, number] = atHome ? [g[0], g[1]] : [g[1], g[0]];
+      return {
+        result:
+          goals[0] > goals[1]
+            ? ('W' as const)
+            : goals[0] < goals[1]
+              ? ('L' as const)
+              : ('D' as const),
+        goals,
+        opponent: face(byId.get(atHome ? meta.away : meta.home)!),
+        atHome,
+      };
+    });
+  const upcoming = upcomingFor(s, w.clubId, 6).map((u) => ({
+    iso: isoOf(u.day),
+    opponent: face(byId.get(u.home === w.clubId ? u.away : u.home)!),
+    atHome: u.home === w.clubId,
+    competition: competition(u.competitionId),
+  }));
   return {
     season: w.season.season,
+    today: isoOf(w.day),
+    form,
+    // The first one is the next match, shown on its own.
+    fixtures: pending?.kind === 'match' ? upcoming.slice(1) : upcoming,
     money: Object.entries(money.byKind)
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
@@ -144,6 +191,7 @@ function view(w: CareerWorld, ms: number): SimView {
             home: face(byId.get(pending.home)!),
             away: face(byId.get(pending.away)!),
             atHome: pending.home === w.clubId,
+            competition: competition(pending.competitionId),
           }
         : null,
     last,

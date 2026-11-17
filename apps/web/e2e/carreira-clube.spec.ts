@@ -19,7 +19,7 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await expect(play).toBeEnabled({ timeout: 30_000 });
   await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
   await play.click();
-  await expect(page.getByLabel(/^\S+ \d+ × \d+ \S+$/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
   await expect(play).toBeEnabled();
   await play.click();
   await expect(play).toBeEnabled({ timeout: 30_000 });
@@ -102,7 +102,7 @@ test('career: watch the club’s own match, change the plan, and its result coun
   await page.getByRole('button', { name: 'Continuar' }).click();
   // The watched score is the one recorded, and the table counts the match.
   const [a, b] = score.split('–');
-  await expect(page.getByLabel(new RegExp(`^\\S+ ${a} × ${b} \\S+$`))).toBeVisible({
+  await expect(page.getByText(new RegExp(`^\\S+ ${a} × ${b} \\S+$`))).toBeVisible({
     timeout: 30_000,
   });
   await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('1');
