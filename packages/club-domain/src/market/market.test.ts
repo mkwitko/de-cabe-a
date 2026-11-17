@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { nationalDivisions } from '../career/start';
 import { MAX_ROUNDS, answerFee, answerTerms, fairRole, playerStance, sellerStance } from './deals';
-import { planOf } from './plan';
+import { squadPlanOf } from './plan';
 import { ageOf, goingWage, goingWages, levelIn, marketValue, readingsOf } from './value';
 
 const pack = generateDevPack();
@@ -51,7 +51,7 @@ describe('value (07 §1)', () => {
 describe('squad plan (04 §8.1)', () => {
   it('names an eleven, its cover and what is left over, for every club', () => {
     for (const c of pack.clubs) {
-      const plan = planOf({ pack, clubId: c.id });
+      const plan = squadPlanOf({ pack, clubId: c.id });
       expect(new Set(plan.xi).size).toBe(11);
       const covering = plan.cover.filter((x): x is string => x !== null);
       expect(new Set(covering).size).toBe(covering.length);
@@ -63,10 +63,10 @@ describe('squad plan (04 §8.1)', () => {
   });
 
   it('a slot emptied of its cover becomes a need', () => {
-    const plan = planOf({ pack, clubId: top });
+    const plan = squadPlanOf({ pack, clubId: top });
     const slot = plan.cover.findIndex((x) => x !== null);
     const without = { ...pack, players: pack.players.filter((p) => p.id !== plan.cover[slot]) };
-    const after = planOf({ pack: without, clubId: top });
+    const after = squadPlanOf({ pack: without, clubId: top });
     // Another reserve may step in; if none does, the need appears.
     if (after.cover[slot] === null)
       expect(after.needs.some((n) => n.slot === slot && n.kind === 'cover')).toBe(true);
@@ -76,7 +76,7 @@ describe('squad plan (04 §8.1)', () => {
 
 describe('the fee table (07 §2)', () => {
   const seller = { pack, clubId: top };
-  const plan = planOf(seller);
+  const plan = squadPlanOf(seller);
   const starter = pack.players.find((p) => p.id === plan.xi[5])!;
   const spare = pack.players.find((p) => p.id === plan.surplus[0])!;
 
@@ -108,7 +108,7 @@ describe('the fee table (07 §2)', () => {
 });
 
 describe('the contract table (07 §2)', () => {
-  const plan = planOf({ pack, clubId: low });
+  const plan = squadPlanOf({ pack, clubId: low });
   const starter = pack.players.find((p) => p.id === plan.xi[5])!;
 
   it('a step up makes him cheaper and a step down dearer; the stance explains itself', () => {
@@ -130,7 +130,7 @@ describe('the contract table (07 §2)', () => {
     const loyal = { ...starter, personality: { ...starter.personality, loyalty: 18, ambition: 5 } };
     const sameLevel = { ...club(top), reputation: club(low).reputation + 5 };
     expect(playerStance(pack, loyal, club(low), sameLevel, 2026).no).toBe('loyal');
-    const star = pack.players.find((p) => p.id === planOf({ pack, clubId: top }).xi[9])!;
+    const star = pack.players.find((p) => p.id === squadPlanOf({ pack, clubId: top }).xi[9])!;
     const proud = { ...star, personality: { ...star.personality, loyalty: 5, ambition: 18 } };
     expect(playerStance(pack, proud, club(top), club(low), 2026).no).toBe('stepDown');
     // A fourth-division starter is a backup at a first-division club: with a small step, no.

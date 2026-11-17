@@ -9,7 +9,7 @@ import {
   offerFor,
   cannotBuy,
   cannotSell,
-  marketValue,
+  listValue,
   sell,
   windowOpen,
 } from './market';
@@ -34,9 +34,9 @@ describe('transfer market (07, corte 1)', () => {
     const p = pack.players.find((x) => x.clubId && x.contract)!;
     const young = { ...p, birthDate: '2005-01-01' };
     const old = { ...p, birthDate: '1992-01-01' };
-    expect(marketValue(young, 2026)).toBeGreaterThan(marketValue(old, 2026));
-    expect(askingPrice(p, 2026)).toBeGreaterThan(marketValue(p, 2026));
-    expect(marketValue(p, 2026) % 1000).toBe(0);
+    expect(listValue(young, 2026)).toBeGreaterThan(listValue(old, 2026));
+    expect(askingPrice(p, 2026)).toBeGreaterThan(listValue(p, 2026));
+    expect(listValue(p, 2026) % 1000).toBe(0);
   });
 
   it('selling moves the player, pays the club and gives the eleven back to the coach', () => {
@@ -48,7 +48,7 @@ describe('transfer market (07, corte 1)', () => {
     expect(cannotSell(w, p)).toBeNull();
     const deal = sell(w, p.id);
     expect(deal).toEqual(offerFor(openCareer(pack, 61, clubId), p));
-    expect(deal.fee).toBeLessThan(marketValue(p, 2026));
+    expect(deal.fee).toBeLessThan(listValue(p, 2026));
     expect(w.ledger.cash).toBe(cash + deal.fee);
     expect(checkLedger(w.ledger)).toEqual([]);
     expect(w.pack.players.find((x) => x.id === p.id)!.clubId).toBe(deal.buyer);
@@ -92,7 +92,7 @@ describe('transfer market (07, corte 1)', () => {
     const round = (x: number) => Math.round(x / 1000) * 1000;
     for (const { p, offer } of offers) {
       if (!offer) continue;
-      const value = marketValue(p, 2026);
+      const value = listValue(p, 2026);
       expect([round((value * 90) / 100), round((value * 60) / 100)]).toContain(offer.fee);
     }
     // Selling everyone a club wants is worth well under a year of the squad's wages.

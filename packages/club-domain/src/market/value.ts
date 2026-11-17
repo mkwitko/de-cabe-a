@@ -12,6 +12,7 @@
  */
 import type { Pack, PackPlayer } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
+import { WHOLE, cached } from '../lib/pack-cache';
 
 /** What the market reads of a player, cached per pack object (a transfer makes a new pack). */
 export interface Reading {
@@ -22,11 +23,10 @@ export interface Reading {
   keeper: boolean;
 }
 
-const readings = new WeakMap<Pack, Map<string, Reading>>();
 export function readingsOf(pack: Pack): Map<string, Reading> {
-  let by = readings.get(pack);
-  if (!by) {
-    by = new Map();
+  // Attributes do not change with a transfer: one reading for the whole pack, carried on.
+  return cached(pack, 'readings', WHOLE, () => {
+    const by = new Map<string, Reading>();
     for (const p of pack.players) {
       const c = p.potential.ceiling;
       by.set(p.id, {
@@ -35,9 +35,8 @@ export function readingsOf(pack: Pack): Map<string, Reading> {
         keeper: p.positions.some((x) => x.position === 'GK'),
       });
     }
-    readings.set(pack, by);
-  }
-  return by;
+    return by;
+  });
 }
 
 export const ageOf = (p: PackPlayer, season: number) => season - Number(p.birthDate.slice(0, 4));
@@ -47,22 +46,21 @@ export const thousands = (x: number) => Math.round(x / 1000) * 1000;
  * The going monthly wage for each level, 0..99: the median of what the pack's clubs pay players
  * of that level, made non-decreasing and filled where no player sits.
  */
-const wages = new WeakMap<Pack, number[]>();
 export function goingWages(pack: Pack): number[] {
-  let table = wages.get(pack);
-  if (!table) {
+  // Read once from the pack the career opened with and carried on: the market's yardstick
+  // does not move with each signing.
+  return cached(pack, 'goingWages', WHOLE, () => {
     const by: number[][] = Array.from({ length: 100 }, () => []);
     const read = readingsOf(pack);
     for (const p of pack.players)
       if (p.clubId && p.contract) by[read.get(p.id)!.level]!.push(p.contract.wage);
-    table = by.map((ws) => (ws.length ? ws.sort((a, b) => a - b)[ws.length >> 1]! : 0));
+    const table = by.map((ws) => (ws.length ? ws.sort((a, b) => a - b)[ws.length >> 1]! : 0));
     // Fill the gaps from below, then keep it from ever going down as the level rises.
     for (let l = 1; l < 100; l++) table[l] = Math.max(table[l]!, table[l - 1]!);
     const first = table.find((x) => x > 0) ?? 0;
     for (let l = 0; l < 100 && table[l] === 0; l++) table[l] = first;
-    wages.set(pack, table);
-  }
-  return table;
+    return table;
+  });
 }
 export const goingWage = (pack: Pack, level: number) =>
   goingWages(pack)[Math.max(0, Math.min(99, level))]!;

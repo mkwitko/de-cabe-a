@@ -4,7 +4,16 @@
  * "need" every buying and selling decision of a club starts from. Pure reading of the pack.
  */
 import { FORMATIONS } from '@decabeca/match-engine';
-import { bestLineup, slotLevels, slotPositions, slotRatings, type ClubIn } from '../career/squad';
+import {
+  bestLineup,
+  slotLevels,
+  slotPositions,
+  slotRating,
+  slotRatings,
+  squadPlayers,
+  type ClubIn,
+} from '../career/squad';
+import { cached } from '../lib/pack-cache';
 import { formationOf } from '../match/fixture-input';
 import type { PackPlayer } from '../pack/schema';
 import { readingsOf } from './value';
@@ -42,14 +51,10 @@ const COVER_GAP = 9;
 /** Squad size a club is comfortable with. */
 export const COMFORT = 24;
 
-const plans = new WeakMap<object, Map<string, SquadPlan>>();
+export const squadPlanOf = (c: ClubIn): SquadPlan =>
+  cached(c.pack, 'plan', c.clubId, () => plan(c));
 
-export function planOf(c: ClubIn): SquadPlan {
-  let by = plans.get(c.pack);
-  if (!by) plans.set(c.pack, (by = new Map()));
-  const cached = by.get(c.clubId);
-  if (cached) return cached;
-
+function plan(c: ClubIn): SquadPlan {
   const formation = formationOf(c.clubId);
   const roles = FORMATIONS[formation]!.roles;
   const positions = slotPositions(formation);
@@ -57,7 +62,7 @@ export function planOf(c: ClubIn): SquadPlan {
   const known = slotLevels(c, formation);
   const xi = bestLineup(c, formation).xi;
   const level = Math.round(xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / xi.length);
-  const squad: PackPlayer[] = c.pack.players.filter((p) => p.clubId === c.clubId);
+  const squad = squadPlayers(c);
   const read = readingsOf(c.pack);
   const out = squad.filter((p) => !xi.includes(p.id));
 
@@ -105,15 +110,9 @@ export function planOf(c: ClubIn): SquadPlan {
     .sort((a, b) => read.get(a.id)!.level - read.get(b.id)!.level || (a.id < b.id ? -1 : 1))
     .map((p) => p.id);
 
-  const plan: SquadPlan = { formation, level, xi, cover, needs, surplus };
-  by.set(c.clubId, plan);
-  return plan;
+  return { formation, level, xi, cover, needs, surplus };
 }
 
 /** The slot rating a player would give this club in the slot of a need. */
-export function fitFor(c: ClubIn, p: PackPlayer, need: Need): number {
-  const formation = formationOf(c.clubId);
-  // He is not in the squad, so rate him as if he were: same rule as slotRatings.
-  const probe = { pack: { ...c.pack, players: [{ ...p, clubId: c.clubId }] }, clubId: c.clubId };
-  return slotRatings(probe, formation).get(p.id)![need.slot]!;
-}
+export const fitFor = (c: ClubIn, p: PackPlayer, need: Need): number =>
+  slotRating(p, formationOf(c.clubId), need.slot);

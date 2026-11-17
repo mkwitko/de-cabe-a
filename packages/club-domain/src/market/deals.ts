@@ -7,7 +7,7 @@
  */
 import type { ClubIn } from '../career/squad';
 import type { Pack, PackClub, PackPlayer } from '../pack/schema';
-import { planOf } from './plan';
+import { squadPlanOf } from './plan';
 import { ageOf, goingWage, marketValue, readingsOf, thousands, yearsLeft } from './value';
 
 /** Rounds of offer and counter-offer before a side walks away. */
@@ -35,7 +35,7 @@ export function sellerStance(
   buyerId: string,
   season: number,
 ): SellerStance {
-  const plan = planOf(seller);
+  const plan = squadPlanOf(seller);
   const slot = plan.xi.indexOf(p.id);
   const mood: SellerMood = slot >= 0 ? 'starter' : plan.cover.includes(p.id) ? 'cover' : 'surplus';
   const club = seller.pack.clubs.find((c) => c.id === seller.clubId)!;
@@ -101,7 +101,7 @@ const rank = (r: Role) => (r === 'starter' ? 3 : r === 'rotation' ? 2 : r === 'p
 /** The role this club's plan has for him: he starts, he rotates in, or he waits. */
 export function fairRole(buyer: ClubIn, p: PackPlayer, season: number): Role {
   const r = readingsOf(buyer.pack).get(p.id)!;
-  const level = planOf(buyer).level;
+  const level = squadPlanOf(buyer).level;
   if (r.level >= level) return 'starter';
   if (r.level >= level - 6) return 'rotation';
   return ageOf(p, season) <= 21 && r.ceiling >= level ? 'prospect' : 'backup';
@@ -123,7 +123,7 @@ export function playerStance(
   const age = ageOf(p, season);
   const step = to.reputation - (from?.reputation ?? 0);
   const fair = fairRole({ pack, clubId: to.id }, p, season);
-  const startsNow = from ? planOf({ pack, clubId: from.id }).xi.includes(p.id) : false;
+  const startsNow = from ? squadPlanOf({ pack, clubId: from.id }).xi.includes(p.id) : false;
   // A starter does not leave to sit, unless the step up is big; a youngster accepts to wait.
   const wants: Role = startsNow && step < 20 ? 'rotation' : age <= 21 ? 'prospect' : 'backup';
   let no: PlayerNo | null = null;

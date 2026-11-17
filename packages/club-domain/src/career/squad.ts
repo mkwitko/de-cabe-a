@@ -10,9 +10,10 @@
 import { FORMATIONS, defaultPlan, type RoleId, type TeamInput } from '@decabeca/match-engine';
 import { formationOf } from '../match/fixture-input';
 import { teamForMatch } from '../match/lineup';
-import type { Pack, PackPlayer } from '../pack/schema';
+import type { PackPlayer } from '../pack/schema';
 import { bestRoles, roleRating } from '../player/ratings';
 import type { CareerWorld } from './advance';
+import { cached } from '../lib/pack-cache';
 
 export interface Lineup {
   formation: string;
@@ -62,20 +63,13 @@ const isKeeperRole = (r: RoleId) => r === 'goalkeeper' || r === 'sweeperKeeper';
 /** A club in a pack: all the line-up rules need. A career world is one. */
 export type ClubIn = Pick<CareerWorld, 'pack' | 'clubId'>;
 
-// ponytail: squads are read from the pack once per pack object. When transfers move players
-// between clubs, they must build a new pack object (or this needs a version key).
-const squads = new WeakMap<Pack, Map<string, PackPlayer[]>>();
-const squad = (w: ClubIn): PackPlayer[] => {
-  let by = squads.get(w.pack);
-  if (!by) {
-    by = new Map();
-    for (const p of w.pack.players)
-      if (p.clubId) (by.get(p.clubId) ?? by.set(p.clubId, []).get(p.clubId)!).push(p);
-    for (const list of by.values()) list.sort((x, y) => (x.id < y.id ? -1 : 1));
-    squads.set(w.pack, by);
-  }
-  return by.get(w.clubId) ?? [];
-};
+/** A club's players, by id: read once per club (lib/pack-cache.ts). */
+const squad = (w: ClubIn): PackPlayer[] =>
+  cached(w.pack, 'squad', w.clubId, () =>
+    w.pack.players.filter((p) => p.clubId === w.clubId).sort((x, y) => (x.id < y.id ? -1 : 1)),
+  );
+/** The squad as a list anyone may read. */
+export const squadPlayers = (w: ClubIn): readonly PackPlayer[] => squad(w);
 
 /** Whole years on 1 January of the season: the same all season long. */
 const ageOf = (p: PackPlayer, season: number) => season - Number(p.birthDate.slice(0, 4));
@@ -175,6 +169,16 @@ const POSITION_FAMILIARITY = [0.6, 0.75, 0.9, 1] as const;
 
 const levelIn = (p: PackPlayer, positions: Position[]) =>
   Math.max(0, ...p.positions.filter((x) => positions.includes(x.position)).map((x) => x.level));
+
+/**
+ * What one player gives one slot of a formation, 1..99: his attributes in the role, less when
+ * the position is not his. The same number `slotRatings` gives a squad player.
+ */
+export function slotRating(p: PackPlayer, formation: string, slot: number): number {
+  const role = FORMATIONS[formation]!.roles[slot]!;
+  const level = levelIn(p, slotPositions(formation)[slot]!);
+  return Math.round(roleRating(p.attributes, role) * POSITION_FACTOR[level]!);
+}
 
 /** How well each squad player knows each slot's position: 3 natural … 0 not his. By player id. */
 export function slotLevels(w: ClubIn, formation: string): Map<string, number[]> {

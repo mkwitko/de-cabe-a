@@ -19,7 +19,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 3;
+export const CAREER_RULES_VERSION = 4;
 
 interface Saved {
   v: number;
@@ -34,6 +34,8 @@ interface Saved {
   moves?: Moves;
   board?: Board;
   inbox?: Note[];
+  books?: CareerWorld['books'];
+  deals?: CareerWorld['deals'];
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -58,6 +60,8 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.moves && { moves: w.moves }),
     ...(w.board && { board: w.board }),
     ...(w.inbox && { inbox: w.inbox }),
+    ...(w.books && { books: w.books }),
+    ...(w.deals && { deals: w.deals }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -90,5 +94,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.moves && { moves: saved.moves }),
     ...(saved.board && { board: saved.board }),
     ...(saved.inbox && { inbox: saved.inbox }),
+    ...(saved.books && { books: saved.books }),
+    ...(saved.deals && { deals: saved.deals }),
   };
 }

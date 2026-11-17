@@ -16,9 +16,13 @@ import { bestRoles } from '../player/ratings';
 import type { CareerWorld } from './advance';
 import { clubLevel } from './training';
 import { note } from './inbox';
+import { carryCache } from '../lib/pack-cache';
 
 /** A player's club and contract after a move, by player id. */
-export type Moves = Record<string, { clubId: string; wage: number; until: string }>;
+export type Moves = Record<
+  string,
+  { clubId: string; wage: number; until: string; /** Season of the move. */ season?: number }
+>;
 
 /** Smallest squad a club may be left with, and keepers in it: the engine needs 18 and a spare. */
 const MIN_SQUAD = 20;
@@ -41,14 +45,14 @@ const thousands = (x: number) => Math.round(x / 1000) * 1000;
  * What a player is worth on the market: months of his wage, more of them the younger he is.
  * The pack's wages already follow each club's level, so the value does too.
  */
-export function marketValue(p: PackPlayer, season: number): number {
+export function listValue(p: PackPlayer, season: number): number {
   const age = ageOf(p, season);
   const months = age <= 23 ? 18 : age <= 28 ? 12 : age <= 31 ? 6 : 3;
   return thousands((p.contract?.wage ?? 0) * months);
 }
 /** What his club asks to let him go: over the value. */
 export const askingPrice = (p: PackPlayer, season: number) =>
-  thousands((marketValue(p, season) * 115) / 100);
+  thousands((listValue(p, season) * 115) / 100);
 /** Share of the value a buying club pays: for a starter there, and for a squad player. */
 const PAYS = { starter: 90, squad: 60 } as const;
 /** The wage he signs for at his new club. */
@@ -78,15 +82,39 @@ export function withMoves(pack: Pack, moves: Moves): Pack {
   };
 }
 
-function move(w: CareerWorld, p: PackPlayer, to: string, fee: number, kind: 'buy' | 'sell') {
+/**
+ * Moves a player to another club on a new contract: the world gets a new pack object, the two
+ * clubs' readings and strengths are rebuilt, and a picked eleven that lost him goes back to the
+ * coach. No money here: the callers post it.
+ */
+export function movePlayer(
+  w: CareerWorld,
+  p: PackPlayer,
+  to: string,
+  contract: { wage: number; until: string },
+): void {
   const from = p.clubId!;
-  const moved = {
-    clubId: to,
-    wage: signingWage(p),
-    until: `${w.season.season + SIGNING_YEARS}-12-31`,
-  };
+  const moved = { clubId: to, ...contract, season: w.season.season };
   w.moves = { ...w.moves, [p.id]: moved };
-  w.pack = withMoves(w.pack, { [p.id]: moved });
+  const before = w.pack;
+  w.pack = withMoves(before, { [p.id]: moved });
+  carryCache(before, w.pack, [from, to]);
+  for (const clubId of [from, to]) {
+    const level = clubLevel(w.pack, clubId);
+    w.strength.set(clubId, level.strength);
+    w.eleven.set(clubId, level.eleven);
+  }
+  if (w.lineup?.xi.includes(p.id)) delete w.lineup;
+}
+
+/** The person's side of a deal: the fee through the ledger and the note in the inbox. */
+export function settle(
+  w: CareerWorld,
+  p: PackPlayer,
+  other: string,
+  fee: number,
+  kind: 'buy' | 'sell',
+): void {
   postEntry(w.ledger, {
     key: `transfer:${p.id}:${w.ledger.today}:${kind}`,
     kind: 'transfers',
@@ -99,16 +127,18 @@ function move(w: CareerWorld, p: PackPlayer, to: string, fee: number, kind: 'buy
     day: w.day,
     kind: kind === 'buy' ? 'bought' : 'sold',
     player: p.knownAs ?? p.name,
-    club: kind === 'buy' ? from : to,
+    club: other,
     fee,
   });
-  for (const clubId of [from, to]) {
-    const level = clubLevel(w.pack, clubId);
-    w.strength.set(clubId, level.strength);
-    w.eleven.set(clubId, level.eleven);
-  }
-  // A picked eleven that lost a player goes back to the coach; the plan stays.
-  if (w.lineup?.xi.includes(p.id)) delete w.lineup;
+}
+
+function move(w: CareerWorld, p: PackPlayer, to: string, fee: number, kind: 'buy' | 'sell') {
+  const from = p.clubId!;
+  settle(w, p, kind === 'buy' ? from : to, fee, kind);
+  movePlayer(w, p, to, {
+    wage: signingWage(p),
+    until: `${w.season.season + SIGNING_YEARS}-12-31`,
+  });
 }
 
 export type Refusal = 'window' | 'cash' | 'squadFull' | 'squadThin' | 'theirSquad' | 'noBuyer';
@@ -173,7 +203,7 @@ export function offerFor(w: CareerWorld, p: PackPlayer): { buyer: string; fee: n
   }
   if (!best) return null;
   const share = rating >= by.get(best)!.starter ? PAYS.starter : PAYS.squad;
-  return { buyer: best, fee: thousands((marketValue(p, w.season.season) * share) / 100) };
+  return { buyer: best, fee: thousands((listValue(p, w.season.season) * share) / 100) };
 }
 
 /** Why the person cannot sell this player now; null when a club takes him. */

@@ -16,7 +16,7 @@ import { nationalDivisions } from './start';
 /** Share of a season's TV money paid as prize to the champion; the last place gets 1/n of it. */
 const PRIZE_SHARE = 4;
 
-const BY_TIER: Record<number, { tv: number; ticket: number }> = {
+export const BY_TIER: Record<number, { tv: number; ticket: number }> = {
   1: { tv: 120_000_000, ticket: 60 },
   2: { tv: 14_500_000, ticket: 30 },
   3: { tv: 1_300_000, ticket: 18 },
