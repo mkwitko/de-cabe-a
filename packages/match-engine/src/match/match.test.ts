@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import type { MatchEvent } from '../contract';
 import { aerialScore, dribbleChance, tackleChance } from '../rules/duel';
-import { aerialFoulChance, foulChance } from '../rules/discipline';
+import { aerialFoulChance, beatenFoulChance, foulChance } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
@@ -321,6 +321,11 @@ describe('MC-039 referee', () => {
     const rs = matches([1, 2, 3]);
     const aerial = rs.flatMap((r) => r.events.filter((e) => e.kind === 'foul' && e.data.aerial));
     expect(aerial.length).toBeGreaterThan(0);
+  });
+
+  it('a beaten defender may trip or hold the dribbler, more with aggression', () => {
+    const d = (aggression: number) => ({ attrs: base({ aggression }), input: { traits: [] } });
+    expect(beatenFoulChance(d(90))).toBeGreaterThan(beatenFoulChance(d(30)));
   });
 
   it('every foul counts and stops the clock for cards', () => {

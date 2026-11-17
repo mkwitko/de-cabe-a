@@ -29,6 +29,14 @@ export function aerialFoulChance(d: Tackler): number {
   return 0.06 + 0.1 * norm(d.attrs.aggression);
 }
 
+/**
+ * Chance a defender beaten by a dribble trips or holds the carrier (02 §6, "falha do
+ * defensor pode virar falta"; puxão). PARAMETERS calibrated on fouls per team (02 §11).
+ */
+export function beatenFoulChance(d: Tackler): number {
+  return 0.25 * (0.6 + 0.8 * norm(d.attrs.aggression));
+}
+
 export interface FoulContext {
   behind: boolean;
   promising: boolean;

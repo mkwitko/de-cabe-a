@@ -35,7 +35,7 @@ import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
 import { acuteLoad, drain, recover } from '../rules/stamina';
 import { ACUTE_LOSS, fatigue } from '../kinematics';
-import { aerialFoulChance, foulChance, cardFor } from '../rules/discipline';
+import { aerialFoulChance, beatenFoulChance, foulChance, cardFor } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { readTheGame, substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
@@ -298,6 +298,14 @@ function dribble(s: MatchState, c: MatchPlayer) {
   const won = next(s.rngs.execution) < p;
   emit(s, 'dribble', c.team, c.index, d.index, c.pos, { won: won ? 1 : 0 });
   if (won) {
+    // Beaten, he may trip or hold him; in his own box he mostly does not (as in the tackle, 0.15).
+    if (
+      next(s.rngs.referee) <
+      beatenFoulChance(d) * (d.cards === 1 ? 0.6 : 1) * (inOwnBox(d.team, c.pos) ? 0.15 : 1)
+    ) {
+      foul(s, d, c, true);
+      return;
+    }
     d.tackleAt = s.tick + 8; // beaten: out of the play for two seconds
     c.score += 0.15;
   } else tackleWins(s, d, c, false);
