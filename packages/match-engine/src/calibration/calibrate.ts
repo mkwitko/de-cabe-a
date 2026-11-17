@@ -45,7 +45,7 @@ async function main() {
   };
   // Transition metrics (no band in 02 §11; references in research 18 §1).
   console.log(
-    `high turnovers per team ${(both('highTurnovers') / 2).toFixed(1)}, ending in a shot ${((100 * both('highTurnoverShots')) / both('highTurnovers')).toFixed(0)}% (Opta 13-21%); losses won back within 5 s ${((100 * both('regained5s')) / both('losses')).toFixed(0)}%`,
+    `high turnovers per team ${(both('highTurnovers') / 2).toFixed(1)}, shot within 10 s ${((100 * both('highTurnoverShots')) / both('highTurnovers')).toFixed(0)}% (Opta 13-21%); losses won back within 5 s ${((100 * both('regained5s')) / both('losses')).toFixed(0)}%`,
   );
   const home = rs.filter((s) => s.score[0] > s.score[1]).length / n;
   const draw = rs.filter((s) => s.score[0] === s.score[1]).length / n;

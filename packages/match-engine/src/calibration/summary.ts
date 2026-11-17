@@ -27,7 +27,7 @@ export interface Summary {
   highWins: [number, number];
   /**
    * Transition (research 18 §1): balls won within 40 m of the opponents' goal and how many of
-   * those possessions end in a shot (Opta: 13% to 21%); losses and how many are won back
+   * them lead to a shot within 10 s, in the same possession (Opta's definition: 13% to 21%); losses and how many are won back
    * within 5 s (Bauer and Anzer 2021: counter-press success).
    */
   highTurnovers: [number, number];
@@ -36,7 +36,10 @@ export interface Summary {
   regained5s: [number, number];
 }
 
-function transitions(r: MatchResult) {
+/** PARAMETER of the Opta definition: a shot-ending high turnover shoots within this many ms. */
+const HT_SHOT_MS = 10000;
+
+export function transitions(r: Pick<MatchResult, 'events'>) {
   const out = { ht: [0, 0], hts: [0, 0], losses: [0, 0], back: [0, 0] } as Record<
     'ht' | 'hts' | 'losses' | 'back',
     [number, number]
@@ -55,7 +58,16 @@ function transitions(r: MatchResult) {
     if (!e.at || (t === 0 ? 1050 - e.at[0] : e.at[0]) >= 400) return;
     out.ht[t]++;
     const end = wins[k + 1]?.id ?? Infinity;
-    if (r.events.some((x) => x.id > e.id && x.id < end && x.kind === 'shot' && x.team === t))
+    if (
+      r.events.some(
+        (x) =>
+          x.id > e.id &&
+          x.id < end &&
+          x.kind === 'shot' &&
+          x.team === t &&
+          x.atMs - e.atMs <= HT_SHOT_MS,
+      )
+    )
       out.hts[t]++;
   });
   return out;
