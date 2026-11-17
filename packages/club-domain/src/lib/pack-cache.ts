@@ -33,3 +33,13 @@ export function carryCache(from: Pack, to: Pack, changed: readonly string[]): vo
   }
   stores.set(to, next);
 }
+
+/** Sets a reading outright, replacing what was there. */
+export function recache<T>(pack: Pack, name: string, key: string, value: T): T {
+  let store = stores.get(pack);
+  if (!store) stores.set(pack, (store = new Map()));
+  let by = store.get(name);
+  if (!by) store.set(name, (by = new Map()));
+  by.set(key, value);
+  return value;
+}

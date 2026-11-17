@@ -12,6 +12,7 @@ import type { Pack, PackPlayer } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
 import { clubLevel } from './training';
+import { markArrival } from '../market/judgement';
 
 /** A player's club and contract after a move, by player id. */
 export type Moves = Record<
@@ -73,6 +74,8 @@ export function movePlayer(
   const before = w.pack;
   w.pack = withMoves(before, { [p.id]: moved });
   carryCache(before, w.pack, touched);
+  // A new club starts to know him now; a renewal changes nothing of what his own knows.
+  if (from !== to) markArrival(w.pack, p.id, w.season.season);
   for (const clubId of touched) {
     const level = clubLevel(w.pack, clubId);
     w.strength.set(clubId, level.strength);

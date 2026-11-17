@@ -30,6 +30,8 @@ import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts } from '../market/contracts';
+import { setJudgementClock } from '../market/judgement';
+import { carryCache } from '../lib/pack-cache';
 import { isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
@@ -160,10 +162,15 @@ const clubPlays = (w: CareerWorld, day: number) =>
   });
 
 /** The world as it stands after `day`: the start, then every match day up to it. */
-export function openCareer(pack: Pack, seed: number, clubId: string, day = 0): CareerWorld {
+export function openCareer(base: Pack, seed: number, clubId: string, day = 0): CareerWorld {
+  // The career's own pack object: what is read and kept beside it (the clubs' opinions, their
+  // plans) belongs to this career alone, while the readings already made of `base` carry over.
+  const pack = { ...base };
+  carryCache(base, pack, []);
   const start = startCareer(pack, seed, clubId);
   const w: CareerWorld = { pack, seed, ...start, day: 0, ...clubLevels(pack) };
   note(w, { day: 0, kind: 'welcome' });
+  setJudgementClock(pack, seed, w.season.season);
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
   w.day = day;
   return w;
@@ -303,6 +310,8 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   });
   // The goal is set again for the table the club is now in.
   w.board = { ...judged, goal: goalFor(w) };
+  // Each office has had another season with its players.
+  setJudgementClock(w.pack, w.seed, year);
   // Every club's market season starts again; open talks and bids do not cross the year.
   delete w.books;
   delete w.talks;

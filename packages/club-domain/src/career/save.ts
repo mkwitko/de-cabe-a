@@ -15,6 +15,7 @@ import { withMoves, type Moves } from './market';
 import type { Board } from './board';
 import { carryCache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
+import { setJudgementClock } from '../market/judgement';
 import type { Note } from './inbox';
 
 /**
@@ -80,17 +81,13 @@ export function saveCareer(w: CareerWorld): string {
 
 export function loadCareer(base: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
-  const pack = withMoves(base, saved.moves ?? {});
-  if (pack !== base) {
-    // The market's yardsticks (who can play where, the going wage by level) are read from the
-    // pack the career opened with, as in the world that never stopped; squads are read again.
-    goingWages(base);
-    carryCache(
-      base,
-      pack,
-      base.clubs.map((c) => c.id),
-    );
-  }
+  // The career's own pack object, with its transfers applied. The market's yardsticks (who can
+  // play where, the going wage by level) are read from the pack the career opened with, as in
+  // the world that never stopped; the squads are read again.
+  const moved = withMoves(base, saved.moves ?? {});
+  const pack = moved === base ? { ...base } : moved;
+  goingWages(base);
+  carryCache(base, pack, moved === base ? [] : base.clubs.map((c) => c.id));
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.
@@ -103,6 +100,13 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
       set.add(m);
     }
   season.calendar = calendar;
+  // Opinions are this career's: its seed, its season, and when each moved player arrived.
+  setJudgementClock(
+    pack,
+    seed,
+    season.season,
+    Object.entries(saved.moves ?? {}).map(([id, m]) => [id, m.season ?? season.season] as const),
+  );
   return {
     pack,
     seed,

@@ -11,7 +11,7 @@
  * opinion, not a dice roll, so the same world always gives the same market. Integer arithmetic
  * only (ADR-020); every number is a PARÂMETRO.
  */
-import { WHOLE, cached } from '../lib/pack-cache';
+import { WHOLE, cached, recache } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -37,6 +37,44 @@ const eyes = (pack: Pack) =>
 export const eyeOf = (pack: Pack, clubId: string): Eye =>
   eyes(pack).get(clubId) ?? { scouting: 3, football: 3 };
 
+/**
+ * What makes one career's opinions differ from another's, and lets them sharpen with time: the
+ * career's seed, the season it is in, and when each player arrived at his club. Kept beside the
+ * pack and carried across transfers; a career sets it when it opens and at each season's turn.
+ */
+interface Clock {
+  seed: number;
+  season: number;
+  /** Season each player joined his club; absent for those there since before the career. */
+  arrived: Map<string, number>;
+}
+const clockOf = (pack: Pack): Clock =>
+  cached(pack, 'clock', WHOLE, () => ({ seed: 0, season: pack.season, arrived: new Map() }));
+
+/** Sets the career's seed and season for every opinion read from this pack. */
+export function setJudgementClock(
+  pack: Pack,
+  seed: number,
+  season: number,
+  arrivals?: Iterable<readonly [string, number]>,
+): void {
+  // A new clock, never a change to one another career may be reading.
+  recache<Clock>(pack, 'clock', WHOLE, {
+    seed,
+    season,
+    arrived: new Map(arrivals ?? clockOf(pack).arrived),
+  });
+}
+/** Records that a player joined a club this season: its office starts to know him now. */
+export const markArrival = (pack: Pack, playerId: string, season: number) =>
+  void clockOf(pack).arrived.set(playerId, season);
+
+/**
+ * Share of its error a football office still makes on its own player, by the seasons he has
+ * been there: it never reads him perfectly, but it learns.
+ */
+const BY_TENURE = [100, 70, 50] as const;
+
 /** Most a club is off, in points, by department level 1..5. */
 const OFF = {
   /** Another club's player: his level. */
@@ -48,8 +86,8 @@ const OFF = {
 } as const;
 
 /** A fixed number in -100..100 for a pair of ids and a purpose: the club's bias on that player. */
-function bias(clubId: string, playerId: string, salt: number): number {
-  let h = 2166136261 ^ salt;
+function bias(seed: number, clubId: string, playerId: string, salt: number): number {
+  let h = Math.imul(2166136261 ^ salt, 16777619) ^ seed;
   for (const s of [clubId, '|', playerId])
     for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
   // Final mix, then down to -100..100.
@@ -59,15 +97,23 @@ function bias(clubId: string, playerId: string, salt: number): number {
   return ((h >>> 0) % 201) - 100;
 }
 
-const off = (spread: number, clubId: string, playerId: string, salt: number) =>
-  Math.round((bias(clubId, playerId, salt) * spread) / 100);
+const off = (pack: Pack, spread: number, clubId: string, playerId: string, salt: number) =>
+  Math.round((bias(clockOf(pack).seed, clubId, playerId, salt) * spread) / 100);
+
+/** Percent of the own-squad error left for this player, by his seasons at the club. */
+function known(pack: Pack, playerId: string): number {
+  const clock = clockOf(pack);
+  // Those there since before the career count as one season known.
+  const seasons = clock.season - (clock.arrived.get(playerId) ?? pack.season - 1);
+  return BY_TENURE[Math.max(0, Math.min(BY_TENURE.length - 1, seasons))]!;
+}
 
 /** How far this club is off on this player's level: by its football office if he is its own. */
 export function levelError(pack: Pack, clubId: string, p: PackPlayer): number {
   const eye = eyeOf(pack, clubId);
   return p.clubId === clubId
-    ? off(OFF.own[eye.football - 1]!, clubId, p.id, 1)
-    : off(OFF.level[eye.scouting - 1]!, clubId, p.id, 1);
+    ? Math.round((off(pack, OFF.own[eye.football - 1]!, clubId, p.id, 1) * known(pack, p.id)) / 100)
+    : off(pack, OFF.level[eye.scouting - 1]!, clubId, p.id, 1);
 }
 
 /** The level this club believes he has. */
@@ -79,7 +125,7 @@ export function seenCeiling(pack: Pack, clubId: string, p: PackPlayer): number {
   const eye = eyeOf(pack, clubId);
   const spread =
     p.clubId === clubId ? OFF.own[eye.football - 1]! * 2 : OFF.ceiling[eye.scouting - 1]!;
-  const seen = readingsOf(pack).get(p.id)!.ceiling + off(spread, clubId, p.id, 2);
+  const seen = readingsOf(pack).get(p.id)!.ceiling + off(pack, spread, clubId, p.id, 2);
   return Math.max(seenLevel(pack, clubId, p), Math.min(99, seen));
 }
 

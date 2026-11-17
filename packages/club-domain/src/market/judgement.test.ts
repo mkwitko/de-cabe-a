@@ -4,7 +4,15 @@ import { openCareer } from '../career/advance';
 import { jobOffers } from '../career/start';
 import { dayOf } from '../competition/calendar';
 import { sellerStance } from './deals';
-import { bargaining, eyeOf, levelError, seenCeiling, seenLevel, seenValue } from './judgement';
+import {
+  bargaining,
+  eyeOf,
+  levelError,
+  seenCeiling,
+  seenLevel,
+  seenValue,
+  setJudgementClock,
+} from './judgement';
 import { squadPlanOf } from './plan';
 import { marketRound } from './rounds';
 import { marketValue, readingsOf } from './value';
@@ -38,6 +46,19 @@ describe("directors' judgement (06 §2.3, 04 §8.2)", () => {
     expect(others.map((p) => levelError(withEye(clubB, 1), clubB, p))).not.toEqual(
       others.map((p) => levelError(poor, clubA, p)),
     );
+    // Another career, another set of opinions.
+    const other = withEye(clubA, 1);
+    setJudgementClock(other, 12345, 2026);
+    expect(others.map((p) => levelError(other, clubA, p))).not.toEqual(
+      others.map((p) => levelError(poor, clubA, p)),
+    );
+    // An office learns its own players: after two more seasons the error is three quarters or less.
+    const later = withEye(clubA, 1);
+    setJudgementClock(later, 0, 2028);
+    for (const p of own)
+      expect(Math.abs(levelError(later, clubA, p))).toBeLessThanOrEqual(
+        Math.ceil(Math.abs(levelError(poor, clubA, p)) * 0.75),
+      );
     // A club knows its own players better than anyone else's.
     expect(Math.max(...own.map((p) => Math.abs(levelError(poor, clubA, p))))).toBeLessThanOrEqual(
       4,
