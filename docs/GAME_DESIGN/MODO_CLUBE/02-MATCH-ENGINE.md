@@ -289,6 +289,18 @@ Confirmação em 2000 partidas, mesmas sementes:
 
 Os amarelos saem da faixa (2,15 a 2,59) porque a taxa de cartão por falta já era alta: 0,23 contra cerca de 0,16 na Série A (2,37 amarelos para 14,6 faltas). Corrigir essa taxa é o próximo passo. Testes em `match.test.ts` ("containment of a carrier in our half").
 
+**Marcação colada perto do gol, terceira tentativa (2026-11-17, não entrou).** Feita depois do conserto do goleiro e da contenção. Regra: atacante a menos de TX metros do gol é marcado a 1 m, e não mais a 2–6 m.
+
+Resultado em 2000 partidas, mesmas sementes:
+
+| Variante | Gols por jogo | Chutes por time | Prova de coordenação |
+|---|---|---|---|
+| Base | 3,44 | 16,9 | passa |
+| TX 25 m | 3,34 | 16,3 | reprova: T1 fora da área 4 contra 3 em S2 e S3 |
+| TX 35 m | 3,22 | 16,1 | reprova: T1 5 em S4; vão da última linha 23,0 e 23,5 contra 22 em S3 e S4 |
+
+O ganho (3% a 6%) não justifica mudar as faixas de T1 e T2. O vão da última linha é defeito real de forma, não de medição. Revertido.
+
 **Critérios de aceite.**
 - Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
 - Marcador a menos de 2 m do próprio ponto na maior parte do tempo.
