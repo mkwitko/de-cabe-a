@@ -9,6 +9,7 @@ import { aerialFoulChance, foulChance } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
+import { candidates } from './carrier';
 import { passSafety, shotClear } from './control';
 import { foul, stepUntilEnd, step } from './engine';
 import { matchInput, teamInput } from './fixture';
@@ -139,6 +140,20 @@ describe('MC-035 passing', () => {
       rate((e) => e.data.d! >= 30),
     );
     expect(rate((e) => e.data.pr! <= 1)).toBeGreaterThan(rate((e) => e.data.pr! >= 5));
+  });
+});
+
+describe('crosses (02 §6.3)', () => {
+  it('the crosser rates the zone where a team-mate beats the defenders highest', () => {
+    const s = bare();
+    const c = place(s, 7, 92, 6);
+    place(s, 9, 98, 40); // free at the far post
+    place(s, 13, 98, 31); // defender at the near post
+    place(s, 12, 93, 34); // defender on the penalty spot
+    const crosses = candidates(s, c, 'open').filter((a) => a.kind === 'cross');
+    expect(crosses.length).toBe(3);
+    const far = crosses.find((a) => a.target.y > 36)!;
+    for (const a of crosses) if (a !== far) expect(far.p).toBeGreaterThan(a.p);
   });
 });
 

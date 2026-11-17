@@ -964,8 +964,11 @@ function chaseLooseBall(s: MatchState) {
     let best: MatchPlayer | null = null;
     let bt = Infinity;
     let bp: Vec2 | null = null;
+    // A cross from the wing is expected by both sides: runners and defenders attack it
+    // without a reaction delay (the defenders' short read of the pass, reactUntil, still applies).
+    const planned = f.kind === 'cross';
     for (const p of mates(s, team)) {
-      const m = meetPoint(p, f.ball, false);
+      const m = meetPoint(p, f.ball, planned);
       // The keeper comes for balls in his box, and beyond it as far as his sweeping allows (ADR-019).
       const g = flip(team, m.pt);
       const sweeper = g.x < 16.5 + 15 * norm(p.attrs.sweeping) && Math.abs(g.y - CENTER.y) < 25;

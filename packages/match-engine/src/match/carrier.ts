@@ -5,14 +5,23 @@
  * with his own (noisy) estimate of P, and picks by softmax. The true P and the
  * best true utility are kept so the log can tell a bad choice from a bad kick.
  */
-import { exp, gaussian } from '../rules/math';
+import { exp, gaussian, logistic } from '../rules/math';
 import { dribbleChance, norm, weighted } from '../rules/duel';
 import { valueAt } from '../rules/value';
 import { goalAngle, xg as chanceOf } from '../rules/xg';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next, type Rng } from '../random';
 import { lineOf } from '../team';
-import { groundSpeed, kin, opponents, passSafety, pressureOn, mates, shotClear } from './control';
+import {
+  groundSpeed,
+  kin,
+  opponents,
+  passSafety,
+  pressureOn,
+  mates,
+  readingArrival,
+  shotClear,
+} from './control';
 import { arrivalTime } from '../kinematics';
 import type { MatchPlayer, MatchState } from './state';
 
@@ -274,30 +283,49 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     me.x > 75 &&
     (me.y < 20 || me.y > WIDTH - 20)
   ) {
-    const inBox = mates(s, c.team).filter((m) => {
-      const t = toTeam(c, m.pos);
-      return t.x > 88.5 && t.y > 14 && t.y < WIDTH - 14 && m.index !== c.index;
-    });
-    const spot = flip(c.team, { x: 96, y: CENTER.y + (me.y < CENTER.y ? 2 : -2) });
-    const opp = opponents(s, c.team).filter((o) => {
-      const t = toTeam(c, o.pos);
-      return t.x > 88.5 && t.y > 14 && t.y < WIDTH - 14;
-    });
-    // A cross works when attackers in the box outnumber defenders there.
-    const p = clamp(
-      0.18 + 0.08 * (inBox.length - opp.length) + 0.25 * norm(c.attrs.crossing),
-      0.05,
-      0.6,
-    );
-    push({
-      kind: 'cross',
-      target: spot,
-      receiver: null,
-      p,
-      win: 0.16,
-      lose: 0.01,
-      bias: allowed === 'corner' ? 1 : 0.004 * (plan.finalThird.crosses - 3),
-    });
+    // Where to put it (research 18 H6; 02 §6.3): near post, penalty spot or far post. Each
+    // zone is judged with the same arrival physics as a pass: a team-mate must get there
+    // with the ball, before the first defender reading it and the keeper (PARAMETERS:
+    // cross speed 17 m/s, spreads 0.4 s and 0.3 s, accuracy by crossing).
+    const nearSide = me.y < CENTER.y ? -1 : 1;
+    const zones = [
+      { x: 99, y: CENTER.y + nearSide * 3 },
+      { x: 94, y: CENTER.y },
+      { x: 99, y: CENTER.y - nearSide * 4 },
+    ];
+    const accuracy = 0.55 + 0.45 * weighted(c.attrs, { crossing: 0.7, technique: 0.3 });
+    for (const z of zones) {
+      const pt = flip(c.team, z);
+      const tf = Math.sqrt((z.x - me.x) ** 2 + (z.y - me.y) ** 2) / 17;
+      let tA = Infinity;
+      for (const m of mates(s, c.team))
+        if (m.index !== c.index && lineOf(m.role) !== 'gk')
+          tA = Math.min(tA, arrivalTime(kin(m), pt, true));
+      let tD = Infinity;
+      for (const o of opponents(s, c.team)) tD = Math.min(tD, readingArrival(o, pt));
+      const p =
+        accuracy * logistic((tD - Math.max(tA, tf)) / 0.4) * logistic((tf + 0.3 - tA) / 0.3);
+      const head = chanceOf({
+        x: z.x,
+        y: z.y,
+        header: true,
+        pressure: 0.5,
+        keeperOut: 0,
+        afterCross: true,
+        counter: false,
+        directFreeKick: false,
+      });
+      push({
+        kind: 'cross',
+        target: pt,
+        receiver: null,
+        p,
+        win: head * SHOT_FOLLOW_UP,
+        lose: oppValue(z),
+        lossX: z.x,
+        bias: allowed === 'corner' ? 1 : 0.004 * (plan.finalThird.crosses - 3),
+      });
+    }
   }
 
   if (allowed === 'corner') return out;

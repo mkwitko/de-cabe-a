@@ -107,6 +107,9 @@ function beside(s: MatchState, c: MatchPlayer, ux: number, uy: number): number[]
     .map((o) => o.index);
 }
 
+/** A cross is whipped in at pace across the runners: harder to land than a long pass (PARAMETER, cross accuracy about 22% to 25%). */
+const CROSS_ERROR = 1.8;
+
 export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolean): Flight {
   const from = { ...c.pos };
   // Lead a moving receiver: aim where he will be when the ball arrives (at most 1.5 s ahead).
@@ -141,7 +144,9 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
         : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
     // Landing error grows with distance and falls with skill (PARAMETERS).
     const err =
-      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) * d * (a.kind === 'clear' ? 2 : 1);
+      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) *
+      d *
+      (a.kind === 'clear' ? 2 : a.kind === 'cross' ? CROSS_ERROR : 1);
     const land = {
       x: clamp(a.target.x + g(s) * err * 0.6, 0.5, LENGTH - 0.5),
       y: clamp(a.target.y + g(s) * err * 0.6, 0.5, WIDTH - 0.5),

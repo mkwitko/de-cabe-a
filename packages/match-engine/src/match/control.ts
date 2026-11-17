@@ -24,7 +24,7 @@ const reading = (p: MatchPlayer): Kin => {
   const t = readTime(p);
   return { ...kin(p), pos: { x: p.pos.x + p.vel.x * t, y: p.pos.y + p.vel.y * t } };
 };
-const readingArrival = (p: MatchPlayer, pt: Vec2) =>
+export const readingArrival = (p: MatchPlayer, pt: Vec2) =>
   readTime(p) + arrivalTime(reading(p), pt, true);
 
 export const opponents = (s: MatchState, team: 0 | 1) =>
