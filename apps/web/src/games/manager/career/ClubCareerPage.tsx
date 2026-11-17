@@ -132,9 +132,10 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
   const segment = (on: boolean) =>
     `min-h-11 flex-1 rounded-lg px-2 font-condensed text-sm leading-tight font-extrabold uppercase sm:px-3 sm:text-lg ${on ? 'bg-club-gold text-ink' : 'text-chalk-soft hover:text-chalk'}`;
   return (
-    <section className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <h2 className="font-condensed text-3xl font-extrabold uppercase sm:text-4xl">
+    <section className="sala-glass flex flex-col gap-5">
+      <Scene plate="campo" />
+      <div className="flex flex-col gap-3 pt-[min(12svh,6rem)] md:flex-row md:items-end md:justify-between">
+        <h2 className="font-condensed text-4xl leading-[0.9] font-black text-balance uppercase sm:text-6xl">
           {t('career.startTitle')}
         </h2>
         <div
@@ -155,15 +156,12 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
           ))}
         </div>
       </div>
-      <p className="max-w-[48ch] text-chalk-soft">{t('career.modeHint', { m: mode })}</p>
+      <p className="max-w-[48ch] text-lg text-chalk">{t('career.modeHint', { m: mode })}</p>
 
       {mode === 'job_offers' && (
         <ul className="grid gap-4 md:grid-cols-3">
           {options.offers.map((o) => (
-            <li
-              key={o.id}
-              className="flex flex-col overflow-hidden rounded-2xl bg-club-panel ring-1 ring-chalk/10"
-            >
+            <li key={o.id} className="sala-slab flex flex-col overflow-hidden [text-shadow:none]">
               <div className="relative h-20" style={slabs(o, o)}>
                 <span className="absolute -bottom-7 left-4">
                   <Crest club={o} size="lg" />
@@ -188,7 +186,7 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
                         aria-valuemax={100}
                         aria-valuenow={o.profile[a]}
                         aria-label={t('career.axisValue', { a, n: o.profile[a] })}
-                        className="h-1.5 overflow-hidden rounded-full bg-club-night"
+                        className="h-1.5 overflow-hidden rounded-full bg-chalk/12"
                       >
                         <span
                           className="block h-full rounded-full bg-club-gold"
@@ -240,7 +238,7 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
                 <button
                   type="button"
                   disabled={busy}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-xl bg-club-panel p-2.5 text-left ring-1 ring-chalk/10 hover:ring-club-gold focus-visible:ring-club-gold"
+                  className="sala-slab flex min-h-14 w-full items-center gap-3 p-2.5 text-left [text-shadow:none] hover:ring-2 hover:ring-club-gold focus-visible:ring-2 focus-visible:ring-club-gold"
                   onClick={() => start(c.id)}
                 >
                   <Crest club={c} />
@@ -400,73 +398,70 @@ function Home({ career }: { career: Career }) {
   const net = sim.money.reduce((sum, m) => sum + m.amount, 0);
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
+      <Scene plate="sala" />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       <ClubBar sim={sim} />
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex min-w-0 flex-col gap-4">
-          {sim.turn && (
-            <p
-              aria-live="polite"
-              className="rounded-2xl border-l-4 border-club-gold bg-club-panel p-4 text-lg"
-            >
-              {t('career.turn', {
-                season: sim.turn.season,
-                champion: sim.turn.champion,
-                move: sim.turn.move,
-              })}
-            </p>
-          )}
-          <Stadium
-            sim={sim}
-            busy={busy}
-            onWatch={watch}
-            onPlay={() => step('play')}
-            onNextSeason={() => step('nextSeason')}
-          />
-          <div className="grid items-start gap-4 md:grid-cols-2">
-            <Form sim={sim} />
-            <Fixtures sim={sim} />
-          </div>
+      {sim.turn && (
+        <p
+          aria-live="polite"
+          className="mx-auto w-fit max-w-full rounded-lg bg-club-night/90 px-4 py-2 text-center text-lg"
+        >
+          {t('career.turn', {
+            season: sim.turn.season,
+            champion: sim.turn.champion,
+            move: sim.turn.move,
+          })}
+        </p>
+      )}
+      <NextMatch
+        sim={sim}
+        busy={busy}
+        onWatch={watch}
+        onPlay={() => step('play')}
+        onNextSeason={() => step('nextSeason')}
+      />
+      <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
+        <Table sim={sim} clubId={career.clubId} />
+        <div className="flex min-w-0 flex-col">
+          <Form sim={sim} />
+          <Fixtures sim={sim} />
           <Inbox sim={sim} net={net} />
-          <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
         </div>
-
-        <div className="flex flex-col gap-4">
-          <Table sim={sim} clubId={career.clubId} />
-          <section className={PANEL}>
-            <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
-            <dl className="flex flex-col gap-2 tabular-nums">
-              {sim.money.map((m) => (
-                <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4">
-                  <dt className="text-chalk-soft">{t('career.moneyKind', { k: m.kind })}</dt>
-                  <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
-                    {t('career.cash', { value: m.amount })}
-                  </dd>
-                  <dd aria-hidden className="col-span-2 h-1 rounded-full bg-club-night">
-                    <span
-                      className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-turf'}`}
-                      style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
-                    />
-                  </dd>
-                </div>
-              ))}
-              <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-2 font-bold">
-                <dt>{t('career.net')}</dt>
-                <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
-                  {t('career.cash', { value: net })}
+        <section className={PANEL}>
+          <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
+          <dl className="flex flex-col gap-2.5 tabular-nums">
+            {sim.money.map((m) => (
+              <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
+                <dt className="text-chalk-soft">{t('career.moneyKind', { k: m.kind })}</dt>
+                <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
+                  {t('career.cash', { value: m.amount })}
+                </dd>
+                <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
+                  <span
+                    className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
+                    style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
+                  />
                 </dd>
               </div>
-            </dl>
-          </section>
-        </div>
+            ))}
+            <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-3 font-condensed text-xl font-extrabold uppercase">
+              <dt>{t('career.net')}</dt>
+              <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
+                {t('career.cash', { value: net })}
+              </dd>
+            </div>
+          </dl>
+        </section>
       </section>
+      <p className="text-xs text-chalk-soft/80">{t('career.builtHere', { ms: sim.ms })}</p>
     </div>
   );
 }
 
-const PANEL = 'flex min-w-0 flex-col gap-3 rounded-2xl bg-club-panel/90 p-4 ring-1 ring-chalk/10';
-const LABEL = 'font-condensed text-sm font-extrabold tracking-wide text-club-gold uppercase';
+const PANEL = 'sala-pane flex min-w-0 flex-col gap-3 p-4 sm:p-5';
+const LABEL =
+  'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const RESULT_TONE = {
   W: 'bg-club-turf text-chalk',
@@ -474,36 +469,42 @@ const RESULT_TONE = {
   L: 'bg-club-danger text-chalk',
 } as const;
 
-/** The club's own band, in its colours, like the top bar of a club's matchday programme. */
-function ClubBar({ sim }: { sim: SimView }) {
-  const [a, b] = sim.club.colours;
+/** One still plate behind the whole page: the coach's office (hub) or the pitch (start). */
+function Scene({ plate }: { plate: 'sala' | 'campo' }) {
   return (
-    <header
-      className={`relative flex flex-wrap items-center gap-x-5 gap-y-3 overflow-hidden rounded-2xl p-4 shadow-[0_20px_40px_-24px_rgb(0_0_0/0.9)] sm:p-5 ${inkOn(a)}`}
-      style={{
-        background: `linear-gradient(110deg, ${a} 0 74%, ${b} 74% 76%, ${a} 76% 80%, ${b} 80% 81%, color-mix(in oklab, ${a} 70%, black) 81%)`,
-      }}
-    >
-      <Crest club={sim.club} size="xl" />
+    <div aria-hidden className="sala-scene">
+      <picture>
+        <source media="(orientation: portrait)" srcSet={`/img/clube/${plate}-v.webp`} />
+        <img src={`/img/clube/${plate}-h.webp`} alt="" decoding="async" fetchPriority="high" />
+      </picture>
+    </div>
+  );
+}
+
+/** Who and when, set on the office wall above the window: the club, the day, the cash. */
+function ClubBar({ sim }: { sim: SimView }) {
+  return (
+    <header className="sala-bar flex flex-wrap items-center gap-x-4 gap-y-2">
+      <Crest club={sim.club} size="lg" />
       <div className="min-w-0 flex-1">
-        <h2 className="font-condensed text-3xl leading-[0.9] font-black uppercase sm:text-5xl">
+        <h2 className="font-condensed text-3xl leading-[0.9] font-black text-balance uppercase sm:text-4xl">
           {sim.club.name}
         </h2>
-        <p className="mt-1 font-semibold opacity-85">
+        <p className="mt-1 text-sm font-semibold text-chalk/85">
           {t('career.where', { division: sim.division, season: sim.season })}
         </p>
       </div>
-      <dl className="flex basis-full gap-6 rounded-xl bg-club-night/85 px-4 py-2 text-chalk sm:basis-auto">
+      <dl className="flex basis-full justify-between gap-5 sm:basis-auto sm:text-right">
         <div>
-          <dt className={LABEL}>{t('career.today')}</dt>
-          <dd className="font-condensed text-xl font-extrabold">
+          <dt className="text-xs font-semibold text-chalk/75">{t('career.today')}</dt>
+          <dd className="font-condensed text-xl leading-tight font-extrabold uppercase">
             {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
           </dd>
         </div>
         <div>
-          <dt className={LABEL}>{t('career.cashLabel')}</dt>
+          <dt className="text-xs font-semibold text-chalk/75">{t('career.cashLabel')}</dt>
           <dd
-            className={`font-condensed text-xl font-extrabold tabular-nums ${sim.cash < 0 ? 'text-club-danger' : ''}`}
+            className={`font-condensed text-xl leading-tight font-extrabold tabular-nums ${sim.cash < 0 ? 'text-club-danger' : 'text-club-gold'}`}
           >
             {t('career.cash', { value: sim.cash })}
           </dd>
@@ -514,11 +515,10 @@ function ClubBar({ sim }: { sim: SimView }) {
 }
 
 /**
- * The next match as a floodlit stadium: stands in both clubs' colours, a pitch laid in
- * perspective and both badges standing on it. CSS 3D only: one transformed plane, static light,
- * one short entrance (index.css, "club-stadium").
+ * The next match, lettered on the office window over the lit pitch. The plate behind is still;
+ * the two badges and the names arrive once per fixture.
  */
-function Stadium(props: {
+function NextMatch(props: {
   sim: SimView;
   busy: boolean;
   onWatch: (w: Watch) => void;
@@ -531,110 +531,98 @@ function Stadium(props: {
     <section
       key={next?.iso ?? 'over'}
       aria-labelledby="career-next"
-      className="club-stadium relative overflow-hidden rounded-2xl ring-1 ring-chalk/10"
-      style={
-        {
-          '--home': next?.home.colours[0] ?? sim.club.colours[0],
-          '--away': next?.away.colours[0] ?? sim.club.colours[1],
-        } as React.CSSProperties
-      }
+      className="sala-window flex flex-col justify-end"
     >
-      <div aria-hidden className="club-stands" />
-      <div aria-hidden className="club-lights" />
-      <div aria-hidden className="club-pitch-wrap">
-        <div className="club-pitch" />
-      </div>
-      <div className="relative flex min-h-[21rem] flex-col gap-4 p-4 sm:min-h-[24rem] sm:p-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 id="career-next" className={LABEL}>
-            {t('career.next')}
-          </h3>
-          {next && <span className="text-sm font-semibold text-chalk/85">{next.competition}</span>}
-        </div>
-        {next ? (
-          <>
-            <div className="grid flex-1 grid-cols-[1fr_auto_1fr] items-end gap-2 sm:gap-4">
-              {[next.home, next.away].map((c, k) => (
-                <div
-                  key={c.shortName}
-                  className={`club-standing flex flex-col items-center gap-2 text-center ${k === 0 ? 'order-1' : 'order-3 [animation-delay:380ms]'}`}
-                >
-                  <Crest club={c} size="xl" />
-                  <span className="rounded-md bg-club-night/80 px-2 font-condensed text-lg leading-tight font-extrabold uppercase sm:text-2xl">
-                    <span className="sm:hidden">{c.shortName}</span>
-                    <span className="hidden sm:inline">{c.name}</span>
-                  </span>
-                </div>
-              ))}
-              <div className="order-2 mb-2 flex flex-col items-center gap-1 rounded-xl bg-club-night/90 px-3 py-2 text-center ring-1 ring-club-gold/40">
-                <span className="font-condensed text-3xl leading-none font-black text-club-gold">
-                  ×
-                </span>
-                <span className="text-sm font-bold">
-                  {t('career.dateLong', { d: new Date(`${next.iso}T12:00:00Z`) })}
-                </span>
-                <span className="text-xs text-chalk-soft">
-                  {t('career.venue', { v: VENUE[Number(next.atHome)]! })}
+      <h3 id="career-next" className="sr-only">
+        {t('career.next')}
+      </h3>
+      {next ? (
+        <div className="sala-glass mx-auto flex w-full max-w-4xl flex-col items-center gap-5">
+          <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+            {[next.home, next.away].map((c, k) => (
+              <div
+                key={c.shortName}
+                className={`sala-side flex min-w-0 items-center gap-3 sm:gap-4 ${k === 0 ? 'order-1 flex-col sm:flex-row-reverse sm:text-right' : 'order-3 flex-col [animation-delay:140ms] sm:flex-row'}`}
+              >
+                <Crest club={c} size="xl" />
+                <span className="font-condensed text-3xl leading-[0.9] font-black text-balance uppercase sm:text-5xl">
+                  <span className="sm:hidden">{c.shortName}</span>
+                  <span className="hidden sm:inline">{c.name}</span>
                 </span>
               </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <button
-                type="button"
-                disabled={busy}
-                className={btnPrimary}
-                onClick={() => props.onWatch('full')}
-              >
-                {t('career.watchFull')}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                className={`${btnSecondary} bg-club-night/85`}
-                onClick={() => props.onWatch('highlights')}
-              >
-                {t('career.watchHighlights')}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                className={`${btnSecondary} bg-club-night/85`}
-                onClick={props.onPlay}
-              >
-                {t('career.play')}
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="mt-auto flex flex-col gap-3">
-            <p className="w-fit rounded-lg bg-club-night/85 px-3 py-2 text-lg">
-              {t('career.seasonOver')}
-            </p>
+            ))}
+            <span
+              aria-hidden
+              className="order-2 font-condensed text-4xl leading-none font-black text-club-gold sm:text-6xl"
+            >
+              ×
+            </span>
+          </div>
+          <p className="text-center text-sm font-semibold text-balance text-chalk sm:text-base">
+            {t('career.dateLong', { d: new Date(`${next.iso}T12:00:00Z`) })}
+            <span className="mx-2 text-club-gold">/</span>
+            {t('career.venue', { v: VENUE[Number(next.atHome)]! })}
+            <span className="mx-2 text-club-gold">/</span>
+            {next.competition}
+          </p>
+          <div className="grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-[1.2fr_1fr_1fr] sm:whitespace-nowrap">
             <button
               type="button"
               disabled={busy}
-              className={`${btnPrimary} sm:w-fit`}
-              onClick={props.onNextSeason}
+              className={`${btnPrimary} col-span-2 min-h-13 bg-club-gold sm:col-span-1`}
+              onClick={() => props.onWatch('full')}
             >
-              {t('career.nextSeason', { season: sim.season + 1 })}
+              {t('career.watchFull')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80 px-2 text-base sm:px-4 sm:text-lg`}
+              onClick={() => props.onWatch('highlights')}
+            >
+              {t('career.watchHighlights')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80 px-2 text-base sm:px-4 sm:text-lg`}
+              onClick={props.onPlay}
+            >
+              {t('career.play')}
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="sala-glass mx-auto flex w-full max-w-2xl flex-col items-center gap-4 text-center">
+          <p className="font-condensed text-3xl leading-none font-black uppercase sm:text-5xl">
+            {t('career.seasonOver')}
+          </p>
+          <button
+            type="button"
+            disabled={busy}
+            className={`${btnPrimary} min-h-13 bg-club-gold`}
+            onClick={props.onNextSeason}
+          >
+            {t('career.nextSeason', { season: sim.season + 1 })}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
 
-/** The walk out of the tunnel: both clubs' colours close in, badges meet in the middle. */
+/** The walk out of the tunnel: the plate pushes toward the light, both badges wait at the mouth. */
 function Tunnel({ home, away }: { home: ClubFace; away: ClubFace }) {
   return (
     <div
       role="status"
-      className="club-tunnel fixed inset-0 z-50 grid place-items-center bg-club-night"
+      className="club-tunnel fixed inset-0 z-50 grid place-items-center overflow-hidden bg-club-night"
     >
-      <div aria-hidden className="club-tunnel-l" style={{ background: home.colours[0] }} />
-      <div aria-hidden className="club-tunnel-r" style={{ background: away.colours[0] }} />
-      <div className="relative flex flex-col items-center gap-5">
+      <picture aria-hidden>
+        <source media="(orientation: portrait)" srcSet="/img/clube/tunel-v.webp" />
+        <img src="/img/clube/tunel-h.webp" alt="" className="club-tunnel-plate" />
+      </picture>
+      <div className="sala-glass relative flex flex-col items-center gap-5">
         <div className="flex items-center gap-4 sm:gap-8">
           <span className="club-tunnel-crest">
             <Crest club={home} size="xl" />
@@ -644,7 +632,7 @@ function Tunnel({ home, away }: { home: ClubFace; away: ClubFace }) {
             <Crest club={away} size="xl" />
           </span>
         </div>
-        <p className="rounded-lg bg-club-night/85 px-4 py-1 font-condensed text-2xl font-extrabold uppercase">
+        <p className="font-condensed text-3xl leading-none font-black uppercase sm:text-5xl">
           {t('career.tunnel')}
         </p>
       </div>
@@ -746,7 +734,10 @@ function Inbox({ sim, net }: { sim: SimView; net: number }) {
       <h3 className={LABEL}>{t('career.inbox')}</h3>
       <ul className="flex flex-col gap-2">
         {notes.map((n) => (
-          <li key={n.from + n.text} className="flex gap-3 rounded-xl bg-club-night/60 p-3">
+          <li
+            key={n.from + n.text}
+            className="flex gap-3 border-t border-chalk/10 pt-2 first:border-0 first:pt-0"
+          >
             <span
               aria-hidden
               className={`mt-1 size-2.5 shrink-0 rounded-full ${n.from === 'press' ? 'bg-club-blue' : n.from === 'board' ? 'bg-club-gold' : 'bg-club-danger'}`}
@@ -767,9 +758,8 @@ const MSG_RESULT = { W: 'career.msgWin', D: 'career.msgDraw', L: 'career.msgLoss
 
 function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
   return (
-    <section className="self-stretch rounded-2xl bg-club-panel/90 p-4 ring-1 ring-chalk/10">
-      <h3 className={`${LABEL} mb-1`}>{t('career.table')}</h3>
-      <p className="mb-3 font-condensed text-xl font-extrabold uppercase">{sim.division}</p>
+    <section className={PANEL}>
+      <h3 className={LABEL}>{t('career.table')}</h3>
       <table className="w-full text-sm tabular-nums">
         <thead className="text-chalk-soft">
           <tr>

@@ -73,3 +73,15 @@ One family, self-hosted: **Archivo Variable** (`@fontsource-variable/archivo/wdt
 ## Browser surfaces
 
 `::selection` cover on ink; `:focus-visible` 3px cover outline, 3px offset; `scrollbar-color` chalk-soft on pitch-deep; `color-scheme: dark`.
+
+## Modo Clube career: the club is a place (2026-11-17)
+
+Scope: `/tecnico/carreira` (`games/manager/career/ClubCareerPage.tsx`, styles under "sala" and "club-tunnel" in `index.css`). Owner direction, replacing the CSS 3D stadium of the same day.
+
+- **World**: each destination of the career is one still, cinematic plate of a room in an old stadium at night: dark green enamel, worn wood, one amber lamp against cold floodlight. The interface is set into the room, never onto a flat ground.
+- **Plates** (`public/img/clube/<room>-h.webp` landscape, `-v.webp` portrait, picked by `orientation`): `sala` (coach's office, the hub), `campo` (pitch side, the start screen), `tunel` (the walk before a watched match). Our own art, FLUX 3 Klein on the owner's desktop, 1344×768 and 768×1344, 8 steps; prompts and seeds in `docs/pesquisa/modo-clube/arte/placas-clube.json`. No people, no logos. Small scribbles on boards and hoardings are not text and stay unreadable.
+- **Scene** (`.sala-scene`): the plate is fixed behind the page, `object-fit: cover`, anchored top. Over it one static veil: the club's colour as light from the top (`--club-a`, 26%) and a dark fall toward the desk so data reads.
+- **Lettering on the scene** (`.sala-glass`, `.sala-bar`): Archivo condensed 900 uppercase in chalk with a deep text shadow, set straight on the plate; the next match (both badges and names) sits over the office window. Gold (`club-gold`) is the only action colour.
+- **Desk** (`.sala-desk`, `.sala-slab`): data lives on one dark slab (`oklch(0.15 0.014 160 / 0.94)`, radius 14px) lit by a gold hairline on its top edge and split by hairlines into panes (`.sala-pane`): table, last matches, next fixtures, messages, money. No separate cards, no nested panels.
+- **Motion** (allowed here by the owner, beyond the app-wide 200 ms rule): one arrival per screen, `transform`/`opacity` only, nothing loops. The plate settles from 1.07 scale in 1.4 s; the two sides of the fixture rise once; the tunnel plate pushes toward the light (scale 1 to 1.16) while the match loads. `prefers-reduced-motion` ends all of it.
+- **Cost**: six WebP plates, 57 to 151 kB each; one is loaded per screen.
