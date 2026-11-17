@@ -6,6 +6,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { generateMiniPack, teamForMatch } from '@decabeca/club-domain';
+import { momentWindows } from './moments';
 import {
   CommandSchema,
   coachOf,
@@ -72,7 +73,14 @@ const FriendlyBody = z.strictObject({
     .max(60),
 });
 
-function friendlyInput(b: z.infer<typeof FriendlyBody>) {
+const MomentsBody = z.strictObject({
+  seed: z.number().int().min(0).max(0x7fffffff),
+  home: Side,
+  away: Side,
+  mode: z.enum(['extended', 'highlights', 'goals']),
+});
+
+function friendlyInput(b: Pick<z.infer<typeof FriendlyBody>, 'seed' | 'home' | 'away'>) {
   const side = (x: z.infer<typeof Side>) => {
     const plan = defaultPlan(x.formation);
     plan.team = { ...plan.team, ...x.instructions } as typeof plan.team;
@@ -129,6 +137,29 @@ export const managerRoutes: FastifyPluginAsyncZod = async (app) => {
       const input = friendlyInput(b);
       const chunk = advanceMatch(input, b.commands, b.from, b.count);
       return { ...chunk, lineups: input.teams.map((t) => t.players.map((p) => p.id)) };
+    },
+  );
+
+  // Highlights: one simulation, only the frames around the chosen events (moments.ts).
+  app.post(
+    '/manager/friendly/moments',
+    {
+      schema: { body: MomentsBody },
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+    },
+    async (req) => {
+      const b = req.body;
+      const input = friendlyInput(b);
+      const all = advanceMatch(input, [], 0, MAX_TICK);
+      const windows = momentWindows(all.events, all.clocks, b.mode);
+      return {
+        moments: windows.map(([from, to]) => ({
+          frames: all.frames.slice(from, to),
+          clocks: all.clocks.slice(from, to),
+        })),
+        events: all.events,
+        result: all.result,
+      };
     },
   );
 

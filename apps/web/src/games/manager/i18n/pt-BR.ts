@@ -35,6 +35,10 @@ export const ptBR = {
   'friendly.width': 'Largura: {v} de 5',
   'friendly.risk': 'Risco no passe: {v} de 5',
   'friendly.play': 'Começar a partida',
+  'friendly.watch': 'Como assistir',
+  'friendly.watchValue':
+    '{v, select, full {Partida completa} extended {Melhores momentos estendidos} highlights {Melhores momentos} goals {Só os gols} other {Só o resultado}}',
+  'friendly.moment': 'Lance {n} de {total}',
   'friendly.loading': 'Preparando o jogo…',
   'friendly.loadError': 'Não deu para carregar a partida',
   'friendly.pitchLabel': 'Campo da partida: {home} de círculos, {away} de quadrados, e a bola',

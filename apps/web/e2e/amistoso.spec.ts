@@ -44,3 +44,21 @@ for (const width of [360, 1280]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('friendly: highlights play moment by moment and end in the report', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/tecnico/amistoso');
+  await page.getByRole('button', { name: 'Melhores momentos', exact: true }).click();
+  await page.getByRole('button', { name: 'Começar a partida' }).click();
+  await expect(page.getByText(/Lance 1 de \d+/)).toBeVisible({ timeout: 30_000 });
+  // Live adjustment belongs to the whole match only.
+  await expect(page.getByText('Ajustar o time')).toHaveCount(0);
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: 'test-results/amistoso-highlights-390.png' });
+  await page.getByRole('button', { name: '16×' }).click();
+  await expect(page.getByText('Fim de jogo')).toBeVisible({ timeout: 90_000 });
+  expect(errors).toEqual([]);
+});

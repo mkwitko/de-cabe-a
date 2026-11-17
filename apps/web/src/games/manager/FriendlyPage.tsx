@@ -9,7 +9,7 @@ import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
-import { drawPlayers, pitchLayer, view, type Kit, type View } from './pitch';
+import { drawPlayers, kitsFor, pitchLayer, view, type View } from './pitch';
 
 interface Club {
   id: string;
@@ -69,7 +69,15 @@ type Command = { atMs: number; team: 0; command: { kind: 'team'; set: Partial<In
 
 const TPS = 4;
 const CHUNK = 1200;
-const SPEEDS = [2, 4, 8, 16] as const;
+const SPEEDS = [1, 2, 4, 8, 16] as const;
+/** How to watch: the whole match, three cuts of moments, or straight to the report. */
+const WATCH = ['full', 'extended', 'highlights', 'goals', 'result'] as const;
+type Watch = (typeof WATCH)[number];
+interface Moments {
+  moments: { frames: number[][]; clocks: number[] }[];
+  events: MatchEvent[];
+  result: Result;
+}
 const PLAN: Instructions = { block: 'mid', pressIntensity: 3, tempo: 3, width: 3, risk: 3 };
 
 /** Match minute shown on the scoreboard: the second half restarts at 45. */
@@ -85,6 +93,7 @@ export function FriendlyPage() {
   const [home, setHome] = useState<Side | null>(null);
   const [away, setAway] = useState<Side | null>(null);
   const [stage, setStage] = useState<'setup' | 'match' | 'report'>('setup');
+  const [watch, setWatch] = useState<Watch>('full');
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9));
   const [error, setError] = useState<string | null>(null);
 
@@ -117,6 +126,8 @@ export function FriendlyPage() {
           away={away}
           setHome={setHome}
           setAway={setAway}
+          watch={watch}
+          setWatch={setWatch}
           onPlay={() => setStage('match')}
         />
       )}
@@ -124,6 +135,7 @@ export function FriendlyPage() {
         <Match
           key={seed}
           seed={seed}
+          watch={watch}
           clubs={clubs}
           home={home}
           away={away}
@@ -289,6 +301,8 @@ function Setup(props: {
   away: Side;
   setHome: (s: Side) => void;
   setAway: (s: Side) => void;
+  watch: Watch;
+  setWatch: (w: Watch) => void;
   onPlay: () => void;
 }) {
   const same = props.home.clubId === props.away.clubId;
@@ -318,6 +332,24 @@ function Setup(props: {
           plan={false}
         />
       </div>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="pb-2 font-condensed text-sm font-extrabold tracking-widest text-chalk-soft uppercase">
+          {t('friendly.watch')}
+        </legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {WATCH.map((w) => (
+            <button
+              key={w}
+              type="button"
+              aria-pressed={props.watch === w}
+              className={`${btnSecondary} px-2 leading-tight ${props.watch === w ? 'border-club-gold text-club-gold' : ''}`}
+              onClick={() => props.setWatch(w)}
+            >
+              {t('friendly.watchValue', { v: w })}
+            </button>
+          ))}
+        </div>
+      </fieldset>
       <button
         type="button"
         className={`${btnPrimary} self-center px-10`}
@@ -334,6 +366,7 @@ function Setup(props: {
 
 function Match(props: {
   seed: number;
+  watch: Watch;
   clubs: Club[];
   home: Side;
   away: Side;
@@ -343,31 +376,28 @@ function Match(props: {
   const clubOf = (s: Side) => props.clubs.find((c) => c.id === s.clubId)!;
   const hc = clubOf(props.home);
   const ac = clubOf(props.away);
-  const kits = useMemo<[Kit, Kit]>(
-    () => [
-      { fill: hc.colours[0], edge: hc.colours[1] },
-      { fill: ac.colours[0], edge: ac.colours[1] },
-    ],
-    [hc, ac],
-  );
+  const kits = useMemo(() => kitsFor(hc, ac), [hc, ac]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sim = useRef({
     frames: [] as number[][],
     clocks: [] as number[],
     events: [] as MatchEvent[],
     head: 0,
-    speed: 8,
+    speed: props.watch === 'full' ? 8 : 2,
+    /** Frame indexes where a new moment starts: no gliding across a cut. */
+    cuts: [] as number[],
     paused: false,
     commands: [] as Command[],
     generation: 0,
     loading: false,
     finished: false,
     result: null as Result | null,
-    skip: false,
+    skip: props.watch === 'result',
   });
   const [plan, setPlan] = useState<Instructions>(props.home.instructions);
   const [paused, setPaused] = useState(false);
-  const [speed, setSpeed] = useState(8);
+  const [speed, setSpeed] = useState(props.watch === 'full' ? 8 : 2);
+  const [moment, setMoment] = useState<[number, number] | null>(null);
   const [board, setBoard] = useState({
     score: [0, 0] as [number, number],
     minute: 1,
@@ -396,8 +426,29 @@ function Match(props: {
       count,
       commands: s.commands,
     });
+    const moments = props.watch !== 'full' && props.watch !== 'result';
+    if (moments) {
+      s.loading = true;
+      api<Moments>('/v1/manager/friendly/moments', {
+        method: 'POST',
+        json: { seed: props.seed, home: props.home, away: props.away, mode: props.watch },
+      })
+        .then((m) => {
+          for (const x of m.moments) {
+            s.cuts.push(s.frames.length);
+            s.frames.push(...x.frames);
+            s.clocks.push(...x.clocks);
+          }
+          s.events = m.events;
+          s.result = m.result;
+          s.finished = true;
+          // Nothing to show in this cut (a goalless match in "goals"): straight to the report.
+          if (s.frames.length < 2) s.skip = true;
+        })
+        .catch((e: Error) => setError(e.message));
+    }
     const load = () => {
-      if (s.loading || s.finished) return;
+      if (moments || s.loading || s.finished) return;
       s.loading = true;
       const generation = s.generation;
       const from = s.skip ? 40000 : (s.frames.at(-1)?.[0] ?? -1) + 1;
@@ -431,13 +482,6 @@ function Match(props: {
         cancelAnimationFrame(raf);
         return;
       }
-      if (s.frames.length < 2) return;
-      if (!s.paused) s.head = Math.min(s.frames.length - 1, s.head + seconds * TPS * s.speed);
-      if (s.finished && s.head >= s.frames.length - 1 && s.result) {
-        setResult(s.result);
-        cancelAnimationFrame(raf);
-      }
-
       const width = canvas.clientWidth;
       if (width === 0) return; // not laid out yet
       // ponytail: at most 2.000 device pixels across, the blit is the frame cost on a wide screen.
@@ -445,8 +489,17 @@ function Match(props: {
       if (canvas.width !== Math.round(width * dpr) || !layer || !v) {
         canvas.width = Math.round(width * dpr);
         canvas.height = Math.round(canvas.clientHeight * dpr);
-        layer = pitchLayer(canvas.width, canvas.height);
+        layer = pitchLayer(canvas.width, canvas.height, kits[0]);
         v = view(canvas.width, canvas.height);
+      }
+      if (s.frames.length < 2) {
+        ctx.drawImage(layer, 0, 0);
+        return;
+      }
+      if (!s.paused) s.head = Math.min(s.frames.length - 1, s.head + seconds * TPS * s.speed);
+      if (s.finished && s.head >= s.frames.length - 1 && s.result) {
+        setResult(s.result);
+        cancelAnimationFrame(raf);
       }
       const head = still ? Math.floor(s.head / TPS) * TPS : s.head;
       const i = Math.floor(head);
@@ -455,10 +508,13 @@ function Match(props: {
         ctx,
         v,
         s.frames[i]!,
-        s.frames[Math.min(i + 1, s.frames.length - 1)]!,
+        s.frames[s.cuts.includes(i + 1) ? i : Math.min(i + 1, s.frames.length - 1)]!,
         head - i,
         kits,
+        still ? 0 : now,
       );
+      const at = s.cuts.findLastIndex((c) => c <= i);
+      const shownMoment = at < 0 ? '' : `${at + 1}/${s.cuts.length}`;
 
       // Scoreboard and feed: only what has happened by the frame on screen.
       const clock = s.clocks[i]!;
@@ -487,10 +543,11 @@ function Match(props: {
                     : 'friendly.event.command';
           return t(key, { minute: m, team });
         });
-      const key = `${score.join()}|${minute}|${feed.join()}`;
+      const key = `${score.join()}|${minute}|${feed.join()}|${shownMoment}`;
       if (key !== shown) {
         shown = key;
         setBoard({ score, minute, feed });
+        setMoment(at < 0 ? null : [at + 1, s.cuts.length]);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -533,6 +590,11 @@ function Match(props: {
           aria-label={t('friendly.pitchLabel', { home: hc.shortName, away: ac.shortName })}
         />
         <Scoreboard clubs={[hc, ac]} score={board.score} minute={board.minute} />
+        {moment && (
+          <span className="pointer-events-none absolute top-2 right-2 rounded-lg bg-club-night/90 px-2 py-1 font-condensed text-base font-extrabold text-club-gold uppercase tabular-nums sm:top-4 sm:right-4 sm:text-xl">
+            {t('friendly.moment', { n: moment[0], total: moment[1] })}
+          </span>
+        )}
       </div>
       <ol
         aria-live="polite"
@@ -586,17 +648,19 @@ function Match(props: {
           {t('friendly.skip')}
         </button>
       </div>
-      <details className="rounded-2xl border border-chalk/10 bg-club-panel/70 p-4" open>
-        <summary className="min-h-11 cursor-pointer font-condensed text-xl font-extrabold uppercase">
-          {t('friendly.tactics')}{' '}
-          <span className="font-sans text-sm font-normal normal-case text-chalk-soft">
-            · {t('friendly.tacticsHint')}
-          </span>
-        </summary>
-        <div className="pt-3">
-          <PlanFields value={plan} onChange={change} />
-        </div>
-      </details>
+      {props.watch === 'full' && (
+        <details className="rounded-2xl border border-chalk/10 bg-club-panel/70 p-4" open>
+          <summary className="min-h-11 cursor-pointer font-condensed text-xl font-extrabold uppercase">
+            {t('friendly.tactics')}{' '}
+            <span className="font-sans text-sm font-normal normal-case text-chalk-soft">
+              · {t('friendly.tacticsHint')}
+            </span>
+          </summary>
+          <div className="pt-3">
+            <PlanFields value={plan} onChange={change} />
+          </div>
+        </details>
+      )}
     </div>
   );
 }

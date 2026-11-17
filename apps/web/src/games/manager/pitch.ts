@@ -62,7 +62,8 @@ function grain(n: number) {
   return v - Math.floor(v);
 }
 
-export function pitchLayer(w: number, h: number): HTMLCanvasElement {
+/** `home` dresses the crowd: a home stadium is mostly the home colours. */
+export function pitchLayer(w: number, h: number, home?: Kit): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = w;
   cv.height = h;
@@ -82,31 +83,69 @@ export function pitchLayer(w: number, h: number): HTMLCanvasElement {
     c.closePath();
   };
 
-  // Night sky and the stand behind the far touchline.
+  // Night sky, then the stand behind the far touchline: two tiers under a roof.
   const farLine = p(0, 0).y;
   const sky = c.createLinearGradient(0, 0, 0, farLine);
   sky.addColorStop(0, '#05090a');
-  sky.addColorStop(1, '#101c17');
+  sky.addColorStop(1, '#0f1a16');
   c.fillStyle = sky;
   c.fillRect(0, 0, w, h);
-  const standTop = farLine * 0.28;
-  c.fillStyle = '#0d1714';
-  c.fillRect(0, standTop, w, farLine - standTop);
-  // The crowd: faint dots of shirts, more of the home colours near the lights.
-  const dot = Math.max(1, w / 640);
-  for (let i = 0; i < Math.floor(w * 1.2); i++) {
-    const x = grain(i) * w;
-    const y = standTop + 4 * dot + grain(i + 0.5) * (farLine - standTop - 10 * dot);
-    c.fillStyle = `rgba(240,241,233,${0.04 + grain(i + 0.25) * 0.1})`;
-    c.fillRect(x, y, dot, dot);
+  const dot = Math.max(1, w / 560);
+  const roof = farLine * 0.2;
+  const tier = roof + (farLine - roof) * 0.48;
+  c.fillStyle = '#121d19';
+  c.fillRect(0, roof, w, farLine - roof);
+  c.fillStyle = '#0a110f';
+  c.fillRect(0, tier - dot, w, 2.5 * dot); // the walkway between tiers
+  // Roof edge with its shadow on the upper tier.
+  c.fillStyle = '#1b2723';
+  c.fillRect(0, roof - 2 * dot, w, 2.5 * dot);
+  const shade = c.createLinearGradient(0, roof, 0, roof + (tier - roof) * 0.6);
+  shade.addColorStop(0, 'rgba(0,0,0,0.55)');
+  shade.addColorStop(1, 'rgba(0,0,0,0)');
+  // The crowd: shirts in rows, mostly the home colours, lit more at the front.
+  const colours = home ? [home.fill, home.edge, home.fill] : [];
+  for (const [top, bottom, light] of [
+    [roof + dot, tier - 2 * dot, 0.55],
+    [tier + 2 * dot, farLine - 7 * dot, 0.8],
+  ] as const) {
+    const rows = Math.max(3, Math.floor((bottom - top) / (dot * 2.2)));
+    const per = Math.floor(w / (dot * 1.8));
+    for (let row = 0; row < rows; row++)
+      for (let k = 0; k < per; k++) {
+        const n = row * 997 + k + top;
+        if (grain(n) < 0.18) continue; // empty seats
+        const x = (k + grain(n + 0.3) * 0.6) * dot * 1.8;
+        const y = top + row * dot * 2.2 + grain(n + 0.7) * dot * 0.6;
+        const g = grain(n + 0.11);
+        c.globalAlpha = light * (0.35 + 0.65 * (row / rows));
+        c.fillStyle =
+          colours.length && g < 0.62
+            ? colours[Math.floor(g * 4.8) % 3]!
+            : g < 0.8
+              ? '#d9dccf'
+              : '#2b3531';
+        c.fillRect(x, y, dot * 1.1, dot * 1.3);
+      }
   }
-  // Advertising board along the far touchline.
+  c.globalAlpha = 1;
+  c.fillStyle = shade;
+  c.fillRect(0, roof, w, tier - roof);
+  // Advertising boards along the far touchline: lit panels in the mode's colours.
+  const boardTop = farLine - 6 * dot;
   c.fillStyle = '#0b1511';
-  c.fillRect(0, farLine - 6 * dot, w, 5 * dot);
-  c.fillStyle = 'rgba(233,198,90,0.35)';
-  c.fillRect(0, farLine - 6 * dot, w, dot);
+  c.fillRect(0, boardTop, w, 5 * dot);
+  for (let k = 0, x = 0; x < w; k++) {
+    const len = w * (0.08 + grain(k + 0.9) * 0.07);
+    c.fillStyle = ['rgba(233,198,90,0.55)', 'rgba(114,169,212,0.45)', 'rgba(240,241,233,0.4)'][
+      k % 3
+    ]!;
+    c.fillRect(x + dot, boardTop + dot, len - 2 * dot, 3 * dot);
+    x += len;
+  }
 
-  // Grass beyond the lines, then the mown stripes across the length.
+  // Grass beyond the lines, then mown stripes across the length, a lighter
+  // cross cut and a fine grain so it reads as turf, not paint.
   c.fillStyle = '#163a28';
   c.fillRect(0, farLine, w, h - farLine);
   const stripes = 14;
@@ -114,6 +153,17 @@ export function pitchLayer(w: number, h: number): HTMLCanvasElement {
     c.fillStyle = i % 2 === 0 ? '#22573a' : '#1c4d33';
     quad((i * LENGTH) / stripes, -30, ((i + 1) * LENGTH) / stripes + 0.5, WIDTH + 30);
     c.fill();
+  }
+  c.fillStyle = 'rgba(255,255,255,0.025)';
+  for (let j = 0; j < 8; j += 2) {
+    quad(-20, (j * WIDTH) / 8, LENGTH + 20, ((j + 1) * WIDTH) / 8);
+    c.fill();
+  }
+  for (let i = 0; i < Math.floor(w * h * 0.004); i++) {
+    const x = grain(i + 0.13) * w;
+    const y = farLine + grain(i + 0.57) * (h - farLine);
+    c.fillStyle = grain(i + 0.29) < 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    c.fillRect(x, y, dot, dot);
   }
 
   // Floodlights: four pools of light and the falloff to the corners.
@@ -135,14 +185,22 @@ export function pitchLayer(w: number, h: number): HTMLCanvasElement {
   fall.addColorStop(1, 'rgba(0,8,4,0.5)');
   c.fillStyle = fall;
   c.fillRect(0, farLine, w, h - farLine);
-  // Light masts at the corners of the stand.
-  for (const x of [0.06, 0.94]) {
-    const g = c.createRadialGradient(w * x, standTop, 0, w * x, standTop, w * 0.12);
-    g.addColorStop(0, 'rgba(255,253,240,0.55)');
-    g.addColorStop(0.15, 'rgba(255,253,240,0.12)');
+  // Light masts at the corners of the stand: a bank of lamps and its glow.
+  for (const x of [0.05, 0.95]) {
+    const cx = w * x;
+    const cy = roof * 0.55;
+    const g = c.createRadialGradient(cx, cy, 0, cx, cy, w * 0.13);
+    g.addColorStop(0, 'rgba(255,253,240,0.5)');
+    g.addColorStop(0.12, 'rgba(255,253,240,0.12)');
     g.addColorStop(1, 'rgba(255,253,240,0)');
     c.fillStyle = g;
     c.fillRect(0, 0, w, farLine);
+    c.fillStyle = '#26312d';
+    c.fillRect(cx - dot, cy, 2 * dot, farLine - cy);
+    c.fillStyle = '#fffdf0';
+    for (let k = -2; k < 2; k++)
+      for (const row of [0, 1])
+        c.fillRect(cx + k * 2.4 * dot, cy - 3 * dot + row * 2.4 * dot, 1.8 * dot, 1.8 * dot);
   }
 
   // Chalk lines, as polylines through the projection.
@@ -222,6 +280,40 @@ export function pitchLayer(w: number, h: number): HTMLCanvasElement {
     c.lineTo(b.x, b.y - hb);
     c.lineTo(b.x, b.y);
     c.stroke();
+    // Net: a few strands from the posts back to the ground.
+    c.strokeStyle = 'rgba(240,241,233,0.25)';
+    c.lineWidth = Math.max(0.5, 0.4 * v.k);
+    for (let k = 1; k < 6; k++) {
+      const f = k / 6;
+      const top = { x: a.x + (b.x - a.x) * f, y: a.y - ha + (b.y - hb - (a.y - ha)) * f };
+      const foot = { x: a.x + back + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+      c.beginPath();
+      c.moveTo(top.x, top.y);
+      c.lineTo(foot.x, foot.y);
+      c.stroke();
+    }
+  }
+  // Corner flags.
+  for (const [x, y] of [
+    [0, 0],
+    [LENGTH, 0],
+    [0, WIDTH],
+    [LENGTH, WIDTH],
+  ] as const) {
+    const o = p(x, y);
+    const pole = 15 * v.k * o.s;
+    c.strokeStyle = 'rgba(240,241,233,0.9)';
+    c.lineWidth = Math.max(1, 0.5 * v.k);
+    c.beginPath();
+    c.moveTo(o.x, o.y);
+    c.lineTo(o.x, o.y - pole);
+    c.stroke();
+    c.fillStyle = '#e9c65a';
+    c.beginPath();
+    c.moveTo(o.x, o.y - pole);
+    c.lineTo(o.x + (x === 0 ? 1 : -1) * pole * 0.45, o.y - pole * 0.85);
+    c.lineTo(o.x, o.y - pole * 0.7);
+    c.fill();
   }
   return cv;
 }
@@ -229,11 +321,74 @@ export function pitchLayer(w: number, h: number): HTMLCanvasElement {
 export interface Kit {
   fill: string;
   edge: string;
+  /** Shirt design; the pack has no field for it yet, so it comes from the club id. */
+  pattern?: Pattern;
+  /** Goalkeeper shirt, unlike both outfield kits. */
+  keeper?: string;
 }
+export type Pattern = 'plain' | 'stripes' | 'hoops' | 'sash' | 'halves';
+const PATTERNS: Pattern[] = ['plain', 'stripes', 'hoops', 'sash', 'halves'];
+const KEEPER = ['#f2c94c', '#8e5bd6', '#2fb86b', '#1c1c1c', '#f08a3c', '#e8e8e8'];
+
+const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const distance = (a: string, b: string) => {
+  const [x, y] = [rgb(a), rgb(b)];
+  return Math.hypot(x[0]! - y[0]!, x[1]! - y[1]!, x[2]! - y[2]!);
+};
+
+/** Both kits for a match: pattern from the club id, keepers in a colour far from both sides. */
+export function kitsFor(
+  home: { id: string; colours: [string, string] },
+  away: { id: string; colours: [string, string] },
+): [Kit, Kit] {
+  const hash = (id: string) => [...id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const outfield = [...home.colours, ...away.colours];
+  const far = (skip: string[]) =>
+    KEEPER.filter((k) => !skip.includes(k)).sort(
+      (a, b) =>
+        Math.min(...outfield.map((o) => distance(b, o))) -
+        Math.min(...outfield.map((o) => distance(a, o))),
+    )[0]!;
+  const homeKeeper = far([]);
+  const kit = (c: typeof home, keeper: string): Kit => ({
+    fill: c.colours[0],
+    edge: c.colours[1],
+    pattern: PATTERNS[hash(c.id) % PATTERNS.length]!,
+    keeper,
+  });
+  return [kit(home, homeKeeper), kit(away, far([homeKeeper]))];
+}
+
+/** Shirt design inside the current path (already filled with the main colour). */
+function pattern(c: CanvasRenderingContext2D, k: Kit, x: number, y: number, r: number) {
+  if (!k.pattern || k.pattern === 'plain') return;
+  c.save();
+  c.clip();
+  c.fillStyle = k.edge;
+  if (k.pattern === 'stripes')
+    for (let i = -1; i <= 1; i += 2)
+      c.fillRect(x + i * r * 0.45 - r * 0.17, y - r, r * 0.34, r * 2);
+  else if (k.pattern === 'hoops') c.fillRect(x - r, y - r * 0.2, r * 2, r * 0.4);
+  else if (k.pattern === 'halves') c.fillRect(x, y - r, r, r * 2);
+  else {
+    c.beginPath();
+    c.moveTo(x - r, y - r * 0.55);
+    c.lineTo(x - r * 0.55, y - r);
+    c.lineTo(x + r, y + r * 0.55);
+    c.lineTo(x + r * 0.55, y + r);
+    c.closePath();
+    c.fill();
+  }
+  c.restore();
+}
+
+const SKIN = ['#f1c9a5', '#d9a47a', '#b97d52', '#8a5a3b', '#5e3b26'];
 
 /**
  * Players and ball between frames `a` and `b` at fraction `f`, back to front.
  * Home: discs; away: rounded squares (shape, not only colour, tells the sides).
+ * `now` drives the running bob and the ball spin; both stop with reduced motion
+ * because the caller then holds `f` and passes a fixed `now`.
  */
 export function drawPlayers(
   c: CanvasRenderingContext2D,
@@ -242,28 +397,73 @@ export function drawPlayers(
   b: number[],
   f: number,
   kits: [Kit, Kit],
+  now = 0,
 ) {
   const lerp = (i: number) => a[i]! + (b[i]! - a[i]!) * f;
   const order = Array.from({ length: 22 }, (_, p) => p).sort(
     (p, q) => lerp(5 + p * 2) - lerp(5 + q * 2),
   );
   const ball = v.at(lerp(1), lerp(2));
+  const from = v.at(a[1]!, a[2]!);
   const z = Math.max(0, lerp(3));
+  // Ball speed in decimetres per frame (4 frames a second).
+  const pace = Math.hypot(b[1]! - a[1]!, b[2]! - a[2]!);
   let ballDrawn = false;
   const drawBall = () => {
     const br = Math.max(2.5, 5.5 * v.k * ball.s * v.size);
     const lift = z * v.k * ball.s;
-    c.fillStyle = `rgba(0,0,0,${Math.max(0.12, 0.38 - z / 400)})`;
+    // Shadow: smaller and softer the higher the ball.
+    const spread = 1 + z / 120;
+    c.fillStyle = `rgba(0,0,0,${Math.max(0.1, 0.4 - z / 350)})`;
     c.beginPath();
-    c.ellipse(ball.x, ball.y, br, br * 0.5, 0, 0, Math.PI * 2);
+    c.ellipse(ball.x, ball.y, br * spread, br * 0.5 * spread, 0, 0, Math.PI * 2);
     c.fill();
+    const y = ball.y - br - lift;
+    // A struck ball leaves a short streak behind it.
+    if (pace > 25) {
+      const dx = ball.x - from.x;
+      const dy = ball.y - from.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const tail = Math.min(br * 6, (pace / 25) * br * 1.5);
+      const g = c.createLinearGradient(
+        ball.x,
+        y,
+        ball.x - (dx / len) * tail,
+        y - (dy / len) * tail,
+      );
+      g.addColorStop(0, 'rgba(255,255,255,0.45)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.strokeStyle = g;
+      c.lineWidth = br * 1.4;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(ball.x, y);
+      c.lineTo(ball.x - (dx / len) * tail, y - (dy / len) * tail);
+      c.stroke();
+      c.lineCap = 'butt';
+    }
     c.fillStyle = '#ffffff';
     c.strokeStyle = '#0b1511';
-    c.lineWidth = Math.max(1, br * 0.3);
+    c.lineWidth = Math.max(1, br * 0.25);
     c.beginPath();
-    c.arc(ball.x, ball.y - br - lift, br, 0, Math.PI * 2);
+    c.arc(ball.x, y, br, 0, Math.PI * 2);
     c.fill();
     c.stroke();
+    // Panels that turn with the roll.
+    const spin = ((lerp(1) + lerp(2)) / 25) % (Math.PI * 2);
+    c.fillStyle = '#1d2a25';
+    for (let k = 0; k < 3; k++) {
+      const ang = spin + (k * Math.PI * 2) / 3;
+      c.beginPath();
+      c.arc(
+        ball.x + Math.cos(ang) * br * 0.5,
+        y + Math.sin(ang) * br * 0.5,
+        br * 0.24,
+        0,
+        Math.PI * 2,
+      );
+      c.fill();
+    }
     ballDrawn = true;
   };
 
@@ -271,34 +471,41 @@ export function drawPlayers(
     const o = v.at(lerp(4 + p * 2), lerp(5 + p * 2));
     if (!ballDrawn && ball.y < o.y) drawBall();
     const r = Math.max(4, 11 * v.k * o.s * v.size);
-    const kit = kits[p < 11 ? 0 : 1];
+    const team = p < 11 ? 0 : 1;
+    const kit = kits[team];
+    const keeper = p % 11 === 0;
+    // Running: a small bob, faster with pace.
+    const run = Math.hypot(b[4 + p * 2]! - a[4 + p * 2]!, b[5 + p * 2]! - a[5 + p * 2]!);
+    const bob = run > 4 ? Math.abs(Math.sin(now / 90 + p)) * r * 0.18 * Math.min(1, run / 20) : 0;
     // Shadow on the grass, then the body standing on it.
     c.fillStyle = 'rgba(0,0,0,0.38)';
     c.beginPath();
     c.ellipse(o.x + r * 0.35, o.y, r * 1.05, r * 0.42, 0, 0, Math.PI * 2);
     c.fill();
-    const y = o.y - r * 1.15;
-    c.lineWidth = Math.max(1.5, r * 0.28);
-    c.strokeStyle = kit.edge;
-    c.fillStyle = kit.fill;
-    // Keepers in a lighter shade of the same shape.
-    if (p % 11 === 0) c.globalAlpha = 0.75;
+    const y = o.y - r * 1.15 - bob;
+    c.lineWidth = Math.max(1.5, r * 0.26);
+    c.strokeStyle = keeper ? '#0b1511' : kit.edge;
+    c.fillStyle = keeper ? (kit.keeper ?? kit.fill) : kit.fill;
     c.beginPath();
-    if (p < 11) c.arc(o.x, y, r, 0, Math.PI * 2);
+    if (team === 0) c.arc(o.x, y, r, 0, Math.PI * 2);
     else c.roundRect(o.x - r, y - r, r * 2, r * 2, r * 0.35);
     c.fill();
-    c.stroke();
-    c.globalAlpha = 1;
-    // Floodlight sheen on the upper edge.
-    c.strokeStyle = 'rgba(255,255,255,0.35)';
-    c.lineWidth = Math.max(1, r * 0.18);
+    if (!keeper) pattern(c, kit, o.x, y, r);
     c.beginPath();
-    if (p < 11) c.arc(o.x, y, r * 0.72, Math.PI * 1.15, Math.PI * 1.85);
-    else {
-      c.moveTo(o.x - r * 0.55, y - r * 0.6);
-      c.lineTo(o.x + r * 0.55, y - r * 0.6);
-    }
+    if (team === 0) c.arc(o.x, y, r, 0, Math.PI * 2);
+    else c.roundRect(o.x - r, y - r, r * 2, r * 2, r * 0.35);
     c.stroke();
+    // Head above the shirt, with hair, lit from the floodlights.
+    const hr = r * 0.42;
+    const hy = y - r - hr * 0.55;
+    c.fillStyle = SKIN[(p * 7) % SKIN.length]!;
+    c.beginPath();
+    c.arc(o.x, hy, hr, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#1a1410';
+    c.beginPath();
+    c.arc(o.x, hy, hr, Math.PI * 1.05, Math.PI * 1.95);
+    c.fill();
   }
   if (!ballDrawn) drawBall();
 }
