@@ -383,10 +383,142 @@ function pattern(c: CanvasRenderingContext2D, k: Kit, x: number, y: number, r: n
 }
 
 const SKIN = ['#f1c9a5', '#d9a47a', '#b97d52', '#8a5a3b', '#5e3b26'];
+const BOOT = '#111814';
+const GLOVE = '#f4f7ef';
+/** Stride phase per player, carried between draws. */
+const phase = new Float64Array(22);
+let lastNow = 0;
+
+interface Pose {
+  x: number;
+  y: number;
+  r: number;
+  team: number;
+  kit: Kit;
+  keeper: boolean;
+  skin: string;
+  /** Unit screen heading. */
+  hx: number;
+  hy: number;
+  /** 0 standing … 1 sprinting. */
+  amp: number;
+  phase: number;
+  /** Screen direction of the strike when this player kicks the ball. */
+  kick: [number, number] | null;
+  dive: boolean;
+  handsUp: boolean;
+}
+
+/**
+ * One athlete standing on (x, y), drawn in a frame where up is -y and the unit
+ * is r: boots, socks, shorts, shirt (disc at home, rounded square away), arms,
+ * head. Leans into the run; a keeper dives sideways with the arms stretched.
+ */
+function athlete(c: CanvasRenderingContext2D, q: Pose) {
+  const { r, kit } = q;
+  const shirt = q.keeper ? (kit.keeper ?? kit.fill) : kit.fill;
+  const side = q.hx >= 0 ? 1 : -1;
+  // Shadow on the grass, longer when diving.
+  c.fillStyle = 'rgba(0,0,0,0.38)';
+  c.beginPath();
+  c.ellipse(q.x + r * 0.3, q.y, r * (q.dive ? 1.9 : 1), r * 0.38, 0, 0, Math.PI * 2);
+  c.fill();
+
+  c.save();
+  c.translate(q.x, q.y);
+  c.rotate(q.dive ? side * 1.15 : q.hx * q.amp * 0.16);
+  const bob = Math.abs(Math.sin(q.phase)) * r * 0.12 * q.amp;
+  const swing = Math.sin(q.phase) * r * 0.75 * q.amp;
+  const hipY = -r * 1.25 - bob;
+  const lw = Math.max(1.2, r * 0.3);
+  c.lineCap = 'round';
+
+  // Legs: sock to boot, the swinging foot lifted off the grass.
+  const leg = (dx: number, s: number, kicking: boolean) => {
+    let fx = dx + s * q.hx;
+    let fy = -Math.max(0, Math.cos(q.phase) * s) * 0.35;
+    if (kicking && q.kick) [fx, fy] = [q.kick[0] * r * 1.1, -r * 0.45];
+    if (q.dive) [fx, fy] = [dx * 0.6 - side * r * 0.5, 0];
+    c.strokeStyle = kit.fill;
+    c.lineWidth = lw;
+    c.beginPath();
+    c.moveTo(dx * 0.7, hipY);
+    c.lineTo(fx, fy - bob * 0.2);
+    c.stroke();
+    c.fillStyle = BOOT;
+    c.beginPath();
+    c.ellipse(fx + side * r * 0.12, fy - r * 0.05, r * 0.24, r * 0.13, 0, 0, Math.PI * 2);
+    c.fill();
+  };
+  leg(-r * 0.28, swing, false);
+  leg(r * 0.28, -swing, true);
+
+  // Shorts.
+  c.fillStyle = kit.edge;
+  c.beginPath();
+  c.roundRect(-r * 0.52, hipY - r * 0.3, r * 1.04, r * 0.45, r * 0.12);
+  c.fill();
+
+  // Arms behind the shirt swing against the legs; a keeper's go up.
+  const ty = hipY - r * 0.92;
+  const arm = (dx: number, s: number) => {
+    let hx2 = dx * 1.25 - s * q.hx * 0.7;
+    let hy2 = ty + r * 0.85;
+    if (q.handsUp) [hx2, hy2] = [dx * 1.3, ty - r * 1.3];
+    if (q.dive) [hx2, hy2] = [dx * 0.4 + side * r * 0.2, ty - r * 1.8];
+    c.strokeStyle = shirt;
+    c.lineWidth = lw * 0.85;
+    c.beginPath();
+    c.moveTo(dx, ty - r * 0.45);
+    c.lineTo(hx2, hy2);
+    c.stroke();
+    c.fillStyle = q.keeper ? GLOVE : q.skin;
+    c.beginPath();
+    c.arc(hx2, hy2, r * (q.keeper ? 0.2 : 0.14), 0, Math.PI * 2);
+    c.fill();
+  };
+  arm(-r * 0.56, -swing);
+  arm(r * 0.56, swing);
+
+  // Shirt: the shape tells the side (disc at home, rounded square away).
+  const tr = r * 0.6;
+  const body = () => {
+    c.beginPath();
+    if (q.team === 0) c.ellipse(0, ty, tr, tr * 1.2, 0, 0, Math.PI * 2);
+    else c.roundRect(-tr, ty - tr * 1.2, tr * 2, tr * 2.4, tr * 0.4);
+  };
+  c.lineWidth = Math.max(1.2, r * 0.2);
+  c.strokeStyle = q.keeper ? BOOT : kit.edge;
+  c.fillStyle = shirt;
+  body();
+  c.fill();
+  if (!q.keeper) {
+    body();
+    pattern(c, kit, 0, ty, tr);
+  }
+  body();
+  c.stroke();
+
+  // Head, turned a little towards the run, with hair.
+  const hr = r * 0.4;
+  const hx3 = q.hx * hr * 0.25;
+  const hy3 = ty - tr * 1.2 - hr * 0.85;
+  c.fillStyle = q.skin;
+  c.beginPath();
+  c.arc(hx3, hy3, hr, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = '#1a1410';
+  c.beginPath();
+  c.arc(hx3 - q.hx * hr * 0.2, hy3, hr, Math.PI * 1.05, Math.PI * 1.95);
+  c.fill();
+  c.restore();
+  c.lineCap = 'butt';
+}
 
 /**
  * Players and ball between frames `a` and `b` at fraction `f`, back to front.
- * Home: discs; away: rounded squares (shape, not only colour, tells the sides).
+ * Athletes with legs, arms and head; the shirt is a disc at home and a rounded
+ * square away (shape, not only colour, tells the sides).
  * `now` drives the running bob and the ball spin; both stop with reduced motion
  * because the caller then holds `f` and passes a fixed `now`.
  */
@@ -467,45 +599,55 @@ export function drawPlayers(
     ballDrawn = true;
   };
 
+  // Who strikes the ball this frame: the nearest player when it leaves fast.
+  let kicker = -1;
+  if (pace > 25) {
+    let best = 20; // decimetres
+    for (let p = 0; p < 22; p++) {
+      const d = Math.hypot(a[4 + p * 2]! - a[1]!, a[5 + p * 2]! - a[2]!);
+      if (d < best) [best, kicker] = [d, p];
+    }
+  }
+  const dt = lastNow === 0 || now === 0 ? 0 : Math.min(100, now - lastNow);
+  lastNow = now;
+
   for (const p of order) {
     const o = v.at(lerp(4 + p * 2), lerp(5 + p * 2));
     if (!ballDrawn && ball.y < o.y) drawBall();
     const r = Math.max(4, 11 * v.k * o.s * v.size);
     const team = p < 11 ? 0 : 1;
-    const kit = kits[team];
-    const keeper = p % 11 === 0;
-    // Running: a small bob, faster with pace.
+    // Screen heading: where the player runs, else towards the ball.
+    const pa = v.at(a[4 + p * 2]!, a[5 + p * 2]!);
+    const pb = v.at(b[4 + p * 2]!, b[5 + p * 2]!);
     const run = Math.hypot(b[4 + p * 2]! - a[4 + p * 2]!, b[5 + p * 2]! - a[5 + p * 2]!);
-    const bob = run > 4 ? Math.abs(Math.sin(now / 90 + p)) * r * 0.18 * Math.min(1, run / 20) : 0;
-    // Shadow on the grass, then the body standing on it.
-    c.fillStyle = 'rgba(0,0,0,0.38)';
-    c.beginPath();
-    c.ellipse(o.x + r * 0.35, o.y, r * 1.05, r * 0.42, 0, 0, Math.PI * 2);
-    c.fill();
-    const y = o.y - r * 1.15 - bob;
-    c.lineWidth = Math.max(1.5, r * 0.26);
-    c.strokeStyle = keeper ? '#0b1511' : kit.edge;
-    c.fillStyle = keeper ? (kit.keeper ?? kit.fill) : kit.fill;
-    c.beginPath();
-    if (team === 0) c.arc(o.x, y, r, 0, Math.PI * 2);
-    else c.roundRect(o.x - r, y - r, r * 2, r * 2, r * 0.35);
-    c.fill();
-    if (!keeper) pattern(c, kit, o.x, y, r);
-    c.beginPath();
-    if (team === 0) c.arc(o.x, y, r, 0, Math.PI * 2);
-    else c.roundRect(o.x - r, y - r, r * 2, r * 2, r * 0.35);
-    c.stroke();
-    // Head above the shirt, with hair, lit from the floodlights.
-    const hr = r * 0.42;
-    const hy = y - r - hr * 0.55;
-    c.fillStyle = SKIN[(p * 7) % SKIN.length]!;
-    c.beginPath();
-    c.arc(o.x, hy, hr, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = '#1a1410';
-    c.beginPath();
-    c.arc(o.x, hy, hr, Math.PI * 1.05, Math.PI * 1.95);
-    c.fill();
+    let hx = pb.x - pa.x;
+    let hy = pb.y - pa.y;
+    if (run < 2) [hx, hy] = [ball.x - o.x, ball.y - o.y];
+    const hl = Math.hypot(hx, hy) || 1;
+    // Stride: the phase advances with the distance run, so the legs match the pace.
+    const amp = Math.min(1, run / 18);
+    phase[p] = (phase[p]! + (dt / 1000) * (4 + 7 * amp) * Math.PI) % (Math.PI * 2);
+    const near = Math.hypot(lerp(4 + p * 2) - lerp(1), lerp(5 + p * 2) - lerp(2));
+    athlete(c, {
+      x: o.x,
+      y: o.y,
+      r,
+      team,
+      kit: kits[team],
+      keeper: p % 11 === 0,
+      skin: SKIN[(p * 7) % SKIN.length]!,
+      hx: hx / hl,
+      hy: hy / hl,
+      amp,
+      phase: phase[p]!,
+      kick:
+        p === kicker
+          ? [(ball.x - from.x) / (Math.hypot(ball.x - from.x, ball.y - from.y) || 1), 0]
+          : null,
+      // A keeper moving fast with the ball close is diving; close enough, his hands go up.
+      dive: p % 11 === 0 && run > 16 && near < 50,
+      handsUp: p % 11 === 0 && near < 90 && z > 3,
+    });
   }
   if (!ballDrawn) drawBall();
 }
