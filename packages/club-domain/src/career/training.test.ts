@@ -10,6 +10,8 @@ import {
   RECOVERY,
   drilled,
   myStrength,
+  rivalFresh,
+  rivalStrength,
   setIntensity,
   trainingOn,
 } from './training';
@@ -73,6 +75,17 @@ describe('training and freshness (08, corte 1)', () => {
     const mine = m.input.teams[m.mine].players;
     expect(mine[0]!.condition).toBe(t.fresh[mine[0]!.id] ?? 1);
     expect(Math.max(...mine.slice(0, 11).map((p) => p.familiarity))).toBe(drilled(t.drill));
+    // The other club tires by the same rule, from the days since its last match.
+    const rival = d.home === clubId ? d.away : d.home;
+    const theirs = m.input.teams[m.mine === 0 ? 1 : 0].players;
+    expect(theirs[0]!.condition).toBe(rivalFresh(w, rival, d.day));
+    let lastDay = -1;
+    for (const x of w.season.calendar.byClub.get(rival)!)
+      if (x.played && x.day < d.day) lastDay = Math.max(lastDay, x.day);
+    expect(lastDay).toBeGreaterThan(0);
+    expect(rivalFresh(w, rival, lastDay + 2)).toBe(1 - MATCH_COST + RECOVERY.normal * 2);
+    expect(rivalStrength(w, rival, lastDay + 2)).toBeLessThan(w.strength.get(rival)!);
+    expect(rivalStrength(w, rival, lastDay + 30)).toBe(w.strength.get(rival));
     // The state rides in the snapshot and the world goes on the same.
     const again = loadCareer(pack, 51, clubId, saveCareer(w));
     expect(again.training).toEqual(w.training);

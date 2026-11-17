@@ -9,6 +9,7 @@ import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../component
 import { t } from '../i18n';
 import type { ClubFace, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
 import { Squad } from './Squad';
+import { Training } from './Training';
 import {
   Match,
   PLAN,
@@ -29,7 +30,9 @@ interface ClubOption {
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
 type Axis = (typeof AXES)[number];
 const VENUE = ['away', 'home'] as const;
-const ROOMS = ['sala', 'vestiario'] as const;
+const ROOMS = ['sala', 'vestiario', 'treino'] as const;
+/** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
+const NO_PORTRAIT: readonly string[] = ['treino'];
 const STILL = '&still=1';
 const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
@@ -431,19 +434,23 @@ function Home({ career }: { career: Career }) {
       <Scene plate={room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       <ClubBar sim={sim} />
-      <nav aria-label={t('career.rooms')} className="sala-rooms flex gap-1 self-start p-1">
+      <nav
+        aria-label={t('career.rooms')}
+        className="sala-rooms flex max-w-full gap-1 self-start overflow-x-auto p-1"
+      >
         {ROOMS.map((r) => (
           <button
             key={r}
             type="button"
             aria-current={room === r ? 'page' : undefined}
-            className={`min-h-11 rounded-lg px-4 font-condensed text-lg font-extrabold uppercase ${room === r ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
+            className={`min-h-11 shrink-0 rounded-lg px-4 font-condensed text-lg font-extrabold whitespace-nowrap uppercase ${room === r ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
             onClick={() => setRoom(r)}
           >
             {t('career.room', { r })}
           </button>
         ))}
       </nav>
+      {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
       {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
       {room === 'sala' && (
         <>
@@ -521,7 +528,9 @@ function Scene({ plate }: { plate: Room | 'campo' }) {
   return (
     <div aria-hidden className="sala-scene">
       <picture>
-        <source media="(orientation: portrait)" srcSet={`/img/clube/${plate}-v.webp`} />
+        {!NO_PORTRAIT.includes(plate) && (
+          <source media="(orientation: portrait)" srcSet={`/img/clube/${plate}-v.webp`} />
+        )}
         <img src={`/img/clube/${plate}-h.webp`} alt="" decoding="async" fetchPriority="high" />
       </picture>
     </div>

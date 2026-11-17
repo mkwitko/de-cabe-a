@@ -10,7 +10,7 @@ import { createLedger, type LedgerEntry } from '../finance/ledger';
 import type { Pack } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import type { Lineup } from './squad';
-import { othersStrengths, type Training } from './training';
+import { clubLevels, type Training } from './training';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
@@ -73,7 +73,7 @@ export function loadCareer(pack: Pack, seed: number, clubId: string, json: strin
     season,
     ledger: createLedger(saved.ledger.today, saved.ledger.entries),
     day: saved.day,
-    strength: othersStrengths(pack),
+    ...clubLevels(pack),
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
   };

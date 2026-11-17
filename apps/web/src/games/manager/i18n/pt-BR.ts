@@ -62,7 +62,8 @@ export const ptBR = {
   'career.cash': '{value, number, currency}',
   'career.next': 'Próximo jogo',
   'career.rooms': 'Salas do clube',
-  'career.room': '{r, select, sala {Sala do técnico} other {Vestiário}}',
+  'career.room':
+    '{r, select, sala {Sala do técnico} vestiario {Vestiário} other {Campo de treino}}',
   'squad.title': 'Escalação',
   'squad.formation': 'Formação',
   'squad.auto': 'Escalação do treinador',
@@ -74,6 +75,22 @@ export const ptBR = {
   'squad.slot': '{role}: {name}, nota {n}, {known}',
   'squad.choose': '{name}, {age} anos, nota {n}, {known}',
   'squad.starter': 'Titular',
+  'squad.fresh': 'Fôlego {n}%',
+  'training.week': 'Semana de treino',
+  'training.intensity': '{i, select, light {Leve} normal {Normal} other {Forte}}',
+  'training.recovery': 'Fôlego volta {n, number}% por dia',
+  'training.target': 'Entrosamento vai a {n}%',
+  'training.drill': 'Entrosamento hoje',
+  'training.drillHint':
+    'Time entrosado pressiona junto e segue o plano. Conta na partida assistida e no resultado.',
+  'training.next':
+    '{n, plural, =0 {Jogo hoje.} one {Próximo jogo em # dia.} other {Próximo jogo em # dias.}}',
+  'training.noMatch': 'Sem jogo marcado.',
+  'training.cost': 'Cada titular deixa {n}% de fôlego no jogo.',
+  'training.fresh': 'Fôlego para o próximo jogo',
+  'training.freshHint': 'Quem está cansado rende menos. Troque no Vestiário ou alivie a semana.',
+  'training.state': '{s, select, ready {Pronto} tired {Cansado} other {Esgotado}}',
+  'training.player': '{name}: fôlego {n}%, {state}',
   'squad.known':
     '{l, select, 3 {Da posição} 2 {Sabe jogar ali} 1 {Improvisado} other {Fora de posição}}',
   'squad.plan': 'Plano de jogo',
@@ -174,6 +191,7 @@ export const ptBR = {
     'Ataque organizado: {xgFor, number} de gols esperados a favor contra {xgAgainst, number}.',
 
   'common.money': '{value, number, currency}',
+  'common.percent': '{n}%',
   'common.minutes': '{n, plural, =0 {nenhum minuto} one {# minuto} other {# minutos}}',
 } as const satisfies Record<string, string>;
 

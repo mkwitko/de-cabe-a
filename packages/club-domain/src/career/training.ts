@@ -9,12 +9,22 @@
  *   the intensity. It is the eleven's familiarity with the plan in the engine and adds or takes
  *   points of strength in the level 3 result.
  *
- * The other clubs are not tracked day by day: they stand at a managed squad's level
- * (`OTHERS`), so the person gains by managing well and loses by overplaying the same eleven.
+ * The other clubs are not tracked player by player. Each one's eleven tires by the same rule
+ * from the days since its last match (`rivalFresh`), on a normal week of training, so a tight
+ * calendar costs both sides; what the person adds is rotation and the choice of the week.
  * Exact arithmetic only (ADR-020). Every number here is a PARÂMETRO, not calibrated.
  */
 import type { CareerWorld } from './advance';
-import { clubStrengths, lineupOf, slotRatings, type ClubIn, type Lineup } from './squad';
+import {
+  bestLineup,
+  lineupOf,
+  lineupStrength,
+  slotRatings,
+  type ClubIn,
+  type Lineup,
+} from './squad';
+import { formationOf } from '../match/fixture-input';
+import { clubStrength } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
 
@@ -39,8 +49,8 @@ const DRILL_RATE = 0.04;
 /** Freshness a starter leaves on the pitch. */
 export const MATCH_COST = 0.28;
 const NEUTRAL_DRILL = DRILL_TARGET.normal;
-/** What every other club is taken to be at: a managed squad on a normal week. */
-export const OTHERS = { fresh: 0.95, drill: NEUTRAL_DRILL } as const;
+/** The drill every other club is taken to keep: a normal week. */
+export const RIVAL_DRILL = NEUTRAL_DRILL;
 
 /** Share of a slot rating a player delivers at this freshness. */
 export const freshFactor = (fresh: number) => 0.8 + 0.2 * fresh;
@@ -106,8 +116,43 @@ export function myStrength(w: CareerWorld, t: Training): number {
   return strengthWith(w, lineupOf(w), { fresh: (id) => t.fresh[id] ?? 1, drill: t.drill });
 }
 
-/** Every club's level 3 strength at the managed level (`OTHERS`): its best eleven by position. */
-export const othersStrengths = (pack: Pack): Map<string, number> =>
-  clubStrengths(pack, (c, l) =>
-    strengthWith(c, l, { fresh: () => OTHERS.fresh, drill: OTHERS.drill }),
-  );
+/**
+ * Every club's level 3 measure, rested and on a normal week: `strength` is its best eleven by
+ * position in its usual formation (`lineupStrength`), `eleven` the part of it the starters carry,
+ * which is what tiredness takes from. A club that cannot field that eleven keeps the plain squad
+ * reading.
+ */
+export function clubLevels(pack: Pack): {
+  strength: Map<string, number>;
+  eleven: Map<string, number>;
+} {
+  const plain = clubStrength(pack);
+  const strength = new Map<string, number>();
+  const eleven = new Map<string, number>();
+  for (const club of pack.clubs) {
+    const c = { pack, clubId: club.id };
+    try {
+      const l = bestLineup(c, formationOf(club.id));
+      const fit = slotRatings(c, l.formation);
+      strength.set(club.id, lineupStrength(c, l));
+      eleven.set(club.id, l.xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / 16);
+    } catch {
+      strength.set(club.id, plain.get(club.id) ?? 50);
+      eleven.set(club.id, ((plain.get(club.id) ?? 50) * 11) / 16);
+    }
+  }
+  return { strength, eleven };
+}
+
+/** How fresh another club's eleven is on `day`: a match's cost, less the days since its last. */
+export function rivalFresh(w: CareerWorld, clubId: string, day: number): number {
+  let last = -1;
+  for (const m of w.season.calendar.byClub.get(clubId) ?? [])
+    if (m.played && m.day < day && m.day > last) last = m.day;
+  return last < 0 ? 1 : Math.min(1, 1 - MATCH_COST + RECOVERY.normal * (day - last));
+}
+
+/** Another club's level 3 strength on `day`: its rested measure, less what tired legs take. */
+export const rivalStrength = (w: CareerWorld, clubId: string, day: number): number =>
+  (w.strength.get(clubId) ?? 50) -
+  (w.eleven.get(clubId) ?? 0) * (1 - freshFactor(rivalFresh(w, clubId, day)));

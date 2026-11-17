@@ -26,7 +26,6 @@ import {
   type MomentMode,
   upcomingFor,
   lineupOf,
-  lineupStrength,
   planOf,
   type PlanChoice,
   setLineup,
@@ -34,6 +33,14 @@ import {
   squadOf,
   bestLineup,
   slotLevels,
+  DRILL_TARGET,
+  INTENSITIES,
+  MATCH_COST,
+  RECOVERY,
+  myStrength,
+  setIntensity,
+  trainingOn,
+  type Intensity,
   type SquadPlayer,
 } from '@decabeca/club-domain';
 import {
@@ -62,6 +69,9 @@ export type SimRequest = { id: number } & (
   | { type: 'squad' }
   /** Picks the eleven; `xi` null asks the coach's best eleven for that formation. */
   | { type: 'lineup'; formation: string; xi: string[] | null; plan: PlanChoice }
+  /** The training ground: the week's intensity and everyone's freshness. */
+  | { type: 'training' }
+  | { type: 'train'; intensity: Intensity }
   | { type: 'nextSeason' }
   /** Watch the person's next match with the match engine (level 1). */
   | { type: 'matchStart' }
@@ -127,13 +137,57 @@ export interface SquadView {
   xi: string[];
   /** `fit[i]`: how the player does in slot `i`, 1..99. */
   /** `known[i]`: how well he knows slot `i`'s position, 3 natural … 0 not his. */
-  players: (SquadPlayer & { fit: number[]; known: number[]; keeper: boolean })[];
+  players: (SquadPlayer & { fit: number[]; known: number[]; keeper: boolean; fresh: number })[];
   strength: number;
   plan: PlanChoice;
 }
 
+/** The day the squad is being prepared for: the next match, or today. */
+const matchDay = (w: CareerWorld) => (pending?.kind === 'match' ? pending.day : w.day);
+const percent = (x: number) => Math.round(x * 100);
+
+/** The training ground: the choice of the week and what it does, in percentages for the screen. */
+export interface TrainingView {
+  intensity: Intensity;
+  drill: number;
+  options: { intensity: Intensity; recovery: number; target: number }[];
+  matchCost: number;
+  /** Days to the next match; null when none is set. */
+  nextIn: number | null;
+  /** Freshness on the day of the next match. */
+  players: { id: string; name: string; position: string; fresh: number; starter: boolean }[];
+}
+
+function trainingView(w: CareerWorld): TrainingView {
+  const now = trainingOn(w, w.day);
+  const then = trainingOn(w, matchDay(w));
+  const xi = lineupOf(w).xi;
+  return {
+    intensity: now.intensity,
+    drill: percent(now.drill),
+    options: INTENSITIES.map((intensity) => ({
+      intensity,
+      // One decimal: 4.5% a day is not 5%.
+      recovery: Math.round(RECOVERY[intensity] * 1000) / 10,
+      target: percent(DRILL_TARGET[intensity]),
+    })),
+    matchCost: percent(MATCH_COST),
+    nextIn: pending?.kind === 'match' ? pending.day - w.day : null,
+    players: squadOf(w)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        position: p.positions[0]!,
+        fresh: percent(then.fresh[p.id] ?? 1),
+        starter: xi.includes(p.id),
+      }))
+      .sort((a, b) => Number(b.starter) - Number(a.starter) || a.fresh - b.fresh),
+  };
+}
+
 function squadView(w: CareerWorld): SquadView {
   const l = lineupOf(w);
+  const then = trainingOn(w, matchDay(w));
   const f = FORMATIONS[l.formation]!;
   const fit = slotRatings(w, l.formation);
   const known = slotLevels(w, l.formation);
@@ -147,8 +201,9 @@ function squadView(w: CareerWorld): SquadView {
       fit: fit.get(p.id)!,
       known: known.get(p.id)!,
       keeper: p.positions.includes('GK'),
+      fresh: percent(then.fresh[p.id] ?? 1),
     })),
-    strength: Math.round(lineupStrength(w, l)),
+    strength: Math.round(myStrength(w, then)),
     plan: planOf(w),
   };
 }
@@ -156,6 +211,7 @@ function squadView(w: CareerWorld): SquadView {
 export interface SimReply {
   id: number;
   squad?: SquadView;
+  training?: TrainingView;
   /** matchStart: the two sides and which one is the person's. */
   match?: { home: MatchClub; away: MatchClub; mine: 0 | 1; formation: string; plan: PlanChoice };
   chunk?: MatchChunk;
@@ -315,6 +371,20 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: world.season.season,
         bytes: await gzip(saveCareer(world)),
       };
+    }
+    if (world && (r.type === 'training' || r.type === 'train')) {
+      if (r.type === 'train') setIntensity(world, r.intensity);
+      const reply: SimReply = { id: r.id, training: trainingView(world) };
+      if (r.type === 'train')
+        reply.save = {
+          from: world.day,
+          to: world.day,
+          season: world.season.season,
+          bytes: await gzip(saveCareer(world)),
+          still: true,
+        };
+      self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
+      return;
     }
     if (world && (r.type === 'squad' || r.type === 'lineup')) {
       if (r.type === 'lineup')

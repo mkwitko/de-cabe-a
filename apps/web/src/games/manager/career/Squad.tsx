@@ -179,6 +179,11 @@ export function Squad(props: {
                       {at >= 0 && (
                         <span className="ml-2 font-bold text-club-gold">{t('squad.starter')}</span>
                       )}
+                      {p.fresh < 85 && (
+                        <span className="ml-2 font-bold text-club-danger">
+                          {t('squad.fresh', { n: p.fresh })}
+                        </span>
+                      )}
                       {slot !== null && (
                         <span
                           className={`ml-2 font-bold ${p.known[slot]! < 2 ? 'text-club-danger' : 'text-chalk'}`}

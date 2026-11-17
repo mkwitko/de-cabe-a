@@ -26,10 +26,12 @@ import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
 import {
-  OTHERS,
+  RIVAL_DRILL,
+  clubLevels,
   drilled,
   myStrength,
-  othersStrengths,
+  rivalFresh,
+  rivalStrength,
   tire,
   trainingOn,
   type Training,
@@ -43,7 +45,10 @@ export interface CareerWorld {
   ledger: Ledger;
   /** Last day whose matches are all played (0 before the first). */
   day: number;
+  /** Each club rested, on a normal week (training.ts `clubLevels`). */
   strength: Map<string, number>;
+  /** The part of `strength` the eleven carries: what tiredness takes from. */
+  eleven: Map<string, number>;
   /** The eleven the person picked; absent while the coach's choice stands (squad.ts). */
   lineup?: Lineup;
   /** Freshness and drill of the person's club; absent before the first day played. */
@@ -70,7 +75,7 @@ function playDay(
   // The person's club as it stands that day (rest and training since the last one applied).
   let training = trainingOn(w, day);
   const strength = (clubId: string) =>
-    clubId === w.clubId ? myStrength(w, training) : (w.strength.get(clubId) ?? 50);
+    clubId === w.clubId ? myStrength(w, training) : rivalStrength(w, clubId, day);
   postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
@@ -100,7 +105,7 @@ const clubPlays = (w: CareerWorld, day: number) =>
 /** The world as it stands after `day`: the start, then every match day up to it. */
 export function openCareer(pack: Pack, seed: number, clubId: string, day = 0): CareerWorld {
   const start = startCareer(pack, seed, clubId);
-  const w: CareerWorld = { pack, seed, ...start, day: 0, strength: othersStrengths(pack) };
+  const w: CareerWorld = { pack, seed, ...start, day: 0, ...clubLevels(pack) };
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
   w.day = day;
   return w;
@@ -160,8 +165,8 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
           familiarity: drilled(training.drill),
         })
       : teamWith(c, bestLineup(c, formationOf(clubId)), {
-          fresh: () => OTHERS.fresh,
-          familiarity: drilled(OTHERS.drill),
+          fresh: () => rivalFresh(w, clubId, d.day),
+          familiarity: drilled(RIVAL_DRILL),
         });
   }) as typeof input.teams;
   input.teams[mine] = { ...input.teams[mine], coach: coachOf(60, { flexibility: 1 }) };

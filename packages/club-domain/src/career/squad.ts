@@ -10,7 +10,6 @@
 import { FORMATIONS, defaultPlan, type RoleId, type TeamInput } from '@decabeca/match-engine';
 import { formationOf } from '../match/fixture-input';
 import { teamForMatch } from '../match/lineup';
-import { clubStrength } from '../match/quick';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { bestRoles, roleRating } from '../player/ratings';
 import type { CareerWorld } from './advance';
@@ -267,26 +266,4 @@ export function teamWith(
       ...(i < 11 && { familiarity: known[i]! * state.familiarity }),
     })),
   };
-}
-
-/**
- * Every club's strength for level 3 results: its best eleven by position in its usual formation
- * (`lineupStrength`). The same measure the person's picked eleven gets, so picking can raise it
- * or lower it. A club that cannot field that eleven keeps the plain squad reading.
- */
-export function clubStrengths(
-  pack: Pack,
-  measure: (c: ClubIn, l: Lineup) => number = lineupStrength,
-): Map<string, number> {
-  const plain = clubStrength(pack);
-  return new Map(
-    pack.clubs.map((club) => {
-      const c = { pack, clubId: club.id };
-      try {
-        return [club.id, measure(c, bestLineup(c, formationOf(club.id)))];
-      } catch {
-        return [club.id, plain.get(club.id) ?? 50];
-      }
-    }),
-  );
 }

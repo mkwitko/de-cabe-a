@@ -185,3 +185,58 @@ for (const width of [360, 1280]) {
     expect(errors).toEqual([]);
   });
 }
+
+for (const width of [360, 1280]) {
+  test(`career: the week's training and the squad's freshness at ${width} px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/tecnico/carreira');
+    await page
+      .getByRole('button', { name: /^Assumir o / })
+      .first()
+      .click();
+    await page.getByRole('button', { name: 'Campo de treino' }).click();
+    await expect(page.getByRole('heading', { name: 'Semana de treino' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByRole('button', { name: /^Normal/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByRole('meter', { name: 'Entrosamento hoje' })).toHaveAttribute(
+      'aria-valuenow',
+      '75',
+    );
+    // Before any match everyone is ready.
+    await expect(page.getByRole('listitem').filter({ hasText: 'Pronto' })).not.toHaveCount(0);
+    await expect(page.getByRole('listitem').filter({ hasText: 'Cansado' })).toHaveCount(0);
+
+    // A hard week is kept on the server; after a match the starters are short of breath.
+    const kept = page.waitForResponse(
+      (r) => r.url().includes('still=1') && r.request().method() === 'PUT',
+    );
+    await page.getByRole('button', { name: /^Forte/ }).click();
+    expect((await kept).status()).toBe(200);
+    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
+    await page.reload();
+    await page.getByRole('button', { name: 'Campo de treino' }).click();
+    await expect(page.getByRole('button', { name: /^Forte/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+      { timeout: 30_000 },
+    );
+    const drill = Number(
+      await page.getByRole('meter', { name: 'Entrosamento hoje' }).getAttribute('aria-valuenow'),
+    );
+    expect(drill).toBeGreaterThan(75);
+    await expect(page.getByRole('listitem', { name: /fôlego \d+%/ })).not.toHaveCount(0);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    expect(errors).toEqual([]);
+  });
+}
