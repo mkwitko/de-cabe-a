@@ -159,6 +159,18 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
     - Impedimento lido pelo passador recalibrado (`4af1120`).
   - Dependências: escanteios vêm 4,3 por time de chute bloqueado (`engine.ts`, 0,72 dos bloqueios vão a escanteio). Escanteios, cartões e chutes no alvo dependem do excesso de chutes. Calibrar esses parâmetros antes de corrigir o volume de chances inverteria o ajuste depois.
   - Origem que sobra: chances demais. Os gols por chute estão quase na faixa; o volume de chutes está 25% acima.
+- **`SHOT_FOLLOW_UP` de 1,6 para 1,2** (2026-11-17). Medido no próprio motor (150 partidas): os chutes seguintes do mesmo time, até perder a bola e em até 90 s, somam cerca de 0,2 de `xG` por unidade de chance. Em 2000 partidas:
+
+  | Medida | Antes | Depois | Faixa Série A |
+  |---|---|---|---|
+  | Chutes por time | 16,3 | 12,9 | 12,6 a 13,6 |
+  | Passes por time | 439 | 419 | 415 a 428 |
+  | Escanteios por time | 6,6 | 5,8 | 5,05 a 5,51 |
+  | No alvo por time | 5,4 | 4,7 | 4,0 a 4,6 |
+  | Gols por jogo | 3,33 | 3,47 | 2,2 a 2,5 |
+  | Gols por chute | 0,102 | 0,134 | 0,085 a 0,10 |
+
+  Com menos chute ruim, o time trabalha a bola até uma chance melhor. O excesso agora é só de qualidade de chance (`xG` por chute 0,172): a defesa perto do gol.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)

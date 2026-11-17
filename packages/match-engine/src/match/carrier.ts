@@ -60,8 +60,11 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
 const SHOT_RESERVE = 0;
-/** Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER. */
-const SHOT_FOLLOW_UP = 1.6;
+/**
+ * Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER measured in the engine:
+ * later shots of the same side before it loses the ball add about 0.2 xG per unit of chance.
+ */
+const SHOT_FOLLOW_UP = 1.2;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.55;
 /**
