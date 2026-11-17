@@ -32,7 +32,8 @@ import {
   setLineup,
   slotRatings,
   squadOf,
-  suggestedLineup,
+  bestLineup,
+  slotLevels,
   type SquadPlayer,
 } from '@decabeca/club-domain';
 import {
@@ -59,7 +60,7 @@ export type SimRequest = { id: number } & (
   | { type: 'play' }
   /** The squad and the eleven in force. */
   | { type: 'squad' }
-  /** Picks the eleven; `xi` null asks the coach's eleven for that formation. */
+  /** Picks the eleven; `xi` null asks the coach's best eleven for that formation. */
   | { type: 'lineup'; formation: string; xi: string[] | null; plan: PlanChoice }
   | { type: 'nextSeason' }
   /** Watch the person's next match with the match engine (level 1). */
@@ -125,7 +126,8 @@ export interface SquadView {
   slots: { role: string; x: number; y: number }[];
   xi: string[];
   /** `fit[i]`: how the player does in slot `i`, 1..99. */
-  players: (SquadPlayer & { fit: number[]; keeper: boolean })[];
+  /** `known[i]`: how well he knows slot `i`'s position, 3 natural … 0 not his. */
+  players: (SquadPlayer & { fit: number[]; known: number[]; keeper: boolean })[];
   strength: number;
   plan: PlanChoice;
 }
@@ -134,6 +136,7 @@ function squadView(w: CareerWorld): SquadView {
   const l = lineupOf(w);
   const f = FORMATIONS[l.formation]!;
   const fit = slotRatings(w, l.formation);
+  const known = slotLevels(w, l.formation);
   return {
     formation: l.formation,
     formations: Object.keys(FORMATIONS),
@@ -142,6 +145,7 @@ function squadView(w: CareerWorld): SquadView {
     players: squadOf(w).map((p) => ({
       ...p,
       fit: fit.get(p.id)!,
+      known: known.get(p.id)!,
       keeper: p.positions.includes('GK'),
     })),
     strength: Math.round(lineupStrength(w, l)),
@@ -315,7 +319,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
     if (world && (r.type === 'squad' || r.type === 'lineup')) {
       if (r.type === 'lineup')
         setLineup(world, {
-          ...(r.xi ? { formation: r.formation, xi: r.xi } : suggestedLineup(world, r.formation)),
+          ...(r.xi ? { formation: r.formation, xi: r.xi } : bestLineup(world, r.formation)),
           plan: r.plan,
         });
       const reply: SimReply = { id: r.id, squad: squadView(world) };

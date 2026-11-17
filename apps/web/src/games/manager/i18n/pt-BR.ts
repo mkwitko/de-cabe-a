@@ -71,9 +71,11 @@ export const ptBR = {
   'squad.pick': 'Quem joga de {role}?',
   'squad.hint':
     'Toque numa posição do campo para trocar o jogador. A escolha vale no próximo jogo.',
-  'squad.slot': '{role}: {name}, nota {n}',
-  'squad.choose': '{name}, {age} anos, nota {n}',
+  'squad.slot': '{role}: {name}, nota {n}, {known}',
+  'squad.choose': '{name}, {age} anos, nota {n}, {known}',
   'squad.starter': 'Titular',
+  'squad.known':
+    '{l, select, 3 {Da posição} 2 {Sabe jogar ali} 1 {Improvisado} other {Fora de posição}}',
   'squad.plan': 'Plano de jogo',
   'squad.planHint':
     'O plano vale quando você assiste à partida ou vê os melhores momentos. Em "Só o resultado" conta apenas a escalação.',

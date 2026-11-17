@@ -4,12 +4,14 @@
  * own choice stands (match/lineup.ts), so nothing changes for a career that never opens this.
  * The eleven counts in both kinds of match: the engine gets these players in these roles, and
  * the level 3 result reads the club's strength from them. The team instructions count in the
- * engine match only: the level 3 result has no tactics.
+ * engine match only: the level 3 result has no tactics. A starter out of his position is worth
+ * less in both: a lower slot rating here, and less familiarity with the plan in the engine.
  */
-import { FORMATIONS, defaultPlan, type RoleId } from '@decabeca/match-engine';
+import { FORMATIONS, defaultPlan, type RoleId, type TeamInput } from '@decabeca/match-engine';
 import { formationOf } from '../match/fixture-input';
 import { teamForMatch } from '../match/lineup';
-import type { PackPlayer } from '../pack/schema';
+import { clubStrength } from '../match/quick';
+import type { Pack, PackPlayer } from '../pack/schema';
 import { bestRoles, roleRating } from '../player/ratings';
 import type { CareerWorld } from './advance';
 
@@ -54,10 +56,27 @@ export interface SquadPlayer {
   best: { role: RoleId; rating: number };
 }
 
+type Position = PackPlayer['positions'][number]['position'];
+
 const isKeeper = (p: PackPlayer) => p.positions.some((x) => x.position === 'GK');
 const isKeeperRole = (r: RoleId) => r === 'goalkeeper' || r === 'sweeperKeeper';
-const squad = (w: CareerWorld) =>
-  w.pack.players.filter((p) => p.clubId === w.clubId).sort((a, b) => (a.id < b.id ? -1 : 1));
+/** A club in a pack: all the line-up rules need. A career world is one. */
+export type ClubIn = Pick<CareerWorld, 'pack' | 'clubId'>;
+
+// ponytail: squads are read from the pack once per pack object. When transfers move players
+// between clubs, they must build a new pack object (or this needs a version key).
+const squads = new WeakMap<Pack, Map<string, PackPlayer[]>>();
+const squad = (w: ClubIn): PackPlayer[] => {
+  let by = squads.get(w.pack);
+  if (!by) {
+    by = new Map();
+    for (const p of w.pack.players)
+      if (p.clubId) (by.get(p.clubId) ?? by.set(p.clubId, []).get(p.clubId)!).push(p);
+    for (const list of by.values()) list.sort((x, y) => (x.id < y.id ? -1 : 1));
+    squads.set(w.pack, by);
+  }
+  return by.get(w.clubId) ?? [];
+};
 
 /** Whole years on 1 January of the season: the same all season long. */
 const ageOf = (p: PackPlayer, season: number) => season - Number(p.birthDate.slice(0, 4));
@@ -72,16 +91,9 @@ export function squadOf(w: CareerWorld): SquadPlayer[] {
   }));
 }
 
-/** The eleven the coach would pick for this formation. */
-export function suggestedLineup(w: CareerWorld, formation: string): Lineup {
-  if (!FORMATIONS[formation]) throw new Error(`lineup: unknown formation ${formation}`);
-  const team = teamForMatch(w.pack, w.clubId, defaultPlan(formation));
-  return { formation, xi: team.players.slice(0, 11).map((p) => p.id) };
-}
-
-/** The line-up in force: the person's, or the coach's for the club's usual formation. */
+/** The line-up in force: the person's, or the coach's best for the club's usual formation. */
 export const lineupOf = (w: CareerWorld): Lineup =>
-  w.lineup ?? suggestedLineup(w, formationOf(w.clubId));
+  w.lineup ?? bestLineup(w, formationOf(w.clubId));
 
 /**
  * Takes the person's line-up. Eleven different players of the club, and a keeper in goal and
@@ -120,17 +132,108 @@ export function setLineup(w: CareerWorld, l: Lineup): void {
   };
 }
 
-/** How each squad player would do in each slot of the formation, 1..99, by player id. */
-export function slotRatings(w: CareerWorld, formation: string): Map<string, number[]> {
+/**
+ * The positions that count as "his position" in each slot: from the slot's role and the side of
+ * the pitch it stands on (low y is the team's right, FORMATIONS).
+ */
+export function slotPositions(formation: string): Position[][] {
+  const f = FORMATIONS[formation]!;
+  return f.roles.map((role, i) => {
+    const { x, y } = f.inPossession[i]!;
+    const side = <T>(right: T[], left: T[]) =>
+      y < 30 ? right : y > 38 ? left : [...right, ...left];
+    switch (role) {
+      case 'goalkeeper':
+      case 'sweeperKeeper':
+        return ['GK'];
+      case 'centreBack':
+      case 'libero':
+        return ['CB'];
+      case 'supportFullBack':
+      case 'invertedFullBack':
+      case 'wingBack':
+        return side<Position>(['RB'], ['LB']);
+      case 'anchor':
+      case 'deepPlaymaker':
+        return ['DM'];
+      case 'boxToBox':
+        return ['CM'];
+      case 'playmaker':
+        return x >= 60 ? ['AM', 'CM'] : ['CM', 'AM'];
+      case 'wideWinger':
+      case 'insideForward':
+        return side<Position>(['RW', 'RM'], ['LW', 'LM']);
+      default:
+        return ['ST', 'SS'];
+    }
+  });
+}
+
+/** PARÂMETRO: what is left of a player's rating by how well he knows the position (0..3). */
+const POSITION_FACTOR = [0.75, 0.85, 0.93, 1] as const;
+/** PARÂMETRO: his familiarity with the plan in the engine match, same levels. */
+const POSITION_FAMILIARITY = [0.6, 0.75, 0.9, 1] as const;
+
+const levelIn = (p: PackPlayer, positions: Position[]) =>
+  Math.max(0, ...p.positions.filter((x) => positions.includes(x.position)).map((x) => x.level));
+
+/** How well each squad player knows each slot's position: 3 natural … 0 not his. By player id. */
+export function slotLevels(w: ClubIn, formation: string): Map<string, number[]> {
+  const slots = slotPositions(formation);
+  return new Map(squad(w).map((p) => [p.id, slots.map((ps) => levelIn(p, ps))]));
+}
+
+/**
+ * How each squad player would do in each slot of the formation, 1..99, by player id: what his
+ * attributes give the role, less when the position is not his.
+ */
+export function slotRatings(w: ClubIn, formation: string): Map<string, number[]> {
   const roles = FORMATIONS[formation]!.roles;
-  return new Map(squad(w).map((p) => [p.id, roles.map((r) => roleRating(p.attributes, r))]));
+  const slots = slotPositions(formation);
+  return new Map(
+    squad(w).map((p) => [
+      p.id,
+      roles.map((r, i) =>
+        Math.round(roleRating(p.attributes, r) * POSITION_FACTOR[levelIn(p, slots[i]!)]!),
+      ),
+    ]),
+  );
+}
+
+/** Each starter's familiarity for the engine match: lower out of position. */
+export function slotFamiliarity(w: ClubIn, l: Lineup): number[] {
+  const levels = slotLevels(w, l.formation);
+  return l.xi.map((id, i) => POSITION_FAMILIARITY[levels.get(id)![i]!]!);
+}
+
+/**
+ * The best eleven for a formation counting positions: slot by slot in the formation's order, the
+ * free player with the highest slot rating (ties by id). What "the coach's eleven" offers.
+ */
+export function bestLineup(w: ClubIn, formation: string): Lineup {
+  const f = FORMATIONS[formation];
+  if (!f) throw new Error(`lineup: unknown formation ${formation}`);
+  const fit = slotRatings(w, formation);
+  const left = [...squad(w)];
+  const xi = f.roles.map((role, i) => {
+    let at = -1;
+    for (const [k, p] of left.entries())
+      if (
+        isKeeper(p) === isKeeperRole(role) &&
+        (at < 0 || fit.get(p.id)![i]! > fit.get(left[at]!.id)![i]!)
+      )
+        at = k;
+    if (at < 0) throw new Error(`lineup: no player for ${role}`);
+    return left.splice(at, 1)[0]!.id;
+  });
+  return { formation, xi };
 }
 
 /**
  * The club's strength for a level 3 result with this eleven, on the scale of `clubStrength`
- * (mean of sixteen): the eleven in their roles and the five best of the rest. PARÂMETRO.
+ * (mean of sixteen): the eleven in their slots and the five best of the rest. PARÂMETRO.
  */
-export function lineupStrength(w: CareerWorld, l: Lineup): number {
+export function lineupStrength(w: ClubIn, l: Lineup): number {
   const fit = slotRatings(w, l.formation);
   const eleven = l.xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0);
   const rest = squad(w)
@@ -140,4 +243,38 @@ export function lineupStrength(w: CareerWorld, l: Lineup): number {
     .slice(0, 5)
     .reduce((a, b) => a + b, 0);
   return (eleven + rest) / 16;
+}
+
+/**
+ * A club's team for the engine: this eleven in these roles, the plan's instructions, and each
+ * starter's familiarity by position. Every club goes through here, the person's or not.
+ */
+export function teamWith(c: ClubIn, l: Lineup): TeamInput {
+  const plan = defaultPlan(l.formation);
+  if (l.plan) plan.team = { ...plan.team, ...l.plan };
+  const team = teamForMatch(c.pack, c.clubId, plan, l.xi);
+  const known = slotFamiliarity(c, l);
+  return {
+    ...team,
+    players: team.players.map((p, i) => (i < 11 ? { ...p, familiarity: known[i]! } : p)),
+  };
+}
+
+/**
+ * Every club's strength for level 3 results: its best eleven by position in its usual formation
+ * (`lineupStrength`). The same measure the person's picked eleven gets, so picking can raise it
+ * or lower it. A club that cannot field that eleven keeps the plain squad reading.
+ */
+export function clubStrengths(pack: Pack): Map<string, number> {
+  const plain = clubStrength(pack);
+  return new Map(
+    pack.clubs.map((club) => {
+      const c = { pack, clubId: club.id };
+      try {
+        return [club.id, lineupStrength(c, bestLineup(c, formationOf(club.id)))];
+      } catch {
+        return [club.id, plain.get(club.id) ?? 50];
+      }
+    }),
+  );
 }

@@ -104,13 +104,18 @@ export function Squad(props: {
                 key={`${squad.formation}-${i}`}
                 type="button"
                 aria-pressed={slot === i}
-                aria-label={t('squad.slot', { role, name: p.name, n: p.fit[i]! })}
+                aria-label={t('squad.slot', {
+                  role,
+                  name: p.name,
+                  n: p.fit[i]!,
+                  known: t('squad.known', { l: p.known[i]! }),
+                })}
                 className="sala-magnet absolute flex w-[4.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
                 style={place(s)}
                 onClick={() => setSlot(slot === i ? null : i)}
               >
                 <span
-                  className={`grid size-10 place-items-center rounded-full border-2 font-condensed text-lg leading-none font-black tabular-nums shadow-[0_6px_10px_-4px_rgb(0_0_0/0.8)] ${slot === i ? 'border-ink bg-club-gold text-ink' : 'border-chalk bg-[var(--club-a,#1c3a2a)] text-chalk'}`}
+                  className={`grid size-10 place-items-center rounded-full border-2 font-condensed text-lg leading-none font-black tabular-nums shadow-[0_6px_10px_-4px_rgb(0_0_0/0.8)] ${slot === i ? 'border-ink bg-club-gold text-ink' : p.known[i]! < 2 ? 'border-dashed border-club-danger bg-club-night text-chalk' : 'border-chalk bg-[var(--club-a,#1c3a2a)] text-chalk'}`}
                 >
                   {p.fit[i]}
                 </span>
@@ -155,7 +160,12 @@ export function Squad(props: {
                 <button
                   type="button"
                   disabled={!able}
-                  aria-label={t('squad.choose', { name: p.name, age: p.age, n })}
+                  aria-label={t('squad.choose', {
+                    name: p.name,
+                    age: p.age,
+                    n,
+                    known: t('squad.known', { l: slot === null ? 3 : p.known[slot]! }),
+                  })}
                   className="flex min-h-12 w-full items-center gap-3 py-1.5 text-left enabled:hover:bg-chalk/6 disabled:cursor-default"
                   onClick={() => take(p.id)}
                 >
@@ -168,6 +178,13 @@ export function Squad(props: {
                       {t('squad.age', { n: p.age })}
                       {at >= 0 && (
                         <span className="ml-2 font-bold text-club-gold">{t('squad.starter')}</span>
+                      )}
+                      {slot !== null && (
+                        <span
+                          className={`ml-2 font-bold ${p.known[slot]! < 2 ? 'text-club-danger' : 'text-chalk'}`}
+                        >
+                          {t('squad.known', { l: p.known[slot]! })}
+                        </span>
                       )}
                     </span>
                   </span>

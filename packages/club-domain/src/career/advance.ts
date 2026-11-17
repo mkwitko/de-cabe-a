@@ -18,14 +18,20 @@ import {
 import { regulationsFor, type Move } from '../competition/outcomes';
 import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
-import { clubStrength, quickResult } from '../match/quick';
-import { matchInputFor } from '../match/fixture-input';
-import { coachOf, defaultPlan } from '@decabeca/match-engine';
+import { quickResult } from '../match/quick';
+import { formationOf, matchInputFor } from '../match/fixture-input';
+import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
-import { lineupStrength, type Lineup } from './squad';
-import { teamForMatch } from '../match/lineup';
+import {
+  bestLineup,
+  clubStrengths,
+  lineupOf,
+  lineupStrength,
+  teamWith,
+  type Lineup,
+} from './squad';
 
 export interface CareerWorld {
   pack: Pack;
@@ -84,7 +90,7 @@ const clubPlays = (w: CareerWorld, day: number) =>
 /** The world as it stands after `day`: the start, then every match day up to it. */
 export function openCareer(pack: Pack, seed: number, clubId: string, day = 0): CareerWorld {
   const start = startCareer(pack, seed, clubId);
-  const w: CareerWorld = { pack, seed, ...start, day: 0, strength: clubStrength(pack) };
+  const w: CareerWorld = { pack, seed, ...start, day: 0, strength: clubStrengths(pack) };
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
   w.day = day;
   return w;
@@ -127,17 +133,19 @@ export function playDecision(
 }
 
 /**
- * The person's match for the match engine (level 1): the same input every club gets
- * (fixture-input.ts), with the person's coach keeping the plan, since they command it live
- * (02 §10), and with the eleven they picked, if any. `mine` is the person's side in the input.
+ * The person's match for the match engine (level 1). Both clubs field an eleven by position
+ * (squad.ts): the other club its coach's best, the person's club the one they picked, with their
+ * instructions. The person's coach keeps the plan, since they command it live (02 §10). `mine`
+ * is the person's side in the input.
  */
 export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>) {
   const input = matchInputFor(w.pack, w.season, d.matchId);
   const mine: 0 | 1 = d.home === w.clubId ? 0 : 1;
-  const plan = w.lineup && defaultPlan(w.lineup.formation);
-  if (plan && w.lineup?.plan) plan.team = { ...plan.team, ...w.lineup.plan };
-  const team = plan ? teamForMatch(w.pack, w.clubId, plan, w.lineup!.xi) : input.teams[mine];
-  input.teams[mine] = { ...team, coach: coachOf(60, { flexibility: 1 }) };
+  input.teams = [d.home, d.away].map((clubId) => {
+    const c = { pack: w.pack, clubId };
+    return teamWith(c, clubId === w.clubId ? lineupOf(w) : bestLineup(c, formationOf(clubId)));
+  }) as typeof input.teams;
+  input.teams[mine] = { ...input.teams[mine], coach: coachOf(60, { flexibility: 1 }) };
   return { input, mine };
 }
 
