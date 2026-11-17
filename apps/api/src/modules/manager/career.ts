@@ -59,9 +59,11 @@ async function offersFor(prisma: PrismaClient, pk: string) {
 /** The browser played the days from `from` to `to` and sends the world as it stands (ADR-020). */
 const AdvanceQuery = z.strictObject({
   from: z.coerce.number().int().min(0),
-  to: z.coerce.number().int().min(1),
+  to: z.coerce.number().int().min(0),
   /** Season the snapshot is in: the same, or the next one after a season turn. */
   season: z.coerce.number().int().min(1900).max(2200),
+  /** A decision changed the world on the same day (the line-up): the snapshot alone is kept. */
+  still: z.literal('1').optional(),
 });
 /** PARÂMETRO: a season spans about a year of days; no single step goes beyond it. */
 const MAX_STEP = 400;
@@ -173,7 +175,8 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
    * The browser played up to `to` and sends the snapshot (gzip JSON of `saveCareer`). Day and
    * snapshot change together. Idempotent and safe against two tabs: the same step twice answers
    * the same career; a step from a day the world is no longer at is a conflict (optimistic lock,
-   * 01 §6). The server does not replay the days here: only when the result affects someone else
+   * 01 §6). `still` keeps a new snapshot of the same day, for a decision that moves no day
+   * (the line-up). The server does not replay the days here: only when the result affects someone else
    * (ADR-020). ponytail: the bytes go to Postgres (measured ~5–20 ms a write); to R2 by a signed
    * upload when the deploy has its bucket.
    */
@@ -184,7 +187,7 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 120, timeWindow: '1 minute' } },
     },
     async (req) => {
-      const { from, to, season } = req.query;
+      const { from, to, season, still } = req.query;
       const bytes = req.body;
       if (!(bytes instanceof Buffer) || bytes.length < 2 || bytes[0] !== 0x1f || bytes[1] !== 0x8b)
         throw new AppError(400, 'VALIDATION_ERROR', 'Fotografia inválida.');
@@ -193,6 +196,17 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
         throw new AppError(400, 'VALIDATION_ERROR', 'Avanço fora do calendário.');
       const c = await currentCareer(prisma, ownerOf(req));
       if (!c) throw new AppError(404, 'NOT_FOUND', 'Nenhuma carreira em andamento.');
+      if (still) {
+        if (to !== from || season !== c.world.season)
+          throw new AppError(400, 'VALIDATION_ERROR', 'Avanço fora do calendário.');
+        const kept = await prisma.clubWorld.updateMany({
+          where: { id: c.world.id, day: from, season },
+          data: { revision: { increment: 1 }, data: new Uint8Array(bytes) },
+        });
+        if (kept.count === 0)
+          throw new AppError(409, 'INVALID_TRANSITION', 'A carreira já avançou em outra aba.');
+        return { career: view(c) };
+      }
       if (c.world.day === to && c.world.season === season) return { career: view(c) };
       // Standing still is only a season turn.
       if (to === from && season === c.world.season)

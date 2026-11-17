@@ -108,3 +108,65 @@ test('career: watch the club’s own match, change the plan, and its result coun
   await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('1');
   expect(errors).toEqual([]);
 });
+
+for (const width of [360, 1280]) {
+  test(`career: pick the formation and the eleven in the dressing room at ${width} px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/tecnico/carreira');
+    await page
+      .getByRole('button', { name: /^Assumir o / })
+      .first()
+      .click();
+    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await expect(page.getByRole('heading', { name: 'Escalação' })).toBeVisible({ timeout: 30_000 });
+    const board = page.locator('.sala-board button');
+    await expect(board).toHaveCount(11);
+
+    // Another formation redraws the board with the coach's eleven for it.
+    await page.getByRole('button', { name: '4-4-2', exact: true }).click();
+    await expect(page.getByRole('button', { name: '4-4-2', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(board).toHaveCount(11);
+
+    // Tap the centre-forward slot, then a player from the bench: he takes the slot.
+    const slot = board.last();
+    const before = await slot.getAttribute('aria-label');
+    await slot.click();
+    await expect(page.getByRole('heading', { name: /^Quem joga de / })).toBeVisible();
+    const bench = page
+      .locator('li')
+      .filter({ hasNotText: 'Titular' })
+      .getByRole('button', { disabled: false })
+      .first();
+    const name = (await bench.getAttribute('aria-label'))!.split(',')[0]!;
+    await bench.click();
+    await expect(page.getByRole('heading', { name: 'Elenco' })).toBeVisible();
+    await expect(board.last()).not.toHaveAttribute('aria-label', before!);
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
+
+    // The pick is kept on the server at once: a reload brings it back.
+    await page.reload();
+    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `), {
+      timeout: 30_000,
+    });
+
+    // The eleven holds across rooms and the next match still plays.
+    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
+    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    expect(errors).toEqual([]);
+  });
+}

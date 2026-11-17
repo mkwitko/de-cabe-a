@@ -3,11 +3,12 @@
  * by one of three offers from the last one; then the career home. The world is built in the
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
 import type { ClubFace, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
+import { Squad } from './Squad';
 import {
   Match,
   PLAN,
@@ -27,6 +28,9 @@ interface ClubOption {
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
 type Axis = (typeof AXES)[number];
 const VENUE = ['away', 'home'] as const;
+const ROOMS = ['sala', 'vestiario'] as const;
+const STILL = '&still=1';
+type Room = (typeof ROOMS)[number];
 const COLS = ['pos', 'club', 'played', 'gd', 'points'] as const;
 interface Options {
   packId: string;
@@ -319,6 +323,18 @@ function Home({ career }: { career: Career }) {
     return () => w.terminate();
   }, [career]);
 
+  // A line-up pick: the same day's snapshot. A later step already carries it, so a pick that
+  // arrives after the day moved is not an error.
+  const keep = useCallback((reply: SimReply) => {
+    const save = reply.save;
+    if (!save) return;
+    api(`/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}${STILL}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: save.bytes,
+    }).catch(() => undefined);
+  }, []);
+
   const step = (type: 'play' | 'nextSeason') => {
     if (!ask) return;
     setBusy(true);
@@ -328,6 +344,7 @@ function Home({ career }: { career: Career }) {
   };
 
   const [tunnel, setTunnel] = useState(false);
+  const [room, setRoom] = useState<Room>('sala');
   const watch = (mode: Watch) => {
     if (!ask) return;
     setBusy(true);
@@ -399,61 +416,79 @@ function Home({ career }: { career: Career }) {
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
   return (
     <div className="flex flex-col gap-5">
-      <Scene plate="sala" />
+      <Scene plate={room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       <ClubBar sim={sim} />
-      {sim.turn && (
-        <p
-          aria-live="polite"
-          className="mx-auto w-fit max-w-full rounded-lg bg-club-night/90 px-4 py-2 text-center text-lg"
-        >
-          {t('career.turn', {
-            season: sim.turn.season,
-            champion: sim.turn.champion,
-            move: sim.turn.move,
-          })}
-        </p>
-      )}
-      <NextMatch
-        sim={sim}
-        busy={busy}
-        onWatch={watch}
-        onPlay={() => step('play')}
-        onNextSeason={() => step('nextSeason')}
-      />
-      <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
-        <Table sim={sim} clubId={career.clubId} />
-        <div className="flex min-w-0 flex-col">
-          <Form sim={sim} />
-          <Fixtures sim={sim} />
-          <Inbox sim={sim} net={net} />
-        </div>
-        <section className={PANEL}>
-          <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
-          <dl className="flex flex-col gap-2.5 tabular-nums">
-            {sim.money.map((m) => (
-              <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
-                <dt className="text-chalk-soft">{t('career.moneyKind', { k: m.kind })}</dt>
-                <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
-                  {t('career.cash', { value: m.amount })}
-                </dd>
-                <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
-                  <span
-                    className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
-                    style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
-                  />
-                </dd>
-              </div>
-            ))}
-            <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-3 font-condensed text-xl font-extrabold uppercase">
-              <dt>{t('career.net')}</dt>
-              <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
-                {t('career.cash', { value: net })}
-              </dd>
+      <nav aria-label={t('career.rooms')} className="sala-rooms flex gap-1 self-start p-1">
+        {ROOMS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            aria-current={room === r ? 'page' : undefined}
+            className={`min-h-11 rounded-lg px-4 font-condensed text-lg font-extrabold uppercase ${room === r ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
+            onClick={() => setRoom(r)}
+          >
+            {t('career.room', { r })}
+          </button>
+        ))}
+      </nav>
+      {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
+      {room === 'sala' && (
+        <>
+          {sim.turn && (
+            <p
+              aria-live="polite"
+              className="mx-auto w-fit max-w-full rounded-lg bg-club-night/90 px-4 py-2 text-center text-lg"
+            >
+              {t('career.turn', {
+                season: sim.turn.season,
+                champion: sim.turn.champion,
+                move: sim.turn.move,
+              })}
+            </p>
+          )}
+          <NextMatch
+            sim={sim}
+            busy={busy}
+            onWatch={watch}
+            onPlay={() => step('play')}
+            onNextSeason={() => step('nextSeason')}
+          />
+          <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
+            <Table sim={sim} clubId={career.clubId} />
+            <div className="flex min-w-0 flex-col">
+              <Form sim={sim} />
+              <Fixtures sim={sim} />
+              <Inbox sim={sim} net={net} />
             </div>
-          </dl>
-        </section>
-      </section>
+            <section className={PANEL}>
+              <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
+              <dl className="flex flex-col gap-2.5 tabular-nums">
+                {sim.money.map((m) => (
+                  <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
+                    <dt className="text-chalk-soft">{t('career.moneyKind', { k: m.kind })}</dt>
+                    <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
+                      {t('career.cash', { value: m.amount })}
+                    </dd>
+                    <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
+                      <span
+                        className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
+                        style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
+                      />
+                    </dd>
+                  </div>
+                ))}
+                <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-3 font-condensed text-xl font-extrabold uppercase">
+                  <dt>{t('career.net')}</dt>
+                  <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
+                    {t('career.cash', { value: net })}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          </section>
+        </>
+      )}
       <p className="text-xs text-chalk-soft/80">{t('career.builtHere', { ms: sim.ms })}</p>
     </div>
   );
@@ -470,7 +505,7 @@ const RESULT_TONE = {
 } as const;
 
 /** One still plate behind the whole page: the coach's office (hub) or the pitch (start). */
-function Scene({ plate }: { plate: 'sala' | 'campo' }) {
+function Scene({ plate }: { plate: Room | 'campo' }) {
   return (
     <div aria-hidden className="sala-scene">
       <picture>

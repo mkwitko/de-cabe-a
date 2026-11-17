@@ -25,8 +25,16 @@ import {
   type Moment,
   type MomentMode,
   upcomingFor,
+  lineupOf,
+  lineupStrength,
+  setLineup,
+  slotRatings,
+  squadOf,
+  suggestedLineup,
+  type SquadPlayer,
 } from '@decabeca/club-domain';
 import {
+  FORMATIONS,
   advanceLiveMatch,
   startLiveMatch,
   type LiveMatch,
@@ -47,6 +55,10 @@ export type SimRequest = { id: number } & (
       snapshot: ArrayBuffer;
     }
   | { type: 'play' }
+  /** The squad and the eleven in force. */
+  | { type: 'squad' }
+  /** Picks the eleven; `xi` null asks the coach's eleven for that formation. */
+  | { type: 'lineup'; formation: string; xi: string[] | null }
   | { type: 'nextSeason' }
   /** Watch the person's next match with the match engine (level 1). */
   | { type: 'matchStart' }
@@ -103,15 +115,46 @@ export interface MatchClub {
   colours: [string, string];
 }
 
+/** The dressing room: the formation's slots on the pitch and everyone who can fill them. */
+export interface SquadView {
+  formation: string;
+  formations: string[];
+  /** One per slot: the role and where it stands (team frame, attacking +x). */
+  slots: { role: string; x: number; y: number }[];
+  xi: string[];
+  /** `fit[i]`: how the player does in slot `i`, 1..99. */
+  players: (SquadPlayer & { fit: number[]; keeper: boolean })[];
+  strength: number;
+}
+
+function squadView(w: CareerWorld): SquadView {
+  const l = lineupOf(w);
+  const f = FORMATIONS[l.formation]!;
+  const fit = slotRatings(w, l.formation);
+  return {
+    formation: l.formation,
+    formations: Object.keys(FORMATIONS),
+    slots: f.roles.map((role, i) => ({ role, ...f.inPossession[i]! })),
+    xi: l.xi,
+    players: squadOf(w).map((p) => ({
+      ...p,
+      fit: fit.get(p.id)!,
+      keeper: p.positions.includes('GK'),
+    })),
+    strength: Math.round(lineupStrength(w, l)),
+  };
+}
+
 export interface SimReply {
   id: number;
+  squad?: SquadView;
   /** matchStart: the two sides and which one is the person's. */
   match?: { home: MatchClub; away: MatchClub; mine: 0 | 1 };
   chunk?: MatchChunk;
   moment?: Moment;
   view?: SimView;
   /** Present when the world moved: the step to send with the snapshot. */
-  save?: { from: number; to: number; season: number; bytes: ArrayBuffer };
+  save?: { from: number; to: number; season: number; bytes: ArrayBuffer; still?: true };
   error?: string;
 }
 
@@ -264,6 +307,25 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: world.season.season,
         bytes: await gzip(saveCareer(world)),
       };
+    }
+    if (world && (r.type === 'squad' || r.type === 'lineup')) {
+      if (r.type === 'lineup')
+        setLineup(
+          world,
+          r.xi ? { formation: r.formation, xi: r.xi } : suggestedLineup(world, r.formation),
+        );
+      const reply: SimReply = { id: r.id, squad: squadView(world) };
+      // A pick moves no day: the snapshot of the same day goes to the server at once.
+      if (r.type === 'lineup')
+        reply.save = {
+          from: world.day,
+          to: world.day,
+          season: world.season.season,
+          bytes: await gzip(saveCareer(world)),
+          still: true,
+        };
+      self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
+      return;
     }
     if (r.type === 'matchStart' && world && pending?.kind === 'match') {
       const { input, mine } = careerMatch(world, pending);

@@ -210,6 +210,21 @@ describe('Modo Clube calendar advance (MC-084)', () => {
       ).statusCode,
     ).toBe(413);
     expect((await d('GET', '/manager/career')).json().career.day).toBe(20500);
+    // A decision on the same day (the line-up) replaces the snapshot and moves nothing.
+    const still = '/manager/career/world?from=20500&to=20500&season=2026&still=1';
+    const pick = gzipSync(JSON.stringify({ v: 1, day: 20500, lineup: true }));
+    expect((await d('PUT', still, pick)).json().career.day).toBe(20500);
+    expect(
+      JSON.parse(gunzipSync((await d('GET', '/manager/career/world')).rawPayload).toString()),
+    ).toEqual({ v: 1, day: 20500, lineup: true });
+    expect(
+      (await d('PUT', '/manager/career/world?from=20400&to=20400&season=2026&still=1', pick))
+        .statusCode,
+    ).toBe(409);
+    expect(
+      (await d('PUT', '/manager/career/world?from=20500&to=20507&season=2026&still=1', pick))
+        .statusCode,
+    ).toBe(400);
     // A season turn moves the season once; skipping a season is refused.
     expect(
       (await d('PUT', '/manager/career/world?from=20500&to=20520&season=2028', snap(1))).statusCode,
