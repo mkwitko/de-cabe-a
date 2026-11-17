@@ -31,6 +31,8 @@ import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts } from '../market/contracts';
 import { returnLoans, type Loan } from '../market/loans';
+import type { SeasonLog } from './development';
+import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { carryCache } from '../lib/pack-cache';
 import { isoOf } from '../competition/calendar';
@@ -50,7 +52,10 @@ import {
 } from './training';
 
 export interface CareerWorld {
+  /** The players and clubs as they stand now: the opening pack, the years and the moves. */
   pack: Pack;
+  /** The pack the career opened with; never changed. */
+  origin: Pack;
   seed: number;
   clubId: string;
   season: SeasonState;
@@ -83,6 +88,11 @@ export interface CareerWorld {
   listed?: string[];
   /** Doors shut for a season: a player, or `club:player` for a bidder. */
   cold?: Record<string, number>;
+  /** Each finished season: its moves and what the person did that the next year grew from. */
+  log?: SeasonLog[];
+  /** Matches each of the person's players started this season, and how many the club played. */
+  starts?: Record<string, number>;
+  played?: number;
   /** Players on loan this season, by id: who owns each and the contract he returns to. */
   loans?: Record<string, Loan>;
   /** The person's players offered on loan. */
@@ -135,7 +145,12 @@ function playDay(
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) {
       postHomeMatch(w, id, day);
-      training = tire(training, lineupOf(w).xi);
+      const eleven = lineupOf(w).xi;
+      training = tire(training, eleven);
+      const starts = { ...w.starts };
+      for (const p of eleven) starts[p] = (starts[p] ?? 0) + 1;
+      w.starts = starts;
+      w.played = (w.played ?? 0) + 1;
       const atHome = m.home === w.clubId;
       note(w, {
         day,
@@ -173,7 +188,7 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
   const pack = { ...base };
   carryCache(base, pack, []);
   const start = startCareer(pack, seed, clubId);
-  const w: CareerWorld = { pack, seed, ...start, day: 0, ...clubLevels(pack) };
+  const w: CareerWorld = { pack, origin: base, seed, ...start, day: 0, ...clubLevels(pack) };
   note(w, { day: 0, kind: 'welcome' });
   setJudgementClock(pack, seed, w.season.season);
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
@@ -315,10 +330,36 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     champion: t.titles.find((x) => x.competitionId === divisionId)?.clubId ?? '',
     move: t.moves.find((m) => m.clubId === w.clubId)?.kind ?? 'stay',
   });
+  // A year passes for every player: growth by where and how much each played, age, retirement
+  // and the academies' crop (development.ts). The season's moves go into the log with it.
+  const squad = w.pack.players.filter((p) => p.clubId === w.clubId);
+  const share = (id: string) => ((w.starts?.[id] ?? 0) * 100) / Math.max(1, w.played ?? 0);
+  const log: SeasonLog = {
+    season: played,
+    moves: w.moves ?? {},
+    mine: {
+      clubId: w.clubId,
+      intensity: w.training?.intensity ?? 'normal',
+      played: Object.fromEntries(
+        squad.map((p) => [p.id, share(p.id) >= 60 ? 2 : share(p.id) >= 25 ? 1 : 0]),
+      ),
+    },
+  };
+  w.log = [...(w.log ?? []), log];
+  w.pack = yearOn(w.pack, w.origin, w.seed, log);
+  w.moves = {};
+  delete w.starts;
+  delete w.played;
+  const levels = clubLevels(w.pack);
+  w.strength = levels.strength;
+  w.eleven = levels.eleven;
+  // Each office has had another season with its players.
+  setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.log, {}));
+  // A picked eleven with someone who retired goes back to the coach.
+  const here = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
+  if (w.lineup?.xi.some((id) => !here.has(id))) delete w.lineup;
   // The goal is set again for the table the club is now in.
   w.board = { ...judged, goal: goalFor(w) };
-  // Each office has had another season with its players.
-  setJudgementClock(w.pack, w.seed, year);
   // Every club's market season starts again; open talks and bids do not cross the year.
   delete w.books;
   delete w.talks;

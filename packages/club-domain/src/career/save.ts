@@ -11,18 +11,17 @@ import type { Pack } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import type { Lineup } from './squad';
 import { clubLevels, type Training } from './training';
-import { withMoves, type Moves } from './market';
+import type { Moves } from './market';
 import type { Board } from './board';
-import { carryCache } from '../lib/pack-cache';
-import { goingWages } from '../market/value';
 import { setJudgementClock } from '../market/judgement';
+import { arrivalsOf, rebuildPack } from './years';
 import type { Note } from './inbox';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 4;
+export const CAREER_RULES_VERSION = 5;
 
 interface Saved {
   v: number;
@@ -46,6 +45,9 @@ interface Saved {
   idle?: CareerWorld['idle'];
   loans?: CareerWorld['loans'];
   forLoan?: CareerWorld['forLoan'];
+  log?: CareerWorld['log'];
+  starts?: CareerWorld['starts'];
+  played?: CareerWorld['played'];
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -79,19 +81,17 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.idle && { idle: w.idle }),
     ...(w.loans && { loans: w.loans }),
     ...(w.forLoan && { forLoan: w.forLoan }),
+    ...(w.log && { log: w.log }),
+    ...(w.starts && { starts: w.starts }),
+    ...(w.played !== undefined && { played: w.played }),
   };
   return JSON.stringify(saved, replacer);
 }
 
 export function loadCareer(base: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
-  // The career's own pack object, with its transfers applied. The market's yardsticks (who can
-  // play where, the going wage by level) are read from the pack the career opened with, as in
-  // the world that never stopped; the squads are read again.
-  const moved = withMoves(base, saved.moves ?? {});
-  const pack = moved === base ? { ...base } : moved;
-  goingWages(base);
-  carryCache(base, pack, moved === base ? [] : base.clubs.map((c) => c.id));
+  // The career's own pack object: the years replayed from the log, then this season's moves.
+  const pack = rebuildPack(base, seed, saved.log ?? [], saved.moves ?? {});
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.
@@ -105,14 +105,10 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     }
   season.calendar = calendar;
   // Opinions are this career's: its seed, its season, and when each moved player arrived.
-  setJudgementClock(
-    pack,
-    seed,
-    season.season,
-    Object.entries(saved.moves ?? {}).map(([id, m]) => [id, m.season ?? season.season] as const),
-  );
+  setJudgementClock(pack, seed, season.season, arrivalsOf(saved.log ?? [], saved.moves ?? {}));
   return {
     pack,
+    origin: base,
     seed,
     clubId,
     season,
@@ -133,5 +129,8 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),
+    ...(saved.log && { log: saved.log }),
+    ...(saved.starts && { starts: saved.starts }),
+    ...(saved.played !== undefined && { played: saved.played }),
   };
 }
