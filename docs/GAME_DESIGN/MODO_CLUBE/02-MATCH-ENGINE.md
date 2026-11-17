@@ -508,7 +508,8 @@ DECISÃO do dono (2026-11-16): a referência de todas as faixas é o Brasileirã
 | Mandante vence, terceira e quarta divisões | C 47,4%; D 45,2%; o mandante faz cerca de 59% dos gols nas quatro divisões (FATO, mesma contagem) |
 | Finalizações por time | 12,6 a 13,6 (FATO: Série A, 2017 a 2023, conjunto de dados comunitário; 2024 e 2025 não encontrados) |
 | No alvo por time | 4,0 a 4,6 (FATO, mesma fonte: cerca de um terço das finalizações) |
-| `xG` por finalização | 0,085 a 0,10 (derivado da Série A: 2,2 a 2,5 gols em 12,6 a 13,6 finalizações por time dão conversão de 8,1% a 9,9%, e a longo prazo `xG` ≈ gols; referência secundária, Premier League: 0,10 a 0,12) |
+| Gols por finalização | 0,085 a 0,10 (Série A: 2,2 a 2,5 gols em 12,6 a 13,6 finalizações por time dão conversão de 8,1% a 9,9%; referência secundária, Premier League: 0,10 a 0,12). A bancada compara gols sobre chutes. O `xG` do motor por chute é outra medida e só é impresso, sem faixa (DECISÃO 2026-11-17: antes a bancada comparava o `xG` por chute com esta faixa de conversão). |
+| Passes de 40 m ou mais | abaixo de 13,8% dos passes (Série A 2025: o quarto time mais direto tem 13,8% de passes longos, Flashscore, rodada 16). É um teto, não uma faixa: vale para qualquer definição de passe longo até 40 m. `LOFT_COST` (`carrier.ts`, 0,01) foi calibrado nele e no acerto de passe. Em 2000 partidas: passes de 40 m ou mais de 18% para cerca de 13%, acerto de passe de 76% para 80%, gols de 3,44 para 3,34, impedimentos de 1,41 para 1,11 (fora da faixa). |
 | `xG` do pênalti | 0,77 a 0,79 (FATO) |
 | Expulsão cedo | cerca de +0,6 `xG` para quem fica com 11 e −0,5 para quem fica com 10 (FATO; teste de cenário) |
 | Corrida intensa nos 15 min finais | queda de cerca de 26% (FATO; valida o modelo de fôlego) |
