@@ -5,6 +5,8 @@
  */
 import { describe, expect, it } from 'vitest';
 import { DT } from './movement';
+import { defaultPlan } from './presets';
+import { anchors, lineOf } from './team';
 import { SCENARIOS, play } from './coordination.scenarios';
 import { BANDS, t1, t2, t3, t5, t9 } from './trajectories';
 
@@ -95,5 +97,19 @@ describe('MC-246 coordination proof', () => {
     const a = play(SCENARIOS[0]!, 3, 30).samples;
     const b = play(SCENARIOS[0]!, 3, 30).samples;
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+});
+
+describe('box defence (research 18 H5)', () => {
+  it('near our goal the lines stay goal-side of the ball and the back line narrows', () => {
+    const plan = defaultPlan('4-4-2');
+    const far = anchors(plan, false, { x: 50, y: 34 }, null);
+    const near = anchors(plan, false, { x: 16, y: 34 }, null);
+    const def = (a: { x: number; y: number }[]) =>
+      a.filter((_, i) => lineOf(plan.roles[i]!) === 'def');
+    for (const d of def(near)) expect(d.x).toBeLessThanOrEqual(11);
+    const width = (a: { y: number }[]) =>
+      Math.max(...a.map((p) => p.y)) - Math.min(...a.map((p) => p.y));
+    expect(width(def(near))).toBeLessThan(width(def(far)));
   });
 });

@@ -112,6 +112,16 @@ const COUNTER_OUTLET = 60;
 const LOW_FLOOR_EXTRA: Record<Line, number> = { gk: 0, def: 4, mid: 3, att: 0 };
 const STEP_UP: Record<Line, number> = { gk: 1.5, def: 4, mid: 3, att: 2 };
 const BLOCK_SHIFT = { high: 9, mid: 0, low: -9 } as const;
+/**
+ * Box defence (research 18 §1, Forcher et al. 2024): with the ball near our goal the lines
+ * stay goal-side of it, the back line at least GOAL_SIDE metres deeper than the ball, never
+ * deeper than BOX_FLOOR; the forwards stay up as the outlet. PARAMETERS.
+ */
+const GOAL_SIDE: Record<Line, number> = { gk: 0, def: 5, mid: 2, att: -Infinity };
+const BOX_FLOOR: Record<Line, number> = { gk: 0, def: 3, mid: 8, att: 0 };
+/** Inside this distance of our goal the back line narrows to the goal mouth, down to BOX_NARROW of its width. PARAMETERS. */
+const NARROW_FROM = 30;
+const BOX_NARROW = 0.6;
 
 /**
  * Anchor of each slot (team frame). `lastLine` is the opponents' offside line
@@ -126,6 +136,10 @@ export function anchors(
   const base = inPossession ? plan.shapes.inPossession : plan.shapes.outOfPossession;
   const t = plan.team;
   const widthScale = 0.8 + 0.1 * (t.width - 1);
+  // Near our goal the back line closes towards the goal mouth (1 at NARROW_FROM, BOX_NARROW at 10 m).
+  const boxNarrow = inPossession
+    ? 1
+    : 1 - (1 - BOX_NARROW) * clamp((NARROW_FROM - focal.x) / (NARROW_FROM - 10), 0, 1);
   const out = base.map((b, slot) => {
     const line = lineOf(plan.roles[slot]!);
     const fx =
@@ -134,7 +148,9 @@ export function anchors(
     if (!inPossession && line !== 'gk') x += BLOCK_SHIFT[t.block];
     let y = inPossession
       ? CENTER.y + (b.y - CENTER.y) * widthScale + (focal.y - CENTER.y) * FOLLOW_Y[line]
-      : CENTER.y + (b.y - CENTER.y) * NARROW_OUT[line] + (focal.y - CENTER.y) * FOLLOW_Y_OUT[line];
+      : CENTER.y +
+        (b.y - CENTER.y) * NARROW_OUT[line] * (line === 'def' ? boxNarrow : 1) +
+        (focal.y - CENTER.y) * FOLLOW_Y_OUT[line] * (line === 'def' ? boxNarrow : 1);
     if (line === 'gk') {
       if (inPossession) {
         x = clamp(6 + focal.x * 0.12, 6, 20);
@@ -159,7 +175,7 @@ export function anchors(
   return out.map((a) => {
     let x = a.line === 'gk' ? a.x : cx + (a.x - cx) * k;
     // The floor gives way when the ball is deeper than it: the line stays goal-side of the ball.
-    if (!inPossession)
+    if (!inPossession && a.line !== 'gk')
       x = Math.min(
         Math.max(
           x,
@@ -171,6 +187,7 @@ export function anchors(
         a.line === 'att' && t.onWin === 'counter'
           ? Math.max(BLOCK_TOP[t.block].att, COUNTER_OUTLET)
           : BLOCK_TOP[t.block][a.line],
+        Math.max(BOX_FLOOR[a.line], focal.x - GOAL_SIDE[a.line]),
       );
     if (inPossession && a.line !== 'gk' && lastLine !== null)
       x = Math.min(x, Math.max(lastLine - 0.8, focal.x - 2));
