@@ -50,14 +50,14 @@ export const ptBR = {
   'career.fixtures': 'Depois',
   'career.venueShort': '{v, select, home {Casa} other {Fora}}',
   'career.inbox': 'Mensagens',
-  'career.from': '{f, select, board {Diretoria} press {Imprensa} other {Financeiro}}',
+  'career.from':
+    '{f, select, board {Diretoria} press {Imprensa} staff {Comissão} market {Mercado} other {Financeiro}}',
   'career.msgWelcome':
     'Bem-vindo ao {club}. A diretoria espera trabalho sério desde o primeiro jogo da {division}.',
   'career.msgWin': 'Vitória por {a} a {b} sobre o {opp}. A torcida saiu cantando.',
   'career.msgDraw': 'Empate em {a} a {b} com o {opp}. Um ponto para a conta.',
   'career.msgLoss': 'Derrota por {a} a {b} para o {opp}. A imprensa cobra reação.',
   'career.msgCash': 'O caixa ficou negativo. A diretoria quer as contas em ordem.',
-  'career.msgDeficit': 'A temporada fecha no vermelho até aqui: {value, number, currency}.',
   'career.net': 'Saldo da temporada',
   'career.cash': '{value, number, currency}',
   'career.next': 'Próximo jogo',
@@ -94,6 +94,19 @@ export const ptBR = {
   'market.player': '{name}, {age} anos, nota {n}, {price}',
   'market.hint':
     'Você paga o preço pedido e o jogador assina por três temporadas. Na venda, o clube mais próximo do nível dele leva.',
+  'inbox.empty': 'Nenhuma mensagem ainda.',
+  'inbox.ultimatum':
+    'Ultimato: {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}, ou o contrato acaba.',
+  'inbox.ultimatumMet': 'Ultimato cumprido. A direção recua.',
+  'inbox.goal':
+    '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
+  'inbox.tired':
+    '{n, plural, one {# titular saiu} other {# titulares saíram}} do jogo com menos de metade do fôlego. Vale rodar o elenco.',
+  'inbox.window':
+    '{open, select, true {A janela de transferências abriu.} other {A janela de transferências fechou.}}',
+  'inbox.prize': 'Premiação pelo {position}º lugar: {amount}.',
+  'inbox.season':
+    'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'board.goal': 'Meta da temporada',
   'board.goalText': 'Terminar a {division} até o {n}º lugar.',
   'board.position': 'Hoje o clube é o {n}º.',

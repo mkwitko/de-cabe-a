@@ -38,11 +38,12 @@ import {
   cannotBuy,
   cannotSell,
   sell,
-  sellingPrice,
+  offerFor,
   windowOpen,
   boardOf,
   positionOf,
   type BoardReason,
+  type Note,
   bestRoles,
   type Refusal,
   DRILL_TARGET,
@@ -130,9 +131,15 @@ export interface SimView {
     last: BoardReason[];
     fired: boolean;
   };
+  /** The inbox, newest first: each note with its clubs named and its date. */
+  inbox: InboxItem[];
   /** ms the last step took on this device. */
   ms: number;
 }
+
+/** A note as the screen reads it: the fact, its date, and club ids turned into names. */
+export type InboxItem = Note & { iso: string; clubName: string };
+const INBOX_SHOWN = 12;
 
 /** What the screen draws for a club: names and the colour badge. */
 export interface ClubFace {
@@ -243,7 +250,7 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
     rating: bestRoles(p.attributes, 1)[0]!.rating,
     wage: own ? (p.contract?.wage ?? 0) : Math.round(((p.contract?.wage ?? 0) * 110) / 100),
-    price: own ? sellingPrice(p, season) : askingPrice(p, season),
+    price: own ? (offerFor(w, p)?.fee ?? 0) : askingPrice(p, season),
     club: face(clubs.get(p.clubId!)!),
     no: own ? cannotSell(w, p) : cannotBuy(w, p),
   });
@@ -382,6 +389,23 @@ function view(w: CareerWorld, ms: number): SimView {
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
     turn,
+    inbox: (w.inbox ?? [])
+      .slice(-INBOX_SHOWN)
+      .reverse()
+      .map((n) => ({
+        ...n,
+        iso: isoOf(n.day || w.day),
+        clubName:
+          byId.get(
+            n.kind === 'result'
+              ? n.opponent
+              : n.kind === 'bought' || n.kind === 'sold'
+                ? n.club
+                : n.kind === 'season'
+                  ? n.champion
+                  : '',
+          )?.name ?? '',
+      })),
     board: {
       confidence: boardOf(w).confidence,
       goal: boardOf(w).goal,

@@ -334,3 +334,31 @@ for (const width of [360, 1280]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('career: the inbox keeps what happened across a reload', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/tecnico/carreira');
+  await page
+    .getByRole('button', { name: /^Assumir o / })
+    .first()
+    .click();
+  // The innermost section with that heading: the desk slab around it has it too.
+  const inbox = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Mensagens' }) })
+    .last();
+  await expect(inbox.getByRole('listitem')).toHaveCount(1, { timeout: 30_000 });
+  await expect(inbox.getByText('Diretoria')).toBeVisible();
+  await page.getByRole('button', { name: 'Só o resultado' }).click();
+  const result = inbox.getByRole('listitem').filter({ hasText: 'Imprensa' });
+  await expect(result).toHaveCount(1, { timeout: 30_000 });
+  const told = await result.innerText();
+  const fact = /(Vitória por|Empate em|Derrota por) \d+ a \d+ [^.]+\./.exec(told)?.[0];
+  expect(fact).toBeTruthy();
+  await page.reload();
+  await expect(inbox.getByRole('listitem')).toHaveCount(2, { timeout: 30_000 });
+  await expect(inbox.getByRole('listitem').filter({ hasText: 'Imprensa' })).toContainText(fact!);
+  expect(errors).toEqual([]);
+});

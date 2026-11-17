@@ -6,12 +6,11 @@ import { nextDecision, openCareer, playDecision } from './advance';
 import {
   askingPrice,
   buy,
-  buyerFor,
+  offerFor,
   cannotBuy,
   cannotSell,
   marketValue,
   sell,
-  sellingPrice,
   windowOpen,
 } from './market';
 import { loadCareer, saveCareer } from './save';
@@ -37,7 +36,6 @@ describe('transfer market (07, corte 1)', () => {
     const old = { ...p, birthDate: '1992-01-01' };
     expect(marketValue(young, 2026)).toBeGreaterThan(marketValue(old, 2026));
     expect(askingPrice(p, 2026)).toBeGreaterThan(marketValue(p, 2026));
-    expect(sellingPrice(p, 2026)).toBeLessThan(marketValue(p, 2026));
     expect(marketValue(p, 2026) % 1000).toBe(0);
   });
 
@@ -49,10 +47,8 @@ describe('transfer market (07, corte 1)', () => {
     const size = w.pack.players.filter(mine).length;
     expect(cannotSell(w, p)).toBeNull();
     const deal = sell(w, p.id);
-    expect(deal).toEqual({
-      buyer: buyerFor(openCareer(pack, 61, clubId), p),
-      fee: sellingPrice(p, 2026),
-    });
+    expect(deal).toEqual(offerFor(openCareer(pack, 61, clubId), p));
+    expect(deal.fee).toBeLessThan(marketValue(p, 2026));
     expect(w.ledger.cash).toBe(cash + deal.fee);
     expect(checkLedger(w.ledger)).toEqual([]);
     expect(w.pack.players.find((x) => x.id === p.id)!.clubId).toBe(deal.buyer);
@@ -89,6 +85,21 @@ describe('transfer market (07, corte 1)', () => {
     expect(playDecision(again, nextDecision(again) as typeof d)).toEqual(playDecision(w, d));
   });
 
+  it('a club buys only a player it has a use for, and pays more for a starter', () => {
+    const w = openCareer(pack, 61, clubId);
+    const squad = w.pack.players.filter(mine);
+    const offers = squad.map((p) => ({ p, offer: offerFor(w, p) }));
+    const round = (x: number) => Math.round(x / 1000) * 1000;
+    for (const { p, offer } of offers) {
+      if (!offer) continue;
+      const value = marketValue(p, 2026);
+      expect([round((value * 90) / 100), round((value * 60) / 100)]).toContain(offer.fee);
+    }
+    // Selling everyone a club wants is worth well under a year of the squad's wages.
+    const wages = squad.reduce((s, p) => s + (p.contract?.wage ?? 0), 0);
+    expect(offers.reduce((s, x) => s + (x.offer?.fee ?? 0), 0)).toBeLessThan(wages * 12);
+  });
+
   it('refuses outside the window, without the money and when a squad would be left thin', () => {
     const w = openCareer(pack, 61, clubId);
     const dear = w.pack.players
@@ -102,8 +113,10 @@ describe('transfer market (07, corte 1)', () => {
       if (!p) break;
       sell(w, p.id);
     }
-    expect(w.pack.players.filter(mine).length).toBe(20);
-    expect(cannotSell(w, w.pack.players.find(mine)!)).toBe('squadThin');
+    // Either the squad reached its floor, or nobody has a use for the players left.
+    const left = w.pack.players.filter(mine);
+    expect(left.length).toBeGreaterThanOrEqual(20);
+    expect(left.every((x) => ['squadThin', 'noBuyer'].includes(cannotSell(w, x)!))).toBe(true);
     // Past April the window is shut.
     while (windowOpen(w.day)) {
       const d = nextDecision(w);

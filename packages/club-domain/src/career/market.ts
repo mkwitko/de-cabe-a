@@ -1,6 +1,6 @@
 /**
  * The transfer market, first cut (07 §9, corte 1): the person buys a player at the selling
- * club's asking price and sells one to the club that needs him most, inside a window. One round,
+ * club's asking price and sells one to a club that has a use for him, inside a window. One round,
  * no agents, no loans, no bargaining yet. The other clubs do not trade among themselves.
  *
  * A move never edits the pack the career was opened with: the world gets a new pack object with
@@ -38,20 +38,19 @@ const ageOf = (p: PackPlayer, season: number) => season - Number(p.birthDate.sli
 const thousands = (x: number) => Math.round(x / 1000) * 1000;
 
 /**
- * What a player is worth on the market: a year of his wage, times what his age still promises.
+ * What a player is worth on the market: months of his wage, more of them the younger he is.
  * The pack's wages already follow each club's level, so the value does too.
  */
 export function marketValue(p: PackPlayer, season: number): number {
   const age = ageOf(p, season);
-  const years = age <= 23 ? 4 : age <= 28 ? 3 : age <= 31 ? 2 : 1;
-  return thousands((p.contract?.wage ?? 0) * 12 * years);
+  const months = age <= 23 ? 18 : age <= 28 ? 12 : age <= 31 ? 6 : 3;
+  return thousands((p.contract?.wage ?? 0) * months);
 }
 /** What his club asks to let him go: over the value. */
 export const askingPrice = (p: PackPlayer, season: number) =>
   thousands((marketValue(p, season) * 115) / 100);
-/** What a buying club pays the person for him: under the value. */
-export const sellingPrice = (p: PackPlayer, season: number) =>
-  thousands((marketValue(p, season) * 90) / 100);
+/** Share of the value a buying club pays: for a starter there, and for a squad player. */
+const PAYS = { starter: 90, squad: 60 } as const;
 /** The wage he signs for at his new club. */
 const signingWage = (p: PackPlayer) => Math.round(((p.contract?.wage ?? 0) * 110) / 100);
 
@@ -132,31 +131,56 @@ export function buy(w: CareerWorld, playerId: string): void {
   move(w, p, w.clubId, askingPrice(p, w.season.season), 'buy');
 }
 
+/** What each club needs from a signing: the ratings of its 11th and 16th best, and its size. */
+const needs = new WeakMap<Pack, Map<string, { starter: number; squad: number; size: number }>>();
+function needsOf(pack: Pack) {
+  let by = needs.get(pack);
+  if (!by) {
+    const ratings = new Map<string, number[]>();
+    for (const x of pack.players)
+      if (x.clubId)
+        (ratings.get(x.clubId) ?? ratings.set(x.clubId, []).get(x.clubId)!).push(
+          bestRoles(x.attributes, 1)[0]!.rating,
+        );
+    by = new Map();
+    for (const [clubId, rs] of ratings) {
+      rs.sort((a, b) => b - a);
+      by.set(clubId, { starter: rs[10] ?? 0, squad: rs[15] ?? 0, size: rs.length });
+    }
+    needs.set(pack, by);
+  }
+  return by;
+}
+
 /**
- * The club that takes a player the person sells: of those with room, the one whose level is
- * nearest to his own, ties by the world's seed. Null when nobody has room.
+ * The offer for a player the person sells: a club buys only a player who would be among its
+ * sixteen best, and pays more for one who would start. Of the clubs with room that want him, the
+ * one whose level is nearest his own takes him (ties by the world's seed). Null when no club
+ * has a use for him.
  */
-export function buyerFor(w: CareerWorld, p: PackPlayer): string | null {
+export function offerFor(w: CareerWorld, p: PackPlayer): { buyer: string; fee: number } | null {
   const rating = bestRoles(p.attributes, 1)[0]!.rating;
-  const sizes = new Map<string, number>();
-  for (const x of w.pack.players) if (x.clubId) sizes.set(x.clubId, (sizes.get(x.clubId) ?? 0) + 1);
+  const by = needsOf(w.pack);
   let best: string | null = null;
   let gap = Infinity;
   let tie = 0;
   for (const c of w.pack.clubs) {
-    if (c.id === w.clubId || (sizes.get(c.id) ?? 0) >= MAX_SQUAD) continue;
+    const need = by.get(c.id);
+    if (c.id === w.clubId || !need || need.size >= MAX_SQUAD || rating < need.squad) continue;
     const g = Math.abs((w.strength.get(c.id) ?? 50) - rating);
     const t = seedOf(w.seed, `buyer:${p.id}:${c.id}`);
     if (g < gap || (g === gap && t < tie)) [best, gap, tie] = [c.id, g, t];
   }
-  return best;
+  if (!best) return null;
+  const share = rating >= by.get(best)!.starter ? PAYS.starter : PAYS.squad;
+  return { buyer: best, fee: thousands((marketValue(p, w.season.season) * share) / 100) };
 }
 
 /** Why the person cannot sell this player now; null when a club takes him. */
 export function cannotSell(w: CareerWorld, p: PackPlayer): Refusal | null {
   if (!windowOpen(w.day)) return 'window';
   if (!canLose(w.pack, p)) return 'squadThin';
-  return buyerFor(w, p) ? null : 'noBuyer';
+  return offerFor(w, p) ? null : 'noBuyer';
 }
 
 /** Sells one of the person's players; returns who took him and for how much. */
@@ -165,8 +189,7 @@ export function sell(w: CareerWorld, playerId: string): { buyer: string; fee: nu
   if (p?.clubId !== w.clubId) throw new Error('market: not yours');
   const no = cannotSell(w, p);
   if (no) throw new Error(`market: ${no}`);
-  const buyer = buyerFor(w, p)!;
-  const fee = sellingPrice(p, w.season.season);
-  move(w, p, buyer, fee, 'sell');
-  return { buyer, fee };
+  const offer = offerFor(w, p)!;
+  move(w, p, offer.buyer, offer.fee, 'sell');
+  return offer;
 }

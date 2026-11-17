@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
-import type { ClubFace, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
+import type { ClubFace, InboxItem, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
 import { Squad } from './Squad';
 import { Training } from './Training';
 import { Market } from './Market';
@@ -504,7 +504,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             <div className="flex min-w-0 flex-col">
               <Form sim={sim} />
               <Fixtures sim={sim} />
-              <Inbox sim={sim} net={net} />
+              <Inbox sim={sim} />
             </div>
             <section className={PANEL}>
               <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
@@ -794,45 +794,101 @@ function Fixtures({ sim }: { sim: SimView }) {
   );
 }
 
-/** What the club is told, newest first: board, press and finance, from the career's own facts. */
-function Inbox({ sim, net }: { sim: SimView; net: number }) {
-  const notes: { from: 'board' | 'press' | 'finance'; text: string }[] = [];
-  const latest = sim.form.at(-1);
-  if (latest) {
-    const r = { a: latest.goals[0], b: latest.goals[1], opp: latest.opponent.name };
-    notes.push({ from: 'press', text: t(MSG_RESULT[latest.result], r) });
+/** Who signs each kind of note. */
+const FROM = {
+  welcome: 'board',
+  result: 'press',
+  ultimatum: 'board',
+  ultimatumMet: 'board',
+  goal: 'board',
+  cashRed: 'finance',
+  tired: 'staff',
+  bought: 'market',
+  sold: 'market',
+  window: 'market',
+  prize: 'finance',
+  season: 'press',
+} as const;
+const FROM_TONE = {
+  board: 'bg-club-gold',
+  press: 'bg-club-blue',
+  staff: 'bg-club-turf',
+  market: 'bg-chalk',
+  finance: 'bg-club-danger',
+} as const;
+const BOOL = ['false', 'true'] as const;
+
+/** One note in the person's language: the fact comes from the career, the sentence from here. */
+function noteText(n: InboxItem, sim: SimView): string {
+  switch (n.kind) {
+    case 'welcome':
+      return t('career.msgWelcome', { club: sim.club.name, division: sim.division });
+    case 'result':
+      return t(MSG_RESULT[n.goals[0] > n.goals[1] ? 'W' : n.goals[0] < n.goals[1] ? 'L' : 'D'], {
+        a: n.goals[0],
+        b: n.goals[1],
+        opp: n.clubName,
+      });
+    case 'ultimatum':
+      return t('inbox.ultimatum', { points: n.points, matches: n.matches });
+    case 'ultimatumMet':
+      return t('inbox.ultimatumMet');
+    case 'goal':
+      return t('inbox.goal', { met: BOOL[Number(n.met)]!, position: n.position, goal: n.goal });
+    case 'cashRed':
+      return t('career.msgCash');
+    case 'tired':
+      return t('inbox.tired', { n: n.players });
+    case 'bought':
+    case 'sold':
+      return t(n.kind === 'bought' ? 'market.bought' : 'market.sold', {
+        name: n.player,
+        club: n.clubName,
+        price: t('career.cash', { value: n.fee }),
+      });
+    case 'window':
+      return t('inbox.window', { open: BOOL[Number(n.open)]! });
+    case 'prize':
+      return t('inbox.prize', {
+        position: n.position,
+        amount: t('career.cash', { value: n.amount }),
+      });
+    case 'season':
+      return t('inbox.season', { season: n.season, champion: n.clubName, move: n.move });
   }
-  if (sim.cash < 0) notes.push({ from: 'board', text: t('career.msgCash') });
-  else if (net < 0 && sim.form.length >= 3)
-    notes.push({ from: 'finance', text: t('career.msgDeficit', { value: net }) });
-  if (sim.form.length === 0 && !sim.turn)
-    notes.push({
-      from: 'board',
-      text: t('career.msgWelcome', { club: sim.club.name, division: sim.division }),
-    });
-  if (notes.length === 0) return null;
+}
+
+/** What the club was told, newest first: kept in the career, so it is there after a reload. */
+function Inbox({ sim }: { sim: SimView }) {
   return (
     <section className={PANEL}>
       <h3 className={LABEL}>{t('career.inbox')}</h3>
-      <ul className="flex flex-col gap-2">
-        {notes.map((n) => (
-          <li
-            key={n.from + n.text}
-            className="flex gap-3 border-t border-chalk/10 pt-2 first:border-0 first:pt-0"
-          >
-            <span
-              aria-hidden
-              className={`mt-1 size-2.5 shrink-0 rounded-full ${n.from === 'press' ? 'bg-club-blue' : n.from === 'board' ? 'bg-club-gold' : 'bg-club-danger'}`}
-            />
-            <p>
-              <span className="mr-2 font-condensed font-extrabold uppercase">
-                {t('career.from', { f: n.from })}
-              </span>
-              {n.text}
-            </p>
-          </li>
-        ))}
-      </ul>
+      {sim.inbox.length === 0 ? (
+        <p className="text-chalk-soft">{t('inbox.empty')}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {sim.inbox.map((n, i) => (
+            <li
+              key={`${n.day}-${n.kind}-${i}`}
+              className="flex gap-3 border-t border-chalk/10 pt-2 first:border-0 first:pt-0"
+            >
+              <span
+                aria-hidden
+                className={`mt-1.5 size-2.5 shrink-0 rounded-full ${FROM_TONE[FROM[n.kind]]}`}
+              />
+              <p className="min-w-0">
+                <span className="mr-2 font-condensed font-extrabold uppercase">
+                  {t('career.from', { f: FROM[n.kind] })}
+                </span>
+                <span className="mr-2 text-xs text-chalk-soft tabular-nums">
+                  {t('career.date', { d: new Date(`${n.iso}T12:00:00Z`) })}
+                </span>
+                {noteText(n, sim)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
