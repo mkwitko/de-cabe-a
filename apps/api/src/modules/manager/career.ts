@@ -223,6 +223,17 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  /**
+   * Ends the person's career (the board dismissed them, or they gave it up). The world stays for
+   * audit; the person may start another career.
+   */
+  app.post('/manager/career/end', async (req) => {
+    const c = await currentCareer(prisma, ownerOf(req));
+    if (!c) throw new AppError(404, 'NOT_FOUND', 'Nenhuma carreira em andamento.');
+    await prisma.clubCareer.update({ where: { id: c.id }, data: { status: 'ended' } });
+    return { ended: true };
+  });
+
   /** The last snapshot as sent (gzip); empty on day one, when the world is the pack itself. */
   app.get('/manager/career/world', async (req, reply) => {
     const c = await currentCareer(prisma, ownerOf(req));

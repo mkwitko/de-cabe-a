@@ -225,6 +225,7 @@ describe('Modo Clube calendar advance (MC-084)', () => {
       (await d('PUT', '/manager/career/world?from=20500&to=20507&season=2026&still=1', pick))
         .statusCode,
     ).toBe(400);
+    // (the career is ended at the bottom of this test)
     // A season turn moves the season once; skipping a season is refused.
     expect(
       (await d('PUT', '/manager/career/world?from=20500&to=20520&season=2028', snap(1))).statusCode,
@@ -235,5 +236,14 @@ describe('Modo Clube calendar advance (MC-084)', () => {
       snap(20520),
     );
     expect(turn.json().career).toMatchObject({ day: 20520, season: 2027 });
+    // Ending it frees the person to start again; the ended one is no longer theirs.
+    expect((await d('POST', '/manager/career/end')).json()).toEqual({ ended: true });
+    expect((await d('GET', '/manager/career')).json().career).toBeNull();
+    expect((await d('POST', '/manager/career/end')).statusCode).toBe(404);
+    const again = (await d('GET', '/manager/career/options')).json();
+    expect(
+      (await d('POST', '/manager/career', { startMode: 'job_offers', clubId: again.offers[0].id }))
+        .statusCode,
+    ).toBe(201);
   });
 });

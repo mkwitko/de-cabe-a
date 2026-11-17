@@ -11,6 +11,7 @@ import type { ClubFace, MatchClub, SimReply, SimRequest, SimView } from './sim.w
 import { Squad } from './Squad';
 import { Training } from './Training';
 import { Market } from './Market';
+import { Board, Fired } from './Board';
 import {
   Match,
   PLAN,
@@ -31,9 +32,9 @@ interface ClubOption {
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
 type Axis = (typeof AXES)[number];
 const VENUE = ['away', 'home'] as const;
-const ROOMS = ['sala', 'vestiario', 'treino', 'mercado'] as const;
+const ROOMS = ['sala', 'vestiario', 'treino', 'mercado', 'diretoria'] as const;
 /** Rooms still waiting for their own plate borrow another room's. */
-const PLATE: Partial<Record<string, string>> = { mercado: 'sala' };
+const PLATE: Partial<Record<string, string>> = { mercado: 'sala', diretoria: 'sala' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
 const NO_PORTRAIT: readonly string[] = ['treino'];
 const STILL = '&still=1';
@@ -76,7 +77,7 @@ export function ClubCareerPage() {
       <GameHeader title={t('career.title')} />
       {error && <Notice title={t('career.loadError')}>{error}</Notice>}
       {career === null && <Start onStarted={setCareer} onError={setError} />}
-      {career && <Home career={career} />}
+      {career && <Home career={career} onEnded={() => setCareer(null)} />}
     </div>
   );
 }
@@ -273,7 +274,7 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
 type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 
-function Home({ career }: { career: Career }) {
+function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const [sim, setSim] = useState<SimView | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -439,6 +440,17 @@ function Home({ career }: { career: Career }) {
         {t('career.computing')}
       </p>
     );
+  if (sim.board.fired)
+    return (
+      <Fired
+        club={sim.club.name}
+        onRestart={() =>
+          api('/v1/manager/career/end', { method: 'POST' })
+            .then(onEnded)
+            .catch((err: Error) => setError(err.message))
+        }
+      />
+    );
   const net = sim.money.reduce((sum, m) => sum + m.amount, 0);
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
   return (
@@ -462,6 +474,7 @@ function Home({ career }: { career: Career }) {
           </button>
         ))}
       </nav>
+      {room === 'diretoria' && <Board sim={sim} />}
       {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
       {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
       {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}

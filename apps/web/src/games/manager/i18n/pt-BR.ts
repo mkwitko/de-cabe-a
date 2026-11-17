@@ -63,7 +63,7 @@ export const ptBR = {
   'career.next': 'Próximo jogo',
   'career.rooms': 'Salas do clube',
   'career.room':
-    '{r, select, sala {Sala do técnico} vestiario {Vestiário} treino {Campo de treino} other {Mercado}}',
+    '{r, select, sala {Sala do técnico} vestiario {Vestiário} treino {Campo de treino} mercado {Mercado} other {Diretoria}}',
   'squad.title': 'Escalação',
   'squad.formation': 'Formação',
   'squad.auto': 'Escalação do treinador',
@@ -94,6 +94,27 @@ export const ptBR = {
   'market.player': '{name}, {age} anos, nota {n}, {price}',
   'market.hint':
     'Você paga o preço pedido e o jogador assina por três temporadas. Na venda, o clube mais próximo do nível dele leva.',
+  'board.goal': 'Meta da temporada',
+  'board.goalText': 'Terminar a {division} até o {n}º lugar.',
+  'board.position': 'Hoje o clube é o {n}º.',
+  'board.confidence': 'Confiança da direção',
+  'board.state':
+    '{s, select, high {Prestigiado} steady {Estável} pressed {Pressionado} other {Na corda bamba}}',
+  'board.last': 'O que mexeu na confiança',
+  'board.none': 'Nada ainda. A confiança muda a cada jogo seu.',
+  'board.result':
+    '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
+  'board.reason':
+    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} other {Ultimato cumprido}}',
+  'board.up': '+{n}',
+  'board.down': '−{n}',
+  'board.ultimatum': 'Ultimato',
+  'board.ultimatumText':
+    'A direção quer {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}. Sem isso, o contrato acaba.',
+  'board.calm': 'Sem ultimato. Abaixo de 25 de confiança, a direção dá um prazo.',
+  'board.fired': 'A direção encerrou seu contrato',
+  'board.firedText': 'O ultimato não foi cumprido. O {club} segue sem você.',
+  'board.restart': 'Começar outra carreira',
   'training.week': 'Semana de treino',
   'training.intensity': '{i, select, light {Leve} normal {Normal} other {Forte}}',
   'training.recovery': 'Fôlego volta {n, number}% por dia',

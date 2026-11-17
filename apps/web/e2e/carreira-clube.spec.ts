@@ -300,3 +300,37 @@ for (const width of [360, 1280]) {
     expect(errors).toEqual([]);
   });
 }
+
+for (const width of [360, 1280]) {
+  test(`career: the board's goal and confidence at ${width} px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/tecnico/carreira');
+    await page
+      .getByRole('button', { name: /^Assumir o / })
+      .first()
+      .click();
+    await page.getByRole('button', { name: 'Diretoria' }).click();
+    await expect(page.getByText(/^Terminar a .+ até o \d+º lugar\.$/)).toBeVisible({
+      timeout: 30_000,
+    });
+    const confidence = page.getByRole('meter', { name: 'Confiança da direção' });
+    await expect(confidence).toHaveAttribute('aria-valuenow', '60');
+    await expect(page.getByText('Nada ainda. A confiança muda a cada jogo seu.')).toBeVisible();
+    await expect(page.getByText(/^Sem ultimato\./)).toBeVisible();
+
+    // A match moves it, and the room says by how much and why.
+    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
+    await page.getByRole('button', { name: 'Diretoria' }).click();
+    await expect(page.getByText(/^(Vitória|Empate|Derrota) (como|em) /)).toBeVisible();
+    await expect(page.getByText(/^[+−]\d+$/).first()).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    expect(errors).toEqual([]);
+  });
+}

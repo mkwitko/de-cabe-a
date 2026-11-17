@@ -40,6 +40,9 @@ import {
   sell,
   sellingPrice,
   windowOpen,
+  boardOf,
+  positionOf,
+  type BoardReason,
   bestRoles,
   type Refusal,
   DRILL_TARGET,
@@ -118,6 +121,15 @@ export interface SimView {
   form: { result: 'W' | 'D' | 'L'; goals: [number, number]; opponent: ClubFace; atHome: boolean }[];
   last: { home: ClubFace; away: ClubFace; goals: [number, number] } | null;
   table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
+  /** The board: the season's goal, its confidence, and what last moved it. */
+  board: {
+    confidence: number;
+    goal: number;
+    position: number;
+    ultimatum: { matches: number; points: number } | null;
+    last: BoardReason[];
+    fired: boolean;
+  };
   /** ms the last step took on this device. */
   ms: number;
 }
@@ -370,6 +382,14 @@ function view(w: CareerWorld, ms: number): SimView {
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
     turn,
+    board: {
+      confidence: boardOf(w).confidence,
+      goal: boardOf(w).goal,
+      position: positionOf(w),
+      ultimatum: boardOf(w).ultimatum ?? null,
+      last: boardOf(w).last ?? [],
+      fired: boardOf(w).fired === true,
+    },
     club: face(club),
     division: table.name,
     cash: w.ledger.cash,
