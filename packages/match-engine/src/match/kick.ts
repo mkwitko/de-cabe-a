@@ -44,7 +44,11 @@ export function footFactor(s: MatchState, c: MatchPlayer): number {
 }
 
 export function passError(s: MatchState, c: MatchPlayer, d: number): number {
-  const skill = weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
+  // The keeper's passing is his distribution (ADR-019).
+  const skill =
+    lineOf(c.role) === 'gk'
+      ? weighted(c.attrs, { distribution: 0.6, passing: 0.25, composure: 0.15 })
+      : weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
   const sigma =
     (0.012 +
       0.05 * (1 - skill) +
@@ -141,7 +145,9 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     const skill =
       a.kind === 'cross'
         ? weighted(c.attrs, { crossing: 0.6, technique: 0.2, longPassing: 0.2 })
-        : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
+        : lineOf(c.role) === 'gk'
+          ? weighted(c.attrs, { distribution: 0.6, longPassing: 0.25, technique: 0.15 })
+          : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
     // Landing error grows with distance and falls with skill (PARAMETERS).
     const err =
       (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c) + 0.04 * (1 - c.stamina)) *

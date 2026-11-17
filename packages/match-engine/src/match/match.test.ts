@@ -3,7 +3,7 @@
  * acceptance in TASKS.md. Full matches use the synthetic fixture.
  */
 import { describe, expect, it } from 'vitest';
-import type { MatchEvent } from '../contract';
+import { ATTRIBUTES, type MatchEvent } from '../contract';
 import { aerialScore, dribbleChance, tackleChance } from '../rules/duel';
 import { aerialFoulChance, beatenFoulChance, foulChance } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
@@ -529,5 +529,21 @@ describe('MC-041 injuries', () => {
         ).length;
         if (subsBefore < 5 && e.atMs < 85 * 60000) expect(off).toBeDefined();
       }
+  });
+});
+
+describe('ADR-019: no player attribute without effect', () => {
+  it('a match reads every player attribute', () => {
+    const s = createMatch(matchInput(1));
+    const read = new Set<string | symbol>();
+    for (const p of s.players)
+      p.attrs = new Proxy(p.attrs, {
+        get(t, k) {
+          read.add(k);
+          return t[k as keyof typeof t];
+        },
+      });
+    stepUntilEnd(s);
+    expect(ATTRIBUTES.filter((a) => !read.has(a))).toEqual([]);
   });
 });

@@ -29,6 +29,7 @@ import {
   pressureOn,
   readTime,
   shotBlockReach,
+  markerReach,
 } from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
@@ -543,7 +544,10 @@ function reachers(s: MatchState): Reacher[] {
             : 2.2;
     else if (f.kind === 'shot') reach = shotBlockReach(p);
     else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
-      reach = 0.55 + 0.35 * norm(p.attrs.anticipation);
+      reach =
+        0.55 +
+        0.35 * norm(p.attrs.anticipation) +
+        (f.to !== null && dist(p.pos, s.players[f.to]!.pos) < 3 ? markerReach(p) : 0);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };
   });
 }

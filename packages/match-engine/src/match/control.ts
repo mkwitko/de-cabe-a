@@ -69,6 +69,9 @@ export function footBlock(o: MatchPlayer, c: MatchPlayer, ux: number, uy: number
   return (0.2 + 0.2 * (o.attrs.anticipation / 99)) * (1.45 - pressResistance(c.attrs));
 }
 
+/** Extra reach of the marker within 3 m of the receiver of a pass: he steps in front (ADR-019). PARAMETER. */
+export const markerReach = (o: MatchPlayer) => 0.3 * (o.attrs.marking / 99);
+
 /** Reach of an outfield body blocking a shot: it needs the body in the line (PARAMETER). */
 export const shotBlockReach = (o: MatchPlayer) => 0.35 + 0.2 * (o.attrs.bravery / 99);
 
@@ -164,12 +167,18 @@ export function passSafety(
   if (receiver) {
     // A marker tight on the receiver (within 3 m) can step in front of the ball (PARAMETER).
     let tight = Infinity;
+    let marker: MatchPlayer | null = null;
     for (const o of opp) {
       const dx = o.pos.x - receiver.pos.x;
       const dy = o.pos.y - receiver.pos.y;
-      tight = Math.min(tight, Math.sqrt(dx * dx + dy * dy));
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < tight) {
+        tight = d;
+        marker = o;
+      }
     }
-    if (tight < 3) safe *= 0.82 + 0.06 * tight;
+    // How often he gets in front depends on his marking (ADR-019; the flight gives him the same extra reach).
+    if (tight < 3 && marker) safe *= 1 - (0.18 - 0.06 * tight) * (0.5 + marker.attrs.marking / 99);
     // The receiver must beat the nearest opponent to the end point.
     const tr = arrivalTime(kin(receiver), to, receiverKnows);
     const tOpp = Math.min(...opp.map((o) => readingArrival(o, to)));

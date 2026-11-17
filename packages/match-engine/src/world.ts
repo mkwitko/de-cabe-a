@@ -194,6 +194,9 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     // Collective errors: a player may miss a new task and follow his own reading (his
     // anchor) instead; the task is then left uncovered — two go to the ball, nobody covers.
     const kept: Assignment[] = [];
+    // A leader on the pitch organises the others (ADR-019; 02 §5.11): the best leadership
+    // moves everyone's compliance by up to ±0.03 around an average one (PARAMETER).
+    const lead = 0.06 * (Math.max(...mine.map((q) => q.attrs.leadership)) / 99 - 0.5);
     for (const a of next_) {
       const old = prev.get(a.player);
       const p = w.players[a.player]!;
@@ -212,7 +215,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
         isNew &&
         (event
           ? missDemand > 0 && next(w.rng) < missDemand
-          : next(w.rng) > compliance(p.attrs, w.familiarity[team]) - missDemand)
+          : next(w.rng) > compliance(p.attrs, w.familiarity[team]) + lead - missDemand)
       )
         continue;
       if (isNew) {
@@ -260,6 +263,23 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     }
     const a = byPlayer.get(p.index);
     let pt = a ? (fresh.get(a.task.key) ?? a.task.point) : anc[p.slot]!;
+    // Movement off the ball (ADR-019): a supporting player steps away from the nearest
+    // opponent to get free, more with a good sense of it (PARAMETER: up to 2 m).
+    if (a && inPossession && (a.task.kind === 'support' || a.task.kind === 'betweenLines')) {
+      let near: Vec2 | null = null;
+      let nd = Infinity;
+      for (const q of opp) {
+        const d = dist(q, pt);
+        if (d < nd) {
+          nd = d;
+          near = q;
+        }
+      }
+      if (near && nd > 1e-6 && nd < 6) {
+        const step = 2 * (p.attrs.offTheBall / 99);
+        pt = { x: pt.x + ((pt.x - near.x) / nd) * step, y: pt.y + ((pt.y - near.y) / nd) * step };
+      }
+    }
     // Timing of the run (ADR-019): a poor sense of it holds the runner back off the last line.
     if (a && a.task.kind === 'depth') pt = { x: pt.x - 2.5 * (1 - p.attrs.timing / 99), y: pt.y };
     // With the ball, the rest defence is the players the plan leaves behind (02 §5.9);
