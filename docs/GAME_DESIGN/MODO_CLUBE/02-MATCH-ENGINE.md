@@ -151,6 +151,8 @@ Cada jogador tem duas tendências derivadas de personalidade e traços: **discip
 
 Conceito de treinamento sem definição acadêmica formal; as fontes são material de treinadores (`docs/pesquisa/modo-clube/08-verificacao-de-fontes.md` item 12), então o que segue é DECISÃO de desenho. No plano, com a bola, o time declara **quantos ficam atrás da linha da bola** (2 a 5) e **como**: quem protege o centro, quem cobre o corredor do lateral que subiu. Na engine isso é um conjunto de âncoras de segurança ocupadas por função (zagueiros, volante, lateral do lado oposto) e um termo coletivo na utilidade: se o número de jogadores atrás da bola cai abaixo do pedido, o candidato `segurar posição` dos elegíveis ganha peso. Métricas que a instrução move: contra-ataques sofridos e `xG` sofrido em transição (caem com mais gente atrás); presença na área e `xG` próprio em ataque posicional (caem também). É uma das instruções com custo mais claro, e tem teste causal próprio.
 
+DECISÃO (2026-11-17, relato do amistoso: zagueiros atrás do goleiro): com a bola, ninguém de linha fica atrás do goleiro. A âncora de cada jogador de linha fica pelo menos 4 m à frente do ponto do goleiro com a bola, e a defesa de descanso, que normalmente fica 16 m atrás da bola, nunca fica a menos de 8 m à frente dele. Na saída de bola ela vira a base da construção. Teste: com a bola na própria metade e fora da área, menos de 0,1% dos quadros têm jogador de linha mais de 3 m atrás do goleiro (antes 2,3%).
+
 ### 5.10 Armadilha de pressão
 
 Além de intensidade e gatilhos (5.3), a pressão pode ter **alvo e direção**:

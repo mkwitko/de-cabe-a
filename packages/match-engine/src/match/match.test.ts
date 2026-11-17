@@ -564,3 +564,39 @@ describe('ADR-019: no player attribute without effect', () => {
     expect(ATTRIBUTES.filter((a) => !read.has(a))).toEqual([]);
   });
 });
+
+describe('nobody behind the keeper', () => {
+  it('with the ball in our half outside the box, no outfield player stands 3 m behind the keeper', async () => {
+    const { defaultPlan } = await import('../presets');
+    const { lineOf } = await import('../team');
+    let frames = 0;
+    let behind = 0;
+    for (const f of ['3-5-2', '4-3-3'] as const)
+      for (const seed of [1, 2]) {
+        const s = createMatch(
+          matchInput(
+            seed,
+            teamInput(seed * 2 + 1, 65, defaultPlan(f)),
+            teamInput(seed * 2 + 2, 65, defaultPlan(f)),
+          ),
+        );
+        while (!s.finished) {
+          step(s);
+          for (const t of [0, 1] as const) {
+            const d = (x: number) => (t === 0 ? x : 105 - x);
+            const bx = d(s.ball.pos.x);
+            if (bx > 52.5 || bx <= 20) continue;
+            const gk = s.players.find((p) => p.team === t && p.active && lineOf(p.role) === 'gk');
+            if (!gk) continue;
+            for (const p of s.players)
+              if (p.team === t && p.active && p !== gk) {
+                frames++;
+                if (d(p.pos.x) < d(gk.pos.x) - 3) behind++;
+              }
+          }
+        }
+      }
+    // Report from the visual side (2026-11-17): 14 per 100 frames of a team; here per player-frame.
+    expect(behind / frames).toBeLessThan(0.001);
+  }, 120000);
+});

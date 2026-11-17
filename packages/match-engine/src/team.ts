@@ -123,6 +123,11 @@ const BOX_FLOOR: Record<Line, number> = { gk: 0, def: 3, mid: 8, att: 0 };
 const NARROW_FROM = 30;
 const BOX_NARROW = 0.6;
 
+/** The keeper's spot with the ball: further out the higher the ball (PARAMETERS). */
+const keeperX = (focal: Vec2) => clamp(6 + focal.x * 0.12, 6, 20);
+/** With the ball the outfield players stand at least this far in front of the keeper (PARAMETER). */
+const BASE_GAP = 4;
+
 /**
  * Anchor of each slot (team frame). `lastLine` is the opponents' offside line
  * in this team's frame (attackers stay onside); `null` when not relevant.
@@ -153,7 +158,7 @@ export function anchors(
         (focal.y - CENTER.y) * FOLLOW_Y_OUT[line] * (line === 'def' ? boxNarrow : 1);
     if (line === 'gk') {
       if (inPossession) {
-        x = clamp(6 + focal.x * 0.12, 6, 20);
+        x = keeperX(focal);
         y = CENTER.y + (focal.y - CENTER.y) * 0.12;
       } else {
         // On the line from the goal centre to the ball (02 §6.4), a quarter of the way, at most 6 m out.
@@ -189,6 +194,8 @@ export function anchors(
           : BLOCK_TOP[t.block][a.line],
         Math.max(BOX_FLOOR[a.line], focal.x - GOAL_SIDE[a.line]),
       );
+    // With the ball nobody stands behind the keeper: the build-up starts in front of him.
+    if (inPossession && a.line !== 'gk') x = Math.max(x, keeperX(focal) + BASE_GAP);
     if (inPossession && a.line !== 'gk' && lastLine !== null)
       x = Math.min(x, Math.max(lastLine - 0.8, focal.x - 2));
     return { x: clamp(x, 1, LENGTH - 1), y: clamp(a.y, 1, WIDTH - 1) };
@@ -263,7 +270,8 @@ export function tasksFor(
     lastLine = Math.max(lastLine, ball.x);
     // Rest defence first: the plan's number stays behind the ball (02 §5.9).
     const n = t.restDefence;
-    const restX = Math.min(focal.x - REST_BEHIND, 62);
+    // Never behind the keeper: in the build-up the rest defence is the base in front of him.
+    const restX = Math.max(Math.min(focal.x - REST_BEHIND, 62), keeperX(focal) + BASE_GAP + 4);
     for (let i = 0; i < n; i++) {
       const y = CENTER.y + (i - (n - 1) / 2) * (n <= 2 ? 16 : 13);
       add('restDefence', `rest${i}`, { x: restX - (i === 0 || i === n - 1 ? 0 : 4), y });
