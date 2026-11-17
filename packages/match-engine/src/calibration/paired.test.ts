@@ -20,13 +20,15 @@ describe('paired bootstrap', () => {
 });
 
 describe('transition metrics in the summary (research 18 §1)', () => {
-  it('a high turnover counts as shot-ending only with a shot within 10 s (Opta)', () => {
+  it('a high turnover is shot-ending only if the shot comes before play stops (Opta sequence)', () => {
     const ev = (id: number, kind: string, team: 0 | 1, atMs: number, x = 800) =>
       ({ id, kind, team, atMs, at: [x, 340] }) as unknown as MatchEvent;
-    const late = transitions({ events: [ev(1, 'phaseChange', 0, 0), ev(2, 'shot', 0, 12000)] });
-    const quick = transitions({ events: [ev(1, 'phaseChange', 0, 0), ev(2, 'shot', 0, 9000)] });
-    expect([late.ht[0], late.hts[0]]).toEqual([1, 0]);
-    expect([quick.ht[0], quick.hts[0]]).toEqual([1, 1]);
+    const cut = transitions({
+      events: [ev(1, 'phaseChange', 0, 0), ev(2, 'throwIn', 0, 4000), ev(3, 'shot', 0, 9000)],
+    });
+    const slow = transitions({ events: [ev(1, 'phaseChange', 0, 0), ev(2, 'shot', 0, 15000)] });
+    expect([cut.ht[0], cut.hts[0]]).toEqual([1, 0]);
+    expect([slow.ht[0], slow.hts[0]]).toEqual([1, 1]);
   });
   it('counts high turnovers, their shots, losses and quick regains consistently', () => {
     const s = summary(simulateMatch(matchInput(2)));

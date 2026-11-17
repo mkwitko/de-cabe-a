@@ -118,7 +118,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   - **Método.** Com 150 partidas, a média de gols oscila cerca de ±0,16 só por acaso. Os ganhos de "10%" medidos antes com 150 partidas estão dentro do ruído. Decidir com 600 partidas (cerca de 3,5 min).
   - **Defensor ideal** (`02` §5.12): com cumprimento sempre, leitura do passe na hora, antecipação de 1 s e marcação a 1 m, os gols caem de 3,86 para 2,63. O excesso vem da defesa. O marcador fica a 6–10 m do ponto em todas as variantes. Trocar quem pega a marca não resolve.
   - **Bug do goleiro corrigido** (`a3c1dd1`): na bola longa que ninguém alcançava em voo, ele corria até onde a bola morreria. O atacante dominava antes e chutava com o gol vazio. Agora ele só sai se encontra a bola em voo antes do adversário mais rápido. Em 2000 partidas, mesmas sementes: gols de 3,80 para 3,61 (−5%). A medida de 600 partidas (3,92 para 3,49) era otimista.
-  - **Métrica da Opta corrigida** (`045982f`): a recuperação alta que vira chute agora conta só chute em até 10 s, como a Opta. Pela definição antiga eram 38%, pela da Opta são 26% (referência 13–21%).
+  - **Métrica da Opta, recuperação alta que vira chute** (`045982f`, depois corrigida). A primeira correção usou uma janela de 10 s que veio de memória, sem fonte. A busca não confirmou essa janela. Pelas fontes achadas (Sky Sports; Opta Analyst via premierleague.com, Premier League 2025/26: 14,9%), conta a sequência que começa em jogo corrido a até 40 m do gol adversário e termina em chute. A sequência acaba quando o adversário toma a bola ou o jogo para (falta, impedimento, lateral, escanteio, tiro de meta, tiro livre, gol). Medido assim em 200 partidas: 18,2 recuperações altas por jogo, 29,4% viram chute (referência 13% a 21%). Contagens antigas: 38% pela posse inteira e 26% com a janela de 10 s; nenhuma das duas segue a definição.
   - **Conversão por distância** (120 partidas):
 
     | Distância | Conversão | `xG` do motor | Nota |
@@ -139,6 +139,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   | Aérea | 0,56 | 0,11 | 0,06 |
 
   Ordem proposta: primeiro as faltas de disputa aérea, que estão baixas. Depois calibrar o cartão por falta, com a Série A em cerca de 0,16 amarelo por falta.
+- **Marcação que persiste** (2026-11-17, não entrou). Das marcas perdidas, 32% somem porque o atacante chega a menos de 8 m da bola, 25% porque ele fica atrás da bola e 26% por ranking. Testado em 2000 partidas: manter a marca até 3 m da bola deu 3,43 gols. Somar 8 m de vantagem a quem já é marcado na lista de perigo, mantendo a marca até 5 m, deu 3,39. A base é 3,44. Nenhuma diferença, e as duas reprovam o vão da última linha em S3. Conclusão: a escolha de quem marcar pesa pouco nos gols.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)

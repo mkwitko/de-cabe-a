@@ -27,7 +27,8 @@ export interface Summary {
   highWins: [number, number];
   /**
    * Transition (research 18 §1): balls won within 40 m of the opponents' goal and how many of
-   * them lead to a shot within 10 s, in the same possession (Opta's definition: 13% to 21%); losses and how many are won back
+   * them lead to a shot in the same sequence, before the opponents win it or play stops (Opta:
+   * 13% to 21%; Opta Analyst, Premier League 2025/26: 14.9%); losses and how many are won back
    * within 5 s (Bauer and Anzer 2021: counter-press success).
    */
   highTurnovers: [number, number];
@@ -36,8 +37,8 @@ export interface Summary {
   regained5s: [number, number];
 }
 
-/** PARAMETER of the Opta definition: a shot-ending high turnover shoots within this many ms. */
-const HT_SHOT_MS = 10000;
+/** A sequence (Opta) ends when play stops: these events end it before any later shot. */
+const STOPPAGE = new Set(['foul', 'offside', 'corner', 'throwIn', 'goalKick', 'freeKick', 'goal']);
 
 export function transitions(r: Pick<MatchResult, 'events'>) {
   const out = { ht: [0, 0], hts: [0, 0], losses: [0, 0], back: [0, 0] } as Record<
@@ -58,17 +59,11 @@ export function transitions(r: Pick<MatchResult, 'events'>) {
     if (!e.at || (t === 0 ? 1050 - e.at[0] : e.at[0]) >= 400) return;
     out.ht[t]++;
     const end = wins[k + 1]?.id ?? Infinity;
-    if (
-      r.events.some(
-        (x) =>
-          x.id > e.id &&
-          x.id < end &&
-          x.kind === 'shot' &&
-          x.team === t &&
-          x.atMs - e.atMs <= HT_SHOT_MS,
-      )
-    )
-      out.hts[t]++;
+    const first = r.events.find(
+      (x) =>
+        x.id > e.id && x.id < end && ((x.kind === 'shot' && x.team === t) || STOPPAGE.has(x.kind)),
+    );
+    if (first?.kind === 'shot') out.hts[t]++;
   });
   return out;
 }
