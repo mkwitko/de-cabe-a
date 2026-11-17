@@ -24,6 +24,7 @@ import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
+import type { Moves } from './market';
 import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
@@ -53,6 +54,8 @@ export interface CareerWorld {
   lineup?: Lineup;
   /** Freshness and drill of the person's club; absent before the first day played. */
   training?: Training;
+  /** Transfers so far; `pack` already carries them (market.ts). */
+  moves?: Moves;
 }
 
 export type Decision =

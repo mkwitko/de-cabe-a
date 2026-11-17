@@ -11,6 +11,7 @@ import type { Pack } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import type { Lineup } from './squad';
 import { clubLevels, type Training } from './training';
+import { withMoves, type Moves } from './market';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
@@ -27,6 +28,8 @@ interface Saved {
   lineup?: Lineup;
   /** Freshness and drill (training.ts). */
   training?: Training;
+  /** Transfers so far (market.ts); the pack is rebuilt from them on load. */
+  moves?: Moves;
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -48,12 +51,14 @@ export function saveCareer(w: CareerWorld): string {
     ledger: { today: w.ledger.today, entries: w.ledger.entries },
     ...(w.lineup && { lineup: w.lineup }),
     ...(w.training && { training: w.training }),
+    ...(w.moves && { moves: w.moves }),
   };
   return JSON.stringify(saved, replacer);
 }
 
-export function loadCareer(pack: Pack, seed: number, clubId: string, json: string): CareerWorld {
+export function loadCareer(base: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
+  const pack = withMoves(base, saved.moves ?? {});
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.
@@ -76,5 +81,6 @@ export function loadCareer(pack: Pack, seed: number, clubId: string, json: strin
     ...clubLevels(pack),
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
+    ...(saved.moves && { moves: saved.moves }),
   };
 }

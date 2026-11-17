@@ -126,22 +126,30 @@ export function clubLevels(pack: Pack): {
   strength: Map<string, number>;
   eleven: Map<string, number>;
 } {
-  const plain = clubStrength(pack);
   const strength = new Map<string, number>();
   const eleven = new Map<string, number>();
   for (const club of pack.clubs) {
-    const c = { pack, clubId: club.id };
-    try {
-      const l = bestLineup(c, formationOf(club.id));
-      const fit = slotRatings(c, l.formation);
-      strength.set(club.id, lineupStrength(c, l));
-      eleven.set(club.id, l.xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / 16);
-    } catch {
-      strength.set(club.id, plain.get(club.id) ?? 50);
-      eleven.set(club.id, ((plain.get(club.id) ?? 50) * 11) / 16);
-    }
+    const level = clubLevel(pack, club.id);
+    strength.set(club.id, level.strength);
+    eleven.set(club.id, level.eleven);
   }
   return { strength, eleven };
+}
+
+/** One club's measure (see `clubLevels`); recomputed when its squad changes. */
+export function clubLevel(pack: Pack, clubId: string): { strength: number; eleven: number } {
+  const c = { pack, clubId };
+  try {
+    const l = bestLineup(c, formationOf(clubId));
+    const fit = slotRatings(c, l.formation);
+    return {
+      strength: lineupStrength(c, l),
+      eleven: l.xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / 16,
+    };
+  } catch {
+    const plain = clubStrength(pack).get(clubId) ?? 50;
+    return { strength: plain, eleven: (plain * 11) / 16 };
+  }
 }
 
 /** How fresh another club's eleven is on `day`: a match's cost, less the days since its last. */
