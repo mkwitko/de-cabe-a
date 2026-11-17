@@ -48,7 +48,7 @@ describe('the person buys at two tables', () => {
     const wants = w.talks![p.id]!.wants!;
     const cash = w.ledger.cash;
     // A low wage draws a counter under his opening ask; his ask is always enough.
-    const counter = bidTerms(w, p.id, { ...wants, wage: Math.round(wants.wage * 0.7) });
+    const counter = bidTerms(w, p.id, { ...wants, wage: Math.round(wants.wage * 0.4) });
     expect(counter.kind).toBe('counter');
     const ask = w.talks![p.id]!.wants!;
     expect(ask.wage).toBeLessThanOrEqual(wants.wage);

@@ -28,7 +28,8 @@ import {
   type Terms,
 } from './deals';
 import { fitFor, squadPlanOf, type Need } from './plan';
-import { ageOf, levelIn, marketValue, readingsOf, thousands } from './value';
+import { bargaining, levelError, seenRise, seenValue } from './judgement';
+import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** The terms of a buying club's choice, in points. */
 export interface Why {
@@ -52,6 +53,8 @@ export interface Deal {
   role: Role;
   /** `starter` or `cover`: the need he was bought for. */
   for: Need['kind'];
+  /** The level the buying club believed he had (judgement.ts). */
+  seen: number;
   why: Why;
 }
 
@@ -94,10 +97,11 @@ export function utility(
   const buyer = { pack: w.pack, clubId: buyerId };
   const club = w.pack.clubs.find((c) => c.id === buyerId)!;
   const season = w.season.season;
-  const level = readingsOf(w.pack).get(p.id)!.level;
   const age = ageOf(p, season);
-  const over = Math.max(0, Math.min(12, fitFor(buyer, p, need) - need.wanted + 4));
-  const rise = levelIn(w.pack, p, season, 2) - level;
+  // Everything the club weighs is what it sees of him, right or wrong (judgement.ts).
+  const off = levelError(w.pack, buyerId, p);
+  const over = Math.max(0, Math.min(12, fitFor(buyer, p, need) + off - need.wanted + 4));
+  const rise = seenRise(w.pack, buyerId, p, season, 2);
   const natural = p.positions.some((x) => need.positions.includes(x.position) && x.level === 3);
   return {
     need: Math.round((need.urgency * over) / 12),
@@ -177,8 +181,9 @@ function choose(
   const pool: PackPlayer[] = [];
   for (const position of need.positions)
     for (const x of index.get(position) ?? []) {
-      if (x.level > need.wanted + 12) continue;
-      if (x.level < need.wanted - 3) break;
+      // Wider than the need by the most a club can be off (seven points).
+      if (x.level > need.wanted + 19) continue;
+      if (x.level < need.wanted - 10) break;
       if (!seen.has(x.id)) {
         seen.add(x.id);
         pool.push(players.get(x.id)!);
@@ -196,10 +201,13 @@ function choose(
       continue;
     const r = read.get(p.id)!;
     if (r.keeper !== need.keeper) continue;
+    // The level the club sees must sit in what the need asks for.
+    const sees = r.level + levelError(w.pack, buyerId, p);
+    if (sees < need.wanted - 3 || sees > need.wanted + 12) continue;
     // Just arrived somewhere: not for sale again this season.
     if (w.moves?.[p.id]?.season === season) continue;
     // Out of reach whatever the club's mood: a spare still costs 80% of his value.
-    if (marketValue(w.pack, p, season) * 8 > money * 10) continue;
+    if (marketValue(w.pack, p, season) * 6 > money * 10) continue;
     if (!canLose(w, p)) continue;
     const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, buyerId, season);
     if (stance.floor > money) continue;
@@ -222,18 +230,22 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   const from = p.clubId!;
   const clubs = new Map(w.pack.clubs.map((x) => [x.id, x]));
   const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season);
-  // The most the club pays: over the value by how much it needs him, never over its budget.
+  // The most the club pays: over what it thinks he is worth by how much it needs him and by
+  // how loose its office is at the table, never over its budget.
+  const hand = bargaining(w.pack, buyerId);
+  const worth = seenValue(w.pack, buyerId, p, season);
   const most = Math.min(
     available(w, buyerId),
-    thousands((stance.value * (100 + Math.round(need.urgency / 2))) / 100),
+    thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
   );
-  let offer = Math.min(most, thousands((stance.value * 90) / 100));
+  let offer = Math.min(most, thousands((worth * hand.opens) / 100));
   let fee = -1;
   for (let round = 1; round <= MAX_ROUNDS && fee < 0; round++) {
     const a = answerFee(stance, offer, round);
     if (a.kind === 'accept') fee = a.fee;
     else if (a.kind === 'refuse') return null;
-    else if (a.fee <= most) offer = a.fee;
+    // A sharp office answers a counter with one of its own; the others take a price they can pay.
+    else if (a.fee <= most && round > hand.haggles) offer = a.fee;
     else if (offer >= most) return null;
     else offer = Math.min(most, thousands((offer + a.fee) / 2));
   }
@@ -265,6 +277,7 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
     years: signed.years,
     role: signed.role,
     for: need.kind,
+    seen: readingsOf(w.pack).get(p.id)!.level + levelError(w.pack, buyerId, p),
     why: c.why,
   };
 }
@@ -306,12 +319,13 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
       tried.add(choice.p.id);
       if (choice.p.clubId === w.clubId) {
         // The person's player: the club bids and waits for the answer.
-        const value = sellerStance({ pack: w.pack, clubId: w.clubId }, choice.p, id, season).value;
+        const hand = bargaining(w.pack, id);
+        const worth = seenValue(w.pack, id, choice.p, season);
         const most = Math.min(
           available(w, id),
-          thousands((value * (100 + Math.round(need.urgency / 2))) / 100),
+          thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
         );
-        const fee = Math.min(most, thousands((value * 90) / 100));
+        const fee = Math.min(most, thousands((worth * hand.opens) / 100));
         w.bids = [
           ...(w.bids ?? []),
           {

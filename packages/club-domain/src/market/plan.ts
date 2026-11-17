@@ -16,6 +16,7 @@ import {
 import { cached } from '../lib/pack-cache';
 import { formationOf } from '../match/fixture-input';
 import type { PackPlayer } from '../pack/schema';
+import { levelError } from './judgement';
 import { readingsOf } from './value';
 
 export interface Need {
@@ -61,8 +62,12 @@ function plan(c: ClubIn): SquadPlan {
   const fit = slotRatings(c, formation);
   const known = slotLevels(c, formation);
   const xi = bestLineup(c, formation).xi;
-  const level = Math.round(xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / xi.length);
+  // The eleven is the coach's, on the pitch. What follows is the director's reading of it: each
+  // rating as the club's football office sees it (judgement.ts), right or wrong.
   const squad = squadPlayers(c);
+  const offBy = new Map(squad.map((p) => [p.id, levelError(c.pack, c.clubId, p)]));
+  const seen = (id: string, slot: number) => fit.get(id)![slot]! + offBy.get(id)!;
+  const level = Math.round(xi.reduce((s, id, i) => s + seen(id, i), 0) / xi.length);
   const read = readingsOf(c.pack);
   const out = squad.filter((p) => !xi.includes(p.id));
 
@@ -74,7 +79,7 @@ function plan(c: ClubIn): SquadPlan {
     for (const p of out) {
       if (!free.has(p.id) || read.get(p.id)!.keeper !== keeper) continue;
       if (known.get(p.id)![i]! < 2) continue;
-      if (!best || fit.get(p.id)![i]! > fit.get(best)![i]!) best = p.id;
+      if (!best || seen(p.id, i) > seen(best, i)) best = p.id;
     }
     if (best) free.delete(best);
     return best;
@@ -83,7 +88,7 @@ function plan(c: ClubIn): SquadPlan {
   const needs: Need[] = [];
   for (const [i, role] of roles.entries()) {
     const keeper = role === 'goalkeeper' || role === 'sweeperKeeper';
-    const starter = fit.get(xi[i]!)![i]!;
+    const starter = seen(xi[i]!, i);
     const base = { slot: i, positions: positions[i]!, keeper };
     if (starter < level - WEAK_LINK)
       needs.push({
@@ -92,7 +97,7 @@ function plan(c: ClubIn): SquadPlan {
         wanted: level,
         urgency: Math.min(100, 40 + (level - starter) * 6),
       });
-    const back = cover[i] ? fit.get(cover[i]!)![i]! : 0;
+    const back = cover[i] ? seen(cover[i]!, i) : 0;
     if (back < level - COVER_GAP)
       needs.push({
         ...base,
@@ -107,7 +112,11 @@ function plan(c: ClubIn): SquadPlan {
   const used = new Set([...xi, ...cover.filter((x): x is string => x !== null)]);
   const surplus = squad
     .filter((p) => !used.has(p.id))
-    .sort((a, b) => read.get(a.id)!.level - read.get(b.id)!.level || (a.id < b.id ? -1 : 1))
+    .sort(
+      (a, b) =>
+        read.get(a.id)!.level + offBy.get(a.id)! - (read.get(b.id)!.level + offBy.get(b.id)!) ||
+        (a.id < b.id ? -1 : 1),
+    )
     .map((p) => p.id);
 
   return { formation, level, xi, cover, needs, surplus };

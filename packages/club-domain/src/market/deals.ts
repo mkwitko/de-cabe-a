@@ -9,7 +9,8 @@ import type { ClubIn } from '../career/squad';
 import { cached } from '../lib/pack-cache';
 import type { Pack, PackClub, PackPlayer } from '../pack/schema';
 import { squadPlanOf } from './plan';
-import { ageOf, goingWage, marketValue, readingsOf, thousands, yearsLeft } from './value';
+import { bargaining, seenValue } from './judgement';
+import { ageOf, goingWage, readingsOf, thousands, yearsLeft } from './value';
 
 /** Rounds of offer and counter-offer before a side walks away. */
 export const MAX_ROUNDS = 4;
@@ -51,9 +52,11 @@ export function sellerStance(
     contract: yearsLeft(p, season) <= 1 ? -20 : 0,
     rival: rivals.includes(buyerId) ? 20 : 0,
   };
-  const value = marketValue(seller.pack, p, season);
+  // What the club thinks he is worth, and how hard its office holds out (judgement.ts).
+  const value = seenValue(seller.pack, seller.clubId, p, season);
+  const holds = bargaining(seller.pack, seller.clubId).holds;
   const floor = thousands(
-    (value * (100 + why.plan + why.noCover + why.contract + why.rival)) / 100,
+    (value * (100 + why.plan + why.noCover + why.contract + why.rival + holds)) / 100,
   );
   return { mood, value, floor, asking: thousands((floor * 125) / 100), why };
 }

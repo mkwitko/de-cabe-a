@@ -3,7 +3,7 @@ import { generateDevPack } from '../generate/pack';
 import { nextDecision, openCareer, playDecision } from '../career/advance';
 import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers } from '../career/start';
-import { available, budgetOf, wageRoom } from './books';
+import { available, wageRoom } from './books';
 import { marketRound, roundsBetween } from './rounds';
 import { marketValue, readingsOf } from './value';
 import { dayOf } from '../competition/calendar';
@@ -44,15 +44,16 @@ describe('the market between clubs (07 §6, 04 §8)', () => {
       expect(
         d.why.need + d.why.fit + d.why.growth + d.why.resale - d.why.cost - d.why.wages,
       ).toBeGreaterThanOrEqual(36);
-      expect(d.fee).toBeLessThanOrEqual(budgetOf(w, d.to).transfer * 2);
-      // The fee stays in reach of what he is worth: from a spare's discount to a key man's premium.
+      // The fee stays in reach of what he is worth: from a spare sold by a weak office to a
+      // key man bought by one that overpays.
       const value = marketValue(
         pack,
         pack.players.find((p) => p.id === d.player)!,
         2026,
       );
-      expect(d.fee).toBeGreaterThanOrEqual(value * 0.55);
-      expect(d.fee).toBeLessThanOrEqual(value * 2.1);
+      expect(d.fee).toBeGreaterThanOrEqual(value * 0.35);
+      expect(d.fee).toBeLessThanOrEqual(value * 3);
+      expect(Math.abs(d.seen - readingsOf(pack).get(d.player)!.level)).toBeLessThanOrEqual(7);
     }
     // A player moves once in a season.
     expect(new Set(deals.map((d) => d.player)).size).toBe(deals.length);

@@ -43,6 +43,7 @@ import {
   marketValue,
   openTalk,
   squadPlanOf,
+  eyeOf,
   MAX_ROUNDS,
   type BidAnswer,
   type FeeAnswer,
@@ -276,6 +277,9 @@ export interface MarketView {
     fee: number;
     role: Role;
     for: 'starter' | 'cover';
+    /** The level the buyer believed he had, and how good its offices are (1..5). */
+    seen: number;
+    office: number;
     why: Why;
   }[];
   /** The other side's answer to what the person just did. */
@@ -369,6 +373,8 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
         fee: d.fee,
         role: d.role,
         for: d.for,
+        seen: d.seen,
+        office: eyeOf(w.pack, d.to).football,
         why: d.why,
       })),
   };

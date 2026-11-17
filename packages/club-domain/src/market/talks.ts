@@ -22,6 +22,7 @@ import {
   type TermsAnswer,
 } from './deals';
 import type { Why } from './rounds';
+import { seenLevel } from './judgement';
 import { readingsOf, thousands } from './value';
 
 const MIN_SQUAD = 20;
@@ -180,6 +181,8 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
 export function listPlayer(w: CareerWorld, playerId: string, on: boolean): void {
   if (playerOf(w, playerId)?.clubId !== w.clubId) throw new Error('list: not yours');
   const listed = new Set(w.listed ?? []);
+  // A player newly on the list is news: the clubs sitting the window out look again.
+  if (on && !listed.has(playerId)) delete w.idle;
   if (on) listed.add(playerId);
   else listed.delete(playerId);
   w.listed = [...listed].sort();
@@ -251,6 +254,7 @@ export function answerBid(
       years: wants.years,
       role: wants.fair,
       for: 'starter' as const,
+      seen: seenLevel(w.pack, bid.from, p),
       why: bid.why,
     },
   ].slice(-80);

@@ -131,6 +131,7 @@ export const ptBR = {
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
     '{to} contratou {name} do {from} por {fee} para ser {for, select, starter {titular} other {reserva}}.',
+  'market.judged': 'Avaliaram ele em nota {seen}. Diretoria de futebol nível {office} de 5.',
   'market.why':
     'Por quê: necessidade {need}, encaixe {fit}, evolução {growth}, revenda {resale}, custo −{cost}, folha −{wages}.',
   'market.bought': '{name} contratado junto ao {club} por {price}.',

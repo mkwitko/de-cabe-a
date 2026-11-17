@@ -13,6 +13,8 @@ import type { Lineup } from './squad';
 import { clubLevels, type Training } from './training';
 import { withMoves, type Moves } from './market';
 import type { Board } from './board';
+import { carryCache } from '../lib/pack-cache';
+import { goingWages } from '../market/value';
 import type { Note } from './inbox';
 
 /**
@@ -79,6 +81,16 @@ export function saveCareer(w: CareerWorld): string {
 export function loadCareer(base: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
   const pack = withMoves(base, saved.moves ?? {});
+  if (pack !== base) {
+    // The market's yardsticks (who can play where, the going wage by level) are read from the
+    // pack the career opened with, as in the world that never stopped; squads are read again.
+    goingWages(base);
+    carryCache(
+      base,
+      pack,
+      base.clubs.map((c) => c.id),
+    );
+  }
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.

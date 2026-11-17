@@ -29,7 +29,10 @@ describe('career money (04 §4)', () => {
     expect(months.size).toBe(kinds('wages').length);
     expect(months.size).toBeGreaterThanOrEqual(10);
     expect(kinds('tv')).toHaveLength(months.size);
-    const homes = [...w.season.meta.values()].filter((m) => m.home === club).length;
+    // Home matches played: a manager dismissed before the end leaves the rest unplayed.
+    const homes = [...w.season.meta].filter(
+      ([id, m]) => m.home === club && w.season.outcomes.has(id),
+    ).length;
     expect(kinds('tickets')).toHaveLength(homes);
     expect(kinds('tickets')[0]!.amount).toBe(attendance(w) * 18);
     expect(checkLedger(w.ledger)).toEqual([]);
