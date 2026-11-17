@@ -39,7 +39,9 @@ export const ptBR = {
   'career.next': 'Próximo jogo',
   'career.date': '{d, date, short}',
   'career.builtHere': 'Último passo calculado neste aparelho em {ms} ms.',
-  'career.play': 'Jogar a partida',
+  'career.play': 'Só o resultado',
+  'career.watchFull': 'Assistir à partida',
+  'career.watchHighlights': 'Melhores momentos',
   'career.lastResult': '{home} {a} × {b} {away}',
   'career.seasonOver': 'Temporada encerrada.',
   'career.nextSeason': 'Começar a temporada {season}',
@@ -50,6 +52,7 @@ export const ptBR = {
     '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
+  'friendly.continue': 'Continuar',
   'friendly.title': 'Amistoso',
   'friendly.kicker': 'Modo Clube · partida avulsa',
   'friendly.intro':

@@ -19,6 +19,8 @@ import { regulationsFor, type Move } from '../competition/outcomes';
 import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { clubStrength, quickResult } from '../match/quick';
+import { matchInputFor } from '../match/fixture-input';
+import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
@@ -45,16 +47,23 @@ export type Decision =
     }
   | { kind: 'seasonOver' };
 
-function playDay(w: CareerWorld, day: number): Map<string, Outcome> {
+function playDay(
+  w: CareerWorld,
+  day: number,
+  given?: { id: string; outcome: Outcome },
+): Map<string, Outcome> {
   const out = new Map<string, Outcome>();
   postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
-    const o = quickResult(
-      seedOf(w.seed, id),
-      w.strength.get(m.home) ?? 50,
-      w.strength.get(m.away) ?? 50,
-    );
+    const o =
+      given?.id === id
+        ? given.outcome
+        : quickResult(
+            seedOf(w.seed, id),
+            w.strength.get(m.home) ?? 50,
+            w.strength.get(m.away) ?? 50,
+          );
     record(w.season, id, o);
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) postHomeMatch(w, id, day);
@@ -102,10 +111,29 @@ export function nextDecision(w: CareerWorld): Decision {
   return { kind: 'seasonOver' };
 }
 
-/** Plays the day of the person's next match (their match and everyone else's). */
-export function playDecision(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>): Outcome {
+/**
+ * Plays the day of the person's next match (their match and everyone else's). Their match takes
+ * `watched` when they watched it with the match engine; otherwise a level 3 result.
+ */
+export function playDecision(
+  w: CareerWorld,
+  d: Extract<Decision, { kind: 'match' }>,
+  watched?: Outcome,
+): Outcome {
   if (nextDay(w.season) !== d.day) throw new Error('career: that match is not next');
-  return playDay(w, d.day).get(d.matchId)!;
+  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched }).get(d.matchId)!;
+}
+
+/**
+ * The person's match for the match engine (level 1): the same input every club gets
+ * (fixture-input.ts), with the person's coach keeping the plan, since they command it live
+ * (02 §10). `mine` is the person's side in the input.
+ */
+export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>) {
+  const input = matchInputFor(w.pack, w.season, d.matchId);
+  const mine: 0 | 1 = d.home === w.clubId ? 0 : 1;
+  input.teams[mine] = { ...input.teams[mine], coach: coachOf(60, { flexibility: 1 }) };
+  return { input, mine };
 }
 
 /** The person's division table as it stands; in a group phase, their group. */

@@ -15,7 +15,7 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await expect(accept).toHaveCount(3);
   await page.screenshot({ path: 'test-results/carreira-ofertas-390.png', fullPage: true });
   await accept.first().click();
-  const play = page.getByRole('button', { name: 'Jogar a partida' });
+  const play = page.getByRole('button', { name: 'Só o resultado' });
   await expect(play).toBeEnabled({ timeout: 30_000 });
   await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
   await play.click();
@@ -28,7 +28,7 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
   // Reloading opens the saved snapshot: the two matches are still there.
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Jogar a partida' })).toBeEnabled({
+  await expect(page.getByRole('button', { name: 'Só o resultado' })).toBeEnabled({
     timeout: 30_000,
   });
   await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('2');
@@ -61,7 +61,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await expect(page.getByRole('heading', { name: 'Dinheiro na temporada 2026' })).toBeVisible({
     timeout: 30_000,
   });
-  const play = page.getByRole('button', { name: 'Jogar a partida' });
+  const play = page.getByRole('button', { name: 'Só o resultado' });
   const turn = page.getByRole('button', { name: 'Começar a temporada 2027' });
   for (let i = 0; i < 60 && !(await turn.isVisible()); i++) {
     await expect(play.or(turn)).toBeEnabled({ timeout: 30_000 });
@@ -77,4 +77,34 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await expect(page.getByText(/· temporada 2027/)).toBeVisible();
   await page.reload();
   await expect(page.getByText(/· temporada 2027/)).toBeVisible({ timeout: 30_000 });
+});
+
+test('career: watch the club’s own match, change the plan, and its result counts', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/tecnico/carreira');
+  await page
+    .getByRole('button', { name: /^Assumir o / })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Melhores momentos' }).click();
+  await expect(page.getByText(/^Lance 1$/)).toBeVisible({ timeout: 60_000 });
+  await page.screenshot({ path: 'test-results/carreira-partida-390.png', fullPage: true });
+  // The plan can change in a career match too.
+  await page.getByRole('button', { name: 'Alto' }).click();
+  await page.getByRole('button', { name: '16×' }).click();
+  await expect(page.getByText('Fim de jogo')).toBeVisible({ timeout: 180_000 });
+  const score = await page.locator('.bg-club-gold.text-ink').first().innerText();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  // The watched score is the one recorded, and the table counts the match.
+  const [a, b] = score.split('–');
+  await expect(page.getByText(new RegExp(`^\\S+ ${a} × ${b} \\S+$`))).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('1');
+  expect(errors).toEqual([]);
 });

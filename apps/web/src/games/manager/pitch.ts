@@ -337,12 +337,28 @@ const distance = (a: string, b: string) => {
 };
 
 /** Both kits for a match: pattern from the club id, keepers in a colour far from both sides. */
+/** PARÂMETRO: below this colour distance two shirts read as the same team on a phone. */
+const CLASH = 120;
+
 export function kitsFor(
   home: { id: string; colours: [string, string] },
   away: { id: string; colours: [string, string] },
 ): [Kit, Kit] {
   const hash = (id: string) => [...id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
-  const outfield = [...home.colours, ...away.colours];
+  // Away kit (as in real football): when the shirts would look alike, the visitors wear their
+  // second colour, or white or black, whichever stands out most from the home shirt.
+  let awayColours = away.colours;
+  if (distance(away.colours[0], home.colours[0]) < CLASH) {
+    const options: [string, string][] = [
+      [away.colours[1], away.colours[0]],
+      ['#f4f4ef', away.colours[0]],
+      ['#15171a', away.colours[0]],
+    ];
+    awayColours = options.reduce((best, o) =>
+      distance(o[0], home.colours[0]) > distance(best[0], home.colours[0]) ? o : best,
+    );
+  }
+  const outfield = [...home.colours, ...awayColours];
   const far = (skip: string[]) =>
     KEEPER.filter((k) => !skip.includes(k)).sort(
       (a, b) =>
@@ -350,13 +366,13 @@ export function kitsFor(
         Math.min(...outfield.map((o) => distance(a, o))),
     )[0]!;
   const homeKeeper = far([]);
-  const kit = (c: typeof home, keeper: string): Kit => ({
-    fill: c.colours[0],
-    edge: c.colours[1],
-    pattern: PATTERNS[hash(c.id) % PATTERNS.length]!,
+  const kit = (id: string, colours: [string, string], keeper: string): Kit => ({
+    fill: colours[0],
+    edge: colours[1],
+    pattern: PATTERNS[hash(id) % PATTERNS.length]!,
     keeper,
   });
-  return [kit(home, homeKeeper), kit(away, far([homeKeeper]))];
+  return [kit(home.id, home.colours, homeKeeper), kit(away.id, awayColours, far([homeKeeper]))];
 }
 
 /** Shirt design inside the current path (already filled with the main colour). */

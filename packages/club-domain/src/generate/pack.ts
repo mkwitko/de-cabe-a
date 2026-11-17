@@ -3,8 +3,8 @@
  * cut 0.5 and quick tests) and `br-dev-1` (the four divisions at real sizes,
  * every phase kind). Same seed, same bytes.
  */
-import { createHash } from 'node:crypto';
 import { between, fork, next, pick, rngFrom, type Rng } from '@decabeca/match-engine';
+import { sha256Hex } from '../lib/sha256';
 import { DEPARTMENTS, PackSchema, type Pack, type PackClub } from '../pack/schema';
 import { devDivisions, miniCup } from './competitions';
 import { generateSquad } from './player';
@@ -294,7 +294,4 @@ export function generateDevPack(seed = 20261116): Pack {
 }
 
 /** sha256 of the pack's JSON with the checksum field blanked. */
-export const packChecksum = (pack: Pack) =>
-  createHash('sha256')
-    .update(JSON.stringify({ ...pack, checksum: '' }))
-    .digest('hex');
+export const packChecksum = (pack: Pack) => sha256Hex(JSON.stringify({ ...pack, checksum: '' }));

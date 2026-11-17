@@ -56,3 +56,24 @@ describe('career calendar (MC-084)', () => {
     ).toThrow();
   });
 });
+
+describe('watching the person’s match (level 1)', () => {
+  it('the engine input puts the person in charge, and its outcome is what gets recorded', async () => {
+    const { simulateMatch } = await import('@decabeca/match-engine');
+    const { outcomeOf } = await import('../match/fixture-input');
+    const { careerMatch } = await import('./advance');
+    const w = openCareer(pack, 33, clubId);
+    const d = nextDecision(w);
+    if (d.kind !== 'match') throw new Error('no match');
+    const { input, mine } = careerMatch(w, d);
+    expect(input.teams[mine].players.map((p) => p.id).every((id) => id.startsWith(clubId))).toBe(
+      true,
+    );
+    expect(input.teams[mine].coach.flexibility).toBe(1);
+    const result = simulateMatch(input);
+    const o = playDecision(w, d, outcomeOf(result));
+    expect(o.goals).toEqual(result.score);
+    const row = divisionTable(w).rows.find((r) => r.clubId === clubId)!;
+    expect(row.goalsFor).toBe(result.score[mine]);
+  }, 60_000);
+});

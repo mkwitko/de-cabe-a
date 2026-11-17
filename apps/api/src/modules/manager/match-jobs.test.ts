@@ -3,7 +3,7 @@ import { generateMiniPack } from '@decabeca/club-domain';
 import { describe, expect, it } from 'vitest';
 import { friendlyInput } from './manager.routes';
 import { runJob, type Moment } from './match-jobs';
-import { momentWindows } from './moments';
+import { momentWindows } from '@decabeca/club-domain';
 
 const [a, b] = generateMiniPack().clubs;
 const side = (clubId: string) => ({ clubId, formation: '4-3-3', instructions: {} });

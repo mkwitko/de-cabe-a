@@ -19,9 +19,23 @@ import {
   type Decision,
   type Pack,
   type SeasonTurn,
+  careerMatch,
+  nextMoment,
+  outcomeOf,
+  type Moment,
+  type MomentMode,
 } from '@decabeca/club-domain';
+import {
+  advanceLiveMatch,
+  startLiveMatch,
+  type LiveMatch,
+  type MatchChunk,
+  type MatchResult,
+  type TimedCommand,
+} from '@decabeca/match-engine';
 
-export type SimRequest =
+/** Every request carries an id; its reply carries the same id. */
+export type SimRequest = { id: number } & (
   | {
       type: 'open';
       packId: string;
@@ -32,7 +46,14 @@ export type SimRequest =
       snapshot: ArrayBuffer;
     }
   | { type: 'play' }
-  | { type: 'nextSeason' };
+  | { type: 'nextSeason' }
+  /** Watch the person's next match with the match engine (level 1). */
+  | { type: 'matchStart' }
+  | { type: 'matchChunk'; from: number; count: number; commands: TimedCommand[] }
+  | { type: 'matchMoment'; from: number; commands: TimedCommand[]; mode: MomentMode }
+  /** Records the watched result and moves on, like `play`. */
+  | { type: 'matchFinish' }
+);
 
 export interface SimView {
   season: number;
@@ -50,7 +71,19 @@ export interface SimView {
   ms: number;
 }
 
+export interface MatchClub {
+  id: string;
+  name: string;
+  shortName: string;
+  colours: [string, string];
+}
+
 export interface SimReply {
+  id: number;
+  /** matchStart: the two sides and which one is the person's. */
+  match?: { home: MatchClub; away: MatchClub; mine: 0 | 1 };
+  chunk?: MatchChunk;
+  moment?: Moment;
   view?: SimView;
   /** Present when the world moved: the step to send with the snapshot. */
   save?: { from: number; to: number; season: number; bytes: ArrayBuffer };
@@ -61,6 +94,9 @@ let world: CareerWorld | null = null;
 let pending: Decision | null = null;
 let last: SimView['last'] = null;
 let turn: SimView['turn'] = null;
+/** The person's match being watched, and the plan changes sent so far. */
+let live: LiveMatch | null = null;
+let liveCommands: TimedCommand[] = [];
 
 async function gzip(text: string): Promise<ArrayBuffer> {
   const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
@@ -169,10 +205,54 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         bytes: await gzip(saveCareer(world)),
       };
     }
-    const reply: SimReply = { view: view(world!, Math.round(performance.now() - t)) };
+    if (r.type === 'matchStart' && world && pending?.kind === 'match') {
+      const { input, mine } = careerMatch(world, pending);
+      live = startLiveMatch(input);
+      liveCommands = [];
+      const club = (id: string): MatchClub => {
+        const c = world!.pack.clubs.find((x) => x.id === id)!;
+        return { id, name: c.name, shortName: c.shortName, colours: c.colours };
+      };
+      self.postMessage({
+        id: r.id,
+        match: { home: club(pending.home), away: club(pending.away), mine },
+      } satisfies SimReply);
+      return;
+    }
+    if (r.type === 'matchChunk' && live) {
+      liveCommands = r.commands;
+      const chunk = advanceLiveMatch(live, r.commands, r.from, r.count);
+      self.postMessage({ id: r.id, chunk } satisfies SimReply);
+      return;
+    }
+    if (r.type === 'matchMoment' && live) {
+      liveCommands = r.commands;
+      const moment = nextMoment(live, r.commands, r.from, r.mode);
+      self.postMessage({ id: r.id, moment } satisfies SimReply);
+      return;
+    }
+    if (r.type === 'matchFinish' && world && live && pending?.kind === 'match') {
+      // The whole match with the plan changes the person made: the same bits as on screen.
+      const end = advanceLiveMatch(live, liveCommands, 40_000, 1);
+      const result = end.result as MatchResult;
+      live = null;
+      const from = world.day;
+      const d = pending;
+      const o = playDecision(world, d, outcomeOf(result));
+      const byId = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
+      last = { home: byId.get(d.home)!, away: byId.get(d.away)!, goals: o.goals };
+      const after = await toNextDecision(world);
+      save = {
+        from,
+        to: world.day,
+        season: world.season.season,
+        bytes: after?.bytes ?? (await gzip(saveCareer(world))),
+      };
+    }
+    const reply: SimReply = { id: r.id, view: view(world!, Math.round(performance.now() - t)) };
     if (save) reply.save = save;
     self.postMessage(reply, { transfer: save ? [save.bytes] : [] });
   } catch (err) {
-    self.postMessage({ error: String(err) } satisfies SimReply);
+    self.postMessage({ id: e.data.id, error: String(err) } satisfies SimReply);
   }
 };

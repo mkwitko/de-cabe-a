@@ -1,4 +1,4 @@
-/* global URL, console, process, structuredClone, performance -- Node script */
+/* global URL, console, process, structuredClone, performance, TextEncoder -- Node script */
 /**
  * Same bits in Node and in the browsers (ADR-020): the solo career runs in the browser and the
  * server replays it. Bundles scripts/determinism-probe.ts, runs it in Node, Chromium and WebKit
@@ -37,7 +37,7 @@ await build({
 });
 const code = readFileSync(join(dir, 'probe.js'), 'utf8');
 
-const ctx = { structuredClone, performance };
+const ctx = { structuredClone, performance, TextEncoder };
 vm.createContext(ctx);
 vm.runInContext(code, ctx);
 const results = { node: JSON.stringify(ctx.probe()) };

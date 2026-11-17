@@ -3,11 +3,19 @@
  * by one of three offers from the last one; then the career home. The world is built in the
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
-import type { SimReply, SimRequest, SimView } from './sim.worker';
+import type { MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
+import {
+  Match,
+  PLAN,
+  type Chunk,
+  type MatchSource,
+  type Moment,
+  type Watch,
+} from '../FriendlyPage';
 
 interface ClubOption {
   id: string;
@@ -204,59 +212,121 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
 
 // ── Home ────────────────────────────────────────────────────────────────────
 
+type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
+type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
+
 function Home({ career }: { career: Career }) {
   const [sim, setSim] = useState<SimView | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [worker, setWorker] = useState<Worker | null>(null);
+  const [ask, setAsk] = useState<Ask | null>(null);
+  const [watching, setWatching] = useState<{
+    watch: Watch;
+    home: MatchClub;
+    away: MatchClub;
+    mine: 0 | 1;
+    key: number;
+  } | null>(null);
+
+  // What every step answers: the server keeps the day and the snapshot, then the screen moves.
+  const apply = async (reply: SimReply) => {
+    const save = reply.save;
+    if (save)
+      await api(`/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/octet-stream' },
+        body: save.bytes,
+      });
+    if (reply.view) setSim(reply.view);
+    setBusy(false);
+  };
 
   useEffect(() => {
     const w = new Worker(new URL('./sim.worker.ts', import.meta.url), { type: 'module' });
-    let alive = true;
-    w.onmessage = async (e: MessageEvent<SimReply>) => {
-      if (e.data.error !== undefined) return setError(e.data.error);
-      // The server keeps the day and the snapshot together, before the screen moves on.
-      const save = e.data.save;
-      if (save)
-        await api(
-          `/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}`,
-          {
-            method: 'PUT',
-            headers: { 'content-type': 'application/octet-stream' },
-            body: save.bytes,
-          },
-        ).catch((err: Error) => alive && setError(err.message));
-      if (!alive) return;
-      setSim(e.data.view ?? null);
-      setBusy(false);
+    const waiting = new Map<number, (r: SimReply) => void>();
+    let seq = 0;
+    w.onmessage = (e: MessageEvent<SimReply>) => {
+      waiting.get(e.data.id)?.(e.data);
+      waiting.delete(e.data.id);
     };
+    const call: Ask = (req) =>
+      new Promise((resolve, reject) => {
+        const id = ++seq;
+        waiting.set(id, (r) => (r.error !== undefined ? reject(new Error(r.error)) : resolve(r)));
+        w.postMessage({ ...req, id }, req.type === 'open' ? [req.snapshot] : []);
+      });
+    setAsk(() => call);
     apiFetch('/v1/manager/career/world')
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
-      .then((snapshot) => {
-        const req: SimRequest = {
+      .then((snapshot) =>
+        call({
           type: 'open',
           packId: career.packId,
           packVersion: career.packVersion,
           seed: career.seed,
           clubId: career.clubId,
           snapshot,
-        };
-        w.postMessage(req, [snapshot]);
-      })
+        }),
+      )
+      .then(apply)
       .catch((err: Error) => setError(err.message));
-    setWorker(w);
-    return () => {
-      alive = false;
-      w.terminate();
-    };
+    return () => w.terminate();
   }, [career]);
 
-  const send = (type: 'play' | 'nextSeason') => {
+  const step = (type: 'play' | 'nextSeason') => {
+    if (!ask) return;
     setBusy(true);
-    worker?.postMessage({ type } satisfies SimRequest);
+    ask({ type })
+      .then(apply)
+      .catch((err: Error) => setError(err.message));
   };
 
+  const watch = (mode: Watch) => {
+    if (!ask) return;
+    setBusy(true);
+    ask({ type: 'matchStart' })
+      .then((r) => {
+        if (!r.match) throw new Error('no match');
+        setWatching({ watch: mode, ...r.match, key: Date.now() });
+      })
+      .catch((err: Error) => setError(err.message));
+  };
+
+  const source = useMemo<MatchSource | null>(
+    () =>
+      ask && {
+        chunk: (from, count, commands) =>
+          ask({ type: 'matchChunk', from, count, commands }).then(
+            (r) => r.chunk as unknown as Chunk,
+          ),
+        moment: (from, commands, mode) =>
+          ask({ type: 'matchMoment', from, commands, mode }).then(
+            (r) => r.moment as unknown as Moment,
+          ),
+      },
+    [ask],
+  );
+
   if (error) return <Notice title={t('career.loadError')}>{error}</Notice>;
+  if (watching && source && ask)
+    return (
+      <Match
+        key={watching.key}
+        seed={0}
+        watch={watching.watch}
+        clubs={[watching.home, watching.away]}
+        home={{ clubId: watching.home.id, formation: '4-3-3', instructions: PLAN }}
+        away={{ clubId: watching.away.id, formation: '4-3-3', instructions: PLAN }}
+        mine={watching.mine}
+        source={source}
+        onFinished={() => {
+          ask({ type: 'matchFinish' })
+            .then(apply)
+            .catch((err: Error) => setError(err.message));
+        }}
+        onDone={() => setWatching(null)}
+      />
+    );
   if (!sim)
     return (
       <p role="status" className="text-chalk-soft">
@@ -314,14 +384,32 @@ function Home({ career }: { career: Career }) {
                 <span className="text-chalk-soft">×</span>
                 <span className={sim.next.atHome ? '' : 'font-bold'}>{sim.next.away}</span>
               </p>
-              <button
-                type="button"
-                disabled={busy}
-                className={btnPrimary}
-                onClick={() => send('play')}
-              >
-                {t('career.play')}
-              </button>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <button
+                  type="button"
+                  disabled={busy}
+                  className={btnPrimary}
+                  onClick={() => watch('full')}
+                >
+                  {t('career.watchFull')}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className={btnSecondary}
+                  onClick={() => watch('highlights')}
+                >
+                  {t('career.watchHighlights')}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className={btnSecondary}
+                  onClick={() => step('play')}
+                >
+                  {t('career.play')}
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -330,7 +418,7 @@ function Home({ career }: { career: Career }) {
                 type="button"
                 disabled={busy}
                 className={btnPrimary}
-                onClick={() => send('nextSeason')}
+                onClick={() => step('nextSeason')}
               >
                 {t('career.nextSeason', { season: sim.season + 1 })}
               </button>

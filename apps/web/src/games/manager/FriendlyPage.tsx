@@ -11,20 +11,20 @@ import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/u
 import { t, tMessage, type MessageKey } from './i18n';
 import { drawPlayers, kitsFor, pitchLayer, view, type View } from './pitch';
 
-interface Club {
+export interface Club {
   id: string;
   name: string;
   shortName: string;
   colours: [string, string];
 }
-interface Instructions {
+export interface Instructions {
   block: 'low' | 'mid' | 'high';
   pressIntensity: number;
   tempo: number;
   width: number;
   risk: number;
 }
-interface Side {
+export interface Side {
   clubId: string;
   formation: string;
   instructions: Instructions;
@@ -53,33 +53,45 @@ interface TeamStats {
   redCards: number;
   corners: number;
 }
-interface Result {
-  score: [number, number];
-  stats: [TeamStats, TeamStats];
-  explanation: { creation: number; conversion: number; factors: { message: Message }[] };
-}
-interface Chunk {
+export interface Chunk {
   frames: number[][];
   clocks: number[];
   events: MatchEvent[];
   finished: boolean;
   result: Result | null;
 }
-type Command = { atMs: number; team: 0; command: { kind: 'team'; set: Partial<Instructions> } };
+export type Command = {
+  atMs: number;
+  team: 0 | 1;
+  command: { kind: 'team'; set: Partial<Instructions> };
+};
+
+/**
+ * Where a match's frames come from: the API for the friendly, the career's worker in the
+ * browser for a career match (ADR-020). Same answers either way.
+ */
+export interface MatchSource {
+  chunk(from: number, count: number, commands: Command[]): Promise<Chunk>;
+  moment(
+    from: number,
+    commands: Command[],
+    mode: Exclude<Watch, 'full' | 'result'>,
+  ): Promise<Moment>;
+}
 
 const TPS = 4;
 const CHUNK = 1200;
 const SPEEDS = [1, 2, 4, 8, 16] as const;
 /** How to watch: the whole match, three cuts of moments, or straight to the report. */
-const WATCH = ['full', 'extended', 'highlights', 'goals', 'result'] as const;
-type Watch = (typeof WATCH)[number];
+export const WATCH = ['full', 'extended', 'highlights', 'goals', 'result'] as const;
+export type Watch = (typeof WATCH)[number];
 /** The next moment from a tick on, in the moment modes (the server simulates up to it). */
-interface Moment {
+export interface Moment {
   frames: number[][];
   clocks: number[];
   chunk: Omit<Chunk, 'frames' | 'clocks'>;
 }
-const PLAN: Instructions = { block: 'mid', pressIntensity: 3, tempo: 3, width: 3, risk: 3 };
+export const PLAN: Instructions = { block: 'mid', pressIntensity: 3, tempo: 3, width: 3, risk: 3 };
 
 /** Match minute shown on the scoreboard: the second half restarts at 45. */
 function minuteOf(clock: number, events: MatchEvent[]) {
@@ -365,15 +377,22 @@ function Setup(props: {
 
 // ── Match ───────────────────────────────────────────────────────────────────
 
-function Match(props: {
+export function Match(props: {
   seed: number;
   watch: Watch;
   clubs: Club[];
   home: Side;
   away: Side;
-  onAgain: () => void;
-  onChange: () => void;
+  /** The person's side (0 home, 1 away): their plan, their commands. */
+  mine?: 0 | 1;
+  source?: MatchSource;
+  /** Called once when the result is known, before the report shows. */
+  onFinished?: (result: Result) => void;
+  onAgain?: () => void;
+  onChange?: () => void;
+  onDone?: () => void;
 }) {
+  const mine = props.mine ?? 0;
   const clubOf = (s: Side) => props.clubs.find((c) => c.id === s.clubId)!;
   const hc = clubOf(props.home);
   const ac = clubOf(props.away);
@@ -395,7 +414,27 @@ function Match(props: {
     result: null as Result | null,
     skip: props.watch === 'result',
   });
-  const [plan, setPlan] = useState<Instructions>(props.home.instructions);
+  const [plan, setPlan] = useState<Instructions>(
+    (mine === 0 ? props.home : props.away).instructions,
+  );
+  // The friendly asks the API; a career match passes its own source.
+  const source = useMemo<MatchSource>(
+    () =>
+      props.source ?? {
+        chunk: (from, count, commands) =>
+          api<Chunk>('/v1/manager/friendly/advance', {
+            method: 'POST',
+            json: { seed: props.seed, home: props.home, away: props.away, from, count, commands },
+          }),
+        moment: (from, commands, mode) =>
+          api<Moment>('/v1/manager/friendly/moment', {
+            method: 'POST',
+            json: { seed: props.seed, home: props.home, away: props.away, from, commands, mode },
+          }),
+      },
+    // Fixed for this mount (keyed by seed).
+    [],
+  );
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(props.watch === 'full' ? 8 : 2);
   const [moment, setMoment] = useState<number | null>(null);
@@ -406,6 +445,14 @@ function Match(props: {
     feed: [] as string[],
   });
   const [result, setResult] = useState<Result | null>(null);
+  const finished = useRef(false);
+  /** The report shows once; the career hears about the result first. */
+  const finish = (r: Result) => {
+    if (finished.current) return;
+    finished.current = true;
+    props.onFinished?.(r);
+    setResult(r);
+  };
   const [error, setError] = useState<string | null>(null);
   const names: [string, string] = [hc.shortName, ac.shortName];
   const moments = props.watch !== 'full' && props.watch !== 'result';
@@ -427,13 +474,7 @@ function Match(props: {
       if (s.loading || s.finished) return;
       s.loading = true;
       const generation = s.generation;
-      const base = {
-        seed: props.seed,
-        home: props.home,
-        away: props.away,
-        commands: s.commands,
-        from: s.skip ? 40000 : (s.frames.at(-1)?.[0] ?? -1) + 1,
-      };
+      const from = s.skip ? 40000 : (s.frames.at(-1)?.[0] ?? -1) + 1;
       const done = (c: Omit<Chunk, 'frames' | 'clocks'>, frames: number[][], clocks: number[]) => {
         if (generation !== s.generation) return;
         if (!s.skip && frames.length > 0) {
@@ -449,14 +490,12 @@ function Match(props: {
       };
       const request =
         moments && !s.skip
-          ? api<Moment>('/v1/manager/friendly/moment', {
-              method: 'POST',
-              json: { ...base, mode: props.watch },
-            }).then((m) => done(m.chunk, m.frames, m.clocks))
-          : api<Chunk>('/v1/manager/friendly/advance', {
-              method: 'POST',
-              json: { ...base, count: s.skip ? 1 : CHUNK },
-            }).then((c) => done(c, c.frames, c.clocks));
+          ? source
+              .moment(from, s.commands, props.watch as Exclude<Watch, 'full' | 'result'>)
+              .then((m) => done(m.chunk, m.frames, m.clocks))
+          : source
+              .chunk(from, s.skip ? 1 : CHUNK, s.commands)
+              .then((c) => done(c, c.frames, c.clocks));
       request
         .catch((e: Error) => setError(e.message))
         .finally(() => {
@@ -471,7 +510,7 @@ function Match(props: {
       // A moment is ~80 frames: keep the next one ready while this one plays.
       if (!s.finished && s.frames.length - s.head < (moments ? 160 : 600)) load();
       if (s.skip && s.result) {
-        setResult(s.result);
+        finish(s.result);
         cancelAnimationFrame(raf);
         return;
       }
@@ -493,7 +532,7 @@ function Match(props: {
       }
       if (!s.paused) s.head = Math.min(s.frames.length - 1, s.head + seconds * TPS * s.speed);
       if (s.finished && s.head >= s.frames.length - 1 && s.result) {
-        setResult(s.result);
+        finish(s.result);
         cancelAnimationFrame(raf);
       }
       const head = still ? Math.floor(s.head / TPS) * TPS : s.head;
@@ -559,7 +598,7 @@ function Match(props: {
     const atMs = s.clocks[keep - 1]!;
     s.commands = [
       ...s.commands.filter((c) => c.atMs < atMs),
-      { atMs, team: 0 as const, command: { kind: 'team' as const, set: next } },
+      { atMs, team: mine, command: { kind: 'team' as const, set: next } },
     ].slice(-60);
     s.frames.length = keep;
     s.clocks.length = keep;
@@ -572,7 +611,13 @@ function Match(props: {
 
   if (result)
     return (
-      <Report result={result} clubs={[hc, ac]} onAgain={props.onAgain} onChange={props.onChange} />
+      <Report
+        result={result}
+        clubs={[hc, ac]}
+        {...(props.onAgain && { onAgain: props.onAgain })}
+        {...(props.onChange && { onChange: props.onChange })}
+        {...(props.onDone && { onDone: props.onDone })}
+      />
     );
 
   return (
@@ -708,11 +753,19 @@ export function signed(m: Message): Message {
   return { key: 'match.explain.keeperConceded', params: { ...m.params, conceded: -saved } };
 }
 
+export interface Result {
+  score: [number, number];
+  stats: [TeamStats, TeamStats];
+  explanation: { creation: number; conversion: number; factors: { message: Message }[] };
+}
+
 function Report(props: {
   result: Result;
   clubs: [Club, Club];
-  onAgain: () => void;
-  onChange: () => void;
+  onAgain?: () => void;
+  onChange?: () => void;
+  /** A career match: back to the career instead of playing again. */
+  onDone?: () => void;
 }) {
   const { result, clubs } = props;
   const [a, b] = result.stats;
@@ -823,12 +876,21 @@ function Report(props: {
         </section>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
-        <button type="button" className={btnPrimary} onClick={props.onAgain}>
-          {t('friendly.again')}
-        </button>
-        <button type="button" className={btnSecondary} onClick={props.onChange}>
-          {t('friendly.change')}
-        </button>
+        {props.onDone && (
+          <button type="button" className={btnPrimary} onClick={props.onDone}>
+            {t('friendly.continue')}
+          </button>
+        )}
+        {props.onAgain && (
+          <button type="button" className={btnPrimary} onClick={props.onAgain}>
+            {t('friendly.again')}
+          </button>
+        )}
+        {props.onChange && (
+          <button type="button" className={btnSecondary} onClick={props.onChange}>
+            {t('friendly.change')}
+          </button>
+        )}
       </div>
     </div>
   );

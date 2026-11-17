@@ -96,6 +96,9 @@ importers:
       '@decabeca/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@decabeca/match-engine':
+        specifier: workspace:*
+        version: link:../../packages/match-engine
       '@fontsource-variable/archivo':
         specifier: ^5.3.0
         version: 5.3.0
