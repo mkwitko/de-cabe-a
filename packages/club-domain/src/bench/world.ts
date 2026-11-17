@@ -10,13 +10,21 @@ import { bestRoles } from '../player/ratings';
 import { matchesOn, nextDay, record, startSeason, type Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 
+/** e^x by its series, with + × ÷ only: the same bits in every browser (ADR-020). x in [0, 10]. */
+function expSeries(x: number): number {
+  let sum = 1;
+  let term = 1;
+  for (let k = 1; k < 40; k++) sum += term *= x / k;
+  return sum;
+}
+
 /** Score-only result (level 3): Poisson goals from the two squads' strength. PARÂMETRO. */
 export function quickResult(seed: number, home: number, away: number): Outcome {
   const r = rngFrom(seed);
   const goals = (mean: number) => {
     // Knuth: fine for means under 5.
     let k = 0;
-    for (let p = next(r), l = Math.exp(-mean); p > l; p *= next(r)) k++;
+    for (let p = next(r), l = 1 / expSeries(mean); p > l; p *= next(r)) k++;
     return k;
   };
   const d = (home - away) / 10;

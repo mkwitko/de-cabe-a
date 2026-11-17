@@ -96,6 +96,59 @@ export default tseslint.config(
     },
   },
   {
+    // ADR-020: the career runs in the browser and is replayed on the server, so the engine and
+    // the domain must give the same bits everywhere. Only + − × ÷ and sqrt are exact in every
+    // JavaScript engine; exp, log, sin, atan, pow… differ between browsers (measured: Node 24 and
+    // Chrome 156 already disagree). Offline calibration, tests and scripts are outside the game.
+    files: ['packages/match-engine/src/**/*.ts', 'packages/club-domain/src/**/*.ts'],
+    ignores: [
+      '**/*.test.ts',
+      'packages/match-engine/src/calibration/**',
+      'packages/match-engine/src/bench.ts',
+      'packages/club-domain/src/season/**',
+    ],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        ...[
+          'exp',
+          'expm1',
+          'log',
+          'log1p',
+          'log2',
+          'log10',
+          'pow',
+          'sin',
+          'cos',
+          'tan',
+          'asin',
+          'acos',
+          'atan',
+          'atan2',
+          'sinh',
+          'cosh',
+          'tanh',
+          'asinh',
+          'acosh',
+          'atanh',
+          'cbrt',
+          'hypot',
+        ].map((property) => ({
+          object: 'Math',
+          property,
+          message: 'Not the same bits in every browser (ADR-020); use + − × ÷ and Math.sqrt.',
+        })),
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "BinaryExpression[operator='**']:not([right.raw=/^[0-9]+$/])",
+          message: 'Only whole-number powers are exact everywhere (ADR-020).',
+        },
+      ],
+    },
+  },
+  {
     files: ['apps/api/**'],
     rules: { 'no-restricted-imports': ['error', { patterns: [matchEngineRootOnly] }] },
   },

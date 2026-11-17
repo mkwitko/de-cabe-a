@@ -77,6 +77,21 @@ Três rodadas; os valores variam com a carga. A vazão é com 16 carreiras avan�
 6. **Multiplayer e campeonatos no servidor, com rodada marcada.** O servidor é a autoridade, como no ADR-015. A rodada acontece em horário fixo e é simulada em lote numa fila. Uma liga é um mundo só, dividido por todos que jogam nela.
 7. **Cópia local e arquivo.** O navegador guarda a última fotografia (IndexedDB) para abrir rápido e jogar com rede ruim. A pessoa pode exportar e importar o save como arquivo; salvar direto no Google Drive fica para depois, como opção, não como lugar principal.
 
+## Determinismo entre navegadores (condição desta decisão)
+
+Refazer no servidor só funciona se o navegador e o servidor chegarem aos mesmos bits. Em JavaScript, `+ − × ÷` e `Math.sqrt` são exatos em qualquer motor (IEEE 754). Já `exp`, `log`, `sin`, `atan`, `pow` e semelhantes ficam a critério de cada motor.
+
+Medido em 2026-11-17, bit a bit, 200 mil valores: Node 24 e Chrome 156 já diferem em `exp`, `log`, `sin`, `atan` e `atan2`, mesmo sendo ambos V8. `sqrt` e `x ** 2` batem.
+
+Regras:
+
+1. **Lint** (`eslint.config.js`): em `packages/match-engine/src` e `packages/club-domain/src`, fora testes, calibração e scripts, `Math.exp`, `log`, `pow`, trigonometria, `hypot` e `**` com expoente não inteiro são erro. O caminho de jogo da engine já não usava nenhuma; o domínio tinha um `Math.log2`, trocado por um laço exato.
+2. **Script** `pnpm --filter @decabeca/web determinism`: empacota 5 partidas inteiras e uma temporada do pacote grande, roda em Node, Chromium, WebKit e Firefox e compara os hashes. Sai com erro se houver diferença.
+   - Resultado em 2026-11-17: mesmos bits em Node, Chromium e Firefox.
+   - WebKit (o motor do Safari) ainda não rodou: falta instalar dependências do sistema com `sudo npx playwright install-deps webkit`.
+   - Um iPhone real continua sendo a prova final.
+3. Ordem de iteração e ordenação já são definidas pela especificação da linguagem (ordenação estável desde 2019). `toString` de números e `Intl` não entram em decisão de jogo.
+
 ## Capacidade estimada
 
 Premissa: uma temporada jogada em ~5 horas, ou seja, um dia de jogo a cada ~55 s por carreira ativa. Com 10.000 carreiras ativas, isso dá ~180 avanços por segundo.

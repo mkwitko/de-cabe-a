@@ -245,8 +245,10 @@ function open(s: SeasonState, c: Competition, p: Phase, clubs: string[]): void {
     return;
   }
   const ratio = clubs.length / p.survivors;
-  const rounds = Math.log2(ratio);
-  if (!Number.isInteger(rounds) || rounds < 1)
+  // Whole powers of two only, with exact arithmetic (ADR-020: no Math.log2).
+  let rounds = 0;
+  for (let size = 1; size < ratio; size *= 2) rounds++;
+  if (1 << rounds !== ratio || rounds < 1)
     throw new Error(`${c.id}/${p.id}: ${clubs.length} clubs cannot leave ${p.survivors}`);
   const run: Run = {
     kind: 'bracket',
