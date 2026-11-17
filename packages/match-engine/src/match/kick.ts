@@ -144,7 +144,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
         : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
     // Landing error grows with distance and falls with skill (PARAMETERS).
     const err =
-      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) *
+      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c) + 0.04 * (1 - c.stamina)) *
       d *
       (a.kind === 'clear' ? 2 : a.kind === 'cross' ? CROSS_ERROR : 1);
     const land = {
@@ -222,6 +222,8 @@ export function shoot(
       finisherFactor(c, header, flip(team, c.pos).x < LENGTH - 18) *
       (header ? 1 : 1 / footFactor(s, c)) *
       keeperFactor(keeper) *
+      // A tired finisher strikes it less cleanly (PARAMETER: −15% at zero stamina).
+      (1 - 0.15 * (1 - c.stamina)) *
       (1 + homeEdge(s, team) - homeEdge(s, team === 0 ? 1 : 0)),
     0.002,
     0.97,
@@ -233,7 +235,14 @@ export function shoot(
   const pOn = opts.penalty
     ? 0.92
     : clamp(
-        Math.max(pGoal + 0.04, 0.28 + 0.3 * (skill - 0.6) - 0.08 * pressureOn(s, c) + 0.6 * chance),
+        Math.max(
+          pGoal + 0.04,
+          0.28 +
+            0.3 * (skill - 0.6) -
+            0.08 * pressureOn(s, c) -
+            0.04 * (1 - c.stamina) +
+            0.6 * chance,
+        ),
         0,
         0.98,
       );

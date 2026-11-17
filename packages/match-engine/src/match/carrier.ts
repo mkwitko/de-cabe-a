@@ -456,13 +456,15 @@ function pick(out: Action[], c: MatchPlayer, pressure: number, r: Rng): Choice {
     };
   const decisions = norm(c.attrs.decisions);
   const composure = norm(c.attrs.composure);
-  // Softmax temperature: falls with decisions and composure, rises with pressure (02 §5.4). PARAMETER.
+  // Softmax temperature: falls with decisions and composure, rises with pressure and fatigue (02 §5.4). PARAMETER.
   // Flair widens the choice (creative players try more); decisions and composure narrow it (ADR-019).
   const tau =
     0.01 *
     (1.6 - 0.6 * decisions - 0.4 * composure) *
     (1 + 0.6 * pressure * (1 - composure)) *
-    (0.85 + 0.3 * norm(c.attrs.flair));
+    (0.85 + 0.3 * norm(c.attrs.flair)) *
+    // Tired legs, tired head (02 §5.4: temperature rises with fatigue). PARAMETER: +60% at 0.
+    (1 + 0.6 * (1 - c.stamina));
   const top = Math.max(...out.map((a) => a.ue));
   const w = out.map((a) => exp((a.ue - top) / tau));
   const total = w.reduce((x, y) => x + y, 0);

@@ -9,7 +9,7 @@ import { aerialFoulChance, beatenFoulChance, foulChance } from '../rules/discipl
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
-import { candidates } from './carrier';
+import { candidates, chooseAction } from './carrier';
 import { passSafety, shotClear } from './control';
 import { foul, stepUntilEnd, step } from './engine';
 import { matchInput, teamInput } from './fixture';
@@ -140,6 +140,37 @@ describe('MC-035 passing', () => {
       rate((e) => e.data.d! >= 30),
     );
     expect(rate((e) => e.data.pr! <= 1)).toBeGreaterThan(rate((e) => e.data.pr! >= 5));
+  });
+});
+
+describe('fatigue (02 §5.4, §6)', () => {
+  it('a tired carrier picks the best option less often', () => {
+    const share = (stamina: number) => {
+      const s = bare(3);
+      const c = place(s, 6, 60, 34);
+      for (const [i, x, y] of [
+        [7, 70, 20],
+        [8, 72, 48],
+        [5, 55, 10],
+        [9, 80, 34],
+      ] as const)
+        place(s, i, x, y);
+      for (const [i, x, y] of [
+        [13, 66, 30],
+        [14, 75, 40],
+        [15, 62, 44],
+      ] as const)
+        place(s, i, x, y);
+      c.stamina = stamina;
+      s.owner = c.index;
+      let best = 0;
+      for (let k = 0; k < 400; k++) {
+        const ch = chooseAction(s, c);
+        if (ch.action.u >= ch.best - 1e-9) best++;
+      }
+      return best;
+    };
+    expect(share(0.2)).toBeLessThan(share(1));
   });
 });
 

@@ -123,7 +123,7 @@ U(ação) = P(sucesso) × V(estado se der certo)
 - `V`: grade de valor de posse (12 × 8, tabela do pacote da engine), corrigida pelo controle de campo ao redor do alvo.
 - `P(sucesso)` é a estimativa **do jogador**, que erra mais com `decisões` baixa.
 - Percepção: uma opção só entra na lista se o jogador a "vê": chance cresce com `visão` e cai com ângulo fora do campo visual e com pressão.
-- Escolha por softmax; temperatura cai com `decisões` e `compostura`, sobe com pressão e fadiga. Mentalidade e `risco` do plano deslocam o peso do termo de perda.
+- Escolha por softmax; temperatura cai com `decisões` e `compostura`, sobe com pressão e fadiga. Implementado (2026-11-16): fôlego 0 aumenta a temperatura em 60% (PARÂMETRO). Fadiga na execução: erro da bola alçada +0,04 por unidade de fôlego perdido, chute no alvo −0,04, conversão −15% com fôlego 0 (PARÂMETROS). Mentalidade e `risco` do plano deslocam o peso do termo de perda.
 
 ### 5.5 Estabilidade das escolhas (histerese)
 Sem amortecimento, um jogador alterna entre dois alvos de utilidade parecida a cada reavaliação e treme em campo. Regras: (1) o alvo atual recebe bônus de permanência; só troca se o melhor candidato superar o atual por uma margem (PARÂMETRO: 10% da utilidade); (2) uma intenção assumida (pressionar, atacar as costas, cobrir) tem duração mínima de 1,5 s, salvo troca de posse, bola parada ou comando; (3) o ruído de escolha é sorteado por intenção, não por passo; (4) a âncora é filtrada no tempo (média móvel curta) para não saltar quando a fase do time muda. Teste: número de trocas de alvo por jogador por minuto abaixo de um teto, e nenhuma oscilação A-B-A em menos de 2 s.
