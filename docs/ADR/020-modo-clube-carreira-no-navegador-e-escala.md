@@ -92,6 +92,23 @@ Regras:
    - Um iPhone real continua sendo a prova final.
 3. Ordem de iteração e ordenação já são definidas pela especificação da linguagem (ordenação estável desde 2019). `toString` de números e `Intl` não entram em decisão de jogo.
 
+## Onde ficam os arquivos: Cloudflare R2 (decidido com o dono em 2026-11-17)
+
+O projeto já usa Cloudflare Pages para o site e R2 para o backup (ADR-010). Limites conferidos na documentação oficial em 2026-11-17:
+
+- **Plano grátis do R2, por mês:** 10 GB guardados, 1 milhão de gravações e 10 milhões de leituras. Saída de dados grátis sempre.
+- **Acima do grátis:** US$ 0,015 por GB-mês, US$ 4,50 por milhão de gravações e US$ 0,36 por milhão de leituras.
+
+Como entra:
+
+1. **Fotografias da carreira no R2**, um objeto por carreira (atual e início da temporada). O navegador envia direto ao R2 por URL assinada que a API gera, com tamanho máximo e validade curta; os bytes não passam pela VM. Postgres guarda só os metadados (`ClubWorld`: revisão, chave do objeto) e as decisões.
+2. **Pacote como arquivo estático versionado** no Pages, com cache longo (`immutable`). Baixado uma vez por versão, sem custo de saída.
+3. **Conta:**
+   - Duas fotografias de ~124 KB por carreira dão ~40 mil carreiras guardadas no plano grátis e ~US$ 3,75 por mês para 1 milhão.
+   - Uma gravação a cada 30 dias de jogo dá ~50 por mês para quem joga 20 horas no mês. São 500 mil gravações para 10 mil jogadores assim, dentro do grátis.
+4. **Para depois, a avaliar quando chegar o multiplayer:** Durable Objects (uma liga = um objeto com SQLite, WebSocket e alarme para a rodada marcada; o plano grátis só aceita os de SQLite, até 5 GB no total). Também Cron Triggers para disparar rodadas e Turnstile contra robôs na criação de carreira.
+5. **Fora do plano:** Workers no plano grátis tem 10 ms de CPU por pedido, pouco para refazer partidas. A conferência continua nos processos auxiliares da VM.
+
 ## Capacidade estimada
 
 Premissa: uma temporada jogada em ~5 horas, ou seja, um dia de jogo a cada ~55 s por carreira ativa. Com 10.000 carreiras ativas, isso dá ~180 avanços por segundo.

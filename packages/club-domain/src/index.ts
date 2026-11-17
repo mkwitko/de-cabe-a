@@ -21,3 +21,4 @@ export {
   type SeasonState,
 } from './competition/season';
 export { matchInputFor, outcomeOf } from './match/fixture-input';
+export * from './finance/ledger';
