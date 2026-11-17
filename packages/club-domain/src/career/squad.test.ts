@@ -10,6 +10,7 @@ import {
   slotRatings,
   squadOf,
   suggestedLineup,
+  planOf,
 } from './squad';
 import { jobOffers } from './start';
 
@@ -60,6 +61,13 @@ describe('squad and line-up', () => {
     expect(team.players.length).toBe(18);
     const again = loadCareer(pack, 41, clubId, saveCareer(w));
     expect(again.lineup).toEqual({ formation: '4-4-2', xi });
+    // The team instructions ride with the eleven into the engine's plan.
+    expect(planOf(w)).toMatchObject({ block: 'mid', tempo: 3 });
+    const plan = { block: 'high', pressIntensity: 5, tempo: 4, width: 2, risk: 1 } as const;
+    setLineup(w, { formation: '4-4-2', xi, plan });
+    expect(careerMatch(w, d).input.teams[mine.mine].plan.team).toMatchObject(plan);
+    expect(planOf(loadCareer(pack, 41, clubId, saveCareer(w)))).toEqual(plan);
+    expect(() => setLineup(w, { formation: '4-4-2', xi, plan: { ...plan, tempo: 9 } })).toThrow();
   });
 
   it('a worse eleven lowers the club strength the quick result reads', () => {

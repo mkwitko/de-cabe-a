@@ -134,9 +134,9 @@ export function playDecision(
 export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>) {
   const input = matchInputFor(w.pack, w.season, d.matchId);
   const mine: 0 | 1 = d.home === w.clubId ? 0 : 1;
-  const team = w.lineup
-    ? teamForMatch(w.pack, w.clubId, defaultPlan(w.lineup.formation), w.lineup.xi)
-    : input.teams[mine];
+  const plan = w.lineup && defaultPlan(w.lineup.formation);
+  if (plan && w.lineup?.plan) plan.team = { ...plan.team, ...w.lineup.plan };
+  const team = plan ? teamForMatch(w.pack, w.clubId, plan, w.lineup!.xi) : input.teams[mine];
   input.teams[mine] = { ...team, coach: coachOf(60, { flexibility: 1 }) };
   return { input, mine };
 }

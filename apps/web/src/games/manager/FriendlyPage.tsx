@@ -202,7 +202,7 @@ function Range({
   );
 }
 
-function PlanFields({
+export function PlanFields({
   value,
   onChange,
 }: {

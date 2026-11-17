@@ -150,12 +150,27 @@ for (const width of [360, 1280]) {
     await expect(board.last()).not.toHaveAttribute('aria-label', before!);
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
 
+    // The game plan: a high block.
+    const kept = page.waitForResponse(
+      (r) => r.url().includes('still=1') && r.request().method() === 'PUT',
+    );
+    await page.getByRole('button', { name: 'Alto' }).click();
+    await expect(page.getByRole('button', { name: 'Alto' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect((await kept).status()).toBe(200);
+
     // The pick is kept on the server at once: a reload brings it back.
     await page.reload();
     await page.getByRole('button', { name: 'Vestiário' }).click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `), {
       timeout: 30_000,
     });
+    await expect(page.getByRole('button', { name: 'Alto' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
     // The eleven holds across rooms and the next match still plays.
     await page.getByRole('button', { name: 'Sala do técnico' }).click();

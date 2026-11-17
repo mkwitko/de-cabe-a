@@ -3,7 +3,8 @@
  * player per role of it, in the formation's slot order. Until the person picks one, the coach's
  * own choice stands (match/lineup.ts), so nothing changes for a career that never opens this.
  * The eleven counts in both kinds of match: the engine gets these players in these roles, and
- * the level 3 result reads the club's strength from them.
+ * the level 3 result reads the club's strength from them. The team instructions count in the
+ * engine match only: the level 3 result has no tactics.
  */
 import { FORMATIONS, defaultPlan, type RoleId } from '@decabeca/match-engine';
 import { formationOf } from '../match/fixture-input';
@@ -16,6 +17,32 @@ export interface Lineup {
   formation: string;
   /** Player ids; `xi[i]` plays `FORMATIONS[formation].roles[i]`. */
   xi: string[];
+  /** The team instructions the person set before the match; the formation's default otherwise. */
+  plan?: PlanChoice;
+}
+
+/** The five team instructions the person sets (02 §8.2), each 1..5 but the block. */
+export interface PlanChoice {
+  block: 'low' | 'mid' | 'high';
+  pressIntensity: number;
+  tempo: number;
+  width: number;
+  risk: number;
+}
+const LEVELS = ['pressIntensity', 'tempo', 'width', 'risk'] as const;
+
+/** The plan in force: the person's, or the default every club plays with. */
+export function planOf(w: CareerWorld): PlanChoice {
+  const t = defaultPlan(lineupOf(w).formation).team;
+  return (
+    w.lineup?.plan ?? {
+      block: t.block,
+      pressIntensity: t.pressIntensity,
+      tempo: t.tempo,
+      width: t.width,
+      risk: t.risk,
+    }
+  );
 }
 
 export interface SquadPlayer {
@@ -71,7 +98,26 @@ export function setLineup(w: CareerWorld, l: Lineup): void {
     if (!p) throw new Error(`lineup: ${id} is not in the squad`);
     if (isKeeper(p) !== isKeeperRole(f.roles[i]!)) throw new Error('lineup: keeper out of goal');
   }
-  w.lineup = { formation: l.formation, xi: [...l.xi] };
+  const plan = l.plan;
+  if (
+    plan &&
+    (!['low', 'mid', 'high'].includes(plan.block) ||
+      LEVELS.some((k) => !Number.isInteger(plan[k]) || plan[k] < 1 || plan[k] > 5))
+  )
+    throw new Error('lineup: plan out of range');
+  w.lineup = {
+    formation: l.formation,
+    xi: [...l.xi],
+    ...(plan && {
+      plan: {
+        block: plan.block,
+        pressIntensity: plan.pressIntensity,
+        tempo: plan.tempo,
+        width: plan.width,
+        risk: plan.risk,
+      },
+    }),
+  };
 }
 
 /** How each squad player would do in each slot of the formation, 1..99, by player id. */

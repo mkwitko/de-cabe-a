@@ -74,6 +74,9 @@ export const ptBR = {
   'squad.slot': '{role}: {name}, nota {n}',
   'squad.choose': '{name}, {age} anos, nota {n}',
   'squad.starter': 'Titular',
+  'squad.plan': 'Plano de jogo',
+  'squad.planHint':
+    'O plano vale quando você assiste à partida ou vê os melhores momentos. Em "Só o resultado" conta apenas a escalação.',
   'squad.age': '{n} anos',
   'squad.role':
     '{r, select, goalkeeper {Goleiro} sweeperKeeper {Goleiro líbero} centreBack {Zagueiro} libero {Líbero} supportFullBack {Lateral} invertedFullBack {Lateral por dentro} wingBack {Ala} anchor {Volante} deepPlaymaker {Volante armador} boxToBox {Meia área a área} playmaker {Armador} wideWinger {Ponta aberto} insideForward {Ponta por dentro} targetMan {Pivô} falseNine {Falso nove} advancedForward {Centroavante} other {Jogador}}',

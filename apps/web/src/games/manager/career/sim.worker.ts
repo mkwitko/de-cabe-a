@@ -27,6 +27,8 @@ import {
   upcomingFor,
   lineupOf,
   lineupStrength,
+  planOf,
+  type PlanChoice,
   setLineup,
   slotRatings,
   squadOf,
@@ -58,7 +60,7 @@ export type SimRequest = { id: number } & (
   /** The squad and the eleven in force. */
   | { type: 'squad' }
   /** Picks the eleven; `xi` null asks the coach's eleven for that formation. */
-  | { type: 'lineup'; formation: string; xi: string[] | null }
+  | { type: 'lineup'; formation: string; xi: string[] | null; plan: PlanChoice }
   | { type: 'nextSeason' }
   /** Watch the person's next match with the match engine (level 1). */
   | { type: 'matchStart' }
@@ -125,6 +127,7 @@ export interface SquadView {
   /** `fit[i]`: how the player does in slot `i`, 1..99. */
   players: (SquadPlayer & { fit: number[]; keeper: boolean })[];
   strength: number;
+  plan: PlanChoice;
 }
 
 function squadView(w: CareerWorld): SquadView {
@@ -142,6 +145,7 @@ function squadView(w: CareerWorld): SquadView {
       keeper: p.positions.includes('GK'),
     })),
     strength: Math.round(lineupStrength(w, l)),
+    plan: planOf(w),
   };
 }
 
@@ -149,7 +153,7 @@ export interface SimReply {
   id: number;
   squad?: SquadView;
   /** matchStart: the two sides and which one is the person's. */
-  match?: { home: MatchClub; away: MatchClub; mine: 0 | 1 };
+  match?: { home: MatchClub; away: MatchClub; mine: 0 | 1; formation: string; plan: PlanChoice };
   chunk?: MatchChunk;
   moment?: Moment;
   view?: SimView;
@@ -310,10 +314,10 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
     }
     if (world && (r.type === 'squad' || r.type === 'lineup')) {
       if (r.type === 'lineup')
-        setLineup(
-          world,
-          r.xi ? { formation: r.formation, xi: r.xi } : suggestedLineup(world, r.formation),
-        );
+        setLineup(world, {
+          ...(r.xi ? { formation: r.formation, xi: r.xi } : suggestedLineup(world, r.formation)),
+          plan: r.plan,
+        });
       const reply: SimReply = { id: r.id, squad: squadView(world) };
       // A pick moves no day: the snapshot of the same day goes to the server at once.
       if (r.type === 'lineup')
@@ -337,7 +341,13 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       };
       self.postMessage({
         id: r.id,
-        match: { home: club(pending.home), away: club(pending.away), mine },
+        match: {
+          home: club(pending.home),
+          away: club(pending.away),
+          mine,
+          formation: lineupOf(world).formation,
+          plan: planOf(world),
+        },
       } satisfies SimReply);
       return;
     }

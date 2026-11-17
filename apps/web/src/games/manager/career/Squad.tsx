@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { btnSecondary } from '../../../components/ui';
+import { PlanFields } from '../FriendlyPage';
 import { t } from '../i18n';
 import type { SimReply, SimRequest, SquadView } from './sim.worker';
 
@@ -36,8 +37,8 @@ export function Squad(props: {
   }, [ask, onError]);
 
   if (!squad) return null;
-  const send = (formation: string, xi: string[] | null) =>
-    ask({ type: 'lineup', formation, xi })
+  const send = (formation: string, xi: string[] | null, plan = squad.plan) =>
+    ask({ type: 'lineup', formation, xi, plan })
       .then((r) => {
         setSquad(r.squad ?? null);
         setSlot(null);
@@ -127,6 +128,14 @@ export function Squad(props: {
         >
           {t('squad.auto')}
         </button>
+        <div className="flex flex-col gap-3 border-t border-chalk/10 pt-4 sm:[&>div]:grid-cols-1">
+          <h3 className={LABEL}>{t('squad.plan')}</h3>
+          <PlanFields
+            value={squad.plan}
+            onChange={(plan) => void send(squad.formation, squad.xi, plan)}
+          />
+          <p className="text-sm text-chalk-soft">{t('squad.planHint')}</p>
+        </div>
       </div>
 
       <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">

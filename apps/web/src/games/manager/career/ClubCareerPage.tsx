@@ -13,6 +13,7 @@ import {
   Match,
   PLAN,
   type Chunk,
+  type Instructions,
   type MatchSource,
   type Moment,
   type Watch,
@@ -30,6 +31,7 @@ type Axis = (typeof AXES)[number];
 const VENUE = ['away', 'home'] as const;
 const ROOMS = ['sala', 'vestiario'] as const;
 const STILL = '&still=1';
+const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
 const COLS = ['pos', 'club', 'played', 'gd', 'points'] as const;
 interface Options {
@@ -275,6 +277,8 @@ function Home({ career }: { career: Career }) {
     home: MatchClub;
     away: MatchClub;
     mine: 0 | 1;
+    formation: string;
+    plan: Instructions;
     key: number;
   } | null>(null);
 
@@ -394,8 +398,16 @@ function Home({ career }: { career: Career }) {
         seed={0}
         watch={watching.watch}
         clubs={[watching.home, watching.away]}
-        home={{ clubId: watching.home.id, formation: '4-3-3', instructions: PLAN }}
-        away={{ clubId: watching.away.id, formation: '4-3-3', instructions: PLAN }}
+        home={{
+          clubId: watching.home.id,
+          formation: watching.mine === 0 ? watching.formation : DEFAULT_FORMATION,
+          instructions: watching.mine === 0 ? watching.plan : PLAN,
+        }}
+        away={{
+          clubId: watching.away.id,
+          formation: watching.mine === 1 ? watching.formation : DEFAULT_FORMATION,
+          instructions: watching.mine === 1 ? watching.plan : PLAN,
+        }}
         mine={watching.mine}
         source={source}
         onFinished={() => {
