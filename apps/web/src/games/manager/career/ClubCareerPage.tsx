@@ -1,0 +1,265 @@
+/**
+ * Modo Clube career (MC-176, MC-177): start by picking any club of the national divisions or
+ * by one of three offers from the last one; then the career home. The world is built in the
+ * browser by a worker (ADR-020); the server only keeps the record and the seed.
+ */
+import { useEffect, useState } from 'react';
+import { api } from '../../../lib/api';
+import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
+import { t } from '../i18n';
+import type { SimRequest, SimSummary } from './sim.worker';
+
+interface ClubOption {
+  id: string;
+  name: string;
+  shortName: string;
+  colours: [string, string];
+  reputation: number;
+}
+const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
+type Axis = (typeof AXES)[number];
+interface Options {
+  packId: string;
+  packVersion: string;
+  divisions: { id: string; name: string; tier: number; clubs: ClubOption[] }[];
+  offers: (ClubOption & { profile: Record<Axis, number> })[];
+}
+interface Career {
+  id: string;
+  clubId: string;
+  startMode: 'free_choice' | 'job_offers';
+  packId: string;
+  packVersion: string;
+  seed: number;
+  season: number;
+  day: number;
+}
+
+export function ClubCareerPage() {
+  const [career, setCareer] = useState<Career | null | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.classList.add('club-stage');
+    return () => document.documentElement.classList.remove('club-stage');
+  }, []);
+  useEffect(() => {
+    api<{ career: Career | null }>('/v1/manager/career')
+      .then((r) => setCareer(r.career))
+      .catch((e: Error) => setError(e.message));
+  }, []);
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+      <GameHeader title={t('career.title')} />
+      {error && <Notice title={t('career.loadError')}>{error}</Notice>}
+      {career === null && <Start onStarted={setCareer} onError={setError} />}
+      {career && <Home career={career} />}
+    </div>
+  );
+}
+
+function Crest({ colours }: { colours: [string, string] }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-block size-9 shrink-0 rounded-md border-2 border-chalk/30"
+      style={{ background: `linear-gradient(135deg, ${colours[0]} 50%, ${colours[1]} 50%)` }}
+    />
+  );
+}
+
+// ── Start ───────────────────────────────────────────────────────────────────
+
+function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => void }) {
+  const [options, setOptions] = useState<Options | null>(null);
+  const [mode, setMode] = useState<'job_offers' | 'free_choice'>('job_offers');
+  const [division, setDivision] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api<Options>('/v1/manager/career/options')
+      .then(setOptions)
+      .catch((e: Error) => props.onError(e.message));
+  }, [props]);
+
+  const start = (clubId: string) => {
+    setBusy(true);
+    api<{ career: Career }>('/v1/manager/career', {
+      method: 'POST',
+      json: { startMode: mode, clubId },
+    })
+      .then((r) => props.onStarted(r.career))
+      .catch((e: Error) => {
+        props.onError(e.message);
+        setBusy(false);
+      });
+  };
+
+  if (!options) return null;
+  return (
+    <section className="flex flex-col gap-4">
+      <h2 className="font-condensed text-3xl font-extrabold uppercase">{t('career.startTitle')}</h2>
+      <div role="group" aria-label={t('career.startTitle')} className="grid gap-3 sm:grid-cols-2">
+        {(['job_offers', 'free_choice'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={mode === m}
+            className={`rounded-2xl border-2 bg-club-panel p-4 text-left ${mode === m ? 'border-club-gold' : 'border-chalk/10'}`}
+            onClick={() => setMode(m)}
+          >
+            <span className="block font-condensed text-xl font-extrabold uppercase">
+              {t('career.mode', { m })}
+            </span>
+            <span className="text-sm text-chalk-soft">{t('career.modeHint', { m })}</span>
+          </button>
+        ))}
+      </div>
+
+      {mode === 'job_offers' && (
+        <ul className="grid gap-3 md:grid-cols-3">
+          {options.offers.map((o) => (
+            <li
+              key={o.id}
+              className="flex flex-col gap-3 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10"
+            >
+              <div className="flex items-center gap-3">
+                <Crest colours={o.colours} />
+                <div>
+                  <p className="font-condensed text-xl font-extrabold uppercase">{o.name}</p>
+                  <p className="text-sm text-chalk-soft">
+                    {t('career.reputation', { n: o.reputation })}
+                  </p>
+                </div>
+              </div>
+              <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5 text-sm">
+                {AXES.map((a) => (
+                  <div key={a} className="contents">
+                    <dt className="text-chalk-soft">{t('career.axis', { a })}</dt>
+                    <dd>
+                      <meter
+                        min={0}
+                        max={100}
+                        value={o.profile[a]}
+                        aria-label={t('career.axisValue', { a, n: o.profile[a] })}
+                        className="h-2 w-full accent-club-gold"
+                      />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <button
+                type="button"
+                disabled={busy}
+                className={btnPrimary}
+                onClick={() => start(o.id)}
+              >
+                {t('career.accept', { club: o.shortName })}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {mode === 'free_choice' && (
+        <div className="flex flex-col gap-3">
+          <div role="group" aria-label={t('career.divisions')} className="flex flex-wrap gap-2">
+            {options.divisions.map((d, i) => (
+              <button
+                key={d.id}
+                type="button"
+                aria-pressed={division === i}
+                className={`${btnSecondary} ${division === i ? 'border-club-gold text-club-gold' : ''}`}
+                onClick={() => setDivision(i)}
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {options.divisions[division]!.clubs.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-xl bg-club-panel p-3 text-left ring-1 ring-chalk/10 hover:ring-club-gold"
+                  onClick={() => start(c.id)}
+                >
+                  <Crest colours={c.colours} />
+                  <span className="flex-1 font-bold">{c.name}</span>
+                  <span className="text-sm text-chalk-soft tabular-nums">
+                    {t('career.reputation', { n: c.reputation })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Home ────────────────────────────────────────────────────────────────────
+
+function Home({ career }: { career: Career }) {
+  const [sim, setSim] = useState<SimSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const w = new Worker(new URL('./sim.worker.ts', import.meta.url), { type: 'module' });
+    w.onmessage = (e: MessageEvent<{ ok?: SimSummary; error?: string }>) => {
+      if (e.data.ok) setSim(e.data.ok);
+      else setError(e.data.error ?? '');
+    };
+    const req: SimRequest = {
+      packId: career.packId,
+      packVersion: career.packVersion,
+      seed: career.seed,
+      clubId: career.clubId,
+    };
+    w.postMessage(req);
+    return () => w.terminate();
+  }, [career]);
+
+  if (error) return <Notice title={t('career.loadError')}>{error}</Notice>;
+  if (!sim)
+    return (
+      <p role="status" className="text-chalk-soft">
+        {t('career.computing')}
+      </p>
+    );
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
+        <Crest colours={sim.club.colours} />
+        <div className="min-w-0 flex-1">
+          <h2 className="font-condensed text-3xl font-extrabold uppercase">{sim.club.name}</h2>
+          <p className="text-chalk-soft">
+            {t('career.where', { division: sim.division, season: career.season })}
+          </p>
+        </div>
+        <p className="w-full font-condensed text-2xl font-extrabold text-club-gold tabular-nums sm:w-auto">
+          {t('career.cash', { value: sim.cash })}
+        </p>
+      </div>
+      <div className="rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
+        <h3 className="mb-2 font-condensed text-xl font-extrabold uppercase">{t('career.next')}</h3>
+        <ol className="flex flex-col divide-y divide-chalk/10">
+          {sim.upcoming.map((m) => (
+            <li key={m.iso + m.home} className="flex items-center gap-3 py-2">
+              <span className="w-24 text-sm text-chalk-soft tabular-nums">
+                {t('career.date', { d: new Date(`${m.iso}T12:00:00Z`) })}
+              </span>
+              <span className={m.atHome ? 'font-bold' : ''}>{m.home}</span>
+              <span className="text-chalk-soft">×</span>
+              <span className={m.atHome ? '' : 'font-bold'}>{m.away}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
+    </section>
+  );
+}

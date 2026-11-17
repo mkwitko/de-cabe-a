@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Plugin } from 'vite';
+import { createServer, type Plugin, type ViteDevServer } from 'vite';
 
 /** Stamps public/sw.js with a hash of the build's files, so each deploy replaces the worker. */
 const swVersion = (): Plugin => ({
@@ -51,13 +51,65 @@ const preloadRoot = (): Plugin => ({
   },
 });
 
+/**
+ * The Modo Clube pack as a static, versioned file (ADR-020): `/packs/<id>.<checksum>.json`,
+ * cached for good by the browser and by Cloudflare Pages (public/_headers), so a new career never
+ * reaches the API for it. The pack is generated from the domain code: in dev on request, in the
+ * build once, through a throwaway Vite server that can load the TypeScript workspace packages.
+ */
+const worldPacks = (): Plugin => {
+  let dev: ViteDevServer | null = null;
+  async function packFile(server?: ViteDevServer) {
+    const own =
+      server ??
+      (await createServer({
+        configFile: false,
+        logLevel: 'silent',
+        server: { middlewareMode: true },
+        appType: 'custom',
+      }));
+    try {
+      const domain = (await own.ssrLoadModule('@decabeca/club-domain')) as {
+        generateDevPack: () => { id: string; checksum: string };
+      };
+      const pack = domain.generateDevPack();
+      return { name: `packs/${pack.id}.${pack.checksum}.json`, json: JSON.stringify(pack) };
+    } finally {
+      if (!server) await own.close();
+    }
+  }
+  let cached: Promise<{ name: string; json: string }> | null = null;
+  return {
+    name: 'world-packs',
+    configureServer(server) {
+      dev = server;
+      // Start building it with the server: the first career should not wait for it.
+      server.httpServer?.once('listening', () => {
+        cached ??= packFile(server);
+      });
+      server.middlewares.use('/packs/', (req, res, next) => {
+        cached ??= packFile(dev!);
+        void cached.then((f) => {
+          if (`/packs${req.url}` !== `/${f.name}`) return next();
+          res.setHeader('content-type', 'application/json');
+          res.end(f.json);
+        }, next);
+      });
+    },
+    async generateBundle() {
+      const f = await packFile();
+      this.emitFile({ type: 'asset', fileName: f.name, source: f.json });
+    },
+  };
+};
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(
       (process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'dev').slice(0, 7),
     ),
   },
-  plugins: [react(), tailwindcss(), swVersion(), preloadRoot()],
+  plugins: [react(), tailwindcss(), swVersion(), preloadRoot(), worldPacks()],
   server: {
     port: 5173,
     strictPort: true,

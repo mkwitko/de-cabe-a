@@ -58,9 +58,10 @@ describe('Modo Clube career ownership (MC-081)', () => {
     const cb = (await b('/manager/career')).json().career;
     expect(ca).toMatchObject({ clubId: 'c1', startMode: 'free_choice', season: 2027, day: 0 });
     expect(cb).toMatchObject({ clubId: 'c9', startMode: 'job_offers' });
-    // The seed and the world document never reach the client.
-    expect(ca).not.toHaveProperty('seed');
+    // The world document never reaches the client; the seed does, for the solo career that the
+    // browser simulates (ADR-020).
     expect(ca).not.toHaveProperty('data');
+    expect(ca).toHaveProperty('seed', 1);
 
     // One career not over per person; one manager per club in a world.
     await expect(
@@ -79,5 +80,73 @@ describe('Modo Clube career ownership (MC-081)', () => {
     await prisma.clubCareer.create({
       data: { pk: sa.id, worldId: (await world()).id, startMode: 'free_choice' },
     });
+  });
+});
+
+describe('Modo Clube career start (MC-176, MC-177)', () => {
+  /** A device keeping its cookie, for GET and POST. */
+  function device() {
+    let cookie = '';
+    return async (method: 'GET' | 'POST', url: string, payload?: object) => {
+      const res = await app.inject({
+        method,
+        url: `/v1${url}`,
+        headers: { origin: WEB_ORIGIN, ...(cookie ? { cookie } : {}) },
+        ...(payload ? { payload } : {}),
+      });
+      const set = res.headers['set-cookie'];
+      if (set) cookie = String([set].flat()[0]).split(';')[0]!;
+      return res;
+    };
+  }
+
+  it('shows the divisions and three offers that stay the same, and starts by free choice', async () => {
+    const d = device();
+    const o = (await d('GET', '/manager/career/options')).json();
+    expect(o.divisions.map((x: { tier: number }) => x.tier)).toEqual([1, 2, 3, 4]);
+    expect(o.offers).toHaveLength(3);
+    expect((await d('GET', '/manager/career/options')).json().offers).toEqual(o.offers);
+    const last = o.divisions.at(-1).clubs.map((c: { id: string }) => c.id);
+    for (const offer of o.offers) expect(last).toContain(offer.id);
+
+    const top = o.divisions[0].clubs[0].id;
+    const created = await d('POST', '/manager/career', { startMode: 'free_choice', clubId: top });
+    expect(created.statusCode, created.body).toBe(201);
+    const career = created.json().career;
+    expect(career).toMatchObject({
+      clubId: top,
+      startMode: 'free_choice',
+      packId: o.packId,
+      day: 0,
+    });
+    expect(Number.isInteger(career.seed)).toBe(true);
+    expect((await d('GET', '/manager/career')).json().career).toEqual(career);
+    // One career at a time.
+    const again = await d('POST', '/manager/career', { startMode: 'free_choice', clubId: top });
+    expect(again.statusCode).toBe(409);
+  });
+
+  it('job offers: only an offered club, and nothing the client may add', async () => {
+    const d = device();
+    const o = (await d('GET', '/manager/career/options')).json();
+    const top = o.divisions[0].clubs[0].id;
+    expect(
+      (await d('POST', '/manager/career', { startMode: 'job_offers', clubId: top })).statusCode,
+    ).toBe(400);
+    expect(
+      (
+        await d('POST', '/manager/career', {
+          startMode: 'job_offers',
+          clubId: o.offers[1].id,
+          seed: 1,
+        })
+      ).statusCode,
+    ).toBe(400);
+    const ok = await d('POST', '/manager/career', {
+      startMode: 'job_offers',
+      clubId: o.offers[1].id,
+    });
+    expect(ok.statusCode, ok.body).toBe(201);
+    expect(ok.json().career.clubId).toBe(o.offers[1].id);
   });
 });

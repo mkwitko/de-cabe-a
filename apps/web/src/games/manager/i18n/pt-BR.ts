@@ -20,6 +20,25 @@ export const ptBR = {
   'sandbox.lineHeight': 'Altura da linha de defesa: {value} de 5',
   'sandbox.inverted': 'Lateral direito por dentro com a bola',
 
+  'career.title': 'Carreira',
+  'career.loadError': 'Não deu para carregar a carreira',
+  'career.startTitle': 'Como você quer começar?',
+  'career.mode': '{m, select, job_offers {Começar por baixo} other {Escolher o clube}}',
+  'career.modeHint':
+    '{m, select, job_offers {Três propostas da última divisão, cada uma um desafio diferente.} other {Qualquer clube das divisões nacionais, com elenco, caixa e estrutura do jeito que estão.}}',
+  'career.axis':
+    '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}',
+  'career.axisValue':
+    '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}: {n} de 100',
+  'career.reputation': 'Reputação {n}',
+  'career.accept': 'Assumir o {club}',
+  'career.divisions': 'Divisões',
+  'career.computing': 'Montando a temporada no seu aparelho…',
+  'career.where': '{division} · temporada {season}',
+  'career.cash': '{value, number, currency}',
+  'career.next': 'Próximos jogos',
+  'career.date': '{d, date, short}',
+  'career.builtHere': 'Temporada montada neste aparelho em {ms} ms.',
   'friendly.title': 'Amistoso',
   'friendly.kicker': 'Modo Clube · partida avulsa',
   'friendly.intro':

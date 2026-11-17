@@ -22,3 +22,4 @@ export {
 } from './competition/season';
 export { matchInputFor, outcomeOf } from './match/fixture-input';
 export * from './finance/ledger';
+export * from './career/start';

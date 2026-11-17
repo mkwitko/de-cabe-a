@@ -15,6 +15,7 @@
     "determinism": "node scripts/determinism.mjs"
   },
   "dependencies": {
+    "@decabeca/club-domain": "workspace:*",
     "@decabeca/contracts": "workspace:*",
     "@fontsource-variable/archivo": "^5.3.0",
     "@sentry/react": "11.9.0",
