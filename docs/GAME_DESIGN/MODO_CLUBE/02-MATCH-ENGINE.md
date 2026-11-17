@@ -226,6 +226,28 @@ Regras de referência adotadas da simulação 2D da RoboCup (`docs/pesquisa/modo
 
 **Segunda tentativa (2026-11-17, não entrou).** Com T1 na área contando só excesso (ADR-020, aceito pelo dono), a zona de perigo passa em T1 na área, mas reprova T1 fora da área (4 contra 3) em S2 e o vão da última linha (22,4 a 24,8 m contra 22) em S2 e S3. Começar a zona com a bola mais perto do gol (25 m, 20 m) reduz as falhas e também o ganho (gols 3,61 e 3,75 em 150 partidas). Conclusão: a marcação colada sozinha rende cerca de 10%; o excesso de gols tem outra origem principal ainda não achada.
 
+**Teste do defensor ideal (2026-11-17, só medição, revertido).** Chaves temporárias, uma de cada vez, valendo para o time sem a bola. Bancada de 300 partidas, mesmas sementes:
+
+| Chave | Gols | Chutes por time | `xG` por chute |
+|---|---|---|---|
+| nenhuma (base) | 3,86 | 17,5 | 0,112 |
+| c: cumpre sempre a tarefa | 3,61 | 17,6 | 0,113 |
+| r: lê o passe na hora | 3,01 | 14,8 | 0,106 |
+| k: recalcula tarefas a cada passo | 3,86 | 17,5 | 0,114 |
+| s: corre sempre no máximo | 4,40 | 19,1 | 0,112 |
+| a: marca onde o atacante estará em 1 s | 3,75 | 17,8 | 0,113 |
+| t: marca colado (1 m) | 3,59 | 16,9 | 0,108 |
+| r + a + t | 2,87 | 14,1 | 0,105 |
+| c + r + a + t | 2,63 | 14,0 | 0,103 |
+
+Leitura:
+
+- A defesa explica quase todo o excesso. Com c + r + a + t os gols ficam perto da faixa. O ataque não é a origem principal.
+- A maior alavanca é o tempo de leitura do passe. O tempo de reação em si é realista, então a correção não é zerá-lo. O que falta é o que o defensor faz antes do passe: posição e antecipação.
+- Correr sempre no máximo piora (4,40). O defensor que dispara sai do lugar.
+- Mesmo no caso ideal, o marcador recebe a tarefa a cerca de 11 m do ponto. Ele só fica colado (0,2 m) depois de uns 8 s na mesma marcação. Isso dá 70% do tempo de marcação com o marcador correndo atrás. Com a bola a menos de 35 m do gol, a distância média do marcador ao ponto fica entre 6 e 10 m em todas as variantes.
+- Causa estrutural provável: as marcas fora de `BOX_MARK_X` (20 m) vão para meio-campistas, que vêm de longe. Os zagueiros perto do lance não podem pegá-las.
+
 **Critérios de aceite.**
 - Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
 - Marcador a menos de 2 m do próprio ponto na maior parte do tempo.
