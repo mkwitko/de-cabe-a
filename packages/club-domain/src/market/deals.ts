@@ -5,12 +5,15 @@
  * the two clubs: the same for a rival and for the person. Integers only; every number is a
  * PARÂMETRO, not calibrated.
  */
+
+/** The clause a club writes into a contract by default: three times his value. */
+export const CLAUSE_TIMES = 3;
 import type { ClubIn } from '../career/squad';
 import { cached } from '../lib/pack-cache';
 import type { Pack, PackClub, PackPlayer } from '../pack/schema';
 import { squadPlanOf } from './plan';
 import { bargaining, seenValue } from './judgement';
-import { ageOf, goingWage, readingsOf, thousands, yearsLeft } from './value';
+import { ageOf, goingWage, marketValue, readingsOf, thousands, yearsLeft } from './value';
 
 /** Rounds of offer and counter-offer before a side walks away. */
 export const MAX_ROUNDS = 4;
@@ -28,6 +31,8 @@ export interface SellerStance {
   asking: number;
   /** Why the floor sits where it does, in percentage points over the value. */
   why: { plan: number; noCover: number; contract: number; rival: number };
+  /** His release clause: a fee that reaches it cannot be refused. Null without one. */
+  release: number | null;
 }
 
 /** How the selling club sees a sale of this player to this buyer. */
@@ -58,7 +63,14 @@ export function sellerStance(
   const floor = thousands(
     (value * (100 + why.plan + why.noCover + why.contract + why.rival + holds)) / 100,
   );
-  return { mood, value, floor, asking: thousands((floor * 125) / 100), why };
+  return {
+    mood,
+    value,
+    floor,
+    asking: thousands((floor * 125) / 100),
+    why,
+    release: p.contract?.releaseFee ?? null,
+  };
 }
 
 export type FeeAnswer =
@@ -72,6 +84,8 @@ export type FeeAnswer =
  * 60% of the floor.
  */
 export function answerFee(s: SellerStance, fee: number, round: number): FeeAnswer {
+  // The clause is in his contract: the club has no say once it is met.
+  if (s.release !== null && fee >= s.release) return { kind: 'accept', fee };
   if (fee >= s.floor) return { kind: 'accept', fee };
   if (fee * 100 < s.floor * 60) return { kind: 'refuse', reason: 'insult' };
   if (round >= MAX_ROUNDS) return { kind: 'refuse', reason: 'final' };
@@ -88,6 +102,8 @@ export interface Terms {
   wage: number;
   years: number;
   role: Role;
+  /** Release clause the club writes in; absent or null for none. */
+  release?: number | null;
 }
 
 export type PlayerNo = 'loyal' | 'stepDown' | 'role' | 'final';
@@ -103,6 +119,8 @@ export interface PlayerStance {
   no: PlayerNo | null;
   /** Why the wage sits where it does, in percentage points over his base. */
   why: { ambition: number; step: number; raise: number };
+  /** His market value: a clause within three times it is a door he pays for with wage. */
+  value: number;
 }
 
 const rank = (r: Role) => (r === 'starter' ? 3 : r === 'rotation' ? 2 : r === 'prospect' ? 1 : 0);
@@ -152,6 +170,7 @@ export function playerStance(
     years: age <= 24 ? 4 : age <= 29 ? 3 : age <= 32 ? 2 : 1,
     no,
     why,
+    value: marketValue(pack, p, season),
   };
 }
 
@@ -170,10 +189,15 @@ export function answerTerms(s: PlayerStance, t: Terms, round: number): TermsAnsw
   if (rank(t.role) < rank(s.wants)) return { kind: 'refuse', reason: 'role' };
   const sweet = (rank(t.role) - rank(s.wants)) * 8;
   const long = Math.max(0, t.years - s.years) * 5;
-  const demand = Math.round((s.wage * (100 - sweet + long)) / 100);
+  // A clause he could be bought out by is worth 5% of wage to him.
+  const door = t.release != null && t.release <= s.value * 3 ? 5 : 0;
+  const demand = Math.round((s.wage * (100 - sweet - door + long)) / 100);
   if (t.wage >= demand) return { kind: 'accept', terms: t };
   if (round >= MAX_ROUNDS) return { kind: 'refuse', reason: 'final' };
   // He opens 10% over what he would take and comes down to it.
   const ask = Math.round((demand * (100 + (10 * (MAX_ROUNDS - round)) / MAX_ROUNDS)) / 100);
-  return { kind: 'counter', terms: { wage: ask, years: Math.min(t.years, 5), role: t.role } };
+  return {
+    kind: 'counter',
+    terms: { ...t, wage: ask, years: Math.min(t.years, 5), role: t.role },
+  };
 }

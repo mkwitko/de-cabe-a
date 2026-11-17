@@ -19,6 +19,7 @@ import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { available, book, wageRoom } from './books';
 import {
+  CLAUSE_TIMES,
   MAX_ROUNDS,
   answerFee,
   answerTerms,
@@ -30,6 +31,7 @@ import {
 import { fitFor, squadPlanOf, type Need } from './plan';
 import { bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
+import { answerBid } from './talks';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** The terms of a buying club's choice, in points. */
@@ -347,7 +349,9 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
           available(w, id),
           thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
         );
-        const fee = Math.min(most, thousands((worth * hand.opens) / 100));
+        const clause = choice.p.contract?.releaseFee ?? null;
+        const pays = clause !== null && clause <= most;
+        const fee = pays ? clause : Math.min(most, thousands((worth * hand.opens) / 100));
         w.bids = [
           ...(w.bids ?? []),
           {
@@ -361,6 +365,19 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
             why: choice.why,
           },
         ];
+        if (pays) {
+          // The clause is met: the person has no say, only the player has.
+          const a = answerBid(w, `${day}:${id}:${choice.p.id}`, { kind: 'accept' });
+          if (a.kind === 'sold')
+            note(w, {
+              day,
+              kind: 'clausePaid',
+              player: choice.p.knownAs ?? choice.p.name,
+              club: id,
+              fee,
+            });
+          break;
+        }
         note(w, { day, kind: 'bid', player: choice.p.knownAs ?? choice.p.name, club: id, fee });
         break;
       }
@@ -369,6 +386,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
       movePlayer(w, choice.p, id, {
         wage: deal.wage,
         until: `${season + deal.years}-12-31`,
+        release: marketValue(w.pack, choice.p, season) * CLAUSE_TIMES,
       });
       if (deal.from !== null) book(w, deal.from, id, deal.fee);
       done.push({ ...deal, day });

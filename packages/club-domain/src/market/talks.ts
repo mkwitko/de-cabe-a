@@ -11,6 +11,7 @@ import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
 import { available, book, wageRoom } from './books';
 import {
+  CLAUSE_TIMES,
   answerFee,
   answerTerms,
   playerStance,
@@ -25,7 +26,7 @@ import {
 import type { Why } from './rounds';
 import { renew, renewalTerms } from './contracts';
 import { seenLevel } from './judgement';
-import { readingsOf, thousands } from './value';
+import { marketValue, readingsOf, thousands } from './value';
 
 const MIN_SQUAD = 20;
 const MIN_KEEPERS = 2;
@@ -42,6 +43,8 @@ export interface Talk {
   round: number;
   /** What the selling club asks now. */
   asking: number;
+  /** His release clause, when he has one: paying it closes the fee whatever the club says. */
+  release?: number;
   /** The fee agreed, once at the contract. */
   fee?: number;
   /** What the player asks now. */
@@ -142,6 +145,7 @@ export function openTalk(w: CareerWorld, playerId: string): Talk {
       stage: 'fee',
       round: 0,
       asking: stance.asking,
+      ...(stance.release !== null && { release: stance.release }),
       day: w.day,
     };
   }
@@ -241,6 +245,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
       years: asks.years,
       no: null,
       why: { ambition: 0, step: 0, raise: 0 },
+      value: marketValue(w.pack, p, season),
     };
   } else {
     const from = talk.seller === null ? null : clubOf(w, talk.seller);
@@ -252,13 +257,17 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
   else if (a.kind === 'counter')
     w.talks = { ...w.talks, [playerId]: { ...talk, round, wants: a.terms } };
   else {
-    if (renewal) renew(w, p, a.terms);
+    if (renewal) renew(w, p, { ...a.terms, release: a.terms.release ?? null });
     else {
       if (talk.seller !== null) {
         settle(w, p, talk.seller, talk.fee, 'buy');
         book(w, talk.seller, w.clubId, talk.fee);
       }
-      movePlayer(w, p, w.clubId, { wage: a.terms.wage, until: `${season + a.terms.years}-12-31` });
+      movePlayer(w, p, w.clubId, {
+        wage: a.terms.wage,
+        until: `${season + a.terms.years}-12-31`,
+        release: a.terms.release ?? null,
+      });
     }
     dropTalk(w, playerId);
   }
@@ -328,7 +337,11 @@ export function answerBid(
   const room = wageRoom(w, bid.from);
   if (wants.wage > room) return leave('budget');
   settle(w, p, bid.from, fee, 'sell');
-  movePlayer(w, p, bid.from, { wage: wants.wage, until: `${season + wants.years}-12-31` });
+  movePlayer(w, p, bid.from, {
+    wage: wants.wage,
+    until: `${season + wants.years}-12-31`,
+    release: marketValue(w.pack, p, season) * CLAUSE_TIMES,
+  });
   book(w, w.clubId, bid.from, fee);
   w.listed = (w.listed ?? []).filter((x) => x !== p.id);
   w.bids = (w.bids ?? []).filter((b) => b.player !== p.id);

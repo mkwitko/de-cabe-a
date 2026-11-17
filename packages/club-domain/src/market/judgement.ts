@@ -177,3 +177,26 @@ export function seenRise(
   const room = seenCeiling(pack, clubId, p) - seenLevel(pack, clubId, p);
   return Math.round((room * Math.min(years, toPeak)) / toPeak);
 }
+
+/**
+ * The band a club's eye puts a player's level in, for the screen: what it sees, give or take
+ * the most its office can be off. The true level is always inside it.
+ */
+export function levelRange(pack: Pack, clubId: string, p: PackPlayer): [number, number] {
+  const eye = eyeOf(pack, clubId);
+  const spread =
+    p.clubId === clubId
+      ? Math.round((OFF.own[eye.football - 1]! * known(pack, p.id)) / 100)
+      : OFF.level[eye.scouting - 1]!;
+  const seen = seenLevel(pack, clubId, p);
+  return [Math.max(1, seen - spread), Math.min(99, seen + spread)];
+}
+
+/** The same for what he may become. */
+export function ceilingRange(pack: Pack, clubId: string, p: PackPlayer): [number, number] {
+  const eye = eyeOf(pack, clubId);
+  const spread =
+    p.clubId === clubId ? OFF.own[eye.football - 1]! * 2 : OFF.ceiling[eye.scouting - 1]!;
+  const seen = seenCeiling(pack, clubId, p);
+  return [Math.max(1, seen - spread), Math.min(99, seen + spread)];
+}

@@ -24,6 +24,8 @@ export type Moves = Record<
     until: string;
     /** Season of the move. */
     season?: number;
+    /** Release clause of the new contract; absent or null when it has none. */
+    release?: number | null;
   }
 >;
 
@@ -49,7 +51,7 @@ export function withMoves(pack: Pack, moves: Moves): Pack {
       return {
         ...p,
         clubId: m.clubId,
-        contract: { wage: m.wage, until: m.until, releaseFee: null },
+        contract: { wage: m.wage, until: m.until, releaseFee: m.release ?? null },
       };
     }),
   };
@@ -64,7 +66,7 @@ export function movePlayer(
   w: CareerWorld,
   p: PackPlayer,
   to: string,
-  contract: { wage: number; until: string },
+  contract: { wage: number; until: string; release?: number | null },
 ): void {
   // A free agent comes from no club; a renewal stays where he is.
   const from = p.clubId;

@@ -12,9 +12,9 @@ import { movePlayer, releasePlayer } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
 import { wageRoom } from './books';
-import type { Terms } from './deals';
+import { CLAUSE_TIMES, type Terms } from './deals';
 import { squadPlanOf } from './plan';
-import { ageOf, goingWage, readingsOf } from './value';
+import { ageOf, goingWage, marketValue, readingsOf } from './value';
 
 /** A squad never ends a season's turn under this, nor with fewer keepers than this. */
 const KEEP = 22;
@@ -47,6 +47,11 @@ export function renew(w: CareerWorld, p: PackPlayer, terms: Terms): void {
   movePlayer(w, p, p.clubId!, {
     wage: terms.wage,
     until: `${w.season.season + terms.years}-12-31`,
+    // A club writes its usual clause; the person writes the one they agreed, or none.
+    release:
+      terms.release !== undefined
+        ? terms.release
+        : marketValue(w.pack, p, w.season.season) * CLAUSE_TIMES,
   });
 }
 
