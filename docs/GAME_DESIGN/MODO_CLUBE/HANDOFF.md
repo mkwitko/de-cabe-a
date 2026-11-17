@@ -150,6 +150,15 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
     2. completude e volume de passes no terço defensivo;
     3. disputas aéreas por jogo.
   - Sem essas referências, os próximos ajustes seriam calibração sem fonte, que o dono vetou.
+- **Estado da bancada ao fim de 2026-11-17** (2000 partidas, `4af1120`).
+  - Dentro da faixa: acerto de passe 79,9%, impedimentos 1,45, vermelhos 0,14, distância 9,9 km.
+  - Fora da faixa: gols 3,33 (2,2 a 2,5); chutes 16,3 (12,6 a 13,6); no alvo 5,4; gols por chute 0,102 (0,085 a 0,10); passes 439 (415 a 428); faltas 11,8; amarelos 2,82; escanteios 6,6.
+  - A bancada agora compara gols sobre chutes com a faixa de conversão. O `xG` por chute do motor (0,126) sai sem faixa (`22d8311`).
+  - Entraram nesta rodada:
+    - `LOFT_COST` 0,01 (`8629e20`): passes de 40 m ou mais de 18% para cerca de 13%; teto de 13,8% do quarto time mais direto da Série A 2025 (Flashscore).
+    - Impedimento lido pelo passador recalibrado (`4af1120`).
+  - Dependências: escanteios vêm 4,3 por time de chute bloqueado (`engine.ts`, 0,72 dos bloqueios vão a escanteio). Escanteios, cartões e chutes no alvo dependem do excesso de chutes. Calibrar esses parâmetros antes de corrigir o volume de chances inverteria o ajuste depois.
+  - Origem que sobra: chances demais. Os gols por chute estão quase na faixa; o volume de chutes está 25% acima.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
