@@ -222,6 +222,8 @@ Regras de referência adotadas da simulação 2D da RoboCup (`docs/pesquisa/modo
 5. Contenção e cobertura.
 6. Recalibrar a decisão de chutar e a defesa da área (`shotClear`, `SHOT_FOLLOW_UP`), que foram ajustadas sobre o erro de passe.
 
+**Primeira tentativa (2026-11-17, revertida).** Diagnóstico da rotatividade: 0,53 troca de dono por segundo; 56% porque a tarefa some (a lista de perigo muda de membros), 21% troca entre marcadores, 19% jogador sem tarefa. Zona de perigo com marcação colada: gols 3,86 → 3,50 (300 partidas), marcadores a 8,3 m do próprio ponto (antes 9), sem mudança no defensor mais próximo da recepção (3,8 m). Zagueiros marcando na zona: pior (3,68; defensores na área 3,5 → 2,7). Conflito: a prova de coordenação reprova S2 e S3 (T1 na área chega a 5 e 6, faixa ≤ 4) mesmo excluindo da marcação quem está a menos de 8 m da bola, porque marcar colado na área põe defensores junto de atacantes que estão perto da bola. A faixa de T1 na área não tem referência publicada; mudá-la depois de ver o resultado é o tipo de decisão do ADR-018 e fica com o dono. Também em aberto: o marcador segue o atacante em vez de antecipar a corrida (alvo = posição atual), por isso não chega.
+
 **Critérios de aceite.**
 - Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
 - Marcador a menos de 2 m do próprio ponto na maior parte do tempo.
