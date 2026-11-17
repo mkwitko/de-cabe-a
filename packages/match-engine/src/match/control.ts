@@ -6,8 +6,9 @@
 import { arrivalTime, kinOf, type Kin } from '../kinematics';
 import { rollTime, ROLL_DECEL } from '../ball';
 import { logistic } from '../rules/math';
+import { lineOf } from '../team';
 import { pressResistance } from '../rules/duel';
-import type { Vec2 } from '../pitch';
+import { CENTER, LENGTH, flip, type Vec2 } from '../pitch';
 import type { MatchPlayer, MatchState } from './state';
 
 export const kin = (p: MatchPlayer): Kin => kinOf(p.attrs, p.pos, p.vel, p.stamina, p.acute);
@@ -66,6 +67,37 @@ export function footBlock(o: MatchPlayer, c: MatchPlayer, ux: number, uy: number
   const d = Math.sqrt(dx * dx + dy * dy);
   if (d >= 1.6 || d < 1e-6 || (dx * ux + dy * uy) / d < 0.7) return 0;
   return (0.2 + 0.2 * (o.attrs.anticipation / 99)) * (1.45 - pressResistance(c.attrs));
+}
+
+/** Reach of an outfield body blocking a shot: it needs the body in the line (PARAMETER). */
+export const shotBlockReach = (o: MatchPlayer) => 0.35 + 0.2 * (o.attrs.bravery / 99);
+
+/**
+ * Share of the goal mouth the shooter sees past the outfield opponents in front of
+ * him (research 18 H1: the shooter's estimate uses the same reach as the flight).
+ * Each body casts the shadow of its block reach on the goal line; the shot goes
+ * somewhere across the mouth, so the shadowed share is the chance of a block.
+ * Team frame, goal mouth 30.34 to 37.66 m.
+ */
+const SHOT_DRIFT = 2;
+export function shotClear(s: MatchState, c: MatchPlayer): number {
+  const me = flip(c.team, c.pos);
+  const D = LENGTH - me.x;
+  let clear = 1;
+  for (const o of opponents(s, c.team)) {
+    if (lineOf(o.role) === 'gk') continue;
+    const q = flip(c.team, o.pos);
+    const a = q.x - me.x;
+    // A body level with him still meets the ball as it leaves the foot (PARAMETER: 0.3 m).
+    if (a <= -0.3 || a >= D) continue;
+    const k = D / Math.max(a, 0.3);
+    const yc = me.y + (q.y - me.y) * k;
+    // He also steps across while the ball travels to him (PARAMETERS: 23 m/s shot, SHOT_DRIFT m/s).
+    const hw = (shotBlockReach(o) + (SHOT_DRIFT * a) / 23) * k;
+    const shade = Math.min(yc + hw, CENTER.y + 3.66) - Math.max(yc - hw, CENTER.y - 3.66);
+    if (shade > 0) clear *= 1 - shade / 7.32;
+  }
+  return clear;
 }
 
 /**

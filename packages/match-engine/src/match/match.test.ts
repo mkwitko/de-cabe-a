@@ -9,7 +9,7 @@ import { foulChance } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
-import { passSafety } from './control';
+import { passSafety, shotClear } from './control';
 import { foul, stepUntilEnd, step } from './engine';
 import { matchInput, teamInput } from './fixture';
 import { finisherFactor, keeperFactor, kick, offsideNow, shoot } from './kick';
@@ -165,6 +165,19 @@ describe('MC-162, MC-036, MC-163 contests', () => {
 });
 
 describe('MC-038 chance quality', () => {
+  it('the shooter sees the bodies between him and the goal, not the keeper', () => {
+    const s = bare();
+    const c = place(s, 9, 85, 34);
+    place(s, 11, 104, 34); // keeper
+    expect(shotClear(s, c)).toBe(1);
+    place(s, 13, 92, 10); // wide, out of the line
+    expect(shotClear(s, c)).toBe(1);
+    place(s, 14, 92, 34.5); // in the line
+    expect(shotClear(s, c)).toBeLessThan(0.6);
+    place(s, 15, 85.2, 34.4); // level with the kick
+    expect(shotClear(s, c)).toBeLessThan(0.1);
+  });
+
   it('matches the reference by distance band', () => {
     expect(open(99, 34)).toBeGreaterThan(0.3);
     expect(open(99, 34)).toBeLessThan(0.48);

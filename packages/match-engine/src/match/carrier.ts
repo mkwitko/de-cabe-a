@@ -12,7 +12,7 @@ import { goalAngle, xg as chanceOf } from '../rules/xg';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next, type Rng } from '../random';
 import { lineOf } from '../team';
-import { groundSpeed, kin, opponents, passSafety, pressureOn, mates } from './control';
+import { groundSpeed, kin, opponents, passSafety, pressureOn, mates, shotClear } from './control';
 import { arrivalTime } from '../kinematics';
 import type { MatchPlayer, MatchState } from './state';
 
@@ -138,6 +138,8 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       lose: number;
       bias?: number;
       lossX?: number;
+      /** What he reads of `p`, when he cannot see all of it (the shot's lane). */
+      seen?: number;
     },
   ) => {
     // A shot's payoff is the whole goal, so an absolute error would make a 1% chance
@@ -146,7 +148,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     const g = gaussian(() => next(r));
     const est =
       a.kind === 'shot'
-        ? clamp(a.p * (1 + 8 * noise * g), 0, 0.99)
+        ? clamp((a.seen ?? a.p) * (1 + 8 * noise * g), 0, 0.99)
         : clamp(a.p + g * noise, 0.01, 0.99);
     const bias = a.bias ?? 0;
     out.push({
@@ -308,11 +310,18 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     let bias = SHOT_RESERVE;
     if (far) bias += 0.006 * (plan.finalThird.shootFromDistance - 3);
     if (c.input.traits.includes('shootsFromDistance') && far) bias += 0.008;
+    // Bodies between him and the goal block part of the mouth (shotClear, the flight's block
+    // reach); the keeper is left to the save. He reads that only in part, better with good
+    // decisions (PARAMETER: 30% to 80%, shots per match and xG per shot, 02 §11). xG stays the chance.
+    const goal = flip(c.team, { x: LENGTH, y: CENTER.y });
+    const clear = shotClear(s, c);
+    const reads = 0.3 + 0.5 * decisions;
     push({
       kind: 'shot',
-      target: flip(c.team, { x: LENGTH, y: CENTER.y }),
+      target: goal,
       receiver: null,
-      p: chance,
+      p: chance * clear,
+      seen: chance * (1 - reads * (1 - clear)),
       // A shot is worth the goal plus what it leaves behind: rebounds and corners come
       // in proportion to its danger (PARAMETER, shots per match and by distance, 02 §11).
       win: SHOT_FOLLOW_UP,

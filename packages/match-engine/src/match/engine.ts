@@ -21,7 +21,15 @@ import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
 import { chanceFrom, chooseAction, inCounter, settleTime, type Allowed } from './carrier';
-import { firstArrival, kin, mates, opponents, pressureOn, readTime } from './control';
+import {
+  firstArrival,
+  kin,
+  mates,
+  opponents,
+  pressureOn,
+  readTime,
+  shotBlockReach,
+} from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
@@ -523,8 +531,7 @@ function reachers(s: MatchState): Reacher[] {
           : f.kind === 'cross'
             ? 1.8 + 1.2 * norm(p.attrs.commandOfArea)
             : 2.2;
-    else if (f.kind === 'shot')
-      reach = 0.35 + 0.2 * norm(p.attrs.bravery); // a block needs the body in the line
+    else if (f.kind === 'shot') reach = shotBlockReach(p);
     else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
       reach = 0.55 + 0.35 * norm(p.attrs.anticipation);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };

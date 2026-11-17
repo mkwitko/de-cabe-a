@@ -92,6 +92,7 @@ Para cada jogador: `âncora = posição_do_slot(fase) + atração_pela_bola + aj
 - `posição_do_slot`: o plano tático guarda uma formação por fase (no mínimo duas: com bola e sem bola).
 - `atração_pela_bola`: deslocamento lateral e longitudinal proporcional à posição da bola, com fatores por linha (defesa acompanha menos que meio).
 - Ajustes: largura, profundidade, altura da linha, compactação. A última linha nunca fica atrás da linha de impedimento pedida, salvo cobertura.
+- Defesa da área (pesquisa 18 H5; 2026-11-16): sem a bola, com ela perto do nosso gol, as linhas ficam do lado do gol em relação à bola: a última linha pelo menos 5 m mais funda que a bola (nunca abaixo de 3 m), a de meio 2 m (nunca abaixo de 8 m); os atacantes ficam como saída. A partir de 30 m do gol a última linha se fecha em direção à boca do gol, até 60% da largura a 10 m. PARÂMETROS. Testado e descartado: tratar o ponta de um 4-4-2 como linha de meio sem a bola (aglomerava perto da bola na prova de coordenação, sem ganho medido).
 
 ### 5.3 Alvo sem bola (utilidade)
 Candidatos: a âncora e os movimentos que a função permite (oferecer curto, atacar as costas, abrir, entrar por dentro, ultrapassar, cobrir companheiro que saiu, marcar adversário, pressionar portador, fechar linha de passe, voltar).
@@ -247,6 +248,7 @@ logit(xG) = b0 + b1 × distância + b2 × ângulo de visão do gol + b3 × cabec
           + b7 × contra-ataque + b8 × bola parada direta
 ```
 
+1a. **Decisão de chutar**: o finalizador decide pela chance vezes a parte da boca do gol que ele vê livre (`shotClear`): cada corpo de linha entre ele e o gol projeta na linha do gol a sombra do mesmo alcance de bloqueio do voo (0,35 a 0,55 m pela `bravura`), mais o passo que dá enquanto a bola viaja (PARÂMETRO: 2 m/s a 23 m/s de chute); o goleiro fica para a defesa. Ele lê essa parte só em parte: de 30% a 80% pela `decisões` (PARÂMETRO calibrado em chutes por jogo e `xG` por chute). O `xG` registrado continua sendo a chance. Calibração (2026-11-16): chutes vistos 80–100% livres são bloqueados 13% das vezes; bloqueios em 26% dos chutes (referência perto de 25%); chutes de fora da área 36% (referência 35 a 40%).
 2. **Execução do chute**: o finalizador escolhe alvo e força; o erro de execução (`finalização`, `técnica`, `compostura`, pé, pressão, fôlego) desloca direção e velocidade. O chute pode sair para fora, ser bloqueado por oclusão ou ir no gol.
 3. **`xG pós-chute`** (FATO: modelo pós-chute, de 0 a 1 por chute no alvo; gols evitados = `xG pós-chute` sofrido menos gols sofridos): probabilidade de gol dada a trajetória real em direção ao gol (colocação, velocidade, distância do goleiro ao ponto de cruzamento). Só existe para chutes no alvo.
 4. **Defesa**: o goleiro resolve contra a trajetória (§6.4).
