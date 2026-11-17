@@ -65,6 +65,12 @@ const SHOT_FOLLOW_UP = 1.6;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.55;
 /**
+ * Utility a lofted pass gives up for being a lofted pass: sides keep the ball rather than
+ * hit it long. PARAMETER calibrated on long-ball share (Série A 2025: the fourth most direct
+ * side plays 13.8% of passes long, Flashscore) and pass completion (02 §11).
+ */
+const LOFT_COST = 0.01;
+/**
  * A ball over the top lands with error, bounces and meets a keeper coming out:
  * measured success near 25% to 35% (calibration run, 2026-11-13). PARAMETER.
  */
@@ -215,6 +221,8 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     if (counter && forward > 10) bias += 0.008;
     if (plan.progression === 'wide' && (mt.y < 14 || mt.y > WIDTH - 14)) bias += 0.004;
     if (plan.progression === 'central' && Math.abs(mt.y - CENTER.y) < 14) bias += 0.003;
+    // Teams prefer to keep the ball: a lofted pass pays a retention cost (LOFT_COST).
+    if (lofted) bias -= LOFT_COST;
     if (plan.buildUp === 'short' && lofted && me.x < 50) bias -= 0.01;
     if (plan.buildUp === 'long' && lofted && me.x < 50 && forward > 20) bias += 0.008;
     const win = valueAt(mt.x, mt.y) * (1 - 0.3 * pressureOn(s, m));
