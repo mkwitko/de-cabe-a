@@ -4,7 +4,7 @@
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
 import { useEffect, useState } from 'react';
-import { api } from '../../../lib/api';
+import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
 import type { SimReply, SimRequest, SimView } from './sim.worker';
@@ -218,16 +218,19 @@ function Home({ career }: { career: Career }) {
       // The server keeps the day and the snapshot together, before the screen moves on.
       const save = e.data.save;
       if (save)
-        await api(`/v1/manager/career/world?from=${save.from}&to=${save.to}`, {
-          method: 'PUT',
-          headers: { 'content-type': 'application/octet-stream' },
-          body: save.bytes,
-        }).catch((err: Error) => alive && setError(err.message));
+        await api(
+          `/v1/manager/career/world?from=${save.from}&to=${save.to}&season=${save.season}`,
+          {
+            method: 'PUT',
+            headers: { 'content-type': 'application/octet-stream' },
+            body: save.bytes,
+          },
+        ).catch((err: Error) => alive && setError(err.message));
       if (!alive) return;
       setSim(e.data.view ?? null);
       setBusy(false);
     };
-    fetch('/v1/manager/career/world', { credentials: 'same-origin' })
+    apiFetch('/v1/manager/career/world')
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((snapshot) => {
         const req: SimRequest = {
@@ -248,9 +251,9 @@ function Home({ career }: { career: Career }) {
     };
   }, [career]);
 
-  const play = () => {
+  const send = (type: 'play' | 'nextSeason') => {
     setBusy(true);
-    worker?.postMessage({ type: 'play' } satisfies SimRequest);
+    worker?.postMessage({ type } satisfies SimRequest);
   };
 
   if (error) return <Notice title={t('career.loadError')}>{error}</Notice>;
@@ -268,7 +271,7 @@ function Home({ career }: { career: Career }) {
           <div className="min-w-0 flex-1">
             <h2 className="font-condensed text-3xl font-extrabold uppercase">{sim.club.name}</h2>
             <p className="text-chalk-soft">
-              {t('career.where', { division: sim.division, season: career.season })}
+              {t('career.where', { division: sim.division, season: sim.season })}
             </p>
           </div>
           <p className="w-full font-condensed text-2xl font-extrabold text-club-gold tabular-nums sm:w-auto">
@@ -276,6 +279,15 @@ function Home({ career }: { career: Career }) {
           </p>
         </div>
 
+        {sim.turn && (
+          <p aria-live="polite" className="rounded-2xl border-2 border-club-gold bg-club-panel p-4">
+            {t('career.turn', {
+              season: sim.turn.season,
+              champion: sim.turn.champion,
+              move: sim.turn.move,
+            })}
+          </p>
+        )}
         {sim.last && (
           <p
             aria-live="polite"
@@ -302,13 +314,43 @@ function Home({ career }: { career: Career }) {
                 <span className="text-chalk-soft">×</span>
                 <span className={sim.next.atHome ? '' : 'font-bold'}>{sim.next.away}</span>
               </p>
-              <button type="button" disabled={busy} className={btnPrimary} onClick={play}>
+              <button
+                type="button"
+                disabled={busy}
+                className={btnPrimary}
+                onClick={() => send('play')}
+              >
                 {t('career.play')}
               </button>
             </>
           ) : (
-            <p>{t('career.seasonOver')}</p>
+            <>
+              <p>{t('career.seasonOver')}</p>
+              <button
+                type="button"
+                disabled={busy}
+                className={btnPrimary}
+                onClick={() => send('nextSeason')}
+              >
+                {t('career.nextSeason', { season: sim.season + 1 })}
+              </button>
+            </>
           )}
+        </div>
+        <div className="rounded-2xl bg-club-panel p-4 ring-1 ring-chalk/10">
+          <h3 className="mb-2 font-condensed text-xl font-extrabold uppercase">
+            {t('career.money', { season: sim.season })}
+          </h3>
+          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 tabular-nums">
+            {sim.money.map((m) => (
+              <div key={m.kind} className="contents">
+                <dt className="text-chalk-soft">{t('career.moneyKind', { k: m.kind })}</dt>
+                <dd className={`text-right ${m.amount < 0 ? 'text-club-danger' : ''}`}>
+                  {t('career.cash', { value: m.amount })}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
         <p className="text-xs text-chalk-soft">{t('career.builtHere', { ms: sim.ms })}</p>
       </div>

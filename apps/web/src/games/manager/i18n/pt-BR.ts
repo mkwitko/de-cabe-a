@@ -42,6 +42,12 @@ export const ptBR = {
   'career.play': 'Jogar a partida',
   'career.lastResult': '{home} {a} × {b} {away}',
   'career.seasonOver': 'Temporada encerrada.',
+  'career.nextSeason': 'Começar a temporada {season}',
+  'career.turn':
+    'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
+  'career.money': 'Dinheiro na temporada {season}',
+  'career.moneyKind':
+    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.title': 'Amistoso',

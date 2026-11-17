@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 /**
  * Client analytics (ANALYTICS.md §1): only what the server cannot see. Game events
  * (started, answers, completed) are recorded by the API. No text, no identifiers.
@@ -15,7 +16,7 @@ const payload = (name: Name, props: Props) =>
 
 export function track(name: Name, props: Props = {}) {
   capture(name, props);
-  void fetch('/v1/events', {
+  void apiFetch('/v1/events', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: payload(name, props),

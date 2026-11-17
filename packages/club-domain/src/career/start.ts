@@ -118,6 +118,7 @@ export interface CareerStart {
 export function startCareer(pack: Pack, seed: number, clubId: string): CareerStart {
   const club = pack.clubs.find((c) => c.id === clubId);
   if (!club) throw new Error(`unknown club ${clubId}`);
+  // The old debt is paid in monthly instalments (04 §4 Dívida, career/finance.ts), not here.
   const ledger = createLedger(0, [
     {
       key: 'opening-cash',
@@ -127,18 +128,6 @@ export function startCareer(pack: Pack, seed: number, clubId: string): CareerSta
       day: 0,
       dueDay: 0,
     },
-    ...(club.initialDebt > 0
-      ? [
-          {
-            key: 'opening-debt',
-            kind: 'opening',
-            ref: 'pack',
-            amount: -club.initialDebt,
-            day: 0,
-            dueDay: 365,
-          },
-        ]
-      : []),
   ]);
   return { clubId, season: startSeason(pack, { seed }), ledger };
 }

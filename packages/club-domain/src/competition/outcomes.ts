@@ -47,7 +47,18 @@ export function regulationsFor(all: readonly Competition[], season: number): Com
     const known = all.filter((c) => c.id === id && c.season <= season);
     if (known.length === 0) continue;
     const last = known.reduce((a, b) => (b.season > a.season ? b : a));
-    out.push(last.season === season ? last : { ...last, season, clubIds: [] });
+    if (last.season === season) out.push(last);
+    else {
+      // The same regulation a year later: every date window moves by the years in between.
+      const years = season - last.season;
+      const shift = (iso: string) => `${Number(iso.slice(0, 4)) + years}${iso.slice(4)}`;
+      const phases = last.phases.map((p) =>
+        p.dates
+          ? { ...p, dates: { ...p.dates, start: shift(p.dates.start), end: shift(p.dates.end) } }
+          : p,
+      );
+      out.push({ ...last, season, clubIds: [], phases } as Competition);
+    }
   }
   return out;
 }

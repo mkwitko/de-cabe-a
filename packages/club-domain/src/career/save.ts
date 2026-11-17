@@ -15,7 +15,7 @@ import type { CareerWorld } from './advance';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 1;
+export const CAREER_RULES_VERSION = 2;
 
 interface Saved {
   v: number;

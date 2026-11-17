@@ -5,7 +5,10 @@
  * step for the server to keep.
  */
 import {
+  dayOf,
   divisionTable,
+  resultBetween,
+  startNextSeason,
   isoOf,
   loadCareer,
   nextDecision,
@@ -15,6 +18,7 @@ import {
   type CareerWorld,
   type Decision,
   type Pack,
+  type SeasonTurn,
 } from '@decabeca/club-domain';
 
 export type SimRequest =
@@ -27,11 +31,16 @@ export type SimRequest =
       /** Last snapshot (gzip), empty on day one. */
       snapshot: ArrayBuffer;
     }
-  | { type: 'next' }
-  | { type: 'play' };
+  | { type: 'play' }
+  | { type: 'nextSeason' };
 
 export interface SimView {
+  season: number;
   club: { name: string; shortName: string; colours: [string, string] };
+  /** This season's money by kind (wages, tv, sponsors, tickets, debt). */
+  money: { kind: string; amount: number }[];
+  /** After a season turn: titles of the person's division and the club's move. */
+  turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
   division: string;
   cash: number;
   next: { iso: string; home: string; away: string; atHome: boolean } | null;
@@ -44,13 +53,14 @@ export interface SimView {
 export interface SimReply {
   view?: SimView;
   /** Present when the world moved: the step to send with the snapshot. */
-  save?: { from: number; to: number; bytes: ArrayBuffer };
+  save?: { from: number; to: number; season: number; bytes: ArrayBuffer };
   error?: string;
 }
 
 let world: CareerWorld | null = null;
 let pending: Decision | null = null;
 let last: SimView['last'] = null;
+let turn: SimView['turn'] = null;
 
 async function gzip(text: string): Promise<ArrayBuffer> {
   const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
@@ -65,7 +75,17 @@ function view(w: CareerWorld, ms: number): SimView {
   const byId = new Map(w.pack.clubs.map((c) => [c.id, c]));
   const club = byId.get(w.clubId)!;
   const table = divisionTable(w);
+  const money = resultBetween(
+    w.ledger,
+    dayOf(`${w.season.season}-01-01`),
+    dayOf(`${w.season.season}-12-31`),
+  );
   return {
+    season: w.season.season,
+    money: Object.entries(money.byKind)
+      .filter(([kind]) => kind !== 'opening')
+      .map(([kind, amount]) => ({ kind, amount })),
+    turn,
     club: { name: club.name, shortName: club.shortName, colours: club.colours },
     division: table.name,
     cash: w.ledger.cash,
@@ -94,7 +114,9 @@ function view(w: CareerWorld, ms: number): SimView {
 async function toNextDecision(w: CareerWorld): Promise<SimReply['save']> {
   const from = w.day;
   pending = nextDecision(w);
-  return w.day !== from ? { from, to: w.day, bytes: await gzip(saveCareer(w)) } : undefined;
+  return w.day !== from
+    ? { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) }
+    : undefined;
 }
 
 self.onmessage = async (e: MessageEvent<SimRequest>) => {
@@ -118,7 +140,34 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
       last = { home: byId.get(d.home)!, away: byId.get(d.away)!, goals: o.goals };
       const after = await toNextDecision(world);
-      save = { from, to: world.day, bytes: after?.bytes ?? (await gzip(saveCareer(world))) };
+      save = {
+        from,
+        to: world.day,
+        season: world.season.season,
+        bytes: after?.bytes ?? (await gzip(saveCareer(world))),
+      };
+    } else if (world && r.type === 'nextSeason' && pending?.kind === 'seasonOver') {
+      // The champion of the division the club played in, read before the turn moves it.
+      const before = divisionTable(world).name;
+      const divId = world.season.competitions.find((c) => c.name === before)?.id;
+      const from = world.day;
+      const t: SeasonTurn = startNextSeason(world);
+      const names = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
+      const champion = t.titles.find((x) => x.competitionId === divId)?.clubId ?? '';
+      turn = {
+        champion: names.get(champion) ?? '',
+        move: t.move?.kind ?? 'stay',
+        season: t.season - 1,
+      };
+      last = null;
+      const after = await toNextDecision(world);
+      // The season changed even if no day was played yet: always saved.
+      save = after ?? {
+        from,
+        to: world.day,
+        season: world.season.season,
+        bytes: await gzip(saveCareer(world)),
+      };
     }
     const reply: SimReply = { view: view(world!, Math.round(performance.now() - t)) };
     if (save) reply.save = save;

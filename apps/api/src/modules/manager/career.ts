@@ -60,6 +60,8 @@ async function offersFor(prisma: PrismaClient, pk: string) {
 const AdvanceQuery = z.strictObject({
   from: z.coerce.number().int().min(0),
   to: z.coerce.number().int().min(1),
+  /** Season the snapshot is in: the same, or the next one after a season turn. */
+  season: z.coerce.number().int().min(1900).max(2200),
 });
 /** PARÂMETRO: a season spans about a year of days; no single step goes beyond it. */
 const MAX_STEP = 400;
@@ -182,23 +184,28 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 120, timeWindow: '1 minute' } },
     },
     async (req) => {
-      const { from, to } = req.query;
+      const { from, to, season } = req.query;
       const bytes = req.body;
       if (!(bytes instanceof Buffer) || bytes.length < 2 || bytes[0] !== 0x1f || bytes[1] !== 0x8b)
         throw new AppError(400, 'VALIDATION_ERROR', 'Fotografia inválida.');
       // Day 0 is "nothing played yet": the first step lands on a calendar day.
-      if (to <= from || (from > 0 && to - from > MAX_STEP))
+      if (to < from || (from > 0 && to - from > MAX_STEP))
         throw new AppError(400, 'VALIDATION_ERROR', 'Avanço fora do calendário.');
       const c = await currentCareer(prisma, ownerOf(req));
       if (!c) throw new AppError(404, 'NOT_FOUND', 'Nenhuma carreira em andamento.');
-      if (c.world.day === to) return { career: view(c) };
+      if (c.world.day === to && c.world.season === season) return { career: view(c) };
+      // Standing still is only a season turn.
+      if (to === from && season === c.world.season)
+        throw new AppError(400, 'VALIDATION_ERROR', 'Avanço fora do calendário.');
+      if (season !== c.world.season && season !== c.world.season + 1)
+        throw new AppError(400, 'VALIDATION_ERROR', 'Temporada fora de ordem.');
       const moved = await prisma.clubWorld.updateMany({
-        where: { id: c.world.id, day: from },
-        data: { day: to, revision: { increment: 1 }, data: new Uint8Array(bytes) },
+        where: { id: c.world.id, day: from, season: c.world.season },
+        data: { day: to, season, revision: { increment: 1 }, data: new Uint8Array(bytes) },
       });
       if (moved.count === 0)
         throw new AppError(409, 'INVALID_TRANSITION', 'A carreira já avançou em outra aba.');
-      return { career: view({ ...c, world: { ...c.world, day: to } }) };
+      return { career: view({ ...c, world: { ...c.world, day: to, season } }) };
     },
   );
 

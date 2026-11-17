@@ -50,3 +50,31 @@ test('career: free choice of a first-division club at 1280 px', async ({ page })
   await expect(page.locator('tbody tr')).toHaveCount(20);
   await page.screenshot({ path: 'test-results/carreira-casa-1280.png', fullPage: true });
 });
+
+test('career: a whole season, its money, and the turn to the next one', async ({ page }) => {
+  test.setTimeout(240_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/tecnico/carreira');
+  await page.getByRole('button', { name: /Escolher o clube/ }).click();
+  await page.getByRole('button', { name: 'Segunda Divisão' }).click();
+  await page.getByRole('listitem').getByRole('button').last().click();
+  await expect(page.getByRole('heading', { name: 'Dinheiro na temporada 2026' })).toBeVisible({
+    timeout: 30_000,
+  });
+  const play = page.getByRole('button', { name: 'Jogar a partida' });
+  const turn = page.getByRole('button', { name: 'Começar a temporada 2027' });
+  for (let i = 0; i < 60 && !(await turn.isVisible()); i++) {
+    await expect(play.or(turn)).toBeEnabled({ timeout: 30_000 });
+    if (await play.isVisible()) await play.click();
+  }
+  await expect(page.getByText('Salários')).toBeVisible();
+  await expect(page.getByText('Bilheteria')).toBeVisible();
+  await page.screenshot({ path: 'test-results/carreira-fim-1280.png', fullPage: true });
+  await turn.click();
+  await expect(page.getByText(/^Temporada 2026: \S+ campeão da divisão\./)).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByText(/· temporada 2027/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(/· temporada 2027/)).toBeVisible({ timeout: 30_000 });
+});

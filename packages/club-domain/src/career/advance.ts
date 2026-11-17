@@ -5,8 +5,19 @@
  * world: the server keeps only the day, the browser replays up to it.
  */
 import { standings, type Row } from '../competition/league';
-import { matchesOn, nextDay, record, seedOf, type SeasonState } from '../competition/season';
+import {
+  finishSeason,
+  isOver,
+  matchesOn,
+  nextDay,
+  record,
+  seedOf,
+  startSeason,
+  type SeasonState,
+} from '../competition/season';
+import { regulationsFor, type Move } from '../competition/outcomes';
 import { advanceLedger, type Ledger } from '../finance/ledger';
+import { postHomeMatch, postMonths } from './finance';
 import { clubStrength, quickResult } from '../match/quick';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
@@ -36,6 +47,7 @@ export type Decision =
 
 function playDay(w: CareerWorld, day: number): Map<string, Outcome> {
   const out = new Map<string, Outcome>();
+  postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     const o = quickResult(
@@ -45,6 +57,7 @@ function playDay(w: CareerWorld, day: number): Map<string, Outcome> {
     );
     record(w.season, id, o);
     out.set(id, o);
+    if (m.home === w.clubId || m.away === w.clubId) postHomeMatch(w, id, day);
   }
   w.day = day;
   advanceLedger(w.ledger, day);
@@ -116,4 +129,34 @@ export function divisionTable(w: CareerWorld): { name: string; rows: Row[] } {
     { points: { win: 3, draw: 1, loss: 0 }, tieBreakers: ['goalDifference', 'goalsFor'], seed: 0 },
   );
   return { name: div.name, rows };
+}
+
+export interface SeasonTurn {
+  season: number;
+  titles: { competitionId: string; clubId: string }[];
+  /** The person's club moved up or down, if it did. */
+  move: Move | null;
+}
+
+/**
+ * From a finished season to the next (05 §3, MC-172): titles, promotion and relegation by the
+ * regulations, then the new season drawn from the career seed. The ledger carries on.
+ */
+export function startNextSeason(w: CareerWorld): SeasonTurn {
+  if (!isOver(w.season)) throw new Error('career: the season is not over');
+  const year = w.season.season + 1;
+  const t = finishSeason(w.season, regulationsFor(w.pack.competitions, year));
+  w.season = startSeason(w.pack, {
+    season: year,
+    seed: seedOf(w.seed, `season:${year}`),
+    members: t.members,
+    slots: t.slots,
+    previous: w.season.results,
+    ranking: w.season.ranking,
+  });
+  return {
+    season: year,
+    titles: t.titles,
+    move: t.moves.find((m) => m.clubId === w.clubId) ?? null,
+  };
 }

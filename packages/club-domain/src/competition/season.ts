@@ -120,6 +120,8 @@ export interface SeasonState {
 
 export interface SeasonOptions {
   seed: number;
+  /** Season to play; defaults to the pack's. */
+  season?: number;
   /** Members by competition; defaults to the regulations' club lists (the pack's season). */
   members?: Record<string, string[]>;
   ranking?: string[];
@@ -134,10 +136,11 @@ export const seedOf = (seed: number, label: string) =>
   Math.floor(next(fork(rngFrom(seed), label)) * 0x7fffffff);
 
 export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
-  const competitions = regulationsFor(pack.competitions, pack.season);
+  const season = opts.season ?? pack.season;
+  const competitions = regulationsFor(pack.competitions, season);
   const cityState = new Map(pack.cities.map((c) => [c.id, c.state]));
   const s: SeasonState = {
-    season: pack.season,
+    season,
     seed: opts.seed,
     competitions,
     members: opts.members ?? Object.fromEntries(competitions.map((c) => [c.id, c.clubIds])),

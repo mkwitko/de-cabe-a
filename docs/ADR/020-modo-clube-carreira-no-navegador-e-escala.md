@@ -119,6 +119,14 @@ Guardar só o dia faria o navegador recalcular a temporada inteira a cada abertu
    - **Quando o mundo da carreira guardar jogadores mudados** (03 §9): a fotografia passa a levar a diferença sobre o pacote, e a dependência do pacote antigo diminui.
 4. **Onde fica a fotografia:** no Postgres (`ClubWorld.data`) até o deploy ter o bucket. A troca para R2 com envio assinado é local à rota.
 
+## Limite conhecido: a carreira solo ainda não é conferível (2026-11-17)
+
+Hoje o servidor guarda a fotografia que o navegador escreveu. Uma conferência que partisse dela aceitaria qualquer caixa ou tabela forjada. Isso não pesa enquanto a trapaça só afeta a própria carreira. Antes de ligar ranking, prêmio ou campeonato à carreira solo:
+
+1. **Registro de decisões no servidor:** guardar cada decisão (escalação, instrução, compra, resposta a carta) em linhas, com o dia e a versão das regras.
+2. **Conferência pelo começo:** refazer a partir do pacote, da semente e das decisões, nunca da fotografia, com a versão das regras de cada trecho guardada no repositório (como no ADR-015, item 4).
+3. **Papel da fotografia:** continua sendo só para abrir rápido.
+
 ## Capacidade estimada
 
 Premissa: uma temporada jogada em ~5 horas, ou seja, um dia de jogo a cada ~55 s por carreira ativa. Com 10.000 carreiras ativas, isso dá ~180 avanços por segundo.

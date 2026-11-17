@@ -171,36 +171,54 @@ describe('Modo Clube calendar advance (MC-084)', () => {
       return res;
     };
     const snap = (day: number) => gzipSync(JSON.stringify({ v: 1, day }));
-    expect((await d('PUT', '/manager/career/world?from=0&to=5', snap(5))).statusCode).toBe(404);
+    expect(
+      (await d('PUT', '/manager/career/world?from=0&to=5&season=2026', snap(5))).statusCode,
+    ).toBe(404);
     const o = (await d('GET', '/manager/career/options')).json();
     await d('POST', '/manager/career', { startMode: 'job_offers', clubId: o.offers[0].id });
     expect((await d('GET', '/manager/career/world')).rawPayload.length).toBe(0);
 
-    const step = await d('PUT', '/manager/career/world?from=0&to=20500', snap(20500));
+    const step = await d('PUT', '/manager/career/world?from=0&to=20500&season=2026', snap(20500));
     expect(step.statusCode, step.body).toBe(200);
     expect(step.json().career.day).toBe(20500);
     const back = await d('GET', '/manager/career/world');
     expect(JSON.parse(gunzipSync(back.rawPayload).toString())).toEqual({ v: 1, day: 20500 });
     // A retry answers the same; a step from the old day is a conflict.
-    expect((await d('PUT', '/manager/career/world?from=0&to=20500', snap(20500))).json()).toEqual(
-      step.json(),
-    );
-    expect((await d('PUT', '/manager/career/world?from=0&to=20510', snap(20510))).statusCode).toBe(
-      409,
-    );
-    expect((await d('PUT', '/manager/career/world?from=20500&to=20400', snap(1))).statusCode).toBe(
-      400,
-    );
-    expect((await d('PUT', '/manager/career/world?from=20500&to=21000', snap(1))).statusCode).toBe(
-      400,
-    );
     expect(
-      (await d('PUT', '/manager/career/world?from=20500&to=20507', Buffer.from('{}'))).statusCode,
+      (await d('PUT', '/manager/career/world?from=0&to=20500&season=2026', snap(20500))).json(),
+    ).toEqual(step.json());
+    expect(
+      (await d('PUT', '/manager/career/world?from=0&to=20510&season=2026', snap(20510))).statusCode,
+    ).toBe(409);
+    expect(
+      (await d('PUT', '/manager/career/world?from=20500&to=20400&season=2026', snap(1))).statusCode,
     ).toBe(400);
     expect(
-      (await d('PUT', '/manager/career/world?from=20500&to=20507', Buffer.alloc(600_000, 0x1f)))
+      (await d('PUT', '/manager/career/world?from=20500&to=21000&season=2026', snap(1))).statusCode,
+    ).toBe(400);
+    expect(
+      (await d('PUT', '/manager/career/world?from=20500&to=20507&season=2026', Buffer.from('{}')))
         .statusCode,
+    ).toBe(400);
+    expect(
+      (
+        await d(
+          'PUT',
+          '/manager/career/world?from=20500&to=20507&season=2026',
+          Buffer.alloc(600_000, 0x1f),
+        )
+      ).statusCode,
     ).toBe(413);
     expect((await d('GET', '/manager/career')).json().career.day).toBe(20500);
+    // A season turn moves the season once; skipping a season is refused.
+    expect(
+      (await d('PUT', '/manager/career/world?from=20500&to=20520&season=2028', snap(1))).statusCode,
+    ).toBe(400);
+    const turn = await d(
+      'PUT',
+      '/manager/career/world?from=20500&to=20520&season=2027',
+      snap(20520),
+    );
+    expect(turn.json().career).toMatchObject({ day: 20520, season: 2027 });
   });
 });

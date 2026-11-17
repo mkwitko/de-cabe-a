@@ -16,7 +16,46 @@ const hex = (r: Rng) =>
 
 const pad = (i: number, width: number) => String(i + 1).padStart(width, '0');
 
+/**
+ * Club money by squad strength (04 §4, table "Milhões de reais por temporada"): anchors near the
+ * middle of each division's range, linear in between. Bands of the dev pack: Primeira 60–80,
+ * Segunda 52–68, Terceira 44–60, Quarta 30–52. PARÂMETRO: the lower divisions have no solid
+ * source (04 §1); these are game proposals, kept close to the research's orders of magnitude.
+ */
+const ECONOMY: {
+  strength: number;
+  /** Monthly payroll of the squad. */
+  payroll: number;
+  sponsors: number;
+  capacity: number;
+  fans: number;
+}[] = [
+  { strength: 30, payroll: 30_000, sponsors: 100_000, capacity: 3_000, fans: 15_000 },
+  { strength: 44, payroll: 90_000, sponsors: 1_000_000, capacity: 8_000, fans: 60_000 },
+  { strength: 52, payroll: 300_000, sponsors: 1_500_000, capacity: 15_000, fans: 150_000 },
+  { strength: 60, payroll: 2_500_000, sponsors: 6_000_000, capacity: 25_000, fans: 400_000 },
+  { strength: 68, payroll: 6_000_000, sponsors: 40_000_000, capacity: 40_000, fans: 1_500_000 },
+  { strength: 80, payroll: 30_000_000, sponsors: 200_000_000, capacity: 70_000, fans: 15_000_000 },
+];
+
+export function economy(strength: number) {
+  const s = Math.max(ECONOMY[0]!.strength, Math.min(ECONOMY.at(-1)!.strength, strength));
+  let k = 0;
+  while (k < ECONOMY.length - 2 && ECONOMY[k + 1]!.strength < s) k++;
+  const [a, b] = [ECONOMY[k]!, ECONOMY[k + 1]!];
+  const t = (s - a.strength) / (b.strength - a.strength);
+  const at = (key: 'payroll' | 'sponsors' | 'capacity' | 'fans') =>
+    Math.round(a[key] + (b[key] - a[key]) * t);
+  return {
+    payroll: at('payroll'),
+    sponsors: at('sponsors'),
+    capacity: at('capacity'),
+    fans: at('fans'),
+  };
+}
+
 function club(r: Rng, i: number, strength: number, city: string, width: number): PackClub {
+  const money = economy(strength);
   const lvl = Math.max(1, Math.min(5, Math.round((strength - 35) / 10)));
   const v = () => Math.round(between(r, 20, 80));
   return {
@@ -34,14 +73,15 @@ function club(r: Rng, i: number, strength: number, city: string, width: number):
     colours: [hex(r), hex(r)],
     stadium: {
       name: `Estádio ${LAST_NAMES[pick(r, LAST_NAMES.length)]}`,
-      capacity: Math.round(strength * strength * 6 + between(r, 0, 5000)),
+      capacity: Math.round(money.capacity * between(r, 0.8, 1.2)),
       pitch: lvl >= 3 ? 'good' : 'average',
       drainage: lvl,
       arrangement: next(r) < 0.7 ? 'owned' : 'municipal',
     },
     reputation: Math.round(strength - 10 + between(r, -5, 5)),
-    initialCash: Math.round(strength * strength * 2000),
-    initialDebt: Math.round(between(r, 0, strength * 200_000)),
+    // About three months of payroll in the bank, and a debt of up to a year of it.
+    initialCash: money.payroll * 3,
+    initialDebt: Math.round(between(r, 0, money.payroll * 12)),
     facilities: { training: lvl, youth: lvl, medical: lvl },
     departments: Object.fromEntries(
       DEPARTMENTS.map((d) => [d, Math.max(1, Math.min(5, lvl + pick(r, 3) - 1))]),
@@ -64,7 +104,7 @@ function club(r: Rng, i: number, strength: number, city: string, width: number):
       confidence: 'high',
     },
     fans: {
-      size: Math.round(strength * strength * 40),
+      size: Math.round(money.fans * between(r, 0.7, 1.3)),
       loyalty: v(),
       demand: v(),
       patience: v(),
@@ -76,7 +116,7 @@ function club(r: Rng, i: number, strength: number, city: string, width: number):
     sponsors: [
       {
         name: `${LAST_NAMES[pick(r, LAST_NAMES.length)]} Alimentos`,
-        annual: strength * 40_000,
+        annual: money.sponsors,
         until: `${SEASON + 1}-12-31`,
       },
     ],
@@ -107,7 +147,17 @@ function world(
     const r = fork(root, `club:${i}`);
     const c = club(r, i, strength, city[0], width);
     w.clubs.push(c);
-    w.players.push(...generateSquad(root, { clubId: c.id, strength, season: SEASON }));
+    // Wages keep their spread inside the squad but add up to the division's payroll (04 §4).
+    const squad = generateSquad(root, { clubId: c.id, strength, season: SEASON });
+    const payroll = economy(strength).payroll;
+    const total = squad.reduce((sum, p) => sum + (p.contract?.wage ?? 0), 0);
+    for (const p of squad)
+      if (p.contract && total > 0)
+        p.contract.wage = Math.max(
+          1_000,
+          Math.round((p.contract.wage * payroll) / total / 10) * 10,
+        );
+    w.players.push(...squad);
     const coachId = `${c.id}-s01`;
     w.staff.push({
       id: coachId,
@@ -135,7 +185,7 @@ function world(
       load: 'full',
       group: 'club',
       contract: {
-        wage: strength * 3000,
+        wage: Math.round(economy(strength).payroll * 0.08),
         until: `${SEASON + 1}-12-31`,
         releaseFee: strength * 20_000,
       },
@@ -148,7 +198,10 @@ function world(
       ownerProfile:
         model === 'association' ? null : (['builder', 'speculator', 'passionate'] as const)[i % 3]!,
       electionEverySeasons: model === 'association' ? 3 : null,
-      authority: { transferCap: strength * 20_000, wageCap: strength * 2_000 },
+      authority: {
+        transferCap: economy(strength).payroll * 4,
+        wageCap: Math.round(economy(strength).payroll / 10),
+      },
       goals: [{ kind: 'position', value: goal }],
     });
     const rc = fork(root, `city:${i}`);
