@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { generateMiniPack, teamForMatch } from '@decabeca/club-domain';
 import type { Moment } from './match-jobs';
 import { runMatchJob } from './match-pool';
+import { careerRoutes } from './career';
 import {
   CommandSchema,
   coachOf,
@@ -115,6 +116,7 @@ export function friendlyInput(b: Pick<z.infer<typeof FriendlyBody>, 'seed' | 'ho
 }
 
 export const managerRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(careerRoutes);
   app.get('/manager/friendly/clubs', async () => ({
     clubs: pack.clubs.map((c) => {
       const squad = pack.players.filter((p) => p.clubId === c.id);

@@ -889,3 +889,138 @@ model Feedback {
   @@index([sessionId])
   @@index([userId])
 }
+
+// ── Modo Clube (docs/GAME_DESIGN/MODO_CLUBE/01-ARQUITETURA.md §5, MC-081) ─────────────────
+// A world is the shared state of one football universe (clubs, competitions, calendar). A
+// single-player career owns its own world; later several careers (multiplayer leagues) share
+// one, so everything about clubs and competitions hangs off the world, and only the person's
+// own decisions hang off the career. How the world document is split is MC-201.
+
+/// One football universe built from a pack. `revision` is the optimistic lock of every advance:
+/// two concurrent advances of the same world, one wins (01 §6).
+model ClubWorld {
+  id            String   @id @default(uuid(7))
+  packId        String
+  packVersion   String
+  engineVersion Int
+  /// Never sent to the client (01 §6): with the seed and the engine the results are predictable.
+  seed          Int
+  season        Int
+  /// Day of the season the world has been resolved up to.
+  day           Int      @default(0)
+  revision      Int      @default(0)
+  /// World document: JSON, gzip (ADR-014). Its split by domain is decided by MC-201.
+  data          Bytes
+  /// Same document at the start of the season, to replay a season (01 §5 Instantâneos).
+  seasonStart   Bytes?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  careers ClubCareer[]
+  matches ClubMatch[]
+  ledger  ClubLedgerEntry[]
+  history ClubHistory[]
+}
+
+/// A person's career as a manager: who (pk = account id, else guest session id), in which world,
+/// at which club. Only one active career per person for now (ADR-017 parameter): partial index.
+model ClubCareer {
+  id         String    @id @default(uuid(7))
+  pk         String
+  worldId    String
+  world      ClubWorld @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  /// free_choice | job_offers
+  startMode  String
+  scenarioId String?
+  /// Club managed now; null while unemployed.
+  clubId     String?
+  /// active | unemployed | ended
+  status     String    @default("active")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  events ClubEvent[]
+
+  @@unique([pk], where: raw("status <> 'ended'"))
+  /// One manager per club in a world (shared worlds later).
+  @@unique([worldId, clubId])
+}
+
+/// A match of a person's club, kept for audit and replay (ADR-015): seed, input and commands
+/// replay it with the same engine version. Other clubs' matches live in the world document.
+model ClubMatch {
+  id            String    @id @default(uuid(7))
+  worldId       String
+  world         ClubWorld @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  season        Int
+  day           Int
+  competitionId String
+  phaseId       String
+  homeClubId    String
+  awayClubId    String
+  seed          Int
+  input         Json
+  commands      Json      @default("[]")
+  /// scheduled | live | finished
+  status        String    @default("scheduled")
+  score         Json?
+  stats         Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([worldId, season, day])
+}
+
+/// The only source of a person's club money (01 §5): cash = sum of settled entries, no balance
+/// column anywhere. Amounts in whole reais, signed. Rivals keep a season summary in the world.
+model ClubLedgerEntry {
+  id             String    @id @default(uuid(7))
+  worldId        String
+  world          ClubWorld @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  clubId         String
+  season         Int
+  day            Int
+  kind           String
+  amount         BigInt
+  dueDay         Int?
+  settledDay     Int?
+  ref            String
+  idempotencyKey String
+  createdAt      DateTime  @default(now())
+
+  @@unique([worldId, idempotencyKey])
+  @@index([worldId, clubId, season])
+}
+
+/// A card shown to the person and what they chose (06): decisions belong to the career.
+model ClubEvent {
+  id        String     @id @default(uuid(7))
+  careerId  String
+  career    ClubCareer @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  season    Int
+  day       Int
+  cardId    String
+  context   Json
+  choice    String?
+  effects   Json?
+  createdAt DateTime   @default(now())
+
+  @@index([careerId, season, day])
+}
+
+/// Titles, records and milestones of a club in a world (and of the manager, with careerId).
+model ClubHistory {
+  id        String    @id @default(uuid(7))
+  worldId   String
+  world     ClubWorld @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  careerId  String?
+  clubId    String
+  season    Int
+  kind      String
+  subjectId String?
+  payload   Json
+  createdAt DateTime  @default(now())
+
+  @@index([worldId, clubId, season])
+  @@index([careerId])
+}
