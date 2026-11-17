@@ -246,7 +246,28 @@ Leitura:
 - A maior alavanca é o tempo de leitura do passe. O tempo de reação em si é realista, então a correção não é zerá-lo. O que falta é o que o defensor faz antes do passe: posição e antecipação.
 - Correr sempre no máximo piora (4,40). O defensor que dispara sai do lugar.
 - Mesmo no caso ideal, o marcador recebe a tarefa a cerca de 11 m do ponto. Ele só fica colado (0,2 m) depois de uns 8 s na mesma marcação. Isso dá 70% do tempo de marcação com o marcador correndo atrás. Com a bola a menos de 35 m do gol, a distância média do marcador ao ponto fica entre 6 e 10 m em todas as variantes.
-- Causa estrutural provável: as marcas fora de `BOX_MARK_X` (20 m) vão para meio-campistas, que vêm de longe. Os zagueiros perto do lance não podem pegá-las.
+- Causa estrutural suspeita: as marcas fora de `BOX_MARK_X` (20 m) vão para meio-campistas, que vêm de longe. Os zagueiros perto do lance não podem pegá-las.
+
+**Quem pega a marca (2026-11-17, só medição, revertido).** Com a bola a menos de 35 m do gol, em 840 marcas novas de 6 partidas:
+
+- O marcador escolhido está a 11,8 m do ponto. O companheiro mais perto está a 6,7 m. O escolhido é o mais perto em só 36% dos casos.
+- Atacantes (pontas, meias-atacantes, centroavantes) pegam 455 das 840 marcas. Eles vêm de longe, voltando do ataque.
+- Mesmo o companheiro mais perto fica a mais de 6 m do ponto em 40% dos casos. A forma inteira está longe dos atacantes, não só o escolhido.
+
+Variações, 150 partidas cada:
+
+| Variação | Gols por jogo |
+|---|---|
+| Base | 3,86 |
+| `BOX_MARK_X` 26 | 3,84 |
+| `BOX_MARK_X` 32 | 3,71 |
+| `BOX_MARK_X` 40 | 3,82 |
+| Atacante não marca abaixo de 35 m | 3,56 |
+| Atacante não marca abaixo de 35 m, `BOX_MARK_X` 35 | 3,94 |
+
+Em todas as variações o marcador segue a 7–8 m do ponto. Trocar quem marca não resolve. O problema é a distância entre a forma e os atacantes.
+
+**Leitura do passe separada.** Com tempo de leitura zero só no movimento, os gols ficam em 3,19. Com tempo zero só na estimativa do passador, ficam em 3,39. As duas partes contam. O tempo atual (0,4 × reação, cerca de 0,24 s) é realista e fica como está.
 
 **Critérios de aceite.**
 - Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
