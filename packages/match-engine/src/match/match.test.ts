@@ -479,6 +479,55 @@ describe('MC-165 offside', () => {
   });
 });
 
+describe('the keeper on a long ball', () => {
+  // A lofted ball from a match (seed 1000): it lands near (82, 30) and runs on towards the byline.
+  const longBall = (withForward: boolean) => {
+    const s = bare();
+    const passer = place(s, 5, 37.3, 9.3);
+    const k = place(s, 11, 99.4, 32);
+    place(s, 12, 72.4, 40.9);
+    place(s, 13, 71.9, 28);
+    const r = withForward ? place(s, 9, 70.6, 28.1) : null;
+    if (r) r.vel = { x: 1.1, y: 0.6 };
+    s.flight = kick(
+      s,
+      passer,
+      { kind: 'long', target: { x: 82, y: 29 }, receiver: r, p: 1, est: 1, u: 0, ue: 0 },
+      true,
+    );
+    s.flight.ball = { x: 37.3, y: 9.3, z: 0.1, vx: 17.9, vy: 10.8, vz: 12.3 };
+    s.owner = null;
+    s.ball.possession = 0;
+    step(s);
+    return k;
+  };
+  it('stays in goal when a forward meets the ball first', () => {
+    const k = longBall(true);
+    expect(k.intent).not.toBe('receive');
+    expect(Math.abs(k.target.y - 34)).toBeLessThan(6);
+  });
+  it('runs neither to where the ball dies when nobody meets it in flight', () => {
+    expect(longBall(false).intent).not.toBe('receive');
+  });
+  it('still comes for a ball rolling into his box ahead of everyone', () => {
+    const s = bare();
+    const passer = place(s, 5, 70, 34);
+    const k = place(s, 11, 101, 34);
+    place(s, 9, 78, 30);
+    s.flight = kick(
+      s,
+      passer,
+      { kind: 'pass', target: { x: 95, y: 34 }, receiver: null, p: 1, est: 1, u: 0, ue: 0 },
+      true,
+    );
+    s.flight.ball = { x: 80, y: 34, z: 0, vx: 12, vy: 0, vz: 0 };
+    s.owner = null;
+    s.ball.possession = 0;
+    step(s);
+    expect(k.intent).toBe('receive');
+  });
+});
+
 describe('MC-042 events and statistics', () => {
   it('the events close with the score and the stats', () => {
     for (const r of matches([1, 2, 3])) {

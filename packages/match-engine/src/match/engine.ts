@@ -1039,14 +1039,14 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
 function meetPoint(p: MatchPlayer, ball: Ball, reacting: boolean): { pt: Vec2; t: number } {
   const b = { ...ball };
   const k = kin(p);
-  for (let t = 0.25; t <= 4; t += 0.25) {
+  for (let t = 0.25; t <= MEET_HORIZON; t += 0.25) {
     advanceBall(b, 0.25);
     const pt = { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) };
     if (b.z < PLAYABLE_HEIGHT && arrivalTime(k, pt, reacting) <= t) return { pt, t };
   }
   return {
     pt: { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) },
-    t: 4 + arrivalTime(k, b, reacting),
+    t: MEET_HORIZON + arrivalTime(k, b, reacting),
   };
 }
 
@@ -1054,6 +1054,15 @@ function meetPoint(p: MatchPlayer, ball: Ball, reacting: boolean): { pt: Vec2; t
 function chaseLooseBall(s: MatchState) {
   const f = s.flight;
   if (!f || f.kind === 'shot') return;
+  const planned = f.kind === 'cross';
+  // Each side's quickest time to the ball: a keeper leaves his goal only to get there first.
+  const quickest = [0, 1].map((team) =>
+    Math.min(
+      ...mates(s, team as 0 | 1).map(
+        (p) => meetPoint(p, f.ball, planned || (f.kind === 'pass' && f.to === p.index)).t,
+      ),
+    ),
+  );
   for (const team of [0, 1] as const) {
     if (f.kind === 'pass' && f.to !== null) {
       const r = s.players[f.to]!;
@@ -1069,7 +1078,6 @@ function chaseLooseBall(s: MatchState) {
     let bp: Vec2 | null = null;
     // A cross from the wing is expected by both sides: runners and defenders attack it
     // without a reaction delay (the defenders' short read of the pass, reactUntil, still applies).
-    const planned = f.kind === 'cross';
     // Defending a cross in the box, the outfield players nearest to the ball all attack it
     // (zonal and man-markers alike), not just the first (PARAMETER: up to CROSS_DEFENDERS).
     const defendingCross = planned && s.players[f.from]!.team !== team;
@@ -1081,7 +1089,11 @@ function chaseLooseBall(s: MatchState) {
       // The keeper comes for balls in his box, and beyond it as far as his sweeping allows (ADR-019).
       const g = flip(team, m.pt);
       const sweeper = g.x < 16.5 + 15 * norm(p.attrs.sweeping) && Math.abs(g.y - CENTER.y) < 25;
-      if (lineOf(p.role) === 'gk' && !(inOwnBox(team, m.pt) || sweeper)) continue;
+      if (
+        lineOf(p.role) === 'gk' &&
+        (!(inOwnBox(team, m.pt) || sweeper) || m.t > Math.min(MEET_HORIZON, quickest[1 - team]!))
+      )
+        continue;
       if (m.t < bt) {
         bt = m.t;
         best = p;
@@ -1101,6 +1113,8 @@ function chaseLooseBall(s: MatchState) {
   }
 }
 const CROSS_DEFENDERS = 3;
+/** meetPoint's look-ahead (s): a later time means nobody meets the ball in flight. */
+const MEET_HORIZON = 4;
 
 function endStep(s: MatchState, opts: StepOptions) {
   for (const p of s.players) {
