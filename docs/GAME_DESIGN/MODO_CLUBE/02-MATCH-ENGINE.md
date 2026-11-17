@@ -402,6 +402,7 @@ DECISÃO do dono (2026-11-16): a referência de todas as faixas é o Brasileirã
 | Amarelos por time | 2,15 a 2,59; vermelhos 0,10 a 0,15 (FATO) |
 | Impedimentos por time | 1,32 a 1,75 (FATO) |
 | Distância por jogador de linha | 9,5 a 11,5 km |
+| Conferência: Série A 2026 (FBref, tabelas agregadas por time, 34 rodadas, 682 jogos-time; trazidas pelo dono em 2026-11-17) | gols 2,57 por jogo; por time: finalizações 14,05, no alvo 4,61 (33%), gols por finalização 0,091, faltas 13,2, amarelos 2,32, vermelhos 0,13, impedimentos 1,42, cruzamentos 19,4, desarmes vencidos 9,65, interceptações 8,8. Fonte diferente da que gerou as faixas (definições podem mudar o número, sobretudo finalizações e interceptações); as faixas acima continuam as de várias temporadas. A FBref não publica tabela de passes para a Série A: passes completados para o terço final (coluna "1/3") seguem SEM REFERÊNCIA na liga principal |
 | Gols de bola parada | 18 a 25% (FATO: 18% na Liga dos Campeões de 2023/24, 66 de 375; 24,4% na Copa de 2022; a definição muda o número) |
 | Origem dos gols de jogo corrido | transição cerca de 22%, posse controlada cerca de 42% (FATO: Liga dos Campeões de 2023/24) |
 | Forma do time | comprimento 31 a 46 m, largura 35 a 48 m, dispersão média em torno do centro 7 a 16 m, área perto de 900 m²; tudo maior com a posse (FATO: revisão sistemática de dados de rastreamento). Distância entre linhas por altura de bloco: NÃO ENCONTRADO |
