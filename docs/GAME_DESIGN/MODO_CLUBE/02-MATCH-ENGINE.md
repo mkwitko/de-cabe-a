@@ -321,7 +321,7 @@ FATO (Sarmento e outros, 2025, International Journal of Sports Medicine; `docs/p
 
 **Esquema defensivo** = marcação por zona, individual ou mista; quantos na barreira; quem fica na trave; quantos ficam à frente para o contra-ataque; linha de impedimento em falta lateral.
 
-Resolvidas pela mesma física: cobrança com erro, disputa aérea, segunda bola, transição. `sincronização` da rotina cresce com treino (`03` §5.1); um treinador de bola parada na comissão acelera (`06`).
+Resolvidas pela mesma física: cobrança com erro, disputa aérea, segunda bola, transição. Esquema padrão de escanteio enquanto o plano não traz rotina (2026-11-16): no ataque, a defesa de descanso do plano fica atrás (no mínimo 2), dois na entrada da área e os demais em primeiro pau, centro da pequena área, segundo pau, marca do pênalti e área do segundo pau, os melhores no alto primeiro; na defesa (mista), os melhores no alto marcam os atacantes da área pelo lado do gol, os demais em zona a partir do primeiro pau, e um atacante fica na frente para o contra-ataque. No cruzamento, até três defensores de linha que estão na área atacam a bola. PARÂMETROS. `sincronização` da rotina cresce com treino (`03` §5.1); um treinador de bola parada na comissão acelera (`06`).
 
 ### 8.7 Memória tática e repertório
 

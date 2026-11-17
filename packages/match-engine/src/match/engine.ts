@@ -104,6 +104,96 @@ export function setRestart(
     emit(s, kind, team, null, null, s.restart.at);
 }
 
+/**
+ * Default corner scheme (02 §8 bola parada, until a plan brings its own routine). Attack: the
+ * plan's rest defence stays back, two wait at the edge of the box, the rest go to near post,
+ * six-yard centre, far post and penalty spot, best in the air first. Defence (mixed): a man on
+ * the near post, the best headers marking the attackers in the box goal-side, the others zonal
+ * on the six-yard line, one forward left up for the counter. Team frames; PARAMETERS.
+ */
+function cornerSetup(s: MatchState, team: 0 | 1, taker: MatchPlayer) {
+  const air = (p: MatchPlayer) => aerialScore(p.attrs, p.input.heightCm);
+  const side = flip(team, taker.pos).y < CENTER.y ? -1 : 1;
+  const place = (p: MatchPlayer, t: 0 | 1, x: number, y: number) => {
+    p.pos = flip(t, { x, y: clamp(y, 1, WIDTH - 1) });
+    p.vel = { x: 0, y: 0 };
+  };
+  const att = mates(s, team)
+    .filter((p) => p.index !== taker.index && lineOf(p.role) !== 'gk')
+    .sort((a, b) => air(b) - air(a) || a.index - b.index);
+  // Rest defence: the deepest-line players stay back (defenders first).
+  const order = { def: 0, mid: 1, att: 2, gk: 3 } as const;
+  const rest = new Set(
+    [...att]
+      .sort(
+        (a, b) =>
+          order[lineOf(a.role)] - order[lineOf(b.role)] || air(a) - air(b) || a.index - b.index,
+      )
+      .slice(0, Math.max(2, s.plans[team].team.restDefence))
+      .map((p) => p.index),
+  );
+  const boxSpots = [
+    { x: 99.5, y: CENTER.y + side * 3 },
+    { x: 99.5, y: CENTER.y },
+    { x: 99, y: CENTER.y - side * 4 },
+    { x: 94, y: CENTER.y },
+    { x: 96, y: CENTER.y - side * 7 },
+  ];
+  const edge = [
+    { x: 86, y: CENTER.y + 6 },
+    { x: 86, y: CENTER.y - 6 },
+  ];
+  const inBox: MatchPlayer[] = [];
+  let k = 0;
+  let e = 0;
+  let r = 0;
+  for (const p of att) {
+    if (rest.has(p.index)) {
+      place(p, team, 58 - 4 * r, CENTER.y + (r % 2 === 0 ? -10 : 10));
+      r++;
+    } else if (k < boxSpots.length) {
+      place(p, team, boxSpots[k]!.x, boxSpots[k]!.y);
+      inBox.push(p);
+      k++;
+    } else if (e < edge.length) {
+      place(p, team, edge[e]!.x, edge[e]!.y);
+      e++;
+    } else place(p, team, 80, CENTER.y);
+  }
+  const opp: 0 | 1 = team === 0 ? 1 : 0;
+  const def = mates(s, opp)
+    .filter((p) => lineOf(p.role) !== 'gk')
+    .sort((a, b) => air(b) - air(a) || a.index - b.index);
+  // One forward stays up (the least useful in the air among the attackers).
+  const outlet = [...def].reverse().find((p) => lineOf(p.role) === 'att') ?? def[def.length - 1]!;
+  place(outlet, opp, 40, CENTER.y);
+  const rest2 = def.filter((p) => p !== outlet);
+  // The best headers mark the attackers in the box; the rest go zonal, near post first
+  // (in the defending team's frame the goal is at x = 0; the corner side mirrors).
+  const dSide = flip(opp, taker.pos).y < CENTER.y ? -1 : 1;
+  const zones = [
+    { x: 1, y: CENTER.y + dSide * 3.2 },
+    { x: 5, y: CENTER.y + dSide * 2 },
+    { x: 5, y: CENTER.y - dSide * 2 },
+    { x: 7, y: CENTER.y },
+    { x: 17, y: CENTER.y },
+  ];
+  let m = 0;
+  let z = 0;
+  for (const p of rest2) {
+    const target = m < inBox.length ? inBox[m] : undefined;
+    if (target) {
+      // Goal-side and a step inside of his man.
+      const q = flip(opp, target.pos);
+      place(p, opp, q.x - 0.8, q.y + (q.y > CENTER.y ? -0.4 : 0.4));
+      m++;
+    } else if (z < zones.length) {
+      place(p, opp, zones[z]!.x, zones[z]!.y);
+      z++;
+    } else place(p, opp, 12, CENTER.y + (z++ % 2 === 0 ? -8 : 8));
+  }
+}
+
 function takeRestart(s: MatchState): Allowed {
   const r = s.restart!;
   s.restart = null;
@@ -160,6 +250,7 @@ function takeRestart(s: MatchState): Allowed {
     p.vel = { x: 0, y: 0 };
   }
   taker.pos = { ...r.at };
+  if (r.kind === 'corner') cornerSetup(s, r.team, taker);
   if (r.kind === 'kickOff') {
     // A team-mate stands next to the taker for the first pass.
     const mate = team
@@ -979,8 +1070,14 @@ function chaseLooseBall(s: MatchState) {
     // A cross from the wing is expected by both sides: runners and defenders attack it
     // without a reaction delay (the defenders' short read of the pass, reactUntil, still applies).
     const planned = f.kind === 'cross';
+    // Defending a cross in the box, the outfield players nearest to the ball all attack it
+    // (zonal and man-markers alike), not just the first (PARAMETER: up to CROSS_DEFENDERS).
+    const defendingCross = planned && s.players[f.from]!.team !== team;
+    const attackers: { p: MatchPlayer; t: number; pt: Vec2 }[] = [];
     for (const p of mates(s, team)) {
       const m = meetPoint(p, f.ball, planned);
+      if (defendingCross && lineOf(p.role) !== 'gk' && inOwnBox(team, p.pos))
+        attackers.push({ p, t: m.t, pt: m.pt });
       // The keeper comes for balls in his box, and beyond it as far as his sweeping allows (ADR-019).
       const g = flip(team, m.pt);
       const sweeper = g.x < 16.5 + 15 * norm(p.attrs.sweeping) && Math.abs(g.y - CENTER.y) < 25;
@@ -995,8 +1092,15 @@ function chaseLooseBall(s: MatchState) {
       best.target = bp;
       best.intent = 'receive';
     }
+    attackers.sort((a, b) => a.t - b.t || a.p.index - b.p.index);
+    for (const a of attackers.slice(0, CROSS_DEFENDERS)) {
+      if (a.p === best) continue;
+      a.p.target = a.pt;
+      a.p.intent = 'receive';
+    }
   }
 }
+const CROSS_DEFENDERS = 3;
 
 function endStep(s: MatchState, opts: StepOptions) {
   for (const p of s.players) {

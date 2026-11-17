@@ -104,7 +104,9 @@ describe('MC-034 action with the ball', () => {
         (n, r) => n + r.events.filter((e) => e.kind === 'pass' && e.data.kind === 1).length,
         0,
       );
-    expect(through(matches([1, 2], vis(20)))).toBeLessThan(through(matches([1, 2], vis(90))));
+    // Six seeds: with two the count is within seed noise (2026-11-16: 79 vs 72 on seeds 1 and 2).
+    const seeds = [1, 2, 3, 4, 5, 6];
+    expect(through(matches(seeds, vis(20)))).toBeLessThan(through(matches(seeds, vis(90))));
   });
 
   it('the log tells a bad choice from a bad kick', () => {
@@ -171,6 +173,21 @@ describe('fatigue (02 §5.4, §6)', () => {
       return best;
     };
     expect(share(0.2)).toBeLessThan(share(1));
+  });
+});
+
+describe('corner scheme (02 §8 bola parada)', () => {
+  it('at a corner the defenders outnumber the attackers in the box and a forward stays up', () => {
+    const s = createMatch(matchInput(4));
+    s.restart = { kind: 'corner', team: 0, at: { x: 105, y: 0.5 } };
+    step(s);
+    const inBox = (p: (typeof s.players)[number]) =>
+      p.pos.x > 105 - 16.5 && Math.abs(p.pos.y - 34) < 20.16 && p.slot !== 0;
+    const att = s.players.filter((p) => p.team === 0 && inBox(p)).length;
+    const def = s.players.filter((p) => p.team === 1 && inBox(p)).length;
+    expect(att).toBeGreaterThanOrEqual(4);
+    expect(def).toBeGreaterThan(att);
+    expect(s.players.some((p) => p.team === 1 && p.pos.x < 70)).toBe(true);
   });
 });
 
