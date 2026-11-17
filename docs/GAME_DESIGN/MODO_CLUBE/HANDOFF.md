@@ -140,6 +140,16 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 
   Ordem proposta: primeiro as faltas de disputa aérea, que estão baixas. Depois calibrar o cartão por falta, com a Série A em cerca de 0,16 amarelo por falta.
 - **Marcação que persiste** (2026-11-17, não entrou). Das marcas perdidas, 32% somem porque o atacante chega a menos de 8 m da bola, 25% porque ele fica atrás da bola e 26% por ranking. Testado em 2000 partidas: manter a marca até 3 m da bola deu 3,43 gols. Somar 8 m de vantagem a quem já é marcado na lista de perigo, mantendo a marca até 5 m, deu 3,39. A base é 3,44. Nenhuma diferença, e as duas reprovam o vão da última linha em S3. Conclusão: a escolha de quem marcar pesa pouco nos gols.
+- **Transição depois da perda alta** (2026-11-17, só medição, 40 partidas).
+  - Das recuperações a até 40 m do gol adversário que viram chute, metade chuta em menos de 3 s. A bola é recuperada a cerca de 25 m do gol, quase sempre interceptando passe da saída.
+  - Defensores do lado do gol: 4,3 na recuperação e 3,1 dois segundos depois quando vira chute; 5,0 e 5,7 quando não vira.
+  - 2 s depois da perda, quem está à frente da bola volta a 3 m/s ou menos rumo ao próprio gol. São sobretudo atacantes, que ficam altos por desenho, e zagueiros que correm de volta. Nada quebrado na física: aceleração e virada valem igual para os dois lados.
+  - Saída de bola: 187 passes por time no próprio terço. São 9,9 interceptações por time: bola longa de 50% a 90% de chance estimada (2,2), passe curto estimado em 99% (1,9) e bola longa abaixo de 50% (1,5).
+  - Bloqueios por falta de referência publicada na mesma definição:
+    1. passes longos por time na Série A (FBref, 30 jardas);
+    2. completude e volume de passes no terço defensivo;
+    3. disputas aéreas por jogo.
+  - Sem essas referências, os próximos ajustes seriam calibração sem fonte, que o dono vetou.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
