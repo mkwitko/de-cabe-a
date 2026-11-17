@@ -16,6 +16,7 @@ import {
   slotPositions,
 } from './squad';
 import { jobOffers } from './start';
+import { OTHERS, drilled, myStrength, strengthWith, trainingOn } from './training';
 import { roleRating } from '../player/ratings';
 
 const pack = generateDevPack();
@@ -104,7 +105,11 @@ describe('squad and line-up', () => {
     const d = nextDecision(w);
     if (d.kind !== 'match') throw new Error('no match');
     const m = careerMatch(w, d);
-    expect(m.input.teams[m.mine].players[2]).toMatchObject({ id: striker.id, familiarity: 0.6 });
+    // In the engine: his position's share of the team's drill (training.ts).
+    expect(m.input.teams[m.mine].players[2]).toMatchObject({
+      id: striker.id,
+      familiarity: 0.6 * drilled(0.75),
+    });
     expect(m.input.teams[m.mine].players[11]!.familiarity).toBe(1);
   });
 
@@ -121,16 +126,17 @@ describe('squad and line-up', () => {
     const worst = { formation: '4-3-3', xi: [best.xi[0]!, ...outfield] };
     expect(lineupStrength(w, worst)).toBeLessThan(lineupStrength(w, best));
     expect(fit.get(best.xi[0]!)!.length).toBe(11);
-    // One measure for every club: before a pick, the club's strength is its coach's eleven's,
-    // so a pick can raise it or lower it, and the other club is read the same way.
-    expect(w.strength.get(clubId)).toBe(lineupStrength(w, lineupOf(w)));
+    // One measure for every club: the best eleven by position, at a managed squad's level.
+    // A rested, picked eleven can beat it; an improvised one falls below.
+    const managed = { fresh: () => OTHERS.fresh, drill: OTHERS.drill };
+    expect(w.strength.get(clubId)).toBe(strengthWith(w, lineupOf(w), managed));
+    expect(myStrength(w, trainingOn(w, w.day))).toBeGreaterThan(w.strength.get(clubId)!);
     const d0 = nextDecision(w);
     if (d0.kind !== 'match') throw new Error('no match');
     const m = careerMatch(w, d0);
-    for (const team of m.input.teams)
-      expect(
-        team.players.slice(0, 11).every((p) => [0.6, 0.75, 0.9, 1].includes(p.familiarity)),
-      ).toBe(true);
+    const theirs = m.input.teams[m.mine === 0 ? 1 : 0].players;
+    expect(theirs.every((p) => p.condition === OTHERS.fresh)).toBe(true);
+    expect(theirs.slice(0, 11).every((p) => p.familiarity <= drilled(OTHERS.drill))).toBe(true);
     // Without a pick, results are the ones the coach's eleven always gave.
     const d = nextDecision(w);
     if (d.kind !== 'match') throw new Error('no match');

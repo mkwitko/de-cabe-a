@@ -246,17 +246,26 @@ export function lineupStrength(w: ClubIn, l: Lineup): number {
 }
 
 /**
- * A club's team for the engine: this eleven in these roles, the plan's instructions, and each
- * starter's familiarity by position. Every club goes through here, the person's or not.
+ * A club's team for the engine: this eleven in these roles, the plan's instructions, each
+ * starter's stamina from his freshness, and his familiarity from the team's drill and his
+ * position (training.ts). Every club goes through here, the person's or not.
  */
-export function teamWith(c: ClubIn, l: Lineup): TeamInput {
+export function teamWith(
+  c: ClubIn,
+  l: Lineup,
+  state: { fresh: (id: string) => number; familiarity: number },
+): TeamInput {
   const plan = defaultPlan(l.formation);
   if (l.plan) plan.team = { ...plan.team, ...l.plan };
   const team = teamForMatch(c.pack, c.clubId, plan, l.xi);
   const known = slotFamiliarity(c, l);
   return {
     ...team,
-    players: team.players.map((p, i) => (i < 11 ? { ...p, familiarity: known[i]! } : p)),
+    players: team.players.map((p, i) => ({
+      ...p,
+      condition: state.fresh(p.id),
+      ...(i < 11 && { familiarity: known[i]! * state.familiarity }),
+    })),
   };
 }
 
@@ -265,13 +274,16 @@ export function teamWith(c: ClubIn, l: Lineup): TeamInput {
  * (`lineupStrength`). The same measure the person's picked eleven gets, so picking can raise it
  * or lower it. A club that cannot field that eleven keeps the plain squad reading.
  */
-export function clubStrengths(pack: Pack): Map<string, number> {
+export function clubStrengths(
+  pack: Pack,
+  measure: (c: ClubIn, l: Lineup) => number = lineupStrength,
+): Map<string, number> {
   const plain = clubStrength(pack);
   return new Map(
     pack.clubs.map((club) => {
       const c = { pack, clubId: club.id };
       try {
-        return [club.id, lineupStrength(c, bestLineup(c, formationOf(club.id)))];
+        return [club.id, measure(c, bestLineup(c, formationOf(club.id)))];
       } catch {
         return [club.id, plain.get(club.id) ?? 50];
       }
