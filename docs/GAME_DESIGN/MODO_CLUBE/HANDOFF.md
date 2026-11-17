@@ -117,7 +117,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 - **Rodada de 2026-11-17 à tarde: defensor ideal, goleiro, métrica da Opta.**
   - **Método.** Com 150 partidas, a média de gols oscila cerca de ±0,16 só por acaso. Os ganhos de "10%" medidos antes com 150 partidas estão dentro do ruído. Decidir com 600 partidas (cerca de 3,5 min).
   - **Defensor ideal** (`02` §5.12): com cumprimento sempre, leitura do passe na hora, antecipação de 1 s e marcação a 1 m, os gols caem de 3,86 para 2,63. O excesso vem da defesa. O marcador fica a 6–10 m do ponto em todas as variantes. Trocar quem pega a marca não resolve.
-  - **Bug do goleiro corrigido** (`a3c1dd1`): na bola longa que ninguém alcançava em voo, ele corria até onde a bola morreria. O atacante dominava antes e chutava com o gol vazio. Agora ele só sai se encontra a bola em voo antes do adversário mais rápido. Gols de 3,92 para 3,49 (600 partidas).
+  - **Bug do goleiro corrigido** (`a3c1dd1`): na bola longa que ninguém alcançava em voo, ele corria até onde a bola morreria. O atacante dominava antes e chutava com o gol vazio. Agora ele só sai se encontra a bola em voo antes do adversário mais rápido. Em 2000 partidas, mesmas sementes: gols de 3,80 para 3,61 (−5%). A medida de 600 partidas (3,92 para 3,49) era otimista.
   - **Métrica da Opta corrigida** (`045982f`): a recuperação alta que vira chute agora conta só chute em até 10 s, como a Opta. Pela definição antiga eram 38%, pela da Opta são 26% (referência 13–21%).
   - **Conversão por distância** (120 partidas):
 
