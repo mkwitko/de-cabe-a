@@ -33,6 +33,15 @@ import {
   squadOf,
   bestLineup,
   slotLevels,
+  askingPrice,
+  buy,
+  cannotBuy,
+  cannotSell,
+  sell,
+  sellingPrice,
+  windowOpen,
+  bestRoles,
+  type Refusal,
   DRILL_TARGET,
   INTENSITIES,
   MATCH_COST,
@@ -72,6 +81,10 @@ export type SimRequest = { id: number } & (
   /** The training ground: the week's intensity and everyone's freshness. */
   | { type: 'training' }
   | { type: 'train'; intensity: Intensity }
+  /** The market: the person's players to sell and the best of the others, by position. */
+  | { type: 'market'; position: string | null }
+  | { type: 'buy'; playerId: string; position: string | null }
+  | { type: 'sell'; playerId: string; position: string | null }
   | { type: 'nextSeason' }
   /** Watch the person's next match with the match engine (level 1). */
   | { type: 'matchStart' }
@@ -185,6 +198,74 @@ function trainingView(w: CareerWorld): TrainingView {
   };
 }
 
+/** A player as the market lists him. `no` says why the deal cannot go through now. */
+export interface MarketPlayer {
+  id: string;
+  name: string;
+  age: number;
+  position: string;
+  rating: number;
+  wage: number;
+  price: number;
+  club: ClubFace;
+  no: Refusal | null;
+}
+export interface MarketView {
+  open: boolean;
+  cash: number;
+  mine: MarketPlayer[];
+  /** Forty of the other clubs' players for the position asked: those the cash reaches first. */
+  targets: MarketPlayer[];
+  /** The deal just closed, for the screen to announce. */
+  deal?: { kind: 'buy' | 'sell'; name: string; club: string; fee: number };
+}
+const MARKET_ROWS = 40;
+
+function marketView(w: CareerWorld, position: string | null): MarketView {
+  const season = w.season.season;
+  const clubs = new Map(w.pack.clubs.map((c) => [c.id, c]));
+  const row = (p: Pack['players'][number], own: boolean): MarketPlayer => ({
+    id: p.id,
+    name: p.knownAs ?? p.name,
+    age: season - Number(p.birthDate.slice(0, 4)),
+    position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
+    rating: bestRoles(p.attributes, 1)[0]!.rating,
+    wage: own ? (p.contract?.wage ?? 0) : Math.round(((p.contract?.wage ?? 0) * 110) / 100),
+    price: own ? sellingPrice(p, season) : askingPrice(p, season),
+    club: face(clubs.get(p.clubId!)!),
+    no: own ? cannotSell(w, p) : cannotBuy(w, p),
+  });
+  const byRating = (a: MarketPlayer, b: MarketPlayer) =>
+    b.rating - a.rating || (a.id < b.id ? -1 : 1);
+  return {
+    open: windowOpen(w.day),
+    cash: w.ledger.cash,
+    mine: w.pack.players
+      .filter((p) => p.clubId === w.clubId)
+      .map((p) => row(p, true))
+      .sort(byRating),
+    targets: w.pack.players
+      .filter(
+        (p) =>
+          p.clubId &&
+          p.clubId !== w.clubId &&
+          (!position || p.positions.some((x) => x.position === position && x.level === 3)),
+      )
+      .map((p) => ({
+        p,
+        rating: bestRoles(p.attributes, 1)[0]!.rating,
+        // Within the club's means first: a list of stars nobody here can pay is no market.
+        within: askingPrice(p, season) <= w.ledger.cash,
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.within) - Number(a.within) || b.rating - a.rating || (a.p.id < b.p.id ? -1 : 1),
+      )
+      .slice(0, MARKET_ROWS)
+      .map((x) => row(x.p, false)),
+  };
+}
+
 function squadView(w: CareerWorld): SquadView {
   const l = lineupOf(w);
   const then = trainingOn(w, matchDay(w));
@@ -212,6 +293,7 @@ export interface SimReply {
   id: number;
   squad?: SquadView;
   training?: TrainingView;
+  market?: MarketView;
   /** matchStart: the two sides and which one is the person's. */
   match?: { home: MatchClub; away: MatchClub; mine: 0 | 1; formation: string; plan: PlanChoice };
   chunk?: MatchChunk;
@@ -371,6 +453,39 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: world.season.season,
         bytes: await gzip(saveCareer(world)),
       };
+    }
+    if (world && (r.type === 'market' || r.type === 'buy' || r.type === 'sell')) {
+      let deal: MarketView['deal'];
+      if (r.type !== 'market') {
+        const p = world.pack.players.find((x) => x.id === r.playerId);
+        const name = p?.knownAs ?? p?.name ?? '';
+        const names = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
+        if (r.type === 'buy') {
+          const fee = p ? askingPrice(p, world.season.season) : 0;
+          const from = names.get(p?.clubId ?? '') ?? '';
+          buy(world, r.playerId);
+          deal = { kind: 'buy', name, club: from, fee };
+        } else {
+          const sold = sell(world, r.playerId);
+          deal = { kind: 'sell', name, club: names.get(sold.buyer) ?? '', fee: sold.fee };
+        }
+      }
+      const market = marketView(world, r.position);
+      if (deal) market.deal = deal;
+      const reply: SimReply = { id: r.id, market };
+      if (deal) {
+        // The squad and the cash changed: the hub's view and the snapshot follow.
+        reply.view = view(world, Math.round(performance.now() - t));
+        reply.save = {
+          from: world.day,
+          to: world.day,
+          season: world.season.season,
+          bytes: await gzip(saveCareer(world)),
+          still: true,
+        };
+      }
+      self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
+      return;
     }
     if (world && (r.type === 'training' || r.type === 'train')) {
       if (r.type === 'train') setIntensity(world, r.intensity);

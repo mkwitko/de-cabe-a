@@ -10,6 +10,7 @@ import { t } from '../i18n';
 import type { ClubFace, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
 import { Squad } from './Squad';
 import { Training } from './Training';
+import { Market } from './Market';
 import {
   Match,
   PLAN,
@@ -30,7 +31,9 @@ interface ClubOption {
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
 type Axis = (typeof AXES)[number];
 const VENUE = ['away', 'home'] as const;
-const ROOMS = ['sala', 'vestiario', 'treino'] as const;
+const ROOMS = ['sala', 'vestiario', 'treino', 'mercado'] as const;
+/** Rooms still waiting for their own plate borrow another room's. */
+const PLATE: Partial<Record<string, string>> = { mercado: 'sala' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
 const NO_PORTRAIT: readonly string[] = ['treino'];
 const STILL = '&still=1';
@@ -342,6 +345,15 @@ function Home({ career }: { career: Career }) {
     }).catch(() => undefined);
   }, []);
 
+  // A transfer: the snapshot is kept and the hub shows the new cash and squad.
+  const deal = useCallback(
+    (reply: SimReply) => {
+      keep(reply);
+      if (reply.view) setSim(reply.view);
+    },
+    [keep],
+  );
+
   const step = (type: 'play' | 'nextSeason') => {
     if (!ask) return;
     setBusy(true);
@@ -431,7 +443,7 @@ function Home({ career }: { career: Career }) {
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
   return (
     <div className="flex flex-col gap-5">
-      <Scene plate={room} />
+      <Scene plate={(PLATE[room] ?? room) as Room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       <ClubBar sim={sim} />
       <nav
@@ -450,6 +462,7 @@ function Home({ career }: { career: Career }) {
           </button>
         ))}
       </nav>
+      {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
       {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
       {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
       {room === 'sala' && (
