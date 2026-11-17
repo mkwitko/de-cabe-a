@@ -813,6 +813,10 @@ const FROM = {
   sold: 'market',
   window: 'market',
   bid: 'market',
+  clausePaid: 'market',
+  loanIn: 'market',
+  loanOut: 'market',
+  loanBack: 'market',
   contractEnded: 'staff',
   contractKept: 'staff',
   contractsEnding: 'staff',
@@ -827,6 +831,11 @@ const FROM_TONE = {
   finance: 'bg-club-danger',
 } as const;
 const BOOL = ['false', 'true'] as const;
+const NOTE_KEY = {
+  clausePaid: 'inbox.clausePaid',
+  loanIn: 'inbox.loanIn',
+  loanOut: 'inbox.loanOut',
+} as const;
 
 /** One note in the person's language: the fact comes from the career, the sentence from here. */
 function noteText(n: InboxItem, sim: SimView): string {
@@ -862,6 +871,16 @@ function noteText(n: InboxItem, sim: SimView): string {
         fee: t('career.cash', { value: n.fee }),
         name: n.player,
       });
+    case 'clausePaid':
+    case 'loanIn':
+    case 'loanOut':
+      return t(NOTE_KEY[n.kind], {
+        club: n.clubName,
+        fee: t('career.cash', { value: n.fee }),
+        name: n.player,
+      });
+    case 'loanBack':
+      return t('inbox.loanBack', { club: n.clubName, name: n.player });
     case 'contractEnded':
       return t('inbox.contractEnded', { name: n.player });
     case 'contractKept':

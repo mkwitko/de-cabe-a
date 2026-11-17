@@ -82,6 +82,19 @@ export const ptBR = {
   'market.wageRoom': 'Folha: cabe mais {room} por mês',
   'market.noClub': 'Sem clube',
   'market.until': 'Contrato até {year}',
+  'market.band': '{lo} a {hi}',
+  'market.potential': 'Potencial {lo} a {hi}',
+  'market.clause': 'Multa {fee}',
+  'market.payClause': 'Pagar a multa',
+  'market.yourClause': 'Multa rescisória em reais (opcional)',
+  'market.borrow': 'Emprestar',
+  'market.borrowFor': 'Pegar {name} emprestado até o fim da temporada por {fee}',
+  'market.lend': 'Ceder',
+  'market.unlend': 'Não ceder',
+  'market.lendFor':
+    '{on, select, true {Tirar {name} da lista de empréstimo} other {Oferecer {name} por empréstimo}}',
+  'market.forLoan': 'Para empréstimo',
+  'market.onLoan': 'Emprestado pelo {club}',
   'market.renew': 'Renovar',
   'market.renewFor': 'Renovar o contrato de {name}',
   'market.freeTalk': 'Sem clube: não há taxa de transferência.',
@@ -133,7 +146,7 @@ export const ptBR = {
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
-    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
+    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
@@ -147,6 +160,10 @@ export const ptBR = {
   'inbox.contractKept': '{name} ficou mais um ano: sem ele o elenco não teria gente para jogar.',
   'inbox.contractsEnding':
     '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
+  'inbox.clausePaid': 'O {club} pagou a multa de {name}: {fee}. Ele foi embora.',
+  'inbox.loanIn': '{name} chegou por empréstimo do {club}, por {fee}.',
+  'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
+  'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
   'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
   'inbox.empty': 'Nenhuma mensagem ainda.',
   'inbox.ultimatum':

@@ -317,6 +317,21 @@ for (const width of [360, 1280]) {
     await expect(page.getByText('Renovação: ele diz quanto quer para ficar.')).toBeVisible();
     await expect(page.getByText(/^Folha: cabe mais R\$/)).toBeVisible();
 
+    // Offering a player on loan marks him too; players of other clubs show a band, not a number.
+    const spare = squad.getByRole('listitem').last();
+    await spare.getByRole('button', { name: /^Oferecer .+ por empréstimo$/ }).click();
+    await expect(spare.getByText('Para empréstimo')).toBeVisible();
+    await expect(
+      slab('Jogadores no mercado')
+        .getByText(/^\d+ a \d+$/)
+        .first(),
+    ).toBeVisible();
+    await expect(
+      slab('Jogadores no mercado')
+        .getByText(/^Potencial \d+ a \d+$/)
+        .first(),
+    ).toBeVisible();
+
     // Putting a player up for sale marks him; the other clubs' deals are told with their reasons.
     const mine = squad.getByRole('listitem').first();
     await mine.getByRole('button', { name: /^Pôr .+ à venda$/ }).click();

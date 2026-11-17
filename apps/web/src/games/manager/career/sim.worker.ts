@@ -44,6 +44,13 @@ import {
   openTalk,
   openRenewal,
   openingWage,
+  borrow,
+  cannotBorrow,
+  listForLoan,
+  loanFee,
+  ceilingRange,
+  levelRange,
+  seenLevel,
   myWageRoom,
   squadPlanOf,
   eyeOf,
@@ -60,7 +67,6 @@ import {
   positionOf,
   type BoardReason,
   type Note,
-  bestRoles,
   DRILL_TARGET,
   INTENSITIES,
   MATCH_COST,
@@ -235,7 +241,8 @@ export type MarketAct =
   | { do: 'open' | 'drop' | 'renew'; playerId: string }
   | { do: 'fee'; playerId: string; fee: number }
   | { do: 'terms'; playerId: string; terms: Terms }
-  | { do: 'list'; playerId: string; on: boolean }
+  | { do: 'list' | 'lend'; playerId: string; on: boolean }
+  | { do: 'borrow'; playerId: string }
   | { do: 'bid'; bidId: string; answer: 'accept' | 'refuse' }
   | { do: 'bid'; bidId: string; answer: 'counter'; fee: number };
 
@@ -254,6 +261,12 @@ export interface MarketPlayer {
   free: boolean;
   /** The year his contract ends; null without one. */
   until: number | null;
+  /** The band the club's eye puts his level in; `rating` is its centre. One number when sure. */
+  range: [number, number];
+  /** The same for what he may become. */
+  potential: [number, number];
+  /** His release clause; null without one. */
+  release: number | null;
 }
 export interface MarketView {
   open: boolean;
@@ -262,9 +275,21 @@ export interface MarketView {
   wageRoom: number;
   /** Forty of the other clubs' players for the position asked: those within reach first. */
   /** `asks`: the monthly wage he would open with at the person's table. */
-  targets: (MarketPlayer & { no: TalkNo | null; asks: number })[];
+  targets: (MarketPlayer & {
+    no: TalkNo | null;
+    asks: number;
+    /** The loan fee when he can be borrowed now; null otherwise. */
+    loan: number | null;
+  })[];
   /** The person's squad: what each is to the plan, and who is on the list. */
-  mine: (MarketPlayer & { part: SellerMood; listed: boolean })[];
+  mine: (MarketPlayer & {
+    part: SellerMood;
+    listed: boolean;
+    /** Offered on loan. */
+    forLoan: boolean;
+    /** Here on loan: the club that owns him, by short name; null when he is the person's. */
+    owner: string | null;
+  })[];
   /** Talks open to buy. */
   talks: {
     player: MarketPlayer;
@@ -275,6 +300,8 @@ export interface MarketView {
     /** Offers left before the other side walks away. */
     left: number;
     asking: number;
+    /** His release clause, when paying it would close the fee. */
+    release: number | null;
     fee: number | null;
     wants: Terms | null;
   }[];
@@ -316,7 +343,10 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     name: p.knownAs ?? p.name,
     age: season - Number(p.birthDate.slice(0, 4)),
     position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
-    rating: bestRoles(p.attributes, 1)[0]!.rating,
+    rating: seenLevel(w.pack, w.clubId, p),
+    range: levelRange(w.pack, w.clubId, p),
+    potential: ceilingRange(w.pack, w.clubId, p),
+    release: p.contract?.releaseFee ?? null,
     wage: p.contract?.wage ?? 0,
     value: marketValue(w.pack, p, season),
     club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
@@ -327,7 +357,7 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
   const room = myWageRoom(w);
   // Within reach: willing to talk, a price the cash covers (a club asks up to 1.7 times the
   // value for a starter it cannot replace) and an asking wage the board's ceiling takes.
-  const reach = (p: MarketPlayer & { no: TalkNo | null; asks: number }) =>
+  const reach = (p: MarketPlayer & { no: TalkNo | null; asks: number; loan: number | null }) =>
     p.no === null && (p.free || p.value * 17 <= w.ledger.cash * 10) && p.asks <= room;
   const listed = new Set(w.listed ?? []);
   return {
@@ -344,6 +374,8 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
             ? ('cover' as const)
             : ('surplus' as const),
         listed: listed.has(p.id),
+        forLoan: (w.forLoan ?? []).includes(p.id),
+        owner: w.loans?.[p.id] ? (clubs.get(w.loans[p.id]!.owner)?.shortName ?? '') : null,
       }))
       .sort((a, b) => b.rating - a.rating || (a.id < b.id ? -1 : 1)),
     targets: w.pack.players
@@ -353,7 +385,12 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
           !w.talks?.[p.id] &&
           (!position || p.positions.some((x) => x.position === position && x.level === 3)),
       )
-      .map((p) => ({ ...row(p), no: cannotTalk(w, p), asks: openingWage(w, p) }))
+      .map((p) => ({
+        ...row(p),
+        no: cannotTalk(w, p),
+        asks: openingWage(w, p),
+        loan: p.clubId && cannotBorrow(w, p, w.clubId) === null ? loanFee(w, p) : null,
+      }))
       // Within reach first: willing to talk, a value the cash covers and a wage near what the
       // club pays. A list of stars nobody here can sign is no market.
       .sort(
@@ -373,6 +410,7 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
       stage: t.stage,
       left: MAX_ROUNDS - t.round,
       asking: t.asking,
+      release: t.release ?? null,
       fee: t.fee ?? null,
       wants: t.wants ?? null,
     })),
@@ -418,6 +456,12 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       return undefined;
     case 'list':
       listPlayer(w, act.playerId, act.on);
+      return undefined;
+    case 'lend':
+      listForLoan(w, act.playerId, act.on);
+      return undefined;
+    case 'borrow':
+      borrow(w, act.playerId);
       return undefined;
     case 'fee':
       return { at: 'fee', answer: bidFee(w, act.playerId, act.fee) };
@@ -550,7 +594,13 @@ function view(w: CareerWorld, ms: number): SimView {
           byId.get(
             n.kind === 'result'
               ? n.opponent
-              : n.kind === 'bought' || n.kind === 'sold' || n.kind === 'bid'
+              : n.kind === 'bought' ||
+                  n.kind === 'sold' ||
+                  n.kind === 'bid' ||
+                  n.kind === 'clausePaid' ||
+                  n.kind === 'loanIn' ||
+                  n.kind === 'loanOut' ||
+                  n.kind === 'loanBack'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion
