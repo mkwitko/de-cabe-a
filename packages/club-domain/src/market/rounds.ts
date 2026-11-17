@@ -29,6 +29,7 @@ import {
 } from './deals';
 import { fitFor, squadPlanOf, type Need } from './plan';
 import { bargaining, levelError, seenRise, seenValue } from './judgement';
+import { lendListed } from './loans';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** The terms of a buying club's choice, in points. */
@@ -311,6 +312,8 @@ const windowOf = (day: number) => {
 export function marketRound(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
   if (w.bids?.length) w.bids = w.bids.filter((b) => day - b.day <= BID_DAYS);
+  // The players the person offered on loan go to the clubs that will play them.
+  lendListed(w);
   const done: Deal[] = [];
   const signed = new Map<string, number>();
   for (const d of w.deals ?? [])

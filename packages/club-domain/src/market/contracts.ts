@@ -117,5 +117,5 @@ export function expireContracts(w: CareerWorld): Expiry {
 /** The person's players whose contract ends with this season, by id. */
 export const endingSoon = (w: CareerWorld): string[] =>
   squadPlayers({ pack: w.pack, clubId: w.clubId })
-    .filter((p) => ends(p, w.season.season))
+    .filter((p) => ends(p, w.season.season) && !w.loans?.[p.id])
     .map((p) => p.id);

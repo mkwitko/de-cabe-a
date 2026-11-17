@@ -30,6 +30,7 @@ import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts } from '../market/contracts';
+import { returnLoans, type Loan } from '../market/loans';
 import { setJudgementClock } from '../market/judgement';
 import { carryCache } from '../lib/pack-cache';
 import { isoOf } from '../competition/calendar';
@@ -82,6 +83,10 @@ export interface CareerWorld {
   listed?: string[];
   /** Doors shut for a season: a player, or `club:player` for a bidder. */
   cold?: Record<string, number>;
+  /** Players on loan this season, by id: who owns each and the contract he returns to. */
+  loans?: Record<string, Loan>;
+  /** The person's players offered on loan. */
+  forLoan?: string[];
   /** Clubs that found nobody worth buying in the window `span` and sit the rest of it out. */
   idle?: { span: string; clubs: string[] };
 }
@@ -276,6 +281,8 @@ export interface SeasonTurn {
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
   const judged = boardAfterSeason(w);
+  // Loans end with the season: everyone goes back before the contracts are looked at.
+  returnLoans(w);
   // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
   expireContracts(w);
   const position = positionOf(w);

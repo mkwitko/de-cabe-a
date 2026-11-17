@@ -44,6 +44,8 @@ interface Saved {
   listed?: CareerWorld['listed'];
   cold?: CareerWorld['cold'];
   idle?: CareerWorld['idle'];
+  loans?: CareerWorld['loans'];
+  forLoan?: CareerWorld['forLoan'];
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -75,6 +77,8 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.listed && { listed: w.listed }),
     ...(w.cold && { cold: w.cold }),
     ...(w.idle && { idle: w.idle }),
+    ...(w.loans && { loans: w.loans }),
+    ...(w.forLoan && { forLoan: w.forLoan }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -127,5 +131,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.listed && { listed: saved.listed }),
     ...(saved.cold && { cold: saved.cold }),
     ...(saved.idle && { idle: saved.idle }),
+    ...(saved.loans && { loans: saved.loans }),
+    ...(saved.forLoan && { forLoan: saved.forLoan }),
   };
 }

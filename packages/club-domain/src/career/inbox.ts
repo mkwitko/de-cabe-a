@@ -13,7 +13,8 @@ export type Note = { day: number } & (
   | { kind: 'goal'; met: boolean; position: number; goal: number }
   | { kind: 'cashRed' }
   | { kind: 'tired'; players: number }
-  | { kind: 'bought' | 'sold'; player: string; club: string; fee: number }
+  | { kind: 'bought' | 'sold' | 'loanIn' | 'loanOut'; player: string; club: string; fee: number }
+  | { kind: 'loanBack'; player: string; club: string }
   | { kind: 'window'; open: boolean }
   | { kind: 'contractEnded' | 'contractKept'; player: string }
   | { kind: 'contractsEnding'; players: number }

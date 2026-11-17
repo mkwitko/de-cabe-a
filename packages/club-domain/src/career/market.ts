@@ -98,25 +98,37 @@ export function releasePlayer(w: CareerWorld, p: PackPlayer): void {
   if (w.lineup?.xi.includes(p.id)) delete w.lineup;
 }
 
-/** The person's side of a deal: the fee through the ledger and the note in the inbox. */
+/**
+ * The person's side of a deal: the fee through the ledger and the note in the inbox. `what`
+ * says whether the player was bought or sold for good, or only for the season.
+ */
 export function settle(
   w: CareerWorld,
   p: PackPlayer,
   other: string,
   fee: number,
   kind: 'buy' | 'sell',
+  what: 'transfer' | 'loan' = 'transfer',
 ): void {
-  postEntry(w.ledger, {
-    key: `transfer:${p.id}:${w.ledger.today}:${kind}`,
-    kind: 'transfers',
-    ref: `player:${p.id}`,
-    amount: kind === 'buy' ? -fee : fee,
-    day: w.ledger.today,
-    dueDay: w.ledger.today,
-  });
+  if (fee !== 0)
+    postEntry(w.ledger, {
+      key: `${what}:${p.id}:${w.ledger.today}:${kind}`,
+      kind: 'transfers',
+      ref: `player:${p.id}`,
+      amount: kind === 'buy' ? -fee : fee,
+      day: w.ledger.today,
+      dueDay: w.ledger.today,
+    });
   note(w, {
     day: w.day,
-    kind: kind === 'buy' ? 'bought' : 'sold',
+    kind:
+      what === 'loan'
+        ? kind === 'buy'
+          ? 'loanIn'
+          : 'loanOut'
+        : kind === 'buy'
+          ? 'bought'
+          : 'sold',
     player: p.knownAs ?? p.name,
     club: other,
     fee,

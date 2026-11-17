@@ -153,6 +153,7 @@ export function openTalk(w: CareerWorld, playerId: string): Talk {
 export function openRenewal(w: CareerWorld, playerId: string): Talk {
   const p = playerOf(w, playerId);
   if (p?.clubId !== w.clubId) throw new Error('talk: not yours');
+  if (w.loans?.[p.id]) throw new Error('talk: onLoan');
   if (w.cold?.[p.id] === w.season.season) throw new Error('talk: cold');
   const wants = renewalTerms(w, p);
   const talk: Talk = {
@@ -269,6 +270,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
 /** Puts one of the person's players on the list, or takes him off: listed players draw bids. */
 export function listPlayer(w: CareerWorld, playerId: string, on: boolean): void {
   if (playerOf(w, playerId)?.clubId !== w.clubId) throw new Error('list: not yours');
+  if (w.loans?.[playerId]) throw new Error('list: on loan');
   const listed = new Set(w.listed ?? []);
   // A player newly on the list is news: the clubs sitting the window out look again.
   if (on && !listed.has(playerId)) delete w.idle;
