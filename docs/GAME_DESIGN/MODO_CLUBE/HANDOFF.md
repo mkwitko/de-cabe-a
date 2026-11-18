@@ -172,6 +172,26 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 
   Com menos chute ruim, o time trabalha a bola até uma chance melhor. O excesso agora é só de qualidade de chance (`xG` por chute 0,172): a defesa perto do gol.
 - **Impedimento pelo tempo do lance** (2026-11-17, decisão do dono). O ajuste que piorava a leitura do passador (10% na linha, certeza a 3,6 m) foi desfeito. A leitura voltou a 30% na linha e certeza a 2 m, aplicada sobre o que ele percebe com atraso `PERCEPTION_LAG` (0,45 s). Impedimentos 1,29 por time (faixa 1,32 a 1,75). Próximo passo: o atacante que sai cedo na corrida conforme o `timing`.
+- **Atacante sozinho rumo ao gol** (2026-11-17 à noite, só medição; nada entrou).
+  - As melhores chances vêm de condução de 10 m ou mais até o chute: `xG` de 0,23 a 0,25 por chute, cerca de 1,0 de `xG` por time por jogo, de 1,57 em jogo corrido. Na hora do chute há em média 0,7 defensor de linha entre o chutador e o gol.
+  - Medida: 8,6 lances por time por jogo com o portador a menos de 25 m do gol e nenhum defensor de linha do lado do gol. Esses lances nascem depois de desarme (2,2), bola longa (2,1), passe (2,0) e passe por cima (1,2). A pressão no passador é baixa (0,17). Referência de grandes chances: cerca de 2 por time, número de memória, sem fonte conferida.
+  - Protótipos, todos revertidos:
+
+    | Protótipo | Partidas | Gols por jogo | Nota |
+    |---|---|---|---|
+    | Base | 2000 | 3,53 | |
+    | Goleiro sai a 16 m quando o atacante está sozinho | 600 | 2,93 | chutes 11,3; 5,5 abafadas por time (era 1,35) |
+    | Goleiro sai a 25 m | 600 | 2,97 | |
+    | Perseguição pelo mais próximo | 600 | 3,77 | |
+    | Goleiro a 20 m mais perseguição | 600 | 2,87 | |
+    | Linha recua 4 m com bola sem pressão | 600 | 3,97 | |
+    | Linha recua 8 m com bola sem pressão | 600 | 4,52 | |
+    | Linha sobe 4 m com bola sem pressão | 600 | 3,21 | |
+
+  - Leitura:
+    - O goleiro que sai faz efeito, mas o volume de abafadas mostra o defeito anterior: o atacante fica sozinho vezes demais.
+    - A linha que recua sem pressão, como no futebol real, piora no motor, e a que sobe melhora. O espaço que o motor entrega está entre as linhas e à frente da defesa, não nas costas dela.
+    - Próximo passo: medir a compactação (distância entre as linhas e largura) contra referência publicada e corrigir a forma sem a bola. Não inverter o princípio da linha.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
