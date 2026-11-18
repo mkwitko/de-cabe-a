@@ -139,6 +139,16 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   | Aérea | 0,56 | 0,11 | 0,06 |
 
   Ordem proposta: primeiro as faltas de disputa aérea, que estão baixas. Depois calibrar o cartão por falta, com a Série A em cerca de 0,16 amarelo por falta.
+- **Defensor recém-batido volta para a contenção** (2026-11-18, `4993c56`, `02` §5.12). Quem está até 2 m atrás do condutor também conta para a contenção. Em 2000 partidas, mesmas sementes: gols 3,53 para 3,23, gols por chute 0,137 para 0,129, chutes 12,9 para 12,5, faltas 11,5 para 12,8, amarelos 2,74 para 3,17. Cartões por tipo de falta depois da mudança (200 partidas, por time):
+
+  | Tipo | Faltas | Taxa de cartão | Amarelos |
+  |---|---|---|---|
+  | De frente | 5,40 | 0,12 | 0,66 |
+  | Por trás | 5,00 | 0,26 | 1,29 |
+  | Tática | 2,01 | 0,59 | 1,19 |
+  | Aérea | 0,47 | 0,07 | 0,03 |
+
+  As duas faixas com fonte apontam para a mesma causa: faltas abaixo (12,8 contra 13,4 a 15,9) e amarelos acima (3,17 contra 2,15 a 2,59). Faltam faltas comuns, que quase nunca dão cartão, como as das disputas aéreas. O próximo passo, a disputa aérea, depende da referência de duelos aéreos por jogo com fonte e mesma definição.
 - **Marcação que persiste** (2026-11-17, não entrou). Das marcas perdidas, 32% somem porque o atacante chega a menos de 8 m da bola, 25% porque ele fica atrás da bola e 26% por ranking. Testado em 2000 partidas: manter a marca até 3 m da bola deu 3,43 gols. Somar 8 m de vantagem a quem já é marcado na lista de perigo, mantendo a marca até 5 m, deu 3,39. A base é 3,44. Nenhuma diferença, e as duas reprovam o vão da última linha em S3. Conclusão: a escolha de quem marcar pesa pouco nos gols.
 - **Transição depois da perda alta** (2026-11-17, só medição, 40 partidas).
   - Das recuperações a até 40 m do gol adversário que viram chute, metade chuta em menos de 3 s. A bola é recuperada a cerca de 25 m do gol, quase sempre interceptando passe da saída.
