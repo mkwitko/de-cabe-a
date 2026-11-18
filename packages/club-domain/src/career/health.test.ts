@@ -11,6 +11,33 @@ import { rivalStrength, trainingOn } from './training';
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 5)[0]!.clubId;
 
+it('a better medical department means fewer and shorter injuries', () => {
+  const at = (level: number) => {
+    const w = openCareer(structuredClone(pack), 3, clubId);
+    w.pack = {
+      ...w.pack,
+      clubs: w.pack.clubs.map((c) =>
+        c.id === clubId ? { ...c, facilities: { ...c.facilities, medical: level } } : c,
+      ),
+    };
+    let n = 0;
+    let days = 0;
+    const xi = w.pack.players.filter((p) => p.clubId === clubId).map((p) => p.id);
+    for (let day = 1; day < 400; day++)
+      for (const i of Object.values(
+        hurtIn(w, xi, day, { intensity: 'normal', fresh: {}, day } as never),
+      )) {
+        n++;
+        days += i.until - i.from;
+      }
+    return { n, days: days / Math.max(1, n) };
+  };
+  const poor = at(1);
+  const good = at(5);
+  expect(good.n).toBeLessThan(poor.n);
+  expect(good.days).toBeLessThan(poor.days);
+});
+
 describe('injuries (08, corte 1)', () => {
   it('tired legs, a fragile body and a hard week all raise the risk; the kinds keep their days', () => {
     const w = openCareer(pack, 111, clubId);
@@ -41,10 +68,11 @@ describe('injuries (08, corte 1)', () => {
       );
     for (const i of all) {
       const days = i.until - i.from;
-      expect(days).toBeGreaterThanOrEqual(3);
-      expect(days).toBeLessThanOrEqual(200);
-      if (i.kind === 'serious') expect(days).toBeGreaterThanOrEqual(90);
-      if (i.kind === 'knock') expect(days).toBeLessThanOrEqual(9);
+      // The table's days, moved by the medical department (-25% to +15%).
+      expect(days).toBeGreaterThanOrEqual(2);
+      expect(days).toBeLessThanOrEqual(230);
+      if (i.kind === 'serious') expect(days).toBeGreaterThanOrEqual(68);
+      if (i.kind === 'knock') expect(days).toBeLessThanOrEqual(11);
     }
     expect(all.filter((i) => i.kind === 'muscle').length).toBeGreaterThan(
       all.filter((i) => i.kind === 'serious').length,

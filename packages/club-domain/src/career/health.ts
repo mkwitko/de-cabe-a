@@ -31,6 +31,16 @@ const TABLE: Record<InjuryKind, { share: number; days: [number, number] }> = {
 };
 /** Chance in ten thousand that a rested, ordinary starter is hurt in a match. */
 const BASE = 220;
+/**
+ * The medical department by level 1..5 (04 §6, 04 §4.7): percent on the risk of an injury and on
+ * the days out. A level 3 department is the yardstick. PARÂMETRO.
+ */
+const MEDICAL_RISK = [12, 5, 0, -8, -15] as const;
+const MEDICAL_DAYS = [15, 7, 0, -12, -25] as const;
+/** Points a level of medical department moves a rival's chance of a man short. */
+const MEDICAL_ROLL = 4;
+const medicalOf = (w: CareerWorld, clubId: string) =>
+  w.pack.clubs.find((c) => c.id === clubId)?.facilities.medical ?? 3;
 
 /** A fixed number 0..9999 for a player, a day and a purpose. */
 function draw(seed: number, id: string, day: number, salt: number): number {
@@ -94,13 +104,17 @@ export function hurtIn(
 ): Record<string, Injury> {
   const hurt: Record<string, Injury> = {};
   const players = new Map(w.pack.players.map((p) => [p.id, p]));
+  const medical = medicalOf(w, w.clubId);
   for (const id of xi) {
     const p = players.get(id);
     if (!p) continue;
     const tired = Math.round((1 - (t.fresh[id] ?? 1)) * 200);
     const prone = (p.hidden.injuryProneness - 10) * 5;
     const week = t.intensity === 'hard' ? 20 : t.intensity === 'light' ? -10 : 0;
-    const risk = Math.round((BASE * (100 + tired) * (100 + prone) * (100 + week)) / 1_000_000);
+    const care = 100 + MEDICAL_RISK[medical - 1]!;
+    const risk = Math.round(
+      (BASE * (100 + tired) * (100 + prone) * (100 + week) * care) / 100_000_000,
+    );
     if (draw(w.seed, id, day, 1) >= risk) continue;
     let pick = draw(w.seed, id, day, 2) % 100;
     let kind: InjuryKind = 'knock';
@@ -110,14 +124,23 @@ export function hurtIn(
       pick -= TABLE[k].share;
     }
     const [lo, hi] = TABLE[kind].days;
-    hurt[id] = { kind, from: day, until: day + lo + (draw(w.seed, id, day, 3) % (hi - lo + 1)) };
+    const out = lo + (draw(w.seed, id, day, 3) % (hi - lo + 1));
+    hurt[id] = {
+      kind,
+      from: day,
+      until: day + Math.max(1, Math.round((out * (100 + MEDICAL_DAYS[medical - 1]!)) / 100)),
+    };
   }
   return hurt;
 }
 
-/** Starters another club is short of on `day`: none in half its matches, one, sometimes two. */
+/**
+ * Starters another club is short of on `day`: none in about half its matches, one, sometimes
+ * two; fewer with a better medical department.
+ */
 export function rivalOut(w: CareerWorld, clubId: string, day: number): number {
-  const roll = draw(w.seed, clubId, day, 4) % 100;
+  // A better medical department keeps more of the squad on its feet.
+  const roll = (draw(w.seed, clubId, day, 4) % 100) - (medicalOf(w, clubId) - 3) * MEDICAL_ROLL;
   return roll < 55 ? 0 : roll < 88 ? 1 : 2;
 }
 /**
