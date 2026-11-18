@@ -29,6 +29,7 @@ import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
+import { agentOffers, type AgentLedger } from '../market/agents';
 import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
@@ -115,6 +116,8 @@ export interface CareerWorld {
   idle?: { span: string; clubs: string[] };
   /** The person's scouts away and the players in the club's files (market/scouting.ts). */
   scouting?: Scouting;
+  /** The person's club's standing with agents (market/agents.ts). */
+  agents?: AgentLedger;
   /** The last window deadline the person was stopped at (nextDecision with deadlines). */
   deadline?: number;
 }
@@ -159,6 +162,8 @@ function playDay(
     // for the next round.
     foreignRound(w, round);
     homecoming(w, round);
+    // Agents who work with the person's club offer players of theirs.
+    agentOffers(w, round);
   }
   scoutingDay(w, day);
   postMonths(w, w.day, day);

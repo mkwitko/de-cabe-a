@@ -143,7 +143,7 @@ export const ptBR = {
   'market.saidFee':
     '{k, select, accept {Preço fechado. Agora o contrato com o jogador.} counter {O clube não aceitou e fez um novo pedido.} insult {A oferta ofendeu o clube, que encerrou a conversa até a próxima temporada.} other {O clube encerrou a conversa até a próxima temporada.}}',
   'market.saidTerms':
-    '{k, select, accept {{name} assinou. Negócio fechado.} counter {{name} não aceitou e fez um novo pedido.} loyal {{name} não quer deixar o clube dele.} stepDown {{name} não aceita descer de nível.} role {{name} não vem para ser reserva.} other {{name} encerrou a conversa.}}',
+    '{k, select, accept {{name} assinou. Negócio fechado.} counter {{name} não aceitou e fez um novo pedido.} impatient {O empresário de {name} perdeu a paciência: o pedido subiu.} loyal {{name} não quer deixar o clube dele.} stepDown {{name} não aceita descer de nível.} role {{name} não vem para ser reserva.} other {{name} encerrou a conversa.}}',
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} refused {Proposta por {name} recusada.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
@@ -160,6 +160,12 @@ export const ptBR = {
   'market.saidScout': 'Olheiro a caminho: {area}.',
   'market.knowledge': 'Conhecimento {k}%',
   'market.unknown': 'Desconhecido',
+  'market.agent': 'Empresário: {name}{size, select, big { (grande agência)} other {}}',
+  'market.agentGreed': 'comissão {n}%',
+  'market.agentPatience': '{n, plural, one {paciência de # rodada} other {paciência de # rodadas}}',
+  'market.offered': 'Oferecidos por empresários',
+  'market.offeredInfo':
+    'Empresários que trabalham com o seu clube oferecem jogadores que encaixam no elenco. A relação melhora a cada negócio fechado e piora a cada conversa rompida.',
   'market.seenAgo':
     '{n, plural, =0 {visto este mês} one {visto há # mês} other {visto há # meses}}',
   'market.scoutCost': 'Custo da viagem: {cost}',
@@ -191,6 +197,10 @@ export const ptBR = {
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
   'inbox.solidarity':
     '{name}, formado no clube, foi vendido: a solidariedade rendeu {fee} ao caixa.',
+  'inbox.agentOffer':
+    '{agent} oferece {name}{club, select, none { (sem clube)} other {, do {club}}}. Ele está no Mercado, em Oferecidos por empresários.',
+  'inbox.homecoming':
+    '{agent}, empresário de {name}, diz que ele quer voltar do exterior e procurou o seu clube. Ele pede {wage} por mês; a conversa está aberta no Mercado.',
   'inbox.watched': 'Chegou o relatório do olheiro sobre {name}: agora você o conhece melhor.',
   'inbox.scouted':
     '{n, plural, =0 {O olheiro voltou de {area} sem nomes novos.} one {O olheiro voltou de {area} com # jogador novo nos arquivos.} other {O olheiro voltou de {area} com # jogadores novos nos arquivos.}}',
@@ -321,7 +331,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',

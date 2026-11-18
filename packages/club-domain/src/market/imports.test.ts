@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { agentOf, commission } from './agents';
 import { dayOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
 import { generateDevPack } from '../generate/pack';
@@ -44,7 +45,9 @@ describe('the foreign market (04 §4.7)', () => {
     const signed = bidTerms(w, p.id, wants);
     expect(signed.kind).toBe('accept');
     expect(w.pack.players.find((x) => x.id === p.id)!.clubId).toBe(clubId);
-    expect(w.ledger.cash).toBe(cash - talk.asking);
+    expect(w.ledger.cash).toBe(
+      cash - talk.asking - commission(agentOf(w.pack, p), talk.asking, wants.wage),
+    );
   });
 
   it('clubs with a scouting department hear of players abroad; the sold young do not come back', () => {
