@@ -109,20 +109,41 @@ export function wageRoom(w: CareerWorld, clubId: string): number {
   const room = Math.max(budgetOf(w, clubId).wageCap, lived) - bill;
   // Under an embargo nobody is registered: no wage can be added.
   if (embargoed(w, clubId)) return Math.min(0, room);
-  // Careful owners keep the squad inside the fair play limit; the bold ones find out later.
+  // Careful owners keep the squad inside the fair play limit, or a prudent share where the rule
+  // sets none; the bold ones find out later.
   if (club.profile.financialRisk < PRUDENT && clubId !== w.clubId)
     return Math.min(
       room,
-      Math.round((budgetOf(w, clubId).income * SQUAD_COST_LIMIT) / 1200) - bill,
+      Math.round((budgetOf(w, clubId).income * (costLimitOf(w, clubId) ?? PRUDENT_COST)) / 1200) -
+        bill,
     );
   return room;
 }
 
+/** Squad cost careful owners keep to where the rule sets no limit, % of income. */
+const PRUDENT_COST = 75;
+
 /**
- * Financial fair play (04 §8.2): a squad may cost up to this share of the season's income.
- * PARÂMETRO, the figure of UEFA's squad cost rule.
+ * The CBF's financial sustainability rule (04 §4.5, art. 60 and 93): the most a squad may cost,
+ * % of the season's income, by division and exercise. Série A 90% in 2026, 80% in 2027, 70%
+ * after; Série B 90% in 2026, 80% after; no limit in Série C, and Série D is outside the rule.
  */
-export const SQUAD_COST_LIMIT = 70;
+export function costLimitOf(
+  w: CareerWorld,
+  clubId: string,
+  season = w.season.season,
+): number | null {
+  const tier = tierOfClub(w, clubId);
+  if (tier === 1) return season <= 2026 ? 90 : season === 2027 ? 80 : 70;
+  if (tier === 2) return season <= 2026 ? 90 : 80;
+  return null;
+}
+
+/** True when a club's squad costs more than its division's limit allows. */
+export const overLimit = (w: CareerWorld, clubId: string): boolean => {
+  const limit = costLimitOf(w, clubId);
+  return limit !== null && squadCost(w, clubId) > limit;
+};
 /** Owners with less appetite for risk than this never plan past the limit. */
 export const PRUDENT = 50;
 
@@ -133,8 +154,8 @@ export const squadCost = (w: CareerWorld, clubId: string): number =>
 /** Seasons in a row the club ended over the limit (market/fairplay.ts). */
 export const strikesOf = (w: CareerWorld, clubId: string): number => w.fairplay?.[clubId] ?? 0;
 
-/** From the second season in a row over the limit, the club registers nobody. */
-export const embargoed = (w: CareerWorld, clubId: string): boolean => strikesOf(w, clubId) >= 2;
+/** From the third season in a row over the limit, the club registers nobody (fairplay.ts). */
+export const embargoed = (w: CareerWorld, clubId: string): boolean => strikesOf(w, clubId) >= 3;
 
 /** Counts a fee paid and a fee received in the two clubs' season. */
 export function book(w: CareerWorld, from: string, to: string, fee: number): void {

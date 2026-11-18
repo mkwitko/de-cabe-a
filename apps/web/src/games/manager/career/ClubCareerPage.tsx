@@ -907,9 +907,10 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.crop', { n: n.players });
     case 'fairplay':
       return t('inbox.fairplay', {
-        s: Math.min(3, n.strikes),
+        s: Math.min(4, n.strikes),
         cost: n.cost,
         points: n.points,
+        fine: t('career.cash', { value: n.fine ?? 0 }),
       });
     case 'fairplayRival':
       return t('inbox.fairplayRival', { club: n.clubName, points: n.points });

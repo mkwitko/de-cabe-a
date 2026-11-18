@@ -17,7 +17,8 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, wageRoom } from './books';
+import { available, book, booksOf, wageRoom } from './books';
+import { isImport } from '../career/development';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -163,6 +164,29 @@ interface Choice {
   why: Why;
 }
 
+/** Over his value a club pays to bring a player from abroad. PARÂMETRO. */
+const IMPORT_PREMIUM = 20;
+/** Over the wage he would ask at home a player wants to come from abroad. PARÂMETRO. */
+const IMPORT_WAGE = 25;
+/** Age from which a player sold abroad will come home. */
+const HOMECOMING = 30;
+
+/** A player abroad a club of the league can sign: the year's foreign market, or a veteran. */
+const signable = (p: PackPlayer, season: number) =>
+  isImport(p.id) || ageOf(p, season) >= HOMECOMING;
+
+/** The fee to bring him from abroad: it leaves the league. */
+const importFee = (w: CareerWorld, p: PackPlayer) =>
+  thousands((marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100);
+
+/** What he wants to sign, coming from his club, from nowhere or from abroad. */
+function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string) {
+  const club = (id: string) => w.pack.clubs.find((x) => x.id === id)!;
+  const from = p.clubId === null || p.clubId === ABROAD ? null : club(p.clubId);
+  const s = playerStance(w.pack, p, from, club(buyerId), w.season.season);
+  return p.clubId === ABROAD ? { ...s, wage: Math.round((s.wage * (100 + IMPORT_WAGE)) / 100) } : s;
+}
+
 /** The best signing for one need, or null: the whole market read through the club's filter. */
 function choose(
   w: CareerWorld,
@@ -174,7 +198,6 @@ function choose(
 ): Choice | null {
   const season = w.season.season;
   const read = readingsOf(w.pack);
-  const clubs = new Map(w.pack.clubs.map((c) => [c.id, c]));
   const money = available(w, buyerId);
   const room = wageRoom(w, buyerId);
   const bidOn = new Set((w.bids ?? []).map((b) => b.player));
@@ -222,7 +245,9 @@ function choose(
     )
       closed = true;
     if (closed && !(p.clubId === w.clubId && listed.has(p.id))) continue;
-    if (p.clubId === buyerId || p.clubId === ABROAD || skip.has(p.id)) continue;
+    if (p.clubId === buyerId || skip.has(p.id)) continue;
+    const abroad = p.clubId === ABROAD;
+    if (abroad && !signable(p, season)) continue;
     const theirs = p.clubId === w.clubId;
     // Without a club he costs no fee and asks nobody's leave.
     const free = p.clubId === null;
@@ -240,7 +265,7 @@ function choose(
     if (!free && w.moves?.[p.id]?.season === season) continue;
     // Out of reach whatever the club's mood: a spare still costs 80% of his value.
     if (!free && marketValue(w.pack, p, season) * 6 > money * 10) continue;
-    if (!free && !canLose(w, p)) continue;
+    if (!free && !abroad && !canLose(w, p)) continue;
     // The level the club sees must sit in what the need asks for.
     const sees = r.level + levelError(w.pack, buyerId, p);
     if (sees < need.wanted - 3 || sees > need.wanted + 12) continue;
@@ -264,15 +289,11 @@ function choose(
   for (const { p, theirs, free } of short.slice(0, SHORTLIST)) {
     const price = free
       ? 0
-      : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season).floor;
+      : p.clubId === ABROAD
+        ? importFee(w, p)
+        : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season).floor;
     if (price > money) continue;
-    const wants = playerStance(
-      w.pack,
-      p,
-      free ? null : clubs.get(p.clubId!)!,
-      clubs.get(buyerId)!,
-      season,
-    );
+    const wants = stanceFor(w, p, buyerId);
     if (wants.no || wants.wage > room) continue;
     const why = utility(w, buyerId, p, need, price, wants.wage, { money, room });
     if (why.need < REAL_NEED) continue;
@@ -289,9 +310,10 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   const season = w.season.season;
   const { p, need } = c;
   const from = p.clubId;
-  const clubs = new Map(w.pack.clubs.map((x) => [x.id, x]));
   let fee = from === null ? 0 : -1;
-  if (from !== null) {
+  // Abroad, the price is the price: paid or not.
+  if (from === ABROAD) fee = importFee(w, p) <= available(w, buyerId) ? importFee(w, p) : -1;
+  else if (from !== null) {
     const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season);
     // The most the club pays: over what it thinks he is worth by how much it needs him and by
     // how loose its office is at the table, never over its budget.
@@ -316,13 +338,7 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   }
   if (fee < 0) return null;
 
-  const wants = playerStance(
-    w.pack,
-    p,
-    from === null ? null : clubs.get(from)!,
-    clubs.get(buyerId)!,
-    season,
-  );
+  const wants = stanceFor(w, p, buyerId);
   const room = wageRoom(w, buyerId);
   let terms: Terms = {
     wage: Math.min(room, Math.round((wants.wage * 95) / 100)),
@@ -445,7 +461,11 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         until: `${season + deal.years}-12-31`,
         release: marketValue(w.pack, choice.p, season) * CLAUSE_TIMES,
       });
-      if (deal.from !== null) book(w, deal.from, id, deal.fee);
+      if (deal.from === ABROAD) {
+        // The fee leaves the league: only the buyer's books see it.
+        const b = booksOf(w, id);
+        w.books = { ...w.books, [id]: { ...b, spent: b.spent + deal.fee } };
+      } else if (deal.from !== null) book(w, deal.from, id, deal.fee);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);
       break;

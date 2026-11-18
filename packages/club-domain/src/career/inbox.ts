@@ -30,7 +30,7 @@ export type Note = { day: number } & (
   | { kind: 'bid' | 'clausePaid'; player: string; club: string; fee: number }
   | { kind: 'prize'; position: number; amount: number }
   /** The person's club ended a season over the fair play limit: the cost and what follows. */
-  | { kind: 'fairplay'; strikes: number; cost: number; points: number }
+  | { kind: 'fairplay'; strikes: number; cost: number; points: number; fine?: number }
   /** A club of the person's division starts the season with points taken off. */
   | { kind: 'fairplayRival'; club: string; points: number }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }

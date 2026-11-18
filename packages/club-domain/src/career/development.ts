@@ -219,6 +219,46 @@ export function crop(
   return out;
 }
 
+/** Players the foreign market offers each season, and their levels and ages. PARÂMETRO. */
+const IMPORTS = 60;
+const IMPORT_QUALITY: [number, number] = [55, 78];
+const IMPORT_AGES: [number, number] = [22, 32];
+
+/** True for a player of the foreign market who has not signed for a club of the league. */
+export const isImport = (id: string) => /^f\d+-/.test(id);
+
+/**
+ * The foreign market of `season` (04 §4.7): players from abroad, mostly South Americans, a
+ * Brazilian club can bring in. They sit abroad, on the wage the market pays their level, and
+ * leave the game at the season's end if nobody here signed them.
+ */
+export function imports(origin: Pack, seed: number, season: number, wages = BASE): PackPlayer[] {
+  const root = fork(rngFrom(seed), `imports:${season}`);
+  const out: PackPlayer[] = [];
+  for (let k = 0; k < IMPORTS; k++) {
+    const r = fork(root, `player:${k}`);
+    const position = SQUAD[pick(r, SQUAD.length)]!;
+    const age = IMPORT_AGES[0] + pick(r, IMPORT_AGES[1] - IMPORT_AGES[0] + 1);
+    const quality = IMPORT_QUALITY[0] + pick(r, IMPORT_QUALITY[1] - IMPORT_QUALITY[0] + 1);
+    const made = generatePlayer(r, {
+      id: `f${season}-${k}`,
+      position,
+      quality,
+      clubId: ABROAD,
+      season,
+    });
+    const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
+    const wage = priced(goingWage(origin, bestRoles(attributes, 1)[0]!.rating), wages);
+    out.push({
+      ...made,
+      birthDate: `${season - age}${made.birthDate.slice(4)}`,
+      attributes,
+      contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },
+    });
+  }
+  return out;
+}
+
 /**
  * What a season leaves behind: for each player of the pack as it stood at the season's end, in
  * the pack's order, one character with his growth for the year that follows (`codeOf`).
@@ -313,7 +353,10 @@ export function codeOf(pack: Pack, mine: Mine, released: ReadonlySet<string>): s
   const growth = growthOf(pack, mine);
   let code = '';
   for (const p of pack.players)
-    code += p.clubId === null && !released.has(p.id) ? GONE : codeFor(growth.get(p.id) ?? 100);
+    code +=
+      (p.clubId === null && !released.has(p.id)) || (p.clubId === ABROAD && isImport(p.id))
+        ? GONE
+        : codeFor(growth.get(p.id) ?? 100);
   return code;
 }
 
@@ -335,5 +378,6 @@ export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
     const youth = log.youth ? Number(log.youth[i]) : undefined;
     players.push(...crop(origin, c.id, seed, season, log.wages, youth));
   });
+  players.push(...imports(origin, seed, season, log.wages));
   return { ...pack, players };
 }

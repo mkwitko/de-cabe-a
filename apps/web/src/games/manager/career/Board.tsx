@@ -22,7 +22,7 @@ export function Board({ sim }: { sim: SimView }) {
   const b = sim.board;
   const state = stateOf(b.confidence);
   const f = b.fairplay;
-  const over = f.cost > f.limit;
+  const over = f.limit !== null && f.cost > f.limit;
   const overKey = over ? 'yes' : 'no';
   return (
     <section aria-labelledby="board-title" className="grid items-start gap-5 lg:grid-cols-2">
@@ -99,7 +99,11 @@ export function Board({ sim }: { sim: SimView }) {
             <span className="font-condensed text-4xl leading-none font-black tabular-nums">
               {t('board.fairplayCost', { n: f.cost })}
             </span>
-            <span className="text-chalk-soft">{t('board.fairplayLimit', { n: f.limit })}</span>
+            <span className="text-chalk-soft">
+              {f.limit === null
+                ? t('board.fairplayNoLimit')
+                : t('board.fairplayLimit', { n: f.limit })}
+            </span>
           </p>
           <div
             role="meter"
@@ -113,15 +117,17 @@ export function Board({ sim }: { sim: SimView }) {
               className={`block h-full rounded-full ${over ? 'bg-club-danger' : 'bg-club-turf'}`}
               style={{ width: `${Math.min(100, f.cost)}%` }}
             />
-            <span
-              aria-hidden
-              className="absolute -top-1 h-4 w-0.5 bg-chalk"
-              style={{ left: `${f.limit}%` }}
-            />
+            {f.limit !== null && (
+              <span
+                aria-hidden
+                className="absolute -top-1 h-4 w-0.5 bg-chalk"
+                style={{ left: `${f.limit}%` }}
+              />
+            )}
           </div>
           <p className={f.strikes > 0 ? 'font-semibold' : 'text-chalk-soft'}>
             {t('board.fairplayState', {
-              s: Math.min(3, f.strikes),
+              s: Math.min(4, f.strikes),
               over: overKey,
               points: f.points,
             })}

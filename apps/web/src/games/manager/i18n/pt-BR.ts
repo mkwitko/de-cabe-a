@@ -183,7 +183,7 @@ export const ptBR = {
   'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
   'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
   'inbox.fairplay':
-    '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita. Advertência.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). O clube está proibido de contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Proibido de contratar e {points} pontos a menos na tabela.}}',
+    '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita, acima do limite da CBF. Advertência pública.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). Multa de {fine}.} 3 {Fair play financeiro: terceira temporada acima do limite ({cost}%). Multa de {fine} e registro de atletas bloqueado: o clube não pode contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Multa de {fine}, registro bloqueado e {points} pontos a menos na tabela.}}',
   'inbox.fairplayRival':
     'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
   'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
@@ -219,9 +219,10 @@ export const ptBR = {
     'A direção quer {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}. Sem isso, o contrato acaba.',
   'board.fairplay': 'Fair play financeiro',
   'board.fairplayCost': '{n}%',
-  'board.fairplayLimit': 'da receita vai em salários. O limite é {n}%.',
+  'board.fairplayLimit': 'da receita vai em salários. O limite da CBF é {n}%.',
+  'board.fairplayNoLimit': 'da receita vai em salários. Esta divisão não tem limite da CBF.',
   'board.fairplayState':
-    '{s, select, 0 {{over, select, yes {Acima do limite. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e o clube fica proibido de contratar.} 2 {Proibido de contratar e de dar aumento nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Proibido de contratar. O clube começou a temporada com {points} pontos a menos.}}',
+    '{s, select, 0 {{over, select, yes {Acima do limite. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e vem multa.} 2 {Multado. Mais uma temporada acima do limite e o registro de atletas é bloqueado.} 3 {Registro bloqueado: sem contratações nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Registro bloqueado. O clube começou a temporada com {points} pontos a menos.}}',
   'board.calm': 'Sem ultimato. Abaixo de 25 de confiança, a direção dá um prazo.',
   'board.fired': 'A direção encerrou seu contrato',
   'board.firedText': 'O ultimato não foi cumprido. O {club} segue sem você.',
@@ -266,7 +267,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} prize {Premiação} fine {Multa do fair play} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',

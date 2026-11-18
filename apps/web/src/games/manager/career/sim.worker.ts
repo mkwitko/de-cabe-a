@@ -68,7 +68,7 @@ import {
   boardOf,
   squadCost,
   strikesOf,
-  SQUAD_COST_LIMIT,
+  costLimitOf,
   jobsAfter,
   nationalDivisions,
   takeJob,
@@ -166,7 +166,8 @@ export interface SimView {
     last: BoardReason[];
     fired: boolean;
     /** Financial fair play: the squad's cost against the limit, and the sanction in force. */
-    fairplay: { cost: number; limit: number; strikes: number; points: number };
+    /** `limit` is null in a division the CBF rule does not cover (Série C and D). */
+    fairplay: { cost: number; limit: number | null; strikes: number; points: number };
     /** After a dismissal: the clubs that offer the job, each with its division. */
     offers: (ClubFace & { clubId: string; division: string })[];
   };
@@ -689,7 +690,7 @@ function view(w: CareerWorld, ms: number): SimView {
       fired: boardOf(w).fired === true,
       fairplay: {
         cost: squadCost(w, w.clubId),
-        limit: SQUAD_COST_LIMIT,
+        limit: costLimitOf(w, w.clubId),
         strikes: strikesOf(w, w.clubId),
         points: s.deduct?.[w.clubId] ?? 0,
       },
