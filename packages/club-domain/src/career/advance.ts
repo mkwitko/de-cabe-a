@@ -24,6 +24,7 @@ import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
+import { fielded, hurtIn, type Injury } from './health';
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
@@ -38,7 +39,7 @@ import { carryCache } from '../lib/pack-cache';
 import { isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
-import { bestLineup, lineupOf, teamWith, type Lineup } from './squad';
+import { bestLineup, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
   clubLevels,
@@ -88,6 +89,8 @@ export interface CareerWorld {
   listed?: string[];
   /** Doors shut for a season: a player, or `club:player` for a bidder. */
   cold?: Record<string, number>;
+  /** The person's injured players: what, since when and until when (health.ts). */
+  injuries?: Record<string, Injury>;
   /** Each finished season: its moves and what the person did that the next year grew from. */
   log?: SeasonLog[];
   /** Matches each of the person's players started this season, and how many the club played. */
@@ -123,7 +126,7 @@ function playDay(
   // The person's club as it stands that day (rest and training since the last one applied).
   let training = trainingOn(w, day);
   const strength = (clubId: string) =>
-    clubId === w.clubId ? myStrength(w, training) : rivalStrength(w, clubId, day);
+    clubId === w.clubId ? myStrength(w, training, fielded(w, day)) : rivalStrength(w, clubId, day);
   const cashBefore = w.ledger.cash;
   if (windowOpen(w.day) !== windowOpen(day)) {
     note(w, { day, kind: 'window', open: windowOpen(day) });
@@ -145,8 +148,22 @@ function playDay(
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) {
       postHomeMatch(w, id, day);
-      const eleven = lineupOf(w).xi;
+      const eleven = fielded(w, day).xi;
+      // Who was hurt, read with the legs each had at kick-off.
+      const hurt = hurtIn(w, eleven, day, training);
       training = tire(training, eleven);
+      const names = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+      for (const [pid, i] of Object.entries(hurt))
+        note(w, {
+          day,
+          kind: 'injury',
+          player: names.get(pid) ?? '',
+          injury: i.kind,
+          days: i.until - day,
+        });
+      // Those back by today leave the list.
+      const still = Object.entries({ ...w.injuries, ...hurt }).filter(([, i]) => i.until > day);
+      if (still.length || w.injuries) w.injuries = Object.fromEntries(still);
       const starts = { ...w.starts };
       for (const p of eleven) starts[p] = (starts[p] ?? 0) + 1;
       w.starts = starts;
@@ -246,7 +263,7 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
   input.teams = [d.home, d.away].map((clubId) => {
     const c = { pack: w.pack, clubId };
     return clubId === w.clubId
-      ? teamWith(c, lineupOf(w), {
+      ? teamWith(c, fielded(w, d.day), {
           fresh: (id) => training.fresh[id] ?? 1,
           familiarity: drilled(training.drill),
         })

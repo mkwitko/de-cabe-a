@@ -24,6 +24,7 @@ import {
   type Lineup,
 } from './squad';
 import { formationOf } from '../match/fixture-input';
+import { MISSING, rivalOut } from './health';
 import { clubStrength } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
@@ -112,8 +113,8 @@ export function strengthWith(
 }
 
 /** The person's club's strength on `day`, with the eleven in force and the squad as it stands. */
-export function myStrength(w: CareerWorld, t: Training): number {
-  return strengthWith(w, lineupOf(w), { fresh: (id) => t.fresh[id] ?? 1, drill: t.drill });
+export function myStrength(w: CareerWorld, t: Training, lineup: Lineup = lineupOf(w)): number {
+  return strengthWith(w, lineup, { fresh: (id) => t.fresh[id] ?? 1, drill: t.drill });
 }
 
 /**
@@ -160,7 +161,11 @@ export function rivalFresh(w: CareerWorld, clubId: string, day: number): number 
   return last < 0 ? 1 : Math.min(1, 1 - MATCH_COST + RECOVERY.normal * (day - last));
 }
 
-/** Another club's level 3 strength on `day`: its rested measure, less what tired legs take. */
+/**
+ * Another club's level 3 strength on `day`: its rested measure, less what tired legs take and
+ * what the starters it is short of that day cost (health.ts).
+ */
 export const rivalStrength = (w: CareerWorld, clubId: string, day: number): number =>
   (w.strength.get(clubId) ?? 50) -
-  (w.eleven.get(clubId) ?? 0) * (1 - freshFactor(rivalFresh(w, clubId, day)));
+  (w.eleven.get(clubId) ?? 0) *
+    (1 - freshFactor(rivalFresh(w, clubId, day)) + (rivalOut(w, clubId, day) * MISSING) / 1000);

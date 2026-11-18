@@ -168,12 +168,8 @@ function main() {
   const divs = nationalDivisions(pack);
   const SEEDS = Number(process.env.SEEDS ?? 6);
   const SEASONS = Number(process.env.SEASONS ?? 3);
-  // Three clubs a division: the strongest, a middle one and the weakest by the pack's order.
-  const clubs = divs.flatMap((d) => [
-    d.clubIds[0]!,
-    d.clubIds[d.clubIds.length >> 1]!,
-    d.clubIds.at(-1)!,
-  ]);
+  // Two clubs a division: one near the top of the pack's order and one from the middle.
+  const clubs = divs.flatMap((d) => [d.clubIds[1]!, d.clubIds[d.clubIds.length >> 1]!]);
   const out: string[] = [];
   const t0 = performance.now();
 
@@ -184,6 +180,7 @@ function main() {
         runs.push(play(pack, seed * 7 + 1, clubId, policy, SEASONS));
     const seasons = runs.reduce((s, r) => s + r.seasons, 0);
     const judged = runs.reduce((s, r) => s + r.goalsJudged, 0);
+    console.error(`${policy} done`);
     out.push(
       `${policy.padEnd(6)} careers ${runs.length} seasons ${seasons}` +
         ` | fired ${pct(runs.filter((r) => r.fired !== null).length / runs.length)} of careers (${pct(runs.filter((r) => r.fired !== null).length / seasons)} a season)` +

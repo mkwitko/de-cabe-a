@@ -19,6 +19,12 @@ export type Note = { day: number } & (
   | { kind: 'contractEnded' | 'contractKept'; player: string }
   | { kind: 'contractsEnding'; players: number }
   | { kind: 'crop'; players: number }
+  | {
+      kind: 'injury';
+      player: string;
+      injury: 'knock' | 'muscle' | 'sprain' | 'serious';
+      days: number;
+    }
   | { kind: 'bid' | 'clausePaid'; player: string; club: string; fee: number }
   | { kind: 'prize'; position: number; amount: number }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }

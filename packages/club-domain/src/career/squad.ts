@@ -220,11 +220,16 @@ export function slotFamiliarity(w: ClubIn, l: Lineup): number[] {
  * The best eleven for a formation counting positions: slot by slot in the formation's order, the
  * free player with the highest slot rating (ties by id). What "the coach's eleven" offers.
  */
-export function bestLineup(w: ClubIn, formation: string): Lineup {
+export function bestLineup(
+  w: ClubIn,
+  formation: string,
+  /** Players who cannot be picked (the injured). */
+  out?: ReadonlySet<string>,
+): Lineup {
   const f = FORMATIONS[formation];
   if (!f) throw new Error(`lineup: unknown formation ${formation}`);
   const fit = slotRatings(w, formation);
-  const left = [...squad(w)];
+  const left = out ? squad(w).filter((p) => !out.has(p.id)) : [...squad(w)];
   const xi = f.roles.map((role, i) => {
     let at = -1;
     for (const [k, p] of left.entries())
