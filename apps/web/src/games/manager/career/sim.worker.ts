@@ -76,6 +76,8 @@ import {
   strikesOf,
   costLimitOf,
   clubState,
+  fameOf,
+  type Fame,
   FRONTS,
   frontLevel,
   proposeWork,
@@ -191,6 +193,8 @@ export interface SimView {
     }[];
     /** The structure's upkeep for a season. */
     upkeep: number;
+    /** How far the club's name carries (clubs.ts). */
+    fame: Fame;
     /** Who runs the club: how far they look and how well they read it (clubs.ts). */
     directors: { horizon: 'short' | 'medium' | 'long'; competence: number };
     position: number;
@@ -442,6 +446,7 @@ export interface MarketView {
       competence: 'high' | 'mid' | 'low';
       structure: { front: Front; level: number }[];
       works: Front[];
+      fame: Fame;
     };
   } | null;
   /** The club's scouts: how many it has, who is away and where they can go. */
@@ -602,6 +607,7 @@ function marketView(
                   k >= 65 ? ('high' as const) : k >= 40 ? ('mid' as const) : ('low' as const),
                 structure: FRONTS.map((front) => ({ front, level: frontLevel(c, front) })),
                 works: (st.works ?? []).map((x) => x.front),
+                fame: fameOf(w, other),
               };
             })(),
             players: w.pack.players
@@ -847,6 +853,7 @@ function view(w: CareerWorld, ms: number): SimView {
         };
       }),
       upkeep: upkeepOf(w, byId.get(w.clubId)!),
+      fame: fameOf(w, w.clubId),
       directors: (({ horizon, competence }) => ({ horizon, competence }))(
         clubState(w, w.clubId).directors,
       ),

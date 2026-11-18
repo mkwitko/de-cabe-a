@@ -11,7 +11,16 @@ import { note } from '../career/inbox';
 import { RELEASED, applyMoves, movePlayer, type Moves } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { PRUDENT, budgetOf, costLimitOf, overLimit, strikesOf, wageBill, wageRoom } from './books';
+import {
+  PRUDENT,
+  budgetOf,
+  costLimitOf,
+  overLimit,
+  squadCost,
+  strikesOf,
+  wageBill,
+  wageRoom,
+} from './books';
 import { CLAUSE_TIMES, type Terms } from './deals';
 import { squadPlanOf } from './plan';
 import { ageOf, goingWage, marketValue, readingsOf } from './value';
@@ -139,6 +148,8 @@ export function expireContracts(w: CareerWorld): Expiry {
   return out;
 }
 
+/** Squad cost a club in the red cuts to, % of income: what it can pay with the debt due. */
+const BROKE_COST = 65;
 /** A rival club carries at most this many players into a new season. */
 export const SQUAD_TARGET = 30;
 /** Age up to which a spare is a prospect, the last to be let go. */
@@ -173,11 +184,16 @@ export function trimSquads(w: CareerWorld): number {
     let size = squad.length;
     let keepers = squad.filter((p) => read.get(p.id)!.keeper).length;
     let bill = wageBill(w, club.id);
-    const cap = costLimitOf(w, club.id) ?? 100;
+    // A club in the red has to cut to what it can pay, limit or no limit.
+    const broke = (w.clubs?.[club.id]?.red ?? 0) > 0;
+    const cap = broke
+      ? Math.min(BROKE_COST, costLimitOf(w, club.id) ?? 100)
+      : (costLimitOf(w, club.id) ?? 100);
     const limit = Math.floor((budgetOf(w, club.id).income * cap) / 1200);
     const over =
-      strikesOf(w, club.id) >= (club.profile.financialRisk < PRUDENT ? 1 : 2) &&
-      overLimit(w, club.id);
+      (broke && squadCost(w, club.id) > cap) ||
+      (strikesOf(w, club.id) >= (club.profile.financialRisk < PRUDENT ? 1 : 2) &&
+        overLimit(w, club.id));
     const go = (p: PackPlayer): boolean => {
       const keeper = read.get(p.id)!.keeper;
       if (size <= KEEP || (keeper && keepers <= KEEP_KEEPERS)) return false;

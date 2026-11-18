@@ -48,6 +48,10 @@ export interface ClubState {
   kitty?: number;
   /** Seasons in a row the club ended with cash below zero. */
   red?: number;
+  /** How far its name carries; absent until the first turn: its roots (`fameOf`). */
+  fame?: Fame;
+  /** International points from players sold to Europe this season. */
+  exported?: number;
 }
 
 /** Share of the money to spare that goes into structure, by horizon. */
@@ -121,7 +125,7 @@ export function withClubs(pack: Pack, clubs: Record<string, ClubState> | undefin
   let changed = false;
   const next = pack.clubs.map((c) => {
     const s = clubs[c.id];
-    if (!s || (!s.levels && s.capacity === undefined)) return c;
+    if (!s || (!s.levels && s.capacity === undefined && !s.fame)) return c;
     changed = true;
     const l = s.levels ?? {};
     return {
@@ -137,6 +141,8 @@ export function withClubs(pack: Pack, clubs: Record<string, ClubState> | undefin
         football: l.football ?? c.departments.football,
       },
       stadium: { ...c.stadium, capacity: s.capacity ?? c.stadium.capacity },
+      // What players weigh when they choose a club: its name in the country today.
+      reputation: s.fame?.national ?? c.reputation,
     };
   });
   if (!changed) return pack;
@@ -202,9 +208,26 @@ export function settleSeason(
       12 * (wageBill(w, club.id) + (staff.get(club.id) ?? 0)) -
       upkeepOf(w, club) -
       debt;
+    s.cash -= leakOf(w, club.id, s);
     s.red = s.cash < 0 ? (s.red ?? 0) + 1 : 0;
     delete s.kitty;
   }
+}
+
+/**
+ * Money that leaves football each season once the cash passes a season's income: the
+ * speculator's dividends, the association's social club and politics, the passionate owner's
+ * vanity. A club does not sit on years of income. Percent of the excess, by owner; competent
+ * directors waste less. PARÂMETRO.
+ */
+const LEAK = { speculator: 40, passionate: 25, builder: 10, association: 30 } as const;
+
+function leakOf(w: CareerWorld, clubId: string, s: ClubState): number {
+  const excess = s.cash - budgetOf(w, clubId).income;
+  if (excess <= 0) return 0;
+  const owner = w.pack.governance.find((g) => g.clubId === clubId)?.ownerProfile ?? 'association';
+  const share = Math.max(5, LEAK[owner] - Math.round(s.directors.competence / 5));
+  return Math.round((excess * share) / 100);
 }
 
 const firstSeason = (w: CareerWorld) => w.log?.[0]?.season ?? w.season.season;
@@ -375,3 +398,94 @@ export function proposeWork(w: CareerWorld, front: Front): WorkNo | null {
 /** A front's level today, for the screen. */
 export const frontLevel = (club: PackClub, front: Front): number =>
   front === 'stadium' ? club.stadium.capacity : levelOf(club, front);
+
+// ── Fame (04 §2.2, §4.7): how far a club's name carries ─────────────────────────────────────
+
+/** How known a club is in the country, in South America and in the world, 0..100. */
+export interface Fame {
+  national: number;
+  continental: number;
+  international: number;
+}
+
+/** Points a season's campaign earns, by what it was. PARÂMETRO. */
+const FAME_GAIN = {
+  title: { national: 14, continental: 10, international: 4 },
+  /** Libertadores places: second to sixth in the Série A. */
+  libertadores: { national: 4, continental: 6, international: 1 },
+  promotion: { national: 5, continental: 0, international: 0 },
+  relegation: { national: -8, continental: -6, international: -2 },
+} as const;
+/** Share of the distance to its roots fame closes each season: titles fade, history stays. */
+const FAME_FADE = 15;
+/** International points a player sold to Europe's elite earns his club, and to the rest. */
+const EXPORT_ELITE = 2;
+const EXPORT_EUROPE = 1;
+
+/** The fame a club's history gives it, from the pack: what it fades back to. */
+export function rootsOf(club: PackClub, tier: number): Fame {
+  const r = club.reputation;
+  return {
+    national: r,
+    continental: tier === 1 ? Math.max(0, r - 25) : Math.max(0, r - 45),
+    international: tier === 1 ? Math.max(0, Math.round((r - 50) * 0.8)) : 0,
+  };
+}
+
+export const fameOf = (w: CareerWorld, clubId: string): Fame => {
+  const s = clubState(w, clubId);
+  if (s.fame) return s.fame;
+  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  return rootsOf(club, tierOfClub(w, clubId));
+};
+
+/** A player of the club sold abroad: Europe hears its name. */
+export function noteExport(w: CareerWorld, clubId: string, elite: boolean): void {
+  const s = clubsOf(w)[clubId];
+  if (s) s.exported = (s.exported ?? 0) + (elite ? EXPORT_ELITE : EXPORT_EUROPE);
+}
+
+/**
+ * The season's fame, run at the turn for every club: the campaign's points (title, Libertadores
+ * place, promotion, relegation) and the players sold to Europe, then a fade toward its roots.
+ * `place` gives each club's final position, its table's size and its tier.
+ */
+export function updateFame(
+  w: CareerWorld,
+  place: (clubId: string) => { position: number; places: number; tier: number },
+  moves: ReadonlyMap<string, 'promotion' | 'relegation'>,
+): void {
+  const clubs = clubsOf(w);
+  for (const club of w.pack.clubs) {
+    const s = clubs[club.id]!;
+    const at = place(club.id);
+    const now = { ...fameOf(w, club.id) };
+    const add = (g: Fame) => {
+      now.national += g.national;
+      now.continental += g.continental;
+      now.international += g.international;
+    };
+    if (at.tier === 1 && at.position === 1) add(FAME_GAIN.title);
+    else if (at.tier === 1 && at.position >= 2 && at.position <= 6) add(FAME_GAIN.libertadores);
+    const move = moves.get(club.id);
+    if (move) add(FAME_GAIN[move]);
+    now.international += s.exported ?? 0;
+    delete s.exported;
+    const roots = rootsOf(club, at.tier);
+    // A step toward the roots each season, at least a point while it is not there.
+    const fade = (x: number, root: number) =>
+      clamp(
+        x === root
+          ? x
+          : x +
+              Math.sign(root - x) * Math.max(1, Math.round((Math.abs(root - x) * FAME_FADE) / 100)),
+        0,
+        100,
+      );
+    s.fame = {
+      national: fade(now.national, roots.national),
+      continental: fade(now.continental, roots.continental),
+      international: fade(now.international, roots.international),
+    };
+  }
+}

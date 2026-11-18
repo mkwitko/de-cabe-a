@@ -123,8 +123,10 @@ export function wageRoom(w: CareerWorld, clubId: string): number {
   );
   const bill = wageBill(w, clubId);
   const room = Math.max(budgetOf(w, clubId).wageCap, lived) - bill;
-  // Under an embargo nobody is registered: no wage can be added.
-  if (embargoed(w, clubId)) return Math.min(0, room);
+  // Under an embargo nobody is registered: no wage can be added. Nor by a club in the red:
+  // its creditors come first (04 §4.5, unpaid wages block registration).
+  if (embargoed(w, clubId) || (clubId !== w.clubId && (w.clubs?.[clubId]?.cash ?? 0) < 0))
+    return Math.min(0, room);
   // Careful owners keep the squad inside the fair play limit, or a prudent share where the rule
   // sets none; the bold ones find out later.
   if (club.profile.financialRisk < PRUDENT && clubId !== w.clubId)

@@ -229,6 +229,9 @@ export const ptBR = {
   'market.officeBoardText':
     '{h, select, short {Imediatista} long {De longo prazo} other {Equilibrada}}, {c, select, high {bem avaliada} low {mal avaliada} other {de gestão mediana}}',
   'market.officeWork': '(em obra)',
+  'market.officeFame': 'Fama',
+  'board.fame':
+    'Fama: {national} no Brasil, {continental} na América do Sul, {international} no mundo (de 0 a 100). Títulos e campanhas aumentam; o tempo sem conquistas devolve à história do clube.',
   'board.upkeep': 'Manutenção da estrutura: {cost} por temporada, descontada mês a mês.',
   'board.front':
     '{f, select, training {Centro de treinamento} youth {Categorias de base} medical {Departamento médico} scouting {Olheiros} football {Diretoria de futebol} stadium {Estádio} other {Estrutura}}',

@@ -4,7 +4,9 @@ import { budgetOf } from '../market/books';
 import { openCareer } from './advance';
 import {
   clubsOf,
+  fameOf,
   frontLevel,
+  updateFame,
   planSeason,
   proposeWork,
   settleSeason,
@@ -115,6 +117,25 @@ describe('clubs as institutions (04 §4.7)', () => {
     planSeason(w, new Set());
     expect(w.inbox?.some((n) => n.kind === 'directors' && n.club === voter)).toBe(true);
     expect(clubsOf(w)[voter]!.directors.since).toBe(w.season.season);
+  });
+
+  it('a title makes a name; years without one fade it back to its roots', () => {
+    const w = openCareer(structuredClone(pack), 5, mine);
+    const club = w.pack.clubs.find((c) => c.id === rival)!;
+    const roots = fameOf(w, rival);
+    const champion = (id: string) => ({ position: id === rival ? 1 : 10, places: 20, tier: 1 });
+    updateFame(w, champion, new Map());
+    const won = fameOf(w, rival);
+    expect(won.national).toBeGreaterThan(roots.national);
+    expect(won.continental).toBeGreaterThan(roots.continental);
+    // The players see it: the club's reputation follows its name in the country.
+    expect(withClubs(w.pack, w.clubs).clubs.find((c) => c.id === rival)!.reputation).toBe(
+      won.national,
+    );
+    const quiet = () => ({ position: 10, places: 20, tier: 1 });
+    for (let k = 0; k < 15; k++) updateFame(w, quiet, new Map());
+    expect(fameOf(w, rival).national).toBeLessThan(won.national);
+    expect(Math.abs(fameOf(w, rival).national - club.reputation)).toBeLessThanOrEqual(2);
   });
 
   it('a level 5 front cannot be built further', () => {

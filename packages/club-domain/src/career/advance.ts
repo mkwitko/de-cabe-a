@@ -35,14 +35,16 @@ import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
 import { returnLoans, type Loan } from '../market/loans';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
-import { codeOf, youthOf, type SeasonLog } from './development';
+import { codeOf, withImports, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
-import { carryCache } from '../lib/pack-cache';
+import { WHOLE, carryCache, recache } from '../lib/pack-cache';
+import { goingWages } from '../market/value';
 import { isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
 import { nextPrices, pricesOf } from './prices';
-import { planSeason, settleSeason, withClubs, type ClubState } from './clubs';
+import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
+import { tierOfClub } from '../market/books';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
 import { bestLineup, teamWith, type Lineup } from './squad';
 import {
@@ -223,9 +225,12 @@ const clubPlays = (w: CareerWorld, day: number) =>
 export function openCareer(base: Pack, seed: number, clubId: string, day = 0): CareerWorld {
   // The career's own pack object: what is read and kept beside it (the clubs' opinions, their
   // plans) belongs to this career alone, while the readings already made of `base` carry over.
-  const pack = { ...base };
-  carryCache(base, pack, []);
-  const start = startCareer(pack, seed, clubId);
+  const opening = { ...base };
+  carryCache(base, opening, []);
+  const start = startCareer(opening, seed, clubId);
+  // The foreign market is open from the first season (04 §4.7); a new pack object, read afresh.
+  const pack = withImports(base, seed, start.season.season);
+  recache(pack, 'goingWages', WHOLE, goingWages(base));
   const w: CareerWorld = { pack, origin: base, seed, ...start, day: 0, ...clubLevels(pack) };
   note(w, { day: 0, kind: 'welcome' });
   setJudgementClock(pack, seed, w.season.season);
@@ -368,10 +373,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
       last: [...(judged.last ?? []), { kind: 'fairplay', value: verdict.board }],
     };
   // Every other club's accounts for the season, with the squads it was played with.
-  settleSeason(w, (id) => {
+  const placeOf = (id: string) => {
     const rows = divisionTableOf(w, id).rows;
     return { position: rows.findIndex((r) => r.clubId === id) + 1, places: rows.length };
-  });
+  };
+  settleSeason(w, placeOf);
   // Loans end with the season: everyone goes back before the contracts are looked at.
   returnLoans(w);
   // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
@@ -391,6 +397,13 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   const divisionId = w.season.competitions.find((c) => c.name === divisionTable(w).name)?.id;
   const year = w.season.season + 1;
   const t = finishSeason(w.season, regulationsFor(w.pack.competitions, year));
+  // How far each name carries after the season: titles, Libertadores places, promotions and
+  // relegations, players sold to Europe (clubs.ts).
+  updateFame(
+    w,
+    (id) => ({ ...placeOf(id), tier: tierOfClub(w, id) }),
+    new Map(t.moves.map((m) => [m.clubId, m.kind])),
+  );
   w.season = startSeason(w.pack, {
     season: year,
     seed: seedOf(w.seed, `season:${year}`),

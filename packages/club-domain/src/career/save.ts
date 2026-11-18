@@ -152,7 +152,8 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
   const moves = unpackMoves(base, saved.moves);
   // A log from before the yearly growth was kept by character cannot be replayed: skipped.
   const log = (saved.log ?? []).filter((l) => typeof l.growth === 'string');
-  const pack = withClubs(rebuildPack(base, seed, log, moves), saved.clubs);
+  const opening = log[0]?.season ?? (saved.season as SeasonState).season;
+  const pack = withClubs(rebuildPack(base, seed, log, moves, opening), saved.clubs);
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.

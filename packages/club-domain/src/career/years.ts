@@ -4,10 +4,10 @@
  * this one season at a time; a loaded one walks it all at once from the log, and the two arrive
  * at the same players.
  */
-import { WHOLE, carryCache, recache } from '../lib/pack-cache';
+import { WHOLE, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import type { Pack } from '../pack/schema';
-import { evolve, type SeasonLog } from './development';
+import { evolve, withImports, type SeasonLog } from './development';
 import { withMoves, type Moves } from './market';
 import { PRICE_BASE, priced } from './prices';
 
@@ -42,15 +42,12 @@ export function rebuildPack(
   seed: number,
   logs: readonly SeasonLog[],
   moves: Moves,
+  /** The season the career opened in: its foreign market is in the opening pack. */
+  opening: number,
 ): Pack {
-  let pack: Pack = { ...origin };
   goingWages(origin);
-  if (logs.length === 0) {
-    const moved = withMoves(pack, moves);
-    // Nothing evolved yet: the readings of the opening pack still hold, squads apart.
-    carryCache(origin, moved, moved === pack ? [] : origin.clubs.map((c) => c.id));
-    return moved;
-  }
+  let pack: Pack = withImports(origin, seed, opening);
+  recache(pack, 'goingWages', WHOLE, goingWages(origin));
   for (const log of logs) pack = yearOn(pack, origin, seed, log);
   const moved = withMoves(pack, moves);
   if (moved !== pack) recache(moved, 'goingWages', WHOLE, goingWages(pack));

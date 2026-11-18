@@ -267,6 +267,12 @@ export function imports(
   return out;
 }
 
+/** The pack with the foreign market of the season it opens in, as a career starts it. */
+export const withImports = (pack: Pack, seed: number, season: number): Pack => ({
+  ...pack,
+  players: [...pack.players, ...imports(pack, seed, season)],
+});
+
 /**
  * What a season leaves behind: for each player of the pack as it stood at the season's end, in
  * the pack's order, one character with his growth for the year that follows (`codeOf`).

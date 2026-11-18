@@ -160,7 +160,18 @@ O que cada traço muda:
 | Horizonte longo | 65% para estrutura, com base e CT primeiro; 10% do dinheiro do elenco pode virar folha |
 | Competência | Reserva guardada, de 0% a 20% da receita. Acerto na escolha da obra: abaixo da competência, a obra é escolhida por capricho. Ágio na mesa de compra, até 20 pontos acima do valor para a pior direção |
 
-**Mercado de fora.** Cada temporada traz 70 jogadores do exterior, nível 58 a 85 (o melhor de dois sorteios, para pesar na faixa alta), que os clubes daqui podem contratar pagando o valor mais 20% (o dinheiro sai da liga) e 25% a mais de salário. Quem foi vendido para fora volta a partir dos 30 anos. Estrangeiro não contratado sai do jogo na virada. Clube com verba de sobra (20% da receita) busca titular três pontos acima do próprio nível.
+**Dinheiro que sai do futebol.** Caixa acima de uma receita anual vaza a cada temporada: dividendos do dono especulador (40% do excesso), clube social e política da associação (30%), vaidade do dono apaixonado (25%), pouco no construtor (10%). Diretoria competente desperdiça menos (até 19 pontos a menos; mínimo de 5%). Nenhum clube senta em anos de receita. PARÂMETROS.
+
+**Fama.** Cada clube tem fama nacional, continental e internacional (0 a 100). O ponto de partida, as "raízes", sai da reputação do pacote: continental e internacional só para quem tem nome grande. Na virada:
+- título da Série A soma 14, 10 e 4;
+- vaga de Libertadores (2º a 6º) soma 4, 6 e 1;
+- acesso soma 5 na nacional;
+- rebaixamento tira 8, 6 e 2;
+- cada jogador vendido à elite europeia soma 2 na internacional, e ao resto da Europa, 1.
+
+Depois a fama anda 15% (no mínimo um ponto) de volta às raízes: título pesa por um tempo, e a história do clube fica para sempre. A fama nacional é a reputação que o jogador pesa ao escolher clube. A internacional regula quanto a Europa olha o elenco, de 70% a 130% da visibilidade da divisão. Assim o campeão perde craques, e nenhum clube fica imbatível (§4.6). Código: `career/clubs.ts`. Lacuna: patrocínio e público ainda não leem a fama.
+
+**Mercado de fora.** Cada temporada traz 70 jogadores do exterior, nível 58 a 85 (o melhor de dois sorteios, para pesar na faixa alta), que os clubes daqui podem contratar pagando o valor mais 20% (o dinheiro sai da liga) e 25% a mais de salário. O retorno de quem foi vendido para fora é o modelo de `homecoming` (abroad.ts). O mercado abre na 1ª temporada. Estrangeiro não contratado sai do jogo na virada. Clube com verba de sobra (20% da receita) busca titular três pontos acima do próprio nível.
 
 **Estrutura.** Seis frentes: CT, base, departamento médico, olheiros, diretoria de futebol (pessoas, então manutenção três vezes maior) e estádio. Cada obra sobe um nível e fica pronta na virada seguinte; havendo verba, a direção toca várias frentes ao mesmo tempo, uma obra por frente. Custos dos níveis 2 a 5, a preço de abertura: R$ 0,4 mi, 1,5 mi, 7 mi e 40 mi; a obra que faz sentido custa de 20% a 40% da receita da divisão em que ela faz sentido (§6). Manutenção anual por nível de 1 a 5: R$ 15 mil, 60 mil, 300 mil, 1,5 mi e 5 mi. O estádio ganha 15% de lugares (no mínimo 2 mil) a R$ 5 mil por lugar, e só ajuda quando lota. A direção competente olha o nível que a divisão pede (5 na Série A, 2 na D) e o estádio só quando ele enche. Todos os números são PARÂMETROS.
 

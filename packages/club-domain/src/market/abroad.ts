@@ -26,6 +26,7 @@ import { fitFor, squadPlanOf } from './plan';
 import type { Deal } from './rounds';
 import { canLose } from './talks';
 import { isImport } from '../career/development';
+import { fameOf, noteExport } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** Where a player sold abroad sits in the pack. */
@@ -58,6 +59,9 @@ const PROMISE = 80;
 const PROMISE_AGE = 21;
 /** How visible a division is to foreign scouts, in percent of Série A. */
 const VISIBILITY = [0, 100, 70, 45, 30];
+/** Visibility at no international fame, and what full fame adds, percent. PARÂMETRO. */
+const FAME_FLOOR = 70;
+const FAME_SPAN = 60;
 /** Share of a season's offers that come in the July window; the rest in January to April. */
 const JULY = 60;
 /** The first round of a window falls in its first ROUND_DAYS days (rounds.ts). */
@@ -148,7 +152,12 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
   const done: Deal[] = [];
   const clubs = [...w.season.calendar.byClub.keys()].sort();
   for (const clubId of clubs) {
-    const seen = VISIBILITY[tierOfClub(w, clubId)] ?? 0;
+    // Europe watches the clubs whose names it knows: international fame (clubs.ts) moves the
+    // division's visibility from 70% to 130% (04 §4.6: no club grows unbeatable).
+    const seen =
+      ((VISIBILITY[tierOfClub(w, clubId)] ?? 0) *
+        (FAME_FLOOR + Math.round((fameOf(w, clubId).international * FAME_SPAN) / 100))) /
+      100;
     // One draw per player of the squad, in the squad's order, whatever happens: a sale earlier
     // in the list never shifts the draws of the rest.
     for (const p of squadPlayers({ pack: w.pack, clubId })) {
@@ -181,6 +190,8 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
         continue;
       }
       sellAbroad(w, p, fee);
+      if (t.id === 'abroad:eu1' || t.id === 'abroad:eu2')
+        noteExport(w, clubId, t.id === 'abroad:eu1');
       done.push({
         day,
         player: p.id,

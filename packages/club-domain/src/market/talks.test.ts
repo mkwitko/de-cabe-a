@@ -26,7 +26,7 @@ const mine = (p: { clubId: string | null }) => p.clubId === clubId;
 /** A player the person can open a talk for and afford at the asking price. */
 const target = (w: CareerWorld) =>
   w.pack.players
-    .filter((p) => p.clubId && !mine(p) && cannotTalk(w, p) === null)
+    .filter((p) => p.clubId && p.clubId !== 'abroad' && !mine(p) && cannotTalk(w, p) === null)
     .map((p) => ({ p, s: sellerStance({ pack: w.pack, clubId: p.clubId! }, p, clubId, 2026) }))
     // Affordable at the asking price, and on a wage the board's ceiling takes.
     .filter(

@@ -62,7 +62,10 @@ describe('release clauses (07 §2)', () => {
   it('the person writes a clause into a signing, and it stays in his contract', () => {
     const w = openCareer(pack, 101, clubId);
     const target = w.pack.players
-      .filter((p) => p.clubId && p.clubId !== clubId && cannotTalk(w, p) === null)
+      .filter(
+        (p) =>
+          p.clubId && p.clubId !== 'abroad' && p.clubId !== clubId && cannotTalk(w, p) === null,
+      )
       .map((p) => ({ p, s: sellerStance({ pack: w.pack, clubId: p.clubId! }, p, clubId, 2026) }))
       .filter((x) => x.s.asking <= w.ledger.cash && (x.p.contract?.wage ?? 0) * 2 <= myWageRoom(w))
       .sort((a, b) => a.s.asking - b.s.asking || (a.p.id < b.p.id ? -1 : 1))[0];
