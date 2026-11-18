@@ -66,6 +66,8 @@ export interface Deal {
 export const ROUND_DAYS = 14;
 /** Signings a club makes in a season, at most. */
 const SIGNINGS = 4;
+/** Free agents a club may sign past that: no fee, a short wait for the paperwork. */
+const FREE_EXTRA = 2;
 /** A choice must be worth this many points to go to the table. */
 const WORTH_IT = 36;
 /** And the need itself must carry at least this much of it: no buying on promise alone. */
@@ -170,6 +172,8 @@ function choose(
   buyerId: string,
   need: Need,
   skip: ReadonlySet<string>,
+  /** Past the season's signings only free agents are looked at. */
+  freeOnly = false,
 ): Choice | null {
   const season = w.season.season;
   const read = readingsOf(w.pack);
@@ -203,6 +207,7 @@ function choose(
     const theirs = p.clubId === w.clubId;
     // Without a club he costs no fee and asks nobody's leave.
     const free = p.clubId === null;
+    if (freeOnly && !free) continue;
     // One bid at a time for a player of the person's, and none from a club already turned away.
     if (
       theirs &&
@@ -346,12 +351,14 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
   const span = windowOf(day);
   const idle = new Set(w.idle?.span === span ? w.idle.clubs : []);
   for (const { id } of order) {
-    if (idle.has(id) || (signed.get(id) ?? 0) >= SIGNINGS) continue;
+    const count = signed.get(id) ?? 0;
+    if (idle.has(id) || count >= SIGNINGS + FREE_EXTRA) continue;
+    const freeOnly = count >= SIGNINGS;
     if (squadPlayers({ pack: w.pack, clubId: id }).length >= MAX_SQUAD) continue;
     const tried = new Set<string>();
     let found = false;
     for (const need of squadPlanOf({ pack: w.pack, clubId: id }).needs.slice(0, 2)) {
-      const choice = choose(w, id, need, tried);
+      const choice = choose(w, id, need, tried, freeOnly);
       if (!choice) continue;
       found = true;
       tried.add(choice.p.id);

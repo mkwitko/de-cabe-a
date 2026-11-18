@@ -11,7 +11,15 @@ import { note } from '../career/inbox';
 import { RELEASED, applyMoves, movePlayer, type Moves } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { strikesOf, wageRoom } from './books';
+import {
+  PRUDENT,
+  SQUAD_COST_LIMIT,
+  budgetOf,
+  squadCost,
+  strikesOf,
+  wageBill,
+  wageRoom,
+} from './books';
 import { CLAUSE_TIMES, type Terms } from './deals';
 import { squadPlanOf } from './plan';
 import { ageOf, goingWage, marketValue, readingsOf } from './value';
@@ -137,6 +145,82 @@ export function expireContracts(w: CareerWorld): Expiry {
   for (const player of out.left) note(w, { day: w.day, kind: 'contractEnded', player });
   for (const player of out.kept) note(w, { day: w.day, kind: 'contractKept', player });
   return out;
+}
+
+/** A rival club carries at most this many players into a new season. */
+export const SQUAD_TARGET = 30;
+/** Age up to which a spare is a prospect, the last to be let go. */
+const PROSPECT = 21;
+
+/**
+ * The rival clubs clear the squad at the season's turn, after the contracts (04 §8.2). Only
+ * players the plan does not use go, never below `KEEP` nor the keepers a match needs:
+ *
+ *  - a club sanctioned and still over the fair play limit has to cut: careful owners at the
+ *    first warning, bold ones only once the embargo bites. The dearest spares go first, then the
+ *    dearest of those the plan uses, until the squad costs no more than the limit (a relegated
+ *    club loses its best paid);
+ *  - a squad over `SQUAD_TARGET` drops its spares down to it: the older and weaker first, the
+ *    prospects last.
+ *
+ * Contracts are ended by agreement and the players become free agents. Run once the new season
+ * stands, so the limit is read against the division the club now plays in and the year's boys
+ * count. Returns how many left.
+ */
+export function trimSquads(w: CareerWorld): number {
+  const read = readingsOf(w.pack);
+  const season = w.season.season;
+  const changes: Moves = {};
+  for (const club of w.pack.clubs) {
+    if (club.id === w.clubId) continue;
+    const c = { pack: w.pack, clubId: club.id };
+    const squad = squadPlayers(c);
+    const plan = squadPlanOf(c);
+    const used = new Set([...plan.xi, ...plan.cover]);
+    const spares = squad.filter((p) => !used.has(p.id) && !w.loans?.[p.id]);
+    let size = squad.length;
+    let keepers = squad.filter((p) => read.get(p.id)!.keeper).length;
+    let bill = wageBill(w, club.id);
+    const limit = Math.floor((budgetOf(w, club.id).income * SQUAD_COST_LIMIT) / 1200);
+    const over =
+      strikesOf(w, club.id) >= (club.profile.financialRisk < PRUDENT ? 1 : 2) &&
+      squadCost(w, club.id) > SQUAD_COST_LIMIT;
+    const go = (p: PackPlayer): boolean => {
+      const keeper = read.get(p.id)!.keeper;
+      if (size <= KEEP || (keeper && keepers <= KEEP_KEEPERS)) return false;
+      changes[p.id] = RELEASED;
+      size--;
+      if (keeper) keepers--;
+      bill -= p.contract?.wage ?? 0;
+      return true;
+    };
+    const left = new Set<string>();
+    const dearest = (a: PackPlayer, b: PackPlayer) =>
+      (b.contract?.wage ?? 0) - (a.contract?.wage ?? 0) || (a.id < b.id ? -1 : 1);
+    if (over)
+      for (const p of [
+        ...[...spares].sort(dearest),
+        ...squad.filter((x) => used.has(x.id) && !w.loans?.[x.id]).sort(dearest),
+      ]) {
+        if (bill <= limit) break;
+        if (go(p)) left.add(p.id);
+      }
+    const prospect = (p: PackPlayer) => ageOf(p, season) <= PROSPECT;
+    for (const p of spares
+      .filter((x) => !left.has(x.id))
+      .sort(
+        (a, b) =>
+          Number(prospect(a)) - Number(prospect(b)) ||
+          read.get(a.id)!.level - read.get(b.id)!.level ||
+          ageOf(b, season) - ageOf(a, season) ||
+          (a.id < b.id ? -1 : 1),
+      )) {
+      if (size <= SQUAD_TARGET) break;
+      go(p);
+    }
+  }
+  applyMoves(w, changes);
+  return Object.keys(changes).length;
 }
 
 /** The person's players whose contract ends with this season, by id. */

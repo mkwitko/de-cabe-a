@@ -105,7 +105,7 @@ export function wageRoom(w: CareerWorld, clubId: string): number {
  */
 export const SQUAD_COST_LIMIT = 70;
 /** Owners with less appetite for risk than this never plan past the limit. */
-const PRUDENT = 50;
+export const PRUDENT = 50;
 
 /** The squad's wages for a season as a percentage of the club's income. */
 export const squadCost = (w: CareerWorld, clubId: string): number =>

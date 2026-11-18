@@ -123,6 +123,9 @@ export interface PlayerStance {
   value: number;
 }
 
+/** Percent under the going wage a free agent asks. PARÂMETRO. */
+const FREE_DISCOUNT = 15;
+
 const rank = (r: Role) => (r === 'starter' ? 3 : r === 'rotation' ? 2 : r === 'prospect' ? 1 : 0);
 
 /** The role this club's plan has for him: he starts, he rotates in, or he waits. */
@@ -160,7 +163,8 @@ export function playerStance(
   const why = {
     ambition: p.personality.ambition,
     step: step >= 10 ? -10 : step <= -10 ? 20 : 0,
-    raise: from ? 5 : 0,
+    // A free agent earns nothing while he waits: he signs for less than the going wage.
+    raise: from ? 5 : -FREE_DISCOUNT,
   };
   const base = Math.max(p.contract?.wage ?? 0, goingWage(pack, r.level));
   return {

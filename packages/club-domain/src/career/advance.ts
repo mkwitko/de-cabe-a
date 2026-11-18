@@ -30,7 +30,7 @@ import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
-import { endingSoon, expireContracts } from '../market/contracts';
+import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
 import { returnLoans, type Loan } from '../market/loans';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
 import { codeOf, type SeasonLog } from './development';
@@ -436,11 +436,14 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;
   delete w.played;
+  // Each office has had another season with its players.
+  setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.moves));
+  // Rival squads cleared for the new season, read with the new clock: spares go, and
+  // sanctioned clubs cut (contracts.ts).
+  trimSquads(w);
   const levels = clubLevels(w.pack);
   w.strength = levels.strength;
   w.eleven = levels.eleven;
-  // Each office has had another season with its players.
-  setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.moves));
   // A picked eleven with someone who retired goes back to the coach.
   const here = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
   if (w.lineup?.xi.some((id) => !here.has(id))) delete w.lineup;

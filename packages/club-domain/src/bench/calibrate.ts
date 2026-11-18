@@ -24,6 +24,7 @@ import { marketValue } from '../market/value';
 import type { Pack } from '../pack/schema';
 
 type Policy = 'auto' | 'light' | 'hard' | 'seller' | 'keeper';
+const median = (xs: number[]) => (xs.length ? [...xs].sort((a, b) => a - b)[xs.length >> 1]! : 0);
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const r1 = (x: number) => Math.round(x * 10) / 10;
@@ -125,7 +126,7 @@ function world(pack: Pack, seed: number, seasons: number) {
     bill: number;
     /** Clubs warned, under embargo and docked points going into this season. */
     fair: [number, number, number];
-    /** Mean squad cost (% of income) by the tier each club is in. */
+    /** Median squad cost (% of income) by the tier each club is in. */
     cost: number[];
   }[] = [];
   const home = { w: 0, d: 0, l: 0, goals: 0, n: 0 };
@@ -147,10 +148,8 @@ function world(pack: Pack, seed: number, seasons: number) {
         strikes.filter((x) => x >= 3).length,
       ],
       cost: [1, 2, 3, 4].map((tier) =>
-        Math.round(
-          mean(
-            pack.clubs.filter((c) => tierOfClub(w, c.id) === tier).map((c) => squadCost(w, c.id)),
-          ),
+        median(
+          pack.clubs.filter((c) => tierOfClub(w, c.id) === tier).map((c) => squadCost(w, c.id)),
         ),
       ),
       deals: Object.values(w.moves ?? {}).filter((m) => m.season === w.season.season && m.clubId)
@@ -256,7 +255,7 @@ function main() {
   for (const [i, s] of w.perSeason.entries())
     out.push(
       `  season ${i + 1}: signings ${s.deals} | free agents ${s.free} | squads ${s.sizes[0]}..${s.sizes[1]} | wage bills x${r1(s.bill * 100) / 100}` +
-        ` | fair play: warned ${s.fair[0]}, embargo ${s.fair[1]}, docked ${s.fair[2]} | squad cost % by tier ${s.cost.join(' ')}`,
+        ` | fair play: warned ${s.fair[0]}, embargo ${s.fair[1]}, docked ${s.fair[2]} | median squad cost % by tier ${s.cost.join(' ')}`,
     );
   out.push(
     `  strength drift by tier after ${w.perSeason.length} seasons: ${w.drift.join(' ')} | mean age ${w.age}`,
