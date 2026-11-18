@@ -542,6 +542,36 @@ describe('containment of a carrier in our half', () => {
   });
 });
 
+describe("the target's marker on a lofted pass", () => {
+  // A long ball to a forward with a centre-back 4 m from him; another defender is nearer the drop.
+  const longBall = (cbAt: [number, number]) => {
+    const s = bare();
+    const passer = place(s, 5, 40, 34);
+    const fwd = place(s, 9, 75, 36);
+    place(s, 11, 103, 34);
+    place(s, 12, 78, 40.5); // already under the drop: he is the side's quickest
+    const cb = place(s, 13, cbAt[0], cbAt[1]);
+    s.flight = kick(
+      s,
+      passer,
+      { kind: 'long', target: { x: 78, y: 40 }, receiver: fwd, p: 1, est: 1, u: 0, ue: 0 },
+      true,
+    );
+    s.owner = null;
+    s.ball.possession = 0;
+    step(s);
+    return { fwd, cb };
+  };
+  it('goes with him to the ball, to contest it in the air', () => {
+    const { fwd, cb } = longBall([79, 33]);
+    expect(cb.intent).toBe('receive');
+    expect(dist(cb.target, fwd.target)).toBeLessThan(2.5);
+  });
+  it('a defender far from the target keeps his job', () => {
+    expect(longBall([90, 20]).cb.intent).not.toBe('receive');
+  });
+});
+
 describe('the keeper on a long ball', () => {
   // A lofted ball from a match (seed 1000): it lands near (82, 30) and runs on towards the byline.
   const longBall = (withForward: boolean) => {
