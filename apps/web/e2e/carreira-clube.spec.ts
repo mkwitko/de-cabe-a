@@ -160,7 +160,12 @@ for (const width of [360, 1280]) {
       .getByRole('button', { disabled: false })
       .first();
     const name = (await bench.getAttribute('aria-label'))!.split(',')[0]!;
+    // The pick is saved on its own; wait for it, so the plan's save below is not taken for it.
+    const picked = page.waitForResponse(
+      (r) => r.url().includes('still=1') && r.request().method() === 'PUT',
+    );
     await bench.click();
+    expect((await picked).status()).toBe(200);
     await expect(page.getByRole('heading', { name: 'Elenco' })).toBeVisible();
     await expect(board.last()).not.toHaveAttribute('aria-label', before!);
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
