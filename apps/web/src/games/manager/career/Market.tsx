@@ -50,6 +50,15 @@ function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
       {p.until !== null && <span>{t('market.until', { year: p.until })}</span>}
       <span>{t('market.potential', { lo: p.potential[0], hi: p.potential[1] })}</span>
       {p.release !== null && <span>{t('market.clause', { fee: money(p.release) })}</span>}
+      <span>
+        {t('market.agent', {
+          name: p.agent.name,
+          size: p.agent.size,
+        })}
+        {p.agent.greed !== undefined && ` · ${t('market.agentGreed', { n: p.agent.greed })}`}
+        {p.agent.patience !== undefined &&
+          ` · ${t('market.agentPatience', { n: p.agent.patience })}`}
+      </span>
       {p.knowledge !== null && (
         <span className="font-bold text-club-gold">
           {t('market.knowledge', { k: p.knowledge })}
@@ -491,7 +500,12 @@ function saidText(said: NonNullable<MarketView['said']>): string {
     });
   if (said.at === 'terms')
     return t('market.saidTerms', {
-      k: said.answer.kind === 'refuse' ? said.answer.reason : said.answer.kind,
+      k:
+        said.answer.kind === 'refuse'
+          ? said.answer.reason
+          : said.answer.kind === 'counter' && said.answer.impatient
+            ? 'impatient'
+            : said.answer.kind,
       name: said.name,
     });
   return t('market.saidBid', {
@@ -706,6 +720,33 @@ export function Market(props: {
               ))}
             </ul>
           </div>
+
+          {view.offered.length > 0 && (
+            <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+              <h3 className={LABEL}>{t('market.offered')}</h3>
+              <p className="text-sm text-chalk-soft">{t('market.offeredInfo')}</p>
+              <ul>
+                {view.offered.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+                  >
+                    <span className="min-w-0 flex-1 basis-56">
+                      <Head p={p} />
+                    </span>
+                    <button
+                      type="button"
+                      disabled={p.no !== null}
+                      className={SMALL}
+                      onClick={() => act({ do: 'open', playerId: p.id })}
+                    >
+                      {p.no === null ? t('market.talk') : t('market.no', { r: p.no })}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <Scouts key={view.scouting.away.map((m) => m.area).join()} s={view.scouting} act={act} />
 

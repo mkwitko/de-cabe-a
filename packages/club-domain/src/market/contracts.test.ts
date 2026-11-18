@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { agentOf, commission } from './agents';
 import { generateDevPack } from '../generate/pack';
 import { nextDecision, openCareer, playDecision, startNextSeason } from '../career/advance';
 import { loadCareer, saveCareer } from '../career/save';
@@ -77,8 +78,10 @@ describe('the life of a contract (07 §2, §6)', () => {
     expect(talk).toMatchObject({ seller: null, stage: 'terms', fee: 0 });
     const a = bidTerms(w, target.id, talk.wants!);
     expect(a.kind).toBe('accept');
-    expect(w.pack.players.find((p) => p.id === target.id)!.clubId).toBe(clubId);
-    expect(w.ledger.cash).toBe(cash);
+    const joined = w.pack.players.find((p) => p.id === target.id)!;
+    expect(joined.clubId).toBe(clubId);
+    // No fee; only the agent's commission, months of his wage.
+    expect(w.ledger.cash).toBe(cash - commission(agentOf(w.pack, joined), 0, talk.wants!.wage));
   });
 
   it('two seasons and their turns: contracts expire at the second, and the third plays', () => {

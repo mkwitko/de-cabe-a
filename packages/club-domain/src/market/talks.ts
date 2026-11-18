@@ -34,6 +34,8 @@ import {
   type TermsAnswer,
 } from './deals';
 import { comeBack, type Why } from './rounds';
+import { agentOf, aiCommission, commission, dealtWith, type Agent } from './agents';
+import { postEntry } from '../finance/ledger';
 import { renew, renewalTerms } from './contracts';
 import { seenLevel } from './judgement';
 import { marketValue, readingsOf, thousands } from './value';
@@ -284,9 +286,12 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
     };
   } else wants = stanceFor(w, p, w.clubId);
   const round = talk.round + 1;
-  const a = answerTerms(wants, terms, round);
-  if (a.kind === 'refuse') cool(w, playerId);
-  else if (a.kind === 'counter')
+  const agent = agentOf(w.pack, p);
+  const a = answerTerms(wants, terms, round, agent);
+  if (a.kind === 'refuse') {
+    cool(w, playerId);
+    dealtWith(w, agent, false);
+  } else if (a.kind === 'counter')
     w.talks = { ...w.talks, [playerId]: { ...talk, round, wants: a.terms } };
   else {
     if (renewal) renew(w, p, { ...a.terms, release: a.terms.release ?? null });
@@ -306,9 +311,26 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
         release: a.terms.release ?? null,
       });
     }
+    // The agent's commission, paid by the club that signs (renewals too).
+    payCommission(w, agent, p, talk.fee, a.terms.wage);
+    dealtWith(w, agent, true);
     dropTalk(w, playerId);
   }
   return a;
+}
+
+/** The person's club pays an agent his commission: a ledger entry. */
+function payCommission(w: CareerWorld, agent: Agent, p: PackPlayer, fee: number, wage: number) {
+  const amount = commission(agent, fee, wage);
+  if (amount <= 0) return;
+  postEntry(w.ledger, {
+    key: `agent:${p.id}:${w.ledger.today}`,
+    kind: 'agent',
+    ref: `player:${p.id}`,
+    amount: -amount,
+    day: w.ledger.today,
+    dueDay: w.ledger.today,
+  });
 }
 
 // ── Selling ──────────────────────────────────────────────────────────────────
@@ -422,6 +444,9 @@ export function answerBid(
     release: marketValue(w.pack, p, season) * CLAUSE_TIMES,
   });
   book(w, w.clubId, bid.from, fee, p);
+  // The buying club pays the agent; the person's club keeps the standing of the deal.
+  aiCommission(w, bid.from, p, fee, wants.wage);
+  dealtWith(w, agentOf(w.pack, p), true);
   w.listed = (w.listed ?? []).filter((x) => x !== p.id);
   w.bids = (w.bids ?? []).filter((b) => b.player !== p.id);
   w.deals = [

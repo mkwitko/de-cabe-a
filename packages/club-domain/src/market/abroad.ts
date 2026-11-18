@@ -15,7 +15,7 @@
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
-import { movePlayer, windowOf } from '../career/market';
+import { movePlayer, releasePlayer, windowOf } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import { seedOf } from '../competition/season';
 import type { PackPlayer } from '../pack/schema';
@@ -23,7 +23,8 @@ import { booksOf, solidarity, tierOfClub, wageRoom } from './books';
 import { CLAUSE_TIMES, playerStance, type PlayerStance } from './deals';
 import { fitFor, squadPlanOf } from './plan';
 import { ROUND_DAYS, type Deal } from './rounds';
-import { canLose } from './talks';
+import { canLose, cannotTalk, openTalk } from './talks';
+import { affinity, agentOf, networkOf } from './agents';
 import { isImport } from '../career/development';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -208,7 +209,9 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
  * player abroad for HOME_AFTER seasons or more draws once, by age. One who wants to come home
  * goes to the club here with the best name among those that need him at his position (a hole
  * or an upgrade his level meets) and can pay his wage; with no such club he stays abroad and
- * tries again next window. The person's club is not among them yet. Returns the moves.
+ * tries again next window. His agent offers him to the clubs he works with first; the person's
+ * club is among them when it stands well with the agent, and then he comes to its table as a
+ * free agent. Returns the moves to clubs of the world.
  */
 export function homecoming(w: CareerWorld, day: number): Deal[] {
   // The first round of each international window only.
@@ -218,8 +221,8 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
   const draw = rngFrom(seedOf(w.seed, `home:${day}`));
   const read = readingsOf(w.pack);
-  const clubs = w.pack.clubs
-    .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
+  const playing = w.pack.clubs
+    .filter((c) => w.season.calendar.byClub.has(c.id))
     .sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1));
   const done: Deal[] = [];
   // In the pack's order, one draw each, whatever happens.
@@ -233,6 +236,15 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
     // Per mille a year, half of it in each window.
     if (roll * 2000 >= chance) continue;
     const r = read.get(p.id)!;
+    // His agent offers him to the clubs he works with first, by name; the person's club only
+    // when it stands well with the agent; then the rest of the league.
+    const agent = agentOf(w.pack, p);
+    const net = networkOf(w.pack, agent);
+    const mine = affinity(w, agent) > 0;
+    const clubs = [
+      ...playing.filter((c) => (c.id === w.clubId ? mine : net.has(c.id))),
+      ...playing.filter((c) => c.id !== w.clubId && !net.has(c.id)),
+    ];
     for (const c of clubs) {
       const plan = squadPlanOf({ pack: w.pack, clubId: c.id });
       const need = [...plan.needs, ...(plan.upgrade ? [plan.upgrade] : [])].find(
@@ -244,6 +256,21 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
       if (!need) continue;
       const wants = playerStance(w.pack, p, null, c, season);
       if (wants.no || wants.wage > wageRoom(w, c.id)) continue;
+      if (c.id === w.clubId) {
+        // The person's club: he leaves his club abroad and comes to its table, through his
+        // agent, if it may talk to him (room in the squad, no embargo, no door shut).
+        if (cannotTalk(w, { ...p, clubId: null })) continue;
+        releasePlayer(w, p);
+        const talk = openTalk(w, p.id);
+        note(w, {
+          day,
+          kind: 'homecoming',
+          player: p.knownAs ?? p.name,
+          agent: agent.name,
+          wage: talk.wants?.wage ?? wants.wage,
+        });
+        break;
+      }
       movePlayer(w, p, c.id, {
         wage: wants.wage,
         until: `${season + wants.years}-12-31`,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { agentOf, commission } from './agents';
 import { dayOf } from '../competition/calendar';
 import { checkLedger } from '../finance/ledger';
 import { generateDevPack } from '../generate/pack';
@@ -71,7 +72,9 @@ describe('the person buys at two tables', () => {
     const moved = w.pack.players.find((x) => x.id === p.id)!;
     expect(moved.clubId).toBe(clubId);
     expect(moved.contract).toMatchObject({ wage: ask.wage, until: `${2026 + ask.years}-12-31` });
-    expect(w.ledger.cash).toBe(cash - s.asking);
+    expect(w.ledger.cash).toBe(
+      cash - s.asking - commission(agentOf(w.pack, p), s.asking, ask.wage),
+    );
     expect(checkLedger(w.ledger)).toEqual([]);
     expect(w.talks![p.id]).toBeUndefined();
     expect(w.books![p.clubId!]!.earned).toBe(s.asking);
@@ -110,7 +113,8 @@ describe('the person buys at two tables', () => {
     const now = w.pack.players.find((x) => x.id === p.id)!;
     expect(now.clubId).toBe(clubId);
     expect(now.contract).toMatchObject({ wage: ask.wage, until: `${2026 + ask.years}-12-31` });
-    expect(w.ledger.cash).toBe(cash);
+    // A renewal costs no fee, only the agent's commission.
+    expect(w.ledger.cash).toBe(cash - commission(agentOf(w.pack, now), 0, ask.wage));
   });
 
   it('an insulting offer shuts the door for the season; talks survive the save', () => {

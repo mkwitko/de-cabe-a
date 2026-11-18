@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 16;
+export const CAREER_RULES_VERSION = 17;
 
 interface Saved {
   v: number;
@@ -49,6 +49,7 @@ interface Saved {
   cold?: CareerWorld['cold'];
   scouting?: CareerWorld['scouting'];
   deadline?: CareerWorld['deadline'];
+  agents?: CareerWorld['agents'];
   idle?: CareerWorld['idle'];
   loans?: CareerWorld['loans'];
   forLoan?: CareerWorld['forLoan'];
@@ -134,6 +135,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.cold && { cold: w.cold }),
     ...(w.scouting && { scouting: w.scouting }),
     ...(w.deadline !== undefined && { deadline: w.deadline }),
+    ...(w.agents && { agents: w.agents }),
     ...(w.idle && { idle: w.idle }),
     ...(w.loans && { loans: w.loans }),
     ...(w.forLoan && { forLoan: w.forLoan }),
@@ -191,6 +193,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.cold && { cold: saved.cold }),
     ...(saved.scouting && { scouting: saved.scouting }),
     ...(saved.deadline !== undefined && { deadline: saved.deadline }),
+    ...(saved.agents && { agents: saved.agents }),
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),
