@@ -204,6 +204,23 @@ describe('crosses (02 §6.3)', () => {
     const far = crosses.find((a) => a.target.y > 36)!;
     for (const a of crosses) if (a !== far) expect(far.p).toBeGreaterThan(a.p);
   });
+  // A defender a step ahead of the attacker at the spot does not win the ball outright: the
+  // attacker arrives in time to jump with him (engine: aerial duel, AERIAL_CLOSE).
+  const atSpot = (attackerHeight: number) => {
+    const s = bare();
+    const c = place(s, 7, 92, 6);
+    const a = place(s, 9, 95, 34);
+    a.input.heightCm = attackerHeight;
+    place(s, 12, 94, 34);
+    place(s, 11, 104, 34);
+    return candidates(s, c, 'open').find((x) => x.kind === 'cross' && x.target.x === 94)!;
+  };
+  it('a team-mate level with his marker at the spot is a duel, not a lost ball', () => {
+    expect(atSpot(180).p).toBeGreaterThan(0.15);
+  });
+  it('the duel is worth more for a team-mate who is better in the air', () => {
+    expect(atSpot(198).p).toBeGreaterThan(atSpot(168).p);
+  });
 });
 
 describe('the passer judges the pass he plays', () => {
