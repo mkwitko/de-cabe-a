@@ -164,6 +164,36 @@ const byPosition = (pack: Pack) =>
     return by;
   });
 
+/** A rival choice within this many points of the refused one: the club turns to it instead. */
+const ALTERNATIVE = 10;
+
+/**
+ * What a club does after the person turns down its first bid. It looks again at the market for
+ * the same need: with someone else nearly as good, it goes after him instead. Without, it comes
+ * back once with more, more the more it needs him (a quarter to three quarters of the way to the
+ * most it pays), and sooner the more it needs him. Null: it leaves.
+ */
+export function comeBack(
+  w: CareerWorld,
+  bid: { from: string; player: string; fee: number; most: number; why: Why },
+): { fee: number; day: number } | null {
+  if (bid.most <= bid.fee) return null;
+  const p = w.pack.players.find((x) => x.id === bid.player);
+  if (!p) return null;
+  const read = readingsOf(w.pack).get(p.id)!;
+  const plan = squadPlanOf({ pack: w.pack, clubId: bid.from });
+  const need = [...plan.needs, ...(plan.upgrade ? [plan.upgrade] : [])].find(
+    (n) => n.keeper === read.keeper && p.positions.some((x) => n.positions.includes(x.position)),
+  );
+  if (!need) return null;
+  const other = choose(w, bid.from, need, new Set([p.id]));
+  if (other && total(other.why) >= total(bid.why) - ALTERNATIVE) return null;
+  const share = Math.max(25, Math.min(75, 25 + Math.round(bid.why.need / 2)));
+  const fee = thousands(bid.fee + ((bid.most - bid.fee) * share) / 100);
+  if (fee <= bid.fee) return null;
+  return { fee, day: w.day + 7 + Math.round((100 - Math.min(100, bid.why.need)) / 10) };
+}
+
 interface Choice {
   p: PackPlayer;
   need: Need;

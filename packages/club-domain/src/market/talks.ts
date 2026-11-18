@@ -33,7 +33,7 @@ import {
   type Terms,
   type TermsAnswer,
 } from './deals';
-import type { Why } from './rounds';
+import { comeBack, type Why } from './rounds';
 import { renew, renewalTerms } from './contracts';
 import { seenLevel } from './judgement';
 import { marketValue, readingsOf, thousands } from './value';
@@ -63,10 +63,6 @@ export interface Talk {
 }
 
 /** A bid from another club for one of the person's players. */
-/** Days before a refused club comes back, and how much more it offers, in percent. PARÂMETROS. */
-const RETURN_DAYS = 10;
-const RETURN_RAISE = 15;
-
 export interface Bid {
   id: string;
   player: string;
@@ -336,8 +332,8 @@ const closeBid = (w: CareerWorld, id: string) => {
 export type BidAnswer =
   | { kind: 'sold'; fee: number }
   | { kind: 'raised'; fee: number }
-  /** Refused, but the club will come back once with a better offer. */
-  | { kind: 'later' }
+  /** Refused: whether the club comes back with more, the person learns only if it does. */
+  | { kind: 'refused' }
   | { kind: 'withdrawn'; reason: 'tooDear' | 'squadThin' | 'budget' | PlayerNo };
 
 /**
@@ -359,14 +355,17 @@ export function answerBid(
     return { kind: 'withdrawn', reason };
   };
   if (answer.kind === 'refuse') {
-    // A first bid turned down: a club that can pay more comes back once, a little later, with a
-    // better one; a club already at its limit, or refused again, leaves.
-    const better = Math.min(bid.most, thousands((bid.fee * (100 + RETURN_RAISE)) / 100));
-    if (bid.round > 1 || bid.again !== undefined || better <= bid.fee) return leave('tooDear');
+    // Refused once, the club thinks again (rounds.ts comeBack): another target, or back later
+    // with more. Refused twice, it leaves.
+    const back = bid.round > 1 || bid.again !== undefined ? null : comeBack(w, bid);
+    if (!back) {
+      leave('tooDear');
+      return { kind: 'refused' };
+    }
     w.bids = (w.bids ?? []).map((b) =>
-      b.id === id ? { ...b, fee: better, round: 2, day: w.day + RETURN_DAYS, again: true } : b,
+      b.id === id ? { ...b, fee: back.fee, round: 2, day: back.day, again: true } : b,
     );
-    return { kind: 'later' };
+    return { kind: 'refused' };
   }
   let fee = bid.fee;
   if (answer.kind === 'counter') {
