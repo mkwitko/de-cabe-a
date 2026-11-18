@@ -4,7 +4,7 @@ import { openCareer } from '../career/advance';
 import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers } from '../career/start';
 import { dayOf } from '../competition/calendar';
-import { ABROAD, foreignRound, isAbroad } from './abroad';
+import { ABROAD, foreignRound, homecoming, isAbroad } from './abroad';
 import { booksOf } from './books';
 import { roundsBetween } from './rounds';
 import { cannotTalk } from './talks';
@@ -44,5 +44,27 @@ describe('the exodus abroad', () => {
     const back = loadCareer(pack, 91, clubId, saveCareer(a));
     for (const d of da)
       expect(back.pack.players.find((p) => p.id === d.player)!.clubId).toBe(ABROAD);
+  });
+
+  it('players come home from their second season, to a club here that needs them', () => {
+    const w = openCareer(pack, 91, clubId);
+    const gone = new Set(SEASON.flatMap((d) => foreignRound(w, d)).map((d) => d.player));
+    // The same season: nobody turns round at once.
+    expect(homecoming(w, dayOf('2026-07-01') + 1)).toEqual([]);
+    // Ten years on, in the January and July windows.
+    w.season = { ...w.season, season: 2036 };
+    const back = [];
+    for (let y = 0; y < 3; y++)
+      for (const iso of [`2036-01-0${1 + y}`, `2036-07-0${1 + y}`])
+        back.push(...homecoming(w, dayOf(iso)));
+    expect(back.length).toBeGreaterThan(0);
+    for (const d of back) {
+      expect(gone.has(d.player)).toBe(true);
+      expect(d.from).toBe(ABROAD);
+      expect(d.to).not.toBe(clubId);
+      expect(w.pack.players.find((p) => p.id === d.player)!.clubId).toBe(d.to);
+    }
+    // Outside a window's opening fortnight, nobody.
+    expect(homecoming(w, dayOf('2036-03-20'))).toEqual([]);
   });
 });

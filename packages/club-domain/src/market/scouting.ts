@@ -46,6 +46,8 @@ export interface Scouting {
 export const MISSION_DAYS = 28;
 /** Scouts the club can have away at once, by scouting department 1..5. */
 const SCOUTS = [1, 1, 2, 2, 3] as const;
+/** Level from which a player without a club is known to every club. PARÂMETRO. */
+const FAMOUS = 63;
 /** Knowledge of a player any club would know, in percent. */
 export const BASE = 25;
 /** Points a report adds, by scouting department 1..5. */
@@ -151,7 +153,9 @@ function rivalsOf(w: CareerWorld, clubId: string): Set<string> {
 export function clubKnows(w: CareerWorld, clubId: string, p: PackPlayer): boolean {
   if (p.clubId === clubId) return true;
   if (p.clubId === ABROAD) return false;
-  if (p.clubId === null) return knows(w.pack, clubId, p, null, false);
+  // A good player without a club is news (a star home from abroad, a veteran let go): all know.
+  if (p.clubId === null)
+    return readingsOf(w.pack).get(p.id)!.level >= FAMOUS || knows(w.pack, clubId, p, null, false);
   if (rivalsOf(w, clubId).has(p.clubId)) return true;
   return knows(
     w.pack,
