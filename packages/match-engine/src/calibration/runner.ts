@@ -2,15 +2,21 @@
  * Runs many matches across worker threads (calibration, zebra suite, preset
  * tournament). Results come back in input order, so a run is reproducible.
  */
-import { cpus } from 'node:os';
+import { cpus, setPriority } from 'node:os';
 import { Worker } from 'node:worker_threads';
 import type { MatchInput } from '../contract';
 import type { Summary } from './summary';
 
 export async function runMany(
   inputs: MatchInput[],
-  threads = Math.max(1, cpus().length - 2),
+  threads = Number(process.env.CAL_THREADS) || Math.max(1, cpus().length - 2),
 ): Promise<Summary[]> {
+  // A batch run is background work: lowest CPU priority, so the machine stays usable.
+  try {
+    setPriority(19);
+  } catch {
+    // not allowed here: run at normal priority
+  }
   const out: Summary[] = new Array(inputs.length);
   let nextJob = 0;
   const url = new URL('./worker.ts', import.meta.url);

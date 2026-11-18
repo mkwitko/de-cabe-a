@@ -1,8 +1,11 @@
 /**
  * MC-044: the statistical bench against 02 §11. Run:
  *   pnpm --filter @decabeca/match-engine exec tsx src/calibration/calibrate.ts [matches]
- * Prints each line with its band and a verdict.
+ * Prints each line with its band and a verdict. CAL_THREADS caps the worker threads.
+ * DUMP=file keeps every match summary; compare two dumps (same seeds) with
+ *   npx tsx src/calibration/paired.ts a.json b.json
  */
+import { writeFileSync } from 'node:fs';
 import { matchInput } from '../match/fixture';
 import { runMany } from './runner';
 
@@ -26,6 +29,7 @@ async function main() {
   const n = Number(process.argv[2] ?? 60);
   const t0 = Date.now();
   const rs = await runMany(Array.from({ length: n }, (_, i) => matchInput(1000 + i)));
+  if (process.env.DUMP) writeFileSync(process.env.DUMP, JSON.stringify(rs));
   const sum = (f: (s: (typeof rs)[number]) => number) => rs.reduce((a, s) => a + f(s), 0) / n;
   const both = (k: keyof (typeof rs)[number]) =>
     sum((s) => (s[k] as [number, number])[0] + (s[k] as [number, number])[1]);
