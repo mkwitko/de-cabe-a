@@ -5,12 +5,12 @@
  * and the ball is then sent where that outcome puts it (wide, saved or in).
  */
 import { GRAVITY, groundPass, type Ball } from '../ball';
-import { weighted } from '../rules/duel';
+import { norm, pressResistance, weighted } from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
 import { lineOf } from '../team';
-import { groundSpeed, opponents, pressureOn } from './control';
+import { footBlock, groundSpeed, leadTarget, opponents, pressureOn, shotClear } from './control';
 import { emit } from './events';
 import type { Action } from './carrier';
 import type { Flight, MatchPlayer, MatchState } from './state';
@@ -23,7 +23,7 @@ const g = (s: MatchState) => gaussian(() => next(s.rngs.execution));
  * PARAMETERS: base and crowd share.
  */
 export const homeEdge = (s: MatchState, team: 0 | 1) =>
-  team === 0 ? 0.05 + 0.1 * s.input.conditions.crowd : 0;
+  team === 0 ? 0.08 + 0.14 * s.input.conditions.crowd : 0;
 
 /** Rotates (vx, vy) by a small angle θ and renormalises (no trigonometry). */
 function turn(vx: number, vy: number, theta: number): [number, number] {
@@ -34,12 +34,31 @@ function turn(vx: number, vy: number, theta: number): [number, number] {
 }
 
 /** Angular error of a pass in radians (PARAMETERS). */
+/**
+ * About a quarter of kicks fall to the weaker foot (ADR-019): the error grows
+ * by how weak that foot is. Two-footed players have no weaker side. PARAMETER.
+ */
+export function footFactor(s: MatchState, c: MatchPlayer): number {
+  if (c.input.preferredFoot === 'both' || next(s.rngs.execution) > 0.25) return 1;
+  return 1 + 0.8 * (1 - c.attrs.weakFoot / 99);
+}
+
 export function passError(s: MatchState, c: MatchPlayer, d: number): number {
-  const skill = weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
+  // The keeper's passing is his distribution (ADR-019).
+  const skill =
+    lineOf(c.role) === 'gk'
+      ? weighted(c.attrs, { distribution: 0.6, passing: 0.25, composure: 0.15 })
+      : weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
   const sigma =
-    (0.012 + 0.05 * (1 - skill) + 0.025 * pressureOn(s, c) + 0.0006 * d + 0.03 * (1 - c.stamina)) *
-    (1 - homeEdge(s, c.team));
-  return g(s) * sigma;
+    (0.012 +
+      0.05 * (1 - skill) +
+      0.04 * pressureOn(s, c) * (1.3 - pressResistance(c.attrs)) +
+      0.0006 * d +
+      0.03 * (1 - c.stamina)) *
+    (1 - homeEdge(s, c.team)) *
+    // First time is harder; technique makes it clean (PARAMETER).
+    (c.firstTime ? 1.5 - 0.5 * norm(c.attrs.technique) : 1);
+  return g(s) * sigma * footFactor(s, c);
 }
 
 function lofted(from: Vec2, to: Vec2, h: number): Ball {
@@ -84,23 +103,22 @@ function beside(s: MatchState, c: MatchPlayer, ux: number, uy: number): number[]
       const dx = o.pos.x - c.pos.x;
       const dy = o.pos.y - c.pos.y;
       const d = Math.sqrt(dx * dx + dy * dy);
-      return d < 1.6 && (d < 1e-6 || (dx * ux + dy * uy) / d < 0.7);
+      if (d >= 1.6) return false;
+      if (d < 1e-6 || (dx * ux + dy * uy) / d < 0.7) return true;
+      // In front of the kick: a leg gets to it only part of the time (footBlock).
+      return next(s.rngs.execution) > footBlock(o, c, ux, uy);
     })
     .map((o) => o.index);
 }
 
+/** A cross is whipped in at pace across the runners: harder to land than a long pass (PARAMETER, cross accuracy about 22% to 25%). */
+const CROSS_ERROR = 1.8;
+
 export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolean): Flight {
   const from = { ...c.pos };
   // Lead a moving receiver: aim where he will be when the ball arrives (at most 1.5 s ahead).
-  if ((a.kind === 'pass' || a.kind === 'long') && a.receiver) {
-    const r = a.receiver;
-    const d0 = Math.sqrt((r.pos.x - from.x) ** 2 + (r.pos.y - from.y) ** 2);
-    const lead = Math.min(1.5, d0 / (a.kind === 'long' ? 18 : 14));
-    a.target = {
-      x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5),
-      y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5),
-    };
-  }
+  if ((a.kind === 'pass' || a.kind === 'long') && a.receiver)
+    a.target = leadTarget(from, a.receiver, a.kind === 'long');
   const dx = a.target.x - from.x;
   const dy = a.target.y - from.y;
   const d = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -115,15 +133,19 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     ball = groundPass(from, target, 1);
     const v = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy) || 1;
     [ball.vx, ball.vy] = turn((ball.vx / v) * spd, (ball.vy / v) * spd, passError(s, c, d));
-  } else if (a.kind === 'long' || a.kind === 'cross' || a.kind === 'clear') {
-    kind = a.kind === 'long' ? 'pass' : a.kind;
+  } else if (a.kind === 'long' || a.kind === 'over' || a.kind === 'cross' || a.kind === 'clear') {
+    kind = a.kind === 'long' || a.kind === 'over' ? 'pass' : a.kind;
     const skill =
       a.kind === 'cross'
-        ? weighted(c.attrs, { crossing: 0.7, technique: 0.3 })
-        : weighted(c.attrs, { passing: 0.6, technique: 0.4 });
+        ? weighted(c.attrs, { crossing: 0.6, technique: 0.2, longPassing: 0.2 })
+        : lineOf(c.role) === 'gk'
+          ? weighted(c.attrs, { distribution: 0.6, longPassing: 0.25, technique: 0.15 })
+          : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
     // Landing error grows with distance and falls with skill (PARAMETERS).
     const err =
-      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) * d * (a.kind === 'clear' ? 2 : 1);
+      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c) + 0.04 * (1 - c.stamina)) *
+      d *
+      (a.kind === 'clear' ? 2 : a.kind === 'cross' ? CROSS_ERROR : 1);
     const land = {
       x: clamp(a.target.x + g(s) * err * 0.6, 0.5, LENGTH - 0.5),
       y: clamp(a.target.y + g(s) * err * 0.6, 0.5, WIDTH - 0.5),
@@ -139,8 +161,9 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
       d: Math.round(d),
       p: Math.round(a.p * 100),
       chosen: Math.round(a.u * 1000),
-      kind: ['pass', 'through', 'long', 'cross', 'clear'].indexOf(a.kind),
+      kind: ['pass', 'through', 'long', 'cross', 'clear', 'over'].indexOf(a.kind),
       pr: Math.round(pressureOn(s, c) * 10),
+      ...(c.firstTime ? { firstTime: 1 } : {}),
     });
   } else if (kind === 'cross') {
     emit(s, 'pass', team, c.index, null, from, { d: Math.round(d), cross: 1 });
@@ -148,7 +171,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     const closer = opponents(s, team).find(
       (o) => Math.sqrt((o.pos.x - from.x) ** 2 + (o.pos.y - from.y) ** 2) < 2.5,
     );
-    if (closer && next(s.rngs.execution) < 0.5) blocked = closer.index;
+    if (closer && next(s.rngs.execution) < 0.58) blocked = closer.index;
   }
   return {
     ball,
@@ -156,6 +179,7 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     to: a.receiver?.index ?? null,
     kind,
     skip: [c.index, ...beside(s, c, dx / d, dy / d)],
+    origin: from,
     offside,
     beaten: false,
     shot: null,
@@ -164,11 +188,13 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
 }
 
 /** Finishing and composure shift conversion by −25%..+25% between 40 and 90 (02 §7). PARAMETER. */
-export const finisherFactor = (c: MatchPlayer, header: boolean) =>
+export const finisherFactor = (c: MatchPlayer, header: boolean, far = false) =>
   1 +
   (header
     ? weighted(c.attrs, { heading: 0.6, jumping: 0.2, composure: 0.2 })
-    : weighted(c.attrs, { finishing: 0.6, composure: 0.25, technique: 0.15 })) -
+    : far
+      ? weighted(c.attrs, { longShots: 0.6, technique: 0.25, composure: 0.15 })
+      : weighted(c.attrs, { finishing: 0.6, composure: 0.25, technique: 0.15 })) -
   0.65;
 
 export const keeperFactor = (k: MatchPlayer | undefined) =>
@@ -190,10 +216,17 @@ export function shoot(
   const header = opts.header ?? false;
   const chance = opts.chance ?? a.chance ?? 0.05;
   const keeper = opponents(s, team).find((p) => lineOf(p.role) === 'gk');
+  // xG already counts the shots that bodies block (the published models are fitted on all
+  // shots); the flight blocks them physically, so a shot that gets through scores at
+  // chance / clear and goals match xG on average (02 §7). Not for a penalty or a header.
+  const through = opts.penalty || header ? 1 : Math.max(0.3, shotClear(s, c));
   const pGoal = clamp(
-    chance *
-      finisherFactor(c, header) *
+    (chance / through) *
+      finisherFactor(c, header, flip(team, c.pos).x < LENGTH - 18) *
+      (header ? 1 : 1 / footFactor(s, c)) *
       keeperFactor(keeper) *
+      // A tired finisher strikes it less cleanly (PARAMETER: −15% at zero stamina).
+      (1 - 0.15 * (1 - c.stamina)) *
       (1 + homeEdge(s, team) - homeEdge(s, team === 0 ? 1 : 0)),
     0.002,
     0.97,
@@ -205,7 +238,14 @@ export function shoot(
   const pOn = opts.penalty
     ? 0.92
     : clamp(
-        Math.max(pGoal + 0.04, 0.28 + 0.3 * (skill - 0.6) - 0.08 * pressureOn(s, c) + 0.6 * chance),
+        Math.max(
+          pGoal + 0.04,
+          0.28 +
+            0.3 * (skill - 0.6) -
+            0.08 * pressureOn(s, c) -
+            0.04 * (1 - c.stamina) +
+            0.6 * chance,
+        ),
         0,
         0.98,
       );
@@ -254,6 +294,7 @@ export function shoot(
     penalty: opts.penalty ? 1 : 0,
     x: Math.round(me.x),
     decided: goal ? 1 : 0,
+    ...(c.firstTime ? { firstTime: 1 } : {}),
   });
   return {
     ball,

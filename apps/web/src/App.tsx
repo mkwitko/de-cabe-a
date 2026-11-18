@@ -88,6 +88,9 @@ const SandboxPage = lazy(() =>
 const FriendlyPage = lazy(() =>
   import('./games/manager/FriendlyPage').then((m) => ({ default: m.FriendlyPage })),
 );
+const ClubCareerPage = lazy(() =>
+  import('./games/manager/career/ClubCareerPage').then((m) => ({ default: m.ClubCareerPage })),
+);
 const CareerPage = lazy(() =>
   import('./pages/CareerPage').then((m) => ({ default: m.CareerPage })),
 );
@@ -583,6 +586,7 @@ function PublicRoutes() {
             <Route path="/carreira" element={<CareerPage />} />
             <Route path="/tecnico/sandbox" element={<SandboxPage />} />
             <Route path="/tecnico/amistoso" element={<FriendlyPage />} />
+            <Route path="/tecnico/carreira" element={<ClubCareerPage />} />
             <Route path="/copa" element={<CopaPage />} />
             <Route path="/oficina" element={<OficinaPage />} />
             <Route path="/oficina/criar" element={<OficinaCreatePage />} />

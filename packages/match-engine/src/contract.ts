@@ -30,6 +30,11 @@ export const TECHNICAL = [
   'tackling',
   'marking',
   'setPieces',
+  // ADR-019: `passing` is short passing; long balls, long shots, weaker foot and shielding apart.
+  'longPassing',
+  'longShots',
+  'weakFoot',
+  'shielding',
 ] as const;
 export const MENTAL = [
   'decisions',
@@ -43,6 +48,22 @@ export const MENTAL = [
   'workRate',
   'leadership',
   'aggression',
+  'bravery',
+  'determination',
+  'flair',
+] as const;
+/** Perception and tactical execution (ADR-019; research 15 to 17). */
+export const TACTICAL = [
+  'scanning',
+  'spatialAwareness',
+  'tacticalReading',
+  'bodyOrientation',
+  'discipline',
+  'timing',
+  'pressing',
+  'covering',
+  'lossReaction',
+  'communication',
 ] as const;
 export const PHYSICAL = [
   'acceleration',
@@ -52,6 +73,8 @@ export const PHYSICAL = [
   'strength',
   'stamina',
   'jumping',
+  'recovery',
+  'deceleration',
 ] as const;
 export const GOALKEEPING = [
   'reflexes',
@@ -60,8 +83,15 @@ export const GOALKEEPING = [
   'commandOfArea',
   'distribution',
   'gkPositioning',
+  'sweeping',
 ] as const;
-export const ATTRIBUTES = [...TECHNICAL, ...MENTAL, ...PHYSICAL, ...GOALKEEPING] as const;
+export const ATTRIBUTES = [
+  ...TECHNICAL,
+  ...MENTAL,
+  ...TACTICAL,
+  ...PHYSICAL,
+  ...GOALKEEPING,
+] as const;
 export type AttributeId = (typeof ATTRIBUTES)[number];
 
 export const AttributesSchema = z.strictObject(
@@ -226,13 +256,34 @@ export type TacticalPlan = z.infer<typeof TacticalPlanSchema>;
 
 // ── Match input ──────────────────────────────────────────────────────────────
 
+/** The coach of the day (ADR-019): independent dimensions, 1..99. */
+export const COACH_ATTRIBUTES = [
+  'tacticalKnowledge',
+  'gameReading',
+  'planning',
+  'teaching',
+  'communication',
+  'development',
+  'manManagement',
+  'matchManagement',
+  'training',
+  'flexibility',
+] as const;
+export const CoachSchema = z.strictObject(
+  Object.fromEntries(COACH_ATTRIBUTES.map((a) => [a, rating])) as Record<
+    (typeof COACH_ATTRIBUTES)[number],
+    typeof rating
+  >,
+);
+export type Coach = z.infer<typeof CoachSchema>;
+
 export const TeamInputSchema = z
   .strictObject({
     /** Starting eleven first (index = slot), then the bench. */
     players: z.array(PlayerInputSchema).min(11).max(23),
     plan: TacticalPlanSchema,
     /** Rival coach behaviour (`02` §10); the same for every team, user or not. */
-    coach: z.strictObject({ gameReading: rating, flexibility: rating }),
+    coach: CoachSchema,
   })
   .refine((t) => new Set(t.players.map((p) => p.id)).size === t.players.length, {
     message: 'duplicate player id',

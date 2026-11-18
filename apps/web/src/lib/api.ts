@@ -22,6 +22,26 @@ const AUTH_MESSAGES: Record<string, string> = {
   PROVIDER_NOT_FOUND: 'Entrar com Google ainda não está disponível.',
 };
 
+/**
+ * A first visit has no session cookie yet, and the API creates one guest session per request
+ * without a cookie: first requests sent in parallel would split the person into several
+ * sessions (progress on one, the next answer on another). The first request goes alone; the
+ * others wait for it to come back with the cookie. After that, waiting costs nothing.
+ */
+let first: Promise<unknown> | null = null;
+function inOrder<T>(run: () => Promise<T>): Promise<T> {
+  if (!first) {
+    const p = run();
+    first = p.catch(() => undefined);
+    return p;
+  }
+  return first.then(run);
+}
+
+/** fetch to the API, after the first request has settled the session (see `inOrder`). */
+export const apiFetch = (path: string, init?: RequestInit) =>
+  inOrder(() => fetch(path, { credentials: 'same-origin', ...init }));
+
 /** JSON fetch against the API (same origin; Vite proxies /v1 in dev). */
 export async function api<T>(
   path: string,
@@ -30,8 +50,7 @@ export async function api<T>(
   const { json, headers, ...rest } = init;
   let res: Response;
   try {
-    res = await fetch(path, {
-      credentials: 'same-origin',
+    res = await apiFetch(path, {
       ...rest,
       headers: {
         ...(json !== undefined ? { 'content-type': 'application/json' } : {}),

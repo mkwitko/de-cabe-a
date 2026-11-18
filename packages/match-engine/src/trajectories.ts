@@ -61,6 +61,8 @@ const p95 = (xs: number[]) => {
  * counts players that stay within 5 m for this long. PARAMETER.
  */
 export const SWARM_HOLD = 1;
+/** In the box, a player this close to an opponent is marking him (ADR-020). PARAMETER. */
+export const MARKED = 2;
 
 /**
  * T1: teammates (not the holder) within 5 m of the ball; mean and max per team,
@@ -70,16 +72,34 @@ export const SWARM_HOLD = 1;
 export function t1(samples: Sample[], team: 0 | 1, dt: number) {
   let sum = 0;
   let count = 0;
-  const near = samples.map((s) => {
+  // In a penalty area a player tight on an opponent (within MARKED m) is marking, not
+  // swarming: the box cell counts only the extra bodies (ADR-020). Each opponent
+  // excuses one player only, so three around one attacker leave two extra.
+  // ponytail: greedy pairing in index order, may count one extra too many in rare
+  // overlaps (stricter, never hides a swarm); use bipartite matching if it matters.
+  const counts = samples.map((s) => {
     let n = 0;
+    let extra = 0;
+    const used = new Set<number>();
     s.players.forEach((p, i) => {
       if (!inTeam(team)(i) || i === s.holder || i % 11 === 0) return; // the keeper is not a swarm
       const dx = p.x - s.ball.x;
       const dy = p.y - s.ball.y;
-      if (dx * dx + dy * dy < 25) n++;
+      if (dx * dx + dy * dy >= 25) return;
+      n++;
+      let best = -1;
+      let bestD = MARKED * MARKED;
+      s.players.forEach((q, j) => {
+        if (inTeam(team)(j) || used.has(j)) return;
+        const d = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
+        if (d < bestD) [best, bestD] = [j, d];
+      });
+      if (best < 0) extra++;
+      else used.add(best);
     });
-    return n;
+    return { n, extra };
   });
+  const near = counts.map((c) => c.n);
   const inBox = (s: Sample) => s.ball.x < 16.5 || s.ball.x > LENGTH - 16.5;
   for (const [k, s] of samples.entries()) {
     if (inBox(s)) continue;
@@ -91,9 +111,13 @@ export function t1(samples: Sample[], team: 0 | 1, dt: number) {
   let maxInBox = 0;
   for (let k = 0; k + w <= samples.length; k++) {
     let held = Infinity;
-    for (let j = k; j < k + w; j++) held = Math.min(held, near[j]!);
-    if (inBox(samples[k]!)) maxInBox = Math.max(maxInBox, held);
-    else max = Math.max(max, held);
+    if (inBox(samples[k]!)) {
+      for (let j = k; j < k + w; j++) held = Math.min(held, counts[j]!.extra);
+      maxInBox = Math.max(maxInBox, held);
+    } else {
+      for (let j = k; j < k + w; j++) held = Math.min(held, near[j]!);
+      max = Math.max(max, held);
+    }
   }
   return { mean: count ? sum / count : 0, max, maxInBox };
 }

@@ -7,7 +7,6 @@
  */
 import type { MatchEvent, MatchInput, MatchResult, TimedCommand } from '../contract';
 import { frameOf, step, stepUntilEnd } from './engine';
-import { substitutions } from './coach';
 import { resultOf } from './simulate';
 import { createMatch } from './state';
 
@@ -35,10 +34,7 @@ export function advanceMatch(
   count: number,
 ): MatchChunk {
   const s = createMatch(input, commands);
-  const tick = () => {
-    step(s);
-    if (s.tick % 40 === 0) substitutions(s, false);
-  };
+  const tick = () => step(s);
   while (!s.finished && s.tick < from) tick();
   const frames: number[][] = [];
   const clocks: number[] = [];

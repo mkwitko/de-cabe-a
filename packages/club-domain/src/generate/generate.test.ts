@@ -3,7 +3,12 @@ import { rngFrom } from '@decabeca/match-engine';
 import { roleRating } from '../player/ratings';
 import { PackSchema } from '../pack/schema';
 import { SQUAD, generatePlayer, generateSquad } from './player';
-import { generateMiniPack, packChecksum } from './pack';
+import { matchCount } from '../competition/season';
+import { realDivisions } from './competitions';
+import { CompetitionSchema } from '../competition/schema';
+import { regulationsFor } from '../competition/outcomes';
+import { generateDevPack, generateMiniPack, packChecksum, slimPack } from './pack';
+import { nextDecision, openCareer, playDecision } from '../career/advance';
 
 describe('MC-013 generators', () => {
   it('same command, same result', () => {
@@ -61,5 +66,105 @@ describe('MC-014 mini pack', () => {
     expect(avg(p.clubs.at(-1)!.id)).toBeGreaterThan(avg(p.clubs[0]!.id) + 15);
     expect(p.clubs).toHaveLength(8);
     expect(new Set(p.clubs.map((c) => c.name)).size).toBe(8);
+  });
+});
+
+describe('MC-014 br-dev-1', () => {
+  const p = generateDevPack();
+
+  it('is identical byte for byte between runs, with a valid checksum', () => {
+    expect(JSON.stringify(generateDevPack())).toBe(JSON.stringify(p));
+    expect(packChecksum(p)).toBe(p.checksum);
+    expect(PackSchema.safeParse(p).success).toBe(true);
+    expect(p.id).toBe('br-dev-1');
+  });
+
+  it('four divisions with the real sizes (05 §8): 20, 20, 20 and 96 clubs', () => {
+    const div = p.competitions.filter((c) => c.tier !== null).sort((a, b) => a.tier! - b.tier!);
+    expect(div.map((c) => c.clubIds.length)).toEqual([20, 20, 20, 96]);
+    expect(p.clubs).toHaveLength(156);
+    expect(new Set(div.flatMap((c) => c.clubIds)).size).toBe(156);
+    expect(new Set(p.clubs.map((c) => c.name)).size).toBe(156);
+  });
+
+  it('one competition phase of each kind', () => {
+    const kinds = new Set(p.competitions.flatMap((c) => c.phases.map((x) => x.kind)));
+    expect([...kinds].sort()).toEqual(['final', 'grupos', 'liga', 'mata-mata']);
+  });
+
+  it('match volumes within 20% of the real ones (05 §8)', () => {
+    const real: Record<number, number> = { 1: 380, 2: 384, 3: 216, 4: 610 };
+    for (const c of p.competitions.filter((x) => x.tier !== null)) {
+      const n = matchCount(c);
+      expect(Math.abs(n - real[c.tier!]!) / real[c.tier!]!).toBeLessThanOrEqual(0.2);
+    }
+  });
+
+  it('divisions get weaker going down; squads cover every club', () => {
+    const strength = (tier: number) => {
+      const ids = new Set(p.competitions.find((c) => c.tier === tier)!.clubIds);
+      const st = p.players.filter((x) => ids.has(x.clubId!) && x.positions[0]!.position === 'ST');
+      return st.reduce((s, x) => s + roleRating(x.attributes, 'advancedForward'), 0) / st.length;
+    };
+    expect(strength(1)).toBeGreaterThan(strength(2));
+    expect(strength(2)).toBeGreaterThan(strength(3));
+    expect(strength(3)).toBeGreaterThan(strength(4));
+    expect(p.players).toHaveLength(156 * SQUAD.length);
+  });
+});
+
+describe('MC-014 mini pack competitions', () => {
+  it('a short league, a play-off and a final', () => {
+    const c = generateMiniPack().competitions[0]!;
+    expect(c.phases.map((x) => x.kind)).toEqual(['liga', 'mata-mata', 'final']);
+    expect(matchCount(c)).toBe(28 + 2 + 1);
+  });
+});
+
+describe('realDivisions (05 §8, 2027 formats)', () => {
+  const ids = (n: number, p: string) => Array.from({ length: n }, (_, i) => `${p}${i}`);
+  const comps = realDivisions(2027, [ids(20, 'a'), ids(20, 'b'), ids(24, 'c'), ids(96, 'd')]);
+
+  it('parses; Série C has 24 clubs in 2027 and 28 in 2028, D refills from the ranking', () => {
+    comps.forEach((c) => CompetitionSchema.parse(c));
+    const sizes = comps.map((c) => `${c.id}@${c.season}:${c.size}/${c.clubIds.length}`);
+    expect(sizes).toEqual([
+      'div-1@2027:20/20',
+      'div-2@2027:20/20',
+      'div-3@2027:24/24',
+      'div-3@2028:28/0',
+      'div-4@2027:96/96',
+    ]);
+    expect(comps.find((c) => c.id === 'div-4')!.refill).toBe('ranking');
+  });
+
+  it('every window keeps at least two match dates in any year (weekday windows move with the calendar)', () => {
+    for (const year of [2027, 2028, 2029, 2030]) {
+      for (const c of regulationsFor(comps, year))
+        for (const p of c.phases) {
+          const days = new Set<number>();
+          for (let t = Date.parse(p.dates.start); t <= Date.parse(p.dates.end); t += 864e5)
+            if (p.dates.weekdays.includes(new Date(t).getUTCDay())) days.add(t);
+          const legs = p.kind === 'liga' || p.kind === 'grupos' ? 2 : p.legs;
+          expect(days.size, `${c.id} ${p.id} ${year}`).toBeGreaterThanOrEqual(legs);
+        }
+    }
+  });
+});
+
+describe('slimPack', () => {
+  it('keeps the checksum, is smaller, and plays the same career as the full pack', () => {
+    const pack = generateDevPack();
+    const slim = slimPack(pack);
+    expect(slim.checksum).toBe(pack.checksum);
+    expect(JSON.stringify(slim).length).toBeLessThan(JSON.stringify(pack).length);
+    const play = (p: typeof pack) => {
+      const w = openCareer(p, 7, p.clubs[0]!.id);
+      const d = nextDecision(w);
+      if (d.kind === 'match') playDecision(w, d);
+      const { pack: _a, origin: _b, ...rest } = w;
+      return JSON.stringify(rest);
+    };
+    expect(play(slim)).toBe(play(pack));
   });
 });

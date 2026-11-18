@@ -9,6 +9,7 @@ import {
   MENTAL,
   PHYSICAL,
   TECHNICAL,
+  TACTICAL,
   between,
   fork,
   next,
@@ -46,7 +47,7 @@ const POSITION_ROLE: Record<Position, RoleId> = {
 };
 
 /** Peak age by position (03 §3: forwards near 25, centre-backs near 27, keepers +3). */
-const PEAK: Record<Position, number> = {
+export const PEAK: Record<Position, number> = {
   GK: 30,
   CB: 27,
   RB: 26,
@@ -64,7 +65,7 @@ const PEAK: Record<Position, number> = {
 
 const GK_SET = new Set<AttributeId>(GOALKEEPING);
 const PHYS_SET = new Set<AttributeId>(PHYSICAL);
-const MENTAL_SET = new Set<AttributeId>(MENTAL);
+const MENTAL_SET = new Set<AttributeId>([...MENTAL, ...TACTICAL]); // perception and tactics grow like the mind (ADR-019)
 const TECH_SET = new Set<AttributeId>(TECHNICAL);
 
 /**

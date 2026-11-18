@@ -92,6 +92,7 @@ Para cada jogador: `âncora = posição_do_slot(fase) + atração_pela_bola + aj
 - `posição_do_slot`: o plano tático guarda uma formação por fase (no mínimo duas: com bola e sem bola).
 - `atração_pela_bola`: deslocamento lateral e longitudinal proporcional à posição da bola, com fatores por linha (defesa acompanha menos que meio).
 - Ajustes: largura, profundidade, altura da linha, compactação. A última linha nunca fica atrás da linha de impedimento pedida, salvo cobertura.
+- Defesa da área (pesquisa 18 H5; 2026-11-16): sem a bola, com ela perto do nosso gol, as linhas ficam do lado do gol em relação à bola: a última linha pelo menos 5 m mais funda que a bola (nunca abaixo de 3 m), a de meio 2 m (nunca abaixo de 8 m); os atacantes ficam como saída. A partir de 30 m do gol a última linha se fecha em direção à boca do gol, até 60% da largura a 10 m. PARÂMETROS. Testado e descartado: tratar o ponta de um 4-4-2 como linha de meio sem a bola (aglomerava perto da bola na prova de coordenação, sem ganho medido).
 
 ### 5.3 Alvo sem bola (utilidade)
 Candidatos: a âncora e os movimentos que a função permite (oferecer curto, atacar as costas, abrir, entrar por dentro, ultrapassar, cobrir companheiro que saiu, marcar adversário, pressionar portador, fechar linha de passe, voltar).
@@ -121,8 +122,9 @@ U(ação) = P(sucesso) × V(estado se der certo)
 ```
 - `V`: grade de valor de posse (12 × 8, tabela do pacote da engine), corrigida pelo controle de campo ao redor do alvo.
 - `P(sucesso)` é a estimativa **do jogador**, que erra mais com `decisões` baixa.
+- DECISÃO (2026-11-17, calibração da estimativa do passe): o passador julga o passe que de fato joga. Para um companheiro em movimento, a estimativa usa o mesmo ponto à frente que o chute mira (`leadTarget`). O ponto final é uma disputa entre o recebedor e o adversário mais próximo, contada uma vez só; ao longo do caminho entram só os pontos antes dele. Um companheiro em impedimento não é opção (o passador percebe 30% das vezes na linha e sempre a 2 m dela, sobre o que ele percebe. DECISÃO do dono, 2026-11-17: o impedimento nasce do tempo do lance, não de piorar a leitura. O passador vê a linha e o companheiro como estavam `PERCEPTION_LAG` atrás (0,45 s, PARÂMETRO; tempo humano de leitura de 0,2 a 0,5 s). Quem acabou de passar a linha em velocidade parece em posição legal. Em 2000 partidas: 1,23 por time com 0,3 s e 1,29 com 0,45 s, ainda um pouco abaixo da faixa. Falta a outra causa real: o atacante que sai cedo na corrida, pelo `timing`. Um ajuste anterior, que piorava a leitura para 10% na linha e certeza a 3,6 m, foi desfeito). Medido antes: passes rasteiros estimados em 14% a 55% chegavam em 69% a 79%; o defensor junto do recebedor era contado duas vezes (77% das ameaças previstas vinham do ponto final). Depois: estimativa e resultado batem entre 55% e 99%; abaixo de 15% a estimativa ainda é pessimista (cerca de 1% estimado contra 34% de acerto real, em todos os tipos de passe).
 - Percepção: uma opção só entra na lista se o jogador a "vê": chance cresce com `visão` e cai com ângulo fora do campo visual e com pressão.
-- Escolha por softmax; temperatura cai com `decisões` e `compostura`, sobe com pressão e fadiga. Mentalidade e `risco` do plano deslocam o peso do termo de perda.
+- Escolha por softmax; temperatura cai com `decisões` e `compostura`, sobe com pressão e fadiga. Implementado (2026-11-16): fôlego 0 aumenta a temperatura em 60% (PARÂMETRO). Fadiga na execução: erro da bola alçada +0,04 por unidade de fôlego perdido, chute no alvo −0,04, conversão −15% com fôlego 0 (PARÂMETROS). Mentalidade e `risco` do plano deslocam o peso do termo de perda.
 
 ### 5.5 Estabilidade das escolhas (histerese)
 Sem amortecimento, um jogador alterna entre dois alvos de utilidade parecida a cada reavaliação e treme em campo. Regras: (1) o alvo atual recebe bônus de permanência; só troca se o melhor candidato superar o atual por uma margem (PARÂMETRO: 10% da utilidade); (2) uma intenção assumida (pressionar, atacar as costas, cobrir) tem duração mínima de 1,5 s, salvo troca de posse, bola parada ou comando; (3) o ruído de escolha é sorteado por intenção, não por passo; (4) a âncora é filtrada no tempo (média móvel curta) para não saltar quando a fase do time muda. Teste: número de trocas de alvo por jogador por minuto abaixo de um teto, e nenhuma oscilação A-B-A em menos de 2 s.
@@ -149,6 +151,8 @@ Cada jogador tem duas tendências derivadas de personalidade e traços: **discip
 ### 5.9 Defesa de descanso (organização defensiva enquanto ataca)
 
 Conceito de treinamento sem definição acadêmica formal; as fontes são material de treinadores (`docs/pesquisa/modo-clube/08-verificacao-de-fontes.md` item 12), então o que segue é DECISÃO de desenho. No plano, com a bola, o time declara **quantos ficam atrás da linha da bola** (2 a 5) e **como**: quem protege o centro, quem cobre o corredor do lateral que subiu. Na engine isso é um conjunto de âncoras de segurança ocupadas por função (zagueiros, volante, lateral do lado oposto) e um termo coletivo na utilidade: se o número de jogadores atrás da bola cai abaixo do pedido, o candidato `segurar posição` dos elegíveis ganha peso. Métricas que a instrução move: contra-ataques sofridos e `xG` sofrido em transição (caem com mais gente atrás); presença na área e `xG` próprio em ataque posicional (caem também). É uma das instruções com custo mais claro, e tem teste causal próprio.
+
+DECISÃO (2026-11-17, relato do amistoso: zagueiros atrás do goleiro): com a bola, ninguém de linha fica atrás do goleiro. A âncora de cada jogador de linha fica pelo menos 4 m à frente do ponto do goleiro com a bola, e a defesa de descanso, que normalmente fica 16 m atrás da bola, nunca fica a menos de 8 m à frente dele. Na saída de bola ela vira a base da construção. Teste: com a bola na própria metade e fora da área, menos de 0,1% dos quadros têm jogador de linha mais de 3 m atrás do goleiro (antes 2,3%).
 
 ### 5.10 Armadilha de pressão
 
@@ -188,6 +192,140 @@ Regras de referência adotadas da simulação 2D da RoboCup (`docs/pesquisa/modo
 
 **Prova de coordenação antes de crescer** (MC-246): antes de implementar a tabela de instruções inteira, a engine precisa passar nos testes de trajetória T1, T2, T3, T5 e T9 só com forma do time, atribuição de tarefas e bola por roteiro, em seis cenários fixos. Sem isso, cada instrução nova é ajustada em cima de um movimento coletivo errado. Mecanismos de referência (simulação 2D da RoboCup e outros): `docs/pesquisa/modo-clube/11-simulacao-e-coordenacao.md` itens 1 e 2.
 
+### 5.12 Defesa perto do gol (DESENHO, 2026-11-17; ainda não implementado)
+
+**Por quê.** Com a estimativa de passe corrigida (§5.4), a defesa perto do gol ficou exposta: 3,86 gols por jogo na bancada. Ajustes isolados (segundo pressionador, recomposição, marcação mais colada) tiraram no máximo 10% cada (HANDOFF, 2026-11-17). A causa está na coordenação, não num parâmetro.
+
+**Linha de base medida (bola a até 35 m do nosso gol, sem a bola).**
+- Recepção do adversário a até 22 m do gol: defensor mais próximo a 3,7 m; 1,2 defensor a até 5 m; 3,7 defensores na área; 5,4 defensores não estão entre o recebedor e o gol.
+- Marcação: 1,6 a 2,3 marcadores por instante; cada marcador fica 6,3 m do atacante mais próximo e 9 m do próprio ponto de marcação; 0,8 a 1,1 marcação nova por segundo (cada uma dura 2 a 3 s); só 10% dessas trocas vêm de um evento (passe).
+- Condutor no terço final: defensor mais próximo a 3,7 m, alguém a distância de desarme só 14% do tempo; o pressionador está a 6,1 m e entre o condutor e o gol em 43% das vezes.
+
+**Causas no código.**
+1. A marcação exclui quem está a menos de 8 m da bola e quem está atrás da nossa última linha (`tasksFor`), e o ponto de marcação não desce abaixo da linha (`aboveLine`). Perto do gol, isso deixa sem marcação justamente o recebedor e o atacante entre a linha e o gol.
+2. Zagueiro só marca a menos de 20 m do gol e perto da própria âncora (`assign`, `BOX_MARK_X`, `DEF_RADIUS`). Os meio-campistas pegam pressão, cobertura e zona antes; as marcações sobram sem dono.
+3. A atribuição é gulosa e refeita a cada segundo; a marcação muda de dono antes de o marcador chegar. Causa exata da rotatividade ainda em aberto: candidatas são a lista de perigo que muda de ordem e o erro coletivo (`compliance`) que faz a tarefa reaparecer como nova.
+
+**Regras propostas** (DECISÃO de desenho, PARÂMETROS a calibrar).
+- **Zona de perigo**: com a bola a até 35 m do nosso gol, todo adversário a até 25 m do gol e a até 22 m do eixo do campo é marcado, inclusive o recebedor e quem está atrás da nossa linha. O portador é do pressionador.
+- **Marcação individual que dura**: o dono de uma marcação na zona só a perde quando o marcado sai da zona ou outro companheiro chega claramente antes (margem maior que a da histerese comum, também em evento).
+- **Ponto de marcação**: 1 m entre o atacante e o gol, deslocado 0,8 m para o lado da bola, sem limite pela altura da linha.
+- **Quem pode marcar**: qualquer jogador de linha, zagueiros inclusive; a linha de defesa deixa de defender só por zona dentro da zona de perigo.
+- **Contenção e cobertura**: o defensor mais próximo que já está entre o condutor e o gol fica com a pressão; a cobertura fica 4 a 5 m atrás dele, na linha até o gol.
+- **Zona restante**: quem sobra protege primeiro poste, marca do pênalti e entrada da área.
+
+**Ordem de implementação** (um passo por commit, cada um com teste e comparação pareada contra o anterior).
+1. Instrumentação: as medidas da linha de base viram métricas do resumo da bancada.
+2. Rotatividade: achar a causa e fazer a marcação na zona durar.
+3. Zona de perigo e ponto de marcação.
+4. Zagueiros marcando na zona.
+5. Contenção e cobertura.
+6. Recalibrar a decisão de chutar e a defesa da área (`shotClear`, `SHOT_FOLLOW_UP`), que foram ajustadas sobre o erro de passe.
+
+**Primeira tentativa (2026-11-17, revertida).** Diagnóstico da rotatividade: 0,53 troca de dono por segundo; 56% porque a tarefa some (a lista de perigo muda de membros), 21% troca entre marcadores, 19% jogador sem tarefa. Zona de perigo com marcação colada: gols 3,86 → 3,50 (300 partidas), marcadores a 8,3 m do próprio ponto (antes 9), sem mudança no defensor mais próximo da recepção (3,8 m). Zagueiros marcando na zona: pior (3,68; defensores na área 3,5 → 2,7). Conflito: a prova de coordenação reprova S2 e S3 (T1 na área chega a 5 e 6, faixa ≤ 4) mesmo excluindo da marcação quem está a menos de 8 m da bola, porque marcar colado na área põe defensores junto de atacantes que estão perto da bola. A faixa de T1 na área não tem referência publicada; mudá-la depois de ver o resultado é o tipo de decisão do ADR-018 e fica com o dono. Também em aberto: o marcador segue o atacante em vez de antecipar a corrida (alvo = posição atual), por isso não chega.
+
+**Segunda tentativa (2026-11-17, não entrou).** Com T1 na área contando só excesso (ADR-020, aceito pelo dono), a zona de perigo passa em T1 na área, mas reprova T1 fora da área (4 contra 3) em S2 e o vão da última linha (22,4 a 24,8 m contra 22) em S2 e S3. Começar a zona com a bola mais perto do gol (25 m, 20 m) reduz as falhas e também o ganho (gols 3,61 e 3,75 em 150 partidas). Conclusão: a marcação colada sozinha rende cerca de 10%; o excesso de gols tem outra origem principal ainda não achada.
+
+**Teste do defensor ideal (2026-11-17, só medição, revertido).** Chaves temporárias, uma de cada vez, valendo para o time sem a bola. Bancada de 300 partidas, mesmas sementes:
+
+| Chave | Gols | Chutes por time | `xG` por chute |
+|---|---|---|---|
+| nenhuma (base) | 3,86 | 17,5 | 0,112 |
+| c: cumpre sempre a tarefa | 3,61 | 17,6 | 0,113 |
+| r: lê o passe na hora | 3,01 | 14,8 | 0,106 |
+| k: recalcula tarefas a cada passo | 3,86 | 17,5 | 0,114 |
+| s: corre sempre no máximo | 4,40 | 19,1 | 0,112 |
+| a: marca onde o atacante estará em 1 s | 3,75 | 17,8 | 0,113 |
+| t: marca colado (1 m) | 3,59 | 16,9 | 0,108 |
+| r + a + t | 2,87 | 14,1 | 0,105 |
+| c + r + a + t | 2,63 | 14,0 | 0,103 |
+
+Leitura:
+
+- A defesa explica quase todo o excesso. Com c + r + a + t os gols ficam perto da faixa. O ataque não é a origem principal.
+- A maior alavanca é o tempo de leitura do passe. O tempo de reação em si é realista, então a correção não é zerá-lo. O que falta é o que o defensor faz antes do passe: posição e antecipação.
+- Correr sempre no máximo piora (4,40). O defensor que dispara sai do lugar.
+- Mesmo no caso ideal, o marcador recebe a tarefa a cerca de 11 m do ponto. Ele só fica colado (0,2 m) depois de uns 8 s na mesma marcação. Isso dá 70% do tempo de marcação com o marcador correndo atrás. Com a bola a menos de 35 m do gol, a distância média do marcador ao ponto fica entre 6 e 10 m em todas as variantes.
+- Causa estrutural suspeita: as marcas fora de `BOX_MARK_X` (20 m) vão para meio-campistas, que vêm de longe. Os zagueiros perto do lance não podem pegá-las.
+
+**Quem pega a marca (2026-11-17, só medição, revertido).** Com a bola a menos de 35 m do gol, em 840 marcas novas de 6 partidas:
+
+- O marcador escolhido está a 11,8 m do ponto. O companheiro mais perto está a 6,7 m. O escolhido é o mais perto em só 36% dos casos.
+- Atacantes (pontas, meias-atacantes, centroavantes) pegam 455 das 840 marcas. Eles vêm de longe, voltando do ataque.
+- Mesmo o companheiro mais perto fica a mais de 6 m do ponto em 40% dos casos. A forma inteira está longe dos atacantes, não só o escolhido.
+
+Variações, 150 partidas cada:
+
+| Variação | Gols por jogo |
+|---|---|
+| Base | 3,86 |
+| `BOX_MARK_X` 26 | 3,84 |
+| `BOX_MARK_X` 32 | 3,71 |
+| `BOX_MARK_X` 40 | 3,82 |
+| Atacante não marca abaixo de 35 m | 3,56 |
+| Atacante não marca abaixo de 35 m, `BOX_MARK_X` 35 | 3,94 |
+
+Em todas as variações o marcador segue a 7–8 m do ponto. Trocar quem marca não resolve. O problema é a distância entre a forma e os atacantes.
+
+**Leitura do passe separada.** Com tempo de leitura zero só no movimento, os gols ficam em 3,19. Com tempo zero só na estimativa do passador, ficam em 3,39. As duas partes contam. O tempo atual (0,4 × reação, cerca de 0,24 s) é realista e fica como está.
+
+**Contenção do condutor (DECISÃO, 2026-11-17).**
+
+- Regra: na nossa metade, o defensor de linha mais próximo do condutor, que esteja do lado do gol e a até 6 m dele, sai para fechá-lo.
+- Ponto alvo: 1,2 m à frente do condutor, na linha entre ele e o gol.
+- Ele corre e pode dar o bote como o pressionador.
+- PARÂMETROS: 6 m e 1,2 m.
+- Motivo: os desarmes só aconteciam a até 1,4 m, e o defensor da linha só entrava no lance a até 1,0 m. O condutor passava por 2 a 3 defensores (5 conduções de cerca de 20 m até o chute por time por jogo).
+- Raio medido em 600 partidas: 4 m deu 3,48 gols; 6 m deu 3,36; 8 m deu 3,56; base 3,63. A prova de coordenação passa com 6 m.
+
+Confirmação em 2000 partidas, mesmas sementes:
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Gols por jogo | 3,61 | 3,44 |
+| Chutes por time | 17,5 | 16,9 |
+| Faltas por time | 10,9 | 12,3 |
+| Amarelos por time | 2,47 | 2,91 |
+
+Os amarelos saem da faixa (2,15 a 2,59) porque a taxa de cartão por falta já era alta: 0,23 contra cerca de 0,16 na Série A (2,37 amarelos para 14,6 faltas). Corrigir essa taxa é o próximo passo. Testes em `match.test.ts` ("containment of a carrier in our half").
+
+**Defensor recém-batido volta para a contenção (DECISÃO, 2026-11-18).**
+
+- Regra: o defensor que está até 2 m atrás do condutor (acabou de ser batido, ainda emparelhado) também conta para a contenção e volta para fechá-lo. Antes, só contava quem estava pelo menos 0,5 m do lado do gol.
+- PARÂMETRO: 2 m (`RECOVER`).
+- Motivo: nos lances de atacante sozinho após passe, o recebedor deixava para trás cerca de 850 defensores em 30 partidas. O mais comum era o zagueiro na linha, parado na posição. Quem era batido por meio passo saía do lance.
+- Recuo medido em 600 partidas: 1 m deu 3,40 gols; 2 m deu 3,19; 4 m deu 3,24. Raio de 9 m com 2 m deu 3,29 (não ajuda). A prova de coordenação passa com 2 m.
+
+Confirmação em 2000 partidas, mesmas sementes:
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Gols por jogo | 3,53 | 3,23 |
+| Gols por chute | 0,137 | 0,129 |
+| Chutes por time | 12,9 | 12,5 |
+| Faltas por time | 11,5 | 12,8 |
+| Amarelos por time | 2,74 | 3,17 |
+
+Os amarelos sobem pelo mesmo motivo de antes: a taxa de cartão por falta está alta. Chutes por time ficam um pouco abaixo da faixa (12,6 a 13,6). Testes em `match.test.ts` ("a defender just beaten, still level with the carrier, cuts back in" e "a defender well behind the carrier does not").
+
+**Marcação colada perto do gol, terceira tentativa (2026-11-17, não entrou).** Feita depois do conserto do goleiro e da contenção. Regra: atacante a menos de TX metros do gol é marcado a 1 m, e não mais a 2–6 m.
+
+Resultado em 2000 partidas, mesmas sementes:
+
+| Variante | Gols por jogo | Chutes por time | Prova de coordenação |
+|---|---|---|---|
+| Base | 3,44 | 16,9 | passa |
+| TX 25 m | 3,34 | 16,3 | reprova: T1 fora da área 4 contra 3 em S2 e S3 |
+| TX 35 m | 3,22 | 16,1 | reprova: T1 5 em S4; vão da última linha 23,0 e 23,5 contra 22 em S3 e S4 |
+
+O ganho (3% a 6%) não justifica mudar as faixas de T1 e T2. O vão da última linha é defeito real de forma, não de medição. Revertido.
+
+**Critérios de aceite.**
+- Recepção a até 22 m do gol: defensor mais próximo abaixo de 2,5 m.
+- Marcador a menos de 2 m do próprio ponto na maior parte do tempo.
+- Gols, chutes e `xG` por chute voltam às faixas de §11.
+- Prova de coordenação (T1 a T10) segue verde: marcar mais não pode virar aglomeração.
+
 ## 6. Execução e disputas
 
 O princípio: **o erro entra na execução, não num sorteio de resultado.** O passe sai com desvio de direção e força; a bola viaja; quem chega primeiro fica com ela.
@@ -215,17 +353,20 @@ Estados: `presa` (acompanha o dono), `rolando` (atrito linear: perde velocidade 
 Sem física de corpo rígido. Cada jogador ocupa um disco de 0,3 m de raio; discos não se atravessam (resolução por separação, determinística por índice). Quem está entre o adversário e a bola **protege** a bola: o desarme de quem vem por trás tem dificuldade maior e risco de falta maior. Carga ombro a ombro é uma disputa de `força` e `equilíbrio`. Barreira e aglomeração na área limitam o corredor de chute por oclusão geométrica.
 
 ### 6.3 Disputa aérea
+Cruzamento (2026-11-16, ordem aprovada item 5): o cruzador avalia primeiro pau, marca do pênalti e segundo pau com a mesma física de chegada do passe (um companheiro precisa chegar com a bola e antes do primeiro defensor ou do goleiro; precisão por `cruzamento`) e o valor de um cabeceio dali. O cruzamento é esperado pelos dois lados: atacantes e defensores atacam a bola sem atraso de reação (a leitura curta do passe pelo defensor continua). Erro de queda do cruzamento 1,8 vez o da bola longa (PARÂMETRO). Medido (40 partidas): 13,8 cruzamentos e 5,7 escanteios por time, 18% dos cruzamentos viram cabeceio, cabeceios 20% dos chutes (referência 15% a 18%).
 Quem disputa: os jogadores que alcançam o ponto de queda a tempo. Vence por logística de `impulsão`, altura, `cabeceio`, `força`, `posicionamento` (quem chegou antes e parado leva vantagem), `agressividade`. O vencedor direciona com erro; perder a disputa não tira o jogador do lance (segunda bola). Goleiro dentro da área disputa com as mãos, com alcance maior.
 
 ### 6.4 Goleiro
 Posicionamento sobre a bissetriz do ângulo de chute, com profundidade dada por função e `posicionamento de goleiro`. Defesa: tempo de reação (`reflexos`) mais tempo de deslocamento até o ponto de cruzamento da bola com o plano do gol, limitado por alcance; bola dentro do alcance é defendida com probabilidade que cai com velocidade e distância ao corpo. Resultado da defesa: segura, espalma para o lado ou devolve para a frente (rebote), conforme `defesa`. Um contra um: sai ou fica, por `um contra um` e `decisões`. Cruzamento: sai ou fica, por `domínio da área`. Reposição com a mão ou o pé conforme plano e `reposição`.
+
+DECISÃO (2026-11-17, bug do goleiro na bola longa): o goleiro só sai do gol para uma bola que ele encontra em voo (até 4 s à frente) e antes do adversário mais rápido. Antes ele corria para onde a bola morreria quando ninguém a alcançava, e o atacante dominava antes e chutava com o gol vazio. Testes em `match.test.ts` ("the keeper on a long ball"). Medido em 2000 partidas, mesmas sementes: gols 3,80 para 3,61 (−5%). A primeira medida, 3,92 para 3,49 em 600 partidas, foi otimista: o ruído e uma instrumentação temporária que consumia sorteio pesaram. Chutes defensáveis que viram gol caíram de 21 para 4 em 40 partidas.
 
 ### 6.4.1 Goleiro no modelo de jogo
 
 O goleiro também é jogador de linha quando o plano pede: opção de passe na saída (posição entre ou ao lado dos zagueiros), altura fora da área com o time adiantado (cobre a bola nas costas da linha alta, com risco de chute por cobertura), tipo de reposição (curta, lançamento para o ponta, chute para disputa), organização da última linha (melhora a sincronização do impedimento conforme `liderança` e `comunicação`), posição em bola parada. Atributos de linha relevantes ao goleiro: `passe`, `primeiro toque`, `decisões`, `compostura`. Contratar goleiro passa a depender do modelo de jogo.
 
 ### 6.5 Árbitro e regras
-- **Falta**: nasce de desarme falho, carga, puxão ou mão; gravidade por velocidade relativa, direção (por trás) e zona.
+- **Falta**: nasce de desarme falho, carga, puxão ou mão; gravidade por velocidade relativa, direção (por trás) e zona. Implementado (2026-11-16): desarme (com falta tática) e disputa aérea: quem perde a disputa empurra ou sobe no adversário com chance de 6% a 16% pela `agressividade` (15% disso dentro da própria área, onde seria pênalti). Disputa aérea: quem está a 1,8 m e o adversário que, já em movimento, chega ao ponto em até 0,5 s (PARÂMETRO). Defensores de linha também atacam a bola alta na própria área. Defensor driblado derruba ou segura o portador com chance de 15% a 35% pela `agressividade` (15% disso na própria área). Falta ainda: mão.
 - **Cartão**: por gravidade, por parar ataque promissor, por reincidência e por reclamação (traço). Segundo amarelo expulsa. Rigor do árbitro é parâmetro da partida, sorteado do pacote.
 - **Vantagem**: aplicada se o time que sofreu mantém a bola e o valor de posse é maior que o da cobrança; o cartão fica para a próxima paralisação.
 - **Impedimento**: avaliado no instante do passe. Fora de jogo quem, no campo adversário, está à frente da bola e do penúltimo adversário. Só é punido se participar: receber a bola, disputar ou obstruir o goleiro. Não há impedimento em tiro de meta, lateral e escanteio. Margem de erro do árbitro em lances de menos de 0,3 m é parâmetro (zero se a competição tem árbitro de vídeo).
@@ -247,13 +388,14 @@ logit(xG) = b0 + b1 × distância + b2 × ângulo de visão do gol + b3 × cabec
           + b7 × contra-ataque + b8 × bola parada direta
 ```
 
+1a. **Decisão de chutar**: o finalizador decide pela chance vezes a parte da boca do gol que ele vê livre (`shotClear`): cada corpo de linha entre ele e o gol projeta na linha do gol a sombra do mesmo alcance de bloqueio do voo (0,35 a 0,55 m pela `bravura`), mais o passo que dá enquanto a bola viaja (PARÂMETRO: 2 m/s a 23 m/s de chute); o goleiro fica para a defesa. Ele lê essa parte só em parte: de 0% a 40% pela `decisões` (PARÂMETRO calibrado em chutes por jogo da Série A). Como os modelos publicados de `xG` são ajustados sobre todos os chutes, bloqueados inclusive, e o voo bloqueia de verdade, o chute que passa pelos corpos converte a chance dividida pela parte livre (`shotClear`, mínimo 0,3; não vale para pênalti e cabeceio): na média, gols ≈ `xG` (medido: 0,99). O `xG` registrado continua sendo a chance. Calibração (2026-11-16): chutes vistos 80–100% livres são bloqueados 13% das vezes; bloqueios em 26% dos chutes (referência perto de 25%); chutes de fora da área 36% (referência 35 a 40%).
 2. **Execução do chute**: o finalizador escolhe alvo e força; o erro de execução (`finalização`, `técnica`, `compostura`, pé, pressão, fôlego) desloca direção e velocidade. O chute pode sair para fora, ser bloqueado por oclusão ou ir no gol.
 3. **`xG pós-chute`** (FATO: modelo pós-chute, de 0 a 1 por chute no alvo; gols evitados = `xG pós-chute` sofrido menos gols sofridos): probabilidade de gol dada a trajetória real em direção ao gol (colocação, velocidade, distância do goleiro ao ponto de cruzamento). Só existe para chutes no alvo.
 4. **Defesa**: o goleiro resolve contra a trajetória (§6.4).
 
 Avaliação: finalizador = `xG pós-chute` menos `xG` (coloca a bola melhor ou pior do que a chance valia); goleiro = `xG pós-chute` sofrido menos gols sofridos (gols evitados). O relatório usa os três números: "criaram pouco, chutaram bem, e o seu goleiro não ajudou" é uma frase que o jogo consegue dizer com fato.
 
-Coeficientes: PARÂMETROS iniciais da literatura (pesquisa 01), ajustados até a conversão por faixa de distância bater com a referência. Por construção, para finalizador e goleiro medianos a taxa de gol média de um conjunto de chances iguala o `xG`; `finalização` e `compostura` deslocam a conversão de forma moderada (PARÂMETRO: de −25% a +25% relativos entre 40 e 90 de atributo).
+Coeficientes: PARÂMETROS iniciais da literatura (pesquisa 01), ajustados até a conversão por faixa de distância bater com a referência. DECISÃO (2026-11-16): a fórmula do `xG` não é usada para acertar a média de gols; quando sobra gol, corrige-se o excesso de chances no jogo (defesa, decisão de chutar). Entre 2026-11-13 e 2026-11-16 o intercepto foi baixado de −1,1 para −1,4 para esse fim e foi revertido. Por construção, para finalizador e goleiro medianos a taxa de gol média de um conjunto de chances iguala o `xG`; `finalização` e `compostura` deslocam a conversão de forma moderada (PARÂMETRO: de −25% a +25% relativos entre 40 e 90 de atributo).
 
 ## 8. Tática
 
@@ -318,7 +460,7 @@ FATO (Sarmento e outros, 2025, International Journal of Sports Medicine; `docs/p
 
 **Esquema defensivo** = marcação por zona, individual ou mista; quantos na barreira; quem fica na trave; quantos ficam à frente para o contra-ataque; linha de impedimento em falta lateral.
 
-Resolvidas pela mesma física: cobrança com erro, disputa aérea, segunda bola, transição. `sincronização` da rotina cresce com treino (`03` §5.1); um treinador de bola parada na comissão acelera (`06`).
+Resolvidas pela mesma física: cobrança com erro, disputa aérea, segunda bola, transição. Esquema padrão de escanteio enquanto o plano não traz rotina (2026-11-16): no ataque, a defesa de descanso do plano fica atrás (no mínimo 2), dois na entrada da área e os demais em primeiro pau, centro da pequena área, segundo pau, marca do pênalti e área do segundo pau, os melhores no alto primeiro; na defesa (mista), os melhores no alto marcam os atacantes da área pelo lado do gol, os demais em zona a partir do primeiro pau, e um atacante fica na frente para o contra-ataque. No cruzamento, até três defensores de linha que estão na área atacam a bola. PARÂMETROS. `sincronização` da rotina cresce com treino (`03` §5.1); um treinador de bola parada na comissão acelera (`06`).
 
 ### 8.7 Memória tática e repertório
 
@@ -369,6 +511,8 @@ Toda frase do relatório é uma afirmação verificável. Cada fator devolvido t
 O time pior pode ganhar, e a engine não protege ninguém (`00-VISAO-E-PRODUTO.md` §8). Caminhos legítimos modelados: bloco baixo e transição contra linha alta; bola parada; goleiro; eficiência acima do `xG`; estado mental (intensidade, compostura, concentração, resposta a jogo grande e a estádio cheio); expulsão e lesão do adversário. A engine não recebe a informação de qual time é do usuário. Suíte Z1 a Z22 em `TEST_STRATEGY.md` §4.
 
 ### Faixas-alvo de calibragem (PARÂMETROS; gols e resultado fechados em `docs/pesquisa/modo-clube/12-calibragem-dados-proprios.md`)
+
+DECISÃO do dono (2026-11-16): a referência de todas as faixas é o Brasileirão Série A; outras ligas entram como referência secundária, citada ao lado, quando faltar dado da Série A ou para comparar. Faixa sem dado da Série A diz de onde veio.
 | Métrica (por partida, times equilibrados) | Faixa inicial |
 |---|---|
 | Gols, primeira divisão | 2,2 a 2,5 por temporada simulada; média de longo prazo 2,40 (FATO: 3.317 partidas da Série A, 2018 a 2026; temporadas entre 2,18 e 2,52) |
@@ -383,7 +527,8 @@ O time pior pode ganhar, e a engine não protege ninguém (`00-VISAO-E-PRODUTO.m
 | Mandante vence, terceira e quarta divisões | C 47,4%; D 45,2%; o mandante faz cerca de 59% dos gols nas quatro divisões (FATO, mesma contagem) |
 | Finalizações por time | 12,6 a 13,6 (FATO: Série A, 2017 a 2023, conjunto de dados comunitário; 2024 e 2025 não encontrados) |
 | No alvo por time | 4,0 a 4,6 (FATO, mesma fonte: cerca de um terço das finalizações) |
-| `xG` por finalização | 0,10 a 0,12 (FATO: conversão de 10,3% a 11,9% na Premier League) |
+| Gols por finalização | 0,085 a 0,10 (Série A: 2,2 a 2,5 gols em 12,6 a 13,6 finalizações por time dão conversão de 8,1% a 9,9%; referência secundária, Premier League: 0,10 a 0,12). A bancada compara gols sobre chutes. O `xG` do motor por chute é outra medida e só é impresso, sem faixa (DECISÃO 2026-11-17: antes a bancada comparava o `xG` por chute com esta faixa de conversão). |
+| Passes de 40 m ou mais | abaixo de 13,8% dos passes (Série A 2025: o quarto time mais direto tem 13,8% de passes longos, Flashscore, rodada 16). É um teto, não uma faixa: vale para qualquer definição de passe longo até 40 m. `LOFT_COST` (`carrier.ts`, 0,01) foi calibrado nele e no acerto de passe. Em 2000 partidas: passes de 40 m ou mais de 18% para cerca de 13%, acerto de passe de 76% para 80%, gols de 3,44 para 3,34, impedimentos de 1,41 para 1,11 (ver §5.4: impedimento pelo tempo do lance). |
 | `xG` do pênalti | 0,77 a 0,79 (FATO) |
 | Expulsão cedo | cerca de +0,6 `xG` para quem fica com 11 e −0,5 para quem fica com 10 (FATO; teste de cenário) |
 | Corrida intensa nos 15 min finais | queda de cerca de 26% (FATO; valida o modelo de fôlego) |
@@ -395,6 +540,12 @@ O time pior pode ganhar, e a engine não protege ninguém (`00-VISAO-E-PRODUTO.m
 | Amarelos por time | 2,15 a 2,59; vermelhos 0,10 a 0,15 (FATO) |
 | Impedimentos por time | 1,32 a 1,75 (FATO) |
 | Distância por jogador de linha | 9,5 a 11,5 km |
+| Conferência: Série A 2026 (FBref, tabelas agregadas por time, 34 rodadas, 682 jogos-time; trazidas pelo dono em 2026-11-17) | gols 2,57 por jogo; por time: finalizações 14,05, no alvo 4,61 (33%), gols por finalização 0,091, faltas 13,2, amarelos 2,32, vermelhos 0,13, impedimentos 1,42, cruzamentos 19,4, desarmes vencidos 9,65, interceptações 8,8. Fonte diferente da que gerou as faixas (definições podem mudar o número, sobretudo finalizações e interceptações); as faixas acima continuam as de várias temporadas. A FBref não publica tabela de passes para a Série A: passes completados para o terço final (coluna "1/3") seguem SEM REFERÊNCIA na liga principal |
+| Duelos aéreos por jogo | cerca de 25 (FATO, Série A 2026, conferido em 2026-11-18: AS, "Total aerial duels" por time, média 845 em 34 jogos, 24,9 por jogo; NumberTwenty via pesquisa do dono, 12,4 vencidos por time, 24,8 por jogo). Definição Opta: dois jogadores disputam a bola no alto; quem fica com ela vence. Taxa de vitória por time entre cerca de 45% e 54%. Ainda sem faixa na bancada: o motor não registra o duelo. Medição provisória (40 partidas, 2026-11-18): 21,9 bolas altas disputadas por jogo, só 10,0 com jogadores dos dois times perto; 0,88 falta aérea por jogo |
+| Grandes chances criadas por time | cerca de 2,2 por jogo (FATO, Série A 2026, Statz.ai, atualizado em 14/11/2026: 1.470 em 20 times com 34 jogos; Flamengo 3,4, Remo 1,6). Definição Opta: chance em que se espera razoavelmente que o jogador marque, em geral um contra um ou chute muito perto; pênalti conta. Não é a medida de "atacante sozinho" do motor (8,2 por time). Comparar só depois de o motor marcar grande chance com a mesma definição |
+| Largura e comprimento do time | largura 35 a 48 m, comprimento 31 a 46 m, área cerca de 900 m², stretch index 7 a 16 m (Rico-González et al., 2022, revisão sistemática, PMC8805357). Mistura fases com e sem bola (com bola é maior): não serve para calibrar largura com bola |
+| Passes longos completos por time | 24,6 a 28,6 nos cinco times de maior volume (NumberTwenty 2026, via pesquisa do dono, não conferido: a página não abre por leitura simples). Definição de distância não confirmada; FBref usa mais de 30 jardas (27,4 m) |
+| Passes no próprio campo por time | 188 a 244 nos cinco times de maior volume (NumberTwenty 2026, via pesquisa do dono, não conferido). Próprio campo não é terço defensivo |
 | Gols de bola parada | 18 a 25% (FATO: 18% na Liga dos Campeões de 2023/24, 66 de 375; 24,4% na Copa de 2022; a definição muda o número) |
 | Origem dos gols de jogo corrido | transição cerca de 22%, posse controlada cerca de 42% (FATO: Liga dos Campeões de 2023/24) |
 | Forma do time | comprimento 31 a 46 m, largura 35 a 48 m, dispersão média em torno do centro 7 a 16 m, área perto de 900 m²; tudo maior com a posse (FATO: revisão sistemática de dados de rastreamento). Distância entre linhas por altura de bloco: NÃO ENCONTRADO |

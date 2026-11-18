@@ -20,6 +20,256 @@ export const ptBR = {
   'sandbox.lineHeight': 'Altura da linha de defesa: {value} de 5',
   'sandbox.inverted': 'Lateral direito por dentro com a bola',
 
+  'career.title': 'Carreira',
+  'career.loadError': 'Não deu para carregar a carreira',
+  'career.startTitle': 'Como você quer começar?',
+  'career.mode': '{m, select, job_offers {Começar por baixo} other {Escolher o clube}}',
+  'career.modeHint':
+    '{m, select, job_offers {Três propostas da última divisão, cada uma um desafio diferente.} other {Qualquer clube das divisões nacionais, com elenco, caixa e estrutura do jeito que estão.}}',
+  'career.axis':
+    '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}',
+  'career.axisValue':
+    '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}: {n} de 100',
+  'career.reputation': 'Reputação {n}',
+  'career.accept': 'Assumir o {club}',
+  'career.divisions': 'Divisões',
+  'career.computing': 'Montando a temporada no seu aparelho…',
+  'career.where': '{division}, temporada {season}',
+  'career.cashLabel': 'Caixa',
+  'career.venue': '{v, select, home {Em casa} other {Fora de casa}}',
+  'career.dateLong': '{d, date, long}',
+  'career.last': 'Último jogo',
+  'career.score': '{a}–{b}',
+  'career.today': 'Hoje',
+  'career.tunnel': 'Entrando em campo',
+  'career.form': 'Últimos jogos',
+  'career.formEmpty': 'Nenhum jogo ainda nesta temporada.',
+  'career.formResult': '{r, select, W {V} D {E} other {D}}',
+  'career.formLabel':
+    '{r, select, W {Vitória} D {Empate} other {Derrota}}, {a} a {b}, contra o {opp}',
+  'career.fixtures': 'Depois',
+  'career.venueShort': '{v, select, home {Casa} other {Fora}}',
+  'career.inbox': 'Mensagens',
+  'career.from':
+    '{f, select, board {Diretoria} press {Imprensa} staff {Comissão} market {Mercado} other {Financeiro}}',
+  'career.msgWelcome':
+    'Bem-vindo ao {club}. A diretoria espera trabalho sério desde o primeiro jogo da {division}.',
+  'career.msgWin': 'Vitória por {a} a {b} sobre o {opp}. A torcida saiu cantando.',
+  'career.msgDraw': 'Empate em {a} a {b} com o {opp}. Um ponto para a conta.',
+  'career.msgLoss': 'Derrota por {a} a {b} para o {opp}. A imprensa cobra reação.',
+  'career.msgCash': 'O caixa ficou negativo. A diretoria quer as contas em ordem.',
+  'career.net': 'Saldo da temporada',
+  'career.cash': '{value, number, currency}',
+  'career.next': 'Próximo jogo',
+  'career.rooms': 'Salas do clube',
+  'career.room':
+    '{r, select, sala {Sala do técnico} vestiario {Vestiário} treino {Campo de treino} mercado {Mercado} other {Diretoria}}',
+  'squad.title': 'Escalação',
+  'squad.formation': 'Formação',
+  'squad.auto': 'Escalação do treinador',
+  'squad.strength': 'Força do time',
+  'squad.list': 'Elenco',
+  'squad.pick': 'Quem joga de {role}?',
+  'squad.hint':
+    'Toque numa posição do campo para trocar o jogador. A escolha vale no próximo jogo.',
+  'squad.slot': '{role}: {name}, nota {n}, {known}',
+  'squad.choose': '{name}, {age} anos, nota {n}, {known}',
+  'squad.starter': 'Titular',
+  'squad.fresh': 'Fôlego {n}%',
+  'market.open': 'Janela aberta',
+  'market.closed': 'Janela fechada. Abre de janeiro a abril e em julho.',
+  'market.cash': 'Caixa {cash}',
+  'market.wageRoom': 'Folha: cabe mais {room} por mês',
+  'market.noClub': 'Sem clube',
+  'market.until': 'Contrato até {year}',
+  'market.band': '{lo} a {hi}',
+  'market.potential': 'Potencial {lo} a {hi}',
+  'market.clause': 'Multa {fee}',
+  'market.payClause': 'Pagar a multa',
+  'market.yourClause': 'Multa rescisória em reais (opcional)',
+  'market.borrow': 'Emprestar',
+  'market.borrowFor': 'Pegar {name} emprestado até o fim da temporada por {fee}',
+  'market.lend': 'Ceder',
+  'market.unlend': 'Não ceder',
+  'market.lendFor':
+    '{on, select, true {Tirar {name} da lista de empréstimo} other {Oferecer {name} por empréstimo}}',
+  'market.forLoan': 'Para empréstimo',
+  'market.onLoan': 'Emprestado pelo {club}',
+  'market.renew': 'Renovar',
+  'market.renewFor': 'Renovar o contrato de {name}',
+  'market.freeTalk': 'Sem clube: não há taxa de transferência.',
+  'market.renewTalk': 'Renovação: ele diz quanto quer para ficar.',
+  'market.mine': 'Seu elenco',
+  'market.targets': 'Jogadores no mercado',
+  'market.position': 'Posição',
+  'market.all': 'Todas',
+  'market.value': 'Valor {value}',
+  'market.wage': '{wage} por mês',
+  'market.talk': 'Negociar',
+  'market.talkFor': 'Negociar {name}, {age} anos, nota {n}, valor {value}',
+  'market.no':
+    '{r, select, window {Janela fechada} embargo {Proibido de contratar} squadFull {Elenco cheio} theirSquad {Clube não libera} cold {Conversa encerrada} justMoved {Recém-contratado} abroad {Jogando no exterior} loyal {Não quer sair} stepDown {Não aceita descer} role {Não vem para o banco} other {Sem acordo}}',
+  'market.part': '{p, select, starter {Titular} cover {Reserva imediato} other {Sobra no elenco}}',
+  'market.list': 'Pôr à venda',
+  'market.unlist': 'Tirar da lista',
+  'market.listed': 'À venda',
+  'market.listFor': '{on, select, true {Tirar {name} da lista} other {Pôr {name} à venda}}',
+  'market.talks': 'Negociações',
+  'market.asks': 'O {club} pede {fee}.',
+  'market.mood':
+    '{m, select, starter {Ele é titular lá: o clube cobra mais.} cover {Ele é o reserva imediato lá.} other {Ele sobra no elenco de lá: o clube aceita menos.}}',
+  'market.left': '{n, plural, =0 {Última oferta.} one {Resta # oferta.} other {Restam # ofertas.}}',
+  'market.yourFee': 'Sua oferta em reais',
+  'market.offer': 'Oferecer',
+  'market.payAsk': 'Pagar o pedido',
+  'market.drop': 'Desistir',
+  'market.agreed': 'Preço fechado com o {club}: {fee}.',
+  'market.wants':
+    '{name} pede {wage} por mês, {years, plural, one {# ano} other {# anos}}, como {role}.',
+  'market.role':
+    '{r, select, starter {titular} rotation {jogador de rodízio} backup {reserva} other {promessa}}',
+  'market.yourWage': 'Salário por mês em reais',
+  'market.years': 'Anos de contrato',
+  'market.roleLabel': 'Papel prometido',
+  'market.propose': 'Propor',
+  'market.takeAsk': 'Aceitar o pedido',
+  'market.bids': 'Propostas recebidas',
+  'market.bidText': 'O {club} oferece {fee} por {name}.',
+  'market.accept': 'Aceitar',
+  'market.refuse': 'Recusar',
+  'market.yourPrice': 'Seu preço em reais',
+  'market.counter': 'Pedir esse valor',
+  'market.saidFee':
+    '{k, select, accept {Preço fechado. Agora o contrato com o jogador.} counter {O clube não aceitou e fez um novo pedido.} insult {A oferta ofendeu o clube, que encerrou a conversa até a próxima temporada.} other {O clube encerrou a conversa até a próxima temporada.}}',
+  'market.saidTerms':
+    '{k, select, accept {{name} assinou. Negócio fechado.} counter {{name} não aceitou e fez um novo pedido.} loyal {{name} não quer deixar o clube dele.} stepDown {{name} não aceita descer de nível.} role {{name} não vem para ser reserva.} other {{name} encerrou a conversa.}}',
+  'market.saidBid':
+    '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
+  'market.saidNo':
+    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
+  'market.news': 'Negócios entre clubes',
+  'market.noNews': 'Nenhum negócio ainda nesta janela.',
+  'market.deal':
+    '{to} contratou {name} do {from} por {fee} para ser {for, select, starter {titular} other {reserva}}.',
+  'market.judged': 'Avaliaram ele em nota {seen}. Diretoria de futebol nível {office} de 5.',
+  'market.why':
+    'Por quê: necessidade {need}, encaixe {fit}, evolução {growth}, revenda {resale}, custo −{cost}, folha −{wages}.',
+  'market.bought': '{name} contratado junto ao {club} por {price}.',
+  'market.sold': '{name} vendido ao {club} por {price}.',
+  'inbox.contractEnded': 'O contrato de {name} acabou e ele deixou o clube.',
+  'inbox.contractKept': '{name} ficou mais um ano: sem ele o elenco não teria gente para jogar.',
+  'inbox.injury':
+    '{name} se machucou: {kind}. Fora por {days, plural, one {# dia} other {# dias}}.',
+  'health.kind':
+    '{k, select, knock {pancada} muscle {lesão muscular} sprain {entorse} other {lesão grave}}',
+  'health.out': '{n, plural, one {Lesionado: volta em # dia} other {Lesionado: volta em # dias}}',
+  'health.outLabel': 'Lesionado',
+  'inbox.crop':
+    '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
+  'inbox.cameUp':
+    '{n, plural, one {# garoto fez 19 anos e subiu} other {# garotos fizeram 19 anos e subiram}} da base para o elenco.',
+  'academy.title': 'Base',
+  'academy.hint':
+    'Na base o garoto cresce no ritmo dele. No elenco cresce mais se jogar e menos se ficar parado. Aos 19 anos ele sobe sozinho.',
+  'academy.empty': 'Nenhum garoto na base agora. A próxima safra chega na virada da temporada.',
+  'academy.line': '{age} anos, nota {rating}, potencial {lo} a {hi}',
+  'academy.promote': 'Subir',
+  'academy.promoteName': 'Subir {name} para o elenco',
+  'inbox.contractsEnding':
+    '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
+  'inbox.clausePaid': 'O {club} pagou a multa de {name}: {fee}. Ele foi embora.',
+  'inbox.loanIn': '{name} chegou por empréstimo do {club}, por {fee}.',
+  'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
+  'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
+  'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
+  'inbox.fairplay':
+    '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita. Advertência.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). O clube está proibido de contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Proibido de contratar e {points} pontos a menos na tabela.}}',
+  'inbox.fairplayRival':
+    'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
+  'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
+  'inbox.empty': 'Nenhuma mensagem ainda.',
+  'inbox.ultimatum':
+    'Ultimato: {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}, ou o contrato acaba.',
+  'inbox.ultimatumMet': 'Ultimato cumprido. A direção recua.',
+  'inbox.goal':
+    '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
+  'inbox.tired':
+    '{n, plural, one {# titular saiu} other {# titulares saíram}} do jogo com menos de metade do fôlego. Vale rodar o elenco.',
+  'inbox.window':
+    '{open, select, true {A janela de transferências abriu.} other {A janela de transferências fechou.}}',
+  'inbox.prize': 'Premiação pelo {position}º lugar: {amount}.',
+  'inbox.season':
+    'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
+  'board.goal': 'Meta da temporada',
+  'board.goalText': 'Terminar a {division} até o {n}º lugar.',
+  'board.position': 'Hoje o clube é o {n}º.',
+  'board.confidence': 'Confiança da direção',
+  'board.state':
+    '{s, select, high {Prestigiado} steady {Estável} pressed {Pressionado} other {Na corda bamba}}',
+  'board.last': 'O que mexeu na confiança',
+  'board.none': 'Nada ainda. A confiança muda a cada jogo seu.',
+  'board.result':
+    '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
+  'board.reason':
+    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} other {Ultimato cumprido}}',
+  'board.up': '+{n}',
+  'board.down': '−{n}',
+  'board.ultimatum': 'Ultimato',
+  'board.ultimatumText':
+    'A direção quer {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}. Sem isso, o contrato acaba.',
+  'board.fairplay': 'Fair play financeiro',
+  'board.fairplayCost': '{n}%',
+  'board.fairplayLimit': 'da receita vai em salários. O limite é {n}%.',
+  'board.fairplayState':
+    '{s, select, 0 {{over, select, yes {Acima do limite. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e o clube fica proibido de contratar.} 2 {Proibido de contratar e de dar aumento nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Proibido de contratar. O clube começou a temporada com {points} pontos a menos.}}',
+  'board.calm': 'Sem ultimato. Abaixo de 25 de confiança, a direção dá um prazo.',
+  'board.fired': 'A direção encerrou seu contrato',
+  'board.firedText': 'O ultimato não foi cumprido. O {club} segue sem você.',
+  'board.restart': 'Começar outra carreira',
+  'board.offers': 'Clubes que querem você',
+  'board.take': 'Assumir',
+  'board.takeName': 'Assumir o {club}',
+  'training.week': 'Semana de treino',
+  'training.intensity': '{i, select, light {Leve} normal {Normal} other {Forte}}',
+  'training.recovery': 'Fôlego volta {n, number}% por dia',
+  'training.target': 'Entrosamento vai a {n}%',
+  'training.drill': 'Entrosamento hoje',
+  'training.drillHint':
+    'Time entrosado pressiona junto e segue o plano. Conta na partida assistida e no resultado.',
+  'training.next':
+    '{n, plural, =0 {Jogo hoje.} one {Próximo jogo em # dia.} other {Próximo jogo em # dias.}}',
+  'training.noMatch': 'Sem jogo marcado.',
+  'training.cost': 'Cada titular deixa {n}% de fôlego no jogo.',
+  'training.fresh': 'Fôlego para o próximo jogo',
+  'training.freshHint': 'Quem está cansado rende menos. Troque no Vestiário ou alivie a semana.',
+  'training.state': '{s, select, ready {Pronto} tired {Cansado} other {Esgotado}}',
+  'training.player': '{name}: fôlego {n}%, {state}',
+  'squad.known':
+    '{l, select, 3 {Da posição} 2 {Sabe jogar ali} 1 {Improvisado} other {Fora de posição}}',
+  'squad.plan': 'Plano de jogo',
+  'squad.planHint':
+    'O plano vale quando você assiste à partida ou vê os melhores momentos. Em "Só o resultado" conta apenas a escalação.',
+  'squad.age': '{n} anos',
+  'squad.role':
+    '{r, select, goalkeeper {Goleiro} sweeperKeeper {Goleiro líbero} centreBack {Zagueiro} libero {Líbero} supportFullBack {Lateral} invertedFullBack {Lateral por dentro} wingBack {Ala} anchor {Volante} deepPlaymaker {Volante armador} boxToBox {Meia área a área} playmaker {Armador} wideWinger {Ponta aberto} insideForward {Ponta por dentro} targetMan {Pivô} falseNine {Falso nove} advancedForward {Centroavante} other {Jogador}}',
+  'squad.position':
+    '{p, select, GK {GOL} CB {ZAG} RB {LD} LB {LE} DM {VOL} CM {MC} RM {MD} LM {ME} AM {MEI} RW {PD} LW {PE} SS {SA} other {ATA}}',
+  'career.date': '{d, date, short}',
+  'career.builtHere': 'Último passo calculado neste aparelho em {ms} ms.',
+  'career.play': 'Só o resultado',
+  'career.watchFull': 'Assistir à partida',
+  'career.watchHighlights': 'Melhores momentos',
+  'career.lastResult': '{home} {a} × {b} {away}',
+  'career.seasonOver': 'Temporada encerrada.',
+  'career.nextSeason': 'Começar a temporada {season}',
+  'career.turn':
+    'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
+  'career.money': 'Dinheiro na temporada {season}',
+  'career.moneyKind':
+    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} other {Outros}}',
+  'career.table': 'Classificação',
+  'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
+  'friendly.continue': 'Continuar',
   'friendly.title': 'Amistoso',
   'friendly.kicker': 'Modo Clube · partida avulsa',
   'friendly.intro':
@@ -35,9 +285,15 @@ export const ptBR = {
   'friendly.width': 'Largura: {v} de 5',
   'friendly.risk': 'Risco no passe: {v} de 5',
   'friendly.play': 'Começar a partida',
+  'friendly.watch': 'Como assistir',
+  'friendly.watchValue':
+    '{v, select, full {Partida completa} extended {Melhores momentos estendidos} highlights {Melhores momentos} goals {Só os gols} other {Só o resultado}}',
+  'friendly.moment': 'Lance {n}',
+  'friendly.preparing': 'Carregando a partida…',
+  'friendly.preparingMoment': 'Preparando o próximo lance…',
   'friendly.loading': 'Preparando o jogo…',
   'friendly.loadError': 'Não deu para carregar a partida',
-  'friendly.pitchLabel': 'Campo visto de cima: {home} de círculos, {away} de quadrados, e a bola',
+  'friendly.pitchLabel': 'Campo da partida: {home} de círculos, {away} de quadrados, e a bola',
   'friendly.clock': "{minute}'",
   'friendly.period': '{p, select, 1 {1º tempo} 2 {2º tempo} other {Prorrogação}}',
   'friendly.pause': 'Pausar',
@@ -78,6 +334,8 @@ export const ptBR = {
     'Seu time fez {goals} gols com {xg, number} de gols esperados: a finalização decidiu.',
   'match.explain.keeper':
     '{team, select, 0 {Seu goleiro evitou {saved, number} gols além do esperado.} other {O goleiro deles evitou {saved, number} gols além do esperado.}}',
+  'match.explain.keeperConceded':
+    '{team, select, 0 {Seu goleiro sofreu {conceded, number} gols além do esperado.} other {O goleiro deles sofreu {conceded, number} gols além do esperado.}}',
   'match.explain.setPieces':
     'Bola parada: {xgFor, number} de gols esperados a favor contra {xgAgainst, number}.',
   'match.explain.transition':
@@ -86,6 +344,7 @@ export const ptBR = {
     'Ataque organizado: {xgFor, number} de gols esperados a favor contra {xgAgainst, number}.',
 
   'common.money': '{value, number, currency}',
+  'common.percent': '{n}%',
   'common.minutes': '{n, plural, =0 {nenhum minuto} one {# minuto} other {# minutos}}',
 } as const satisfies Record<string, string>;
 

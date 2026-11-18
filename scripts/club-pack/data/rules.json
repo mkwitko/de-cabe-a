@@ -1,0 +1,965 @@
+[
+  {
+    "competitionId": "br-serie-a",
+    "season": "2026",
+    "type": "league",
+    "teams": 20,
+    "format": "double round-robin",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 4,
+      "playoffSlots": 0,
+      "to": "br-serie-b"
+    },
+    "continentalSlots": [
+      {
+        "competition": "conmebol-libertadores",
+        "slots": 5,
+        "note": "top five for 2027, plus Copa do Brasil champion and runner-up"
+      },
+      {
+        "competition": "conmebol-sudamericana",
+        "slots": 6,
+        "note": "next six best-placed non-qualifiers"
+      }
+    ],
+    "tieBreaks": [
+      "wins",
+      "goalDifference",
+      "goalsFor",
+      "headToHead",
+      "fewerRedCards",
+      "fewerYellowCards",
+      "drawingOfLots"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": 9,
+      "maxOnPitch": null,
+      "notes": "no limit on foreigners in overall squad"
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Campeonato_Brasileiro_Série_A",
+        "title": "2026 Campeonato Brasileiro Série A (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "format", "relegation", "continentalSlots", "foreignPlayers"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Campeonato_Brasileiro_Série_A",
+        "title": "Campeonato Brasileiro Série A (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "tieBreaks"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Season 28 Jan to 2 Dec 2026 with World Cup break. Tie-breaks not read on the page. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed. Tie-breaks from the league main article (head-to-head ignored when 3+ teams tied); news reports of REC 2026 article 15 list a shorter or differently ordered set, so unverified against the CBF PDF."
+  },
+  {
+    "competitionId": "br-serie-b",
+    "season": "2026",
+    "type": "league",
+    "teams": 20,
+    "format": "double round-robin, 38 matches each, promotion play-offs",
+    "pointsWin": null,
+    "pointsDraw": null,
+    "pointsLoss": null,
+    "promotion": {
+      "slots": 4,
+      "playoffSlots": null,
+      "to": "br-serie-a"
+    },
+    "relegation": {
+      "slots": 4,
+      "playoffSlots": 0,
+      "to": "br-serie-c"
+    },
+    "continentalSlots": [],
+    "tieBreaks": [
+      "wins",
+      "goalDifference",
+      "goalsFor",
+      "headToHead",
+      "fewerRedCards",
+      "fewerYellowCards",
+      "drawingOfLots"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Campeonato_Brasileiro_Série_B",
+        "title": "2026 Campeonato Brasileiro Série B (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "relegation", "tieBreaks", "promotion"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Campeonato_Brasileiro_Série_A",
+        "title": "Campeonato Brasileiro Série A (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["promotion"],
+        "quote": "top four from Série B are promoted"
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Champion and runner-up promoted directly; play-off for places roughly 3rd-6th in two groups but page truncated before the format and whether it yields promotion, so promotion slots left null. Sudamericana qualification not on page. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed. Promotion slots=4 from the Serie A main article (4 relegated/4 promoted); season page shows champion and runner-up plus play-off groups, play-off structure unverified."
+  },
+  {
+    "competitionId": "br-copa-do-brasil",
+    "season": "2026",
+    "type": "cup",
+    "teams": 126,
+    "format": "single-leg rounds 1-4, two-legged round 5 to semi-finals, single-match final",
+    "pointsWin": null,
+    "pointsDraw": null,
+    "pointsLoss": null,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "continentalSlots": [
+      {
+        "competition": "conmebol-libertadores",
+        "slots": 2,
+        "note": "champion and runner-up get 2027 Libertadores berths per the Serie A page"
+      }
+    ],
+    "tieBreaks": null,
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Copa_do_Brasil",
+        "title": "2026 Copa do Brasil (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "format"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Serie A clubs enter in round 5. Final 6 Dec in Brasilia. Extra time, away goals and penalties rules not stated; leg count differs per round so knockout.legs null. Winner Libertadores berth mentioned on the Serie A page only. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "conmebol-libertadores",
+    "season": "2026",
+    "type": "continental",
+    "teams": 47,
+    "format": "qualifying stages, 8 groups of 4, then two-legged knockouts, single-match final",
+    "pointsWin": null,
+    "pointsDraw": null,
+    "pointsLoss": null,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "continentalSlots": [],
+    "tieBreaks": null,
+    "knockout": {
+      "legs": 2,
+      "awayGoals": null,
+      "extraTime": false,
+      "penalties": true
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Copa_Libertadores",
+        "title": "2026 Copa Libertadores (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "format", "knockout"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Copa_Libertadores_final_stages",
+        "title": "2026 Copa Libertadores final stages (Wikipedia, cites Regulations Art. 2.4.3 and 2.4.4)",
+        "accessed": "2026-11-17",
+        "supports": ["knockout"],
+        "quote": "If tied on aggregate, extra time was not played"
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Final 28 Nov 2026 at Estadio Centenario. Qualifying-stage ties level on aggregate go straight to penalties (no extra time); rule for later knockout rounds, away goals and group tie-breaks not read. Group winners and runners-up reach the round of 16; third place drops to Sudamericana play-offs. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed. R16-SF two-legged, level aggregate goes straight to penalties; the single-match final plays 30 min extra time then penalties. No away-goals rule mentioned (left null)."
+  },
+  {
+    "competitionId": "conmebol-sudamericana",
+    "season": "2026",
+    "type": "continental",
+    "teams": 44,
+    "format": "first stage single-leg, 8 groups of 4, two-legged knockouts, single-match final",
+    "pointsWin": null,
+    "pointsDraw": null,
+    "pointsLoss": null,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "continentalSlots": [],
+    "tieBreaks": null,
+    "knockout": {
+      "legs": 2,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Copa_Sudamericana",
+        "title": "2026 Copa Sudamericana (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "format"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Final 21 Nov 2026 in Barranquilla. 12 Libertadores-eliminated teams join. First-stage draws go to penalties. Away goals, extra time and group tie-break order not read. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "en-premier-league",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 20,
+    "format": "double round-robin",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 3,
+      "playoffSlots": 0,
+      "to": "en-championship"
+    },
+    "continentalSlots": [
+      {
+        "competition": "uefa-champions-league",
+        "slots": null,
+        "note": "1st confirmed; full count not read; extra 5th place if coefficient bonus"
+      },
+      {
+        "competition": "uefa-europa-league",
+        "slots": null,
+        "note": "5th plus FA Cup winner"
+      }
+    ],
+    "tieBreaks": ["goalDifference", "goalsFor", "headToHead", "awayGoalsHeadToHead", "playoff"],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": {
+      "summer": "2026-06-15 to 2026-09-01 23:00 BST",
+      "winter": "2027-01-01 to 2027-02-01 23:00 GMT"
+    },
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_Premier_League",
+        "title": "2026-27 Premier League (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots", "transferWindows"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Premier_League",
+        "title": "Premier League (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Premier_League",
+        "title": "Premier League (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["relegation"],
+        "quote": "three lowest-placed teams are relegated"
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Tie-break: points, GD, GF, then head-to-head points, head-to-head away goals, neutral-site play-off for title/relegation/UEFA places. Europa League: 5th plus FA Cup winner (6th if winner is top five). If England is a top-two UEFA association, 5th goes to Champions League. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "en-championship",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 24,
+    "format": "double round-robin plus play-offs",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": 2,
+      "playoffSlots": 6,
+      "to": "en-premier-league"
+    },
+    "relegation": {
+      "slots": 3,
+      "playoffSlots": 0,
+      "to": "en-league-one"
+    },
+    "continentalSlots": [],
+    "tieBreaks": [
+      "goalDifference",
+      "goalsFor",
+      "headToHead",
+      "wins",
+      "awayGoals",
+      "penaltyPoints",
+      "redCardOffences",
+      "playoff"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_EFL_Championship",
+        "title": "2026-27 EFL Championship (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "promotion", "tieBreaks"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/EFL_Championship",
+        "title": "EFL Championship (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "promotion", "relegation"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Six play-off places (3rd-4th into semi-finals, 5th-8th eliminators per the page). Automatic promotion count and relegation count not stated explicitly; play-off legs/extra time not stated. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "es-laliga",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 20,
+    "format": "double round-robin",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 3,
+      "playoffSlots": 0,
+      "to": "es-segunda"
+    },
+    "continentalSlots": [],
+    "tieBreaks": [
+      "headToHead",
+      "headToHeadGoalDifference",
+      "goalDifference",
+      "goalsFor",
+      "fairPlay",
+      "playoff"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_La_Liga",
+        "title": "2026-27 La Liga (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "tieBreaks"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/La_Liga",
+        "title": "La Liga (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "relegation"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Relegation zone starts at 19th on the table but slot total not stated. European slot counts not stated. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "de-bundesliga",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 18,
+    "format": "double round-robin",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 2,
+      "playoffSlots": 1,
+      "to": "de-2-bundesliga"
+    },
+    "continentalSlots": [
+      {
+        "competition": "uefa-champions-league",
+        "slots": null,
+        "note": "1st confirmed; count not read"
+      },
+      {
+        "competition": "uefa-europa-league",
+        "slots": null,
+        "note": "5th plus DFB-Pokal winner"
+      },
+      {
+        "competition": "uefa-conference-league",
+        "slots": null,
+        "note": "6th, playoff round"
+      }
+    ],
+    "tieBreaks": [
+      "goalDifference",
+      "goalsFor",
+      "headToHead",
+      "awayGoalsHeadToHead",
+      "awayGoals",
+      "playoff"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_Bundesliga",
+        "title": "2026-27 Bundesliga (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Bundesliga",
+        "title": "Bundesliga (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "relegation"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "16th goes to relegation play-offs (27 and 31 May 2027); 17th marked relegated; label for 18th missing from extract so direct slots left null. Head-to-head criteria apply after both matches are played. DFB-Pokal winner gets Europa League (7th takes Conference spot if winner is top six). Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "it-serie-a",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 20,
+    "format": "double round-robin",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 3,
+      "playoffSlots": 0,
+      "to": "it-serie-b"
+    },
+    "continentalSlots": [
+      {
+        "competition": "uefa-europa-league",
+        "slots": null,
+        "note": "5th plus Coppa Italia winner"
+      },
+      {
+        "competition": "uefa-conference-league",
+        "slots": null,
+        "note": "6th, playoff round"
+      }
+    ],
+    "tieBreaks": [
+      "headToHead",
+      "headToHeadGoalDifference",
+      "goalDifference",
+      "goalsFor",
+      "drawingOfLots"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_Serie_A",
+        "title": "2026-27 Serie A (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Serie_A",
+        "title": "Serie A (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Bottom three marked relegated. Ties for 1st or 17th may be decided by play-off unless UEFA finalist involved. Europa League: 5th plus Coppa Italia winner; Conference: 6th. 5th also Champions League if coefficient bonus. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  },
+  {
+    "competitionId": "fr-ligue-1",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 18,
+    "format": "double round-robin",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": null,
+      "playoffSlots": 1,
+      "to": null
+    },
+    "continentalSlots": [
+      {
+        "competition": "uefa-champions-league",
+        "slots": null,
+        "note": "1st league phase, 4th third qualifying round; 2nd/3rd not read"
+      },
+      {
+        "competition": "uefa-europa-league",
+        "slots": null,
+        "note": "5th plus Coupe de France winner"
+      },
+      {
+        "competition": "uefa-conference-league",
+        "slots": null,
+        "note": "6th, playoff round"
+      }
+    ],
+    "tieBreaks": [
+      "goalDifference",
+      "headToHead",
+      "headToHeadGoalDifference",
+      "goalsFor",
+      "wins",
+      "awayWins",
+      "fairPlay",
+      "drawingOfLots"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_Ligue_1",
+        "title": "2026-27 Ligue 1 (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["relegation", "tieBreaks", "continentalSlots"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Ligue_1",
+        "title": "Ligue 1 (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Team count inferred from 18 table rows (18th shown). 16th goes to relegation play-off; 17th marked relegated; 18th label missing so direct slots null. 4th enters Champions League 3rd qualifying round. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed. Direct relegation count still not stated by any fetched page."
+  },
+  {
+    "competitionId": "pt-primeira-liga",
+    "season": "2026-27",
+    "type": "league",
+    "teams": 18,
+    "format": "double round-robin",
+    "pointsWin": null,
+    "pointsDraw": null,
+    "pointsLoss": null,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 2,
+      "playoffSlots": 1,
+      "to": "pt-liga-2"
+    },
+    "continentalSlots": [
+      {
+        "competition": "uefa-champions-league",
+        "slots": 3,
+        "note": "1st-2nd league phase, 3rd third qualifying round"
+      },
+      {
+        "competition": "uefa-europa-league",
+        "slots": 1,
+        "note": "4th, second qualifying round; Taca winner league phase"
+      },
+      {
+        "competition": "uefa-conference-league",
+        "slots": 1,
+        "note": "5th, second qualifying round"
+      }
+    ],
+    "tieBreaks": [
+      "headToHead",
+      "headToHeadGoalDifference",
+      "goalDifference",
+      "wins",
+      "goalsFor",
+      "playoff"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026–27_Primeira_Liga",
+        "title": "2026-27 Primeira Liga (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "16th plays two-legged play-off (29 May and 6 Jun 2027) vs 3rd of Liga Portugal 2. Taca de Portugal winner gets Europa League league phase with cascading spots. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed. The Primeira Liga main article contradicts itself (2 vs 3 relegated); season page used."
+  },
+  {
+    "competitionId": "us-mls",
+    "season": "2026",
+    "type": "league",
+    "teams": 30,
+    "format": "two 15-team conferences, 34 matches each, conference playoffs and MLS Cup",
+    "pointsWin": null,
+    "pointsDraw": null,
+    "pointsLoss": null,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "continentalSlots": [
+      {
+        "competition": "concacaf-champions-cup",
+        "slots": null,
+        "note": "Shield winner, Western Conference winner, next two Shield clubs, US Open Cup winner"
+      }
+    ],
+    "tieBreaks": [
+      "wins",
+      "goalDifference",
+      "goalsFor",
+      "fairPlay",
+      "awayGoals",
+      "homeGoals",
+      "drawingOfLots"
+    ],
+    "knockout": {
+      "legs": null,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": 30,
+      "notes": "active roster up to 30 (20 senior + up to 11 supplemental per page; counts as listed); final roster freeze 9 Oct 2026"
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": "241 international slots shared across 30 clubs in 2026 (about 8 per club, tradable); Canadian clubs may designate up to 3 extra"
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": {
+      "primary": "2026-01-26 to 2026-03-26",
+      "secondary": "2026-07-13 to 2026-09-02"
+    },
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Major_League_Soccer_season",
+        "title": "2026 Major League Soccer season (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "format", "continentalSlots", "tieBreaks"]
+      },
+      {
+        "url": "https://www.mlssoccer.com/about/roster-rules-and-regulations",
+        "title": "MLS roster rules and regulations (official)",
+        "accessed": "2026-11-17",
+        "supports": ["squadRegistration", "foreignPlayers", "transferWindows"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Regular season 21 Feb to 7 Nov with World Cup break; playoffs 19 Nov to 18 Dec. Top two per conference skip the wild card round. Tie-break order read from standings legend (vague on disciplinary and home/away goal items). No relegation mentioned on page; value left null. 2027 Champions Cup: Shield winner, Western winner, two next Shield ranks, US Open Cup winner. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed. Roster and international slot figures are from the official MLS page; the page's own 30 vs 31 slot wording is inconsistent."
+  },
+  {
+    "competitionId": "ar-primera",
+    "season": "2026",
+    "type": "league",
+    "teams": 30,
+    "format": "Apertura and Clausura, two zones of 15, top 8 per zone to single-leg knockouts",
+    "pointsWin": 3,
+    "pointsDraw": 1,
+    "pointsLoss": 0,
+    "promotion": {
+      "slots": null,
+      "playoffSlots": null,
+      "to": null
+    },
+    "relegation": {
+      "slots": 2,
+      "playoffSlots": 0,
+      "to": "ar-primera-nacional"
+    },
+    "continentalSlots": [
+      {
+        "competition": "conmebol-libertadores",
+        "slots": null,
+        "note": "Apertura and Clausura winners plus aggregate-table spots"
+      }
+    ],
+    "tieBreaks": null,
+    "knockout": {
+      "legs": 1,
+      "awayGoals": null,
+      "extraTime": null,
+      "penalties": null
+    },
+    "squadRegistration": {
+      "maxRegistered": null,
+      "notes": null
+    },
+    "foreignPlayers": {
+      "maxInMatchSquad": null,
+      "maxOnPitch": null,
+      "notes": null
+    },
+    "homegrown": {
+      "rule": null
+    },
+    "transferWindows": null,
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/2026_Argentine_Primera_División",
+        "title": "2026 Argentine Primera Division (Wikipedia)",
+        "accessed": "2026-11-17",
+        "supports": ["teams", "format", "relegation", "continentalSlots"]
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Argentine_Primera_División",
+        "title": "Argentine Primera Division (Wikipedia, league main article)",
+        "accessed": "2026-11-17",
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
+      }
+    ],
+    "confidence": "medium",
+    "notes": "Two relegated: one by coefficient, last in the 2026 aggregate table. Apertura and Clausura winners go to 2027 Libertadores; other berths from aggregate table. Tie-breaks and foreign-player rules not in excerpt. Source is Wikipedia only (no official page fetched), so confidence is medium; points values and unlisted fields left null rather than assumed."
+  }
+]

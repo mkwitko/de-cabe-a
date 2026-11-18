@@ -7,7 +7,7 @@ Uma carreira tem mais de cem clubes e alguns milhares de jogadores profissionais
 
 ## Decisão
 1. **Pacote de dados** (`apps/api/club-packs/<id>.json`, validado por zod): clubes, elencos, atributos, cidades, parâmetros de competição. Imutável depois de publicado; tem `id`, `versão`, `checksum` e manifesto de origem por campo (`importado`, `gerado`, `ajustado à mão`). Carregado em memória na subida da API.
-2. **Importador genérico**: lê CSV ou JSON no formato do pacote, normaliza, deduplica e emite relatório de qualidade. O importador não conhece fornecedor; a origem dos arquivos que entram é decisão e responsabilidade do dono. O assistente não extrai nem converte bases de terceiros.
+2. **Importador genérico**: lê CSV ou JSON no formato do pacote, normaliza, deduplica e emite relatório de qualidade. O importador não conhece fornecedor; a origem dos arquivos que entram é decisão e responsabilidade do dono. O assistente não extrai nem converte bases de terceiros. *Nota de 2026-11-17: o dono autorizou importar a exportação do próprio save do FM26 (pasta de CSVs) para um pacote `kind: 'real'`, por conta e responsabilidade dele. Os CSVs brutos e o pacote gerado (`apps/api/club-packs/`) ficam fora do git; o repositório guarda só o importador (`scripts/club-pack/import-fm.ts`) e a tabela de nações (`scripts/club-pack/data/fm-nations.json`).*
 3. **Estado da carreira = diferenças sobre o pacote.** Três partes:
    - `ClubCareer` (linha): dono (sessão), pacote, versão da engine, semente, modo de início, temporada, dia, clube. Sem saldo de caixa (item 6b).
    - `ClubCareerWorld` (um documento JSON comprimido por carreira): só o que mudou em relação ao pacote (atributos evoluídos, transferências, tabelas, jogadores gerados, estado dos outros clubes). Lido e gravado só ao avançar o calendário.
@@ -26,3 +26,5 @@ Uma carreira tem mais de cem clubes e alguns milhares de jogadores profissionais
 ## Alternativas
 - Linhas por jogador e por carreira: consultável, mas milhares de linhas por carreira e escrita em massa a cada dia de jogo.
 - Documento único com tudo: simples, mas leitura e gravação pesadas em cada toque e sem auditoria financeira.
+
+> Revisado pelo ADR-020 (2026-11-17, MC-201): carreira solo no navegador; o servidor guarda decisões e fotografias compactas.
