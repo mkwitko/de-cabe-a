@@ -6,7 +6,7 @@ import { openCareer, type CareerWorld } from '../career/advance';
 import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { sellerStance } from './deals';
-import { marketRound } from './rounds';
+import { comeBack, marketRound } from './rounds';
 import {
   answerBid,
   bidFee,
@@ -183,10 +183,27 @@ describe("other clubs bid for the person's players", () => {
       expect(raised.kind).toBe('raised');
       expect(v.bids!.find((x) => x.id === b.id)!.fee).toBeGreaterThan(b.fee);
     } else expect(raised).toEqual({ kind: 'withdrawn', reason: 'tooDear' });
-    expect(answerBid(withBid(96), b.id, { kind: 'refuse' })).toEqual({
-      kind: 'withdrawn',
-      reason: 'tooDear',
-    });
+    // A refusal is just that: the club thinks again (comeBack) and the person learns only if it
+    // comes back, once, with more and never past its limit; refused again, it leaves for good.
+    const r = withBid(96);
+    const plan = comeBack(r, b);
+    expect(answerBid(r, b.id, { kind: 'refuse' })).toEqual({ kind: 'refused' });
+    const back = r.bids!.find((x) => x.id === b.id);
+    if (!plan) {
+      expect(back).toBeUndefined();
+      expect(r.cold![`${b.from}:${b.player}`]).toBe(2026);
+      return;
+    }
+    expect(back!.again).toBe(true);
+    expect(back!.fee).toBe(plan.fee);
+    expect(back!.fee).toBeGreaterThan(b.fee);
+    expect(back!.fee).toBeLessThanOrEqual(b.most);
+    expect(() => answerBid(r, b.id, { kind: 'accept' })).toThrow('bid: gone');
+    marketRound(r, back!.day);
+    expect(r.bids!.find((x) => x.id === b.id)!.again).toBe(false);
+    expect(r.inbox!.some((n) => n.kind === 'bid' && n.fee === back!.fee)).toBe(true);
+    expect(answerBid(r, b.id, { kind: 'refuse' })).toEqual({ kind: 'refused' });
+    expect(r.bids!.some((x) => x.id === b.id)).toBe(false);
   });
 
   it('bids expire after two weeks', () => {

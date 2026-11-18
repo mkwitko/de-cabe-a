@@ -144,7 +144,7 @@ export const ptBR = {
   'market.saidTerms':
     '{k, select, accept {{name} assinou. Negócio fechado.} counter {{name} não aceitou e fez um novo pedido.} loyal {{name} não quer deixar o clube dele.} stepDown {{name} não aceita descer de nível.} role {{name} não vem para ser reserva.} other {{name} encerrou a conversa.}}',
   'market.saidBid':
-    '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
+    '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} refused {Proposta por {name} recusada.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
     '{r, select, scout_busy {Todos os seus olheiros já estão viajando.} scout_cash {O caixa não cobre a viagem do olheiro.} scout_already {Já há um olheiro nessa região.} scout_area {Não há clubes nessa região.} cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
