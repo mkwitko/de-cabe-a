@@ -28,8 +28,6 @@ export interface Board {
 }
 
 const START = 60;
-/** Below this the board sets an ultimatum. */
-const PRESSURE = 25;
 const ULTIMATUM = { matches: 5, points: 7 } as const;
 /** Where the confidence is put back when an ultimatum is met. */
 const RELIEF = 35;
@@ -108,8 +106,26 @@ export function boardAfterMatch(
       last.push({ kind: 'ultimatumMet', value: lift });
     } else if (left.matches <= 0) next.fired = true;
     else next.ultimatum = left;
-  } else if (confidence < PRESSURE) next.ultimatum = { ...ULTIMATUM };
+  } else if (confidence < pressureOf(w)) next.ultimatum = ultimatumOf(w);
   return next;
+}
+
+/**
+ * How patient the board is, 0..100: the club's own profile, less when the owners answer to
+ * investors (a SAF, more so a multi-club group). PARÂMETROS.
+ */
+const OWNER_HASTE = { association: 0, ownedSaf: 10, groupSaf: 15 } as const;
+export function patienceOf(w: CareerWorld): number {
+  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
+  const model = w.pack.governance.find((g) => g.clubId === w.clubId)?.model ?? 'association';
+  return Math.max(0, club.profile.patience - OWNER_HASTE[model]);
+}
+/** Below this confidence the board sets an ultimatum: 15 for the most patient, 35 for the least. */
+const pressureOf = (w: CareerWorld) => 15 + Math.round((100 - patienceOf(w)) / 5);
+/** The ultimatum: more matches for a patient board, at the same points a match. */
+function ultimatumOf(w: CareerWorld): { matches: number; points: number } {
+  const matches = 3 + Math.round(patienceOf(w) / 30);
+  return { matches, points: Math.round((matches * ULTIMATUM.points) / ULTIMATUM.matches) };
 }
 
 /** At the season's end, before the turn: the goal against the final position. */
