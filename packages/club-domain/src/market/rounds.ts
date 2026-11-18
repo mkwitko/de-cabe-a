@@ -80,7 +80,7 @@ export const BID_DAYS = 14;
 const KEPT = 80;
 const MIN_SQUAD = 20;
 const MIN_KEEPERS = 2;
-const MAX_SQUAD = 35;
+const MAX_SQUAD = 42;
 
 const total = (y: Why) => y.need + y.fit + y.growth + y.resale - y.cost - y.wages;
 

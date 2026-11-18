@@ -48,7 +48,8 @@ describe('the inbox', () => {
     const cash = w.ledger.cash;
     startNextSeason(w);
     const kinds = w.inbox!.map((n) => n.kind);
-    expect(kinds.slice(-3)).toEqual(['goal', 'prize', 'season']);
+    // The turn tells, in order: the goal, the prize, the season, and the academy's boys.
+    expect(kinds.slice(-4)).toEqual(['goal', 'prize', 'season', 'crop']);
     const prize = w.inbox!.find((n) => n.kind === 'prize')!;
     expect(prize).toMatchObject({ position });
     expect(w.ledger.cash).toBe(cash + (prize.kind === 'prize' ? prize.amount : 0));

@@ -347,6 +347,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   };
   w.log = [...(w.log ?? []), log];
   w.pack = yearOn(w.pack, w.origin, w.seed, log);
+  // The academy's boys of the year are in the squad.
+  const boys = w.pack.players.filter(
+    (p) => p.clubId === w.clubId && p.id.startsWith(`y${year}-`),
+  ).length;
+  if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
   w.moves = {};
   delete w.starts;
   delete w.played;

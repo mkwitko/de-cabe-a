@@ -26,7 +26,7 @@ export interface Loan {
 
 /** The loan fee, as a share of his value. */
 const FEE = 5;
-const MAX_SQUAD = 35;
+const MAX_SQUAD = 42;
 const MIN_SQUAD = 20;
 const MIN_KEEPERS = 2;
 

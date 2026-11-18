@@ -55,17 +55,46 @@ const legsPeak = (p: PackPlayer) =>
   (p.potential.physicalCurve === 'early' ? 3 : p.potential.physicalCurve === 'late' ? 1 : 2);
 
 /**
- * One player a year older, at the start of `season`. `growth` scales what he gains while he is
- * still growing, in percent; what age takes away it does not change.
+ * How hard he works at getting better, in percent, from who he is: professionalism most,
+ * then ambition and resilience (each 1..20). About 60% for the idle to 125% for the driven.
+ */
+export const drive = (p: PackPlayer) =>
+  55 +
+  2 * p.personality.professionalism +
+  p.personality.ambition +
+  Math.round(p.personality.resilience / 2);
+
+/**
+ * The year he had, in percent: most are ordinary, one in six goes nowhere (a slump, a niggle,
+ * a bad dressing room) and one in six is the year it all clicks.
+ */
+function year(seed: number, p: PackPlayer, season: number): number {
+  const roll = draw(seed, p.id, season, 0);
+  return roll < 16 ? 25 : roll >= 84 ? 170 : 80 + (roll % 5) * 10;
+}
+
+/**
+ * One player a year older, at the start of `season`.
+ *
+ * His ceiling is what he may become, not what he will: each year he closes a share of the gap
+ * to it, and that share is his talent for learning, times how hard he works (`drive`), times
+ * the year he had, times `growth` (where he trained, how much he played, the week his coach
+ * set: `growthOf`). The window shuts at his peak age. Measured on a crop followed to its peak:
+ * an ordinary player in an ordinary club ends about two thirds of the way and one in fifty
+ * gets within a tenth of his ceiling; well looked after, four fifths and nearly one in five;
+ * neglected, under half and none. What age takes away none of this
+ * changes.
  */
 export function develop(p: PackPlayer, seed: number, season: number, growth = 100): PackPlayer {
   const age = ageIn(p, season);
   const peak = p.potential.peakAge;
   const legs = legsPeak(p);
   const out = { ...p.attributes };
-  /** A share of what is left to the ceiling, at least a point now and then. */
+  // All three factors in one percentage, so a point of rate stays a point.
+  const effort = Math.round((drive(p) * year(seed, p, season) * growth) / 10_000);
+  /** A share of what is left to the ceiling; a single point only now and then. */
   const gain = (gap: number, rate: number, roll: number, often: number) =>
-    Math.max(roll < often ? 1 : 0, Math.round((gap * rate * growth) / 10_000));
+    Math.max(roll < (often * effort) / 100 ? 1 : 0, Math.round((gap * rate * effort) / 10_000));
   let k = 0;
   for (const a of Object.keys(out) as AttributeId[]) {
     const group = GROUP.get(a) ?? 'technical';
@@ -74,7 +103,8 @@ export function develop(p: PackPlayer, seed: number, season: number, growth = 10
     if (group === 'physical') {
       if (age <= legs) {
         const gap = p.potential.ceiling.physical - v;
-        if (gap > 0) out[a] = clamp(v + gain(gap, 14 + p.potential.learning, roll, 60));
+        if (gap > 0)
+          out[a] = clamp(v + gain(gap, 9 + Math.round(p.potential.learning / 2), roll, 30));
       } else {
         // Past the peak the legs go: a point a year at first, two, then three.
         const past = age - legs;
@@ -87,8 +117,12 @@ export function develop(p: PackPlayer, seed: number, season: number, growth = 10
     const ceiling = p.potential.ceiling[group];
     if (age <= peak) {
       const gap = ceiling - v;
-      const rate = age <= 21 ? 12 + p.potential.learning : 6 + Math.round(p.potential.learning / 2);
-      if (gap > 0) out[a] = clamp(v + gain(gap, rate, roll, 45));
+      // 11% to 18% of the gap a year up to 21, 6% to 11% after: the early years are the ones.
+      const rate =
+        age <= 21
+          ? 9 + Math.round(p.potential.learning / 2)
+          : 5 + Math.round(p.potential.learning / 3);
+      if (gap > 0) out[a] = clamp(v + gain(gap, rate, roll, 25));
     } else if (group === 'mental') {
       // Experience still adds a little for some years, then holds.
       if (age <= peak + 4 && v < ceiling && roll < 35) out[a] = clamp(v + 1);
@@ -128,10 +162,10 @@ const baseLevels = (origin: Pack) =>
   });
 
 /** Boys a club's academy brings up in a year, by its youth level 1..5. */
-const CROP = [2, 2, 3, 3, 4] as const;
+const CROP = [3, 3, 4, 5, 6] as const;
 
 /**
- * A club's crop for `season`: sixteen to eighteen years old, well under the first team today,
+ * A club's crop for `season`: fifteen to seventeen years old, well under the first team today,
  * a few of them with a ceiling far above it. Better academies bring more and better.
  */
 export function crop(origin: Pack, clubId: string, seed: number, season: number): PackPlayer[] {
@@ -143,7 +177,7 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
   for (let k = 0; k < CROP[youth - 1]!; k++) {
     const r = fork(root, `boy:${k}`);
     const position = SQUAD[pick(r, SQUAD.length)]!;
-    const age = 16 + pick(r, 3);
+    const age = 15 + pick(r, 3);
     const quality = Math.max(20, level - 16 + youth + pick(r, 7));
     const made = generatePlayer(r, {
       id: `y${season}-${clubId}-${k}`,
@@ -185,7 +219,7 @@ export interface SeasonLog {
 /** Percent of growth by the club's training ground, level 1..5. */
 const BY_GROUND = [-10, -5, 0, 8, 15] as const;
 /** By minutes: left out, a squad player, a starter. */
-const BY_MINUTES = [-15, 0, 15] as const;
+const BY_MINUTES = [-30, 0, 25] as const;
 /** By the week the person trained. */
 const BY_WEEK: Record<Intensity, number> = { light: -5, normal: 0, hard: 8 };
 

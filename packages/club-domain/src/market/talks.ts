@@ -30,7 +30,7 @@ import { marketValue, readingsOf, thousands } from './value';
 
 const MIN_SQUAD = 20;
 const MIN_KEEPERS = 2;
-const MAX_SQUAD = 35;
+const MAX_SQUAD = 42;
 /** A talk the person opened to buy a player. */
 export interface Talk {
   player: string;

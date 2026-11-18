@@ -158,6 +158,8 @@ export const ptBR = {
   'market.sold': '{name} vendido ao {club} por {price}.',
   'inbox.contractEnded': 'O contrato de {name} acabou e ele deixou o clube.',
   'inbox.contractKept': '{name} ficou mais um ano: sem ele o elenco não teria gente para jogar.',
+  'inbox.crop':
+    '{n, plural, one {# garoto da base subiu} other {# garotos da base subiram}} para o elenco. Quem joga cresce mais.',
   'inbox.contractsEnding':
     '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
   'inbox.clausePaid': 'O {club} pagou a multa de {name}: {fee}. Ele foi embora.',
