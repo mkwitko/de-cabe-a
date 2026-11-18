@@ -20,7 +20,7 @@ import {
 
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 5)[0]!.clubId;
-const ROUND = dayOf('2026-04-16');
+const ROUND = dayOf('2026-02-16');
 const mine = (p: { clubId: string | null }) => p.clubId === clubId;
 
 /** A player the person can open a talk for and afford at the asking price. */

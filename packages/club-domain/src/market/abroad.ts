@@ -15,15 +15,14 @@
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
-import { movePlayer } from '../career/market';
+import { movePlayer, windowOf } from '../career/market';
 import { squadPlayers } from '../career/squad';
-import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
 import type { PackPlayer } from '../pack/schema';
-import { booksOf, tierOfClub, wageRoom } from './books';
+import { booksOf, solidarity, tierOfClub, wageRoom } from './books';
 import { CLAUSE_TIMES, playerStance, type PlayerStance } from './deals';
 import { fitFor, squadPlanOf } from './plan';
-import type { Deal } from './rounds';
+import { ROUND_DAYS, type Deal } from './rounds';
 import { canLose } from './talks';
 import { isImport } from '../career/development';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
@@ -49,8 +48,8 @@ export const FOREIGN_TIERS: readonly ForeignTier[] = [
   { id: 'abroad:eu1', name: 'Elite europeia', level: 73, ages: [17, 24], chance: 450, pays: 200 },
   { id: 'abroad:eu2', name: 'Europa', level: 68, ages: [18, 27], chance: 260, pays: 140 },
   { id: 'abroad:gulf', name: 'Golfo Pérsico', level: 66, ages: [25, 33], chance: 180, pays: 130 },
-  { id: 'abroad:asia', name: 'Ásia e EUA', level: 62, ages: [20, 31], chance: 90, pays: 110 },
-  { id: 'abroad:minor', name: 'Exterior', level: 57, ages: [20, 30], chance: 60, pays: 100 },
+  { id: 'abroad:asia', name: 'Ásia e EUA', level: 62, ages: [20, 31], chance: 150, pays: 110 },
+  { id: 'abroad:minor', name: 'Exterior', level: 57, ages: [20, 30], chance: 100, pays: 100 },
 ];
 
 /** A young talent's ceiling that the elite tier buys on promise. */
@@ -58,13 +57,14 @@ const PROMISE = 80;
 const PROMISE_AGE = 21;
 /** How visible a division is to foreign scouts, in percent of Série A. */
 const VISIBILITY = [0, 100, 70, 45, 30];
-/** Share of a season's offers that come in the July window; the rest in January to April. */
-const JULY = 60;
-/** The first round of a window falls in its first ROUND_DAYS days (rounds.ts). */
-const ROUND_DAYS_MAX = 14;
-/** Rounds in each window (rounds.ts: one every 14 days): January to April, and July. */
-const ROUNDS_EARLY = 8;
-const ROUNDS_JULY = 2;
+/**
+ * Share of a season's offers that come in the second window (Europe's summer); the rest in
+ * the first. The domestic window in March is for clubs here only.
+ */
+const SECOND = 60;
+/** Rounds in each window (rounds.ts: one every 14 days). */
+const ROUNDS_FIRST = 4;
+const ROUNDS_SECOND = 4;
 /** A player loyal and unambitious enough stays home (personality on 1..20). */
 const STAYS = { loyalty: 16, ambition: 8 };
 /** Years of the contract he signs abroad. */
@@ -138,12 +138,14 @@ export function sellAbroad(w: CareerWorld, p: PackPlayer, fee: number): void {
   movePlayer(w, p, ABROAD, { wage: 0, until: `${w.season.season + YEARS_ABROAD}-12-31` });
   const got = booksOf(w, from);
   w.books = { ...w.books, [from]: { ...got, earned: got.earned + fee } };
+  solidarity(w, p, from, fee, true);
 }
 
 /** One round of foreign offers. Returns the sales between the world's clubs and abroad. */
 export function foreignRound(w: CareerWorld, day: number): Deal[] {
-  const july = isoOf(day).slice(5, 7) === '07';
-  const share = july ? JULY / ROUNDS_JULY : (100 - JULY) / ROUNDS_EARLY;
+  const window = windowOf(day);
+  if (window !== 'first' && window !== 'second') return [];
+  const share = window === 'second' ? SECOND / ROUNDS_SECOND : (100 - SECOND) / ROUNDS_FIRST;
   const draw = rngFrom(seedOf(w.seed, `abroad:${day}`));
   const done: Deal[] = [];
   const clubs = [...w.season.calendar.byClub.keys()].sort();
@@ -202,16 +204,17 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
 }
 
 /**
- * Players abroad coming home: on the first round of each window (January and July), every
+ * Players abroad coming home: on the first round of each international window, every
  * player abroad for HOME_AFTER seasons or more draws once, by age. One who wants to come home
  * goes to the club here with the best name among those that need him at his position (a hole
  * or an upgrade his level meets) and can pay his wage; with no such club he stays abroad and
  * tries again next window. The person's club is not among them yet. Returns the moves.
  */
 export function homecoming(w: CareerWorld, day: number): Deal[] {
-  const iso = isoOf(day);
-  const month = iso.slice(5, 7);
-  if ((month !== '01' && month !== '07') || Number(iso.slice(8, 10)) > ROUND_DAYS_MAX) return [];
+  // The first round of each international window only.
+  const window = windowOf(day);
+  if ((window !== 'first' && window !== 'second') || windowOf(day - ROUND_DAYS) === window)
+    return [];
   const season = w.season.season;
   const draw = rngFrom(seedOf(w.seed, `home:${day}`));
   const read = readingsOf(w.pack);

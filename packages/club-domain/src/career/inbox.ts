@@ -22,6 +22,8 @@ export type Note = { day: number } & (
   | { kind: 'crop'; players: number }
   /** A scout back from an area (a state or `tier:N`) with this many new players. */
   | { kind: 'scouted'; area: string; players: number }
+  /** A boy the club formed was sold elsewhere: its solidarity share. */
+  | { kind: 'solidarity'; player: string; fee: number }
   | { kind: 'cameUp'; players: number }
   | {
       kind: 'injury';

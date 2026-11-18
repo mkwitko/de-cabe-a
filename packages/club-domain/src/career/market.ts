@@ -32,11 +32,22 @@ export type Moves = Record<
   }
 >;
 
-/** The windows: from the turn of the year to the end of April, and all of July. */
-export function windowOpen(day: number): boolean {
+/**
+ * The CBF's transfer windows (2026 calendar): the first to 3 March, a domestic one for clubs
+ * here only from 4 to 27 March (after the state championships), and the second from 20 July to
+ * 11 September. PARÂMETRO: the dates move a little each year. The first opens on 5 January in
+ * the CBF's calendar; here it opens with the year, since a career starts on 1 January and its
+ * first days would otherwise find the market shut.
+ */
+export type TransferWindow = 'first' | 'domestic' | 'second';
+export function windowOf(day: number): TransferWindow | null {
   const md = isoOf(day).slice(5);
-  return md <= '04-30' || md.startsWith('07');
+  if (md <= '03-03') return 'first';
+  if (md >= '03-04' && md <= '03-27') return 'domestic';
+  if (md >= '07-20' && md <= '09-11') return 'second';
+  return null;
 }
+export const windowOpen = (day: number): boolean => windowOf(day) !== null;
 
 /** The pack with these moves applied: a new object, the players untouched otherwise. */
 /** One player after his move. */
