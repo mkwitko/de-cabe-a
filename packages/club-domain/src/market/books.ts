@@ -23,9 +23,18 @@ export interface Budget {
   wageCap: number;
 }
 
+/** Each club's national tier this season, read once per season (members do not change in it). */
+const tiers = new WeakMap<object, Map<string, number>>();
+
 export function tierOfClub(w: CareerWorld, clubId: string): number {
-  const div = nationalDivisions(w.pack).find((d) => w.season.members[d.id]?.includes(clubId));
-  return div?.tier ?? 4;
+  let by = tiers.get(w.season);
+  if (!by) {
+    by = new Map();
+    for (const d of nationalDivisions(w.pack))
+      for (const id of w.season.members[d.id] ?? []) by.set(id, d.tier);
+    tiers.set(w.season, by);
+  }
+  return by.get(clubId) ?? 4;
 }
 
 /** A season's budgets, read once per club: the division and the income do not change in it. */

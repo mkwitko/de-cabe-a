@@ -119,6 +119,37 @@ export function levelError(pack: Pack, clubId: string, p: PackPlayer): number {
     : off(pack, OFF.level[eye.scouting - 1]!, clubId, p.id, 1);
 }
 
+/**
+ * Whether this club's scouts know a player at all (a club does not see the whole country):
+ * by its scouting department, how visible the player's division is, and whether he plays in
+ * its own state. Fixed per career, club and player, like the errors above: no storage.
+ * PARÂMETROS: REACH by scouting 1..5, SHOWN by the player's tier (free agents at FREE_AGENT),
+ * LOCAL points for a player of the same state.
+ */
+const REACH = [35, 50, 65, 80, 95] as const;
+const SHOWN = [0, 100, 70, 45, 25] as const;
+const FREE_AGENT = 60;
+const LOCAL = 30;
+
+/** Percent of such players this club knows, 0..100. */
+export function reach(scouting: number, tier: number | null, local: boolean): number {
+  const shown = tier === null ? FREE_AGENT : (SHOWN[tier] ?? SHOWN[4]);
+  return Math.min(100, Math.round((REACH[scouting - 1]! * shown) / 100) + (local ? LOCAL : 0));
+}
+
+/** A club always knows its own players; others by `reach`, through a fixed draw per pair. */
+export function knows(
+  pack: Pack,
+  clubId: string,
+  p: PackPlayer,
+  tier: number | null,
+  local: boolean,
+): boolean {
+  if (p.clubId === clubId) return true;
+  const draw = (bias(clockOf(pack).seed, clubId, p.id, 3) + 100) >> 1;
+  return draw < reach(eyeOf(pack, clubId).scouting, tier, local);
+}
+
 /** The level this club believes he has. */
 export const seenLevel = (pack: Pack, clubId: string, p: PackPlayer): number =>
   Math.max(1, Math.min(99, readingsOf(pack).get(p.id)!.level + levelError(pack, clubId, p)));
