@@ -31,6 +31,7 @@ Sempre conhecidos:
 - O mercado fica regional e desigual. Clubes grandes, com bom scouting, enxergam o país. Clubes pequenos enxergam sobretudo o próprio estado e a elite.
 - A filtragem é barata: um hash por candidato, antes da leitura cara. A divisão de cada clube agora fica em cache por temporada (`tierOfClub`), o que também acelera o êxodo para o exterior.
 - **Teto:** o conhecimento não cresce com o tempo. Jogar contra um jogador ou observá-lo por uma temporada ainda não faz o clube conhecê-lo. Para corrigir, basta trocar o sorteio fixo por um limiar que sobe com as temporadas e com os jogos entre os clubes, ainda sem armazenamento.
+
 ## Passo 4: os olheiros do clube da pessoa (2026-11-18)
 
 O clube da pessoa segue a mesma regra dos outros. No começo da carreira ele conhece:
