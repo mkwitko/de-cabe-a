@@ -31,6 +31,8 @@ export interface Need {
   wanted: number;
   /** 1..100: how much it hurts. */
   urgency: number;
+  /** Points a signing must be worth for it; absent: the market's usual bar (rounds.ts). */
+  worth?: number;
 }
 
 export interface SquadPlan {
@@ -41,12 +43,26 @@ export interface SquadPlan {
   /** The best player outside the eleven for each slot, or null. */
   cover: (string | null)[];
   needs: Need[];
+  /**
+   * The weakest slot of the eleven as a chance to improve on, not a hole: a signing over the
+   * team's level there. Null for a club without an eleven.
+   */
+  upgrade: Need | null;
   /** Players the plan has no use for, least useful first. */
   surplus: string[];
 }
 
 /** Below the eleven's level by this much, a starter is a weak link. */
 const WEAK_LINK = 4;
+/** An upgrade must beat the eleven's level by this much: a clear step up, not a sideways move. */
+const UPGRADE = 3;
+/** How much an upgrade weighs against real needs (urgency 1..100). */
+const UPGRADE_URGENCY = 60;
+/**
+ * The bar an upgrade must clear: what he brings worth more than what he costs. Lower than a
+ * hole's bar, which also pays for the hurry: a club with money spends it on getting better.
+ */
+const UPGRADE_WORTH = 6;
 /** Cover must be within this of the eleven's level, and know the position. */
 const COVER_GAP = 9;
 /** Squad size a club is comfortable with. */
@@ -68,7 +84,15 @@ function plan(c: ClubIn): SquadPlan {
       ? Math.round(few.reduce((s, p) => s + read.get(p.id)!.level, 0) / few.length)
       : 0;
     const xi = few.map((p) => p.id);
-    return { formation, level, xi, cover: roles.map(() => null), needs: [], surplus: [] };
+    return {
+      formation,
+      level,
+      xi,
+      cover: roles.map(() => null),
+      needs: [],
+      upgrade: null,
+      surplus: [],
+    };
   }
   const fit = slotRatings(c, formation);
   const known = slotLevels(c, formation);
@@ -118,6 +142,17 @@ function plan(c: ClubIn): SquadPlan {
       });
   }
   needs.sort((a, b) => b.urgency - a.urgency || a.slot - b.slot);
+  let weakest = 0;
+  for (let i = 1; i < roles.length; i++) if (seen(xi[i]!, i) < seen(xi[weakest]!, i)) weakest = i;
+  const upgrade: Need = {
+    slot: weakest,
+    positions: positions[weakest]!,
+    keeper: roles[weakest] === 'goalkeeper' || roles[weakest] === 'sweeperKeeper',
+    kind: 'starter',
+    wanted: level + UPGRADE,
+    urgency: UPGRADE_URGENCY,
+    worth: UPGRADE_WORTH,
+  };
 
   // Left over: neither starting nor the cover of any slot; the weakest go first.
   const used = new Set([...xi, ...cover.filter((x): x is string => x !== null)]);
@@ -130,7 +165,7 @@ function plan(c: ClubIn): SquadPlan {
     )
     .map((p) => p.id);
 
-  return { formation, level, xi, cover, needs, surplus };
+  return { formation, level, xi, cover, needs, upgrade, surplus };
 }
 
 /** The slot rating a player would give this club in the slot of a need. */

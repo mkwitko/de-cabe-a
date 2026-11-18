@@ -17,7 +17,7 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, wageRoom } from './books';
+import { available, book, budgetOf, wageRoom } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -67,9 +67,16 @@ export interface Deal {
 /** Days between rounds inside a window. */
 export const ROUND_DAYS = 14;
 /** Signings a club makes in a season, at most. */
-const SIGNINGS = 4;
+const SIGNINGS = 6;
 /** Free agents a club may sign past that: no fee, a short wait for the paperwork. */
 const FREE_EXTRA = 2;
+/**
+ * A club with this share of its season's transfer budget still unspent also looks to improve its
+ * weakest starter, not only to fill holes (plan.ts `upgrade`).
+ */
+const SPARE = 50;
+/** Rounds a club that found nobody sits out before it reads the market again. */
+const IDLE_ROUNDS = 3;
 /** A choice must be worth this many points to go to the table. */
 const WORTH_IT = 36;
 /** And the need itself must carry at least this much of it: no buying on promise alone. */
@@ -180,7 +187,7 @@ function choose(
   const bidOn = new Set((w.bids ?? []).map((b) => b.player));
   const listed = new Set(w.listed ?? []);
   let best: Choice | null = null;
-  let score = WORTH_IT - 1;
+  let score = (need.worth ?? WORTH_IT) - 1;
   // Only those who know one of the positions and sit in the level the need asks for.
   const index = byPosition(w.pack);
   const seen = new Set<string>();
@@ -380,9 +387,9 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     // model of its own, not a full market reading for hundreds of idle clubs.
     .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
     .sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1));
-  // A club that found nobody worth the table sits out the rest of the window: the market it
-  // read does not change enough in a few weeks to look again.
-  const span = windowOf(day);
+  // A club that found nobody worth the table sits out a few rounds: the market it read does not
+  // change enough in a fortnight to look again.
+  const span = `${windowOf(day)}:${Math.floor(day / (ROUND_DAYS * IDLE_ROUNDS))}`;
   const idle = new Set(w.idle?.span === span ? w.idle.clubs : []);
   for (const { id } of order) {
     const count = signed.get(id) ?? 0;
@@ -391,7 +398,11 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     if (squadPlayers({ pack: w.pack, clubId: id }).length >= MAX_SQUAD) continue;
     const tried = new Set<string>();
     let found = false;
-    for (const need of squadPlanOf({ pack: w.pack, clubId: id }).needs.slice(0, 2)) {
+    const plan = squadPlanOf({ pack: w.pack, clubId: id });
+    const needs = plan.needs.slice(0, 2);
+    if (plan.upgrade && available(w, id) * 100 >= budgetOf(w, id).transfer * SPARE)
+      needs.push(plan.upgrade);
+    for (const need of needs) {
       const choice = choose(w, id, need, tried, freeOnly);
       if (!choice) continue;
       found = true;
