@@ -27,6 +27,12 @@ export const BY_TIER: Record<number, { tv: number; ticket: number }> = {
 };
 
 const DEBT_MONTHS = 60;
+/**
+ * Interest on the old debt, percent a year: Brazilian clubs' debt is mostly tax debt renegotiated
+ * at the Selic rate and bank loans above it (PARÂMETRO; the audited accounts split it by kind for
+ * a few clubs only).
+ */
+export const DEBT_RATE = 10;
 /** Home matches counted for a season's gate. */
 const HOME_MATCHES = 15;
 
@@ -80,9 +86,14 @@ function monthlyBills(w: CareerWorld, day: number) {
   post('wages', -wages);
   // The structure's upkeep, a twelfth of the season's each month (clubs.ts).
   post('upkeep', -Math.round(upkeepOf(w, club) / 12));
-  // PARÂMETRO: the pack's debt in 60 monthly instalments (five years), no interest yet.
+  // PARÂMETRO: the pack's debt in 60 monthly instalments (five years), with interest on what is
+  // still owed (DEBT_RATE a year).
   const paid = w.ledger.entries.filter((e) => e.kind === 'debt').length;
-  if (paid < DEBT_MONTHS) post('debt', -Math.round(club.initialDebt / DEBT_MONTHS));
+  if (paid < DEBT_MONTHS) {
+    const owed = club.initialDebt - Math.round((club.initialDebt * paid) / DEBT_MONTHS);
+    post('debt', -Math.round(club.initialDebt / DEBT_MONTHS));
+    post('interest', -Math.round((owed * DEBT_RATE) / 1200));
+  }
   const { prices } = pricesOf(w);
   post('tv', Math.round(priced(tier.tv, prices) / 12));
   post('sponsors', Math.round(priced(sponsors, prices) / 12));

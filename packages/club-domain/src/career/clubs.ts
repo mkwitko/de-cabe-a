@@ -14,7 +14,7 @@ import { WHOLE, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/books';
 import type { CareerWorld } from './advance';
-import { BY_TIER, gateOf } from './finance';
+import { BY_TIER, DEBT_RATE, gateOf } from './finance';
 import { postEntry } from '../finance/ledger';
 import { priced, pricesOf } from './prices';
 
@@ -188,9 +188,12 @@ export function settleSeason(
     const s = clubs[club.id]!;
     const books = booksOf(w, club.id);
     const at = position(club.id);
+    // The old debt in five yearly parts, with a year's interest on what is still owed.
+    const done = w.season.season - firstSeason(w);
     const debt =
-      w.season.season - firstSeason(w) < DEBT_SEASONS
-        ? Math.round(club.initialDebt / DEBT_SEASONS)
+      done < DEBT_SEASONS
+        ? Math.round(club.initialDebt / DEBT_SEASONS) +
+          Math.round((club.initialDebt * (DEBT_SEASONS - done) * DEBT_RATE) / (DEBT_SEASONS * 100))
         : 0;
     s.cash +=
       budgetOf(w, club.id).income +

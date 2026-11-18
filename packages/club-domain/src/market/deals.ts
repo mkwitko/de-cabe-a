@@ -30,10 +30,13 @@ export interface SellerStance {
   /** What it asks for first. */
   asking: number;
   /** Why the floor sits where it does, in percentage points over the value. */
-  why: { plan: number; noCover: number; contract: number; rival: number };
+  why: { plan: number; noCover: number; contract: number; rival: number; broke: number };
   /** His release clause: a fee that reaches it cannot be refused. Null without one. */
   release: number | null;
 }
+
+/** Points under the value a club in the red takes: it lives on selling players. PARÂMETRO. */
+const BROKE_DISCOUNT = 15;
 
 /** How the selling club sees a sale of this player to this buyer. */
 export function sellerStance(
@@ -41,6 +44,8 @@ export function sellerStance(
   p: PackPlayer,
   buyerId: string,
   season: number,
+  /** The seller is in the red: it needs the money and takes less (career/clubs.ts cash). */
+  broke = false,
 ): SellerStance {
   const plan = squadPlanOf(seller);
   const slot = plan.xi.indexOf(p.id);
@@ -56,12 +61,13 @@ export function sellerStance(
     noCover: slot >= 0 && plan.cover[slot] === null ? 25 : 0,
     contract: yearsLeft(p, season) <= 1 ? -20 : 0,
     rival: rivals.includes(buyerId) ? 20 : 0,
+    broke: broke ? -BROKE_DISCOUNT : 0,
   };
   // What the club thinks he is worth, and how hard its office holds out (judgement.ts).
   const value = seenValue(seller.pack, seller.clubId, p, season);
   const holds = bargaining(seller.pack, seller.clubId).holds;
   const floor = thousands(
-    (value * (100 + why.plan + why.noCover + why.contract + why.rival + holds)) / 100,
+    (value * (100 + why.plan + why.noCover + why.contract + why.rival + why.broke + holds)) / 100,
   );
   return {
     mood,
