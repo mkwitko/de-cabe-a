@@ -7,6 +7,7 @@ import type { CareerWorld } from './advance';
 
 export type Note = { day: number } & (
   | { kind: 'welcome' }
+  | { kind: 'hired'; club: string }
   | { kind: 'result'; opponent: string; goals: [number, number] }
   | { kind: 'ultimatum'; matches: number; points: number }
   | { kind: 'ultimatumMet' }

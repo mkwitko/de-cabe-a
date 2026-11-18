@@ -106,10 +106,22 @@ export function Board({ sim }: { sim: SimView }) {
   );
 }
 
-/** The board ended the job: the way out, and the door to another career. */
-export function Fired({ club, onRestart }: { club: string; onRestart: () => void }) {
+/** The board ended the job: the clubs that call, and the door to another career. */
+export function Fired({
+  club,
+  offers,
+  busy,
+  onTake,
+  onRestart,
+}: {
+  club: string;
+  offers: SimView['board']['offers'];
+  busy: boolean;
+  onTake: (clubId: string) => void;
+  onRestart: () => void;
+}) {
   return (
-    <div className="club-tunnel fixed inset-0 z-40 grid place-items-center overflow-hidden bg-club-night p-6">
+    <div className="club-tunnel fixed inset-0 z-40 flex overflow-y-auto bg-club-night p-4 sm:p-6">
       <picture aria-hidden>
         <source media="(orientation: portrait)" srcSet="/img/clube/tunel-v.webp" />
         <img
@@ -118,12 +130,52 @@ export function Fired({ club, onRestart }: { club: string; onRestart: () => void
           className="absolute inset-0 size-full object-cover"
         />
       </picture>
-      <div className="sala-glass relative flex max-w-xl flex-col items-center gap-5 text-center">
-        <h2 className="font-condensed text-4xl leading-[0.92] font-black text-balance uppercase sm:text-6xl">
+      <div className="sala-glass relative m-auto flex w-full max-w-xl min-w-0 flex-col items-center gap-5 text-center">
+        <h2 className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-6xl">
           {t('board.fired')}
         </h2>
         <p className="text-lg text-balance">{t('board.firedText', { club })}</p>
-        <button type="button" className={`${btnPrimary} min-h-13 bg-club-gold`} onClick={onRestart}>
+        {offers.length > 0 && (
+          <section aria-labelledby="job-offers" className="flex w-full flex-col gap-2">
+            <h3 id="job-offers" className="font-condensed text-xl font-extrabold uppercase">
+              {t('board.offers')}
+            </h3>
+            <ul className="flex flex-col gap-2">
+              {offers.map((o) => (
+                <li
+                  key={o.clubId}
+                  className="flex min-w-0 items-center gap-3 rounded-lg bg-club-night/60 p-3 text-left"
+                >
+                  <span
+                    aria-hidden
+                    className="size-8 shrink-0 rounded-full border-2"
+                    style={{ background: o.colours[0], borderColor: o.colours[1] }}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-condensed text-lg leading-tight font-extrabold text-balance uppercase">
+                      {o.name}
+                    </span>
+                    <span className="block truncate text-sm text-chalk-soft">{o.division}</span>
+                  </span>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-label={t('board.takeName', { club: o.name })}
+                    className={`${btnPrimary} min-h-11 shrink-0 bg-club-gold`}
+                    onClick={() => onTake(o.clubId)}
+                  >
+                    {t('board.take')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <button
+          type="button"
+          className="min-h-11 px-3 font-semibold underline underline-offset-4"
+          onClick={onRestart}
+        >
           {t('board.restart')}
         </button>
       </div>

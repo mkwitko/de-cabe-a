@@ -309,7 +309,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     return sent;
   };
   const apply = async (reply: SimReply) => {
-    if (reply.save) await put(reply.save, false);
+    if (reply.save) await put(reply.save, reply.save.still === true);
     if (reply.view) setSim(reply.view);
     setBusy(false);
   };
@@ -450,6 +450,18 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     return (
       <Fired
         club={sim.club.name}
+        offers={sim.board.offers}
+        busy={busy}
+        onTake={(clubId) => {
+          if (!ask) return;
+          setBusy(true);
+          ask({ type: 'takeJob', clubId })
+            .then(apply)
+            .catch((err: Error) => {
+              setBusy(false);
+              setError(err.message);
+            });
+        }}
         onRestart={() =>
           api('/v1/manager/career/end', { method: 'POST' })
             .then(onEnded)
@@ -506,7 +518,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             onNextSeason={() => step('nextSeason')}
           />
           <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
-            <Table sim={sim} clubId={career.clubId} />
+            <Table sim={sim} clubId={sim.clubId} />
             <div className="flex min-w-0 flex-col">
               <Form sim={sim} />
               <Fixtures sim={sim} />
@@ -803,6 +815,7 @@ function Fixtures({ sim }: { sim: SimView }) {
 /** Who signs each kind of note. */
 const FROM = {
   welcome: 'board',
+  hired: 'board',
   result: 'press',
   ultimatum: 'board',
   ultimatumMet: 'board',
@@ -890,6 +903,8 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.contractKept', { name: n.player });
     case 'crop':
       return t('inbox.crop', { n: n.players });
+    case 'hired':
+      return t('inbox.hired', { club: n.clubName });
     case 'cameUp':
       return t('inbox.cameUp', { n: n.players });
     case 'injury':

@@ -182,6 +182,7 @@ export const ptBR = {
   'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
   'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
   'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
+  'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
   'inbox.empty': 'Nenhuma mensagem ainda.',
   'inbox.ultimatum':
     'Ultimato: {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}, ou o contrato acaba.',
@@ -216,6 +217,9 @@ export const ptBR = {
   'board.fired': 'A direção encerrou seu contrato',
   'board.firedText': 'O ultimato não foi cumprido. O {club} segue sem você.',
   'board.restart': 'Começar outra carreira',
+  'board.offers': 'Clubes que querem você',
+  'board.take': 'Assumir',
+  'board.takeName': 'Assumir o {club}',
   'training.week': 'Semana de treino',
   'training.intensity': '{i, select, light {Leve} normal {Normal} other {Forte}}',
   'training.recovery': 'Fôlego volta {n, number}% por dia',

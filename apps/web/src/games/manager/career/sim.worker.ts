@@ -66,6 +66,9 @@ import {
   type TermsAnswer,
   type Why,
   boardOf,
+  jobsAfter,
+  nationalDivisions,
+  takeJob,
   positionOf,
   type BoardReason,
   type InjuryKind,
@@ -113,6 +116,8 @@ export type SimRequest = { id: number } & (
   /** The market: the person's players to sell and the best of the others, by position. */
   | { type: 'market'; position: string | null; act?: MarketAct }
   | { type: 'nextSeason' }
+  /** After a dismissal: takes one of the clubs that offered the job. */
+  | { type: 'takeJob'; clubId: string }
   /** Watch the person's next match with the match engine (level 1). */
   | { type: 'matchStart' }
   | { type: 'matchChunk'; from: number; count: number; commands: TimedCommand[] }
@@ -123,6 +128,7 @@ export type SimRequest = { id: number } & (
 
 export interface SimView {
   season: number;
+  clubId: string;
   club: { name: string; shortName: string; colours: [string, string] };
   /** This season's money by kind (wages, tv, sponsors, tickets, debt). */
   money: { kind: string; amount: number }[];
@@ -153,6 +159,8 @@ export interface SimView {
     ultimatum: { matches: number; points: number } | null;
     last: BoardReason[];
     fired: boolean;
+    /** After a dismissal: the clubs that offer the job, each with its division. */
+    offers: (ClubFace & { clubId: string; division: string })[];
   };
   /** The inbox, newest first: each note with its clubs named and its date. */
   inbox: InboxItem[];
@@ -646,7 +654,8 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'clausePaid' ||
                   n.kind === 'loanIn' ||
                   n.kind === 'loanOut' ||
-                  n.kind === 'loanBack'
+                  n.kind === 'loanBack' ||
+                  n.kind === 'hired'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion
@@ -660,7 +669,14 @@ function view(w: CareerWorld, ms: number): SimView {
       ultimatum: boardOf(w).ultimatum ?? null,
       last: boardOf(w).last ?? [],
       fired: boardOf(w).fired === true,
+      offers: jobsAfter(w).map((clubId) => ({
+        clubId,
+        ...face(byId.get(clubId)!),
+        division:
+          nationalDivisions(w.pack).find((d) => s.members[d.id]?.includes(clubId))?.name ?? '',
+      })),
     },
+    clubId: w.clubId,
     club: face(club),
     division: table.name,
     cash: w.ledger.cash,
@@ -743,6 +759,19 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         to: world.day,
         season: world.season.season,
         bytes: await gzip(saveCareer(world)),
+      };
+    } else if (world && r.type === 'takeJob' && pending?.kind === 'fired') {
+      const from = world.day;
+      takeJob(world, r.clubId);
+      last = null;
+      // The new club's next match may be the very next day: then no day moves, and the
+      // snapshot of the same day is what carries the new job.
+      save = (await toNextDecision(world)) ?? {
+        from,
+        to: world.day,
+        season: world.season.season,
+        bytes: await gzip(saveCareer(world)),
+        still: true,
       };
     }
     if (world && r.type === 'market') {

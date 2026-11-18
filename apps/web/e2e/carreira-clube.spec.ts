@@ -433,3 +433,75 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
   await expect(inbox.getByRole('listitem').filter({ hasText: 'Imprensa' })).toContainText(fact!);
   expect(errors).toEqual([]);
 });
+
+for (const width of [360, 1280]) {
+  test(`career: dismissed, takes another club's offer and carries on at ${width} px`, async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const { gunzipSync, gzipSync } = await import('node:zlib');
+    await page.setViewportSize({ width, height: width === 360 ? 780 : 900 });
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/tecnico/carreira');
+    await page
+      .getByRole('button', { name: /^Assumir o / })
+      .first()
+      .click();
+    const play = page.getByRole('button', { name: 'Só o resultado' });
+    await expect(play).toBeEnabled({ timeout: 30_000 });
+    await play.click();
+    await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
+    await expect(play).toBeEnabled({ timeout: 30_000 });
+    const old = await page.locator('tbody tr.text-club-gold td').nth(1).innerText();
+
+    // The board's verdict written into the saved world, through the same API the game uses:
+    // losing enough matches to be dismissed would take a season of play.
+    const { career } = (await (await page.request.get('/v1/manager/career')).json()) as {
+      career: { day: number; season: number };
+    };
+    const got = await page.request.get('/v1/manager/career/world');
+    const world = JSON.parse(gunzipSync(await got.body()).toString()) as {
+      board: Record<string, unknown>;
+    };
+    world.board = { ...world.board, fired: true };
+    const put = await page.request.put(
+      `/v1/manager/career/world?from=${career.day}&to=${career.day}&season=${career.season}&still=1`,
+      {
+        headers: { 'content-type': 'application/octet-stream' },
+        data: gzipSync(JSON.stringify(world)),
+      },
+    );
+    expect(put.ok()).toBe(true);
+
+    await page.reload();
+    await expect(
+      page.getByRole('heading', { name: 'A direção encerrou seu contrato' }),
+    ).toBeVisible({ timeout: 30_000 });
+    const take = page.getByRole('button', { name: /^Assumir o / });
+    await expect(take).toHaveCount(3);
+    await expect(page.getByRole('button', { name: 'Começar outra carreira' })).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    // Nothing runs off the side: the last offer's button ends inside the screen.
+    const box = (await take.last().boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    await page.screenshot({ path: `test-results/carreira-demissao-${width}.png` });
+    await take.first().click();
+    await expect(play).toBeEnabled({ timeout: 30_000 });
+    await expect(page.getByText(/Você assumiu o /)).toBeVisible();
+    const now = await page.locator('tbody tr.text-club-gold td').nth(1).innerText();
+    expect(now).not.toBe(old);
+    // The new job is in the save: a reload opens the career at the new club.
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Só o resultado' })).toBeEnabled({
+      timeout: 30_000,
+    });
+    expect(await page.locator('tbody tr.text-club-gold td').nth(1).innerText()).toBe(now);
+    await play.click();
+    await expect(play).toBeEnabled({ timeout: 30_000 });
+    expect(errors).toEqual([]);
+  });
+}

@@ -43,5 +43,6 @@ export * from './market/loans';
 export * from './career/development';
 export * from './career/years';
 export * from './career/health';
+export * from './career/jobs';
 export { attendance, tierOf } from './career/finance';
 export * from './match/moments';

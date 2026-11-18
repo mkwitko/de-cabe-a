@@ -21,10 +21,12 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 10;
+export const CAREER_RULES_VERSION = 11;
 
 interface Saved {
   v: number;
+  /** The club the person coaches now, when it is no longer the one the career opened at. */
+  clubId?: string;
   day: number;
   season: unknown;
   ledger: { today: number; entries: LedgerEntry[] };
@@ -108,6 +110,7 @@ export function saveCareer(w: CareerWorld): string {
   const { byClub: _byClub, ...calendar } = w.season.calendar;
   const saved: Saved = {
     v: CAREER_RULES_VERSION,
+    clubId: w.clubId,
     day: w.day,
     season: { ...w.season, calendar },
     ledger: { today: w.ledger.today, entries: w.ledger.entries },
@@ -159,7 +162,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     pack,
     origin: base,
     seed,
-    clubId,
+    clubId: saved.clubId ?? clubId,
     season,
     ledger: createLedger(saved.ledger.today, saved.ledger.entries),
     day: saved.day,
