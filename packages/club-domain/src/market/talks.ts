@@ -67,14 +67,7 @@ export interface Bid {
 }
 
 export type TalkNo =
-  | 'window'
-  | 'squadFull'
-  | 'theirSquad'
-  | 'cold'
-  | 'justMoved'
-  | 'abroad'
-  | 'embargo'
-  | PlayerNo;
+  'window' | 'squadFull' | 'theirSquad' | 'cold' | 'justMoved' | 'abroad' | 'embargo' | PlayerNo;
 
 /** Monthly wage the person's club can still add (books.ts): the board's ceiling. */
 export const myWageRoom = (w: CareerWorld) => wageRoom(w, w.clubId);

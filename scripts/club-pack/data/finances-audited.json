@@ -1,1231 +1,1231 @@
 {
- "generated": "2026-11-18",
- "note": "Valores em BRL inteiros (R$ mil convertidos x1000). null = nao encontrado em demonstracao publicada; nada estimado. 'payroll' = futebol profissional + direitos de imagem quando separavel (ver note). Paginas = pagina do PDF (ou impressa quando indicado).",
- "clubs": [
-  {
-   "club": "Flamengo",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "PDF anual auditado 2025 (EY) nao localizado; so ha DFs 1T2026 NAO auditadas em https://images.flamengo.com.br/public/arquivos/transparencia/19/1777579037016.pdf"
-  },
-  {
-   "club": "Palmeiras",
-   "division": "br-serie-a",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "R$ mil (x1000)",
-   "auditStatus": "audited",
-   "auditor": "BDO (parecer sem ressalva na opiniao; PDF do parecer: https://www.palmeiras.com.br/wp-content/uploads/2026/05/parecer-bdo-2025.pdf)",
-   "values": {
-    "revenueTotal": {
-     "value": 1628486000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE, pag. impressa 12 (PDF 1 de 1)",
-     "note": "Receitas operacionais totais (futebol + clube social); exclui receitas financeiras"
+  "generated": "2026-11-18",
+  "note": "Valores em BRL inteiros (R$ mil convertidos x1000). null = nao encontrado em demonstracao publicada; nada estimado. 'payroll' = futebol profissional + direitos de imagem quando separavel (ver note). Paginas = pagina do PDF (ou impressa quando indicado).",
+  "clubs": [
+    {
+      "club": "Flamengo",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "PDF anual auditado 2025 (EY) nao localizado; so ha DFs 1T2026 NAO auditadas em https://images.flamengo.com.br/public/arquivos/transparencia/19/1777579037016.pdf"
     },
-    "broadcasting": {
-     "value": 180084000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12",
-     "note": "Direitos de transmissao"
+    {
+      "club": "Palmeiras",
+      "division": "br-serie-a",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "R$ mil (x1000)",
+      "auditStatus": "audited",
+      "auditor": "BDO (parecer sem ressalva na opiniao; PDF do parecer: https://www.palmeiras.com.br/wp-content/uploads/2026/05/parecer-bdo-2025.pdf)",
+      "values": {
+        "revenueTotal": {
+          "value": 1628486000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE, pag. impressa 12 (PDF 1 de 1)",
+          "note": "Receitas operacionais totais (futebol + clube social); exclui receitas financeiras"
+        },
+        "broadcasting": {
+          "value": 180084000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12",
+          "note": "Direitos de transmissao"
+        },
+        "matchday": {
+          "value": 140844000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12",
+          "note": "Arrecadacao de jogos 67.230 + Socio torcedor Avanti 73.614"
+        },
+        "commercial": {
+          "value": 236856000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12",
+          "note": "Publicidade e patrocinio 203.398 + Licenciamentos 33.458"
+        },
+        "playerSales": null,
+        "payroll": {
+          "value": 530155000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12",
+          "note": "Futebol profissional: pessoal e encargos 419.192 + direitos de imagem 110.963"
+        },
+        "playerRightsAmortisation": {
+          "value": 228169000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12",
+          "note": "Total clube; futebol profissional 225.391"
+        },
+        "netResult": {
+          "value": 292395000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12",
+          "note": "Superavit do exercicio"
+        },
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": {
+          "value": 118371000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "Balanco pag. 12",
+          "note": "Caixa e equivalentes"
+        }
+      },
+      "extra": {
+        "totalLiabilities": {
+          "value": 1584613000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "Balanco pag. 12"
+        },
+        "loansAndFinancing": {
+          "value": 234000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "Balanco pag. 12",
+          "note": "Emprestimos e financiamentos (circulante); sem nao circulante"
+        },
+        "premiacoes": {
+          "value": 318945000,
+          "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
+          "page": "DRE pag. 12"
+        }
+      },
+      "notes": "Venda de atletas nao e linha propria da DRE (esta em 'Outras receitas' 676.633, nota 2.1.22 nao lida). Notas explicativas nao estao no PDF publicado de 1 pagina."
     },
-    "matchday": {
-     "value": 140844000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12",
-     "note": "Arrecadacao de jogos 67.230 + Socio torcedor Avanti 73.614"
+    {
+      "club": "Botafogo",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "DFs 2025 em static.botafogo.com.br retornam AccessDenied; relatorio do auditor (opiniao com ressalva) lido em https://botafogofutebolsa.com.br/files/BOTAFOGO_2025_Relatorio_do_Auditor_assinado.pdf sem numeros; imprensa cita versao com abstencao de opiniao (BDO)"
     },
-    "commercial": {
-     "value": 236856000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12",
-     "note": "Publicidade e patrocinio 203.398 + Licenciamentos 33.458"
+    {
+      "club": "São Paulo",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "PDF oficial nao localizado"
     },
-    "playerSales": null,
-    "payroll": {
-     "value": 530155000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12",
-     "note": "Futebol profissional: pessoal e encargos 419.192 + direitos de imagem 110.963"
+    {
+      "club": "Fluminense",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "PDF nao localizado no portal; imprensa cita BDO com ressalvas"
     },
-    "playerRightsAmortisation": {
-     "value": 228169000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12",
-     "note": "Total clube; futebol profissional 225.391"
+    {
+      "club": "Corinthians",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "PDF oficial nao localizado; imprensa cita parecer com ressalvas (Parker Russell)"
     },
-    "netResult": {
-     "value": 292395000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12",
-     "note": "Superavit do exercicio"
+    {
+      "club": "Grêmio",
+      "division": "br-serie-a",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "R$ mil (x1000)",
+      "auditStatus": "audited",
+      "auditor": "Relatorio do auditor independente no PDF (Baker Tilly segundo imprensa; nao confirmado no texto lido)",
+      "values": {
+        "revenueTotal": {
+          "value": 375539000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "DRE PDF pag. 8",
+          "note": "Receita da atividade de desporto (liquida); venda de atletas fica em outras receitas operacionais"
+        },
+        "broadcasting": {
+          "value": 155548000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Nota 22, PDF pag. 28"
+        },
+        "matchday": {
+          "value": 71461000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Nota 22, PDF pag. 28",
+          "note": "Receitas de jogos 3.910 + Arrecadacao quadro social 67.551"
+        },
+        "commercial": {
+          "value": 107592000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Nota 22, PDF pag. 28",
+          "note": "Receitas publicitarias; royalties 7.656 e Gremio Mania 31.815 a parte"
+        },
+        "playerSales": {
+          "value": 123804000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Nota 26(b), PDF pag. 30",
+          "note": "Venda de atletas"
+        },
+        "payroll": null,
+        "playerRightsAmortisation": {
+          "value": 101900000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Nota 23, PDF pag. 29",
+          "note": "Amortizacao de direitos sobre atletas profissionais"
+        },
+        "netResult": {
+          "value": 35484000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "DRE PDF pag. 8",
+          "note": "Superavit do exercicio (inclui doacao Arena 135.000 e valor justo 248.161, impairment -157.495)"
+        },
+        "grossDebt": {
+          "value": 80006000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Balanco PDF pag. 7",
+          "note": "Instituicoes financeiras circulante + nao circulante"
+        },
+        "netDebt": null,
+        "cash": {
+          "value": 18356000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Balanco PDF pag. 7"
+        }
+      },
+      "extra": {
+        "totalLiabilities": {
+          "value": 935630000,
+          "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
+          "page": "Balanco PDF pag. 7",
+          "note": "Circulante + nao circulante (passivo a descoberto)"
+        }
+      },
+      "notes": "Folha de pagamento em nota 23 (PDF pag. 29-32) nao extraida."
     },
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": {
-     "value": 118371000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "Balanco pag. 12",
-     "note": "Caixa e equivalentes"
+    {
+      "club": "Santos",
+      "division": "br-serie-a",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "R$ mil (x1000)",
+      "auditStatus": "audited",
+      "auditor": "Relatorio do auditor independente na pag. 11 do PDF (tipo de opiniao nao verificado)",
+      "values": {
+        "revenueTotal": {
+          "value": 624922000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE, PDF pag. 16",
+          "note": "Total das receitas operacionais"
+        },
+        "broadcasting": {
+          "value": 156172000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16",
+          "note": "Receitas com transmissoes televisivas"
+        },
+        "matchday": {
+          "value": 32326000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16",
+          "note": "Bilheterias e cotas de participacao apenas; mensalidades de socios ficam em 'manutencao e frequencia' 57.224 (clube social, nao separavel)"
+        },
+        "commercial": {
+          "value": 142433000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16",
+          "note": "Receitas de publicidade"
+        },
+        "playerSales": {
+          "value": 134934000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16",
+          "note": "'Outras receitas liquidas - Negociacao de atletas' (liquido)"
+        },
+        "payroll": {
+          "value": 312608000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16",
+          "note": "Futebol profissional: pessoal e encargos 217.540 + direitos de imagem e arena 95.068"
+        },
+        "playerRightsAmortisation": {
+          "value": 91272000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16"
+        },
+        "netResult": {
+          "value": -79396000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "DRE PDF pag. 16",
+          "note": "Deficit do exercicio"
+        },
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": {
+          "value": 295000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "Balanco PDF pag. 14",
+          "note": "Caixa e equivalentes"
+        }
+      },
+      "extra": {
+        "totalLiabilities": {
+          "value": 1231959000,
+          "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
+          "page": "PDF pag. 34"
+        }
+      },
+      "notes": "Divida bancaria detalhada nao extraida."
+    },
+    {
+      "club": "Cruzeiro",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Cruzeiro SAF 2025 so em suplemento de jornal (diariodocomercio.com.br), nao lido"
+    },
+    {
+      "club": "Atlético Mineiro",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Localizado apenas Clube Atletico Mineiro (associacao) 2025: https://atletico.com.br/wp-content/uploads/2026/06/3648-26-NEs-Clube-Atletico-Mineiro-31.12.2025.pdf (nao e a SAF, nao extraido); SAF 2025 nao localizado"
+    },
+    {
+      "club": "Internacional",
+      "division": "br-serie-a",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "R$ mil (x1000)",
+      "auditStatus": "audited",
+      "auditor": "Relatorio do auditor independente PDF pag. 2 (opiniao nao verificada)",
+      "values": {
+        "revenueTotal": {
+          "value": 469887000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 22, PDF pag. 59",
+          "note": "Receita bruta das atividades; liquida 396.755 (DRE pag. 22)"
+        },
+        "broadcasting": {
+          "value": 119646000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 22, PDF pag. 59",
+          "note": "Cotas de TV (bruto)"
+        },
+        "matchday": {
+          "value": 118788000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 22, PDF pag. 59",
+          "note": "Arrecadacao jogos + Sociais (bruto)"
+        },
+        "commercial": {
+          "value": 146584000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 22, PDF pag. 59",
+          "note": "Patrocinios + publicidade + licenca de logomarca (bruto)"
+        },
+        "playerSales": {
+          "value": 185600000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 26/27, PDF pag. 61",
+          "note": "Negociacao de atletas - liquido"
+        },
+        "payroll": {
+          "value": 168968000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 23, PDF pag. 60",
+          "note": "Pessoal e beneficios (custos operacionais); direitos de imagem nao separados"
+        },
+        "playerRightsAmortisation": {
+          "value": 81521000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 23, PDF pag. 60"
+        },
+        "netResult": {
+          "value": 8972000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "DRE PDF pag. 22"
+        },
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": {
+          "value": 2261000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Balanco PDF pag. 21"
+        }
+      },
+      "extra": {
+        "totalAssets": {
+          "value": 1571724000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "PDF pag. 21"
+        },
+        "premiacoes": {
+          "value": 81939000,
+          "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
+          "page": "Nota 22 PDF pag. 59"
+        }
+      },
+      "notes": "Divida bruta nao extraida."
+    },
+    {
+      "club": "Red Bull Bragantino",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Nao localizado"
+    },
+    {
+      "club": "Vasco da Gama",
+      "division": "br-serie-a",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "R$ mil (x1000)",
+      "auditStatus": "audited-qualified",
+      "auditor": "Opiniao COM RESSALVA (PDF pag. 29); incerteza de continuidade operacional; aprovacao pendente",
+      "values": {
+        "revenueTotal": {
+          "value": 446349000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 26, PDF pag. 92",
+          "note": "Receita operacional bruta; liquida 413.878 (DRE pag. 35)"
+        },
+        "broadcasting": {
+          "value": 147061000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 26, PDF pag. 92"
+        },
+        "matchday": {
+          "value": 96521000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 26, PDF pag. 92",
+          "note": "Bilheteria + programa socio torcedor"
+        },
+        "commercial": {
+          "value": 117243000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 26, PDF pag. 92",
+          "note": "Marketing + licenciamento e royalties"
+        },
+        "playerSales": {
+          "value": 123866000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 28, PDF pag. 95",
+          "note": "Receita com transacao de atletas"
+        },
+        "payroll": {
+          "value": 291210000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 27, PDF pag. 93",
+          "note": "Salarios/encargos + direito de imagem (custos operacionais)"
+        },
+        "playerRightsAmortisation": {
+          "value": 124676000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Nota 27, PDF pag. 93",
+          "note": "Fluxo de caixa informa 125.811 (pag. 38)"
+        },
+        "netResult": {
+          "value": 81218000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "DRE PDF pag. 36"
+        },
+        "grossDebt": {
+          "value": 99379000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Balanco PDF pag. 34",
+          "note": "Emprestimos e financiamentos circ. + nao circ.; exclui passivo fiscal/recuperacao judicial"
+        },
+        "netDebt": null,
+        "cash": {
+          "value": 60344000,
+          "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
+          "page": "Balanco PDF pag. 33"
+        }
+      },
+      "extra": {},
+      "notes": "Entidade: Vasco da Gama SAF (nao o clube associativo). Arquivo hospedado em fan site (netvasco); original em vasco.com.br/transparencia nao verificado."
+    },
+    {
+      "club": "Bahia",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "DFs 2025 (fbf.org.br) retornam 404/HTML; 2024 em https://repositorio-bahia.s3.amazonaws.com/wp-content/uploads/2025/05/23145729/Bahia-SAF-Demonstracoes-Financeiras-e-Relatorio-dos-Auditores-Independentes-2024.pdf nao extraido"
+    },
+    {
+      "club": "Athletico Paranaense",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "https://www.athletico.com.br/wp-content/uploads/2026/04/Relatorio_Club_Athletico_Paranaense_2025.pdf existe mas retornou 403 ao download; nada lido"
+    },
+    {
+      "club": "Vitória",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Nao localizado"
+    },
+    {
+      "club": "Mirassol",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "PDF nao localizado"
+    },
+    {
+      "club": "Coritiba",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Chapecoense",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Remo",
+      "division": "br-serie-a",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Fortaleza",
+      "division": "br-serie-b",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "R$ mil (x1000)",
+      "auditStatus": "audited",
+      "auditor": "Relatorio do auditor independente PDF pag. 2 (opiniao nao verificada)",
+      "values": {
+        "revenueTotal": {
+          "value": 276709000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "DRE PDF pag. 7",
+          "note": "Receita operacional liquida (bruta de futebol 290.679 + diversas 12.789, nota 17 pag. 32)"
+        },
+        "broadcasting": {
+          "value": 155055000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Nota 17, PDF pag. 32"
+        },
+        "matchday": {
+          "value": 61439000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Nota 17, PDF pag. 32",
+          "note": "Bilheteria + socio torcedor"
+        },
+        "commercial": {
+          "value": 42601000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Nota 17, PDF pag. 32",
+          "note": "Patrocinios"
+        },
+        "playerSales": null,
+        "payroll": {
+          "value": 112594000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Nota 18, PDF pag. 33",
+          "note": "Salarios, encargos e beneficios (custo das atividades)"
+        },
+        "playerRightsAmortisation": {
+          "value": 72180000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Nota 18, PDF pag. 33"
+        },
+        "netResult": {
+          "value": -120141000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "DRE PDF pag. 7"
+        },
+        "grossDebt": {
+          "value": 60166000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Nota de instrumentos financeiros, PDF pag. 37",
+          "note": "Emprestimos e financiamentos"
+        },
+        "netDebt": null,
+        "cash": {
+          "value": 4074000,
+          "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
+          "page": "Balanco PDF pag. 6"
+        }
+      },
+      "extra": {},
+      "notes": "Entidade: Fortaleza EC SAF (exercicio 2025). Venda de atletas nao extraida (nota 20)."
+    },
+    {
+      "club": "Ceará",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "PDF nao localizado; imprensa cita deficit 2025 e ressalvas"
+    },
+    {
+      "club": "Sport Recife",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Juventude",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Náutico",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "América-MG",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Avaí",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Ponte Preta",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Vila Nova",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Novorizontino",
+      "division": "br-serie-b",
+      "fiscalYear": 2025,
+      "currency": "BRL",
+      "currencyUnitInSource": "BRL (reais, x1)",
+      "auditStatus": "audited",
+      "auditor": "Demonstracoes acompanhadas de relatorio do auditor (nao lido)",
+      "values": {
+        "revenueTotal": {
+          "value": 69542801,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "DRE PDF pag. 7",
+          "note": "Receita bruta total"
+        },
+        "broadcasting": {
+          "value": 36984915,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "DRE PDF pag. 7"
+        },
+        "matchday": {
+          "value": 3421619,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "DRE PDF pag. 7",
+          "note": "Arrecadacao de jogos; sem linha de socio-torcedor"
+        },
+        "commercial": {
+          "value": 7022023,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "DRE PDF pag. 7",
+          "note": "Publicidade + patrocinio"
+        },
+        "playerSales": {
+          "value": 17103865,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "DRE PDF pag. 7",
+          "note": "Negociacao de atletas"
+        },
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": {
+          "value": -25254161,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "DRE PDF pag. 9",
+          "note": "Prejuizo liquido do exercicio"
+        },
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": {
+          "value": 1482725,
+          "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
+          "page": "Balanco PDF pag. 6"
+        }
+      },
+      "extra": {},
+      "notes": "Entidade: Gremio Novorizontino S.A.F. Custos operacionais 73.810.452 nao abertos em folha/amortizacao na DRE (ver notas)."
+    },
+    {
+      "club": "Goiás",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Botafogo-SP",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "São Bernardo",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Athletic-MG",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Londrina",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Atlético-GO",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Cuiabá",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Criciúma",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "Operário-PR",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
+    },
+    {
+      "club": "CRB",
+      "division": "br-serie-b",
+      "fiscalYear": null,
+      "currency": "BRL",
+      "auditStatus": "not-found",
+      "values": {
+        "revenueTotal": null,
+        "broadcasting": null,
+        "matchday": null,
+        "commercial": null,
+        "playerSales": null,
+        "payroll": null,
+        "playerRightsAmortisation": null,
+        "netResult": null,
+        "grossDebt": null,
+        "netDebt": null,
+        "cash": null
+      },
+      "extra": {},
+      "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
     }
-   },
-   "extra": {
-    "totalLiabilities": {
-     "value": 1584613000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "Balanco pag. 12"
-    },
-    "loansAndFinancing": {
-     "value": 234000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "Balanco pag. 12",
-     "note": "Emprestimos e financiamentos (circulante); sem nao circulante"
-    },
-    "premiacoes": {
-     "value": 318945000,
-     "sourceUrl": "https://www.palmeiras.com.br/wp-content/uploads/2026/05/Balanco-e-DRE-2025.pdf",
-     "page": "DRE pag. 12"
-    }
-   },
-   "notes": "Venda de atletas nao e linha propria da DRE (esta em 'Outras receitas' 676.633, nota 2.1.22 nao lida). Notas explicativas nao estao no PDF publicado de 1 pagina."
-  },
-  {
-   "club": "Botafogo",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "DFs 2025 em static.botafogo.com.br retornam AccessDenied; relatorio do auditor (opiniao com ressalva) lido em https://botafogofutebolsa.com.br/files/BOTAFOGO_2025_Relatorio_do_Auditor_assinado.pdf sem numeros; imprensa cita versao com abstencao de opiniao (BDO)"
-  },
-  {
-   "club": "São Paulo",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "PDF oficial nao localizado"
-  },
-  {
-   "club": "Fluminense",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "PDF nao localizado no portal; imprensa cita BDO com ressalvas"
-  },
-  {
-   "club": "Corinthians",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "PDF oficial nao localizado; imprensa cita parecer com ressalvas (Parker Russell)"
-  },
-  {
-   "club": "Grêmio",
-   "division": "br-serie-a",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "R$ mil (x1000)",
-   "auditStatus": "audited",
-   "auditor": "Relatorio do auditor independente no PDF (Baker Tilly segundo imprensa; nao confirmado no texto lido)",
-   "values": {
-    "revenueTotal": {
-     "value": 375539000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "DRE PDF pag. 8",
-     "note": "Receita da atividade de desporto (liquida); venda de atletas fica em outras receitas operacionais"
-    },
-    "broadcasting": {
-     "value": 155548000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Nota 22, PDF pag. 28"
-    },
-    "matchday": {
-     "value": 71461000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Nota 22, PDF pag. 28",
-     "note": "Receitas de jogos 3.910 + Arrecadacao quadro social 67.551"
-    },
-    "commercial": {
-     "value": 107592000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Nota 22, PDF pag. 28",
-     "note": "Receitas publicitarias; royalties 7.656 e Gremio Mania 31.815 a parte"
-    },
-    "playerSales": {
-     "value": 123804000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Nota 26(b), PDF pag. 30",
-     "note": "Venda de atletas"
-    },
-    "payroll": null,
-    "playerRightsAmortisation": {
-     "value": 101900000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Nota 23, PDF pag. 29",
-     "note": "Amortizacao de direitos sobre atletas profissionais"
-    },
-    "netResult": {
-     "value": 35484000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "DRE PDF pag. 8",
-     "note": "Superavit do exercicio (inclui doacao Arena 135.000 e valor justo 248.161, impairment -157.495)"
-    },
-    "grossDebt": {
-     "value": 80006000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Balanco PDF pag. 7",
-     "note": "Instituicoes financeiras circulante + nao circulante"
-    },
-    "netDebt": null,
-    "cash": {
-     "value": 18356000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Balanco PDF pag. 7"
-    }
-   },
-   "extra": {
-    "totalLiabilities": {
-     "value": 935630000,
-     "sourceUrl": "https://gremio.net/documentos/GREMIO_-_DFS+RAI_2025_-_final_-_23-03-2026_CD_(1).pdf",
-     "page": "Balanco PDF pag. 7",
-     "note": "Circulante + nao circulante (passivo a descoberto)"
-    }
-   },
-   "notes": "Folha de pagamento em nota 23 (PDF pag. 29-32) nao extraida."
-  },
-  {
-   "club": "Santos",
-   "division": "br-serie-a",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "R$ mil (x1000)",
-   "auditStatus": "audited",
-   "auditor": "Relatorio do auditor independente na pag. 11 do PDF (tipo de opiniao nao verificado)",
-   "values": {
-    "revenueTotal": {
-     "value": 624922000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE, PDF pag. 16",
-     "note": "Total das receitas operacionais"
-    },
-    "broadcasting": {
-     "value": 156172000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16",
-     "note": "Receitas com transmissoes televisivas"
-    },
-    "matchday": {
-     "value": 32326000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16",
-     "note": "Bilheterias e cotas de participacao apenas; mensalidades de socios ficam em 'manutencao e frequencia' 57.224 (clube social, nao separavel)"
-    },
-    "commercial": {
-     "value": 142433000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16",
-     "note": "Receitas de publicidade"
-    },
-    "playerSales": {
-     "value": 134934000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16",
-     "note": "'Outras receitas liquidas - Negociacao de atletas' (liquido)"
-    },
-    "payroll": {
-     "value": 312608000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16",
-     "note": "Futebol profissional: pessoal e encargos 217.540 + direitos de imagem e arena 95.068"
-    },
-    "playerRightsAmortisation": {
-     "value": 91272000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16"
-    },
-    "netResult": {
-     "value": -79396000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "DRE PDF pag. 16",
-     "note": "Deficit do exercicio"
-    },
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": {
-     "value": 295000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "Balanco PDF pag. 14",
-     "note": "Caixa e equivalentes"
-    }
-   },
-   "extra": {
-    "totalLiabilities": {
-     "value": 1231959000,
-     "sourceUrl": "https://media.santosfc.com.br/wp-content/uploads/2026/04/Demonstracoes_Financeiras-2025-assinada.pdf",
-     "page": "PDF pag. 34"
-    }
-   },
-   "notes": "Divida bancaria detalhada nao extraida."
-  },
-  {
-   "club": "Cruzeiro",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Cruzeiro SAF 2025 so em suplemento de jornal (diariodocomercio.com.br), nao lido"
-  },
-  {
-   "club": "Atlético Mineiro",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Localizado apenas Clube Atletico Mineiro (associacao) 2025: https://atletico.com.br/wp-content/uploads/2026/06/3648-26-NEs-Clube-Atletico-Mineiro-31.12.2025.pdf (nao e a SAF, nao extraido); SAF 2025 nao localizado"
-  },
-  {
-   "club": "Internacional",
-   "division": "br-serie-a",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "R$ mil (x1000)",
-   "auditStatus": "audited",
-   "auditor": "Relatorio do auditor independente PDF pag. 2 (opiniao nao verificada)",
-   "values": {
-    "revenueTotal": {
-     "value": 469887000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 22, PDF pag. 59",
-     "note": "Receita bruta das atividades; liquida 396.755 (DRE pag. 22)"
-    },
-    "broadcasting": {
-     "value": 119646000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 22, PDF pag. 59",
-     "note": "Cotas de TV (bruto)"
-    },
-    "matchday": {
-     "value": 118788000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 22, PDF pag. 59",
-     "note": "Arrecadacao jogos + Sociais (bruto)"
-    },
-    "commercial": {
-     "value": 146584000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 22, PDF pag. 59",
-     "note": "Patrocinios + publicidade + licenca de logomarca (bruto)"
-    },
-    "playerSales": {
-     "value": 185600000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 26/27, PDF pag. 61",
-     "note": "Negociacao de atletas - liquido"
-    },
-    "payroll": {
-     "value": 168968000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 23, PDF pag. 60",
-     "note": "Pessoal e beneficios (custos operacionais); direitos de imagem nao separados"
-    },
-    "playerRightsAmortisation": {
-     "value": 81521000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 23, PDF pag. 60"
-    },
-    "netResult": {
-     "value": 8972000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "DRE PDF pag. 22"
-    },
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": {
-     "value": 2261000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Balanco PDF pag. 21"
-    }
-   },
-   "extra": {
-    "totalAssets": {
-     "value": 1571724000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "PDF pag. 21"
-    },
-    "premiacoes": {
-     "value": 81939000,
-     "sourceUrl": "https://static.internacional.com.br/cms/assets/ra_2025_6be6c85b2a.pdf",
-     "page": "Nota 22 PDF pag. 59"
-    }
-   },
-   "notes": "Divida bruta nao extraida."
-  },
-  {
-   "club": "Red Bull Bragantino",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Nao localizado"
-  },
-  {
-   "club": "Vasco da Gama",
-   "division": "br-serie-a",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "R$ mil (x1000)",
-   "auditStatus": "audited-qualified",
-   "auditor": "Opiniao COM RESSALVA (PDF pag. 29); incerteza de continuidade operacional; aprovacao pendente",
-   "values": {
-    "revenueTotal": {
-     "value": 446349000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 26, PDF pag. 92",
-     "note": "Receita operacional bruta; liquida 413.878 (DRE pag. 35)"
-    },
-    "broadcasting": {
-     "value": 147061000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 26, PDF pag. 92"
-    },
-    "matchday": {
-     "value": 96521000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 26, PDF pag. 92",
-     "note": "Bilheteria + programa socio torcedor"
-    },
-    "commercial": {
-     "value": 117243000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 26, PDF pag. 92",
-     "note": "Marketing + licenciamento e royalties"
-    },
-    "playerSales": {
-     "value": 123866000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 28, PDF pag. 95",
-     "note": "Receita com transacao de atletas"
-    },
-    "payroll": {
-     "value": 291210000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 27, PDF pag. 93",
-     "note": "Salarios/encargos + direito de imagem (custos operacionais)"
-    },
-    "playerRightsAmortisation": {
-     "value": 124676000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Nota 27, PDF pag. 93",
-     "note": "Fluxo de caixa informa 125.811 (pag. 38)"
-    },
-    "netResult": {
-     "value": 81218000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "DRE PDF pag. 36"
-    },
-    "grossDebt": {
-     "value": 99379000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Balanco PDF pag. 34",
-     "note": "Emprestimos e financiamentos circ. + nao circ.; exclui passivo fiscal/recuperacao judicial"
-    },
-    "netDebt": null,
-    "cash": {
-     "value": 60344000,
-     "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20260430-224806-1-vasco-da-gama-saf-%E2%80%93-demonstracoes-contabeis-2025.pdf",
-     "page": "Balanco PDF pag. 33"
-    }
-   },
-   "extra": {},
-   "notes": "Entidade: Vasco da Gama SAF (nao o clube associativo). Arquivo hospedado em fan site (netvasco); original em vasco.com.br/transparencia nao verificado."
-  },
-  {
-   "club": "Bahia",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "DFs 2025 (fbf.org.br) retornam 404/HTML; 2024 em https://repositorio-bahia.s3.amazonaws.com/wp-content/uploads/2025/05/23145729/Bahia-SAF-Demonstracoes-Financeiras-e-Relatorio-dos-Auditores-Independentes-2024.pdf nao extraido"
-  },
-  {
-   "club": "Athletico Paranaense",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "https://www.athletico.com.br/wp-content/uploads/2026/04/Relatorio_Club_Athletico_Paranaense_2025.pdf existe mas retornou 403 ao download; nada lido"
-  },
-  {
-   "club": "Vitória",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Nao localizado"
-  },
-  {
-   "club": "Mirassol",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "PDF nao localizado"
-  },
-  {
-   "club": "Coritiba",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Chapecoense",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Remo",
-   "division": "br-serie-a",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Fortaleza",
-   "division": "br-serie-b",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "R$ mil (x1000)",
-   "auditStatus": "audited",
-   "auditor": "Relatorio do auditor independente PDF pag. 2 (opiniao nao verificada)",
-   "values": {
-    "revenueTotal": {
-     "value": 276709000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "DRE PDF pag. 7",
-     "note": "Receita operacional liquida (bruta de futebol 290.679 + diversas 12.789, nota 17 pag. 32)"
-    },
-    "broadcasting": {
-     "value": 155055000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Nota 17, PDF pag. 32"
-    },
-    "matchday": {
-     "value": 61439000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Nota 17, PDF pag. 32",
-     "note": "Bilheteria + socio torcedor"
-    },
-    "commercial": {
-     "value": 42601000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Nota 17, PDF pag. 32",
-     "note": "Patrocinios"
-    },
-    "playerSales": null,
-    "payroll": {
-     "value": 112594000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Nota 18, PDF pag. 33",
-     "note": "Salarios, encargos e beneficios (custo das atividades)"
-    },
-    "playerRightsAmortisation": {
-     "value": 72180000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Nota 18, PDF pag. 33"
-    },
-    "netResult": {
-     "value": -120141000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "DRE PDF pag. 7"
-    },
-    "grossDebt": {
-     "value": 60166000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Nota de instrumentos financeiros, PDF pag. 37",
-     "note": "Emprestimos e financiamentos"
-    },
-    "netDebt": null,
-    "cash": {
-     "value": 4074000,
-     "sourceUrl": "https://transparencia.fortaleza1918.com.br/wp-content/uploads/2026/04/DEMONSTRACOES-CONTABEIS-FEC-SAF-31-12-2025.pdf",
-     "page": "Balanco PDF pag. 6"
-    }
-   },
-   "extra": {},
-   "notes": "Entidade: Fortaleza EC SAF (exercicio 2025). Venda de atletas nao extraida (nota 20)."
-  },
-  {
-   "club": "Ceará",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "PDF nao localizado; imprensa cita deficit 2025 e ressalvas"
-  },
-  {
-   "club": "Sport Recife",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Juventude",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Náutico",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "América-MG",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Avaí",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Ponte Preta",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Vila Nova",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Novorizontino",
-   "division": "br-serie-b",
-   "fiscalYear": 2025,
-   "currency": "BRL",
-   "currencyUnitInSource": "BRL (reais, x1)",
-   "auditStatus": "audited",
-   "auditor": "Demonstracoes acompanhadas de relatorio do auditor (nao lido)",
-   "values": {
-    "revenueTotal": {
-     "value": 69542801,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "DRE PDF pag. 7",
-     "note": "Receita bruta total"
-    },
-    "broadcasting": {
-     "value": 36984915,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "DRE PDF pag. 7"
-    },
-    "matchday": {
-     "value": 3421619,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "DRE PDF pag. 7",
-     "note": "Arrecadacao de jogos; sem linha de socio-torcedor"
-    },
-    "commercial": {
-     "value": 7022023,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "DRE PDF pag. 7",
-     "note": "Publicidade + patrocinio"
-    },
-    "playerSales": {
-     "value": 17103865,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "DRE PDF pag. 7",
-     "note": "Negociacao de atletas"
-    },
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": {
-     "value": -25254161,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "DRE PDF pag. 9",
-     "note": "Prejuizo liquido do exercicio"
-    },
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": {
-     "value": 1482725,
-     "sourceUrl": "https://www.gremionovorizontino.com.br/wp-content/uploads/2026/04/DF-GREMIO-NOVORIZONTINO-2025-Final-assinada-total-1.pdf",
-     "page": "Balanco PDF pag. 6"
-    }
-   },
-   "extra": {},
-   "notes": "Entidade: Gremio Novorizontino S.A.F. Custos operacionais 73.810.452 nao abertos em folha/amortizacao na DRE (ver notas)."
-  },
-  {
-   "club": "Goiás",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Botafogo-SP",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "São Bernardo",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Athletic-MG",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Londrina",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Atlético-GO",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Cuiabá",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Criciúma",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "Operário-PR",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  },
-  {
-   "club": "CRB",
-   "division": "br-serie-b",
-   "fiscalYear": null,
-   "currency": "BRL",
-   "auditStatus": "not-found",
-   "values": {
-    "revenueTotal": null,
-    "broadcasting": null,
-    "matchday": null,
-    "commercial": null,
-    "playerSales": null,
-    "payroll": null,
-    "playerRightsAmortisation": null,
-    "netResult": null,
-    "grossDebt": null,
-    "netDebt": null,
-    "cash": null
-   },
-   "extra": {},
-   "notes": "Demonstracoes 2025 auditadas nao localizadas em fonte primaria nesta rodada"
-  }
- ]
+  ]
 }

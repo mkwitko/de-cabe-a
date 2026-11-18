@@ -190,7 +190,7 @@ function choose(
     const list = index.get(position) ?? [];
     // Best first: a binary search finds the first one in range instead of walking past the stars.
     let lo = 0;
-    for (let hi = list.length; lo < hi; ) {
+    for (let hi = list.length; lo < hi;) {
       const mid = (lo + hi) >> 1;
       if (list[mid]!.level > top) lo = mid + 1;
       else hi = mid;
@@ -214,7 +214,11 @@ function choose(
   const bestSeen: number[] = [];
   let closed = false;
   for (const { p, level } of pool) {
-    if (!closed && bestSeen.length === SHORTLIST && level + MAX_LEVEL_ERROR < bestSeen[SHORTLIST - 1]!)
+    if (
+      !closed &&
+      bestSeen.length === SHORTLIST &&
+      level + MAX_LEVEL_ERROR < bestSeen[SHORTLIST - 1]!
+    )
       closed = true;
     if (closed && !(p.clubId === w.clubId && listed.has(p.id))) continue;
     if (p.clubId === buyerId || p.clubId === ABROAD || skip.has(p.id)) continue;

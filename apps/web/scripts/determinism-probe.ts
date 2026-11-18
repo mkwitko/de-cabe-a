@@ -2,8 +2,10 @@
  * Probe for scripts/determinism.mjs (ADR-020): whole matches of the engine and one season of the
  * big fictional pack, hashed bit by bit, so Node and every browser can be compared.
  */
-import { advanceMatch } from '../../../packages/match-engine/src/match/advance';
+// A dev probe, not shipped code: it reads the engine's fixture helper, which the root does not export.
+// eslint-disable-next-line no-restricted-imports
 import { matchInput } from '../../../packages/match-engine/src/match/fixture';
+import { advanceMatch } from '@decabeca/match-engine';
 import { benchSeason, toJson } from '../../../packages/club-domain/src/bench/world';
 import { generateDevPack } from '../../../packages/club-domain/src/generate/pack';
 import { startSeason } from '../../../packages/club-domain/src/competition/season';

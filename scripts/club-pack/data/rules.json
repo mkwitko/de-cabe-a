@@ -63,24 +63,13 @@
         "url": "https://en.wikipedia.org/wiki/2026_Campeonato_Brasileiro_Série_A",
         "title": "2026 Campeonato Brasileiro Série A (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "format",
-          "relegation",
-          "continentalSlots",
-          "foreignPlayers"
-        ]
+        "supports": ["teams", "format", "relegation", "continentalSlots", "foreignPlayers"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Campeonato_Brasileiro_Série_A",
         "title": "Campeonato Brasileiro Série A (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss",
-          "tieBreaks"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "tieBreaks"]
       }
     ],
     "confidence": "medium",
@@ -139,20 +128,13 @@
         "url": "https://en.wikipedia.org/wiki/2026_Campeonato_Brasileiro_Série_B",
         "title": "2026 Campeonato Brasileiro Série B (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "relegation",
-          "tieBreaks",
-          "promotion"
-        ]
+        "supports": ["teams", "relegation", "tieBreaks", "promotion"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Campeonato_Brasileiro_Série_A",
         "title": "Campeonato Brasileiro Série A (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "promotion"
-        ],
+        "supports": ["promotion"],
         "quote": "top four from Série B are promoted"
       }
     ],
@@ -210,10 +192,7 @@
         "url": "https://en.wikipedia.org/wiki/2026_Copa_do_Brasil",
         "title": "2026 Copa do Brasil (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "format"
-        ]
+        "supports": ["teams", "format"]
       }
     ],
     "confidence": "medium",
@@ -264,19 +243,13 @@
         "url": "https://en.wikipedia.org/wiki/2026_Copa_Libertadores",
         "title": "2026 Copa Libertadores (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "format",
-          "knockout"
-        ]
+        "supports": ["teams", "format", "knockout"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/2026_Copa_Libertadores_final_stages",
         "title": "2026 Copa Libertadores final stages (Wikipedia, cites Regulations Art. 2.4.3 and 2.4.4)",
         "accessed": "2026-11-17",
-        "supports": [
-          "knockout"
-        ],
+        "supports": ["knockout"],
         "quote": "If tied on aggregate, extra time was not played"
       }
     ],
@@ -328,10 +301,7 @@
         "url": "https://en.wikipedia.org/wiki/2026_Copa_Sudamericana",
         "title": "2026 Copa Sudamericana (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "format"
-        ]
+        "supports": ["teams", "format"]
       }
     ],
     "confidence": "medium",
@@ -368,13 +338,7 @@
         "note": "5th plus FA Cup winner"
       }
     ],
-    "tieBreaks": [
-      "goalDifference",
-      "goalsFor",
-      "headToHead",
-      "awayGoalsHeadToHead",
-      "playoff"
-    ],
+    "tieBreaks": ["goalDifference", "goalsFor", "headToHead", "awayGoalsHeadToHead", "playoff"],
     "knockout": {
       "legs": null,
       "awayGoals": null,
@@ -402,31 +366,19 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_Premier_League",
         "title": "2026-27 Premier League (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "relegation",
-          "tieBreaks",
-          "continentalSlots",
-          "transferWindows"
-        ]
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots", "transferWindows"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Premier_League",
         "title": "Premier League (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Premier_League",
         "title": "Premier League (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "relegation"
-        ],
+        "supports": ["relegation"],
         "quote": "three lowest-placed teams are relegated"
       }
     ],
@@ -487,23 +439,13 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_EFL_Championship",
         "title": "2026-27 EFL Championship (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "promotion",
-          "tieBreaks"
-        ]
+        "supports": ["teams", "promotion", "tieBreaks"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/EFL_Championship",
         "title": "EFL Championship (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss",
-          "promotion",
-          "relegation"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "promotion", "relegation"]
       }
     ],
     "confidence": "medium",
@@ -561,21 +503,13 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_La_Liga",
         "title": "2026-27 La Liga (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "tieBreaks"
-        ]
+        "supports": ["teams", "tieBreaks"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/La_Liga",
         "title": "La Liga (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss",
-          "relegation"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "relegation"]
       }
     ],
     "confidence": "medium",
@@ -649,23 +583,13 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_Bundesliga",
         "title": "2026-27 Bundesliga (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "relegation",
-          "tieBreaks",
-          "continentalSlots"
-        ]
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Bundesliga",
         "title": "Bundesliga (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss",
-          "relegation"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss", "relegation"]
       }
     ],
     "confidence": "medium",
@@ -733,22 +657,13 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_Serie_A",
         "title": "2026-27 Serie A (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "relegation",
-          "tieBreaks",
-          "continentalSlots"
-        ]
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Serie_A",
         "title": "Serie A (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
       }
     ],
     "confidence": "medium",
@@ -824,21 +739,13 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_Ligue_1",
         "title": "2026-27 Ligue 1 (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "relegation",
-          "tieBreaks",
-          "continentalSlots"
-        ]
+        "supports": ["relegation", "tieBreaks", "continentalSlots"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Ligue_1",
         "title": "Ligue 1 (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
       }
     ],
     "confidence": "medium",
@@ -912,12 +819,7 @@
         "url": "https://en.wikipedia.org/wiki/2026–27_Primeira_Liga",
         "title": "2026-27 Primeira Liga (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "relegation",
-          "tieBreaks",
-          "continentalSlots"
-        ]
+        "supports": ["teams", "relegation", "tieBreaks", "continentalSlots"]
       }
     ],
     "confidence": "medium",
@@ -985,22 +887,13 @@
         "url": "https://en.wikipedia.org/wiki/2026_Major_League_Soccer_season",
         "title": "2026 Major League Soccer season (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "format",
-          "continentalSlots",
-          "tieBreaks"
-        ]
+        "supports": ["teams", "format", "continentalSlots", "tieBreaks"]
       },
       {
         "url": "https://www.mlssoccer.com/about/roster-rules-and-regulations",
         "title": "MLS roster rules and regulations (official)",
         "accessed": "2026-11-17",
-        "supports": [
-          "squadRegistration",
-          "foreignPlayers",
-          "transferWindows"
-        ]
+        "supports": ["squadRegistration", "foreignPlayers", "transferWindows"]
       }
     ],
     "confidence": "medium",
@@ -1057,22 +950,13 @@
         "url": "https://en.wikipedia.org/wiki/2026_Argentine_Primera_División",
         "title": "2026 Argentine Primera Division (Wikipedia)",
         "accessed": "2026-11-17",
-        "supports": [
-          "teams",
-          "format",
-          "relegation",
-          "continentalSlots"
-        ]
+        "supports": ["teams", "format", "relegation", "continentalSlots"]
       },
       {
         "url": "https://en.wikipedia.org/wiki/Argentine_Primera_División",
         "title": "Argentine Primera Division (Wikipedia, league main article)",
         "accessed": "2026-11-17",
-        "supports": [
-          "pointsWin",
-          "pointsDraw",
-          "pointsLoss"
-        ]
+        "supports": ["pointsWin", "pointsDraw", "pointsLoss"]
       }
     ],
     "confidence": "medium",
