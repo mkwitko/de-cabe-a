@@ -25,6 +25,7 @@ import {
 import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
+import { goingWage } from '../market/value';
 import { bestRoles } from '../player/ratings';
 import type { Intensity } from './training';
 
@@ -137,13 +138,13 @@ export function develop(p: PackPlayer, seed: number, season: number, growth = 10
 
 /**
  * True when he hangs up his boots before `season`: from 36 on, surer each year. Keepers go two
- * years later; players of the lower levels, who never lived well off the game, up to four
+ * years later; players of the lowest levels, who never lived well off the game, up to three
  * years sooner.
  */
 export function retires(p: PackPlayer, seed: number, season: number): boolean {
   const keeper = p.positions.some((x) => x.position === 'GK');
   const level = bestRoles(p.attributes, 1)[0]!.rating;
-  const from = 36 + (keeper ? 2 : 0) - (level < 40 ? 4 : level < 50 ? 2 : 0);
+  const from = 36 + (keeper ? 2 : 0) - (level < 32 ? 3 : level < 42 ? 1 : 0);
   const over = ageIn(p, season) - from;
   return over >= 0 && draw(seed, p.id, season, 99) < (over + 1) * 25;
 }
@@ -179,7 +180,7 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
     const r = fork(root, `boy:${k}`);
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = 15 + pick(r, 3);
-    const quality = Math.max(20, level - 16 + youth + pick(r, 7));
+    const quality = Math.max(20, level - 13 + youth + pick(r, 7));
     const made = generatePlayer(r, {
       id: `y${season}-${clubId}-${k}`,
       position,
@@ -190,19 +191,18 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
     // One in six is the kind that outgrows the club; the rest reach about its level.
     const gem = pick(r, 6) === 0 ? 10 + pick(r, 12) : 0;
     const reach = (base: number) => clamp(level + base + gem + pick(r, 8));
+    const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
+    // A first contract: two fifths of what the market pays a man of his level today.
+    const wage = Math.round((goingWage(origin, bestRoles(attributes, 1)[0]!.rating) * 40) / 100);
     out.push({
       ...made,
       birthDate: `${season - age}${made.birthDate.slice(4)}`,
-      attributes: generateAttributes(fork(r, 'attributes'), position, quality, age),
+      attributes,
       potential: {
         ...made.potential,
         ceiling: { technical: reach(-2), mental: reach(0), physical: reach(-4) },
       },
-      contract: {
-        wage: Math.round(quality * quality * 6) * 10,
-        until: `${season + 2}-12-31`,
-        releaseFee: null,
-      },
+      contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },
     });
   }
   return out;

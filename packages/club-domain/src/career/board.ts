@@ -29,15 +29,18 @@ export interface Board {
 const START = 60;
 /** Below this the board sets an ultimatum. */
 const PRESSURE = 25;
-const ULTIMATUM = { matches: 5, points: 7 } as const;
+const ULTIMATUM = { matches: 5, points: 6 } as const;
 /** Where the confidence is put back when an ultimatum is met. */
 const RELIEF = 35;
 /** Strength points that make one side the favourite. */
 const CLEAR_GAP = 3;
 const BY_ODDS: Record<Odds, Record<'W' | 'D' | 'L', number>> = {
-  favourite: { W: 2, D: -2, L: -6 },
-  even: { W: 3, D: -1, L: -4 },
-  underdog: { W: 5, D: 2, L: -2 },
+  // Each row sums to about nothing over the results a side of that standing should get
+  // (a favourite wins half and loses a quarter; an even side wins and loses alike; an underdog
+  // the reverse), so a club that does what was expected of it holds its confidence.
+  favourite: { W: 2, D: -1, L: -3 },
+  even: { W: 3, D: 0, L: -3 },
+  underdog: { W: 4, D: 1, L: -2 },
 };
 const IN_THE_RED = -2;
 const GOAL_MET = 15;

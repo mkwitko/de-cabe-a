@@ -4,7 +4,7 @@
  * against something. Not used by the game. Run: `pnpm --filter @decabeca/club-domain calibrate`.
  *
  * Policies: `auto` never touches anything; `light`/`hard` only set the training week;
- * `seller` sells whoever a club bids for and lists the squad; `rotate` rests tired starters.
+ * `seller` sells whoever a club bids for and lists the squad; `keeper` renews every contract.
  */
 import { generateDevPack } from '../generate/pack';
 import {
@@ -16,14 +16,14 @@ import {
 } from '../career/advance';
 import { boardOf, positionOf } from '../career/board';
 import { nationalDivisions } from '../career/start';
-import { setIntensity, trainingOn, type Intensity } from '../career/training';
-import { lineupOf, setLineup, slotRatings } from '../career/squad';
+import { setIntensity, type Intensity } from '../career/training';
 import { budgetOf, tierOfClub, wageBill } from '../market/books';
-import { answerBid, listPlayer } from '../market/talks';
-import { marketValue, readingsOf } from '../market/value';
+import { endingSoon } from '../market/contracts';
+import { answerBid, bidTerms, listPlayer, openRenewal } from '../market/talks';
+import { marketValue } from '../market/value';
 import type { Pack } from '../pack/schema';
 
-type Policy = 'auto' | 'light' | 'hard' | 'seller' | 'rotate';
+type Policy = 'auto' | 'light' | 'hard' | 'seller' | 'keeper';
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const r1 = (x: number) => Math.round(x * 10) / 10;
@@ -44,28 +44,15 @@ interface Run {
   endStrength: number;
 }
 
-/** Rests the starters under 60% freshness for the best fresh reserve of the slot. */
-function rotate(w: CareerWorld, day: number) {
-  const t = trainingOn(w, day);
-  const l = lineupOf(w);
-  const fit = slotRatings(w, l.formation);
-  const read = readingsOf(w.pack);
-  const xi = [...l.xi];
-  for (const [i, id] of l.xi.entries()) {
-    if ((t.fresh[id] ?? 1) >= 0.6) continue;
-    const keeper = read.get(id)!.keeper;
-    let best: string | null = null;
-    for (const p of w.pack.players) {
-      if (p.clubId !== w.clubId || xi.includes(p.id) || read.get(p.id)!.keeper !== keeper) continue;
-      if ((t.fresh[p.id] ?? 1) < 0.85) continue;
-      if (!best || fit.get(p.id)![i]! > fit.get(best)![i]!) best = p.id;
+/** Renews, at what each asks, the players whose contract ends with the season. */
+function keep(w: CareerWorld) {
+  for (const id of endingSoon(w)) {
+    try {
+      const talk = openRenewal(w, id);
+      if (talk.wants) bidTerms(w, id, talk.wants);
+    } catch {
+      // The board's wage ceiling, or a door already shut: he is not renewed.
     }
-    if (best && fit.get(best)![i]! >= fit.get(id)![i]! - 6) xi[i] = best;
-  }
-  try {
-    setLineup(w, { ...l, xi });
-  } catch {
-    // An invalid swap (a keeper out of goal): keep the eleven as it was.
   }
 }
 
@@ -92,7 +79,7 @@ function play(pack: Pack, seed: number, clubId: string, policy: Policy, seasons:
     let matches = 0;
     let hadUltimatum = false;
     for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) {
-      if (policy === 'rotate') rotate(w, d.day);
+      if (policy === 'keeper') keep(w);
       if (policy === 'seller') {
         for (const p of w.pack.players) if (p.clubId === clubId) listPlayer(w, p.id, true);
         for (const b of [...(w.bids ?? [])]) {
@@ -148,7 +135,14 @@ function world(pack: Pack, seed: number, seasons: number) {
         .length,
       free: w.pack.players.filter((p) => p.clubId === null).length,
       sizes: [Math.min(...sizes), Math.max(...sizes)],
-      bill: mean(pack.clubs.map((c) => wageBill(w, c.id) / Math.max(1, bill0.get(c.id)!))),
+      // All the clubs' wages together against the opening day's: a mean of ratios would let
+      // the smallest clubs speak for the world.
+      bill:
+        pack.clubs.reduce((t, c) => t + wageBill(w, c.id), 0) /
+        Math.max(
+          1,
+          [...bill0.values()].reduce((a, b) => a + b, 0),
+        ),
     });
     if (boardOf(w).fired) break;
     startNextSeason(w);
@@ -173,7 +167,7 @@ function main() {
   const out: string[] = [];
   const t0 = performance.now();
 
-  for (const policy of ['auto', 'light', 'hard', 'rotate', 'seller'] as Policy[]) {
+  for (const policy of ['auto', 'keeper', 'light', 'hard', 'seller'] as Policy[]) {
     const runs: Run[] = [];
     for (const clubId of clubs)
       for (let seed = 1; seed <= SEEDS; seed++)
