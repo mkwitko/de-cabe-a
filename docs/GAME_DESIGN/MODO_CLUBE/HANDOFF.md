@@ -192,6 +192,18 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
     - O goleiro que sai faz efeito, mas o volume de abafadas mostra o defeito anterior: o atacante fica sozinho vezes demais.
     - A linha que recua sem pressão, como no futebol real, piora no motor, e a que sobe melhora. O espaço que o motor entrega está entre as linhas e à frente da defesa, não nas costas dela.
     - Próximo passo: medir a compactação (distância entre as linhas e largura) contra referência publicada e corrigir a forma sem a bola. Não inverter o princípio da linha.
+- **Forma do time** (2026-11-17, só medição; nada entrou).
+  - Medida em 10 partidas, fora dos 8 s seguintes à troca de posse:
+
+    | Situação | Comprimento | Largura |
+    |---|---|---|
+    | Sem a bola | 27,5 a 30,6 m | 41 a 46 m |
+    | Com a bola | 41 a 50 m | 59 a 60 m |
+
+  - A faixa de `02` §11 (31 a 46 m de comprimento, 35 a 48 m de largura, "tudo maior com a posse") não separa com e sem a bola. Por isso não serve para calibrar a largura com a bola.
+  - Os 60 m vêm da tarefa `width`: os dois pontas a 3 m das laterais.
+  - Teste revertido: o ponta do lado longe da bola entra 12 m. A largura caiu para 46,7 m, mas os gols ficaram iguais (3,56 em 600 partidas) e a prova reprovou S3 e T9.
+  - Pendente: largura publicada com a bola. Sem a bola, o time fica até um pouco abaixo do comprimento da faixa, então a forma defensiva não é o defeito.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
