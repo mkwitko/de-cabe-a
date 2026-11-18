@@ -52,6 +52,10 @@ import {
   loanFee,
   ceilingRange,
   levelRange,
+  personKnows,
+  scoutAreas,
+  scoutsOf,
+  sendScout,
   seenLevel,
   myWageRoom,
   squadPlanOf,
@@ -310,7 +314,8 @@ export type MarketAct =
   | { do: 'list' | 'lend'; playerId: string; on: boolean }
   | { do: 'borrow'; playerId: string }
   | { do: 'bid'; bidId: string; answer: 'accept' | 'refuse' }
-  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number };
+  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number }
+  | { do: 'scout'; area: string };
 
 /** A player as the market lists him. */
 export interface MarketPlayer {
@@ -387,11 +392,20 @@ export interface MarketView {
     office: number;
     why: Why;
   }[];
+  /** The club's scouts: how many it has, who is away and where they can go. */
+  scouting: {
+    scouts: number;
+    away: { area: string; label: string; back: string }[];
+    areas: { area: string; label: string }[];
+    /** Players in the club's files from scouts' reports. */
+    known: number;
+  };
   /** The other side's answer to what the person just did. */
   said?:
     | { at: 'fee'; answer: FeeAnswer }
     | { at: 'terms'; answer: TermsAnswer; name: string }
     | { at: 'bid'; answer: BidAnswer; name: string }
+    | { at: 'scout'; area: string }
     /** What the person asked could not be done; the reason, for the screen to say. */
     | { at: 'no'; reason: string };
 }
@@ -399,6 +413,13 @@ const MARKET_ROWS = 40;
 /** The badge of a player without a club: no name, neutral colours. */
 const NO_CLUB: ClubFace = { name: '', shortName: '', colours: ['#3a4a42', '#9aa59f'] };
 const NEWS_ROWS = 15;
+
+/** A scouting area for the screen: a division's name, or the state's code. */
+export function areaLabel(w: CareerWorld, area: string): string {
+  if (!area.startsWith('tier:')) return area;
+  const tier = Number(area.slice(5));
+  return nationalDivisions(w.pack).find((d) => d.tier === tier)?.name ?? area;
+}
 
 function marketView(w: CareerWorld, position: string | null): MarketView {
   const season = w.season.season;
@@ -453,6 +474,8 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
           p.clubId !== w.clubId &&
           p.clubId !== ABROAD &&
           !w.talks?.[p.id] &&
+          // Only those the club's scouts know of (market/scouting.ts).
+          personKnows(w, p) &&
           (!position || p.positions.some((x) => x.position === position && x.level === 3)),
       )
       .map((p) => ({
@@ -490,6 +513,16 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
       from: face(clubs.get(b.from)!),
       fee: b.fee,
     })),
+    scouting: {
+      scouts: scoutsOf(w),
+      away: (w.scouting?.missions ?? []).map((m) => ({
+        area: m.area,
+        label: areaLabel(w, m.area),
+        back: isoOf(m.until),
+      })),
+      areas: scoutAreas(w).map((area) => ({ area, label: areaLabel(w, area) })),
+      known: Object.keys(w.scouting?.known ?? {}).length,
+    },
     news: (w.deals ?? [])
       .slice(-NEWS_ROWS)
       .reverse()
@@ -546,6 +579,12 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
           ? answerBid(w, act.bidId, { kind: 'counter', fee: act.fee })
           : answerBid(w, act.bidId, { kind: act.answer });
       return { at: 'bid', answer, name: who };
+    }
+    case 'scout': {
+      const no = sendScout(w, act.area, w.day);
+      return no
+        ? { at: 'no', reason: `scout_${no}` }
+        : { at: 'scout', area: areaLabel(w, act.area) };
     }
   }
 }
@@ -678,7 +717,13 @@ function view(w: CareerWorld, ms: number): SimView {
                 : n.kind === 'season'
                   ? n.champion
                   : '',
-          )?.name ?? (n.kind === 'bid' || n.kind === 'sold' ? foreignName(n.club) : ''),
+          )?.name ??
+          (n.kind === 'bid' || n.kind === 'sold'
+            ? foreignName(n.club)
+            : // A scout's report: the area's name, for the screen.
+              n.kind === 'scouted'
+              ? areaLabel(w, n.area)
+              : ''),
       })),
     board: {
       confidence: boardOf(w).confidence,

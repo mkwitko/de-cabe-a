@@ -32,6 +32,7 @@ import { fitFor, squadPlanOf, type Need } from './plan';
 import { MAX_LEVEL_ERROR, bargaining, knows, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
 import { ABROAD } from './abroad';
+import { stateOf } from './scouting';
 import { answerBid } from './talks';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -155,13 +156,6 @@ const byPosition = (pack: Pack) =>
       list.sort((a, b) => b.level - a.level || (a.id < b.id ? -1 : 1));
     return by;
   });
-
-/** Each club's state, by its city. */
-const stateOf = (pack: Pack, clubId: string) =>
-  cached(pack, 'clubStates', WHOLE, () => {
-    const cities = new Map(pack.cities.map((c) => [c.id, c.state]));
-    return new Map(pack.clubs.map((c) => [c.id, cities.get(c.cityId)]));
-  }).get(clubId);
 
 interface Choice {
   p: PackPlayer;
