@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { budgetOf } from '../market/books';
 import { openCareer } from './advance';
-import { clubsOf, planSeason, settleSeason, withClubs, workCost } from './clubs';
+import {
+  clubsOf,
+  frontLevel,
+  planSeason,
+  proposeWork,
+  settleSeason,
+  withClubs,
+  workAnswer,
+  workCost,
+} from './clubs';
+import { postEntry } from '../finance/ledger';
 import { goalFor } from './board';
 import { nationalDivisions } from './start';
 
@@ -59,6 +69,38 @@ describe('clubs as institutions (04 §4.7)', () => {
     clubsOf(t)[mine]!.directors = { ...d, horizon: 'long' };
     expect(goalFor(t)).toBeGreaterThan(short.goal);
     expect(budgetOf(t, mine).transfer).toBeLessThan(short.fees);
+  });
+
+  it('the person proposes a work: the board signs what it can pay and wants, and says why not', () => {
+    const w = openCareer(structuredClone(pack), 5, rival);
+    const s = clubsOf(w)[rival]!;
+    s.directors = { competence: 80, horizon: 'long', since: w.season.season };
+    postEntry(w.ledger, {
+      key: 'test:cash',
+      kind: 'transfers',
+      ref: 'test',
+      amount: budgetOf(w, rival).income * 2,
+      day: w.ledger.today,
+      dueDay: w.ledger.today,
+    });
+    const club = w.pack.clubs.find((c) => c.id === rival)!;
+    const front = (['youth', 'training', 'medical', 'scouting', 'football'] as const).find(
+      (f) => workCost(w, club, f) !== null,
+    )!;
+    const cash = w.ledger.cash;
+    expect(proposeWork(w, front)).toBe(null);
+    expect(w.ledger.cash).toBe(cash - workCost(w, club, front)!);
+    expect(proposeWork(w, front)).toBe('busy');
+    // In use at the next turn.
+    planSeason(w, new Set());
+    const built = withClubs(w.pack, w.clubs).clubs.find((c) => c.id === rival)!;
+    expect(frontLevel(built, front)).toBe(frontLevel(club, front) + 1);
+    // A short-sighted board will not sink a season's money in bricks.
+    s.directors = { ...s.directors, horizon: 'short' };
+    const dear = (['youth', 'training', 'medical', 'scouting', 'football'] as const).find(
+      (f) => (workCost(w, built, f) ?? 0) * 100 > budgetOf(w, rival).income * 15,
+    );
+    if (dear) expect(workAnswer(w, dear)).toBe('horizon');
   });
 
   it('a level 5 front cannot be built further', () => {

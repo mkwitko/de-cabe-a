@@ -213,6 +213,20 @@ export const ptBR = {
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'board.goal': 'Meta da temporada',
+  'board.structure': 'Estrutura do clube',
+  'board.upkeep': 'Manutenção da estrutura: {cost} por temporada, descontada mês a mês.',
+  'board.front':
+    '{f, select, training {Centro de treinamento} youth {Categorias de base} medical {Departamento médico} scouting {Olheiros} football {Diretoria de futebol} stadium {Estádio} other {Estrutura}}',
+  'board.level': 'Nível {n} de 5',
+  'board.seats': '{n, number} lugares',
+  'board.workCost': 'Próxima obra: {cost}. Fica pronta na virada da temporada.',
+  'board.building': 'Em obra: fica pronta na virada da temporada.',
+  'board.top': 'No nível máximo.',
+  'board.propose': 'Propor obra',
+  'board.proposeName': 'Propor obra: {f}',
+  'board.workYes': 'A diretoria aprovou a obra: {f} fica pronta na virada da temporada.',
+  'board.workNo':
+    '{r, select, cash {A diretoria negou: o caixa não cobre a obra e a reserva que ela quer manter.} horizon {A diretoria negou: obra cara demais para quem quer resultado agora.} useless {A diretoria negou: o estádio não lota, ampliar seria dinheiro jogado fora.} busy {Já há uma obra nessa frente.} top {Essa frente já está no nível máximo.} other {A diretoria negou.}}',
   'board.directors':
     '{h, select, short {Diretoria imediatista: quer resultado já, libera mais verba para reforços e tem pouca paciência com derrotas.} long {Diretoria de longo prazo: segura verba para estrutura e base, dá tempo ao trabalho.} other {Diretoria equilibrada: cobra resultado sem abrir mão do planejamento.}} Competência {n} de 100.',
   'board.goalText': 'Terminar a {division} até o {n}º lugar.',
@@ -281,7 +295,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} prize {Premiação} fine {Multa do fair play} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',

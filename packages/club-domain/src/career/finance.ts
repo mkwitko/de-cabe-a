@@ -9,6 +9,7 @@ import { postEntry } from '../finance/ledger';
 import type { PackClub } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import { PRICE_BASE, priced, pricesOf } from './prices';
+import { upkeepOf } from './clubs';
 import { nationalDivisions } from './start';
 
 /**
@@ -77,6 +78,8 @@ function monthlyBills(w: CareerWorld, day: number) {
       dueDay: day,
     });
   post('wages', -wages);
+  // The structure's upkeep, a twelfth of the season's each month (clubs.ts).
+  post('upkeep', -Math.round(upkeepOf(w, club) / 12));
   // PARÂMETRO: the pack's debt in 60 monthly instalments (five years), no interest yet.
   const paid = w.ledger.entries.filter((e) => e.kind === 'debt').length;
   if (paid < DEBT_MONTHS) post('debt', -Math.round(club.initialDebt / DEBT_MONTHS));
