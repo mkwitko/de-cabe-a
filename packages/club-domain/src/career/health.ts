@@ -120,7 +120,28 @@ export function rivalOut(w: CareerWorld, clubId: string, day: number): number {
   const roll = draw(w.seed, clubId, day, 4) % 100;
   return roll < 55 ? 0 : roll < 88 ? 1 : 2;
 }
-/** Share of the eleven's part of the strength a missing starter costs, in thousandths. */
+/**
+ * Which starters another club is short of on `day`: as many as `rivalOut` says, picked from its
+ * best eleven by a fixed draw. For the engine match, where the men who replace them play.
+ */
+export function rivalOutIds(
+  w: CareerWorld,
+  clubId: string,
+  xi: readonly string[],
+  day: number,
+): Set<string> {
+  const out = new Set<string>();
+  const n = rivalOut(w, clubId, day);
+  // The keeper's slot is left alone: a club always has its number one or his stand-in ready.
+  for (let k = 0; out.size < n && k < 40; k++)
+    out.add(xi[1 + (draw(w.seed, clubId, day, 10 + k) % (xi.length - 1))]!);
+  return out;
+}
+/**
+ * Share of the eleven's part of the strength a missing starter costs in a level 3 result, in
+ * thousandths. A club's strength is a mean of sixteen, so a starter replaced by a man five or
+ * six points worse costs a third of a point: this is that, for a club not tracked man by man.
+ */
 export const MISSING = 11;
 
 /** For a squad to field without the injured: the coach's best eleven of those fit. */

@@ -1,8 +1,8 @@
 /**
- * The career's pack through the years: the pack it opened with, each finished season's moves
- * and the year that followed (development.ts), then the current season's moves. The world
- * that never stopped walks this one season at a time; a loaded one walks it all at once from
- * the log, and the two arrive at the same players.
+ * The career's pack through the years: the pack it opened with, a year for each finished
+ * season (development.ts), then every move still in force. The world that never stopped walks
+ * this one season at a time; a loaded one walks it all at once from the log, and the two arrive
+ * at the same players.
  */
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
@@ -21,15 +21,14 @@ export function yearOn(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
   return next;
 }
 
-/** When each player last joined a club, from the log and the current season's moves. */
-export function arrivalsOf(logs: readonly SeasonLog[], moves: Moves): [string, number][] {
-  const at = new Map<string, number>();
-  for (const log of logs)
-    for (const [id, m] of Object.entries(log.moves))
-      if (m.clubId) at.set(id, m.season ?? log.season);
-  for (const [id, m] of Object.entries(moves))
-    if (m.clubId && m.season !== undefined) at.set(id, m.season);
-  return [...at];
+/** The season each player joined the club he is at, from the moves in force. */
+export function arrivalsOf(moves: Moves): [string, number][] {
+  const at: [string, number][] = [];
+  for (const [id, m] of Object.entries(moves)) {
+    const joined = m.joined ?? m.season;
+    if (m.clubId && joined !== undefined) at.push([id, joined]);
+  }
+  return at;
 }
 
 /** The career's own pack object as it stands: every finished season replayed, then `moves`. */
@@ -47,7 +46,7 @@ export function rebuildPack(
     carryCache(origin, moved, moved === pack ? [] : origin.clubs.map((c) => c.id));
     return moved;
   }
-  for (const log of logs) pack = yearOn(withMoves(pack, log.moves), origin, seed, log);
+  for (const log of logs) pack = yearOn(pack, origin, seed, log);
   const moved = withMoves(pack, moves);
   if (moved !== pack) recache(moved, 'goingWages', WHOLE, goingWages(origin));
   return moved;

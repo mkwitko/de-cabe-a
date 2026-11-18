@@ -24,6 +24,8 @@ export type Moves = Record<
     until: string;
     /** Season of the move. */
     season?: number;
+    /** Season he joined the club he is at; a renewal keeps it. */
+    joined?: number;
     /** Release clause of the new contract; absent or null when it has none. */
     release?: number | null;
   }
@@ -93,7 +95,9 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     if (i === undefined) continue;
     const from = players[i]!.clubId;
     const to = changes[id]!.clubId;
-    stamped[id] = { ...changes[id]!, season };
+    // A renewal keeps the season he joined; a new club starts it again.
+    const joined = from === to ? (w.moves?.[id]?.joined ?? w.moves?.[id]?.season) : season;
+    stamped[id] = { ...changes[id]!, season, ...(joined !== undefined && { joined }) };
     players[i] = moved(players[i]!, stamped[id]!);
     // A renewal changes neither squad.
     if (from === to) continue;

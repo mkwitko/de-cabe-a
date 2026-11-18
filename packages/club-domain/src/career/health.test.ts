@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { careerMatch, nextDecision, openCareer, playDecision } from './advance';
-import { fielded, hurtIn, injuredOn, rivalOut } from './health';
+import { fielded, hurtIn, injuredOn, rivalOut, rivalOutIds } from './health';
+import { formationOf } from '../match/fixture-input';
 import { loadCareer, saveCareer } from './save';
-import { lineupOf, setLineup } from './squad';
+import { bestLineup, lineupOf, setLineup } from './squad';
 import { jobOffers } from './start';
 import { rivalStrength, trainingOn } from './training';
 
@@ -105,5 +106,16 @@ describe('injuries (08, corte 1)', () => {
     expect(rivalStrength(w, rival, 20500 + short)).toBeLessThan(
       rivalStrength(w, rival, 20500 + full),
     );
+    // In the engine match the men who replace them play.
+    const d = nextDecision(w);
+    if (d.kind !== 'match') throw new Error('no match');
+    const other = d.home === clubId ? d.away : d.home;
+    const best = bestLineup({ pack: w.pack, clubId: other }, formationOf(other)).xi;
+    const gone = rivalOutIds(w, other, best, d.day);
+    expect(gone.size).toBe(rivalOut(w, other, d.day));
+    const m = careerMatch(w, d);
+    const theirs = m.input.teams[m.mine === 0 ? 1 : 0].players.slice(0, 11).map((p) => p.id);
+    for (const id of gone) expect(theirs).not.toContain(id);
+    expect(new Set(theirs).size).toBe(11);
   });
 });

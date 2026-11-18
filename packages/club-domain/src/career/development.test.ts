@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { bestRoles } from '../player/ratings';
 import { nextDecision, openCareer, playDecision, startNextSeason } from './advance';
-import { crop, develop, drive, evolve, growthOf, retires, type SeasonLog } from './development';
+import {
+  codeOf,
+  crop,
+  develop,
+  drive,
+  evolve,
+  growthOf,
+  retires,
+  type Mine,
+  type SeasonLog,
+} from './development';
 import { loadCareer, saveCareer } from './save';
 import { setLineup, lineupOf } from './squad';
 import { jobOffers } from './start';
@@ -14,10 +24,10 @@ const level = (p: { attributes: Parameters<typeof bestRoles>[0] }) =>
   bestRoles(p.attributes, 1)[0]!.rating;
 const age = (p: { birthDate: string }, season: number) => season - Number(p.birthDate.slice(0, 4));
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
-const quiet = (season: number): SeasonLog => ({
+/** A season in which nothing was decided: everyone grows by where he sits in his squad. */
+const quiet = (pk: typeof pack, season: number): SeasonLog => ({
   season,
-  moves: {},
-  mine: { clubId, intensity: 'normal', played: {} },
+  growth: codeOf(pk, { clubId, intensity: 'normal', played: {} }, new Set()),
 });
 
 describe('a year passes (03 §3)', () => {
@@ -61,10 +71,10 @@ describe('a year passes (03 §3)', () => {
     const squad = pack.players.filter((p) => p.clubId === clubId);
     const starter = squad[0]!.id;
     const bench = squad[1]!.id;
-    const log = (intensity: 'light' | 'hard'): SeasonLog => ({
-      season: 2026,
-      moves: {},
-      mine: { clubId, intensity, played: { [starter]: 2, [bench]: 0 } },
+    const log = (intensity: 'light' | 'hard'): Mine => ({
+      clubId,
+      intensity,
+      played: { [starter]: 2, [bench]: 0 },
     });
     const hard = growthOf(pack, log('hard'));
     const light = growthOf(pack, log('light'));
@@ -145,34 +155,42 @@ describe('a year passes (03 §3)', () => {
     expect(crop(pack, clubId, 7, 2027)).toEqual(crop(pack, clubId, 7, 2027));
     expect(crop(pack, clubId, 7, 2028)).not.toEqual(crop(pack, clubId, 7, 2027));
 
-    const next = evolve(pack, pack, 7, quiet(2026));
+    const next = evolve(pack, pack, 7, quiet(pack, 2026));
     expect(next.players.length).toBeGreaterThan(pack.players.length - 400);
     expect(next.players.some((p) => p.id.startsWith('y2027-'))).toBe(true);
     let world = pack;
-    for (let s = 2026; s < 2031; s++) world = evolve(world, pack, 7, quiet(s));
+    for (let s = 2026; s < 2031; s++) world = evolve(world, pack, 7, quiet(world, s));
     const ages = (pk: typeof pack, season: number) =>
       mean(pk.players.filter((p) => p.clubId).map((p) => age(p, season)));
     // The world does not grow old: over ten years the mean age holds within a year and a half.
     // (No contract ends in this bare run, so squads only grow here; the career releases players.)
-    for (let y = 2031; y < 2036; y++) world = evolve(world, pack, 7, quiet(y));
+    for (let y = 2031; y < 2036; y++) world = evolve(world, pack, 7, quiet(world, y));
     expect(Math.abs(ages(world, 2036) - ages(pack, 2026))).toBeLessThan(3.5);
     expect(world.players.length).toBeGreaterThan(pack.players.length * 0.8);
   });
 
-  it('two seasons played, saved and loaded: the same players as the world that never stopped', () => {
+  it('three seasons played, saved and loaded: the same players as the world that never stopped', () => {
     const w = openCareer(pack, 61, clubId);
     setIntensity(w, 'hard');
     setLineup(w, lineupOf(w));
-    for (let year = 0; year < 2; year++) {
-      for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) playDecision(w, d);
-      if (w.board?.fired) return;
+    // Three turns: the third is the first at which players a whole year without a club leave.
+    for (let year = 0; year < 3; year++) {
+      for (;;) {
+        const d = nextDecision(w);
+        // A dismissal does not stop the world in this test: the board is set back.
+        if (d.kind === 'fired') w.board = { confidence: 60, goal: w.board!.goal };
+        else if (d.kind === 'match') playDecision(w, d);
+        else break;
+      }
       startNextSeason(w);
     }
-    expect(w.log).toHaveLength(2);
-    expect(w.season.season).toBe(2028);
-    expect(w.pack.players.some((p) => p.id.startsWith('y2028-'))).toBe(true);
-    expect(w.log![0]!.mine.intensity).toBe('hard');
-    expect(Object.values(w.log![0]!.mine.played).some((x) => x === 2)).toBe(true);
+    expect(w.log).toHaveLength(3);
+    expect(w.season.season).toBe(2029);
+    expect(w.pack.players.some((p) => p.id.startsWith('y2029-'))).toBe(true);
+    expect(w.log!.some((l) => l.growth.includes('!'))).toBe(true);
+    // One character a player for each finished season: that is all the log keeps.
+    expect(w.log![0]!.growth.length).toBe(pack.players.length);
+    expect(w.log![0]!.growth).toMatch(/^[!0-v]+$/);
     const t = performance.now();
     const again = loadCareer(pack, 61, clubId, saveCareer(w));
     const ms = performance.now() - t;

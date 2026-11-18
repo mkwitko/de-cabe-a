@@ -158,6 +158,12 @@ export const ptBR = {
   'market.sold': '{name} vendido ao {club} por {price}.',
   'inbox.contractEnded': 'O contrato de {name} acabou e ele deixou o clube.',
   'inbox.contractKept': '{name} ficou mais um ano: sem ele o elenco não teria gente para jogar.',
+  'inbox.injury':
+    '{name} se machucou: {kind}. Fora por {days, plural, one {# dia} other {# dias}}.',
+  'health.kind':
+    '{k, select, knock {pancada} muscle {lesão muscular} sprain {entorse} other {lesão grave}}',
+  'health.out': '{n, plural, one {Lesionado: volta em # dia} other {Lesionado: volta em # dias}}',
+  'health.outLabel': 'Lesionado',
   'inbox.crop':
     '{n, plural, one {# garoto da base subiu} other {# garotos da base subiram}} para o elenco. Quem joga cresce mais.',
   'inbox.contractsEnding':

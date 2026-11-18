@@ -24,7 +24,7 @@ import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
-import { fielded, hurtIn, type Injury } from './health';
+import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
@@ -32,7 +32,7 @@ import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts } from '../market/contracts';
 import { returnLoans, type Loan } from '../market/loans';
-import type { SeasonLog } from './development';
+import { codeOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { carryCache } from '../lib/pack-cache';
@@ -250,6 +250,20 @@ export function playDecision(
   return playDay(w, d.day, watched && { id: d.matchId, outcome: watched }).get(d.matchId)!;
 }
 
+/** Another club's eleven for the day: its best, without the starters it is short of. */
+function rivalEleven(w: CareerWorld, c: { pack: Pack; clubId: string }, day: number): Lineup {
+  const formation = formationOf(c.clubId);
+  const best = bestLineup(c, formation);
+  const out = rivalOutIds(w, c.clubId, best.xi, day);
+  if (out.size === 0) return best;
+  try {
+    return bestLineup(c, formation, out);
+  } catch {
+    // No one left for a slot without them: they play.
+    return best;
+  }
+}
+
 /**
  * The person's match for the match engine (level 1). Both clubs field an eleven by position
  * (squad.ts): the other club its coach's best, the person's club the one they picked, with their
@@ -267,7 +281,7 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
           fresh: (id) => training.fresh[id] ?? 1,
           familiarity: drilled(training.drill),
         })
-      : teamWith(c, bestLineup(c, formationOf(clubId)), {
+      : teamWith(c, rivalEleven(w, c, d.day), {
           fresh: () => rivalFresh(w, clubId, d.day),
           familiarity: drilled(RIVAL_DRILL),
         });
@@ -351,32 +365,42 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   // and the academies' crop (development.ts). The season's moves go into the log with it.
   const squad = w.pack.players.filter((p) => p.clubId === w.clubId);
   const share = (id: string) => ((w.starts?.[id] ?? 0) * 100) / Math.max(1, w.played ?? 0);
+  const released = new Set(
+    Object.entries(w.moves ?? {})
+      .filter(([, m]) => m.clubId === null && m.season === played)
+      .map(([id]) => id),
+  );
   const log: SeasonLog = {
     season: played,
-    moves: w.moves ?? {},
-    mine: {
-      clubId: w.clubId,
-      intensity: w.training?.intensity ?? 'normal',
-      played: Object.fromEntries(
-        squad.map((p) => [p.id, share(p.id) >= 60 ? 2 : share(p.id) >= 25 ? 1 : 0]),
-      ),
-    },
+    growth: codeOf(
+      w.pack,
+      {
+        clubId: w.clubId,
+        intensity: w.training?.intensity ?? 'normal',
+        played: Object.fromEntries(
+          squad.map((p) => [p.id, share(p.id) >= 60 ? 2 : share(p.id) >= 25 ? 1 : 0]),
+        ),
+      },
+      released,
+    ),
   };
   w.log = [...(w.log ?? []), log];
   w.pack = yearOn(w.pack, w.origin, w.seed, log);
+  // The moves in force stay (each player's club and contract); those of players gone do not.
+  const alive = new Set(w.pack.players.map((p) => p.id));
+  w.moves = Object.fromEntries(Object.entries(w.moves ?? {}).filter(([id]) => alive.has(id)));
   // The academy's boys of the year are in the squad.
   const boys = w.pack.players.filter(
     (p) => p.clubId === w.clubId && p.id.startsWith(`y${year}-`),
   ).length;
   if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
-  w.moves = {};
   delete w.starts;
   delete w.played;
   const levels = clubLevels(w.pack);
   w.strength = levels.strength;
   w.eleven = levels.eleven;
   // Each office has had another season with its players.
-  setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.log, {}));
+  setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.moves));
   // A picked eleven with someone who retired goes back to the coach.
   const here = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
   if (w.lineup?.xi.some((id) => !here.has(id))) delete w.lineup;

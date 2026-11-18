@@ -154,7 +154,7 @@ export function Squad(props: {
           {rows.map((p) => {
             const at = squad.xi.indexOf(p.id);
             const n = slot === null ? p.best.rating : p.fit[slot]!;
-            const able = slot !== null && p.keeper === keeperSlot && at !== slot;
+            const able = slot !== null && p.keeper === keeperSlot && at !== slot && p.out === null;
             return (
               <li key={p.id} className="border-t border-chalk/10">
                 <button
@@ -178,6 +178,11 @@ export function Squad(props: {
                       {t('squad.age', { n: p.age })}
                       {at >= 0 && (
                         <span className="ml-2 font-bold text-club-gold">{t('squad.starter')}</span>
+                      )}
+                      {p.out !== null && (
+                        <span className="ml-2 font-bold text-club-danger">
+                          {t('health.out', { n: p.out })}
+                        </span>
                       )}
                       {p.fresh < 85 && (
                         <span className="ml-2 font-bold text-club-danger">

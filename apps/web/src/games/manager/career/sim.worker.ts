@@ -66,6 +66,7 @@ import {
   boardOf,
   positionOf,
   type BoardReason,
+  type InjuryKind,
   type Note,
   DRILL_TARGET,
   INTENSITIES,
@@ -188,7 +189,14 @@ export interface SquadView {
   xi: string[];
   /** `fit[i]`: how the player does in slot `i`, 1..99. */
   /** `known[i]`: how well he knows slot `i`'s position, 3 natural … 0 not his. */
-  players: (SquadPlayer & { fit: number[]; known: number[]; keeper: boolean; fresh: number })[];
+  players: (SquadPlayer & {
+    fit: number[];
+    known: number[];
+    keeper: boolean;
+    fresh: number;
+    /** Days until he is back from injury; null when fit. */
+    out: number | null;
+  })[];
   strength: number;
   plan: PlanChoice;
 }
@@ -196,6 +204,12 @@ export interface SquadView {
 /** The day the squad is being prepared for: the next match, or today. */
 const matchDay = (w: CareerWorld) => (pending?.kind === 'match' ? pending.day : w.day);
 const percent = (x: number) => Math.round(x * 100);
+
+/** His injury as the screen shows it: the kind and the days left from today; null when fit. */
+function outOf(w: CareerWorld, id: string): { kind: InjuryKind; days: number } | null {
+  const i = w.injuries?.[id];
+  return i && i.until > w.day ? { kind: i.kind, days: i.until - w.day } : null;
+}
 
 /** The training ground: the choice of the week and what it does, in percentages for the screen. */
 export interface TrainingView {
@@ -206,7 +220,15 @@ export interface TrainingView {
   /** Days to the next match; null when none is set. */
   nextIn: number | null;
   /** Freshness on the day of the next match. */
-  players: { id: string; name: string; position: string; fresh: number; starter: boolean }[];
+  /** `out`: injured, with the kind and the days until he is back; null when fit. */
+  players: {
+    id: string;
+    name: string;
+    position: string;
+    fresh: number;
+    starter: boolean;
+    out: { kind: InjuryKind; days: number } | null;
+  }[];
 }
 
 function trainingView(w: CareerWorld): TrainingView {
@@ -231,6 +253,7 @@ function trainingView(w: CareerWorld): TrainingView {
         position: p.positions[0]!,
         fresh: percent(then.fresh[p.id] ?? 1),
         starter: xi.includes(p.id),
+        out: outOf(w, p.id),
       }))
       .sort((a, b) => Number(b.starter) - Number(a.starter) || a.fresh - b.fresh),
   };
@@ -497,6 +520,7 @@ function squadView(w: CareerWorld): SquadView {
       known: known.get(p.id)!,
       keeper: p.positions.includes('GK'),
       fresh: percent(then.fresh[p.id] ?? 1),
+      out: outOf(w, p.id)?.days ?? null,
     })),
     strength: Math.round(myStrength(w, then)),
     plan: planOf(w),

@@ -21,7 +21,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 6;
+export const CAREER_RULES_VERSION = 7;
 
 interface Saved {
   v: number;
@@ -33,7 +33,8 @@ interface Saved {
   /** Freshness and drill (training.ts). */
   training?: Training;
   /** Transfers so far (market.ts); the pack is rebuilt from them on load. */
-  moves?: Moves;
+  /** The moves in force, packed (`packMoves`); a plain map in snapshots of older versions. */
+  moves?: PackedMoves | Moves;
   board?: Board;
   inbox?: Note[];
   books?: CareerWorld['books'];
@@ -61,6 +62,47 @@ const reviver = (_k: string, v: unknown) => {
   return v;
 };
 
+/**
+ * The moves in force as rows of numbers: a career ends up with one for nearly every player, and
+ * as objects they would be most of the snapshot. `[player, club, wage, until, release, season,
+ * joined]`, with the club as its place in the pack's list (-1: none), years as numbers and -1
+ * for what is absent.
+ */
+interface PackedMoves {
+  rows: [string, number, number, number, number, number, number][];
+}
+
+function packMoves(pack: Pack, moves: Moves): PackedMoves {
+  const place = new Map(pack.clubs.map((c, i) => [c.id, i]));
+  return {
+    rows: Object.entries(moves).map(([id, m]) => [
+      id,
+      m.clubId === null ? -1 : (place.get(m.clubId) ?? -1),
+      m.wage,
+      m.until ? Number(m.until.slice(0, 4)) : -1,
+      m.release ?? -1,
+      m.season ?? -1,
+      m.joined ?? -1,
+    ]),
+  };
+}
+
+function unpackMoves(pack: Pack, saved: PackedMoves | Moves | undefined): Moves {
+  if (!saved) return {};
+  if (!('rows' in saved) || !Array.isArray(saved.rows)) return saved as Moves;
+  const moves: Moves = {};
+  for (const [id, club, wage, until, release, season, joined] of saved.rows)
+    moves[id] = {
+      clubId: club < 0 ? null : pack.clubs[club]!.id,
+      wage,
+      until: until < 0 ? '' : `${until}-12-31`,
+      ...(release >= 0 && { release }),
+      ...(season >= 0 && { season }),
+      ...(joined >= 0 && { joined }),
+    };
+  return moves;
+}
+
 export function saveCareer(w: CareerWorld): string {
   const { byClub: _byClub, ...calendar } = w.season.calendar;
   const saved: Saved = {
@@ -70,7 +112,7 @@ export function saveCareer(w: CareerWorld): string {
     ledger: { today: w.ledger.today, entries: w.ledger.entries },
     ...(w.lineup && { lineup: w.lineup }),
     ...(w.training && { training: w.training }),
-    ...(w.moves && { moves: w.moves }),
+    ...(w.moves && { moves: packMoves(w.pack, w.moves) }),
     ...(w.board && { board: w.board }),
     ...(w.inbox && { inbox: w.inbox }),
     ...(w.books && { books: w.books }),
@@ -93,7 +135,10 @@ export function saveCareer(w: CareerWorld): string {
 export function loadCareer(base: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
   // The career's own pack object: the years replayed from the log, then this season's moves.
-  const pack = rebuildPack(base, seed, saved.log ?? [], saved.moves ?? {});
+  const moves = unpackMoves(base, saved.moves);
+  // A log from before the yearly growth was kept by character cannot be replayed: skipped.
+  const log = (saved.log ?? []).filter((l) => typeof l.growth === 'string');
+  const pack = rebuildPack(base, seed, log, moves);
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.
@@ -107,7 +152,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     }
   season.calendar = calendar;
   // Opinions are this career's: its seed, its season, and when each moved player arrived.
-  setJudgementClock(pack, seed, season.season, arrivalsOf(saved.log ?? [], saved.moves ?? {}));
+  setJudgementClock(pack, seed, season.season, arrivalsOf(moves));
   return {
     pack,
     origin: base,
@@ -119,7 +164,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...clubLevels(pack),
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
-    ...(saved.moves && { moves: saved.moves }),
+    ...(saved.moves && { moves }),
     ...(saved.board && { board: saved.board }),
     ...(saved.inbox && { inbox: saved.inbox }),
     ...(saved.books && { books: saved.books }),
@@ -131,7 +176,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),
-    ...(saved.log && { log: saved.log }),
+    ...(saved.log && { log }),
     ...(saved.injuries && { injuries: saved.injuries }),
     ...(saved.starts && { starts: saved.starts }),
     ...(saved.played !== undefined && { played: saved.played }),

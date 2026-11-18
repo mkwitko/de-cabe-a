@@ -821,6 +821,7 @@ const FROM = {
   contractKept: 'staff',
   contractsEnding: 'staff',
   crop: 'staff',
+  injury: 'staff',
   prize: 'finance',
   season: 'press',
 } as const;
@@ -888,6 +889,12 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.contractKept', { name: n.player });
     case 'crop':
       return t('inbox.crop', { n: n.players });
+    case 'injury':
+      return t('inbox.injury', {
+        name: n.player,
+        kind: t('health.kind', { k: n.injury }),
+        days: n.days,
+      });
     case 'contractsEnding':
       return t('inbox.contractsEnding', { n: n.players });
     case 'window':

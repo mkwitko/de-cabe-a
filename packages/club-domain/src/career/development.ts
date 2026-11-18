@@ -4,9 +4,11 @@
  * once at each season's turn.
  *
  * How much a young player grows is not his alone: the club's training ground, the minutes he
- * played and the week the person trained him all move it (`growthOf`). What decided it is kept
- * small in the career's log (each season's transfers, the person's training and who they
- * played), and a loaded career runs the years again from that log: no attribute is stored. Integer arithmetic and the seeded generator
+ * played and the week the person trained him all move it (`growthOf`). No attribute is stored
+ * in the snapshot: the career keeps, for each finished season, one character per player with
+ * how much he grew that year (`SeasonLog`), and a loaded career runs the years again from the
+ * pack it opened with. Everything else a year does (age, the year he had, retirement, the
+ * academies' crop) comes from the seed. Integer arithmetic and the seeded generator
  * only (ADR-020); every number is a PARÂMETRO, not calibrated.
  */
 import {
@@ -24,7 +26,6 @@ import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
-import type { Moves } from './market';
 import type { Intensity } from './training';
 
 type Group = 'technical' | 'mental' | 'physical';
@@ -207,14 +208,36 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
   return out;
 }
 
-/** What a season leaves behind that the next year's growth depends on. */
+/**
+ * What a season leaves behind: for each player of the pack as it stood at the season's end, in
+ * the pack's order, one character with his growth for the year that follows (`codeOf`).
+ */
 export interface SeasonLog {
   season: number;
-  /** The season's transfers, renewals and releases, by player. */
-  moves: Moves;
-  /** The person's club: the week they trained and how much each player started (0, 1 or 2). */
-  mine: { clubId: string; intensity: Intensity; played: Record<string, number> };
+  growth: string;
 }
+
+/** What the person did in the season that the growth of their players reads. */
+export interface Mine {
+  clubId: string;
+  intensity: Intensity;
+  /** How much each player started: 0 left out, 1 a squad player, 2 a starter. */
+  played: Record<string, number>;
+}
+
+/** A player who leaves the game at the turn (a whole season without a club). */
+const GONE = '!';
+/** Growth is kept in steps of two points from 40%: one printable character a player. */
+const FLOOR = 40;
+const STEP = 2;
+const BASE_CODE = 48;
+const codeFor = (growth: number) =>
+  String.fromCharCode(BASE_CODE + Math.max(0, Math.min(70, Math.round((growth - FLOOR) / STEP))));
+/** The growth a character stands for; null for a player who leaves the game. */
+const growthAt = (code: string, i: number): number | null =>
+  code[i] === GONE || code[i] === undefined
+    ? null
+    : FLOOR + STEP * (code.charCodeAt(i) - BASE_CODE);
 
 /** Percent of growth by the club's training ground, level 1..5. */
 const BY_GROUND = [-10, -5, 0, 8, 15] as const;
@@ -229,7 +252,7 @@ const BY_WEEK: Record<Intensity, number> = { light: -5, normal: 0, hard: 8 };
  * seven are squad players; in the person's club, who they really started), and the person's
  * training week. A player without a club trains alone: the least.
  */
-export function growthOf(pack: Pack, log: SeasonLog): Map<string, number> {
+export function growthOf(pack: Pack, mine: Mine): Map<string, number> {
   const grounds = new Map(pack.clubs.map((c) => [c.id, BY_GROUND[c.facilities.training - 1]!]));
   const squads = new Map<string, { id: string; level: number }[]>();
   for (const p of pack.players)
@@ -241,15 +264,12 @@ export function growthOf(pack: Pack, log: SeasonLog): Map<string, number> {
   const out = new Map<string, number>();
   for (const [clubId, squad] of squads) {
     squad.sort((a, b) => b.level - a.level || (a.id < b.id ? -1 : 1));
-    const mine = clubId === log.mine.clubId;
+    const own = clubId === mine.clubId;
     for (const [rank, p] of squad.entries()) {
-      const minutes = mine ? (log.mine.played[p.id] ?? 0) : rank < 11 ? 2 : rank < 18 ? 1 : 0;
+      const minutes = own ? (mine.played[p.id] ?? 0) : rank < 11 ? 2 : rank < 18 ? 1 : 0;
       out.set(
         p.id,
-        100 +
-          grounds.get(clubId)! +
-          BY_MINUTES[minutes]! +
-          (mine ? BY_WEEK[log.mine.intensity] : 0),
+        100 + grounds.get(clubId)! + BY_MINUTES[minutes]! + (own ? BY_WEEK[mine.intensity] : 0),
       );
     }
   }
@@ -258,18 +278,30 @@ export function growthOf(pack: Pack, log: SeasonLog): Map<string, number> {
 }
 
 /**
- * The pack a year on, for the season that starts: everyone a year older and changed by it,
- * the retired and those a whole season without a club gone, each club's crop in. `origin` is the pack the career opened with, `log` the
- * season that just ended, its moves already applied to `pack`.
+ * The season's line for the log: each player's growth in the pack's order. A player without a
+ * club who was not released this season (`released`) has gone a whole year unsigned and leaves.
+ */
+export function codeOf(pack: Pack, mine: Mine, released: ReadonlySet<string>): string {
+  const growth = growthOf(pack, mine);
+  let code = '';
+  for (const p of pack.players)
+    code += p.clubId === null && !released.has(p.id) ? GONE : codeFor(growth.get(p.id) ?? 100);
+  return code;
+}
+
+/**
+ * The pack a year on, for the season after `log.season`: everyone a year older and changed by
+ * it, the retired and those the log marks as gone removed, each club's crop in. `origin` is the
+ * pack the career opened with. It reads nothing a transfer changes (no club, no contract), so
+ * a loaded career can run it on the opening pack and apply its moves after.
  */
 export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): Pack {
   const season = log.season + 1;
-  const growth = growthOf(pack, log);
   const players: PackPlayer[] = [];
-  for (const p of pack.players) {
-    // A season without a club is the end of the road: only those released this year remain.
-    if (p.clubId === null && log.moves[p.id] === undefined) continue;
-    if (!retires(p, seed, season)) players.push(develop(p, seed, season, growth.get(p.id) ?? 100));
+  for (const [i, p] of pack.players.entries()) {
+    const growth = growthAt(log.growth, i);
+    if (growth === null || retires(p, seed, season)) continue;
+    players.push(develop(p, seed, season, growth));
   }
   for (const c of origin.clubs) players.push(...crop(origin, c.id, seed, season));
   return { ...pack, players };

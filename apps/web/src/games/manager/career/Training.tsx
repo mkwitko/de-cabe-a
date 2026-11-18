@@ -13,6 +13,8 @@ type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 const LABEL =
   'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
 const stateOf = (fresh: number) => (fresh >= 85 ? 'ready' : fresh >= 65 ? 'tired' : 'spent');
+/** An injured player reads as spent whatever his freshness. */
+const OUT = 'spent' as const;
 const TONE = {
   ready: 'bg-club-turf text-chalk',
   tired: 'bg-club-gold text-ink',
@@ -107,7 +109,7 @@ export function Training(props: {
         <p className="text-chalk-soft">{t('training.freshHint')}</p>
         <ul className="grid gap-x-6 sm:grid-cols-2">
           {view.players.map((p) => {
-            const state = stateOf(p.fresh);
+            const state = p.out ? OUT : stateOf(p.fresh);
             return (
               <li
                 key={p.id}
@@ -124,6 +126,11 @@ export function Training(props: {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">
                     {p.name}
+                    {p.out && (
+                      <span className="ml-2 text-xs font-bold text-club-danger">
+                        {t('health.out', { n: p.out.days })}
+                      </span>
+                    )}
                     {p.starter && (
                       <span className="ml-2 text-xs font-bold text-club-gold">
                         {t('squad.starter')}
@@ -143,7 +150,7 @@ export function Training(props: {
                 <span
                   className={`w-20 rounded px-1.5 text-center text-xs leading-5 font-bold ${TONE[state]}`}
                 >
-                  {t('training.state', { s: state })}
+                  {p.out ? t('health.outLabel') : t('training.state', { s: state })}
                 </span>
               </li>
             );
