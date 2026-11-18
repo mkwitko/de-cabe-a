@@ -116,6 +116,8 @@ export interface SeasonState {
   played: Map<string, Played[]>;
   calendar: Calendar;
   decisions: Decision[];
+  /** Points each club starts its national division without (financial fair play). */
+  deduct?: Record<string, number>;
 }
 
 export interface SeasonOptions {
@@ -128,6 +130,7 @@ export interface SeasonOptions {
   slots?: Record<string, Record<string, string[]>>;
   /** Last season's results, for `{ from: 'competition', season: 'previous' }`. */
   previous?: Results;
+  deduct?: Record<string, number>;
 }
 
 const POINTS = { win: 3, draw: 1, loss: 0 };
@@ -156,6 +159,7 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     played: new Map(),
     calendar: emptyCalendar(),
     decisions: [],
+    ...(opts.deduct && Object.keys(opts.deduct).length > 0 && { deduct: opts.deduct }),
   };
   openReady(s);
   return s;
@@ -163,7 +167,16 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
 
 const tableRules = (s: SeasonState, c: Competition, p: Phase): TableRules =>
   p.kind === 'liga' || p.kind === 'grupos'
-    ? { points: p.points, tieBreakers: p.tieBreakers, seed: seedOf(s.seed, key(c.id, p.id)) }
+    ? {
+        points: p.points,
+        tieBreakers: p.tieBreakers,
+        seed: seedOf(s.seed, key(c.id, p.id)),
+        // A sanction is served in the national division, from its first phase.
+        ...(s.deduct &&
+          c.scope === 'nacional' &&
+          c.tier !== null &&
+          c.phases[0]!.id === p.id && { deduct: s.deduct }),
+      }
     : { points: POINTS, tieBreakers: [], seed: seedOf(s.seed, key(c.id, p.id)) };
 
 /** The phase's clubs, or null while a phase they come from is not over. */

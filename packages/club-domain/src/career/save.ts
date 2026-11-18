@@ -51,6 +51,7 @@ interface Saved {
   log?: CareerWorld['log'];
   injuries?: CareerWorld['injuries'];
   academy?: CareerWorld['academy'];
+  fairplay?: CareerWorld['fairplay'];
   starts?: CareerWorld['starts'];
   played?: CareerWorld['played'];
 }
@@ -131,6 +132,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.log && { log: w.log }),
     ...(w.injuries && { injuries: w.injuries }),
     ...(w.academy && { academy: w.academy }),
+    ...(w.fairplay && { fairplay: w.fairplay }),
     ...(w.starts && { starts: w.starts }),
     ...(w.played !== undefined && { played: w.played }),
   };
@@ -184,6 +186,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.log && { log }),
     ...(saved.injuries && { injuries: saved.injuries }),
     ...(saved.academy && { academy: saved.academy }),
+    ...(saved.fairplay && { fairplay: saved.fairplay }),
     ...(saved.starts && { starts: saved.starts }),
     ...(saved.played !== undefined && { played: saved.played }),
   };

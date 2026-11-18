@@ -10,7 +10,7 @@ import { note } from '../career/inbox';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { wageRoom } from './books';
+import { embargoed, wageRoom } from './books';
 import { fairRole } from './deals';
 import { squadPlanOf } from './plan';
 import { marketValue, readingsOf, thousands } from './value';
@@ -34,7 +34,15 @@ export const loanFee = (w: CareerWorld, p: PackPlayer) =>
   thousands((marketValue(w.pack, p, w.season.season) * FEE) / 100);
 
 export type LoanNo =
-  'window' | 'squadFull' | 'onLoan' | 'starter' | 'theirSquad' | 'noMinutes' | 'cash' | 'wageCap';
+  | 'window'
+  | 'embargo'
+  | 'squadFull'
+  | 'onLoan'
+  | 'starter'
+  | 'theirSquad'
+  | 'noMinutes'
+  | 'cash'
+  | 'wageCap';
 
 const thin = (w: CareerWorld, p: PackPlayer) => {
   const squad = squadPlayers({ pack: w.pack, clubId: p.clubId! });
@@ -48,6 +56,7 @@ const thin = (w: CareerWorld, p: PackPlayer) => {
 /** Why `to` cannot borrow this player now; null when the loan can be made. */
 export function cannotBorrow(w: CareerWorld, p: PackPlayer, to: string): LoanNo | null {
   if (!windowOpen(w.day)) return 'window';
+  if (embargoed(w, to)) return 'embargo';
   if (!p.clubId || p.clubId === to) return 'onLoan';
   if (w.loans?.[p.id]) return 'onLoan';
   if (squadPlayers({ pack: w.pack, clubId: to }).length >= MAX_SQUAD) return 'squadFull';

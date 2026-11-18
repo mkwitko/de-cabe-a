@@ -17,7 +17,7 @@ import {
 import { boardOf, positionOf } from '../career/board';
 import { nationalDivisions } from '../career/start';
 import { setIntensity, type Intensity } from '../career/training';
-import { budgetOf, tierOfClub, wageBill } from '../market/books';
+import { budgetOf, squadCost, tierOfClub, wageBill } from '../market/books';
 import { endingSoon } from '../market/contracts';
 import { answerBid, bidTerms, listPlayer, openRenewal } from '../market/talks';
 import { marketValue } from '../market/value';
@@ -118,7 +118,16 @@ function world(pack: Pack, seed: number, seasons: number) {
   const w = openCareer(pack, seed, divs.at(-1)!.clubIds[0]!);
   const start = new Map(w.strength);
   const bill0 = new Map(pack.clubs.map((c) => [c.id, wageBill(w, c.id)]));
-  const perSeason: { deals: number; free: number; sizes: [number, number]; bill: number }[] = [];
+  const perSeason: {
+    deals: number;
+    free: number;
+    sizes: [number, number];
+    bill: number;
+    /** Clubs warned, under embargo and docked points going into this season. */
+    fair: [number, number, number];
+    /** Mean squad cost (% of income) by the tier each club is in. */
+    cost: number[];
+  }[] = [];
   const home = { w: 0, d: 0, l: 0, goals: 0, n: 0 };
   for (let s = 0; s < seasons; s++) {
     for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) playDecision(w, d);
@@ -130,7 +139,20 @@ function world(pack: Pack, seed: number, seasons: number) {
       else home.d++;
     }
     const sizes = pack.clubs.map((c) => w.pack.players.filter((p) => p.clubId === c.id).length);
+    const strikes = Object.values(w.fairplay ?? {});
     perSeason.push({
+      fair: [
+        strikes.filter((x) => x === 1).length,
+        strikes.filter((x) => x === 2).length,
+        strikes.filter((x) => x >= 3).length,
+      ],
+      cost: [1, 2, 3, 4].map((tier) =>
+        Math.round(
+          mean(
+            pack.clubs.filter((c) => tierOfClub(w, c.id) === tier).map((c) => squadCost(w, c.id)),
+          ),
+        ),
+      ),
       deals: Object.values(w.moves ?? {}).filter((m) => m.season === w.season.season && m.clubId)
         .length,
       free: w.pack.players.filter((p) => p.clubId === null).length,
@@ -223,13 +245,18 @@ function main() {
     console.log(out.join('\n'));
     return;
   }
-  const w = world(pack, 5, Number(process.env.WORLD_SEASONS ?? 5));
+  const w = world(
+    pack,
+    Number(process.env.WORLD_SEED ?? 5),
+    Number(process.env.WORLD_SEASONS ?? 5),
+  );
   out.push(
     `world  home ${pct(w.home.w / w.home.n)} draw ${pct(w.home.d / w.home.n)} away ${pct(w.home.l / w.home.n)} | goals a match ${r1((w.home.goals / w.home.n) * 100) / 100}`,
   );
   for (const [i, s] of w.perSeason.entries())
     out.push(
-      `  season ${i + 1}: signings ${s.deals} | free agents ${s.free} | squads ${s.sizes[0]}..${s.sizes[1]} | wage bills x${r1(s.bill * 100) / 100}`,
+      `  season ${i + 1}: signings ${s.deals} | free agents ${s.free} | squads ${s.sizes[0]}..${s.sizes[1]} | wage bills x${r1(s.bill * 100) / 100}` +
+        ` | fair play: warned ${s.fair[0]}, embargo ${s.fair[1]}, docked ${s.fair[2]} | squad cost % by tier ${s.cost.join(' ')}`,
     );
   out.push(
     `  strength drift by tier after ${w.perSeason.length} seasons: ${w.drift.join(' ')} | mean age ${w.age}`,

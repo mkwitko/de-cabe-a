@@ -9,7 +9,7 @@ import type { CareerWorld } from '../career/advance';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { available, book, wageRoom } from './books';
+import { available, book, embargoed, wageRoom } from './books';
 import {
   CLAUSE_TIMES,
   answerFee,
@@ -65,7 +65,8 @@ export interface Bid {
   why: Why;
 }
 
-export type TalkNo = 'window' | 'squadFull' | 'theirSquad' | 'cold' | 'justMoved' | PlayerNo;
+export type TalkNo =
+  'window' | 'squadFull' | 'theirSquad' | 'cold' | 'justMoved' | 'embargo' | PlayerNo;
 
 /** Monthly wage the person's club can still add (books.ts): the board's ceiling. */
 export const myWageRoom = (w: CareerWorld) => wageRoom(w, w.clubId);
@@ -88,6 +89,7 @@ const cool = (w: CareerWorld, playerId: string) => {
 /** Why the person cannot open a talk for this player now; null when they can. */
 export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
   const season = w.season.season;
+  if (embargoed(w, w.clubId)) return 'embargo';
   if (squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD) return 'squadFull';
   if (w.cold?.[p.id] === season) return 'cold';
   // A free agent signs in or out of a window, and asks no club's leave.

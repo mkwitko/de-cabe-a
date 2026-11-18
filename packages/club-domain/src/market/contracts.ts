@@ -11,7 +11,7 @@ import { note } from '../career/inbox';
 import { RELEASED, applyMoves, movePlayer, type Moves } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { wageRoom } from './books';
+import { strikesOf, wageRoom } from './books';
 import { CLAUSE_TIMES, type Terms } from './deals';
 import { squadPlanOf } from './plan';
 import { ageOf, goingWage, marketValue, readingsOf } from './value';
@@ -19,6 +19,8 @@ import { ageOf, goingWage, marketValue, readingsOf } from './value';
 /** A squad never ends a season's turn under this, nor with fewer keepers than this. */
 const KEEP = 22;
 const KEEP_KEEPERS = 2;
+/** He renews without a raise when his wage is at least this share of what he asked. */
+const FLAT = 85;
 
 /** True when his contract ends with this season. */
 export const ends = (p: PackPlayer, season: number) =>
@@ -91,6 +93,7 @@ export function expireContracts(w: CareerWorld): Expiry {
     let size = squadPlayers(c).length;
     let keepers = squadPlayers(c).filter((x) => read.get(x.id)!.keeper).length;
     let room = mine ? 0 : wageRoom(w, club.id);
+    const over = strikesOf(w, club.id) > 0;
     for (const p of ranked) {
       const keeper = read.get(p.id)!.keeper;
       const needed = size <= KEEP || (keeper && keepers <= KEEP_KEEPERS);
@@ -98,12 +101,20 @@ export function expireContracts(w: CareerWorld): Expiry {
       const used = plan.xi.includes(p.id) || plan.cover.includes(p.id);
       const raise = terms.wage - (p.contract?.wage ?? 0);
       // A rival club renews who its plan uses, is not past it, and fits the wage room.
-      const wants = !mine && used && ageOf(p, season) <= 34 && raise <= room;
-      if (wants || needed) {
+      const keeps = !mine && used && ageOf(p, season) <= 34;
+      const wants = keeps && raise <= room;
+      // No room for the raise: he stays on what he earns when that is close to what he asked;
+      // a bigger gap and he walks. A club over the fair play limit lets him go: it has to cut.
+      const flat = keeps && !wants && !over && (p.contract?.wage ?? 0) * 100 >= terms.wage * FLAT;
+      if (wants || flat || needed) {
         // Kept because the squad cannot lose him: one more year, no raise asked.
         const signed = wants
           ? terms
-          : { ...terms, wage: Math.max(p.contract?.wage ?? 0, terms.wage - raise), years: 1 };
+          : {
+              ...terms,
+              wage: Math.max(p.contract?.wage ?? 0, terms.wage - raise),
+              years: flat ? terms.years : 1,
+            };
         changes[p.id] = {
           clubId: club.id,
           wage: signed.wage,
@@ -112,7 +123,7 @@ export function expireContracts(w: CareerWorld): Expiry {
         };
         if (wants) room -= raise;
         out.renewed++;
-        if (!wants && mine) out.kept.push(p.knownAs ?? p.name);
+        if (!wants && !flat && mine) out.kept.push(p.knownAs ?? p.name);
       } else {
         changes[p.id] = RELEASED;
         size--;

@@ -6,6 +6,7 @@
  */
 import { dayOf, isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
+import type { PackClub } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import { nationalDivisions } from './start';
 
@@ -24,6 +25,18 @@ export const BY_TIER: Record<number, { tv: number; ticket: number }> = {
 };
 
 const DEBT_MONTHS = 60;
+/** Home matches counted for a season's gate. */
+const HOME_MATCHES = 15;
+
+/** Paying public a club draws at home: 3 % to 5 % of the fan base by demand, up to the capacity. */
+export const gateOf = (c: Pick<PackClub, 'stadium' | 'fans'>): number =>
+  Math.min(c.stadium.capacity, Math.round((c.fans.size * (300 + 2 * c.fans.demand)) / 10_000));
+
+/** What a club takes in a season in a tier: TV, sponsors and the gate of its home matches. */
+export const seasonIncome = (c: Pick<PackClub, 'stadium' | 'fans' | 'sponsors'>, tier: number) =>
+  BY_TIER[tier]!.tv +
+  c.sponsors.reduce((s, x) => s + x.annual, 0) +
+  gateOf(c) * BY_TIER[tier]!.ticket * HOME_MATCHES;
 
 export function tierOf(w: CareerWorld): number {
   const div = nationalDivisions(w.pack).find((d) => w.season.members[d.id]?.includes(w.clubId));
@@ -32,11 +45,7 @@ export function tierOf(w: CareerWorld): number {
 
 /** Paying public at a home match: 3 % to 5 % of the fan base by demand, up to the capacity. */
 export function attendance(w: CareerWorld): number {
-  const c = w.pack.clubs.find((x) => x.id === w.clubId)!;
-  return Math.min(
-    c.stadium.capacity,
-    Math.round((c.fans.size * (300 + 2 * c.fans.demand)) / 10_000),
-  );
+  return gateOf(w.pack.clubs.find((x) => x.id === w.clubId)!);
 }
 
 function monthlyBills(w: CareerWorld, day: number) {

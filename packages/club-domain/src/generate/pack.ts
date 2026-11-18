@@ -4,6 +4,7 @@
  * every phase kind). Same seed, same bytes.
  */
 import { between, fork, next, pick, rngFrom, type Rng } from '@decabeca/match-engine';
+import { seasonIncome } from '../career/finance';
 import { sha256Hex } from '../lib/sha256';
 import { DEPARTMENTS, PackSchema, type Pack, type PackClub } from '../pack/schema';
 import { devDivisions, miniCup } from './competitions';
@@ -52,6 +53,20 @@ export function economy(strength: number) {
     capacity: at('capacity'),
     fans: at('fans'),
   };
+}
+
+/**
+ * The squad's payroll in a division: what its strength asks, held to a share of what the club
+ * earns there in a season (TV, sponsors, gate). The share is the owners' doing: careful ones
+ * pay 55% of the income, bold ones up to 76%, past the fair play limit (market/books.ts), so
+ * some clubs are born living beyond their means and the others are not. PARÂMETRO.
+ */
+function payrollIn(c: PackClub, strength: number, tier: number): number {
+  const share = 48 + Math.round((c.profile.financialRisk * 35) / 100);
+  return Math.min(
+    economy(strength).payroll,
+    Math.round((seasonIncome(c, tier) * share) / 100 / 12),
+  );
 }
 
 function club(r: Rng, i: number, strength: number, city: string, width: number): PackClub {
@@ -132,7 +147,12 @@ type World = Pick<Pack, 'clubs' | 'players' | 'staff' | 'assignments' | 'governa
  */
 function world(
   root: Rng,
-  list: { strength: number; city: readonly [string, string, number]; goal: number }[],
+  list: {
+    strength: number;
+    city: readonly [string, string, number];
+    goal: number;
+    tier?: number;
+  }[],
 ): World {
   const width = list.length > 99 ? 3 : 2;
   const w: World = {
@@ -143,13 +163,17 @@ function world(
     governance: [],
     cities: [],
   };
-  list.forEach(({ strength, city, goal }, i) => {
+  list.forEach(({ strength, city, goal, tier }, i) => {
     const r = fork(root, `club:${i}`);
     const c = club(r, i, strength, city[0], width);
+    const asked = economy(strength).payroll;
+    const payroll = tier === undefined ? asked : payrollIn(c, strength, tier);
+    // Cash and debt follow the payroll the club really has.
+    c.initialCash = payroll * 3;
+    c.initialDebt = Math.round((c.initialDebt * payroll) / asked);
     w.clubs.push(c);
     // Wages keep their spread inside the squad but add up to the division's payroll (04 §4).
     const squad = generateSquad(root, { clubId: c.id, strength, season: SEASON });
-    const payroll = economy(strength).payroll;
     const total = squad.reduce((sum, p) => sum + (p.contract?.wage ?? 0), 0);
     for (const p of squad)
       if (p.contract && total > 0)
@@ -185,7 +209,7 @@ function world(
       load: 'full',
       group: 'club',
       contract: {
-        wage: Math.round(economy(strength).payroll * 0.08),
+        wage: Math.round(payroll * 0.08),
         until: `${SEASON + 1}-12-31`,
         releaseFee: strength * 20_000,
       },
@@ -199,8 +223,8 @@ function world(
         model === 'association' ? null : (['builder', 'speculator', 'passionate'] as const)[i % 3]!,
       electionEverySeasons: model === 'association' ? 3 : null,
       authority: {
-        transferCap: economy(strength).payroll * 4,
-        wageCap: Math.round(economy(strength).payroll / 10),
+        transferCap: payroll * 4,
+        wageCap: Math.round(payroll / 10),
       },
       goals: [{ kind: 'position', value: goal }],
     });
@@ -285,6 +309,7 @@ export function generateDevPack(seed = 20261116): Pack {
         strength: Math.round(hi - ((hi - lo) * i) / (n - 1)),
         city: cities[list.length]!,
         goal: Math.min(n, i + 3),
+        tier: d + 1,
       });
   });
   const w = world(rngFrom(seed), list);

@@ -12,7 +12,7 @@ export type Odds = 'favourite' | 'even' | 'underdog';
 /** One line of why the confidence moved, for the screen: a fact and its points. */
 export type BoardReason =
   | { kind: 'result'; result: 'W' | 'D' | 'L'; odds: Odds; value: number }
-  | { kind: 'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet'; value: number };
+  | { kind: 'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet' | 'fairplay'; value: number };
 
 export interface Board {
   /** 0..100. */

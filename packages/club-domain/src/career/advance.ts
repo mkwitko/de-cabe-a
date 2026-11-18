@@ -32,6 +32,7 @@ import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts } from '../market/contracts';
 import { returnLoans, type Loan } from '../market/loans';
+import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
 import { codeOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
@@ -102,6 +103,8 @@ export interface CareerWorld {
   loans?: Record<string, Loan>;
   /** The person's players offered on loan. */
   forLoan?: string[];
+  /** Seasons in a row each club ended over the fair play limit; absent when none (fairplay.ts). */
+  fairplay?: Record<string, number>;
   /** Clubs that found nobody worth buying in the window `span` and sit the rest of it out. */
   idle?: { span: string; clubs: string[] };
 }
@@ -310,7 +313,12 @@ export function divisionTable(w: CareerWorld): { name: string; rows: Row[] } {
   const rows = standings(
     group,
     (w.season.played.get(div.id) ?? []).filter((g) => inGroup.has(g.home) && inGroup.has(g.away)),
-    { points: { win: 3, draw: 1, loss: 0 }, tieBreakers: ['goalDifference', 'goalsFor'], seed: 0 },
+    {
+      points: { win: 3, draw: 1, loss: 0 },
+      tieBreakers: ['goalDifference', 'goalsFor'],
+      seed: 0,
+      ...(w.season.deduct && { deduct: w.season.deduct }),
+    },
   );
   return { name: div.name, rows };
 }
@@ -331,7 +339,15 @@ const FIRST_TEAM_AGE = 19;
  */
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
-  const judged = boardAfterSeason(w);
+  let judged = boardAfterSeason(w);
+  // The season's accounts are judged as the squads stood while it was played.
+  const verdict = judgeFairPlay(w);
+  if (verdict.board !== 0 && !judged.fired)
+    judged = {
+      ...judged,
+      confidence: Math.max(0, judged.confidence + verdict.board),
+      last: [...(judged.last ?? []), { kind: 'fairplay', value: verdict.board }],
+    };
   // Loans end with the season: everyone goes back before the contracts are looked at.
   returnLoans(w);
   // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
@@ -358,7 +374,9 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     slots: t.slots,
     previous: w.season.results,
     ranking: w.season.ranking,
+    deduct: verdict.deduct,
   });
+  noteFairPlay(w, verdict);
   note(w, {
     day: w.day,
     kind: 'season',

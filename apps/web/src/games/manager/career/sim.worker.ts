@@ -66,6 +66,9 @@ import {
   type TermsAnswer,
   type Why,
   boardOf,
+  squadCost,
+  strikesOf,
+  SQUAD_COST_LIMIT,
   jobsAfter,
   nationalDivisions,
   takeJob,
@@ -159,6 +162,8 @@ export interface SimView {
     ultimatum: { matches: number; points: number } | null;
     last: BoardReason[];
     fired: boolean;
+    /** Financial fair play: the squad's cost against the limit, and the sanction in force. */
+    fairplay: { cost: number; limit: number; strikes: number; points: number };
     /** After a dismissal: the clubs that offer the job, each with its division. */
     offers: (ClubFace & { clubId: string; division: string })[];
   };
@@ -655,7 +660,8 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'loanIn' ||
                   n.kind === 'loanOut' ||
                   n.kind === 'loanBack' ||
-                  n.kind === 'hired'
+                  n.kind === 'hired' ||
+                  n.kind === 'fairplayRival'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion
@@ -669,6 +675,12 @@ function view(w: CareerWorld, ms: number): SimView {
       ultimatum: boardOf(w).ultimatum ?? null,
       last: boardOf(w).last ?? [],
       fired: boardOf(w).fired === true,
+      fairplay: {
+        cost: squadCost(w, w.clubId),
+        limit: SQUAD_COST_LIMIT,
+        strikes: strikesOf(w, w.clubId),
+        points: s.deduct?.[w.clubId] ?? 0,
+      },
       offers: jobsAfter(w).map((clubId) => ({
         clubId,
         ...face(byId.get(clubId)!),

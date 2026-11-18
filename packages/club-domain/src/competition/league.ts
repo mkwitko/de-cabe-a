@@ -89,6 +89,8 @@ export interface TableRules {
   seed: number;
   /** Rows carried from an earlier phase (points do not reset). */
   carry?: readonly Row[];
+  /** Points taken off a club before the first match (a sanction); not applied to carried rows. */
+  deduct?: Readonly<Record<string, number>>;
 }
 
 /** Points a club took from a set of matches. */
@@ -108,7 +110,15 @@ export function standings(
   rules: TableRules,
 ): Row[] {
   const rows = new Map(
-    clubs.map((c) => [c, { ...(rules.carry?.find((r) => r.clubId === c) ?? empty(c)) }]),
+    clubs.map((c) => [
+      c,
+      {
+        ...(rules.carry?.find((r) => r.clubId === c) ?? {
+          ...empty(c),
+          points: -(rules.deduct?.[c] ?? 0),
+        }),
+      },
+    ]),
   );
   for (const g of games) {
     const sides = [rows.get(g.home), rows.get(g.away)];

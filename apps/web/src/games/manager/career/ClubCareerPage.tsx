@@ -837,6 +837,8 @@ const FROM = {
   cameUp: 'staff',
   injury: 'staff',
   prize: 'finance',
+  fairplay: 'finance',
+  fairplayRival: 'press',
   season: 'press',
 } as const;
 const FROM_TONE = {
@@ -903,6 +905,14 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.contractKept', { name: n.player });
     case 'crop':
       return t('inbox.crop', { n: n.players });
+    case 'fairplay':
+      return t('inbox.fairplay', {
+        s: Math.min(3, n.strikes),
+        cost: n.cost,
+        points: n.points,
+      });
+    case 'fairplayRival':
+      return t('inbox.fairplayRival', { club: n.clubName, points: n.points });
     case 'hired':
       return t('inbox.hired', { club: n.clubName });
     case 'cameUp':

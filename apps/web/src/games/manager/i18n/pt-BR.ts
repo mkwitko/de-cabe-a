@@ -108,7 +108,7 @@ export const ptBR = {
   'market.talk': 'Negociar',
   'market.talkFor': 'Negociar {name}, {age} anos, nota {n}, valor {value}',
   'market.no':
-    '{r, select, window {Janela fechada} squadFull {Elenco cheio} theirSquad {Clube não libera} cold {Conversa encerrada} justMoved {Recém-contratado} loyal {Não quer sair} stepDown {Não aceita descer} role {Não vem para o banco} other {Sem acordo}}',
+    '{r, select, window {Janela fechada} embargo {Proibido de contratar} squadFull {Elenco cheio} theirSquad {Clube não libera} cold {Conversa encerrada} justMoved {Recém-contratado} loyal {Não quer sair} stepDown {Não aceita descer} role {Não vem para o banco} other {Sem acordo}}',
   'market.part': '{p, select, starter {Titular} cover {Reserva imediato} other {Sobra no elenco}}',
   'market.list': 'Pôr à venda',
   'market.unlist': 'Tirar da lista',
@@ -146,7 +146,7 @@ export const ptBR = {
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
-    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
+    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
@@ -182,6 +182,10 @@ export const ptBR = {
   'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
   'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
   'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
+  'inbox.fairplay':
+    '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita. Advertência.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). O clube está proibido de contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Proibido de contratar e {points} pontos a menos na tabela.}}',
+  'inbox.fairplayRival':
+    'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
   'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
   'inbox.empty': 'Nenhuma mensagem ainda.',
   'inbox.ultimatum':
@@ -207,12 +211,17 @@ export const ptBR = {
   'board.result':
     '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
   'board.reason':
-    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} other {Ultimato cumprido}}',
+    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} other {Ultimato cumprido}}',
   'board.up': '+{n}',
   'board.down': '−{n}',
   'board.ultimatum': 'Ultimato',
   'board.ultimatumText':
     'A direção quer {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}. Sem isso, o contrato acaba.',
+  'board.fairplay': 'Fair play financeiro',
+  'board.fairplayCost': '{n}%',
+  'board.fairplayLimit': 'da receita vai em salários. O limite é {n}%.',
+  'board.fairplayState':
+    '{s, select, 0 {{over, select, yes {Acima do limite. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e o clube fica proibido de contratar.} 2 {Proibido de contratar e de dar aumento nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Proibido de contratar. O clube começou a temporada com {points} pontos a menos.}}',
   'board.calm': 'Sem ultimato. Abaixo de 25 de confiança, a direção dá um prazo.',
   'board.fired': 'A direção encerrou seu contrato',
   'board.firedText': 'O ultimato não foi cumprido. O {club} segue sem você.',

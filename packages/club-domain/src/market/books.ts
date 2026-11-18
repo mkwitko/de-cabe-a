@@ -6,13 +6,11 @@
  * (`w.books`) and counted against the budget. Integers; every number is a PARÂMETRO.
  */
 import type { CareerWorld } from '../career/advance';
-import { BY_TIER } from '../career/finance';
+import { seasonIncome } from '../career/finance';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
 import { thousands } from './value';
 
-/** Home matches counted for a season's gate. */
-const HOME_MATCHES = 15;
 /** Share of a sale a club puts back into signings. */
 const REINVEST = 80;
 
@@ -43,16 +41,7 @@ export function budgetOf(w: CareerWorld, clubId: string): Budget {
 
 function readBudget(w: CareerWorld, clubId: string): Budget {
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
-  const tier = BY_TIER[tierOfClub(w, clubId)]!;
-  const gate =
-    Math.min(
-      club.stadium.capacity,
-      Math.round((club.fans.size * (300 + 2 * club.fans.demand)) / 10_000),
-    ) *
-    tier.ticket *
-    HOME_MATCHES;
-  const sponsors = club.sponsors.reduce((s, x) => s + x.annual, 0);
-  const income = tier.tv + sponsors + gate;
+  const income = seasonIncome(club, tierOfClub(w, clubId));
   const risk = club.profile.financialRisk;
   return {
     income,
@@ -97,8 +86,36 @@ export function wageRoom(w: CareerWorld, clubId: string): number {
   const lived = Math.round(
     (booksOf(w, clubId).bill * (105 + club.profile.financialRisk / 10)) / 100,
   );
-  return Math.max(budgetOf(w, clubId).wageCap, lived) - wageBill(w, clubId);
+  const bill = wageBill(w, clubId);
+  const room = Math.max(budgetOf(w, clubId).wageCap, lived) - bill;
+  // Under an embargo nobody is registered: no wage can be added.
+  if (embargoed(w, clubId)) return Math.min(0, room);
+  // Careful owners keep the squad inside the fair play limit; the bold ones find out later.
+  if (club.profile.financialRisk < PRUDENT && clubId !== w.clubId)
+    return Math.min(
+      room,
+      Math.round((budgetOf(w, clubId).income * SQUAD_COST_LIMIT) / 1200) - bill,
+    );
+  return room;
 }
+
+/**
+ * Financial fair play (04 §8.2): a squad may cost up to this share of the season's income.
+ * PARÂMETRO, the figure of UEFA's squad cost rule.
+ */
+export const SQUAD_COST_LIMIT = 70;
+/** Owners with less appetite for risk than this never plan past the limit. */
+const PRUDENT = 50;
+
+/** The squad's wages for a season as a percentage of the club's income. */
+export const squadCost = (w: CareerWorld, clubId: string): number =>
+  Math.round((wageBill(w, clubId) * 1200) / Math.max(1, budgetOf(w, clubId).income));
+
+/** Seasons in a row the club ended over the limit (market/fairplay.ts). */
+export const strikesOf = (w: CareerWorld, clubId: string): number => w.fairplay?.[clubId] ?? 0;
+
+/** From the second season in a row over the limit, the club registers nobody. */
+export const embargoed = (w: CareerWorld, clubId: string): boolean => strikesOf(w, clubId) >= 2;
 
 /** Counts a fee paid and a fee received in the two clubs' season. */
 export function book(w: CareerWorld, from: string, to: string, fee: number): void {

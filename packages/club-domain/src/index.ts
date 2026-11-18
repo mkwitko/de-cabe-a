@@ -40,6 +40,7 @@ export * from './market/talks';
 export * from './market/judgement';
 export * from './market/contracts';
 export * from './market/loans';
+export * from './market/fairplay';
 export * from './career/development';
 export * from './career/years';
 export * from './career/health';

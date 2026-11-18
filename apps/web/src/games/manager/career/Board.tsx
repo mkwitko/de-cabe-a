@@ -21,6 +21,9 @@ const BAR = {
 export function Board({ sim }: { sim: SimView }) {
   const b = sim.board;
   const state = stateOf(b.confidence);
+  const f = b.fairplay;
+  const over = f.cost > f.limit;
+  const overKey = over ? 'yes' : 'no';
   return (
     <section aria-labelledby="board-title" className="grid items-start gap-5 lg:grid-cols-2">
       <div className="sala-slab flex flex-col gap-4 p-4 sm:p-5">
@@ -87,6 +90,42 @@ export function Board({ sim }: { sim: SimView }) {
               ))}
             </ul>
           )}
+        </div>
+        <div className="flex flex-col gap-2 border-t border-chalk/10 pt-4">
+          <h3 id="fairplay-title" className={`${LABEL} ${over ? 'text-club-danger' : ''}`}>
+            {t('board.fairplay')}
+          </h3>
+          <p className="flex items-baseline gap-3">
+            <span className="font-condensed text-4xl leading-none font-black tabular-nums">
+              {t('board.fairplayCost', { n: f.cost })}
+            </span>
+            <span className="text-chalk-soft">{t('board.fairplayLimit', { n: f.limit })}</span>
+          </p>
+          <div
+            role="meter"
+            aria-labelledby="fairplay-title"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.min(100, f.cost)}
+            className="relative h-2 rounded-full bg-chalk/12"
+          >
+            <span
+              className={`block h-full rounded-full ${over ? 'bg-club-danger' : 'bg-club-turf'}`}
+              style={{ width: `${Math.min(100, f.cost)}%` }}
+            />
+            <span
+              aria-hidden
+              className="absolute -top-1 h-4 w-0.5 bg-chalk"
+              style={{ left: `${f.limit}%` }}
+            />
+          </div>
+          <p className={f.strikes > 0 ? 'font-semibold' : 'text-chalk-soft'}>
+            {t('board.fairplayState', {
+              s: Math.min(3, f.strikes),
+              over: overKey,
+              points: f.points,
+            })}
+          </p>
         </div>
         <div className="flex flex-col gap-2 border-t border-chalk/10 pt-4">
           <h3 className={`${LABEL} ${b.ultimatum ? 'text-club-danger' : ''}`}>
