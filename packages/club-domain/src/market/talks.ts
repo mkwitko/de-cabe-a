@@ -63,6 +63,10 @@ export interface Talk {
 }
 
 /** A bid from another club for one of the person's players. */
+/** Days before a refused club comes back, and how much more it offers, in percent. PARÂMETROS. */
+const RETURN_DAYS = 10;
+const RETURN_RAISE = 15;
+
 export interface Bid {
   id: string;
   player: string;
@@ -71,8 +75,11 @@ export interface Bid {
   /** The most that club pays for him; never shown. */
   most: number;
   round: number;
+  /** The day it was made; a bid coming back after a refusal waits until then. */
   day: number;
   why: Why;
+  /** A bid back after the person's refusal, not yet announced in the inbox. */
+  again?: boolean;
 }
 
 export type TalkNo =
@@ -329,6 +336,8 @@ const closeBid = (w: CareerWorld, id: string) => {
 export type BidAnswer =
   | { kind: 'sold'; fee: number }
   | { kind: 'raised'; fee: number }
+  /** Refused, but the club will come back once with a better offer. */
+  | { kind: 'later' }
   | { kind: 'withdrawn'; reason: 'tooDear' | 'squadThin' | 'budget' | PlayerNo };
 
 /**
@@ -342,13 +351,23 @@ export function answerBid(
 ): BidAnswer {
   const bid = (w.bids ?? []).find((b) => b.id === id);
   const p = bid && playerOf(w, bid.player);
-  if (!bid || p?.clubId !== w.clubId) throw new Error('bid: gone');
+  // A bid coming back is not on the table before the club announces it.
+  if (!bid || p?.clubId !== w.clubId || bid.again) throw new Error('bid: gone');
   const leave = (reason: Extract<BidAnswer, { kind: 'withdrawn' }>['reason']): BidAnswer => {
     closeBid(w, id);
     w.cold = { ...w.cold, [`${bid.from}:${p.id}`]: w.season.season };
     return { kind: 'withdrawn', reason };
   };
-  if (answer.kind === 'refuse') return leave('tooDear');
+  if (answer.kind === 'refuse') {
+    // A first bid turned down: a club that can pay more comes back once, a little later, with a
+    // better one; a club already at its limit, or refused again, leaves.
+    const better = Math.min(bid.most, thousands((bid.fee * (100 + RETURN_RAISE)) / 100));
+    if (bid.round > 1 || bid.again !== undefined || better <= bid.fee) return leave('tooDear');
+    w.bids = (w.bids ?? []).map((b) =>
+      b.id === id ? { ...b, fee: better, round: 2, day: w.day + RETURN_DAYS, again: true } : b,
+    );
+    return { kind: 'later' };
+  }
   let fee = bid.fee;
   if (answer.kind === 'counter') {
     if (!Number.isSafeInteger(answer.fee) || answer.fee < 0) throw new Error('bid: fee');

@@ -580,12 +580,15 @@ function marketView(
       fee: t.fee ?? null,
       wants: t.wants ?? null,
     })),
-    bids: (w.bids ?? []).map((b) => ({
-      id: b.id,
-      player: row(byId.get(b.player)!),
-      from: face(clubs.get(b.from)!),
-      fee: b.fee,
-    })),
+    // A bid coming back after a refusal shows once the club announces it.
+    bids: (w.bids ?? [])
+      .filter((b) => !b.again)
+      .map((b) => ({
+        id: b.id,
+        player: row(byId.get(b.player)!),
+        from: face(clubs.get(b.from)!),
+        fee: b.fee,
+      })),
     clubList: nationalDivisions(w.pack).map((d) => ({
       division: d.name,
       clubs: (w.season.members[d.id] ?? [])

@@ -183,7 +183,23 @@ describe("other clubs bid for the person's players", () => {
       expect(raised.kind).toBe('raised');
       expect(v.bids!.find((x) => x.id === b.id)!.fee).toBeGreaterThan(b.fee);
     } else expect(raised).toEqual({ kind: 'withdrawn', reason: 'tooDear' });
-    expect(answerBid(withBid(96), b.id, { kind: 'refuse' })).toEqual({
+    // A first refusal: a club that can pay more comes back once, better; refused again, it leaves.
+    const r = withBid(96);
+    const first = answerBid(r, b.id, { kind: 'refuse' });
+    if (b.most <= b.fee) {
+      expect(first).toEqual({ kind: 'withdrawn', reason: 'tooDear' });
+      return;
+    }
+    expect(first).toEqual({ kind: 'later' });
+    const back = r.bids!.find((x) => x.id === b.id)!;
+    expect(back.again).toBe(true);
+    expect(back.fee).toBeGreaterThan(b.fee);
+    expect(back.fee).toBeLessThanOrEqual(b.most);
+    expect(() => answerBid(r, b.id, { kind: 'accept' })).toThrow('bid: gone');
+    marketRound(r, back.day);
+    expect(r.bids!.find((x) => x.id === b.id)!.again).toBe(false);
+    expect(r.inbox!.some((n) => n.kind === 'bid' && n.fee === back.fee)).toBe(true);
+    expect(answerBid(r, b.id, { kind: 'refuse' })).toEqual({
       kind: 'withdrawn',
       reason: 'tooDear',
     });

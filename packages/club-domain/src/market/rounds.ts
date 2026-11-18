@@ -364,6 +364,14 @@ const windowOf = (day: number) => {
 export function marketRound(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
   if (w.bids?.length) w.bids = w.bids.filter((b) => day - b.day <= BID_DAYS);
+  // Clubs refused once come back with their better bid on its day.
+  if (w.bids?.some((b) => b.again && b.day <= day))
+    w.bids = w.bids.map((b) => {
+      if (!b.again || b.day > day) return b;
+      const p = w.pack.players.find((x) => x.id === b.player);
+      if (p) note(w, { day, kind: 'bid', player: p.knownAs ?? p.name, club: b.from, fee: b.fee });
+      return { ...b, again: false };
+    });
   // The players the person offered on loan go to the clubs that will play them.
   lendListed(w);
   const done: Deal[] = [];
