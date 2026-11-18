@@ -183,6 +183,8 @@ export const ptBR = {
   'health.outLabel': 'Lesionado',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
+  'inbox.homecoming':
+    '{name} quer voltar do exterior e procurou o seu clube. Ele pede {wage} por mês; a conversa está aberta no Mercado. Se você não fechar, outro clube daqui pode contratá-lo.',
   'inbox.watched': 'Chegou o relatório do olheiro sobre {name}: agora você o conhece melhor.',
   'inbox.scouted':
     '{n, plural, =0 {O olheiro voltou de {area} sem nomes novos.} one {O olheiro voltou de {area} com # jogador novo nos arquivos.} other {O olheiro voltou de {area} com # jogadores novos nos arquivos.}}',

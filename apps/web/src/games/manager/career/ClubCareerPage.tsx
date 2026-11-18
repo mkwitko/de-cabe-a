@@ -836,6 +836,7 @@ const FROM = {
   crop: 'staff',
   cameUp: 'staff',
   scouted: 'staff',
+  homecoming: 'market',
   injury: 'staff',
   prize: 'finance',
   fairplay: 'finance',
@@ -917,6 +918,8 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.fairplayRival', { club: n.clubName, points: n.points });
     case 'hired':
       return t('inbox.hired', { club: n.clubName });
+    case 'homecoming':
+      return t('inbox.homecoming', { name: n.player, wage: t('career.cash', { value: n.wage }) });
     case 'scouted':
       return n.area.startsWith('player:')
         ? t('inbox.watched', { name: n.clubName })

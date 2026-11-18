@@ -67,4 +67,24 @@ describe('the exodus abroad', () => {
     // Outside a window's opening fortnight, nobody.
     expect(homecoming(w, dayOf('2036-03-20'))).toEqual([]);
   });
+
+  it("one who picks the person's club comes to its table as a free agent", () => {
+    // The person coaches the club with the best name: the first a player coming home looks at.
+    const top = [...pack.clubs].sort((a, b) => b.reputation - a.reputation)[0]!.id;
+    const mine = openCareer(pack, 91, top);
+    SEASON.forEach((d) => foreignRound(mine, d));
+    mine.season = { ...mine.season, season: 2036 };
+    for (let y = 0; y < 9; y++)
+      for (const iso of [`2036-01-0${1 + y}`, `2036-07-0${1 + y}`]) {
+        mine.day = dayOf(iso);
+        homecoming(mine, dayOf(iso));
+      }
+    const offers = (mine.inbox ?? []).filter((n) => n.kind === 'homecoming');
+    expect(offers.length).toBeGreaterThan(0);
+    for (const talk of Object.values(mine.talks ?? {})) {
+      expect(talk.seller).toBeNull();
+      expect(mine.pack.players.find((p) => p.id === talk.player)!.clubId).toBeNull();
+    }
+    expect(Object.keys(mine.talks ?? {}).length).toBe(offers.length);
+  });
 });

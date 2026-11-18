@@ -15,7 +15,7 @@
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
-import { movePlayer } from '../career/market';
+import { movePlayer, releasePlayer } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
@@ -24,7 +24,7 @@ import { booksOf, tierOfClub, wageRoom } from './books';
 import { CLAUSE_TIMES, playerStance } from './deals';
 import { fitFor, squadPlanOf } from './plan';
 import type { Deal } from './rounds';
-import { canLose } from './talks';
+import { canLose, cannotTalk, openTalk } from './talks';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** Where a player sold abroad sits in the pack. */
@@ -181,7 +181,9 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
  * player abroad for HOME_AFTER seasons or more draws once, by age. One who wants to come home
  * goes to the club here with the best name among those that need him at his position (a hole
  * or an upgrade his level meets) and can pay his wage; with no such club he stays abroad and
- * tries again next window. The person's club is not among them yet. Returns the moves.
+ * tries again next window. When that club is the person's, he leaves his club abroad and comes
+ * to the person's table as a free agent (a talk opened, a note in the inbox); if the person does
+ * not sign him, any club here may. Returns the moves to clubs of the world.
  */
 export function homecoming(w: CareerWorld, day: number): Deal[] {
   const iso = isoOf(day);
@@ -191,7 +193,7 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
   const draw = rngFrom(seedOf(w.seed, `home:${day}`));
   const read = readingsOf(w.pack);
   const clubs = w.pack.clubs
-    .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
+    .filter((c) => w.season.calendar.byClub.has(c.id))
     .sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1));
   const done: Deal[] = [];
   // In the pack's order, one draw each, whatever happens.
@@ -216,6 +218,20 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
       if (!need) continue;
       const wants = playerStance(w.pack, p, null, c, season);
       if (wants.no || wants.wage > wageRoom(w, c.id)) continue;
+      if (c.id === w.clubId) {
+        // The person's club: only if it may talk to him once he is free (a squad with room, no
+        // embargo, no door shut this season).
+        if (cannotTalk(w, { ...p, clubId: null })) continue;
+        releasePlayer(w, p);
+        const talk = openTalk(w, p.id);
+        note(w, {
+          day,
+          kind: 'homecoming',
+          player: p.knownAs ?? p.name,
+          wage: talk.wants?.wage ?? wants.wage,
+        });
+        break;
+      }
       movePlayer(w, p, c.id, {
         wage: wants.wage,
         until: `${season + wants.years}-12-31`,
