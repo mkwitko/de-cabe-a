@@ -517,6 +517,12 @@ describe('containment of a carrier in our half', () => {
   it('a defender further off keeps his own job', () => {
     expect(run([84, 40]).d.intent).not.toBe('press');
   });
+  it('a defender just beaten, still level with the carrier, cuts back in', () => {
+    expect(run([68.5, 37]).d.intent).toBe('press');
+  });
+  it('a defender well behind the carrier does not', () => {
+    expect(run([66, 36]).d.intent).not.toBe('press');
+  });
 });
 
 describe('the keeper on a long ball', () => {

@@ -1055,9 +1055,11 @@ function meetPoint(p: MatchPlayer, ball: Ball, reacting: boolean): { pt: Vec2; t
 /**
  * Containment (02 §5.12): in our half, the nearest goal-side outfield defender within
  * ENGAGE metres of the carrier steps into his path towards goal, CONTAIN_GAP ahead of him,
- * and may tackle him like the presser. PARAMETERS.
+ * and may tackle him like the presser. A defender up to RECOVER metres behind the carrier
+ * (just beaten, still level) still counts: he cuts back in. PARAMETERS.
  */
 const ENGAGE = 6;
+const RECOVER = 2;
 const CONTAIN_GAP = 1.2;
 const ENGAGE_HALF = LENGTH / 2;
 function engageCarrier(s: MatchState) {
@@ -1071,7 +1073,7 @@ function engageCarrier(s: MatchState) {
   for (const d of opponents(s, c.team)) {
     if (lineOf(d.role) === 'gk' || d.intent === 'press' || d.tackleAt > s.tick) continue;
     const dd = dist(d.pos, c.pos);
-    if (flip(def, d.pos).x > cg.x - 0.5 || dd >= bd) continue;
+    if (flip(def, d.pos).x > cg.x + RECOVER || dd >= bd) continue;
     best = d;
     bd = dd;
   }

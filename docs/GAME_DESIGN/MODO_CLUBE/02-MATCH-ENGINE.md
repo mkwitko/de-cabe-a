@@ -289,6 +289,25 @@ Confirmação em 2000 partidas, mesmas sementes:
 
 Os amarelos saem da faixa (2,15 a 2,59) porque a taxa de cartão por falta já era alta: 0,23 contra cerca de 0,16 na Série A (2,37 amarelos para 14,6 faltas). Corrigir essa taxa é o próximo passo. Testes em `match.test.ts` ("containment of a carrier in our half").
 
+**Defensor recém-batido volta para a contenção (DECISÃO, 2026-11-18).**
+
+- Regra: o defensor que está até 2 m atrás do condutor (acabou de ser batido, ainda emparelhado) também conta para a contenção e volta para fechá-lo. Antes, só contava quem estava pelo menos 0,5 m do lado do gol.
+- PARÂMETRO: 2 m (`RECOVER`).
+- Motivo: nos lances de atacante sozinho após passe, o recebedor deixava para trás cerca de 850 defensores em 30 partidas. O mais comum era o zagueiro na linha, parado na posição. Quem era batido por meio passo saía do lance.
+- Recuo medido em 600 partidas: 1 m deu 3,40 gols; 2 m deu 3,19; 4 m deu 3,24. Raio de 9 m com 2 m deu 3,29 (não ajuda). A prova de coordenação passa com 2 m.
+
+Confirmação em 2000 partidas, mesmas sementes:
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Gols por jogo | 3,53 | 3,23 |
+| Gols por chute | 0,137 | 0,129 |
+| Chutes por time | 12,9 | 12,5 |
+| Faltas por time | 11,5 | 12,8 |
+| Amarelos por time | 2,74 | 3,17 |
+
+Os amarelos sobem pelo mesmo motivo de antes: a taxa de cartão por falta está alta. Chutes por time ficam um pouco abaixo da faixa (12,6 a 13,6). Testes em `match.test.ts` ("a defender just beaten, still level with the carrier, cuts back in" e "a defender well behind the carrier does not").
+
 **Marcação colada perto do gol, terceira tentativa (2026-11-17, não entrou).** Feita depois do conserto do goleiro e da contenção. Regra: atacante a menos de TX metros do gol é marcado a 1 m, e não mais a 2–6 m.
 
 Resultado em 2000 partidas, mesmas sementes:
