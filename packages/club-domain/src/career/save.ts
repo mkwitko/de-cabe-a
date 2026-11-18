@@ -15,6 +15,7 @@ import { clubLevels, type Training } from './training';
 import type { Moves } from './market';
 import type { Board } from './board';
 import { setJudgementClock } from '../market/judgement';
+import { withClubs, type ClubState } from './clubs';
 import { arrivalsOf, rebuildPack } from './years';
 import type { Note } from './inbox';
 
@@ -22,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 12;
+export const CAREER_RULES_VERSION = 13;
 
 interface Saved {
   v: number;
@@ -54,6 +55,8 @@ interface Saved {
   injuries?: CareerWorld['injuries'];
   academy?: CareerWorld['academy'];
   fairplay?: CareerWorld['fairplay'];
+  /** Every club's cash, directors and structure (clubs.ts). */
+  clubs?: Record<string, ClubState>;
   starts?: CareerWorld['starts'];
   played?: CareerWorld['played'];
 }
@@ -136,6 +139,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.injuries && { injuries: w.injuries }),
     ...(w.academy && { academy: w.academy }),
     ...(w.fairplay && { fairplay: w.fairplay }),
+    ...(w.clubs && { clubs: w.clubs }),
     ...(w.starts && { starts: w.starts }),
     ...(w.played !== undefined && { played: w.played }),
   };
@@ -148,7 +152,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
   const moves = unpackMoves(base, saved.moves);
   // A log from before the yearly growth was kept by character cannot be replayed: skipped.
   const log = (saved.log ?? []).filter((l) => typeof l.growth === 'string');
-  const pack = rebuildPack(base, seed, log, moves);
+  const pack = withClubs(rebuildPack(base, seed, log, moves), saved.clubs);
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.
@@ -191,6 +195,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.injuries && { injuries: saved.injuries }),
     ...(saved.academy && { academy: saved.academy }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),
+    ...(saved.clubs && { clubs: saved.clubs }),
     ...(saved.starts && { starts: saved.starts }),
     ...(saved.played !== undefined && { played: saved.played }),
   };

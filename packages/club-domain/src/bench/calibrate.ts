@@ -128,6 +128,11 @@ function world(pack: Pack, seed: number, seasons: number) {
     fair: [number, number, number];
     /** Median squad cost (% of income) by the tier each club is in. */
     cost: number[];
+    /** Median cash, in seasons of income, by tier; clubs in the red; mean structure level. */
+    cash: number[];
+    red: number[];
+    level: number[];
+    horizons: string;
   }[] = [];
   const home = { w: 0, d: 0, l: 0, goals: 0, n: 0 };
   for (let s = 0; s < seasons; s++) {
@@ -152,6 +157,39 @@ function world(pack: Pack, seed: number, seasons: number) {
           pack.clubs.filter((c) => tierOfClub(w, c.id) === tier).map((c) => squadCost(w, c.id)),
         ),
       ),
+      cash: [1, 2, 3, 4].map((tier) =>
+        median(
+          pack.clubs
+            .filter((c) => tierOfClub(w, c.id) === tier && w.clubs?.[c.id])
+            .map((c) => Math.round((w.clubs![c.id]!.cash * 100) / budgetOf(w, c.id).income)),
+        ),
+      ),
+      red: [1, 2, 3, 4].map(
+        (tier) =>
+          pack.clubs.filter((c) => tierOfClub(w, c.id) === tier && (w.clubs?.[c.id]?.cash ?? 0) < 0)
+            .length,
+      ),
+      level: [1, 2, 3, 4].map(
+        (tier) =>
+          Math.round(
+            mean(
+              w.pack.clubs
+                .filter((c) => tierOfClub(w, c.id) === tier)
+                .map(
+                  (c) =>
+                    (c.facilities.training +
+                      c.facilities.youth +
+                      c.facilities.medical +
+                      c.departments.scouting +
+                      c.departments.football) /
+                    5,
+                ),
+            ) * 10,
+          ) / 10,
+      ),
+      horizons: (['short', 'medium', 'long'] as const)
+        .map((h) => Object.values(w.clubs ?? {}).filter((c) => c.directors.horizon === h).length)
+        .join('/'),
       deals: Object.values(w.moves ?? {}).filter((m) => m.season === w.season.season && m.clubId)
         .length,
       free: w.pack.players.filter((p) => p.clubId === null).length,
@@ -255,7 +293,8 @@ function main() {
   for (const [i, s] of w.perSeason.entries())
     out.push(
       `  season ${i + 1}: signings ${s.deals} | free agents ${s.free} | squads ${s.sizes[0]}..${s.sizes[1]} | wage bills x${r1(s.bill * 100) / 100}` +
-        ` | fair play: warned ${s.fair[0]}, embargo ${s.fair[1]}, docked ${s.fair[2]} | median squad cost % by tier ${s.cost.join(' ')}`,
+        ` | fair play: warned ${s.fair[0]}, embargo ${s.fair[1]}, docked ${s.fair[2]} | median squad cost % by tier ${s.cost.join(' ')}` +
+        ` | cash %income ${s.cash.join(' ')} red ${s.red.join(' ')} | structure ${s.level.join(' ')} | horizons ${s.horizons}`,
     );
   out.push(
     `  strength drift by tier after ${w.perSeason.length} seasons: ${w.drift.join(' ')} | mean age ${w.age}`,

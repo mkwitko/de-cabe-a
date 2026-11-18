@@ -8,6 +8,7 @@ import { dayOf, isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
 import type { PackClub } from '../pack/schema';
 import type { CareerWorld } from './advance';
+import { PRICE_BASE, priced, pricesOf } from './prices';
 import { nationalDivisions } from './start';
 
 /**
@@ -33,10 +34,17 @@ export const gateOf = (c: Pick<PackClub, 'stadium' | 'fans'>): number =>
   Math.min(c.stadium.capacity, Math.round((c.fans.size * (300 + 2 * c.fans.demand)) / 10_000));
 
 /** What a club takes in a season in a tier: TV, sponsors and the gate of its home matches. */
-export const seasonIncome = (c: Pick<PackClub, 'stadium' | 'fans' | 'sponsors'>, tier: number) =>
-  BY_TIER[tier]!.tv +
-  c.sponsors.reduce((s, x) => s + x.annual, 0) +
-  gateOf(c) * BY_TIER[tier]!.ticket * HOME_MATCHES;
+export const seasonIncome = (
+  c: Pick<PackClub, 'stadium' | 'fans' | 'sponsors'>,
+  tier: number,
+  prices = PRICE_BASE,
+) =>
+  priced(
+    BY_TIER[tier]!.tv +
+      c.sponsors.reduce((s, x) => s + x.annual, 0) +
+      gateOf(c) * BY_TIER[tier]!.ticket * HOME_MATCHES,
+    prices,
+  );
 
 export function tierOf(w: CareerWorld): number {
   const div = nationalDivisions(w.pack).find((d) => w.season.members[d.id]?.includes(w.clubId));
@@ -72,8 +80,9 @@ function monthlyBills(w: CareerWorld, day: number) {
   // PARÂMETRO: the pack's debt in 60 monthly instalments (five years), no interest yet.
   const paid = w.ledger.entries.filter((e) => e.kind === 'debt').length;
   if (paid < DEBT_MONTHS) post('debt', -Math.round(club.initialDebt / DEBT_MONTHS));
-  post('tv', Math.round(tier.tv / 12));
-  post('sponsors', Math.round(sponsors / 12));
+  const { prices } = pricesOf(w);
+  post('tv', Math.round(priced(tier.tv, prices) / 12));
+  post('sponsors', Math.round(priced(sponsors, prices) / 12));
 }
 
 /** Bills of every month that starts after `from` and on or before `to`. */
@@ -87,7 +96,7 @@ export function postMonths(w: CareerWorld, from: number, to: number) {
 export function postHomeMatch(w: CareerWorld, matchId: string, day: number) {
   const m = w.season.meta.get(matchId)!;
   if (m.home !== w.clubId) return;
-  const amount = attendance(w) * BY_TIER[tierOf(w)]!.ticket;
+  const amount = priced(attendance(w) * BY_TIER[tierOf(w)]!.ticket, pricesOf(w).prices);
   postEntry(w.ledger, {
     // Match ids repeat every season: the season is part of the key.
     key: `tickets:${w.season.season}:${matchId}`,
@@ -105,7 +114,7 @@ export function postHomeMatch(w: CareerWorld, matchId: string, day: number) {
  */
 export function postPrize(w: CareerWorld, position: number, places: number): number {
   if (position < 1 || places < 1) return 0;
-  const top = BY_TIER[tierOf(w)]!.tv / PRIZE_SHARE;
+  const top = priced(BY_TIER[tierOf(w)]!.tv, pricesOf(w).prices) / PRIZE_SHARE;
   const amount = Math.round((top * (places - position + 1)) / places / 1000) * 1000;
   if (amount > 0)
     postEntry(w.ledger, {

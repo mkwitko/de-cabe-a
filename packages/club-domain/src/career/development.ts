@@ -27,6 +27,7 @@ import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { goingWage } from '../market/value';
+import { PRICE_BASE, priced } from './prices';
 import { bestRoles } from '../player/ratings';
 import type { Intensity } from './training';
 
@@ -171,10 +172,17 @@ const CROP = [3, 3, 4, 5, 6] as const;
  * A club's crop for `season`: fifteen to seventeen years old, well under the first team today,
  * a few of them with a ceiling far above it. Better academies bring more and better.
  */
-export function crop(origin: Pack, clubId: string, seed: number, season: number): PackPlayer[] {
+export function crop(
+  origin: Pack,
+  clubId: string,
+  seed: number,
+  season: number,
+  wages = PRICE_BASE,
+  youthLevel?: number,
+): PackPlayer[] {
   const club = origin.clubs.find((c) => c.id === clubId)!;
   const level = baseLevels(origin).get(clubId) ?? 40;
-  const youth = club.facilities.youth;
+  const youth = youthLevel ?? club.facilities.youth;
   const root = fork(rngFrom(seed), `crop:${season}:${clubId}`);
   const out: PackPlayer[] = [];
   for (let k = 0; k < CROP[youth - 1]!; k++) {
@@ -194,7 +202,9 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
     const reach = (base: number) => clamp(level + base + gem + pick(r, 8));
     const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
     // A first contract: two fifths of what the market pays a man of his level today.
-    const wage = Math.round((goingWage(origin, bestRoles(attributes, 1)[0]!.rating) * 40) / 100);
+    const wage = Math.round(
+      (priced(goingWage(origin, bestRoles(attributes, 1)[0]!.rating), wages) * 40) / 100,
+    );
     out.push({
       ...made,
       birthDate: `${season - age}${made.birthDate.slice(4)}`,
@@ -209,6 +219,54 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
   return out;
 }
 
+/** Players the foreign market offers each season, and their levels and ages. PARÂMETRO. */
+const IMPORTS = 70;
+/** Quality from 58 to 85, the better of two draws: the clubs here buy from the top of the
+ * South American market and bring players home from Europe. */
+const IMPORT_QUALITY: [number, number] = [58, 85];
+const IMPORT_AGES: [number, number] = [22, 32];
+
+/** True for a player of the foreign market who has not signed for a club of the league. */
+export const isImport = (id: string) => /^f\d+-/.test(id);
+
+/**
+ * The foreign market of `season` (04 §4.7): players from abroad, mostly South Americans, a
+ * Brazilian club can bring in. They sit abroad, on the wage the market pays their level, and
+ * leave the game at the season's end if nobody here signed them.
+ */
+export function imports(
+  origin: Pack,
+  seed: number,
+  season: number,
+  wages = PRICE_BASE,
+): PackPlayer[] {
+  const root = fork(rngFrom(seed), `imports:${season}`);
+  const out: PackPlayer[] = [];
+  for (let k = 0; k < IMPORTS; k++) {
+    const r = fork(root, `player:${k}`);
+    const position = SQUAD[pick(r, SQUAD.length)]!;
+    const age = IMPORT_AGES[0] + pick(r, IMPORT_AGES[1] - IMPORT_AGES[0] + 1);
+    const span = IMPORT_QUALITY[1] - IMPORT_QUALITY[0] + 1;
+    const quality = IMPORT_QUALITY[0] + Math.max(pick(r, span), pick(r, span));
+    const made = generatePlayer(r, {
+      id: `f${season}-${k}`,
+      position,
+      quality,
+      clubId: ABROAD,
+      season,
+    });
+    const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
+    const wage = priced(goingWage(origin, bestRoles(attributes, 1)[0]!.rating), wages);
+    out.push({
+      ...made,
+      birthDate: `${season - age}${made.birthDate.slice(4)}`,
+      attributes,
+      contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },
+    });
+  }
+  return out;
+}
+
 /**
  * What a season leaves behind: for each player of the pack as it stood at the season's end, in
  * the pack's order, one character with his growth for the year that follows (`codeOf`).
@@ -216,7 +274,19 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
 export interface SeasonLog {
   season: number;
   growth: string;
+  /** The next season's price rate and indices (prices.ts); absent in logs written before. */
+  rate?: number;
+  prices?: number;
+  wages?: number;
+  /** Each club's academy level for the crop, one digit a club in the opening pack's order. */
+  youth?: string;
 }
+
+/** The academies' levels as `SeasonLog.youth` keeps them. */
+export const youthOf = (origin: Pack, pack: Pack): string => {
+  const now = new Map(pack.clubs.map((c) => [c.id, c.facilities.youth]));
+  return origin.clubs.map((c) => now.get(c.id) ?? c.facilities.youth).join('');
+};
 
 /** What the person did in the season that the growth of their players reads. */
 export interface Mine {
@@ -291,7 +361,10 @@ export function codeOf(pack: Pack, mine: Mine, released: ReadonlySet<string>): s
   const growth = growthOf(pack, mine);
   let code = '';
   for (const p of pack.players)
-    code += p.clubId === null && !released.has(p.id) ? GONE : codeFor(growth.get(p.id) ?? 100);
+    code +=
+      (p.clubId === null && !released.has(p.id)) || (p.clubId === ABROAD && isImport(p.id))
+        ? GONE
+        : codeFor(growth.get(p.id) ?? 100);
   return code;
 }
 
@@ -309,6 +382,10 @@ export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
     if (growth === null || retires(p, seed, season)) continue;
     players.push(develop(p, seed, season, growth));
   }
-  for (const c of origin.clubs) players.push(...crop(origin, c.id, seed, season));
+  origin.clubs.forEach((c, i) => {
+    const youth = log.youth ? Number(log.youth[i]) : undefined;
+    players.push(...crop(origin, c.id, seed, season, log.wages, youth));
+  });
+  players.push(...imports(origin, seed, season, log.wages));
   return { ...pack, players };
 }

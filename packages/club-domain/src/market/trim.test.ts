@@ -5,7 +5,7 @@ import { squadPlayers } from '../career/squad';
 import { nationalDivisions } from '../career/start';
 import { rngFrom } from '@decabeca/match-engine';
 import { generatePlayer } from '../generate/player';
-import { SQUAD_COST_LIMIT, squadCost } from './books';
+import { costLimitOf, squadCost } from './books';
 import { SQUAD_TARGET, trimSquads } from './contracts';
 import { squadPlanOf } from './plan';
 
@@ -46,7 +46,7 @@ describe('rival squads cleared at the turn (04 §8.2)', () => {
     for (const p of w.pack.players)
       if (p.clubId === rival && p.contract && !used.has(p.id))
         p.contract = { ...p.contract, wage: p.contract.wage * 8 };
-    expect(squadCost(w, rival)).toBeGreaterThan(SQUAD_COST_LIMIT);
+    expect(squadCost(w, rival)).toBeGreaterThan(costLimitOf(w, rival)!);
     const cost = squadCost(w, rival);
     const spares = new Set(
       w.pack.players.filter((p) => p.clubId === rival && !used.has(p.id)).map((p) => p.id),

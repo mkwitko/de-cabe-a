@@ -11,15 +11,7 @@ import { note } from '../career/inbox';
 import { RELEASED, applyMoves, movePlayer, type Moves } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import {
-  PRUDENT,
-  SQUAD_COST_LIMIT,
-  budgetOf,
-  squadCost,
-  strikesOf,
-  wageBill,
-  wageRoom,
-} from './books';
+import { PRUDENT, budgetOf, costLimitOf, overLimit, strikesOf, wageBill, wageRoom } from './books';
 import { CLAUSE_TIMES, type Terms } from './deals';
 import { squadPlanOf } from './plan';
 import { ageOf, goingWage, marketValue, readingsOf } from './value';
@@ -181,10 +173,11 @@ export function trimSquads(w: CareerWorld): number {
     let size = squad.length;
     let keepers = squad.filter((p) => read.get(p.id)!.keeper).length;
     let bill = wageBill(w, club.id);
-    const limit = Math.floor((budgetOf(w, club.id).income * SQUAD_COST_LIMIT) / 1200);
+    const cap = costLimitOf(w, club.id) ?? 100;
+    const limit = Math.floor((budgetOf(w, club.id).income * cap) / 1200);
     const over =
       strikesOf(w, club.id) >= (club.profile.financialRisk < PRUDENT ? 1 : 2) &&
-      squadCost(w, club.id) > SQUAD_COST_LIMIT;
+      overLimit(w, club.id);
     const go = (p: PackPlayer): boolean => {
       const keeper = read.get(p.id)!.keeper;
       if (size <= KEEP || (keeper && keepers <= KEEP_KEEPERS)) return false;

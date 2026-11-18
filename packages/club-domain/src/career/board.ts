@@ -7,6 +7,7 @@
  */
 import type { Outcome } from '../competition/season';
 import { divisionTable, type CareerWorld } from './advance';
+import { clubsOf, type Horizon } from './clubs';
 
 export type Odds = 'favourite' | 'even' | 'underdog';
 /** One line of why the confidence moved, for the screen: a fact and its points. */
@@ -49,12 +50,22 @@ const GOAL_MISSED = -10;
 
 const clamp = (x: number) => Math.max(0, Math.min(100, x));
 
-/** The goal for the table the club is in: one place below its rank by squad strength. */
+/**
+ * Places below its rank by squad strength the goal sits, by the directors' horizon: the
+ * short-sighted want it now, the far-sighted give time (04 §4.7).
+ */
+const GOAL_SLACK: Record<Horizon, number> = { short: 1, medium: 2, long: 3 };
+/** Extra points a defeat costs with the board, by horizon: patience. */
+const LOSS_WEIGHT: Record<Horizon, number> = { short: -1, medium: 0, long: 1 };
+
+const horizonOf = (w: CareerWorld): Horizon => clubsOf(w)[w.clubId]?.directors.horizon ?? 'medium';
+
+/** The goal for the table the club is in, from its rank by squad strength and the directors. */
 export function goalFor(w: CareerWorld): number {
   const rows = divisionTable(w).rows;
   const mine = w.strength.get(w.clubId) ?? 0;
   const stronger = rows.filter((r) => (w.strength.get(r.clubId) ?? 0) > mine).length;
-  return Math.max(1, Math.min(rows.length, stronger + 2));
+  return Math.max(1, Math.min(rows.length, stronger + GOAL_SLACK[horizonOf(w)]));
 }
 
 /** The club's position in its table today, 1 = top. */
@@ -79,7 +90,8 @@ export function boardAfterMatch(
   const gap =
     (w.strength.get(w.clubId) ?? 0) - (w.strength.get(atHome ? match.away : match.home) ?? 0);
   const odds: Odds = gap > CLEAR_GAP ? 'favourite' : gap < -CLEAR_GAP ? 'underdog' : 'even';
-  const last: BoardReason[] = [{ kind: 'result', result, odds, value: BY_ODDS[odds][result] }];
+  const value = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w)] : 0);
+  const last: BoardReason[] = [{ kind: 'result', result, odds, value }];
   if (w.ledger.cash < 0) last.push({ kind: 'cash', value: IN_THE_RED });
   let confidence = clamp(b.confidence + last.reduce((s, r) => s + r.value, 0));
   const next: Board = { confidence, goal: b.goal, last };

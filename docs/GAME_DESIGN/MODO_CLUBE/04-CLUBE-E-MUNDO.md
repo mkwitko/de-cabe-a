@@ -143,6 +143,27 @@ FATO (comunicados do órgão regulador, 2026): até novembro de 2026 as sançõe
 ### 4.6 Por que o clube não fica rico e imbatível (sem trava artificial)
 Folha sobe com a divisão e com renovação de quem valorizou; manutenção cresce mais devagar que o custo de obra mas nunca para; grandes assediam seus melhores jogadores (multa paga encerra a conversa); meta da diretoria e exigência da torcida sobem com o sucesso; rivais ricos existem desde o início (concentração real da Série A). HIPÓTESE verificada por simulação de 30 temporadas com um "usuário ótimo" automático: se ele vence a Série A mais de 40% das vezes depois do ano 15, a economia está frouxa (PARÂMETRO).
 
+### 4.7 Economia viva: inflação, caixa, dirigentes e estrutura (revisão 5)
+
+**Inflação.** A cada temporada o mundo sorteia um índice de preços entre 3% e 7%, com metade da memória do ano anterior (PARÂMETRO; a faixa cobre o IPCA de 2017 a 2025). TV, patrocínio, ingresso, premiação e obras seguem o índice. O salário de mercado sobe um ponto acima dele, porque no futebol a folha corre na frente dos preços. Contrato assinado não é corrigido: a renovação e a contratação seguintes pagam o preço novo. Os índices ficam no registro da temporada, para o save andar pelos mesmos preços. Código: `career/prices.ts`.
+
+**Caixa de cada clube.** Os rivais têm caixa que atravessa as temporadas. Na virada entram receita, premiação e vendas; saem compras, doze meses de folha de jogadores e de comissão, manutenção da estrutura e a dívida antiga, em cinco temporadas como no livro-caixa da pessoa. Clube no vermelho perde metade do que deve na verba de compras. Dois anos seguidos no vermelho, sem manutenção paga, fazem um setor da estrutura cair um nível. Código: `career/clubs.ts`.
+
+**Dirigentes.** Cada clube tem uma direção com **competência** (0 a 100) e **horizonte** (curto, médio ou longo). O horizonte sai da paciência do clube e do perfil do dono: construtor puxa para o longo, especulador para o curto, apaixonado um pouco para o curto. Há um sorteio por cima. A competência sai da reputação, também com sorteio. Associação elege a cada três temporadas; clube-empresa é vendido em média uma vez a cada doze. Clube rebaixado ou no vermelho tende a eleger quem promete resultado já.
+
+O que cada traço muda:
+
+| Traço | Efeito |
+| --- | --- |
+| Horizonte curto | 15% da sobra vai para estrutura, o resto para o elenco; 40% do dinheiro do elenco pode virar folha |
+| Horizonte médio | 40% para estrutura; 20% do dinheiro do elenco pode virar folha |
+| Horizonte longo | 65% para estrutura, com base e CT primeiro; 10% do dinheiro do elenco pode virar folha |
+| Competência | Reserva guardada, de 0% a 20% da receita. Acerto na escolha da obra: abaixo da competência, a obra é escolhida por capricho. Ágio na mesa de compra, até 20 pontos acima do valor para a pior direção |
+
+**Mercado de fora.** Cada temporada traz 70 jogadores do exterior, nível 58 a 85 (o melhor de dois sorteios, para pesar na faixa alta), que os clubes daqui podem contratar pagando o valor mais 20% (o dinheiro sai da liga) e 25% a mais de salário. Quem foi vendido para fora volta a partir dos 30 anos. Estrangeiro não contratado sai do jogo na virada. Clube com verba de sobra (20% da receita) busca titular três pontos acima do próprio nível.
+
+**Estrutura.** Seis frentes: CT, base, departamento médico, olheiros, diretoria de futebol (pessoas, então manutenção três vezes maior) e estádio. Cada obra sobe um nível e fica pronta na virada seguinte; havendo verba, a direção toca várias frentes ao mesmo tempo, uma obra por frente. Custos dos níveis 2 a 5, a preço de abertura: R$ 0,4 mi, 1,5 mi, 7 mi e 40 mi; a obra que faz sentido custa de 20% a 40% da receita da divisão em que ela faz sentido (§6). Manutenção anual por nível de 1 a 5: R$ 15 mil, 60 mil, 300 mil, 1,5 mi e 5 mi. O estádio ganha 15% de lugares (no mínimo 2 mil) a R$ 5 mil por lugar, e só ajuda quando lota. A direção competente olha o nível que a divisão pede (5 na Série A, 2 na D) e o estádio só quando ele enche. Todos os números são PARÂMETROS.
+
 ## 5. Patrocínio, TV e comercial
 
 ### 5.1 Propriedades vendáveis
