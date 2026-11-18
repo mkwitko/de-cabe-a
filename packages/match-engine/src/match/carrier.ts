@@ -6,7 +6,7 @@
  * best true utility are kept so the log can tell a bad choice from a bad kick.
  */
 import { exp, gaussian, logistic } from '../rules/math';
-import { dribbleChance, norm, weighted } from '../rules/duel';
+import { aerialScore, dribbleChance, norm, weighted } from '../rules/duel';
 import { valueAt } from '../rules/value';
 import { goalAngle, xg as chanceOf } from '../rules/xg';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
@@ -330,13 +330,34 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       const pt = flip(c.team, z);
       const tf = Math.sqrt((z.x - me.x) ** 2 + (z.y - me.y) ** 2) / 17;
       let tA = Infinity;
+      let att: MatchPlayer | null = null;
       for (const m of mates(s, c.team))
-        if (m.index !== c.index && lineOf(m.role) !== 'gk')
-          tA = Math.min(tA, arrivalTime(kin(m), pt, true));
+        if (m.index !== c.index && lineOf(m.role) !== 'gk') {
+          const t = arrivalTime(kin(m), pt, true);
+          if (t < tA) [tA, att] = [t, m];
+        }
       let tD = Infinity;
-      for (const o of opponents(s, c.team)) tD = Math.min(tD, readingArrival(o, pt));
-      const p =
-        accuracy * logistic((tD - Math.max(tA, tf)) / 0.4) * logistic((tf + 0.3 - tA) / 0.3);
+      let tK = Infinity;
+      let def: MatchPlayer | null = null;
+      for (const o of opponents(s, c.team)) {
+        const t = readingArrival(o, pt);
+        if (lineOf(o.role) === 'gk') tK = Math.min(tK, t);
+        else if (t < tD) [tD, def] = [t, o];
+      }
+      // As the engine plays it (aerial, AERIAL_CLOSE): a team-mate first wins it clean; one
+      // arriving within 0.5 s of the first outfield defender jumps with him and wins by
+      // aerial score (noise 0.08 each, about 0.11 on the difference); a keeper first claims it.
+      const first = logistic((Math.min(tD, tK) - Math.max(tA, tf)) / 0.4);
+      const share =
+        att && def
+          ? logistic(
+              (aerialScore(att.attrs, att.input.heightCm) -
+                aerialScore(def.attrs, def.input.heightCm)) /
+                0.07,
+            )
+          : 0;
+      const duel = logistic((tD + 0.5 - tA) / 0.2) * logistic((tK - tD) / 0.4) * share;
+      const p = accuracy * (first + (1 - first) * duel) * logistic((tf + 0.3 - tA) / 0.3);
       const head = chanceOf({
         x: z.x,
         y: z.y,

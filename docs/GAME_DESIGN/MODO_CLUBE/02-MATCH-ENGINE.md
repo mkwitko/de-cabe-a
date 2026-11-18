@@ -354,6 +354,14 @@ Sem física de corpo rígido. Cada jogador ocupa um disco de 0,3 m de raio; disc
 
 ### 6.3 Disputa aérea
 Cruzamento (2026-11-16, ordem aprovada item 5): o cruzador avalia primeiro pau, marca do pênalti e segundo pau com a mesma física de chegada do passe (um companheiro precisa chegar com a bola e antes do primeiro defensor ou do goleiro; precisão por `cruzamento`) e o valor de um cabeceio dali. O cruzamento é esperado pelos dois lados: atacantes e defensores atacam a bola sem atraso de reação (a leitura curta do passe pelo defensor continua). Erro de queda do cruzamento 1,8 vez o da bola longa (PARÂMETRO). Medido (40 partidas): 13,8 cruzamentos e 5,7 escanteios por time, 18% dos cruzamentos viram cabeceio, cabeceios 20% dos chutes (referência 15% a 18%).
+
+**Cruzamento avaliado como o motor joga (DECISÃO, 2026-11-18).** A estimativa do cruzador contava como perdido todo cruzamento em que um defensor chegava primeiro. No motor, o companheiro que chega até 0,5 s depois dele salta junto e disputa pela força aérea. Medido em 40 partidas com a estimativa antiga: cruzamentos estimados em 0,05 (três quartos dos cruzamentos) davam a primeira bola ao ataque em 26% das vezes, e 47% viravam disputa; os estimados entre 0,43 e 0,57 davam só 32% a 37%. Regra nova:
+
+- p = precisão × (chegar primeiro + (1 − chegar primeiro) × disputa) × companheiro alcança a bola.
+- Chegar primeiro: companheiro antes do primeiro defensor de linha e do goleiro.
+- Disputa: o companheiro chega até 0,5 s depois do primeiro defensor de linha (`AERIAL_CLOSE`), o goleiro não chega antes desse defensor, e o companheiro vence pela diferença de força aérea (`aerialScore`, escala 0,07, o ruído do duelo).
+
+Em 2000 partidas, mesmas sementes: gols 3,23 para 3,26 (dentro do ruído), chutes 12,5 nos dois, amarelos 3,17 para 3,09, escanteios 6,3 para 6,6. Em 100 partidas: cruzamentos de jogo corrido de 10,3 para 11,8 por time, cabeceios de 14,1% para 14,8% dos chutes, disputas aéreas com os dois times perto estáveis (10,3 e 10,1 por jogo, contra cerca de 25 na Série A). As disputas que faltam não vêm do cruzamento: vêm da bola longa, cujo alvo está em média a 10 m do adversário mais próximo no momento do passe. Testes em `match.test.ts` ("a team-mate level with his marker at the spot is a duel, not a lost ball" e "the duel is worth more for a team-mate who is better in the air").
 Quem disputa: os jogadores que alcançam o ponto de queda a tempo. Vence por logística de `impulsão`, altura, `cabeceio`, `força`, `posicionamento` (quem chegou antes e parado leva vantagem), `agressividade`. O vencedor direciona com erro; perder a disputa não tira o jogador do lance (segunda bola). Goleiro dentro da área disputa com as mãos, com alcance maior.
 
 ### 6.4 Goleiro
