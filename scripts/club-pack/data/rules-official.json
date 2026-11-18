@@ -1,0 +1,398 @@
+{
+ "generated": "2026-11-18",
+ "note": "Official CBF PDFs only. Null = not found in the documents read. The 2026 Manual de Competicoes replaced the RGC. The Serie A REC PDF was read from a mirror (netvasco.com.br attachment of the CBF release of 2025-12-15, file 'REC - Brasileiro Serie A 2026 v15-12-2025 final.pdf').",
+ "competitions": [
+  {
+   "competitionId": "br-serie-a",
+   "season": "2026",
+   "teams": {
+    "value": 20,
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "REC Serie A art. 3"
+   },
+   "format": {
+    "value": "double round-robin, 19+19 games",
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 14"
+   },
+   "relegation": {
+    "value": {
+     "slots": 4,
+     "to": "br-serie-b"
+    },
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 8"
+   },
+   "promotion": null,
+   "continental": {
+    "value": {
+     "libertadores": "1st-4th group stage, 5th preliminary; +2 via Copa do Brasil",
+     "sudamericana": "6 best placed non-qualified"
+    },
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "arts. 6-7"
+   },
+   "squadRegistration": {
+    "value": {
+     "maxRegistered": 50,
+     "deadline": "2026-10-07",
+     "maxSubstitutions": 8,
+     "substitutionDeadline": "2026-10-30",
+     "minRegistered": 25
+    },
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 9 par.1-2"
+   },
+   "midSeasonTransferRestriction": {
+    "value": {
+     "maxGamesForOriginClub": 12,
+     "mayPlayForOnlyOneMoreClub": true,
+     "maxIncomingFromOtherSerieAClubs": 5,
+     "maxFromSameClub": 3
+    },
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 12 and par.1-3"
+   },
+   "foreignPlayers": {
+    "value": "max 9 foreign players listed per match sheet (refugees count as nationals); no limit on registered foreigners",
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/Manual_de_Competicoes_CBF_2026_f5b02a4e04.pdf",
+    "ref": "Manual de Competicoes 2026, PDF p.84 (printed ~p.79); paragraph on 'relacionar nas sumulas ate 9 atletas estrangeiros'"
+   },
+   "tieBreaks": {
+    "value": [
+     "wins",
+     "goalDifference",
+     "goalsFor",
+     "headToHead",
+     "fewerRedCards",
+     "fewerYellowCards",
+     "drawingOfLots"
+    ],
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 15 (head-to-head ignored if 3+ clubs tied, par.2)"
+   },
+   "cardSuspensions": {
+    "value": {
+     "yellowAccumulationSuspension": "3 yellow cards (consecutive or not) = suspended from next match of same competition",
+     "redCard": "automatic suspension for next match",
+     "yellowReset": "Série C: yellows reset at end of 1st phase (REC C art. 40); Série B: reset before playoffs"
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/Manual_de_Competicoes_CBF_2026_f5b02a4e04.pdf",
+    "ref": "Manual de Competicoes 2026, item 2.5.1 Das Suspensoes Automaticas, PDF p.86-87 (printed p.81-82)"
+   },
+   "minTicketPriceBRL": {
+    "value": {
+     "full": 40,
+     "half": 20
+    },
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 18"
+   },
+   "minStadiumCapacity": {
+    "value": 12000,
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 21"
+   },
+   "logistics": {
+    "value": "each club pays own travel, lodging and food",
+    "sourceUrl": "https://www.netvasco.com.br/news/noticias16/arquivos/20251215-231828-1-.pdf",
+    "ref": "art. 19"
+   },
+   "prizeMoney": null,
+   "loanRules": null,
+   "transferWindows": null
+  },
+  {
+   "competitionId": "br-serie-b",
+   "season": "2026",
+   "teams": {
+    "value": 20,
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "REC Serie B art. 3"
+   },
+   "format": {
+    "value": "double round-robin 19+19, then playoffs 3rd x 6th and 4th x 5th (two legs)",
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "arts. 11, 13"
+   },
+   "promotion": {
+    "value": {
+     "direct": 2,
+     "viaPlayoffs": 2,
+     "to": "br-serie-a"
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "art. 5"
+   },
+   "relegation": {
+    "value": {
+     "slots": 4,
+     "to": "br-serie-c"
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "art. 5"
+   },
+   "squadRegistration": {
+    "value": {
+     "maxRegistered": 50,
+     "deadline": "2026-09-19",
+     "maxSubstitutions": 8,
+     "substitutionDeadline": "2026-10-17",
+     "minRegistered": 25
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "art. 6 par.1-2"
+   },
+   "midSeasonTransferRestriction": {
+    "value": {
+     "maxGamesForOriginClub": 12,
+     "maxIncomingFromOtherSerieBClubs": 5,
+     "maxFromSameClub": 3
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "art. 9 and par.1-3"
+   },
+   "foreignPlayers": {
+    "value": "max 9 foreign players listed per match sheet (refugees count as nationals); no limit on registered foreigners",
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/Manual_de_Competicoes_CBF_2026_f5b02a4e04.pdf",
+    "ref": "Manual de Competicoes 2026, PDF p.84 (printed ~p.79); paragraph on 'relacionar nas sumulas ate 9 atletas estrangeiros'"
+   },
+   "tieBreaks": {
+    "value": [
+     "wins",
+     "goalDifference",
+     "goalsFor",
+     "headToHead",
+     "fewerRedCards",
+     "fewerYellowCards",
+     "drawingOfLots"
+    ],
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Brasileiro_Serie_B_2026_85d55b9f72.pdf",
+    "ref": "art. 12 (head-to-head = 180-minute aggregate, ignored if 3+ tied)"
+   },
+   "cardSuspensions": {
+    "value": {
+     "yellowAccumulationSuspension": "3 yellow cards (consecutive or not) = suspended from next match of same competition",
+     "redCard": "automatic suspension for next match",
+     "yellowReset": "Série C: yellows reset at end of 1st phase (REC C art. 40); Série B: reset before playoffs"
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/Manual_de_Competicoes_CBF_2026_f5b02a4e04.pdf",
+    "ref": "Manual de Competicoes 2026, item 2.5.1 Das Suspensoes Automaticas, PDF p.86-87 (printed p.81-82)"
+   },
+   "prizeMoney": null,
+   "loanRules": null,
+   "transferWindows": null
+  },
+  {
+   "competitionId": "br-serie-c",
+   "season": "2026",
+   "teams": {
+    "value": 20,
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 2"
+   },
+   "format": {
+    "value": "1st phase single round-robin; top 8 to 2nd phase (2 groups of 4, home and away); group winners play 2-leg final",
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "arts. 12-24"
+   },
+   "promotion": {
+    "value": {
+     "slots": 4,
+     "to": "br-serie-b",
+     "rule": "top 2 of each 2nd-phase group"
+    },
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 5"
+   },
+   "relegation": {
+    "value": {
+     "slots": 2,
+     "to": "br-serie-d",
+     "rule": "last 2 of 1st phase"
+    },
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 42"
+   },
+   "squadRegistration": {
+    "value": {
+     "maxRegistered": 50,
+     "deadline": "2026-09-04",
+     "maxSubstitutions": 8,
+     "substitutionDeadline": "2026-09-25",
+     "minRegistered": 25
+    },
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 7 par.1-2"
+   },
+   "tieBreaks1stPhase": {
+    "value": [
+     "wins",
+     "goalDifference",
+     "goalsFor",
+     "fewerRedCards",
+     "fewerYellowCards",
+     "drawingOfLots"
+    ],
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 16"
+   },
+   "tieBreaks2ndPhase": {
+    "value": [
+     "wins",
+     "goalDifference",
+     "goalsFor",
+     "headToHead",
+     "fewerRedCards",
+     "fewerYellowCards",
+     "drawingOfLots"
+    ],
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 20"
+   },
+   "yellowReset": {
+    "value": "yellows reset after 1st phase; 3rd-yellow/red suspension stays",
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 40"
+   },
+   "clubBenefits": {
+    "value": "CBF pays visiting delegation (32 people) land transport 200-500 km, air >500 km, lodging and food, referees/VAR/antidoping; participation cota per CBF oficio",
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 30"
+   },
+   "participationCotaBRL": null,
+   "minTicketPriceBRL": {
+    "value": {
+     "full": 10,
+     "half": 5
+    },
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 29"
+   },
+   "minStadiumCapacity": {
+    "value": 4000,
+    "sourceUrl": "https://esportegoiano.com.br/wp-content/uploads/2026/02/Veja-o-regulamento-geral-da-Serie-C-2026.pdf",
+    "ref": "art. 31"
+   },
+   "note": "Document is the CBF Serie C 2026 regulamento as republished by esportegoiano.com.br (CBF original URL not located). 2026 cota amount not found in official source.",
+   "prizeMoney": null
+  },
+  {
+   "competitionId": "br-serie-d",
+   "season": "2026",
+   "teams": {
+    "value": 96,
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/undefined/athletico-paranaense-x-atletico-mineiro/com-aumento-nas-cotas-de-participacao-cbf-realiza-conselho-tecnico-da-nova-serie-d",
+    "ref": "CBF news, Conselho Tecnico"
+   },
+   "format": {
+    "value": "16 groups of 6, top 4 advance; knockouts two-legged; 4 quarter-final losers play playoffs for Serie C 2027; 6 clubs promoted (4 semifinalists + 2 playoff winners)",
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/undefined/athletico-paranaense-x-atletico-mineiro/com-aumento-nas-cotas-de-participacao-cbf-realiza-conselho-tecnico-da-nova-serie-d",
+    "ref": "CBF news page"
+   },
+   "squadRegistration": {
+    "value": {
+     "maxRegistered": 50,
+     "deadline": "2026-08-07",
+     "maxSubstitutions": 8,
+     "substitutionDeadline": "2026-09-25"
+    },
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/undefined/athletico-paranaense-x-atletico-mineiro/com-aumento-nas-cotas-de-participacao-cbf-realiza-conselho-tecnico-da-nova-serie-d",
+    "ref": "CBF news page (REC PDF not read)"
+   },
+   "participationCotasTotalBRL": {
+    "value": 65500000,
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/undefined/athletico-paranaense-x-atletico-mineiro/com-aumento-nas-cotas-de-participacao-cbf-realiza-conselho-tecnico-da-nova-serie-d",
+    "ref": "CBF news page: raised 64% from R$40m"
+   },
+   "prizeMoneyByPhaseBRL": {
+    "value": {
+     "1st phase (96 clubs)": 500000,
+     "2nd phase (64)": 100000,
+     "3rd phase (32)": 150000,
+     "4th phase round of 16 (16)": 180000,
+     "5th phase quarterfinals (8)": 180000,
+     "playoffs (4)": 180000,
+     "6th phase semifinals (4)": 180000,
+     "7th phase final (2)": 300000
+    },
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/undefined/athletico-paranaense-x-atletico-mineiro/com-aumento-nas-cotas-de-participacao-cbf-realiza-conselho-tecnico-da-nova-serie-d",
+    "ref": "CBF news page"
+   },
+   "logistics": {
+    "value": "CBF covers transport, lodging, food for 32 people per visiting club, referees, antidoping",
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/undefined/athletico-paranaense-x-atletico-mineiro/com-aumento-nas-cotas-de-participacao-cbf-realiza-conselho-tecnico-da-nova-serie-d",
+    "ref": "CBF news page"
+   },
+   "note": "Source is the CBF news article, not the REC PDF; no article numbers."
+  },
+  {
+   "competitionId": "br-copa-do-brasil",
+   "season": "2026",
+   "teams": {
+    "value": 126,
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Copa_do_Brasil_2026_66989a5426.pdf",
+    "ref": "REC Copa art. 2"
+   },
+   "tieBreaks": {
+    "value": {
+     "phases 1-4 and 9 (final)": "penalties if level",
+     "phases 5-8 (two legs)": [
+      "points",
+      "goal difference",
+      "penalties"
+     ]
+    },
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Copa_do_Brasil_2026_66989a5426.pdf",
+    "ref": "art. 22"
+   },
+   "squadRegistration": {
+    "value": "unlimited registered players",
+    "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/REC_Copa_do_Brasil_2026_66989a5426.pdf",
+    "ref": "art. 5 par.3"
+   },
+   "prizeMoneyBRL": {
+    "value": {
+     "phase1 Group III": 400000,
+     "phase2 Group II/III": [
+      1380000,
+      830000
+     ],
+     "phase3 Group II/III": [
+      1530000,
+      950000
+     ],
+     "phase4 Group II/III": [
+      1680000,
+      1070000
+     ],
+     "phase5": 2000000,
+     "round of 16": 3000000,
+     "quarterfinals": 4000000,
+     "semifinals": 9000000,
+     "runner-up": 34000000,
+     "champion": 78000000,
+     "totalApprox": 500000000
+    },
+    "sourceUrl": "https://www.cbf.com.br/futebol-brasileiro/noticias/copa-do-brasil/feminino/cbf-divulga-cotas-da-copa-do-brasil-2026-a-mais-democratica-da-historia",
+    "ref": "CBF news page 'cotas da Copa do Brasil 2026' (Group I Serie A values for phases 1-4 not stated)"
+   }
+  }
+ ],
+ "general": {
+  "transferWindows": null,
+  "loanRules": null,
+  "manualDeCompeticoes": {
+   "value": "2026 Manual de Competicoes replaces the RGC",
+   "sourceUrl": "https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/Manual_de_Competicoes_CBF_2026_f5b02a4e04.pdf",
+   "ref": "CBF release 2026-01-27"
+  },
+  "gaps": [
+   "Transfer windows 2026 dates not found in any CBF document read (RGR/FIFA circular not located)",
+   "Loan rules (RGR) not located; Manual only mentions BID reactivation on return from loan (PDF p.83)",
+   "Serie D REC PDF and Copa do Brasil other articles (legs/extra time) beyond art. 22 not read",
+   "Serie A/B prize money by position not found in REC (REC art. 19 says clubs bear own logistics); only Copa/Serie D published",
+   "SSF/RSSF financial sustainability regulation (ANRESF) mentioned in REC Serie A art. 1 but not extracted"
+  ]
+ }
+}

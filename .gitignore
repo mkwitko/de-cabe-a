@@ -27,3 +27,5 @@ scripts/research/cutouts/skipped.json
 apps/api/club-packs/
 # Wikidata/QLever and openfootball fetch caches of the club-pack scripts
 scripts/club-pack/.cache/
+# Modo Clube staging output
+scripts/club-pack/out/

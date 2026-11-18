@@ -1,0 +1,2040 @@
+{
+ "currencyNotes": "BRL for Brazil (fiscalYear 2025 = calendar 2025), EUR for Deloitte Money League (fiscalYear 2025 = season 2024/25). Sources disagree for some Brazilian clubs (e.g. Palmeiras 2025 revenue 1.605bn Convocados / 1.696bn Sports Value / ~1.78bn other); Sports Value used for consistency. totalDebt is Anresf end-2025 aggregate (includes tax/labour debt), not directly comparable to EY net debt. No audited statements read directly. 'division' is an added field; Série A/B = 2026 membership.",
+ "clubs": [
+  {
+   "club": "Flamengo",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 2089000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": 336000000,
+   "totalDebt": 1260000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Palmeiras",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 1696000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": 292400000,
+   "totalDebt": 1580000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Botafogo",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 1388000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -290800000,
+   "totalDebt": 2010000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "São Paulo",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 1085000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": 56000000,
+   "totalDebt": 2450000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Fluminense",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 1022000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -51500000,
+   "totalDebt": 1040000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Corinthians",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 971100000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -143400000,
+   "totalDebt": 2760000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Grêmio",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 736800000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 936000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Santos",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 678500000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 1230000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Cruzeiro",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 677200000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -114900000,
+   "totalDebt": 1360000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Atlético Mineiro",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 669800000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -882100000,
+   "totalDebt": 2660000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Internacional",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 655500000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 1270000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Red Bull Bragantino",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 637000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 772000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Vasco da Gama",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 570200000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": 81000000,
+   "totalDebt": 1100000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Bahia",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 562200000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -154600000,
+   "totalDebt": 407000000,
+   "netDebt": 168000000,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    },
+    {
+     "url": "https://www.seudinheiro.com/2026/empresas/quem-sao-os-clubes-mais-quebrados-e-os-com-maior-receita-do-brasil-em-2025-rnda/",
+     "title": "Seu Dinheiro: EY, dívida líquida por clube 2025",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Athletico Paranaense",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 435900000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 405000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Vitória",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 200200000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -25000000,
+   "totalDebt": 408000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://diariodonordeste.verdesmares.com.br/opiniao/colunistas/alexandre-mota/principais-times-do-nordeste-tiveram-preju%C3%ADzo-em-2025-veja-ranking-1.3762102",
+     "title": "Diário do Nordeste: resultado 2025 clubes do Nordeste",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Mirassol",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": 180000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": 58100000,
+   "totalDebt": 11000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Coritiba",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -113900000,
+   "totalDebt": 185000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Chapecoense",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 174000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Remo",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-a",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 37000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Fortaleza",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": 303500000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 291000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Ceará",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": 254900000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -85800000,
+   "totalDebt": 217000000,
+   "netDebt": 161000000,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://diariodonordeste.verdesmares.com.br/opiniao/colunistas/alexandre-mota/principais-times-do-nordeste-tiveram-preju%C3%ADzo-em-2025-veja-ranking-1.3762102",
+     "title": "Diário do Nordeste: resultado 2025 clubes do Nordeste",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    },
+    {
+     "url": "https://www.seudinheiro.com/2026/empresas/quem-sao-os-clubes-mais-quebrados-e-os-com-maior-receita-do-brasil-em-2025-rnda/",
+     "title": "Seu Dinheiro: EY, dívida líquida por clube 2025",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Sport Recife",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": 182800000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -112400000,
+   "totalDebt": 422000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://timesbrasil.com.br/esportes/veja-as-receitas-dos-clubes-com-maior-faturamento-do-futebol-brasileiro-em-2025/",
+     "title": "Times Brasil/CNBC: receitas 2025 (Sports Value, Finanças Top 20 clubes brasileiros 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Juventude",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": 137000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": 25400000,
+   "totalDebt": 29000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.mktesportivo.com/2026/05/flamengo-lidera-ranking-de-receitas-da-serie-a-em-2025-diferenca-para-rivais-ultrapassa-r-300-milhoes/",
+     "title": "MKT Esportivo: Relatório Convocados 2026 (receita 2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/386182/vasco-foi-o-9-clube-em-receitas-e-o-3-em-superavit-em-2025",
+     "title": "Resultado 2025 dos clubes (balanços, levantamento ge via NetVasco)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Náutico",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": -18500000,
+   "totalDebt": 292000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://diariodonordeste.verdesmares.com.br/opiniao/colunistas/alexandre-mota/principais-times-do-nordeste-tiveram-preju%C3%ADzo-em-2025-veja-ranking-1.3762102",
+     "title": "Diário do Nordeste: resultado 2025 clubes do Nordeste",
+     "accessed": "2026-11-17",
+     "supports": [
+      "netResult"
+     ]
+    },
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "América-MG",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 283000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Avaí",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 268000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Ponte Preta",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 240000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Vila Nova",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 175000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Novorizontino",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 167000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Goiás",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 114000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Botafogo-SP",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 89000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "São Bernardo",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 77000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Athletic-MG",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 72000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Londrina",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 60000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Atlético-GO",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 42000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Cuiabá",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 40000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Criciúma",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 37000000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Operário-PR",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 4200000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "CRB",
+   "country": "BR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "division": "br-serie-b",
+   "revenueTotal": null,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": 900000,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://netvasco.com.br/n/394946/anresf-publica-ranking-das-dividas-dos-40-clubes-das-series-a-e-b-vasco-e-o-10-com-r-11-bilhao",
+     "title": "Anresf: ranking de dívidas dos 40 clubes das Séries A e B (balanços 31/12/2025)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "totalDebt"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Real Madrid",
+   "country": "ES",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 1161000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Barcelona",
+   "country": "ES",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 974800000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Bayern Munich",
+   "country": "DE",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 860600000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Paris Saint-Germain",
+   "country": "FR",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 837000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Liverpool",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 836100000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Manchester City",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 829300000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Arsenal",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 821700000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Manchester United",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 793100000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Tottenham Hotspur",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 672600000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Chelsea",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 584100000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Inter",
+   "country": "IT",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 537500000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Borussia Dortmund",
+   "country": "DE",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 531300000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Atlético Madrid",
+   "country": "ES",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 454500000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Aston Villa",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 450200000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "AC Milan",
+   "country": "IT",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 410400000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Juventus",
+   "country": "IT",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 401700000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Newcastle United",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 398400000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "VfB Stuttgart",
+   "country": "DE",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 296300000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "Benfica",
+   "country": "PT",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 283400000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "club": "West Ham United",
+   "country": "GB",
+   "wikidataId": null,
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "division": "europe-deloitte-top20",
+   "revenueTotal": 276000000,
+   "broadcasting": null,
+   "matchday": null,
+   "commercial": null,
+   "playerSales": null,
+   "wageBill": null,
+   "netResult": null,
+   "totalDebt": null,
+   "netDebt": null,
+   "sources": [
+    {
+     "url": "https://www.goal.com/en/news/deloitte-football-money-league-2026/bltedf9c4b411ec7212",
+     "title": "Goal: Deloitte Football Money League 2026 table (season 2024/25)",
+     "accessed": "2026-11-17",
+     "supports": [
+      "revenueTotal"
+     ]
+    }
+   ],
+   "confidence": "medium"
+  }
+ ],
+ "divisionBands": [
+  {
+   "division": "br-serie-a",
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "revenueMin": 180000000,
+   "revenueMedian": 677200000,
+   "revenueMax": 2089000000,
+   "wageBillMedian": null,
+   "clubsCounted": 17,
+   "derivedFrom": "clubs above (Sports Value 2025 revenue; Coritiba, Chapecoense, Remo missing)"
+  },
+  {
+   "division": "br-serie-b",
+   "fiscalYear": 2025,
+   "currency": "BRL",
+   "revenueMin": 137000000,
+   "revenueMedian": 218850000,
+   "revenueMax": 303500000,
+   "wageBillMedian": null,
+   "clubsCounted": 4,
+   "derivedFrom": "clubs above (only 4 clubs relegated from Série A 2025; biased upward vs rest of Série B)"
+  },
+  {
+   "division": "europe-deloitte-top20",
+   "fiscalYear": 2025,
+   "currency": "EUR",
+   "revenueMin": 276000000,
+   "revenueMedian": 560800000,
+   "revenueMax": 1161000000,
+   "wageBillMedian": null,
+   "clubsCounted": 20,
+   "derivedFrom": "clubs above (Deloitte Money League 2026, season 2024/25)"
+  }
+ ]
+}
