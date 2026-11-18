@@ -378,6 +378,23 @@ describe('MC-164 keeper', () => {
     expect(rate(90)).toBeLessThan(rate(35));
   });
 
+  it('a defender behind the shooter cannot block the shot (the ball leaves him behind)', () => {
+    const s = bare();
+    const c = place(s, 9, 94, 34);
+    place(s, 11, 103, 34);
+    const d = place(s, 13, 93.4, 34.2);
+    d.vel = { x: 6, y: 0 };
+    const f = shoot(
+      s,
+      c,
+      { kind: 'shot', target: { x: 105, y: 34 }, receiver: null, p: 0.3, est: 0.3, u: 0, ue: 0 },
+      [],
+      { chance: 0.3 },
+    );
+    expect(f.skip).toContain(d.index);
+    expect(f.origin).toEqual({ x: 94, y: 34 });
+  });
+
   it('a shot past the keeper is not reachable by him', () => {
     const s = bare();
     const c = place(s, 9, 94, 34);

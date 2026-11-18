@@ -301,7 +301,15 @@ export function shoot(
     from: c.index,
     to: null,
     kind: 'shot',
-    skip: [c.index],
+    // The ball leaves those behind him (as shotClear reads it: 0.3 m behind the kick or more)
+    // until it is clear of the kick point, as a pass leaves those beside it.
+    skip: [
+      c.index,
+      ...opponents(s, team)
+        .filter((o) => flip(team, o.pos).x - me.x <= -0.3)
+        .map((o) => o.index),
+    ],
+    origin: from,
     offside,
     beaten: goal || !onTarget,
     shot: { xg: chance, event: ev },
