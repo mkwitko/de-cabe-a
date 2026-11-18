@@ -66,6 +66,15 @@ const PURSE: Record<Horizon, number> = { short: 4, medium: 0, long: -3 };
 /** Share of the directors' squad money a short-sighted board lets go to wages. */
 const KITTY_WAGES: Record<Horizon, number> = { short: 40, medium: 20, long: 10 };
 
+/**
+ * What the owners put into signings over the income's share, in percent (pack governance): a
+ * SAF's investor brings capital, a multi-club group more; an association spends what it earns.
+ * PARÂMETRO.
+ */
+const OWNER_MONEY = { association: 100, ownedSaf: 125, groupSaf: 135 } as const;
+const modelOf = (w: CareerWorld, clubId: string) =>
+  w.pack.governance.find((g) => g.clubId === clubId)?.model ?? 'association';
+
 function readBudget(w: CareerWorld, clubId: string): Budget {
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
   const income = incomeOf(w, clubId);
@@ -83,7 +92,10 @@ function readBudget(w: CareerWorld, clubId: string): Budget {
     // directors put in from the cash.
     transfer: Math.max(
       0,
-      thousands((income * (6 + purse + risk / 10)) / 100) + kitty - toWages - owed,
+      thousands((income * (6 + purse + risk / 10) * OWNER_MONEY[modelOf(w, clubId)]) / 10_000) +
+        kitty -
+        toWages -
+        owed,
     ),
     wageCap: Math.round(((income * (55 + risk / 5)) / 100 + toWages) / 12),
   };
