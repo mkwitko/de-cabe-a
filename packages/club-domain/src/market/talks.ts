@@ -5,6 +5,7 @@
  * accepts, counters or refuses; a player put on the list draws bids sooner. A side that walks
  * away does not come back that season. Money goes through the ledger only when a deal closes.
  */
+import { ABROAD, FOREIGN_TIERS, sellAbroad, wantsToGo } from './abroad';
 import type { CareerWorld } from '../career/advance';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
@@ -66,7 +67,14 @@ export interface Bid {
 }
 
 export type TalkNo =
-  'window' | 'squadFull' | 'theirSquad' | 'cold' | 'justMoved' | 'embargo' | PlayerNo;
+  | 'window'
+  | 'squadFull'
+  | 'theirSquad'
+  | 'cold'
+  | 'justMoved'
+  | 'abroad'
+  | 'embargo'
+  | PlayerNo;
 
 /** Monthly wage the person's club can still add (books.ts): the board's ceiling. */
 export const myWageRoom = (w: CareerWorld) => wageRoom(w, w.clubId);
@@ -89,6 +97,7 @@ const cool = (w: CareerWorld, playerId: string) => {
 /** Why the person cannot open a talk for this player now; null when they can. */
 export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
   const season = w.season.season;
+  if (p.clubId === ABROAD) return 'abroad';
   if (embargoed(w, w.clubId)) return 'embargo';
   if (squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD) return 'squadFull';
   if (w.cold?.[p.id] === season) return 'cold';
@@ -332,6 +341,33 @@ export function answerBid(
     fee = answer.fee;
   }
   if (!canLose(w, p)) return leave('squadThin');
+  const foreign = FOREIGN_TIERS.find((t) => t.id === bid.from);
+  if (foreign) {
+    // A foreign club: no budget or wage ceiling of this league; only the player's will.
+    if (!wantsToGo(p)) return leave('loyal');
+    settle(w, p, bid.from, fee, 'sell');
+    sellAbroad(w, p, fee);
+    w.listed = (w.listed ?? []).filter((x) => x !== p.id);
+    w.bids = (w.bids ?? []).filter((b) => b.player !== p.id);
+    w.deals = [
+      ...(w.deals ?? []),
+      {
+        day: w.day,
+        player: p.id,
+        name: p.knownAs ?? p.name,
+        from: w.clubId,
+        to: bid.from,
+        fee,
+        wage: 0,
+        years: 4,
+        role: 'starter' as const,
+        for: 'starter' as const,
+        seen: readingsOf(w.pack).get(p.id)!.level,
+        why: bid.why,
+      },
+    ].slice(-80);
+    return { kind: 'sold', fee };
+  }
   if (fee > available(w, bid.from)) return leave('budget');
   const season = w.season.season;
   const wants = playerStance(w.pack, p, clubOf(w, w.clubId), clubOf(w, bid.from), season);

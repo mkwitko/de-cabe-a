@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import { createServer, type Plugin, type ViteDevServer } from 'vite';
 
@@ -71,8 +72,13 @@ const worldPacks = (): Plugin => {
     try {
       const domain = (await own.ssrLoadModule('@decabeca/club-domain')) as {
         generateDevPack: () => { id: string; checksum: string };
+        slimPack: (p: { id: string; checksum: string }) => { id: string; checksum: string };
       };
-      const pack = domain.generateDevPack();
+      // CLUB_PACK_PATH (as in the API): the real pack, slimmed for the browser; else the dev pack.
+      const path = process.env.CLUB_PACK_PATH;
+      const pack = path
+        ? domain.slimPack(JSON.parse(gunzipSync(readFileSync(path)).toString()))
+        : domain.generateDevPack();
       return { name: `packs/${pack.id}.${pack.checksum}.json`, json: JSON.stringify(pack) };
     } finally {
       if (!server) await own.close();

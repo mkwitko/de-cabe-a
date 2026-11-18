@@ -6,7 +6,15 @@
 import { between, fork, next, pick, rngFrom, type Rng } from '@decabeca/match-engine';
 import { seasonIncome } from '../career/finance';
 import { sha256Hex } from '../lib/sha256';
-import { DEPARTMENTS, PackSchema, type Pack, type PackClub } from '../pack/schema';
+import {
+  DEPARTMENTS,
+  PackSchema,
+  type Pack,
+  type PackClub,
+  type PackGovernance,
+  type PackStaff,
+  type PackStaffAssignment,
+} from '../pack/schema';
 import { devDivisions, miniCup } from './competitions';
 import { generateSquad } from './player';
 import { CITIES, CLUB_PREFIXES, FIRST_NAMES, LAST_NAMES, NICKNAMES, devCities } from './names';
@@ -69,10 +77,58 @@ function payrollIn(c: PackClub, strength: number, tier: number): number {
   );
 }
 
-function club(r: Rng, i: number, strength: number, city: string, width: number): PackClub {
+/**
+ * Facilities, departments, five-axis profile and fan base of a club of `strength`, drawn from `r`
+ * (the real-data import uses it for what the source does not carry, with `origin` 'inferred').
+ * Draw order is part of the contract: `club` calls it right after the debt.
+ */
+export function estimatedBody(
+  r: Rng,
+  strength: number,
+  origin: 'generated' | 'inferred' = 'generated',
+  confidence: 'high' | 'low' = 'high',
+) {
   const money = economy(strength);
   const lvl = Math.max(1, Math.min(5, Math.round((strength - 35) / 10)));
   const v = () => Math.round(between(r, 20, 80));
+  return {
+    facilities: { training: lvl, youth: lvl, medical: lvl },
+    departments: Object.fromEntries(
+      DEPARTMENTS.map((d) => [d, Math.max(1, Math.min(5, lvl + pick(r, 3) - 1))]),
+    ) as PackClub['departments'],
+    profile: {
+      playingStyle: {
+        possession: v(),
+        verticality: v(),
+        pressing: v(),
+        block: v(),
+        width: v(),
+        tempo: v(),
+        risk: v(),
+      },
+      market: { readyVsYoung: v(), regionalVsNational: v() },
+      youthPolicy: v(),
+      financialRisk: v(),
+      patience: v(),
+      origin,
+      confidence,
+    },
+    fans: {
+      size: Math.round(money.fans * between(r, 0.7, 1.3)),
+      loyalty: v(),
+      demand: v(),
+      patience: v(),
+      priceSensitivity: v(),
+      localIdentity: v(),
+      youthPride: v(),
+      ambition: v(),
+    },
+  };
+}
+
+function club(r: Rng, i: number, strength: number, city: string, width: number): PackClub {
+  const money = economy(strength);
+  const lvl = Math.max(1, Math.min(5, Math.round((strength - 35) / 10)));
   return {
     id: `club${pad(i, width)}`,
     name: `${CLUB_PREFIXES[pick(r, CLUB_PREFIXES.length)]} ${city}`,
@@ -97,37 +153,7 @@ function club(r: Rng, i: number, strength: number, city: string, width: number):
     // About three months of payroll in the bank, and a debt of up to a year of it.
     initialCash: money.payroll * 3,
     initialDebt: Math.round(between(r, 0, money.payroll * 12)),
-    facilities: { training: lvl, youth: lvl, medical: lvl },
-    departments: Object.fromEntries(
-      DEPARTMENTS.map((d) => [d, Math.max(1, Math.min(5, lvl + pick(r, 3) - 1))]),
-    ) as PackClub['departments'],
-    profile: {
-      playingStyle: {
-        possession: v(),
-        verticality: v(),
-        pressing: v(),
-        block: v(),
-        width: v(),
-        tempo: v(),
-        risk: v(),
-      },
-      market: { readyVsYoung: v(), regionalVsNational: v() },
-      youthPolicy: v(),
-      financialRisk: v(),
-      patience: v(),
-      origin: 'generated',
-      confidence: 'high',
-    },
-    fans: {
-      size: Math.round(money.fans * between(r, 0.7, 1.3)),
-      loyalty: v(),
-      demand: v(),
-      patience: v(),
-      priceSensitivity: v(),
-      localIdentity: v(),
-      youthPride: v(),
-      ambition: v(),
-    },
+    ...estimatedBody(r, strength),
     sponsors: [
       {
         name: `${LAST_NAMES[pick(r, LAST_NAMES.length)]} Alimentos`,
@@ -137,6 +163,71 @@ function club(r: Rng, i: number, strength: number, city: string, width: number):
     ],
     rivals: [],
   };
+}
+
+/**
+ * Head coach, his assignment and the board of a club, drawn from `r` right after the club itself
+ * (the real-data import reuses it: the source carries no staff jobs). `modelOverride` replaces the
+ * drawn governance model (the draw still happens, so the stream does not move).
+ */
+export function staffing(
+  r: Rng,
+  c: PackClub,
+  strength: number,
+  goal: number,
+  i: number,
+  modelOverride?: PackGovernance['model'],
+  /** The squad's monthly payroll, when the club's income holds it under what strength asks. */
+  payroll = economy(strength).payroll,
+) {
+  const coachId = `${c.id}-s01`;
+  const coach: PackStaff = {
+    id: coachId,
+    name: `${FIRST_NAMES[pick(r, FIRST_NAMES.length)]} ${LAST_NAMES[pick(r, LAST_NAMES.length)]}`,
+    birthDate: `${SEASON - 40 - pick(r, 20)}-06-15`,
+    nationality: 'BR',
+    roles: ['headCoach'],
+    specialties: [],
+    attributes: {
+      tactics: 6 + pick(r, 12),
+      gameReading: 6 + pick(r, 12),
+      manManagement: 6 + pick(r, 12),
+      motivation: 6 + pick(r, 12),
+    },
+    licence: strength > 60 ? 'Pro' : 'A',
+    experienceYears: 3 + pick(r, 20),
+    reputation: Math.round(strength - 5),
+    ties: [],
+    field: { identity: { origin: 'generated', confidence: 'high' } },
+  };
+  const assignment: PackStaffAssignment = {
+    staffId: coachId,
+    clubId: c.id,
+    posts: ['headCoach'],
+    load: 'full',
+    group: 'club',
+    contract: {
+      wage: Math.round(payroll * 0.08),
+      until: `${SEASON + 1}-12-31`,
+      releaseFee: strength * 20_000,
+    },
+  };
+  const drawn = next(r) < 0.7 ? 'association' : 'ownedSaf';
+  const model = modelOverride ?? drawn;
+  const governance: PackGovernance = {
+    clubId: c.id,
+    model,
+    // Owner profile only for SAFs (06 §5.1).
+    ownerProfile:
+      model === 'association' ? null : (['builder', 'speculator', 'passionate'] as const)[i % 3]!,
+    electionEverySeasons: model === 'association' ? 3 : null,
+    authority: {
+      transferCap: payroll * 4,
+      wageCap: Math.round(payroll / 10),
+    },
+    goals: [{ kind: 'position', value: goal }],
+  };
+  return { coach, assignment, governance };
 }
 
 type World = Pick<Pack, 'clubs' | 'players' | 'staff' | 'assignments' | 'governance' | 'cities'>;
@@ -182,52 +273,10 @@ function world(
           Math.round((p.contract.wage * payroll) / total / 10) * 10,
         );
     w.players.push(...squad);
-    const coachId = `${c.id}-s01`;
-    w.staff.push({
-      id: coachId,
-      name: `${FIRST_NAMES[pick(r, FIRST_NAMES.length)]} ${LAST_NAMES[pick(r, LAST_NAMES.length)]}`,
-      birthDate: `${SEASON - 40 - pick(r, 20)}-06-15`,
-      nationality: 'BR',
-      roles: ['headCoach'],
-      specialties: [],
-      attributes: {
-        tactics: 6 + pick(r, 12),
-        gameReading: 6 + pick(r, 12),
-        manManagement: 6 + pick(r, 12),
-        motivation: 6 + pick(r, 12),
-      },
-      licence: strength > 60 ? 'Pro' : 'A',
-      experienceYears: 3 + pick(r, 20),
-      reputation: Math.round(strength - 5),
-      ties: [],
-      field: { identity: { origin: 'generated', confidence: 'high' } },
-    });
-    w.assignments.push({
-      staffId: coachId,
-      clubId: c.id,
-      posts: ['headCoach'],
-      load: 'full',
-      group: 'club',
-      contract: {
-        wage: Math.round(payroll * 0.08),
-        until: `${SEASON + 1}-12-31`,
-        releaseFee: strength * 20_000,
-      },
-    });
-    const model = next(r) < 0.7 ? 'association' : 'ownedSaf';
-    w.governance.push({
-      clubId: c.id,
-      model,
-      // Owner profile only for SAFs (06 §5.1).
-      ownerProfile:
-        model === 'association' ? null : (['builder', 'speculator', 'passionate'] as const)[i % 3]!,
-      electionEverySeasons: model === 'association' ? 3 : null,
-      authority: {
-        transferCap: payroll * 4,
-        wageCap: Math.round(payroll / 10),
-      },
-      goals: [{ kind: 'position', value: goal }],
-    });
+    const own = staffing(r, c, strength, goal, i, undefined, payroll);
+    w.staff.push(own.coach);
+    w.assignments.push(own.assignment);
+    w.governance.push(own.governance);
     const rc = fork(root, `city:${i}`);
     w.cities.push({
       id: `city${pad(i, width)}`,
@@ -320,3 +369,14 @@ export function generateDevPack(seed = 20261116): Pack {
 
 /** sha256 of the pack's JSON with the checksum field blanked. */
 export const packChecksum = (pack: Pack) => sha256Hex(JSON.stringify({ ...pack, checksum: '' }));
+
+/**
+ * The pack as the browser downloads it: per-field provenance marks (`field`, about half of a real
+ * pack's bytes) are data-quality metadata the career never reads, so they are dropped. The file
+ * is still named by the full pack's `checksum` (the version the API stores); the checksum does not
+ * cover the slim bytes and the simulation does not depend on what was dropped.
+ */
+export const slimPack = (pack: Pack): Pack => ({
+  ...pack,
+  players: pack.players.map((p) => ({ ...p, field: {} })),
+});

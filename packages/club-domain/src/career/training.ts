@@ -20,12 +20,13 @@ import {
   lineupOf,
   lineupStrength,
   slotRatings,
+  squadPlayers,
   type ClubIn,
   type Lineup,
 } from './squad';
 import { formationOf } from '../match/fixture-input';
 import { MISSING, rivalOut } from './health';
-import { clubStrength } from '../match/quick';
+import { clubStrengthOf } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
 
@@ -103,8 +104,8 @@ export function strengthWith(
 ): number {
   const fit = slotRatings(c, l.formation);
   const eleven = l.xi.reduce((s, id, i) => s + fit.get(id)![i]! * freshFactor(state.fresh(id)), 0);
-  const rest = c.pack.players
-    .filter((p) => p.clubId === c.clubId && !l.xi.includes(p.id))
+  const rest = squadPlayers(c)
+    .filter((p) => !l.xi.includes(p.id))
     .map((p) => bestRoles(p.attributes, 1)[0]!.rating)
     .sort((a, b) => b - a)
     .slice(0, 5)
@@ -148,7 +149,7 @@ export function clubLevel(pack: Pack, clubId: string): { strength: number; eleve
       eleven: l.xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / 16,
     };
   } catch {
-    const plain = clubStrength(pack).get(clubId) ?? 50;
+    const plain = clubStrengthOf(squadPlayers(c)) ?? 50;
     return { strength: plain, eleven: (plain * 11) / 16 };
   }
 }

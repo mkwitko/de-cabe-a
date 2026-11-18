@@ -29,8 +29,9 @@ import {
   type Terms,
 } from './deals';
 import { fitFor, squadPlanOf, type Need } from './plan';
-import { bargaining, levelError, seenRise, seenValue } from './judgement';
+import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
+import { ABROAD } from './abroad';
 import { answerBid } from './talks';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -139,26 +140,21 @@ const canLose = (w: CareerWorld, p: PackPlayer) => {
 const byPosition = (pack: Pack) =>
   cached(pack, 'byPosition', WHOLE, () => {
     const read = readingsOf(pack);
-    const by = new Map<string, { id: string; level: number }[]>();
-    for (const p of pack.players)
+    // `at`: the player's place in the pack's list. Carried only across transfers (carryCache),
+    // which keep the order, so the place stays right in the packs that follow.
+    const by = new Map<string, { id: string; at: number; level: number }[]>();
+    for (const [at, p] of pack.players.entries())
       for (const x of p.positions)
         if (x.level >= 2)
           (by.get(x.position) ?? by.set(x.position, []).get(x.position)!).push({
             id: p.id,
+            at,
             level: read.get(p.id)!.level,
           });
     for (const list of by.values())
       list.sort((a, b) => b.level - a.level || (a.id < b.id ? -1 : 1));
     return by;
   });
-
-/** The pack's players by id; rebuilt for each pack object (a transfer makes a new one). */
-const byIds = new WeakMap<Pack, Map<string, PackPlayer>>();
-const playersById = (pack: Pack) => {
-  let by = byIds.get(pack);
-  if (!by) byIds.set(pack, (by = new Map(pack.players.map((p) => [p.id, p]))));
-  return by;
-};
 
 interface Choice {
   p: PackPlayer;
@@ -185,25 +181,43 @@ function choose(
   let best: Choice | null = null;
   let score = WORTH_IT - 1;
   // Only those who know one of the positions and sit in the level the need asks for.
-  const players = playersById(w.pack);
   const index = byPosition(w.pack);
   const seen = new Set<string>();
-  const pool: PackPlayer[] = [];
-  for (const position of need.positions)
-    for (const x of index.get(position) ?? []) {
-      // Wider than the need by the most a club can be off (seven points).
-      if (x.level > need.wanted + 19) continue;
+  const pool: { p: PackPlayer; level: number }[] = [];
+  // Wider than the need by the most a club can be off (seven points).
+  const top = need.wanted + 19;
+  for (const position of need.positions) {
+    const list = index.get(position) ?? [];
+    // Best first: a binary search finds the first one in range instead of walking past the stars.
+    let lo = 0;
+    for (let hi = list.length; lo < hi; ) {
+      const mid = (lo + hi) >> 1;
+      if (list[mid]!.level > top) lo = mid + 1;
+      else hi = mid;
+    }
+    for (let k = lo; k < list.length; k++) {
+      const x = list[k]!;
       if (x.level < need.wanted - 10) break;
       if (!seen.has(x.id)) {
         seen.add(x.id);
-        pool.push(players.get(x.id)!);
+        pool.push({ p: w.pack.players[x.at]!, level: x.level });
       }
     }
+  }
   // First a cheap sieve over everyone in range; then only the best few sit through the costly
   // reading (the selling club's plan, the player's mind, the points).
   const short: { p: PackPlayer; sees: number; theirs: boolean; free: boolean }[] = [];
-  for (const p of pool) {
-    if (p.clubId === buyerId || skip.has(p.id)) continue;
+  // Best level first, so the sieve can stop once nobody left can reach the shortlist: the
+  // SHORTLIST-th best level seen so far (`cut`) against what the rest could at most be seen at.
+  // The person's listed players go first whatever their level, so they are always looked at.
+  pool.sort((a, b) => b.level - a.level);
+  const bestSeen: number[] = [];
+  let closed = false;
+  for (const { p, level } of pool) {
+    if (!closed && bestSeen.length === SHORTLIST && level + MAX_LEVEL_ERROR < bestSeen[SHORTLIST - 1]!)
+      closed = true;
+    if (closed && !(p.clubId === w.clubId && listed.has(p.id))) continue;
+    if (p.clubId === buyerId || p.clubId === ABROAD || skip.has(p.id)) continue;
     const theirs = p.clubId === w.clubId;
     // Without a club he costs no fee and asks nobody's leave.
     const free = p.clubId === null;
@@ -216,15 +230,24 @@ function choose(
       continue;
     const r = read.get(p.id)!;
     if (r.keeper !== need.keeper) continue;
-    // The level the club sees must sit in what the need asks for.
-    const sees = r.level + levelError(w.pack, buyerId, p);
-    if (sees < need.wanted - 3 || sees > need.wanted + 12) continue;
+    // The buyer's own reading (a hash per player) last: the cheap tests weed out most first.
     // Just arrived somewhere: not for sale again this season.
     if (!free && w.moves?.[p.id]?.season === season) continue;
     // Out of reach whatever the club's mood: a spare still costs 80% of his value.
     if (!free && marketValue(w.pack, p, season) * 6 > money * 10) continue;
     if (!free && !canLose(w, p)) continue;
+    // The level the club sees must sit in what the need asks for.
+    const sees = r.level + levelError(w.pack, buyerId, p);
+    if (sees < need.wanted - 3 || sees > need.wanted + 12) continue;
     short.push({ p, sees, theirs, free });
+    if (!(theirs && listed.has(p.id))) {
+      let i = bestSeen.length;
+      while (i > 0 && bestSeen[i - 1]! < sees) i--;
+      if (i < SHORTLIST) {
+        bestSeen.splice(i, 0, sees);
+        if (bestSeen.length > SHORTLIST) bestSeen.pop();
+      }
+    }
   }
   // The best the club sees, and whoever of the person's is on the list; ties by id.
   short.sort(
@@ -344,7 +367,11 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
   const draw = rngFrom(seedOf(w.seed, `round:${day}`));
   const order = w.pack.clubs
     .map((c) => ({ id: c.id, at: next(draw) }))
-    .filter((c) => c.id !== w.clubId)
+    // Only clubs with fixtures this season shop: a club of the pack that plays nothing here (a
+    // foreign club holding a few of its players) still sells, but never looks for anyone.
+    // ponytail: the exodus abroad (foreign clubs buying the league's best) is a later, cheap
+    // model of its own, not a full market reading for hundreds of idle clubs.
+    .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
     .sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1));
   // A club that found nobody worth the table sits out the rest of the window: the market it
   // read does not change enough in a few weeks to look again.

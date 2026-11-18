@@ -28,6 +28,7 @@ import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
+import { foreignRound } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
@@ -141,7 +142,11 @@ function playDay(
       note(w, { day, kind: 'contractsEnding', players: ending });
   }
   // The clubs trade among themselves before the day's matches: the rounds due since the last day.
-  for (const round of roundsBetween(w.day, day)) marketRound(w, round);
+  for (const round of roundsBetween(w.day, day)) {
+    marketRound(w, round);
+    // Then the foreign buyers, once the clubs here had their turn.
+    foreignRound(w, round);
+  }
   postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;

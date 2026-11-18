@@ -239,10 +239,26 @@ export function roleRating(a: Attributes, role: RoleId): number {
 }
 
 /** The roles this player is best at, best first. */
+/**
+ * Every role rated, best first, kept per attributes object: the market and the level 3 strengths
+ * ask for the same player's best role thousands of times a day, and attributes only change by a
+ * new object (development). Shared and frozen: never mutate the answer.
+ */
+const ranked = new WeakMap<Attributes, readonly { role: RoleId; rating: number }[]>();
+function rankedRoles(a: Attributes): readonly { role: RoleId; rating: number }[] {
+  let r = ranked.get(a);
+  if (!r) {
+    r = Object.freeze(
+      ROLES.map((role) => Object.freeze({ role, rating: roleRating(a, role) })).sort(
+        (x, y) => y.rating - x.rating,
+      ),
+    );
+    ranked.set(a, r);
+  }
+  return r;
+}
 export const bestRoles = (a: Attributes, n = 3): { role: RoleId; rating: number }[] =>
-  ROLES.map((role) => ({ role, rating: roleRating(a, role) }))
-    .sort((x, y) => y.rating - x.rating)
-    .slice(0, n);
+  rankedRoles(a).slice(0, n);
 
 const mean = (a: Attributes, keys: readonly AttributeId[]) =>
   Math.round(keys.reduce((s, k) => s + a[k], 0) / keys.length);

@@ -22,3 +22,8 @@ scripts/research/.cache/
 # holds the VAPID private key, local only
 deploy/SETUP-PUSH.md
 scripts/research/cutouts/skipped.json
+
+# Modo Clube real data pack (owner's own FM26 export, ADR-014 item 2): never committed
+apps/api/club-packs/
+# Wikidata/QLever and openfootball fetch caches of the club-pack scripts
+scripts/club-pack/.cache/

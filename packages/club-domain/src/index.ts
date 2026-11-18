@@ -1,8 +1,16 @@
 /** Public surface of @decabeca/club-domain (01-ARQUITETURA.md §2). */
 export * from './pack/schema';
 export * from './player/ratings';
-export { generateAttributes, generatePlayer, generateSquad, SQUAD } from './generate/player';
-export { generateDevPack, generateMiniPack, packChecksum } from './generate/pack';
+export { generateAttributes, generatePlayer, generateSquad, PEAK, SQUAD } from './generate/player';
+export {
+  economy,
+  estimatedBody,
+  generateDevPack,
+  generateMiniPack,
+  packChecksum,
+  slimPack,
+  staffing,
+} from './generate/pack';
 export { teamForMatch } from './match/lineup';
 export * from './competition/schema';
 export { roundRobin, standings, type Played, type Row } from './competition/league';
@@ -41,6 +49,7 @@ export * from './market/judgement';
 export * from './market/contracts';
 export * from './market/loans';
 export * from './market/fairplay';
+export * from './market/abroad';
 export * from './career/development';
 export * from './career/years';
 export * from './career/health';

@@ -228,3 +228,120 @@ export function devDivisions(season: number, [a, b, c, d]: string[][]): Competit
     ]),
   ];
 }
+
+const organiserPays = (
+  busFromKm: number | null,
+  planeFromKm: number | null,
+  nights: number | null,
+  conditional: boolean,
+): Competition['money']['travel'] => ({
+  payer: 'organiser',
+  busFromKm,
+  planeFromKm,
+  people: busFromKm === null ? null : 32,
+  nights,
+  conditional,
+});
+
+/**
+ * The four national series with the 2027 formats of 05 §8 (FATO unless marked), for a real pack:
+ *  - A: 20 clubs, 38 rounds, four down. B: 38 rounds, then the play-off (3rd v 6th, 4th v 5th,
+ *    two legs): two up direct and two through it, four down; the CBF pays the visitor's trip, on
+ *    condition. C: 24 clubs in 2027 (single round, eight in two groups of four, two-leg final),
+ *    four up, two down, six come up from D; 28 clubs in 2028 (FATO). D: 96 clubs in 16 groups of
+ *    six, then a knockout from 64; the four semi-finalists go up, and so do the two winners of a
+ *    play-off between the four quarter-final losers (six up in all: FATO count, the play-off
+ *    shape is read off the save's 2026 fixtures).
+ *  - PARÂMETRO (not published, 05 §8 "NÃO ENCONTRADO"): from 2028 C sends six down (not two) so the
+ *    28 clubs stay 28 while D sends six up; D refills from the national ranking (places left by
+ *    promotion without relegation) because the 96 places are a format, not a count of members.
+ *  - Dates follow the save's 2026 calendar for the same series, moved a year; D's registration
+ *    keeps the defaults (05 §8 gives 50 / 8 changes for A, B and C only).
+ */
+export function realDivisions(season: number, [a, b, c, d]: string[][]): Competition[] {
+  const w = (from: string, to: string, days?: number[]) => dateWindow(season, from, to, days);
+  const div = (tier: number, clubIds: string[], name: string, size?: number) => ({
+    id: `div-${tier}`,
+    name,
+    season,
+    tier,
+    clubIds,
+    ...(size ? { size } : {}),
+  });
+  const serieC = (year: number, clubIds: string[], size: number, down: number): Competition => {
+    const k = (from: string, to: string, days: number[]) => dateWindow(year, from, to, days);
+    return regulation({ ...div(3, clubIds, 'Série C', size), season: year, size }, [
+      ligaPhase('liga', k('04-04', '08-30', [6, 0]), {
+        legs: 1,
+        tieBreakers: ['wins', 'goalDifference', 'goalsFor', 'redCards', 'yellowCards', 'draw'],
+        outcomes: [{ kind: 'relegation', target: 'div-4', positions: [size - down + 1, size] }],
+      }),
+      gruposPhase('quadrangular', 2, k('09-06', '10-11', [6, 0]), {
+        entrants: [{ from: 'phase', phaseId: 'liga', positions: [1, 8] }],
+        outcomes: [{ kind: 'promotion', target: 'div-2', positions: [1, 2] }],
+      }),
+      knockoutPhase('final', 'final', k('10-18', '10-25', [6, 0]), {
+        entrants: [{ from: 'phase', phaseId: 'quadrangular', positions: [1, 1] }],
+        outcomes: [{ kind: 'title', positions: [1, 1] }],
+      }),
+    ]);
+  };
+  const withTravel = (comp: Competition, travel: Competition['money']['travel']): Competition => ({
+    ...comp,
+    money: { ...comp.money, travel },
+  });
+  return [
+    regulation(div(1, a!, 'Série A'), [
+      ligaPhase('liga', w('01-27', '12-01'), {
+        outcomes: [
+          { kind: 'title', positions: [1, 1] },
+          { kind: 'relegation', target: 'div-2', positions: [17, 20] },
+        ],
+      }),
+    ]),
+    withTravel(
+      regulation(div(2, b!, 'Série B'), [
+        ligaPhase('liga', w('03-21', '11-15', [6, 2]), {
+          outcomes: [
+            { kind: 'title', positions: [1, 1] },
+            { kind: 'promotion', target: 'div-1', positions: [1, 2] },
+            { kind: 'relegation', target: 'div-3', positions: [17, 20] },
+          ],
+        }),
+        // 3rd v 6th and 4th v 5th over two legs; the better campaign goes through on a level aggregate.
+        knockoutPhase('acesso', 'mata-mata', w('11-21', '11-28', [6, 0]), {
+          entrants: [{ from: 'phase', phaseId: 'liga', positions: [3, 6] }],
+          survivors: 2,
+          tieBreakers: ['betterCampaign'],
+          outcomes: [{ kind: 'promotion', target: 'div-1', positions: [1, 2] }],
+        }),
+      ]),
+      organiserPays(null, null, null, true),
+    ),
+    withTravel(serieC(season, c!, 24, 2), organiserPays(200, 500, null, false)),
+    // 2028 onwards (see the PARÂMETRO above): 28 clubs, six down.
+    withTravel(serieC(season + 1, [], 28, 6), organiserPays(200, 500, null, false)),
+    withTravel(
+      regulation({ ...div(4, d!, 'Série D'), refill: 'ranking' }, [
+        gruposPhase('grupos', 16, w('04-04', '06-14', [6, 0]), { draw: 'regional' }),
+        // Round of 64 to the quarter-finals; the last four (semi-finalists) go up.
+        knockoutPhase('mata-mata', 'mata-mata', w('06-20', '08-16', [6, 0]), {
+          entrants: [{ from: 'phase', phaseId: 'grupos', positions: [1, 4] }],
+          survivors: 4,
+          outcomes: [{ kind: 'promotion', target: 'div-3', positions: [1, 4] }],
+        }),
+        // The four quarter-final losers play off for two more places.
+        knockoutPhase('repescagem', 'mata-mata', w('08-26', '09-02', [3, 4]), {
+          entrants: [{ from: 'phase', phaseId: 'mata-mata', positions: [5, 8] }],
+          survivors: 2,
+          outcomes: [{ kind: 'promotion', target: 'div-3', positions: [1, 2] }],
+        }),
+        knockoutPhase('final', 'final', w('08-22', '09-13', [6, 0]), {
+          entrants: [{ from: 'phase', phaseId: 'mata-mata', positions: [1, 4] }],
+          outcomes: [{ kind: 'title', positions: [1, 1] }],
+        }),
+      ]),
+      organiserPays(200, 700, 2, false),
+    ),
+  ];
+}

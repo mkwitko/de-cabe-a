@@ -85,6 +85,9 @@ import {
   trainingOn,
   type Intensity,
   type SquadPlayer,
+  ABROAD,
+  FOREIGN_TIERS,
+  foreignName,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -183,6 +186,11 @@ export interface ClubFace {
   shortName: string;
   colours: [string, string];
 }
+/** Foreign buyers and the abroad bucket have no club in the pack: a plain badge with a name. */
+const ABROAD_FACES: [string, ClubFace][] = [ABROAD, ...FOREIGN_TIERS.map((t) => t.id)].map((id) => [
+  id,
+  { name: foreignName(id), shortName: foreignName(id), colours: ['#1f3b5c', '#c9d6e3'] },
+]);
 const face = (c: ClubFace): ClubFace => ({
   name: c.name,
   shortName: c.shortName,
@@ -394,7 +402,10 @@ const NEWS_ROWS = 15;
 
 function marketView(w: CareerWorld, position: string | null): MarketView {
   const season = w.season.season;
-  const clubs = new Map(w.pack.clubs.map((c) => [c.id, c]));
+  const clubs = new Map<string, ClubFace>([
+    ...w.pack.clubs.map((c): [string, ClubFace] => [c.id, c]),
+    ...ABROAD_FACES,
+  ]);
   const byId = new Map(w.pack.players.map((p) => [p.id, p]));
   const row = (p: Pack['players'][number]): MarketPlayer => ({
     id: p.id,
@@ -440,6 +451,7 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
       .filter(
         (p) =>
           p.clubId !== w.clubId &&
+          p.clubId !== ABROAD &&
           !w.talks?.[p.id] &&
           (!position || p.positions.some((x) => x.position === position && x.level === 3)),
       )
@@ -666,7 +678,7 @@ function view(w: CareerWorld, ms: number): SimView {
                 : n.kind === 'season'
                   ? n.champion
                   : '',
-          )?.name ?? '',
+          )?.name ?? (n.kind === 'bid' || n.kind === 'sold' ? foreignName(n.club) : ''),
       })),
     board: {
       confidence: boardOf(w).confidence,

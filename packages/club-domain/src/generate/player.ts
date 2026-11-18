@@ -47,7 +47,7 @@ const POSITION_ROLE: Record<Position, RoleId> = {
 };
 
 /** Peak age by position (03 §3: forwards near 25, centre-backs near 27, keepers +3). */
-const PEAK: Record<Position, number> = {
+export const PEAK: Record<Position, number> = {
   GK: 30,
   CB: 27,
   RB: 26,
