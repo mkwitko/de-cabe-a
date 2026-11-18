@@ -53,6 +53,7 @@ import {
   ceilingRange,
   levelRange,
   personKnows,
+  personReading,
   scoutAreas,
   scoutsOf,
   sendScout,
@@ -338,6 +339,8 @@ export interface MarketPlayer {
   potential: [number, number];
   /** His release clause; null without one. */
   release: number | null;
+  /** How much the club knows of him, 0..100 (market/scouting.ts); null for its own players. */
+  knowledge: number | null;
 }
 export interface MarketView {
   open: boolean;
@@ -428,21 +431,26 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     ...ABROAD_FACES,
   ]);
   const byId = new Map(w.pack.players.map((p) => [p.id, p]));
-  const row = (p: Pack['players'][number]): MarketPlayer => ({
-    id: p.id,
-    name: p.knownAs ?? p.name,
-    age: season - Number(p.birthDate.slice(0, 4)),
-    position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
-    rating: seenLevel(w.pack, w.clubId, p),
-    range: levelRange(w.pack, w.clubId, p),
-    potential: ceilingRange(w.pack, w.clubId, p),
-    release: p.contract?.releaseFee ?? null,
-    wage: p.contract?.wage ?? 0,
-    value: marketValue(w.pack, p, season),
-    club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
-    free: p.clubId === null,
-    until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
-  });
+  const row = (p: Pack['players'][number]): MarketPlayer => {
+    // Another club's player is read through what the club knows of him (scouts, matches).
+    const rep = p.clubId === w.clubId ? null : personReading(w, p);
+    return {
+      id: p.id,
+      name: p.knownAs ?? p.name,
+      age: season - Number(p.birthDate.slice(0, 4)),
+      position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
+      rating: rep?.rating ?? seenLevel(w.pack, w.clubId, p),
+      range: rep?.range ?? levelRange(w.pack, w.clubId, p),
+      potential: rep?.potential ?? ceilingRange(w.pack, w.clubId, p),
+      knowledge: rep?.knowledge ?? null,
+      release: p.contract?.releaseFee ?? null,
+      wage: p.contract?.wage ?? 0,
+      value: marketValue(w.pack, p, season),
+      club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
+      free: p.clubId === null,
+      until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
+    };
+  };
   const plan = squadPlanOf({ pack: w.pack, clubId: w.clubId });
   const room = myWageRoom(w);
   // Within reach: willing to talk, a price the cash covers (a club asks up to 1.7 times the

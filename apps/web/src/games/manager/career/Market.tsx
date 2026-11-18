@@ -50,6 +50,11 @@ function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
       {p.until !== null && <span>{t('market.until', { year: p.until })}</span>}
       <span>{t('market.potential', { lo: p.potential[0], hi: p.potential[1] })}</span>
       {p.release !== null && <span>{t('market.clause', { fee: money(p.release) })}</span>}
+      {p.knowledge !== null && (
+        <span className="font-bold text-club-gold">
+          {t('market.knowledge', { k: p.knowledge })}
+        </span>
+      )}
     </span>
   );
 }

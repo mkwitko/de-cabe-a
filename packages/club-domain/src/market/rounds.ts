@@ -17,7 +17,7 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, tierOfClub, wageRoom } from './books';
+import { available, book, wageRoom } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -29,10 +29,10 @@ import {
   type Terms,
 } from './deals';
 import { fitFor, squadPlanOf, type Need } from './plan';
-import { MAX_LEVEL_ERROR, bargaining, knows, levelError, seenRise, seenValue } from './judgement';
+import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
 import { ABROAD } from './abroad';
-import { stateOf } from './scouting';
+import { clubKnows } from './scouting';
 import { answerBid } from './talks';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -236,17 +236,7 @@ function choose(
     const r = read.get(p.id)!;
     if (r.keeper !== need.keeper) continue;
     // Only players its scouts know; the person's listed players are offered to everyone.
-    if (
-      !(theirs && listed.has(p.id)) &&
-      !knows(
-        w.pack,
-        buyerId,
-        p,
-        free ? null : tierOfClub(w, p.clubId!),
-        free ? false : stateOf(w.pack, p.clubId!) === stateOf(w.pack, buyerId),
-      )
-    )
-      continue;
+    if (!(theirs && listed.has(p.id)) && !clubKnows(w, buyerId, p)) continue;
     // The buyer's own reading (a hash per player) last: the cheap tests weed out most first.
     // Just arrived somewhere: not for sale again this season.
     if (!free && w.moves?.[p.id]?.season === season) continue;

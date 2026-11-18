@@ -5,7 +5,12 @@ import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers } from '../career/start';
 import {
   MISSION_DAYS,
+  FADE_DAYS,
+  MATCH_GAIN,
+  facedClub,
+  knowledgeOf,
   personKnows,
+  personReading,
   scoutAreas,
   scoutingDay,
   scoutsOf,
@@ -39,10 +44,49 @@ describe("the person's scouts", () => {
     expect(w.scouting!.missions).toHaveLength(0);
     const found = Object.keys(w.scouting!.known);
     expect(found.length).toBeGreaterThan(0);
-    expect(w.pack.players.filter((p) => personKnows(w, p)).length).toBe(before + found.length);
+    // Reports reach players unknown before and sharpen some the club half knew.
+    expect(w.pack.players.filter((p) => personKnows(w, p)).length).toBeGreaterThan(before);
+    for (const id of found)
+      expect(
+        knowledgeOf(
+          w,
+          w.pack.players.find((p) => p.id === id)!,
+        ),
+      ).toBeGreaterThan(0);
     expect(w.inbox!.at(-1)).toMatchObject({ kind: 'scouted', area, players: found.length });
     const back = loadCareer(pack, 3, clubId, saveCareer(w));
     expect(back.scouting!.known).toEqual(w.scouting!.known);
+  });
+
+  it('knowledge sharpens the reading, fades with time, and grows with matches', () => {
+    const w = openCareer(pack, 3, clubId);
+    const area = scoutAreas(w).find((a) => a.startsWith('tier:'))!;
+    sendScout(w, area, 10);
+    const back = 10 + MISSION_DAYS;
+    scoutingDay(w, back);
+    const id = Object.keys(w.scouting!.known)[0]!;
+    const p = w.pack.players.find((x) => x.id === id)!;
+    w.day = back;
+    const fresh = personReading(w, p);
+    expect(fresh.knowledge).toBeGreaterThan(0);
+    w.day = back + 20 * FADE_DAYS;
+    const old = personReading(w, p);
+    expect(old.knowledge).toBe(Math.max(0, fresh.knowledge - 20));
+    expect(old.range[1] - old.range[0]).toBeGreaterThanOrEqual(fresh.range[1] - fresh.range[0]);
+    // A match against his club teaches the club about him again.
+    facedClub(w, p.clubId!, w.day);
+    expect(knowledgeOf(w, p)).toBe(old.knowledge + MATCH_GAIN);
+    // Faded all the way, he leaves the files.
+    scoutingDay(w, w.day + 300 * FADE_DAYS - ((w.day + 300 * FADE_DAYS) % 30));
+    expect(w.scouting!.known[id]).toBeUndefined();
+  });
+
+  it('at full knowledge the club reads him exactly', () => {
+    const w = openCareer(pack, 3, clubId);
+    const p = w.pack.players.find((x) => x.clubId && x.clubId !== clubId)!;
+    w.scouting = { known: { [p.id]: { k: 100, day: w.day } }, missions: [] };
+    const r = personReading(w, p);
+    expect(r.range[0]).toBe(r.range[1]);
   });
 
   it('no more scouts away than the department has', () => {
