@@ -8,6 +8,7 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { atan, atan2, exp, gaussian, logistic } from './math';
 import { contest } from './duel';
+import { cardChance } from './discipline';
 
 const SRC = join(__dirname, '..');
 const files = (dir: string): string[] =>
@@ -88,5 +89,34 @@ describe('MC-256 rules core', () => {
         relative(SRC, f),
       ).toBe(false);
     }
+  });
+});
+
+describe('the card for a foul (law 12)', () => {
+  const d = { attrs: { aggression: 60, tackling: 60 }, input: { traits: [] } };
+  const base = { promising: false, lastMan: false, tactical: false, playedBall: true };
+  it('the direction of the challenge alone does not raise it', () => {
+    expect(cardChance(0.5, d, { ...base, behind: true })).toBe(
+      cardChance(0.5, d, { ...base, behind: false }),
+    );
+  });
+  it('missing the ball (no attempt to play it) raises it', () => {
+    expect(cardChance(0.5, d, { ...base, behind: false, playedBall: false })).toBeGreaterThan(
+      cardChance(0.5, d, { ...base, behind: false }),
+    );
+  });
+  it('stopping a promising attack weighs most, a deliberate stop of a counter more still, not always', () => {
+    const careless = cardChance(0.5, d, { ...base, behind: false });
+    const spa = cardChance(0.5, d, { ...base, behind: false, promising: true, playedBall: false });
+    const tactical = cardChance(0.5, d, {
+      ...base,
+      behind: false,
+      promising: true,
+      playedBall: false,
+      tactical: true,
+    });
+    expect(spa).toBeGreaterThan(2 * careless);
+    expect(tactical).toBeGreaterThan(spa);
+    expect(tactical).toBeLessThan(0.9);
   });
 });

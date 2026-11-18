@@ -396,6 +396,16 @@ O goleiro também é jogador de linha quando o plano pede: opção de passe na s
 ### 6.5 Árbitro e regras
 - **Falta**: nasce de desarme falho, carga, puxão ou mão; gravidade por velocidade relativa, direção (por trás) e zona. Implementado (2026-11-16): desarme (com falta tática) e disputa aérea: quem perde a disputa empurra ou sobe no adversário com chance de 6% a 16% pela `agressividade` (15% disso dentro da própria área, onde seria pênalti). Disputa aérea: quem está a 1,8 m e o adversário que, já em movimento, chega ao ponto em até 0,5 s (PARÂMETRO). Defensores de linha também atacam a bola alta na própria área. Defensor driblado derruba ou segura o portador com chance de 15% a 35% pela `agressividade` (15% disso na própria área). Falta ainda: mão.
 - **Cartão**: por gravidade, por parar ataque promissor, por reincidência e por reclamação (traço). Segundo amarelo expulsa. Rigor do árbitro é parâmetro da partida, sorteado do pacote.
+  - **Amarelo pela natureza da falta (DECISÃO do dono, 2026-11-18, regra 12 da IFAB).** A direção do lance (por trás ou de frente) não é motivo de cartão por si. A chance de amarelo soma, vezes o rigor do árbitro (0,7 + 0,6 × rigor):
+    - falta imprudente comum: 0,03;
+    - agressividade: até 0,06;
+    - não disputou a bola (rasteira de quem foi driblado, falta tática, desarme sem tocar na bola): 0,03;
+    - parou ataque promissor: 0,08. Promissor é perto do nosso gol (além de 70 m) ou, além de 40 m, com no máximo 3 dos nossos do lado do gol, goleiro incluído (ataque em superioridade);
+    - falta tática para parar um contra-ataque: 0,3. Alta, mas não automática.
+  - PARÂMETROS calibrados em amarelos por falta: Série A cerca de 0,16 (faixas de §11) e 0,176 (FBref 2026). Medido em 150 partidas: 0,163. A falta tática leva amarelo em 44% das vezes. A de frente leva em 11%, a por trás em 13% e a aérea em 10%.
+  - Ponto em aberto: as cerca de 2 faltas táticas por time dão cerca de 40% dos amarelos. Não há número publicado de faltas táticas na Série A; se forem menos, o excesso está na frequência delas, não no cartão.
+  - Confirmação em 2000 partidas, mesmas sementes: amarelos por time 3,25 para 2,22 (dentro da faixa), vermelhos 0,18 para 0,09 (faixa 0,10 a 0,15), faltas 13,8, gols 2,93. Em 300 partidas, os vermelhos são quase todos segundo amarelo (0,073 por time); vermelho direto 0,008. Faltas de último homem são raras (0,02 por time, todas na área), então a regra de vermelho por chance clara de gol pesa pouco. Fica em aberto.
+  - Testes em `rules.test.ts` ("the card for a foul (law 12)").
 - **Vantagem**: aplicada se o time que sofreu mantém a bola e o valor de posse é maior que o da cobrança; o cartão fica para a próxima paralisação.
 - **Impedimento**: avaliado no instante do passe. Fora de jogo quem, no campo adversário, está à frente da bola e do penúltimo adversário. Só é punido se participar: receber a bola, disputar ou obstruir o goleiro. Não há impedimento em tiro de meta, lateral e escanteio. Margem de erro do árbitro em lances de menos de 0,3 m é parâmetro (zero se a competição tem árbitro de vídeo).
 - **Pênalti**: falta punível com tiro livre direto dentro da área. Cobrança resolvida como finalização com `xG` do pênalti (`bola parada`, `compostura` contra `reflexos`, com lado escolhido).
