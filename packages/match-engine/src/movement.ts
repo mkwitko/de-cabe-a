@@ -63,3 +63,40 @@ export function separate(all: Mover[]): void {
     }
   }
 }
+
+/**
+ * Body contact (02 §2): a mover going from `from` to where he stands now cannot pass through
+ * any of `others`. He stops where his path first comes within `body` metres of one of them
+ * and loses the part of his velocity heading into that player, so he has to go round him.
+ */
+export function blockBody(m: Mover, from: { x: number; y: number }, others: Mover[], body: number) {
+  const vx = m.pos.x - from.x;
+  const vy = m.pos.y - from.y;
+  const vv = vx * vx + vy * vy;
+  if (vv === 0) return;
+  let tMin = Infinity;
+  let hit: Mover | null = null;
+  for (const o of others) {
+    // Solve |from + t v - o| = body for the first t in [0, 1].
+    const fx = from.x - o.pos.x;
+    const fy = from.y - o.pos.y;
+    const b = fx * vx + fy * vy;
+    const c = fx * fx + fy * fy - body * body;
+    if (c <= 0 || b >= 0) continue; // already in contact, or moving away from him
+    const disc = b * b - vv * c;
+    if (disc < 0) continue;
+    const t = (-b - Math.sqrt(disc)) / vv;
+    if (t >= 0 && t <= 1 && t < tMin) [tMin, hit] = [t, o];
+  }
+  if (!hit) return;
+  m.pos.x = from.x + vx * tMin;
+  m.pos.y = from.y + vy * tMin;
+  const nx = hit.pos.x - m.pos.x;
+  const ny = hit.pos.y - m.pos.y;
+  const n = Math.sqrt(nx * nx + ny * ny) || 1;
+  const into = (m.vel.x * nx + m.vel.y * ny) / n;
+  if (into > 0) {
+    m.vel.x -= (into * nx) / n;
+    m.vel.y -= (into * ny) / n;
+  }
+}

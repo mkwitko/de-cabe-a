@@ -363,6 +363,24 @@ Cruzamento (2026-11-16, ordem aprovada item 5): o cruzador avalia primeiro pau, 
 
 Em 2000 partidas, mesmas sementes: gols 3,23 para 3,26 (dentro do ruído), chutes 12,5 nos dois, amarelos 3,17 para 3,09, escanteios 6,3 para 6,6. Em 100 partidas: cruzamentos de jogo corrido de 10,3 para 11,8 por time, cabeceios de 14,1% para 14,8% dos chutes, disputas aéreas com os dois times perto estáveis (10,3 e 10,1 por jogo, contra cerca de 25 na Série A). As disputas que faltam não vêm do cruzamento: vêm da bola longa, cujo alvo está em média a 10 m do adversário mais próximo no momento do passe. Testes em `match.test.ts` ("a team-mate level with his marker at the spot is a duel, not a lost ball" e "the duel is worth more for a team-mate who is better in the air").
 
+**Contato de corpo com o condutor e chute que deixa para trás quem está atrás (DECISÃO, 2026-11-18).**
+
+- Contato de corpo: o condutor não atravessa um defensor. Ele para onde seu caminho chega a 0,7 m de um adversário e perde a parte da velocidade que ia contra ele, então precisa contorná-lo (`blockBody`, `movement.ts`). PARÂMETRO: 0,7 m (`BODY`). Antes, os jogadores sem bola se afastavam uns dos outros, mas o condutor se movia depois disso e passava através dos defensores.
+- Chute: quem está 0,3 m ou mais atrás do chutador não toca na bola até ela se afastar 2,5 m do ponto do chute, como no passe. É a mesma regra que a estimativa do chutador (`shotClear`) já usava. Antes, 33% dos bloqueios de chutes de perto vinham de defensores atrás do chutador: a estimativa previa 4% de bloqueio a até 6 m, e o voo bloqueava 28%.
+- Motivo (referência da Série A 2026, Gato Mestre via Super Rádio Tupi, §11): de fora da área, cerca de 40% dos chutes e conversão de 3,7%; de dentro, 15,4%. O motor tinha 25% de chutes de fora; 27% dos chutes saíam da pequena área. O condutor entrava na área com o defensor à frente, a 3,25 m em média e pressionando em 83% das decisões.
+- Raio do corpo em 600 partidas (com a correção do chute): 0 m deu 3,51 gols; 0,5 m deu 2,87; 0,7 m deu 2,79; 0,9 m deu 2,74.
+
+Em 200 partidas, mesma definição de área da Opta:
+
+| Medida | Sem contato | Com contato | Série A 2026 |
+|---|---|---|---|
+| Chutes de fora por time | 2,7 (25%) | 2,9 (29%) | 5,4 (cerca de 40%) |
+| Conversão de fora | 5,0% | 3,6% | 3,7% |
+| Conversão de dentro | 17,9% | 14,1% | 15,4% |
+| Chutes da pequena área | 27% | 21% | sem fonte |
+
+Confirmação em 2000 partidas, mesmas sementes, contra o `main` anterior: gols 2,93 para 2,85, chutes por time 11,6 para 10,2, escanteios 6,2 para 5,5, transição com chute depois de perda alta 20% (Opta 13% a 21%). Chutes e chutes no alvo (3,6) ficam abaixo da faixa: o condutor ainda chuta pouco de longe. A causa provável é o valor de posse (`valueAt`, 80% do `xG` de um chute livre), próximo passo. Testes em `match.test.ts` ("body contact with the carrier" e "a defender behind the shooter cannot block the shot").
+
 **Marcador do alvo disputa a bola longa (DECISÃO, 2026-11-18).**
 
 - Regra: num passe alto para um adversário, o defensor de linha mais próximo do alvo, a até 6 m dele, vai junto até onde o alvo encontra a bola e salta com ele. Vale mesmo quando um companheiro chega antes à queda.

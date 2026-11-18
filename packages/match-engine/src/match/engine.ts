@@ -15,7 +15,7 @@ import {
   weighted,
 } from '../rules/duel';
 import { gaussian } from '../rules/math';
-import { DT, moveTowards, maxSpeed } from '../movement';
+import { DT, blockBody, moveTowards, maxSpeed } from '../movement';
 import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
 import { between, next } from '../random';
 import { lineOf } from '../team';
@@ -1030,7 +1030,9 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
   s.ball.holder = intended;
   if (s.owner !== null) {
     const c = s.players[s.owner]!;
+    const from = { ...c.pos };
     moveTowards(c, c.target, maxSpeed(c) * (0.8 + 0.1 * norm(c.attrs.dribbling)));
+    blockBody(c, from, opponents(s, c.team), BODY);
     s.ball.pos = { ...c.pos };
     tackles(s);
   }
@@ -1175,6 +1177,8 @@ function chaseLooseBall(s: MatchState) {
   }
 }
 const CROSS_DEFENDERS = 3;
+/** Body contact with the carrier (02 §2): shoulders apart. PARAMETER. */
+const BODY = 0.7;
 const MARK_CONTEST = 6;
 /** meetPoint's look-ahead (s): a later time means nobody meets the ball in flight. */
 const MEET_HORIZON = 4;

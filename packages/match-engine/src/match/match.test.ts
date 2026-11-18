@@ -526,6 +526,25 @@ describe('MC-165 offside', () => {
   });
 });
 
+describe('body contact with the carrier', () => {
+  it('a carrier cannot run through a defender standing in his path', () => {
+    const s = bare();
+    const c = place(s, 9, 70, 34);
+    c.vel = { x: 6, y: 0 };
+    c.target = { x: 90, y: 34 };
+    c.decideAt = s.tick + 20;
+    s.owner = 9;
+    s.ball.holder = 9;
+    s.ball.possession = 0;
+    s.ball.pos = { ...c.pos };
+    place(s, 11, 103, 34);
+    const d = place(s, 13, 71.2, 34);
+    d.tackleAt = s.tick + 100;
+    for (let i = 0; i < 2; i++) step(s);
+    expect(c.pos.x).toBeLessThan(d.pos.x);
+  });
+});
+
 describe('containment of a carrier in our half', () => {
   const run = (defenderAt: [number, number]) => {
     const s = bare();
