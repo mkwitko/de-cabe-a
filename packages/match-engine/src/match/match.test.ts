@@ -395,6 +395,27 @@ describe('MC-164 keeper', () => {
     expect(f.origin).toEqual({ x: 94, y: 34 });
   });
 
+  it('marks a big chance (Opta): very close, or one-on-one in the box; not a long shot', () => {
+    const big = (x: number, y: number, defenderAt?: [number, number]) => {
+      const s = bare();
+      const c = place(s, 9, x, y);
+      place(s, 11, 103, 34);
+      if (defenderAt) place(s, 13, defenderAt[0], defenderAt[1]);
+      const f = shoot(
+        s,
+        c,
+        { kind: 'shot', target: { x: 105, y: 34 }, receiver: null, p: 0.3, est: 0.3, u: 0, ue: 0 },
+        [],
+        { chance: 0.3 },
+      );
+      return s.events[f.shot!.event]!.data.big === 1;
+    };
+    expect(big(100, 34)).toBe(true);
+    expect(big(92, 34)).toBe(true);
+    expect(big(92, 34, [96, 34])).toBe(false);
+    expect(big(80, 34)).toBe(false);
+  });
+
   it('a shot past the keeper is not reachable by him', () => {
     const s = bare();
     const c = place(s, 9, 94, 34);

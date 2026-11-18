@@ -180,7 +180,8 @@ export function playerStance(
 
 export type TermsAnswer =
   | { kind: 'accept'; terms: Terms }
-  | { kind: 'counter'; terms: Terms }
+  /** `impatient`: the agent's patience ran out and he asks more than before (agents.ts). */
+  | { kind: 'counter'; terms: Terms; impatient?: boolean }
   | { kind: 'refuse'; reason: PlayerNo };
 
 /**
@@ -188,14 +189,24 @@ export type TermsAnswer =
  * is worth 8% of wage a step; a longer deal than he wants costs 5% a year. He meets the club
  * part of the way as the rounds go.
  */
-export function answerTerms(s: PlayerStance, t: Terms, round: number): TermsAnswer {
+export function answerTerms(
+  s: PlayerStance,
+  t: Terms,
+  round: number,
+  /** The player's agent: past his patience, each round asks 3% to 5% more, by his greed. */
+  agent?: { patience: number; greed: number },
+): TermsAnswer {
   if (s.no) return { kind: 'refuse', reason: s.no };
   if (rank(t.role) < rank(s.wants)) return { kind: 'refuse', reason: 'role' };
   const sweet = (rank(t.role) - rank(s.wants)) * 8;
   const long = Math.max(0, t.years - s.years) * 5;
   // A clause he could be bought out by is worth 5% of wage to him.
   const door = t.release != null && t.release <= s.value * 3 ? 5 : 0;
-  const demand = Math.round((s.wage * (100 - sweet - door + long)) / 100);
+  const hard =
+    agent && round > agent.patience
+      ? (round - agent.patience) * (3 + Math.min(2, Math.max(0, Math.floor((agent.greed - 5) / 4))))
+      : 0;
+  const demand = Math.round((s.wage * (100 - sweet - door + long + hard)) / 100);
   if (t.wage >= demand) return { kind: 'accept', terms: t };
   if (round >= MAX_ROUNDS) return { kind: 'refuse', reason: 'final' };
   // He opens 10% over what he would take and comes down to it.
@@ -203,5 +214,6 @@ export function answerTerms(s: PlayerStance, t: Terms, round: number): TermsAnsw
   return {
     kind: 'counter',
     terms: { ...t, wage: ask, years: Math.min(t.years, 5), role: t.role },
+    ...(hard > 0 && { impatient: true }),
   };
 }

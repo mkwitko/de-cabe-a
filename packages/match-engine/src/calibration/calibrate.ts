@@ -55,6 +55,11 @@ async function main() {
   console.log(
     `high turnovers per team ${(both('highTurnovers') / 2).toFixed(1)}, shot-ending (same sequence) ${((100 * both('highTurnoverShots')) / both('highTurnovers')).toFixed(0)}% (Opta 13-21%); losses won back within 5 s ${((100 * both('regained5s')) / both('losses')).toFixed(0)}%`,
   );
+  // Big chances (02 §11: Série A 2026 about 2.2 created per team, Statz.ai; "created" counts
+  // those from a pass).
+  console.log(
+    `big chances per team ${(both('bigChances') / 2).toFixed(2)}, from a pass ${(both('bigFromPass') / 2).toFixed(2)} (Statz 2026 about 2.2), converted ${((100 * both('bigGoals')) / both('bigChances')).toFixed(0)}%`,
+  );
   const home = rs.filter((s) => s.score[0] > s.score[1]).length / n;
   const draw = rs.filter((s) => s.score[0] === s.score[1]).length / n;
   for (const [k, [lo, hi]] of Object.entries(BANDS_11))

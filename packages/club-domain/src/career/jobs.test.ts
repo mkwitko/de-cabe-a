@@ -47,7 +47,7 @@ describe('after the board ends the job (06 §5.3)', () => {
     expect(playDecision(again, nextDecision(again) as typeof d)).toEqual(playDecision(w, d));
     for (let x = nextDecision(w); x.kind !== 'seasonOver'; x = nextDecision(w)) {
       if (x.kind === 'fired') w.board = { confidence: 60, goal: w.board!.goal };
-      else playDecision(w, x);
+      else if (x.kind === 'match') playDecision(w, x);
     }
     expect(startNextSeason(w).season).toBe(pack.season + 1);
   }, 120_000);

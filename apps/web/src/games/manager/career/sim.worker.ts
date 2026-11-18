@@ -54,6 +54,9 @@ import {
   levelRange,
   personKnows,
   personReading,
+  agentOf,
+  affinity,
+  seenTraits,
   watchedIn,
   scoutAreas,
   scoutsOf,
@@ -171,6 +174,8 @@ export interface SimView {
     atHome: boolean;
     competition: string;
   } | null;
+  /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
+  deadline: string | null;
   /** The club's next matches after this one, by date. */
   fixtures: { iso: string; opponent: ClubFace; atHome: boolean; competition: string }[];
   /** The club's last five results, oldest first, from the club's side. */
@@ -372,6 +377,15 @@ export interface MarketPlayer {
   knowledge: number | null;
   /** Whole months since the club last learned of him; null when it never looked. */
   seenMonths: number | null;
+  /** His agent, as the person's club knows him: traits seen so far, and its standing with him. */
+  agent: {
+    name: string;
+    size: 'big' | 'mid' | 'small';
+    greed?: number;
+    patience?: number;
+    influence?: number;
+    standing: number;
+  };
 }
 export interface MarketView {
   open: boolean;
@@ -426,6 +440,8 @@ export interface MarketView {
     office: number;
     why: Why;
   }[];
+  /** Players agents offered this season and still within reach: they talk with the club. */
+  offered: (MarketPlayer & { no: TalkNo | null })[];
   /** The national divisions' clubs, to pick a squad to look at. */
   clubList: { division: string; clubs: { id: string; name: string }[] }[];
   /**
@@ -507,6 +523,10 @@ function marketView(
       potential: rep?.potential ?? ceilingRange(w.pack, w.clubId, p),
       knowledge: rep?.knowledge ?? null,
       seenMonths: rep?.seen != null ? Math.floor((w.day - rep.seen) / 30) : null,
+      agent: (() => {
+        const a = agentOf(w.pack, p);
+        return { name: a.name, size: a.size, ...seenTraits(w, a), standing: affinity(w, a) };
+      })(),
       release: p.contract?.releaseFee ?? null,
       wage: p.contract?.wage ?? 0,
       value: marketValue(w.pack, p, season),
@@ -642,6 +662,13 @@ function marketView(
       watchCost: tripCost(w, 'player:'),
       known: Object.keys(w.scouting?.known ?? {}).length,
     },
+    offered: Object.entries(w.agents?.offered ?? {})
+      .filter(([, season]) => season === w.season.season)
+      .map(([id]) => byId.get(id))
+      .filter(
+        (p): p is Pack['players'][number] => !!p && p.clubId !== w.clubId && p.clubId !== ABROAD,
+      )
+      .map((p) => ({ ...row(p), no: cannotTalk(w, p) })),
     news: (w.deals ?? [])
       .slice(-NEWS_ROWS)
       .reverse()
@@ -833,6 +860,7 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'loanOut' ||
                   n.kind === 'loanBack' ||
                   n.kind === 'hired' ||
+                  n.kind === 'agentOffer' ||
                   n.kind === 'fairplayRival'
                 ? n.club
                 : n.kind === 'season'
@@ -884,6 +912,7 @@ function view(w: CareerWorld, ms: number): SimView {
     club: face(club),
     division: table.name,
     cash: w.ledger.cash,
+    deadline: pending?.kind === 'deadline' ? isoOf(pending.day) : null,
     next:
       pending?.kind === 'match'
         ? {
@@ -909,7 +938,7 @@ function view(w: CareerWorld, ms: number): SimView {
 /** Moves to the next decision; a snapshot to save when days were played on the way. */
 async function toNextDecision(w: CareerWorld): Promise<SimReply['save']> {
   const from = w.day;
-  pending = nextDecision(w);
+  pending = nextDecision(w, { deadlines: true });
   return w.day !== from
     ? { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) }
     : undefined;
@@ -928,6 +957,9 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         r.snapshot.byteLength > 0
           ? loadCareer(pack, r.seed, r.clubId, await gunzip(r.snapshot))
           : openCareer(pack, r.seed, r.clubId);
+      save = await toNextDecision(world);
+    } else if (world && r.type === 'play' && pending?.kind === 'deadline') {
+      // Deadline day passed on: the window closes and the days run to the next decision.
       save = await toNextDecision(world);
     } else if (world && r.type === 'play' && pending?.kind === 'match') {
       const from = world.day;

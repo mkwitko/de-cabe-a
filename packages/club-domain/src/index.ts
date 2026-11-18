@@ -51,6 +51,7 @@ export * from './market/loans';
 export * from './market/fairplay';
 export * from './market/abroad';
 export * from './market/scouting';
+export * from './market/agents';
 export * from './career/development';
 export * from './career/years';
 export * from './career/health';

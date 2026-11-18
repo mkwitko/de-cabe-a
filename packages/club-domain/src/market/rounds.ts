@@ -32,6 +32,7 @@ import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './
 import { lendListed } from './loans';
 import { ABROAD, importFee, signable, stanceFor } from './abroad';
 import { clubKnows } from './scouting';
+import { agentOf, aiCommission, commission } from './agents';
 import { answerBid } from './talks';
 import { boardOverpay } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
@@ -310,6 +311,8 @@ function choose(
     if (price > money) continue;
     const wants = stanceFor(w, p, buyerId);
     if (wants.no || wants.wage > room) continue;
+    // The agent's commission comes on top of the fee.
+    if (price + commission(agentOf(w.pack, p), price, wants.wage) > money) continue;
     const why = utility(w, buyerId, p, need, price, wants.wage, { money, room });
     if (why.need < REAL_NEED) continue;
     // A player on the list is easier to get: clubs come for him sooner.
@@ -362,12 +365,14 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   };
   let signed: Terms | null = null;
   for (let round = 1; round <= MAX_ROUNDS && !signed; round++) {
-    const a = answerTerms(wants, terms, round);
+    const a = answerTerms(wants, terms, round, agentOf(w.pack, p));
     if (a.kind === 'accept') signed = a.terms;
     else if (a.kind === 'refuse' || a.terms.wage > room) return null;
     else terms = a.terms;
   }
   if (!signed) return null;
+  // The agent's commission on top of the fee must fit what the club can still pay.
+  if (fee + commission(agentOf(w.pack, p), fee, signed.wage) > available(w, buyerId)) return null;
   return {
     day: w.day,
     player: p.id,
@@ -492,7 +497,8 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         // The fee leaves the league: only the buyer's books see it.
         const b = booksOf(w, id);
         w.books = { ...w.books, [id]: { ...b, spent: b.spent + deal.fee } };
-      } else if (deal.from !== null) book(w, deal.from, id, deal.fee);
+      } else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
+      aiCommission(w, id, choice.p, deal.fee, deal.wage);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);
       break;

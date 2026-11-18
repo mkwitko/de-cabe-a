@@ -3,23 +3,23 @@ import { generateDevPack } from '../generate/pack';
 import { nextDecision, openCareer, playDecision } from '../career/advance';
 import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers } from '../career/start';
-import { available, wageRoom } from './books';
+import { available, book, booksOf, wageRoom } from './books';
 import { marketRound, roundsBetween } from './rounds';
 import { marketValue, readingsOf } from './value';
 import { dayOf } from '../competition/calendar';
 
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 5)[0]!.clubId;
-const ROUND = dayOf('2026-04-16');
+const ROUND = dayOf('2026-02-16');
 
 describe('the market between clubs (07 §6, 04 §8)', () => {
   it('rounds fall every fourteen days inside a window and nowhere else', () => {
-    const april = roundsBetween(dayOf('2026-04-01'), dayOf('2026-04-30'));
-    expect(april.length).toBe(2);
-    expect(april.every((d) => d % 14 === 0)).toBe(true);
-    expect(roundsBetween(dayOf('2026-05-02'), dayOf('2026-06-28'))).toEqual([]);
+    const feb = roundsBetween(dayOf('2026-02-01'), dayOf('2026-02-28'));
+    expect(feb.length).toBe(2);
+    expect(feb.every((d) => d % 14 === 0)).toBe(true);
+    expect(roundsBetween(dayOf('2026-04-01'), dayOf('2026-07-15'))).toEqual([]);
     // The turn of the year plays its last four rounds, not every one since December.
-    expect(roundsBetween(dayOf('2026-12-06'), dayOf('2027-04-05')).length).toBe(4);
+    expect(roundsBetween(dayOf('2026-12-06'), dayOf('2027-03-01')).length).toBe(4);
   });
 
   it('clubs buy for a need, inside their budget, and nobody is left short', () => {
@@ -86,5 +86,20 @@ describe('the market between clubs (07 §6, 04 §8)', () => {
       expect(playDecision(again, nextDecision(again) as typeof d)).toEqual(playDecision(w, d));
     }
     expect(again.deals).toEqual(w.deals);
+  });
+
+  it('a sale pays the club that formed the player its solidarity share', () => {
+    const w = openCareer(pack, 91, clubId);
+    const [a, b, c] = pack.clubs.filter((x) => x.id !== clubId).map((x) => x.id);
+    const p = { ...pack.players.find((x) => x.clubId === a)!, origin: { clubId: c } };
+    book(w, a!, b!, 1_000_000, p);
+    expect(booksOf(w, a!).earned).toBe(1_000_000 - 60_000);
+    expect(booksOf(w, c!).earned).toBe(60_000);
+    expect(booksOf(w, b!).spent).toBe(1_000_000);
+    // The person's club formed him: the share comes into its cash, and the inbox says so.
+    const cash = w.ledger.cash;
+    book(w, a!, b!, 1_000_000, { ...p, origin: { clubId } });
+    expect(w.ledger.cash).toBe(cash + 60_000);
+    expect(w.inbox!.at(-1)).toMatchObject({ kind: 'solidarity', fee: 60_000 });
   });
 });

@@ -60,7 +60,7 @@ describe('loans (07 §4)', () => {
     const fee = loanFee(w, spare);
     listForLoan(w, spare.id, true);
     expect(w.forLoan).toEqual([spare.id]);
-    marketRound(w, dayOf('2026-04-16'));
+    marketRound(w, dayOf('2026-02-16'));
     expect(w.pack.players.find((p) => p.id === spare.id)!.clubId).toBe(to);
     expect(w.ledger.cash).toBeGreaterThanOrEqual(cash + fee);
     expect(w.loans![spare.id]).toMatchObject({ owner: clubId });
@@ -83,4 +83,27 @@ describe('loans (07 §4)', () => {
     expect(w.loans).toBeUndefined();
     expect(w.inbox!.some((n) => n.kind === 'loanBack')).toBe(true);
   }, 120_000);
+
+  it("FIFA's limits: six out, six in, three with the same club a season", () => {
+    const w = openCareer(pack, 99, clubId);
+    const p = w.pack.players.find(
+      (x) => x.clubId && x.clubId !== clubId && cannotBorrow(w, x, clubId) === null,
+    )!;
+    const owner = p.clubId!;
+    // Fake loans already in force (players of 22 or more, so they count).
+    const fake = (n: number, from: string, at: string) =>
+      w.pack.players
+        .filter(
+          (x) => x.clubId === at && x.id !== p.id && 2026 - Number(x.birthDate.slice(0, 4)) > 21,
+        )
+        .slice(0, n)
+        .map((x) => [x.id, { owner: from, wage: 0, until: '', season: 2026 }] as const);
+    w.loans = Object.fromEntries(fake(3, owner, clubId));
+    expect(cannotBorrow(w, p, clubId)).toBe('pairLimit');
+    const other = w.pack.clubs.find((c) => c.id !== owner && c.id !== clubId)!.id;
+    w.loans = Object.fromEntries(fake(6, other, clubId));
+    expect(cannotBorrow(w, p, clubId)).toBe('loansIn');
+    w.loans = Object.fromEntries(fake(6, owner, other));
+    expect(cannotBorrow(w, p, clubId)).toBe('loansOut');
+  });
 });

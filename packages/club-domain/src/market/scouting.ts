@@ -83,6 +83,13 @@ function learn(
   known[p.id] = { k: Math.min(100, knowledgeOf(w, p, day) + gain), day };
 }
 
+/** What an agent told the club of his player: knowledge up to `floor` (his pitch). */
+export function hearOf(w: CareerWorld, p: PackPlayer, floor: number, day: number): void {
+  if (knowledgeOf(w, p, day) >= floor) return;
+  const s = w.scouting ?? { known: {}, missions: [] };
+  w.scouting = { ...s, known: { ...s.known, [p.id]: { k: floor, day } } };
+}
+
 /**
  * What the person's club reads of a player of another club: the level and ceiling its eye sees,
  * pulled toward the truth by what it knows, with a band that narrows as it knows more.

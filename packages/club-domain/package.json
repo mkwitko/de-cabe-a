@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "season": "tsx src/season/run.ts",
-    "calibrate": "tsx src/bench/calibrate.ts"
+    "calibrate": "tsx src/bench/calibrate.ts",
+    "reality": "tsx src/bench/reality.ts"
   },
   "dependencies": {
     "@decabeca/match-engine": "workspace:*",
