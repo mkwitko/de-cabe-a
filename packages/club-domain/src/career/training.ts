@@ -58,7 +58,7 @@ export const freshFactor = (fresh: number) => 0.8 + 0.2 * fresh;
 /** Familiarity with the plan a team has at this drill (engine, 0..1). */
 export const drilled = (drill: number) => 0.6 + 0.4 * drill;
 /** Points of level 3 strength the drill is worth, against a normal week. */
-const drillPoints = (drill: number) => (drill - NEUTRAL_DRILL) * 7;
+const drillPoints = (drill: number) => (drill - NEUTRAL_DRILL) * 5;
 
 const start = (day: number): Training => ({
   intensity: 'normal',

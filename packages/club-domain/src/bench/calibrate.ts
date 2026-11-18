@@ -167,11 +167,27 @@ function main() {
   const out: string[] = [];
   const t0 = performance.now();
 
-  for (const policy of ['auto', 'keeper', 'light', 'hard', 'seller'] as Policy[]) {
+  // SEED_FROM shifts the seeds, so several processes can share a large sample; POLICIES picks
+  // which to play. Each policy also prints its raw counts by tier (`RAW`), to be summed outside.
+  const FROM = Number(process.env.SEED_FROM ?? 0);
+  const policies = (process.env.POLICIES?.split(',') ??
+    (['auto', 'keeper', 'light', 'hard', 'seller'] as const)) as Policy[];
+  for (const policy of policies) {
     const runs: Run[] = [];
     for (const clubId of clubs)
-      for (let seed = 1; seed <= SEEDS; seed++)
+      for (let seed = FROM + 1; seed <= FROM + SEEDS; seed++)
         runs.push(play(pack, seed * 7 + 1, clubId, policy, SEASONS));
+    for (const tier of [1, 2, 3, 4]) {
+      const of = runs.filter((r) => r.tier === tier);
+      const ppg = of.flatMap((r) => r.ppg);
+      out.push(
+        `RAW ${policy} ${tier} ${of.length} ${of.filter((r) => r.fired !== null).length}` +
+          ` ${of.reduce((s, r) => s + r.seasons, 0)} ${of.reduce((s, r) => s + r.ultimatums, 0)}` +
+          ` ${of.reduce((s, r) => s + r.goalsMet, 0)} ${of.reduce((s, r) => s + r.goalsJudged, 0)}` +
+          ` ${r1(ppg.reduce((a, b) => a + b, 0) * 100) / 100} ${ppg.length}` +
+          ` ${r1(of.reduce((s, r) => s + r.startStrength, 0))} ${r1(of.reduce((s, r) => s + r.endStrength, 0))}`,
+      );
+    }
     const seasons = runs.reduce((s, r) => s + r.seasons, 0);
     const judged = runs.reduce((s, r) => s + r.goalsJudged, 0);
     console.error(`${policy} done`);
@@ -203,6 +219,10 @@ function main() {
       }
   }
 
+  if (process.env.WORLD_SEASONS === '0') {
+    console.log(out.join('\n'));
+    return;
+  }
   const w = world(pack, 5, Number(process.env.WORLD_SEASONS ?? 5));
   out.push(
     `world  home ${pct(w.home.w / w.home.n)} draw ${pct(w.home.d / w.home.n)} away ${pct(w.home.l / w.home.n)} | goals a match ${r1((w.home.goals / w.home.n) * 100) / 100}`,

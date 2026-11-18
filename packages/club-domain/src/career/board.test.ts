@@ -68,10 +68,10 @@ describe('the board (06, corte 1)', () => {
   it('losing brings an ultimatum; meeting it lifts the pressure', () => {
     const w = openCareer(pack, 71, clubId);
     for (let i = 0; i < 40 && !boardOf(w).ultimatum; i++) play(w, 0, 3);
-    expect(boardOf(w).ultimatum).toEqual({ matches: 5, points: 6 });
+    expect(boardOf(w).ultimatum).toEqual({ matches: 5, points: 7 });
     expect(boardOf(w).confidence).toBeLessThan(25);
     play(w, 2, 0);
-    expect(boardOf(w).ultimatum).toEqual({ matches: 4, points: 3 });
+    expect(boardOf(w).ultimatum).toEqual({ matches: 4, points: 4 });
     play(w, 2, 0);
     play(w, 2, 0);
     expect(boardOf(w).ultimatum).toBeUndefined();

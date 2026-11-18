@@ -33,7 +33,7 @@ const ECONOMY: {
   { strength: 30, payroll: 30_000, sponsors: 100_000, capacity: 3_000, fans: 15_000 },
   { strength: 44, payroll: 90_000, sponsors: 1_000_000, capacity: 8_000, fans: 60_000 },
   { strength: 52, payroll: 300_000, sponsors: 1_500_000, capacity: 15_000, fans: 150_000 },
-  { strength: 60, payroll: 2_500_000, sponsors: 6_000_000, capacity: 25_000, fans: 400_000 },
+  { strength: 60, payroll: 1_300_000, sponsors: 6_000_000, capacity: 25_000, fans: 400_000 },
   { strength: 68, payroll: 6_000_000, sponsors: 40_000_000, capacity: 40_000, fans: 1_500_000 },
   { strength: 80, payroll: 30_000_000, sponsors: 200_000_000, capacity: 70_000, fans: 15_000_000 },
 ];

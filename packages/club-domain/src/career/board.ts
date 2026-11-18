@@ -29,7 +29,7 @@ export interface Board {
 const START = 60;
 /** Below this the board sets an ultimatum. */
 const PRESSURE = 25;
-const ULTIMATUM = { matches: 5, points: 6 } as const;
+const ULTIMATUM = { matches: 5, points: 7 } as const;
 /** Where the confidence is put back when an ultimatum is met. */
 const RELIEF = 35;
 /** Strength points that make one side the favourite. */
@@ -42,7 +42,8 @@ const BY_ODDS: Record<Odds, Record<'W' | 'D' | 'L', number>> = {
   even: { W: 3, D: 0, L: -3 },
   underdog: { W: 4, D: 1, L: -2 },
 };
-const IN_THE_RED = -2;
+/** A match played with the cash below zero. Light: the pack's money is not the person's doing. */
+const IN_THE_RED = -1;
 const GOAL_MET = 15;
 const GOAL_MISSED = -10;
 

@@ -23,7 +23,7 @@ A carreira acontece dentro do estádio à noite. Cada destino é uma cena fixa (
 - **Escalação** (`career/squad.ts`): formação e onze titulares valem na partida assistida e no resultado rápido. Jogador fora de posição rende menos (7%, 15%, 25%), para você e para todos os clubes.
 - **Plano de jogo**: bloco, pressão, ritmo, largura e risco entram na partida assistida. O resultado rápido não tem tática.
 - **Treino e fôlego** (`career/training.ts`): intensidade leve, normal ou forte troca fôlego por entrosamento. Titular deixa 28% de fôlego no jogo. Os adversários cansam pelos dias desde o último jogo deles.
-- **Diretoria** (`career/board.ts`): meta por posição, confiança de 0 a 100 que muda a cada jogo pesando o adversário, ultimato de 6 pontos em 5 jogos, demissão. Fim de temporada julga a meta.
+- **Diretoria** (`career/board.ts`): meta por posição, confiança de 0 a 100 que muda a cada jogo pesando o adversário, ultimato de 7 pontos em 5 jogos, demissão. Fim de temporada julga a meta.
 - **Lesões** (`career/health.ts`): tipo, dias fora e volta; o técnico do jogo escala só quem está apto, e os adversários também perdem jogadores.
 - **Evolução dos jogadores** (`career/development.ts`, `career/years.ts`): a cada virada todos envelhecem. O potencial é teto, não destino: o quanto cada um cresce depende de determinação (profissionalismo, ambição, resiliência), minutos jogados, intensidade do treino, estrutura do clube e um sorteio fixo pela semente. Veteranos caem e se aposentam a partir dos 36 (goleiros dois anos depois, níveis baixos antes).
 - **Safra da base**: de 3 a 6 garotos de 15 a 17 anos por clube a cada virada, conforme a estrutura. Primeiro contrato paga dois quintos do salário de mercado do nível. Os garotos do seu clube ficam na **base** (lista no Campo de treino): têm contrato, não podem ser escalados, crescem no ritmo normal. Você sobe quem quiser; aos 19 anos sobem sozinhos. No elenco, quem joga cresce mais e quem fica parado cresce menos.
@@ -46,21 +46,29 @@ A carreira acontece dentro do estádio à noite. Cada destino é uma cena fixa (
 ### Qualidade
 
 - 176 testes de domínio, 130 de integração da API, 16 de ponta a ponta (360 e 1280 px).
-- Bancada de calibração: `pnpm --filter @decabeca/club-domain calibrate` (variáveis `SEEDS`, `SEASONS`, `WORLD_SEASONS`). Joga carreiras inteiras com políticas fixas (piloto automático, treino leve, treino forte, vendedor, renovador) e mede o mundo.
+- Bancada de calibração: `pnpm --filter @decabeca/club-domain calibrate` (variáveis `SEEDS`, `SEED_FROM`, `POLICIES`, `SEASONS`, `WORLD_SEASONS`; para amostra grande, rode vários processos com `SEED_FROM` diferente e some as linhas `RAW`). Joga carreiras inteiras com políticas fixas (piloto automático, treino leve, treino forte, vendedor, renovador) e mede o mundo.
 - Lint, prettier e typecheck só nos arquivos tocados; o repositório inteiro já falhava antes.
-- Regras de carreira na versão 8 (`CAREER_RULES_VERSION`).
+- Regras de carreira na versão 10 (`CAREER_RULES_VERSION`).
 
 ## 2. Limites conhecidos do que existe
 
-- **Calibração**: três rodadas da bancada (24 carreiras de 3 temporadas por política, mundo de 5 temporadas; amostra pequena). Última medição, antes da base separada:
-  - Mandante vence 45%, empate 25,1%, visitante 29,8%; 2,56 gols por jogo.
-  - Demissão em piloto automático: 11,6% por temporada (primeira divisão 0%, segunda 4 de 6 carreiras, terceira 3 de 6, quarta 1 de 6). O piloto não contrata nem renova, e o clube dele perde força (70,1 para 63,9 na primeira divisão em 3 temporadas), então o número mede um técnico passivo, não uma pessoa jogando.
-  - Renovar todo contrato que vence piorou a demissão (17,9% por temporada). Causa não investigada.
-  - Treino forte 1,383 ponto por jogo, leve 1,352, normal 1,378: a diferença é pequena.
-  - Folhas salariais do mundo: ×1,13 em 5 temporadas. Negócios: 131 a 200 por temporada.
-  - Jogadores sem clube: 702 na quinta temporada, e subindo.
-  - Força média por divisão depois de 5 temporadas: +0,5, −0,1, −1,5, −1,1.
-  - Terceira divisão fecha a primeira temporada com caixa negativo (−R$5,6 mi com receita de R$7,6 mi): a economia do pacote está errada ali.
+- **Calibração**: medida com 30 sementes, 2 clubes por divisão, 3 temporadas (240 carreiras por política, 60 por divisão). As rodadas anteriores, de 3 sementes, não serviam para fechar número por divisão.
+  - **Demissão por política** (carreiras demitidas em 240; por divisão, em 60):
+
+    | Política | Total | Div. 1 | Div. 2 | Div. 3 | Div. 4 | Pontos por jogo |
+    |---|---|---|---|---|---|---|
+    | Piloto automático | 26 | 3 | 7 | 14 | 2 | 1,437 |
+    | Renova tudo ao preço pedido | 56 | 12 | 19 | 23 | 2 | 1,432 |
+    | Treino leve o ano todo | 39 | 8 | 11 | 17 | 3 | 1,399 |
+    | Treino forte o ano todo | 61 | 14 | 24 | 21 | 2 | 1,383 |
+
+  - **Causa da demissão alta que havia** (66 em 240 no piloto, 29 e 30 em 60 nas divisões 2 e 3): caixa negativo. Com a punição de caixa desligada, mesmas sementes, caíam 11 em 240. A folha do pacote saltava 8 vezes entre força 52 e 60 e a metade de cima das divisões 2 e 3 nascia com salários acima da receita. Corrigido: âncora de folha em força 60 de R$2,5 mi para R$1,3 mi por mês, e punição de caixa negativo de −2 para −1 por jogo.
+  - **Ainda aberto**:
+    - Os clubes mais fortes das divisões 2 e 3 seguem com salários acima da receita fixa (até −R$23 mi por ano na segunda). A terceira ainda demite mais (14 em 60).
+    - Treino normal vence leve e forte quando mantido o ano todo; forte é o pior. A escolha de intensidade ainda não é uma troca justa.
+    - Renovar todo contrato ao preço pedido dobra a demissão: a folha sobe e o caixa fica negativo.
+    - O piloto automático não contrata nem renova e o clube dele perde força (70,1 para 64,6 na primeira divisão em 3 temporadas). Os números medem um técnico passivo, não uma pessoa jogando.
+  - **Mundo** (uma semente, 5 temporadas, medido antes da correção da folha): mandante vence 45%, empate 25,1%, visitante 29,8%; 2,56 gols por jogo; 131 a 200 negócios por temporada; folhas ×1,13; 702 jogadores sem clube na quinta temporada, e subindo; força por divisão +0,5, −0,1, −1,5, −1,1.
 - **Desempenho**: o primeiro passo da carreira leva cerca de 3 s no Node por causa da abertura da janela. Não medido em celular.
 - **Base**: é uma lista no Campo de treino, sem sala nem arte própria, sem jogos da base, sem treino próprio. Os clubes do jogo não têm base separada: os garotos deles entram direto no elenco.
 - **Carregamento** de carreira longa cresce com o número de temporadas (cerca de 2,5 s em 10 temporadas no Node).
@@ -76,7 +84,7 @@ A carreira acontece dentro do estádio à noite. Cada destino é uma cena fixa (
 
 ### Próximo (fecha o corte atual)
 
-1. **Calibração, segunda volta**: demissão nas divisões 2 e 3, por que renovar tudo piora, jogadores sem clube acumulando, finanças da terceira divisão. Rodar com mais sementes.
+1. **Calibração, segunda volta**: receita dos clubes fortes das divisões 2 e 3, troca justa entre intensidades de treino, jogadores sem clube acumulando, medir o mundo de novo depois da correção da folha. Sempre com dezenas de sementes.
 2. **Base, segunda camada**: sala própria, clubes do jogo com base, jogos da base.
 3. **Desempenho do mercado em celular**: medir e, se preciso, repartir a abertura da janela em passos.
 4. **Proposta de emprego depois da demissão** e reputação do treinador.
