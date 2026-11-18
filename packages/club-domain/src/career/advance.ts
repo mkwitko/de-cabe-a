@@ -29,7 +29,7 @@ import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
-import { foreignRound } from '../market/abroad';
+import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
@@ -151,8 +151,10 @@ function playDay(
   // The clubs trade among themselves before the day's matches: the rounds due since the last day.
   for (const round of roundsBetween(w.day, day)) {
     marketRound(w, round);
-    // Then the foreign buyers, once the clubs here had their turn.
+    // Then the foreign buyers, once the clubs here had their turn; and those coming home, free
+    // for the next round.
     foreignRound(w, round);
+    homecoming(w, round);
   }
   scoutingDay(w, day);
   postMonths(w, w.day, day);

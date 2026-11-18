@@ -8,7 +8,8 @@
  *
  * A player sold abroad keeps his place in the pack under the club id `ABROAD`, with no wage
  * the league pays: no club here can sign him, field him or count him.
- * ponytail: nobody comes back yet; a return home (veterans, failed moves) is its own model.
+ * Players come home too (`homecoming`): veterans at the end of their careers and moves that did
+ * not work out, to a club here that needs them, at the opening of each window.
  * Every number here is a PARÂMETRO, to be calibrated against the real yearly exodus.
  */
 import { next, rngFrom } from '@decabeca/match-engine';
@@ -19,11 +20,12 @@ import { squadPlayers } from '../career/squad';
 import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
 import type { PackPlayer } from '../pack/schema';
-import { booksOf, tierOfClub } from './books';
+import { booksOf, tierOfClub, wageRoom } from './books';
+import { CLAUSE_TIMES, playerStance, type PlayerStance } from './deals';
+import { fitFor, squadPlanOf } from './plan';
 import type { Deal } from './rounds';
 import { canLose } from './talks';
 import { isImport } from '../career/development';
-import { playerStance, type PlayerStance } from './deals';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** Where a player sold abroad sits in the pack. */
@@ -58,6 +60,8 @@ const PROMISE_AGE = 21;
 const VISIBILITY = [0, 100, 70, 45, 30];
 /** Share of a season's offers that come in the July window; the rest in January to April. */
 const JULY = 60;
+/** The first round of a window falls in its first ROUND_DAYS days (rounds.ts). */
+const ROUND_DAYS_MAX = 14;
 /** Rounds in each window (rounds.ts: one every 14 days): January to April, and July. */
 const ROUNDS_EARLY = 8;
 const ROUNDS_JULY = 2;
@@ -65,6 +69,19 @@ const ROUNDS_JULY = 2;
 const STAYS = { loyalty: 16, ambition: 8 };
 /** Years of the contract he signs abroad. */
 const YEARS_ABROAD = 4;
+/**
+ * Chance a player abroad comes home in a year, per mille, by age: the veteran back for his last
+ * seasons, the young one whose move did not work out. Half in each window. PARÂMETRO.
+ */
+const HOME_BY_AGE: readonly [number, number][] = [
+  [23, 60],
+  [28, 80],
+  [31, 160],
+  [33, 320],
+  [99, 500],
+];
+/** Seasons abroad before he may come home. */
+const HOME_AFTER = 1;
 
 export const isAbroad = (id: string | null) => id !== null && id.startsWith(ABROAD);
 
@@ -78,12 +95,11 @@ export const foreignName = (id: string) =>
 const IMPORT_PREMIUM = 20;
 /** Over the wage he would ask at home a player wants to come from abroad. */
 const IMPORT_WAGE = 25;
-/** Age from which a player sold abroad will come home. */
-const HOMECOMING = 30;
-
-/** A player abroad a club of the league can sign: the year's foreign market, or a veteran. */
-export const signable = (p: PackPlayer, season: number) =>
-  p.clubId === ABROAD && (isImport(p.id) || ageOf(p, season) >= HOMECOMING);
+/**
+ * A player abroad a club of the league can sign: the year's foreign market. Those sold from
+ * here come home by themselves (`homecoming`). `season` kept for the callers' reading.
+ */
+export const signable = (p: PackPlayer, _season: number) => p.clubId === ABROAD && isImport(p.id);
 
 /** The fee to bring him from abroad. */
 export const importFee = (w: CareerWorld, p: PackPlayer) =>
@@ -179,6 +195,72 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
         seen: readingsOf(w.pack).get(p.id)!.level,
         why: { need: 0, fit: 0, growth: 0, resale: 0, cost: 0, wages: 0 },
       });
+    }
+  }
+  if (done.length) w.deals = [...(w.deals ?? []), ...done].slice(-80);
+  return done;
+}
+
+/**
+ * Players abroad coming home: on the first round of each window (January and July), every
+ * player abroad for HOME_AFTER seasons or more draws once, by age. One who wants to come home
+ * goes to the club here with the best name among those that need him at his position (a hole
+ * or an upgrade his level meets) and can pay his wage; with no such club he stays abroad and
+ * tries again next window. The person's club is not among them yet. Returns the moves.
+ */
+export function homecoming(w: CareerWorld, day: number): Deal[] {
+  const iso = isoOf(day);
+  const month = iso.slice(5, 7);
+  if ((month !== '01' && month !== '07') || Number(iso.slice(8, 10)) > ROUND_DAYS_MAX) return [];
+  const season = w.season.season;
+  const draw = rngFrom(seedOf(w.seed, `home:${day}`));
+  const read = readingsOf(w.pack);
+  const clubs = w.pack.clubs
+    .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
+    .sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1));
+  const done: Deal[] = [];
+  // In the pack's order, one draw each, whatever happens.
+  for (const p of w.pack.players) {
+    if (p.clubId !== ABROAD) continue;
+    const roll = next(draw);
+    const left = w.moves?.[p.id]?.joined ?? w.moves?.[p.id]?.season ?? season;
+    if (season - left < HOME_AFTER) continue;
+    const age = ageOf(p, season);
+    const chance = HOME_BY_AGE.find(([until]) => age <= until)![1];
+    // Per mille a year, half of it in each window.
+    if (roll * 2000 >= chance) continue;
+    const r = read.get(p.id)!;
+    for (const c of clubs) {
+      const plan = squadPlanOf({ pack: w.pack, clubId: c.id });
+      const need = [...plan.needs, ...(plan.upgrade ? [plan.upgrade] : [])].find(
+        (n) =>
+          n.keeper === r.keeper &&
+          fitFor({ pack: w.pack, clubId: c.id }, p, n) >= n.wanted &&
+          fitFor({ pack: w.pack, clubId: c.id }, p, n) <= n.wanted + 12,
+      );
+      if (!need) continue;
+      const wants = playerStance(w.pack, p, null, c, season);
+      if (wants.no || wants.wage > wageRoom(w, c.id)) continue;
+      movePlayer(w, p, c.id, {
+        wage: wants.wage,
+        until: `${season + wants.years}-12-31`,
+        release: marketValue(w.pack, p, season) * CLAUSE_TIMES,
+      });
+      done.push({
+        day,
+        player: p.id,
+        name: p.knownAs ?? p.name,
+        from: ABROAD,
+        to: c.id,
+        fee: 0,
+        wage: wants.wage,
+        years: wants.years,
+        role: wants.fair,
+        for: need.kind,
+        seen: r.level,
+        why: { need: 0, fit: 0, growth: 0, resale: 0, cost: 0, wages: 0 },
+      });
+      break;
     }
   }
   if (done.length) w.deals = [...(w.deals ?? []), ...done].slice(-80);
