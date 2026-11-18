@@ -6,8 +6,9 @@
 import { arrivalTime, kinOf, type Kin } from '../kinematics';
 import { rollTime, ROLL_DECEL } from '../ball';
 import { logistic } from '../rules/math';
+import { lineOf } from '../team';
 import { pressResistance } from '../rules/duel';
-import type { Vec2 } from '../pitch';
+import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import type { MatchPlayer, MatchState } from './state';
 
 export const kin = (p: MatchPlayer): Kin => kinOf(p.attrs, p.pos, p.vel, p.stamina, p.acute);
@@ -23,7 +24,7 @@ const reading = (p: MatchPlayer): Kin => {
   const t = readTime(p);
   return { ...kin(p), pos: { x: p.pos.x + p.vel.x * t, y: p.pos.y + p.vel.y * t } };
 };
-const readingArrival = (p: MatchPlayer, pt: Vec2) =>
+export const readingArrival = (p: MatchPlayer, pt: Vec2) =>
   readTime(p) + arrivalTime(reading(p), pt, true);
 
 export const opponents = (s: MatchState, team: 0 | 1) =>
@@ -68,6 +69,40 @@ export function footBlock(o: MatchPlayer, c: MatchPlayer, ux: number, uy: number
   return (0.2 + 0.2 * (o.attrs.anticipation / 99)) * (1.45 - pressResistance(c.attrs));
 }
 
+/** Extra reach of the marker within 3 m of the receiver of a pass: he steps in front (ADR-019). PARAMETER. */
+export const markerReach = (o: MatchPlayer) => 0.3 * (o.attrs.marking / 99);
+
+/** Reach of an outfield body blocking a shot: it needs the body in the line (PARAMETER). */
+export const shotBlockReach = (o: MatchPlayer) => 0.35 + 0.2 * (o.attrs.bravery / 99);
+
+/**
+ * Share of the goal mouth the shooter sees past the outfield opponents in front of
+ * him (research 18 H1: the shooter's estimate uses the same reach as the flight).
+ * Each body casts the shadow of its block reach on the goal line; the shot goes
+ * somewhere across the mouth, so the shadowed share is the chance of a block.
+ * Team frame, goal mouth 30.34 to 37.66 m.
+ */
+const SHOT_DRIFT = 2;
+export function shotClear(s: MatchState, c: MatchPlayer): number {
+  const me = flip(c.team, c.pos);
+  const D = LENGTH - me.x;
+  let clear = 1;
+  for (const o of opponents(s, c.team)) {
+    if (lineOf(o.role) === 'gk') continue;
+    const q = flip(c.team, o.pos);
+    const a = q.x - me.x;
+    // A body level with him still meets the ball as it leaves the foot (PARAMETER: 0.3 m).
+    if (a <= -0.3 || a >= D) continue;
+    const k = D / Math.max(a, 0.3);
+    const yc = me.y + (q.y - me.y) * k;
+    // He also steps across while the ball travels to him (PARAMETERS: 23 m/s shot, SHOT_DRIFT m/s).
+    const hw = (shotBlockReach(o) + (SHOT_DRIFT * a) / 23) * k;
+    const shade = Math.min(yc + hw, CENTER.y + 3.66) - Math.max(yc - hw, CENTER.y - 3.66);
+    if (shade > 0) clear *= 1 - shade / 7.32;
+  }
+  return clear;
+}
+
 /**
  * PARAMETERS: an opponent who reaches the ball's path this much later than the
  * ball still gets a foot to it half of the time, and the spread of that guess.
@@ -107,7 +142,15 @@ export function passSafety(
     Math.abs(c.pos.x - from.x) + Math.abs(c.pos.y - from.y) < 0.01
   )
     for (const o of opp) safe *= 1 - footBlock(o, c, dx / d, dy / d);
-  const samples = lofted ? [1] : [0.25, 0.5, 0.75, 1];
+  // The end point is a race between the receiver and the nearest opponent (below), counted
+  // once: along the path only the points before it, unless nobody is there to receive.
+  const samples = receiver
+    ? lofted
+      ? []
+      : [0.25, 0.5, 0.75]
+    : lofted
+      ? [1]
+      : [0.25, 0.5, 0.75, 1];
   for (const o of opp) {
     let worst = 0;
     // Already standing in the lane: the ball meets his reach without him moving.
@@ -132,18 +175,38 @@ export function passSafety(
   if (receiver) {
     // A marker tight on the receiver (within 3 m) can step in front of the ball (PARAMETER).
     let tight = Infinity;
+    let marker: MatchPlayer | null = null;
     for (const o of opp) {
       const dx = o.pos.x - receiver.pos.x;
       const dy = o.pos.y - receiver.pos.y;
-      tight = Math.min(tight, Math.sqrt(dx * dx + dy * dy));
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < tight) {
+        tight = d;
+        marker = o;
+      }
     }
-    if (tight < 3) safe *= 0.82 + 0.06 * tight;
+    // How often he gets in front depends on his marking (ADR-019; the flight gives him the same extra reach).
+    if (tight < 3 && marker) safe *= 1 - (0.18 - 0.06 * tight) * (0.5 + marker.attrs.marking / 99);
     // The receiver must beat the nearest opponent to the end point.
     const tr = arrivalTime(kin(receiver), to, receiverKnows);
     const tOpp = Math.min(...opp.map((o) => readingArrival(o, to)));
     safe *= logistic((tOpp - tr + 0.2) / 0.3);
   }
   return safe;
+}
+
+/**
+ * Where a pass to a moving team-mate is aimed: where he will be when the ball arrives,
+ * at most 1.5 s ahead (PARAMETERS: 14 m/s along the ground, 18 m/s lofted). The kick and
+ * the passer's estimate both use it, so the passer judges the pass he actually plays.
+ */
+export function leadTarget(from: Vec2, r: MatchPlayer, long: boolean): Vec2 {
+  const d0 = Math.sqrt((r.pos.x - from.x) ** 2 + (r.pos.y - from.y) ** 2);
+  const lead = Math.min(1.5, d0 / (long ? 18 : 14));
+  return {
+    x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5),
+    y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5),
+  };
 }
 
 /** Speed for a ground pass of `d` metres, arriving firm but controllable. PARAMETERS. */

@@ -3,17 +3,19 @@
  * acceptance in TASKS.md. Full matches use the synthetic fixture.
  */
 import { describe, expect, it } from 'vitest';
-import type { MatchEvent } from '../contract';
+import { ATTRIBUTES, type MatchEvent } from '../contract';
 import { aerialScore, dribbleChance, tackleChance } from '../rules/duel';
-import { foulChance } from '../rules/discipline';
+import { aerialFoulChance, beatenFoulChance, foulChance } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { explain } from '../rules/explain';
 import { PENALTY_XG, xg } from '../rules/xg';
-import { passSafety } from './control';
+import { candidates, chooseAction } from './carrier';
+import { passSafety, shotClear } from './control';
 import { foul, stepUntilEnd, step } from './engine';
 import { matchInput, teamInput } from './fixture';
 import { finisherFactor, keeperFactor, kick, offsideNow, shoot } from './kick';
 import { resultOf, simulateMatch } from './simulate';
+import { dist } from '../pitch';
 import { createMatch, deserialize, serialize, type MatchState } from './state';
 
 const base = (over: Partial<Record<string, number>> = {}) => {
@@ -103,7 +105,9 @@ describe('MC-034 action with the ball', () => {
         (n, r) => n + r.events.filter((e) => e.kind === 'pass' && e.data.kind === 1).length,
         0,
       );
-    expect(through(matches([1, 2], vis(20)))).toBeLessThan(through(matches([1, 2], vis(90))));
+    // Six seeds: with two the count is within seed noise (2026-11-16: 79 vs 72 on seeds 1 and 2).
+    const seeds = [1, 2, 3, 4, 5, 6];
+    expect(through(matches(seeds, vis(20)))).toBeLessThan(through(matches(seeds, vis(90))));
   });
 
   it('the log tells a bad choice from a bad kick', () => {
@@ -142,6 +146,112 @@ describe('MC-035 passing', () => {
   });
 });
 
+describe('fatigue (02 §5.4, §6)', () => {
+  it('a tired carrier picks the best option less often', () => {
+    const share = (stamina: number) => {
+      const s = bare(3);
+      const c = place(s, 6, 60, 34);
+      for (const [i, x, y] of [
+        [7, 70, 20],
+        [8, 72, 48],
+        [5, 55, 10],
+        [9, 80, 34],
+      ] as const)
+        place(s, i, x, y);
+      for (const [i, x, y] of [
+        [13, 66, 30],
+        [14, 75, 40],
+        [15, 62, 44],
+      ] as const)
+        place(s, i, x, y);
+      c.stamina = stamina;
+      s.owner = c.index;
+      let best = 0;
+      for (let k = 0; k < 400; k++) {
+        const ch = chooseAction(s, c);
+        if (ch.action.u >= ch.best - 1e-9) best++;
+      }
+      return best;
+    };
+    expect(share(0.2)).toBeLessThan(share(1));
+  });
+});
+
+describe('corner scheme (02 §8 bola parada)', () => {
+  it('at a corner the defenders outnumber the attackers in the box and a forward stays up', () => {
+    const s = createMatch(matchInput(4));
+    s.restart = { kind: 'corner', team: 0, at: { x: 105, y: 0.5 } };
+    step(s);
+    const inBox = (p: (typeof s.players)[number]) =>
+      p.pos.x > 105 - 16.5 && Math.abs(p.pos.y - 34) < 20.16 && p.slot !== 0;
+    const att = s.players.filter((p) => p.team === 0 && inBox(p)).length;
+    const def = s.players.filter((p) => p.team === 1 && inBox(p)).length;
+    expect(att).toBeGreaterThanOrEqual(4);
+    expect(def).toBeGreaterThan(att);
+    expect(s.players.some((p) => p.team === 1 && p.pos.x < 70)).toBe(true);
+  });
+});
+
+describe('crosses (02 §6.3)', () => {
+  it('the crosser rates the zone where a team-mate beats the defenders highest', () => {
+    const s = bare();
+    const c = place(s, 7, 92, 6);
+    place(s, 9, 98, 40); // free at the far post
+    place(s, 13, 98, 31); // defender at the near post
+    place(s, 12, 93, 34); // defender on the penalty spot
+    const crosses = candidates(s, c, 'open').filter((a) => a.kind === 'cross');
+    expect(crosses.length).toBe(3);
+    const far = crosses.find((a) => a.target.y > 36)!;
+    for (const a of crosses) if (a !== far) expect(far.p).toBeGreaterThan(a.p);
+  });
+});
+
+describe('the passer judges the pass he plays', () => {
+  it('a pass to a running team-mate is rated where the kick sends it, ahead of him', () => {
+    const s = bare();
+    const c = place(s, 7, 40, 34);
+    const m = place(s, 9, 55, 34);
+    m.vel = { x: 0, y: 6 };
+    // An opponent standing where the ball will meet the runner, nowhere near his current spot.
+    const lead = Math.min(1.5, 15 / 14);
+    place(s, 13, 55, 34 + 6 * lead);
+    const pass = candidates(s, c, 'open').find((a) => a.kind === 'pass' && a.receiver === m)!;
+    expect(pass.target.y).toBeCloseTo(34 + 6 * lead, 1);
+    expect(pass.p).toBeLessThan(0.3);
+  });
+
+  it('a runner who has just crossed the line at speed still looks onside (offside from timing)', () => {
+    const s = bare();
+    const c = place(s, 7, 60, 34);
+    const m = place(s, 9, 86, 34);
+    m.vel = { x: 7, y: 0 };
+    place(s, 12, 84, 40);
+    place(s, 13, 84, 28);
+    place(s, 11, 103, 34);
+    expect(candidates(s, c, 'open').some((a) => a.receiver === m)).toBe(true);
+  });
+
+  it('nobody plays a team-mate clearly offside', () => {
+    const s = bare();
+    const c = place(s, 7, 60, 34);
+    const m = place(s, 9, 90, 30);
+    place(s, 12, 84, 40);
+    place(s, 13, 84, 28);
+    place(s, 11, 103, 34);
+    const to = candidates(s, c, 'open').filter((a) => a.receiver === m);
+    expect(to).toEqual([]);
+  });
+
+  it('a defender behind a receiver who already stands on the ball does not cut the pass', () => {
+    const s = bare();
+    const c = place(s, 7, 40, 34);
+    const m = place(s, 9, 55, 34);
+    place(s, 13, 58.5, 34);
+    // The race at the end point is the receiver's against the nearest opponent, counted once.
+    expect(passSafety(s, 0, c.pos, m.pos, 12, false, m)).toBeGreaterThan(0.7);
+  });
+});
+
 describe('MC-162, MC-036, MC-163 contests', () => {
   it('a tackle from behind is harder and fouls more', () => {
     const a = base();
@@ -165,6 +275,19 @@ describe('MC-162, MC-036, MC-163 contests', () => {
 });
 
 describe('MC-038 chance quality', () => {
+  it('the shooter sees the bodies between him and the goal, not the keeper', () => {
+    const s = bare();
+    const c = place(s, 9, 85, 34);
+    place(s, 11, 104, 34); // keeper
+    expect(shotClear(s, c)).toBe(1);
+    place(s, 13, 92, 10); // wide, out of the line
+    expect(shotClear(s, c)).toBe(1);
+    place(s, 14, 92, 34.5); // in the line
+    expect(shotClear(s, c)).toBeLessThan(0.6);
+    place(s, 15, 85.2, 34.4); // level with the kick
+    expect(shotClear(s, c)).toBeLessThan(0.1);
+  });
+
   it('matches the reference by distance band', () => {
     expect(open(99, 34)).toBeGreaterThan(0.3);
     expect(open(99, 34)).toBeLessThan(0.48);
@@ -287,6 +410,20 @@ describe('MC-039 referee', () => {
     expect(s.teams[1].stats.redCards).toBe(1);
   });
 
+  it('fouls also come from aerial duels (02 §6.5 carga), more with aggression', () => {
+    const d = (aggression: number) => ({ attrs: base({ aggression }), input: { traits: [] } });
+    expect(aerialFoulChance(d(90))).toBeGreaterThan(aerialFoulChance(d(30)));
+    // Aerial fouls are rare (few contested high balls, HANDOFF): enough matches to see one.
+    const rs = matches([1, 2, 3, 4, 5, 6, 7, 8]);
+    const aerial = rs.flatMap((r) => r.events.filter((e) => e.kind === 'foul' && e.data.aerial));
+    expect(aerial.length).toBeGreaterThan(0);
+  });
+
+  it('a beaten defender may trip or hold the dribbler, more with aggression', () => {
+    const d = (aggression: number) => ({ attrs: base({ aggression }), input: { traits: [] } });
+    expect(beatenFoulChance(d(90))).toBeGreaterThan(beatenFoulChance(d(30)));
+  });
+
   it('every foul counts and stops the clock for cards', () => {
     const r = simulateMatch(matchInput(4));
     expect(r.stats[0].fouls + r.stats[1].fouls).toBe(
@@ -352,6 +489,88 @@ describe('MC-165 offside', () => {
     s.ball.possession = 0;
     for (let i = 0; i < 20 && s.flight; i++) step(s);
     expect(s.events.some((e) => e.kind === 'offside')).toBe(false);
+  });
+});
+
+describe('containment of a carrier in our half', () => {
+  const run = (defenderAt: [number, number]) => {
+    const s = bare();
+    const c = place(s, 9, 70, 34);
+    c.vel = { x: 5, y: 0 };
+    s.owner = 9;
+    s.ball.holder = 9;
+    s.ball.possession = 0;
+    s.ball.pos = { ...c.pos };
+    place(s, 11, 103, 34);
+    const d = place(s, 13, defenderAt[0], defenderAt[1]);
+    step(s);
+    return { c, d };
+  };
+  it('the nearest goal-side defender within 6 m steps into his path', () => {
+    const { c, d } = run([75, 36]);
+    expect(d.intent).toBe('press');
+    // Goal-side of where the carrier stood when the step began (he then moves on).
+    expect(d.target.x).toBeGreaterThan(70);
+    expect(dist(d.target, { x: 70, y: 34 })).toBeLessThan(2);
+    expect(c.pos.x).toBeGreaterThan(70);
+  });
+  it('a defender further off keeps his own job', () => {
+    expect(run([84, 40]).d.intent).not.toBe('press');
+  });
+  it('a defender just beaten, still level with the carrier, cuts back in', () => {
+    expect(run([68.5, 37]).d.intent).toBe('press');
+  });
+  it('a defender well behind the carrier does not', () => {
+    expect(run([66, 36]).d.intent).not.toBe('press');
+  });
+});
+
+describe('the keeper on a long ball', () => {
+  // A lofted ball from a match (seed 1000): it lands near (82, 30) and runs on towards the byline.
+  const longBall = (withForward: boolean) => {
+    const s = bare();
+    const passer = place(s, 5, 37.3, 9.3);
+    const k = place(s, 11, 99.4, 32);
+    place(s, 12, 72.4, 40.9);
+    place(s, 13, 71.9, 28);
+    const r = withForward ? place(s, 9, 70.6, 28.1) : null;
+    if (r) r.vel = { x: 1.1, y: 0.6 };
+    s.flight = kick(
+      s,
+      passer,
+      { kind: 'long', target: { x: 82, y: 29 }, receiver: r, p: 1, est: 1, u: 0, ue: 0 },
+      true,
+    );
+    s.flight.ball = { x: 37.3, y: 9.3, z: 0.1, vx: 17.9, vy: 10.8, vz: 12.3 };
+    s.owner = null;
+    s.ball.possession = 0;
+    step(s);
+    return k;
+  };
+  it('stays in goal when a forward meets the ball first', () => {
+    const k = longBall(true);
+    expect(k.intent).not.toBe('receive');
+    expect(Math.abs(k.target.y - 34)).toBeLessThan(6);
+  });
+  it('runs neither to where the ball dies when nobody meets it in flight', () => {
+    expect(longBall(false).intent).not.toBe('receive');
+  });
+  it('still comes for a ball rolling into his box ahead of everyone', () => {
+    const s = bare();
+    const passer = place(s, 5, 70, 34);
+    const k = place(s, 11, 101, 34);
+    place(s, 9, 78, 30);
+    s.flight = kick(
+      s,
+      passer,
+      { kind: 'pass', target: { x: 95, y: 34 }, receiver: null, p: 1, est: 1, u: 0, ue: 0 },
+      true,
+    );
+    s.flight.ball = { x: 80, y: 34, z: 0, vx: 12, vy: 0, vz: 0 };
+    s.owner = null;
+    s.ball.possession = 0;
+    step(s);
+    expect(k.intent).toBe('receive');
   });
 });
 
@@ -458,4 +677,56 @@ describe('MC-041 injuries', () => {
         if (subsBefore < 5 && e.atMs < 85 * 60000) expect(off).toBeDefined();
       }
   });
+});
+
+describe('ADR-019: no player attribute without effect', () => {
+  it('a match reads every player attribute', () => {
+    const s = createMatch(matchInput(1));
+    const read = new Set<string | symbol>();
+    for (const p of s.players)
+      p.attrs = new Proxy(p.attrs, {
+        get(t, k) {
+          read.add(k);
+          return t[k as keyof typeof t];
+        },
+      });
+    stepUntilEnd(s);
+    expect(ATTRIBUTES.filter((a) => !read.has(a))).toEqual([]);
+  });
+});
+
+describe('nobody behind the keeper', () => {
+  it('with the ball in our half outside the box, no outfield player stands 3 m behind the keeper', async () => {
+    const { defaultPlan } = await import('../presets');
+    const { lineOf } = await import('../team');
+    let frames = 0;
+    let behind = 0;
+    for (const f of ['3-5-2', '4-3-3'] as const)
+      for (const seed of [1, 2]) {
+        const s = createMatch(
+          matchInput(
+            seed,
+            teamInput(seed * 2 + 1, 65, defaultPlan(f)),
+            teamInput(seed * 2 + 2, 65, defaultPlan(f)),
+          ),
+        );
+        while (!s.finished) {
+          step(s);
+          for (const t of [0, 1] as const) {
+            const d = (x: number) => (t === 0 ? x : 105 - x);
+            const bx = d(s.ball.pos.x);
+            if (bx > 52.5 || bx <= 20) continue;
+            const gk = s.players.find((p) => p.team === t && p.active && lineOf(p.role) === 'gk');
+            if (!gk) continue;
+            for (const p of s.players)
+              if (p.team === t && p.active && p !== gk) {
+                frames++;
+                if (d(p.pos.x) < d(gk.pos.x) - 3) behind++;
+              }
+          }
+        }
+      }
+    // Report from the visual side (2026-11-17): 14 per 100 frames of a team; here per player-frame.
+    expect(behind / frames).toBeLessThan(0.001);
+  }, 120000);
 });

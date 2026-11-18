@@ -22,6 +22,7 @@ const METRICS: Record<string, (s: Summary, a: number) => number> = {
   shotsA: (s, a) => s.shots[a]!,
   shotsB: (s, a) => s.shots[1 - a]!,
   highWinsA: (s, a) => s.highWins[a]!,
+  htShotShareA: (s, a) => (s.highTurnovers[a] ? s.highTurnoverShots[a]! / s.highTurnovers[a]! : 0),
   goals: (s) => s.score[0] + s.score[1],
 };
 

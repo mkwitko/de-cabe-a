@@ -10,7 +10,8 @@ export const BANDS_11: Record<string, [number, number]> = {
   goals: [2.2, 2.5],
   shotsPerTeam: [12.6, 13.6],
   onTargetPerTeam: [4.0, 4.6],
-  xgPerShot: [0.1, 0.12],
+  // Série A: goals over shots, a conversion rate (02 §11; Premier League 0.10 to 0.12 secondary).
+  goalsPerShot: [0.085, 0.1],
   passesPerTeam: [415, 428],
   passCompletion: [0.78, 0.82],
   foulsPerTeam: [13.4, 15.9],
@@ -32,7 +33,7 @@ async function main() {
     goals: both('score'),
     shotsPerTeam: both('shots') / 2,
     onTargetPerTeam: both('onTarget') / 2,
-    xgPerShot: both('xg') / both('shots'),
+    goalsPerShot: both('score') / both('shots'),
     passesPerTeam: both('passes') / 2,
     passCompletion: both('completed') / both('passes'),
     foulsPerTeam: both('fouls') / 2,
@@ -42,6 +43,14 @@ async function main() {
     offsidesPerTeam: both('offsides') / 2,
     distanceKm: sum((s) => s.distance) / 1000,
   };
+  // The engine's own chance quality per shot: no band with this definition in 02 §11.
+  console.log(
+    `xG per shot (engine chance quality, no band) ${(both('xg') / both('shots')).toFixed(3)}`,
+  );
+  // Transition metrics (no band in 02 §11; references in research 18 §1).
+  console.log(
+    `high turnovers per team ${(both('highTurnovers') / 2).toFixed(1)}, shot-ending (same sequence) ${((100 * both('highTurnoverShots')) / both('highTurnovers')).toFixed(0)}% (Opta 13-21%); losses won back within 5 s ${((100 * both('regained5s')) / both('losses')).toFixed(0)}%`,
+  );
   const home = rs.filter((s) => s.score[0] > s.score[1]).length / n;
   const draw = rs.filter((s) => s.score[0] === s.score[1]).length / n;
   for (const [k, [lo, hi]] of Object.entries(BANDS_11))

@@ -56,6 +56,8 @@ export interface World {
   lostAt?: [number, number];
   /** Per team: just won the ball and set to counter (the match engine sets it each step). */
   counter?: [boolean, boolean];
+  /** Per team without the ball: one of its press triggers is on (the match engine sets it). */
+  triggered?: [boolean, boolean];
 }
 
 export interface TeamSetup {
@@ -128,6 +130,8 @@ const compliance = (a: Attributes, fam: number) =>
 const BACK_SPACING = 13;
 /** PARAMETER: compliance lost per unit of plan demand when the side is not drilled at all. */
 const DEMAND_COST = 0.35;
+/** PARAMETER: metres the back line steps up on an offside trap. */
+const TRAP_STEP = 5;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
 /** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
@@ -181,6 +185,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       ourLine,
       w.counter?.[team] ?? false,
       afterLoss,
+      w.triggered?.[team] ?? false,
     );
     // The carrier (or the intended receiver) is not available for tasks.
     const pool = mine.filter((p) => p.index !== w.ball.holder);
@@ -189,6 +194,9 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     // Collective errors: a player may miss a new task and follow his own reading (his
     // anchor) instead; the task is then left uncovered — two go to the ball, nobody covers.
     const kept: Assignment[] = [];
+    // A leader on the pitch organises the others (ADR-019; 02 §5.11): the best leadership
+    // moves everyone's compliance by up to ±0.03 around an average one (PARAMETER).
+    const lead = 0.06 * (Math.max(...mine.map((q) => q.attrs.leadership)) / 99 - 0.5);
     for (const a of next_) {
       const old = prev.get(a.player);
       const p = w.players[a.player]!;
@@ -207,7 +215,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
         isNew &&
         (event
           ? missDemand > 0 && next(w.rng) < missDemand
-          : next(w.rng) > compliance(p.attrs, w.familiarity[team]) - missDemand)
+          : next(w.rng) > compliance(p.attrs, w.familiarity[team]) + lead - missDemand)
       )
         continue;
       if (isNew) {
@@ -243,6 +251,7 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       ourLine,
       w.counter?.[team] ?? false,
       afterLoss,
+      w.triggered?.[team] ?? false,
     ).map((t) => [t.key, t.point]),
   );
   const targets: Vec2[] = [];
@@ -254,6 +263,23 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     }
     const a = byPlayer.get(p.index);
     let pt = a ? (fresh.get(a.task.key) ?? a.task.point) : anc[p.slot]!;
+    // Movement off the ball (ADR-019): a supporting player steps away from the nearest
+    // opponent to get free, more with a good sense of it (PARAMETER: up to 2 m).
+    if (a && inPossession && (a.task.kind === 'support' || a.task.kind === 'betweenLines')) {
+      let near: Vec2 | null = null;
+      let nd = Infinity;
+      for (const q of opp) {
+        const d = dist(q, pt);
+        if (d < nd) {
+          nd = d;
+          near = q;
+        }
+      }
+      if (near && nd > 1e-6 && nd < 6) {
+        const step = 2 * (p.attrs.offTheBall / 99);
+        pt = { x: pt.x + ((pt.x - near.x) / nd) * step, y: pt.y + ((pt.y - near.y) / nd) * step };
+      }
+    }
     // Timing of the run (ADR-019): a poor sense of it holds the runner back off the last line.
     if (a && a.task.kind === 'depth') pt = { x: pt.x - 2.5 * (1 - p.attrs.timing / 99), y: pt.y };
     // With the ball, the rest defence is the players the plan leaves behind (02 §5.9);
@@ -275,8 +301,23 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       const cy = ys.reduce((a, b) => a + b, 0) / ys.length;
       const cx = line.reduce((a, { p }) => a + anc[p.slot]!.x, 0) / line.length;
       const spacing = Math.min(BACK_SPACING, (ys[ys.length - 1]! - ys[0]!) / (line.length - 1));
-      line.forEach(({ i }, k) => {
-        targets[i] = { x: cx, y: clamp(cy + (k - (line.length - 1) / 2) * spacing, 2, WIDTH - 2) };
+      // Offside trap (02 §8.1): on a press trigger the line steps up together; a defender
+      // who is slow to read it or new to the plan steps less and plays the runner onside.
+      // The classic moment: the passer is closed down (one of ours within 2.5 m of him).
+      const holder = w.ball.holder !== null ? w.players[w.ball.holder] : undefined;
+      const closed =
+        holder !== undefined &&
+        holder.team !== team &&
+        mine.some((q) => dist(q.pos, holder.pos) < 2.5);
+      const trap = plan.team.offsideTrap && ((w.triggered?.[team] ?? false) || closed);
+      line.forEach(({ p, i }, k) => {
+        const step = trap
+          ? TRAP_STEP * w.familiarity[team] * (0.5 + 0.5 * (p.attrs.concentration / 99))
+          : 0;
+        targets[i] = {
+          x: cx + step,
+          y: clamp(cy + (k - (line.length - 1) / 2) * spacing, 2, WIDTH - 2),
+        };
       });
     }
   }

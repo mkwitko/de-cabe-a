@@ -81,6 +81,8 @@ export interface TeamState {
 
 export interface MatchState extends World {
   version: number;
+  /** Per team: a press trigger keeps the block stepping out until this tick. */
+  triggerUntil?: [number, number];
   players: MatchPlayer[];
   /** 1, 2 regular halves; 3, 4 extra time. */
   period: number;

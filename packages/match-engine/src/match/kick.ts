@@ -10,7 +10,7 @@ import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
 import { lineOf } from '../team';
-import { footBlock, groundSpeed, opponents, pressureOn } from './control';
+import { footBlock, groundSpeed, leadTarget, opponents, pressureOn, shotClear } from './control';
 import { emit } from './events';
 import type { Action } from './carrier';
 import type { Flight, MatchPlayer, MatchState } from './state';
@@ -44,7 +44,11 @@ export function footFactor(s: MatchState, c: MatchPlayer): number {
 }
 
 export function passError(s: MatchState, c: MatchPlayer, d: number): number {
-  const skill = weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
+  // The keeper's passing is his distribution (ADR-019).
+  const skill =
+    lineOf(c.role) === 'gk'
+      ? weighted(c.attrs, { distribution: 0.6, passing: 0.25, composure: 0.15 })
+      : weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
   const sigma =
     (0.012 +
       0.05 * (1 - skill) +
@@ -107,18 +111,14 @@ function beside(s: MatchState, c: MatchPlayer, ux: number, uy: number): number[]
     .map((o) => o.index);
 }
 
+/** A cross is whipped in at pace across the runners: harder to land than a long pass (PARAMETER, cross accuracy about 22% to 25%). */
+const CROSS_ERROR = 1.8;
+
 export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolean): Flight {
   const from = { ...c.pos };
   // Lead a moving receiver: aim where he will be when the ball arrives (at most 1.5 s ahead).
-  if ((a.kind === 'pass' || a.kind === 'long') && a.receiver) {
-    const r = a.receiver;
-    const d0 = Math.sqrt((r.pos.x - from.x) ** 2 + (r.pos.y - from.y) ** 2);
-    const lead = Math.min(1.5, d0 / (a.kind === 'long' ? 18 : 14));
-    a.target = {
-      x: clamp(r.pos.x + r.vel.x * lead, 0.5, LENGTH - 0.5),
-      y: clamp(r.pos.y + r.vel.y * lead, 0.5, WIDTH - 0.5),
-    };
-  }
+  if ((a.kind === 'pass' || a.kind === 'long') && a.receiver)
+    a.target = leadTarget(from, a.receiver, a.kind === 'long');
   const dx = a.target.x - from.x;
   const dy = a.target.y - from.y;
   const d = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -138,10 +138,14 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
     const skill =
       a.kind === 'cross'
         ? weighted(c.attrs, { crossing: 0.6, technique: 0.2, longPassing: 0.2 })
-        : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
+        : lineOf(c.role) === 'gk'
+          ? weighted(c.attrs, { distribution: 0.6, longPassing: 0.25, technique: 0.15 })
+          : weighted(c.attrs, { longPassing: 0.6, technique: 0.25, passing: 0.15 });
     // Landing error grows with distance and falls with skill (PARAMETERS).
     const err =
-      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c)) * d * (a.kind === 'clear' ? 2 : 1);
+      (0.06 + 0.12 * (1 - skill) + 0.04 * pressureOn(s, c) + 0.04 * (1 - c.stamina)) *
+      d *
+      (a.kind === 'clear' ? 2 : a.kind === 'cross' ? CROSS_ERROR : 1);
     const land = {
       x: clamp(a.target.x + g(s) * err * 0.6, 0.5, LENGTH - 0.5),
       y: clamp(a.target.y + g(s) * err * 0.6, 0.5, WIDTH - 0.5),
@@ -212,11 +216,17 @@ export function shoot(
   const header = opts.header ?? false;
   const chance = opts.chance ?? a.chance ?? 0.05;
   const keeper = opponents(s, team).find((p) => lineOf(p.role) === 'gk');
+  // xG already counts the shots that bodies block (the published models are fitted on all
+  // shots); the flight blocks them physically, so a shot that gets through scores at
+  // chance / clear and goals match xG on average (02 §7). Not for a penalty or a header.
+  const through = opts.penalty || header ? 1 : Math.max(0.3, shotClear(s, c));
   const pGoal = clamp(
-    chance *
+    (chance / through) *
       finisherFactor(c, header, flip(team, c.pos).x < LENGTH - 18) *
       (header ? 1 : 1 / footFactor(s, c)) *
       keeperFactor(keeper) *
+      // A tired finisher strikes it less cleanly (PARAMETER: −15% at zero stamina).
+      (1 - 0.15 * (1 - c.stamina)) *
       (1 + homeEdge(s, team) - homeEdge(s, team === 0 ? 1 : 0)),
     0.002,
     0.97,
@@ -228,7 +238,14 @@ export function shoot(
   const pOn = opts.penalty
     ? 0.92
     : clamp(
-        Math.max(pGoal + 0.04, 0.28 + 0.3 * (skill - 0.6) - 0.08 * pressureOn(s, c) + 0.6 * chance),
+        Math.max(
+          pGoal + 0.04,
+          0.28 +
+            0.3 * (skill - 0.6) -
+            0.08 * pressureOn(s, c) -
+            0.04 * (1 - c.stamina) +
+            0.6 * chance,
+        ),
         0,
         0.98,
       );

@@ -25,6 +25,47 @@ export interface Summary {
   xgBy: Record<'setPiece' | 'transition' | 'positional', [number, number]>;
   /** Balls won within 35 m of the opponents' goal. */
   highWins: [number, number];
+  /**
+   * Transition (research 18 §1): balls won within 40 m of the opponents' goal and how many of
+   * them lead to a shot in the same sequence, before the opponents win it or play stops (Opta:
+   * 13% to 21%; Opta Analyst, Premier League 2025/26: 14.9%); losses and how many are won back
+   * within 5 s (Bauer and Anzer 2021: counter-press success).
+   */
+  highTurnovers: [number, number];
+  highTurnoverShots: [number, number];
+  losses: [number, number];
+  regained5s: [number, number];
+}
+
+/** A sequence (Opta) ends when play stops: these events end it before any later shot. */
+const STOPPAGE = new Set(['foul', 'offside', 'corner', 'throwIn', 'goalKick', 'freeKick', 'goal']);
+
+export function transitions(r: Pick<MatchResult, 'events'>) {
+  const out = { ht: [0, 0], hts: [0, 0], losses: [0, 0], back: [0, 0] } as Record<
+    'ht' | 'hts' | 'losses' | 'back',
+    [number, number]
+  >;
+  const wins = r.events.filter((e) => e.kind === 'phaseChange' && e.team !== null);
+  wins.forEach((e, k) => {
+    const t = e.team as 0 | 1;
+    const prev = wins[k - 1];
+    if (prev && prev.team !== t) {
+      out.losses[prev.team as 0 | 1]++;
+      // Won back by the side that lost it, within 5 s of losing it.
+      const again = wins[k + 1];
+      if (again && again.team === prev.team && again.atMs - e.atMs <= 5000)
+        out.back[prev.team as 0 | 1]++;
+    }
+    if (!e.at || (t === 0 ? 1050 - e.at[0] : e.at[0]) >= 400) return;
+    out.ht[t]++;
+    const end = wins[k + 1]?.id ?? Infinity;
+    const first = r.events.find(
+      (x) =>
+        x.id > e.id && x.id < end && ((x.kind === 'shot' && x.team === t) || STOPPAGE.has(x.kind)),
+    );
+    if (first?.kind === 'shot') out.hts[t]++;
+  });
+  return out;
 }
 
 export function summary(r: MatchResult): Summary {
@@ -74,6 +115,15 @@ export function summary(r: MatchResult): Summary {
       for (const e of r.events)
         if (e.kind === 'shot' && e.team !== null) out[o.get(e.id)!][e.team] += e.data.xg ?? 0;
       return out;
+    })(),
+    ...(() => {
+      const t = transitions(r);
+      return {
+        highTurnovers: t.ht,
+        highTurnoverShots: t.hts,
+        losses: t.losses,
+        regained5s: t.back,
+      };
     })(),
     highWins: pair(
       (t) =>

@@ -21,13 +21,22 @@ import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
 import { chanceFrom, chooseAction, inCounter, settleTime, type Allowed } from './carrier';
-import { firstArrival, kin, mates, opponents, pressureOn, readTime } from './control';
+import {
+  firstArrival,
+  kin,
+  mates,
+  opponents,
+  pressureOn,
+  readTime,
+  shotBlockReach,
+  markerReach,
+} from './control';
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
 import { acuteLoad, drain, recover } from '../rules/stamina';
 import { ACUTE_LOSS, fatigue } from '../kinematics';
-import { foulChance, cardFor } from '../rules/discipline';
+import { aerialFoulChance, beatenFoulChance, foulChance, cardFor } from '../rules/discipline';
 import { CONTACT_PER_FOUL, injuryRisk } from '../rules/injury';
 import { readTheGame, substitute, substitutions } from './coach';
 import type { MatchPlayer, MatchState, RestartKind } from './state';
@@ -95,6 +104,96 @@ export function setRestart(
     emit(s, kind, team, null, null, s.restart.at);
 }
 
+/**
+ * Default corner scheme (02 §8 bola parada, until a plan brings its own routine). Attack: the
+ * plan's rest defence stays back, two wait at the edge of the box, the rest go to near post,
+ * six-yard centre, far post and penalty spot, best in the air first. Defence (mixed): a man on
+ * the near post, the best headers marking the attackers in the box goal-side, the others zonal
+ * on the six-yard line, one forward left up for the counter. Team frames; PARAMETERS.
+ */
+function cornerSetup(s: MatchState, team: 0 | 1, taker: MatchPlayer) {
+  const air = (p: MatchPlayer) => aerialScore(p.attrs, p.input.heightCm);
+  const side = flip(team, taker.pos).y < CENTER.y ? -1 : 1;
+  const place = (p: MatchPlayer, t: 0 | 1, x: number, y: number) => {
+    p.pos = flip(t, { x, y: clamp(y, 1, WIDTH - 1) });
+    p.vel = { x: 0, y: 0 };
+  };
+  const att = mates(s, team)
+    .filter((p) => p.index !== taker.index && lineOf(p.role) !== 'gk')
+    .sort((a, b) => air(b) - air(a) || a.index - b.index);
+  // Rest defence: the deepest-line players stay back (defenders first).
+  const order = { def: 0, mid: 1, att: 2, gk: 3 } as const;
+  const rest = new Set(
+    [...att]
+      .sort(
+        (a, b) =>
+          order[lineOf(a.role)] - order[lineOf(b.role)] || air(a) - air(b) || a.index - b.index,
+      )
+      .slice(0, Math.max(2, s.plans[team].team.restDefence))
+      .map((p) => p.index),
+  );
+  const boxSpots = [
+    { x: 99.5, y: CENTER.y + side * 3 },
+    { x: 99.5, y: CENTER.y },
+    { x: 99, y: CENTER.y - side * 4 },
+    { x: 94, y: CENTER.y },
+    { x: 96, y: CENTER.y - side * 7 },
+  ];
+  const edge = [
+    { x: 86, y: CENTER.y + 6 },
+    { x: 86, y: CENTER.y - 6 },
+  ];
+  const inBox: MatchPlayer[] = [];
+  let k = 0;
+  let e = 0;
+  let r = 0;
+  for (const p of att) {
+    if (rest.has(p.index)) {
+      place(p, team, 58 - 4 * r, CENTER.y + (r % 2 === 0 ? -10 : 10));
+      r++;
+    } else if (k < boxSpots.length) {
+      place(p, team, boxSpots[k]!.x, boxSpots[k]!.y);
+      inBox.push(p);
+      k++;
+    } else if (e < edge.length) {
+      place(p, team, edge[e]!.x, edge[e]!.y);
+      e++;
+    } else place(p, team, 80, CENTER.y);
+  }
+  const opp: 0 | 1 = team === 0 ? 1 : 0;
+  const def = mates(s, opp)
+    .filter((p) => lineOf(p.role) !== 'gk')
+    .sort((a, b) => air(b) - air(a) || a.index - b.index);
+  // One forward stays up (the least useful in the air among the attackers).
+  const outlet = [...def].reverse().find((p) => lineOf(p.role) === 'att') ?? def[def.length - 1]!;
+  place(outlet, opp, 40, CENTER.y);
+  const rest2 = def.filter((p) => p !== outlet);
+  // The best headers mark the attackers in the box; the rest go zonal, near post first
+  // (in the defending team's frame the goal is at x = 0; the corner side mirrors).
+  const dSide = flip(opp, taker.pos).y < CENTER.y ? -1 : 1;
+  const zones = [
+    { x: 1, y: CENTER.y + dSide * 3.2 },
+    { x: 5, y: CENTER.y + dSide * 2 },
+    { x: 5, y: CENTER.y - dSide * 2 },
+    { x: 7, y: CENTER.y },
+    { x: 17, y: CENTER.y },
+  ];
+  let m = 0;
+  let z = 0;
+  for (const p of rest2) {
+    const target = m < inBox.length ? inBox[m] : undefined;
+    if (target) {
+      // Goal-side and a step inside of his man.
+      const q = flip(opp, target.pos);
+      place(p, opp, q.x - 0.8, q.y + (q.y > CENTER.y ? -0.4 : 0.4));
+      m++;
+    } else if (z < zones.length) {
+      place(p, opp, zones[z]!.x, zones[z]!.y);
+      z++;
+    } else place(p, opp, 12, CENTER.y + (z++ % 2 === 0 ? -8 : 8));
+  }
+}
+
 function takeRestart(s: MatchState): Allowed {
   const r = s.restart!;
   s.restart = null;
@@ -151,6 +250,7 @@ function takeRestart(s: MatchState): Allowed {
     p.vel = { x: 0, y: 0 };
   }
   taker.pos = { ...r.at };
+  if (r.kind === 'corner') cornerSetup(s, r.team, taker);
   if (r.kind === 'kickOff') {
     // A team-mate stands next to the taker for the first pass.
     const mate = team
@@ -290,6 +390,14 @@ function dribble(s: MatchState, c: MatchPlayer) {
   const won = next(s.rngs.execution) < p;
   emit(s, 'dribble', c.team, c.index, d.index, c.pos, { won: won ? 1 : 0 });
   if (won) {
+    // Beaten, he may trip or hold him; in his own box he mostly does not (as in the tackle, 0.15).
+    if (
+      next(s.rngs.referee) <
+      beatenFoulChance(d) * (d.cards === 1 ? 0.6 : 1) * (inOwnBox(d.team, c.pos) ? 0.15 : 1)
+    ) {
+      foul(s, d, c, true);
+      return;
+    }
     d.tackleAt = s.tick + 8; // beaten: out of the play for two seconds
     c.score += 0.15;
   } else tackleWins(s, d, c, false);
@@ -321,6 +429,41 @@ function tackleWins(s: MatchState, d: MatchPlayer, c: MatchPlayer, emitTackle = 
     const ang = gaussian(() => next(s.rngs.execution));
     looseBall(s, d.index, c.pos, ang * 3, gaussian(() => next(s.rngs.execution)) * 3);
   }
+}
+
+/**
+ * The plan's press triggers (02 §8.1; research 13 §1): the cue that tells a block to step out
+ * together. Seen by the defending team now; the block keeps going for 2 s (PARAMETERS:
+ * 5 m back, 6 m from the touchline, 2 s).
+ */
+function pressTriggered(s: MatchState, team: 0 | 1): boolean {
+  const on = s.plans[team].team.pressTriggers;
+  const st = (s.triggerUntil ??= [-1, -1]);
+  if (s.ball.possession === team || on.length === 0) return false;
+  const f = s.flight;
+  const kicker = f ? s.players[f.from] : undefined;
+  const theirs = kicker !== undefined && kicker.team !== team;
+  let fire = false;
+  if (theirs && f!.kind === 'pass') {
+    // A real back pass: most of the ball's pace goes towards their own goal.
+    const v = Math.sqrt(f!.ball.vx * f!.ball.vx + f!.ball.vy * f!.ball.vy);
+    const back = flip(kicker!.team, { x: f!.ball.vx, y: f!.ball.vy }).x < -0.7 * v;
+    if (on.includes('backPass') && back && v > 3) fire = true;
+    const r = f!.to !== null ? s.players[f!.to] : undefined;
+    if (on.includes('receiverFacingOwnGoal') && r && flip(r.team, r.vel).x < -1) fire = true;
+  }
+  if (on.includes('poorTouch') && theirs && f!.kind === 'loose' && f!.from === s.lastTouch)
+    fire = true;
+  const c = s.owner !== null ? s.players[s.owner] : undefined;
+  if (
+    on.includes('ballOnTouchline') &&
+    c &&
+    c.team !== team &&
+    (c.pos.y < 6 || c.pos.y > WIDTH - 6)
+  )
+    fire = true;
+  if (fire) st[team] = s.tick + 8;
+  return s.tick <= st[team];
 }
 
 /** PARAMETERS: counter window 8 s, from 45 m, at most 4 goal-side, chance per step. */
@@ -415,11 +558,13 @@ export function foul(
   c: MatchPlayer,
   behind: boolean,
   tactical = false,
+  aerial = false,
 ) {
   s.teams[d.team].stats.fouls++;
   emit(s, 'foul', d.team, d.index, c.index, c.pos, {
     behind: behind ? 1 : 0,
     ...(tactical ? { tactical: 1 } : {}),
+    ...(aerial ? { aerial: 1 } : {}),
   });
   const cg = flip(c.team, c.pos);
   // Promising attack and last man (02 §6.5 cartão).
@@ -488,10 +633,12 @@ function reachers(s: MatchState): Reacher[] {
           : f.kind === 'cross'
             ? 1.8 + 1.2 * norm(p.attrs.commandOfArea)
             : 2.2;
-    else if (f.kind === 'shot')
-      reach = 0.35 + 0.2 * norm(p.attrs.bravery); // a block needs the body in the line
+    else if (f.kind === 'shot') reach = shotBlockReach(p);
     else if (f.kind === 'pass' && p.team !== s.players[f.from]!.team)
-      reach = 0.55 + 0.35 * norm(p.attrs.anticipation);
+      reach =
+        0.55 +
+        0.35 * norm(p.attrs.anticipation) +
+        (f.to !== null && dist(p.pos, s.players[f.to]!.pos) < 3 ? markerReach(p) : 0);
     return { pos: p.pos, vel: p.vel, reach, height: gk ? 2.9 : PLAYABLE_HEIGHT };
   });
 }
@@ -723,11 +870,18 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
   );
 }
 
+const AERIAL_CLOSE = 0.5;
 function aerial(s: MatchState, first: MatchPlayer) {
   const f = s.flight!;
   const at = { x: f.ball.x, y: f.ball.y };
+  // In the duel: those within reach, and opponents who get under the ball while it drops
+  // (PARAMETER: AERIAL_CLOSE seconds of arrival, the time a high ball takes to come down).
   const near = s.players.filter(
-    (p) => p.active && dist(p.pos, at) < 1.8 && lineOf(p.role) !== 'gk',
+    (p) =>
+      p.active &&
+      lineOf(p.role) !== 'gk' &&
+      (dist(p.pos, at) < 1.8 ||
+        (p.team !== first.team && arrivalTime(kin(p), at, true) < AERIAL_CLOSE)),
   );
   // Uncontested and not too high: chest or thigh control (02 §6 recepção). PARAMETER.
   // Above the chest in the shooting zone an attacker heads it first time: there
@@ -765,6 +919,21 @@ function aerial(s: MatchState, first: MatchPlayer) {
     }
   }
   s.lastTouch = win.index;
+  // Contested: the nearest opponent of the winner may push or climb on him (02 §6.5).
+  // In his own box a defender holds back: it would be a penalty (as in the tackle, 0.15).
+  const loser = near
+    .filter((p) => p.team !== win.team)
+    .sort((a, b) => dist(a.pos, win.pos) - dist(b.pos, win.pos) || a.index - b.index)[0];
+  if (
+    loser &&
+    next(s.rngs.referee) <
+      aerialFoulChance(loser) *
+        (loser.cards === 1 ? 0.6 : 1) *
+        (inOwnBox(loser.team, win.pos) ? 0.15 : 1)
+  ) {
+    foul(s, loser, win, false, false, true);
+    return;
+  }
   const t = flip(win.team, win.pos);
   // Attacking header near goal: a shot (02 §6.3).
   if (win.team === kicker.team && t.x > LENGTH - 14 && Math.abs(t.y - CENTER.y) < 10) {
@@ -844,10 +1013,12 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
   } else if (s.flight) s.ball.pos = { x: s.flight.ball.x, y: s.flight.ball.y };
   const carrierTarget = s.owner !== null ? { ...s.players[s.owner]!.target } : null;
   s.counter = [inCounter(s, 0), inCounter(s, 1)];
+  s.triggered = [pressTriggered(s, 0), pressTriggered(s, 1)];
   coordinate(s, 0, event);
   coordinate(s, 1, event);
   if (s.owner !== null && carrierTarget) s.players[s.owner]!.target = carrierTarget;
   chaseLooseBall(s);
+  engageCarrier(s);
   // movePlayers leaves the holder to the caller; in flight nobody holds the ball.
   const intended = s.ball.holder;
   if (s.owner === null) s.ball.holder = null;
@@ -869,21 +1040,65 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
 function meetPoint(p: MatchPlayer, ball: Ball, reacting: boolean): { pt: Vec2; t: number } {
   const b = { ...ball };
   const k = kin(p);
-  for (let t = 0.25; t <= 4; t += 0.25) {
+  for (let t = 0.25; t <= MEET_HORIZON; t += 0.25) {
     advanceBall(b, 0.25);
     const pt = { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) };
     if (b.z < PLAYABLE_HEIGHT && arrivalTime(k, pt, reacting) <= t) return { pt, t };
   }
   return {
     pt: { x: clamp(b.x, 0, LENGTH), y: clamp(b.y, 0, WIDTH) },
-    t: 4 + arrivalTime(k, b, reacting),
+    t: MEET_HORIZON + arrivalTime(k, b, reacting),
   };
 }
 
 /** Without an owner, the intended receiver and the quickest player of each side go to meet the ball (02 §6: whoever arrives first gets it). */
+/**
+ * Containment (02 §5.12): in our half, the nearest goal-side outfield defender within
+ * ENGAGE metres of the carrier steps into his path towards goal, CONTAIN_GAP ahead of him,
+ * and may tackle him like the presser. A defender up to RECOVER metres behind the carrier
+ * (just beaten, still level) still counts: he cuts back in. PARAMETERS.
+ */
+const ENGAGE = 6;
+const RECOVER = 2;
+const CONTAIN_GAP = 1.2;
+const ENGAGE_HALF = LENGTH / 2;
+function engageCarrier(s: MatchState) {
+  if (s.owner === null) return;
+  const c = s.players[s.owner]!;
+  const def: 0 | 1 = c.team === 0 ? 1 : 0;
+  const cg = flip(def, c.pos);
+  if (cg.x > ENGAGE_HALF) return;
+  let best: MatchPlayer | null = null;
+  let bd = ENGAGE;
+  for (const d of opponents(s, c.team)) {
+    if (lineOf(d.role) === 'gk' || d.intent === 'press' || d.tackleAt > s.tick) continue;
+    const dd = dist(d.pos, c.pos);
+    if (flip(def, d.pos).x > cg.x + RECOVER || dd >= bd) continue;
+    best = d;
+    bd = dd;
+  }
+  if (!best) return;
+  const gx = def === 0 ? 0 : LENGTH;
+  const l = dist({ x: gx, y: CENTER.y }, c.pos) || 1;
+  best.target = {
+    x: c.pos.x + ((gx - c.pos.x) / l) * CONTAIN_GAP,
+    y: c.pos.y + ((CENTER.y - c.pos.y) / l) * CONTAIN_GAP,
+  };
+  best.intent = 'press';
+}
+
 function chaseLooseBall(s: MatchState) {
   const f = s.flight;
   if (!f || f.kind === 'shot') return;
+  const planned = f.kind === 'cross';
+  // Each side's quickest time to the ball: a keeper leaves his goal only to get there first.
+  const quickest = [0, 1].map((team) =>
+    Math.min(
+      ...mates(s, team as 0 | 1).map(
+        (p) => meetPoint(p, f.ball, planned || (f.kind === 'pass' && f.to === p.index)).t,
+      ),
+    ),
+  );
   for (const team of [0, 1] as const) {
     if (f.kind === 'pass' && f.to !== null) {
       const r = s.players[f.to]!;
@@ -897,12 +1112,23 @@ function chaseLooseBall(s: MatchState) {
     let best: MatchPlayer | null = null;
     let bt = Infinity;
     let bp: Vec2 | null = null;
+    // A cross from the wing is expected by both sides: runners and defenders attack it
+    // without a reaction delay (the defenders' short read of the pass, reactUntil, still applies).
+    // Defending a cross in the box, the outfield players nearest to the ball all attack it
+    // (zonal and man-markers alike), not just the first (PARAMETER: up to CROSS_DEFENDERS).
+    const defendingCross = planned && s.players[f.from]!.team !== team;
+    const attackers: { p: MatchPlayer; t: number; pt: Vec2 }[] = [];
     for (const p of mates(s, team)) {
-      const m = meetPoint(p, f.ball, false);
+      const m = meetPoint(p, f.ball, planned);
+      if (defendingCross && lineOf(p.role) !== 'gk' && inOwnBox(team, p.pos))
+        attackers.push({ p, t: m.t, pt: m.pt });
       // The keeper comes for balls in his box, and beyond it as far as his sweeping allows (ADR-019).
       const g = flip(team, m.pt);
       const sweeper = g.x < 16.5 + 15 * norm(p.attrs.sweeping) && Math.abs(g.y - CENTER.y) < 25;
-      if (lineOf(p.role) === 'gk' ? !(inOwnBox(team, m.pt) || sweeper) : inOwnBox(team, m.pt))
+      if (
+        lineOf(p.role) === 'gk' &&
+        (!(inOwnBox(team, m.pt) || sweeper) || m.t > Math.min(MEET_HORIZON, quickest[1 - team]!))
+      )
         continue;
       if (m.t < bt) {
         bt = m.t;
@@ -914,8 +1140,17 @@ function chaseLooseBall(s: MatchState) {
       best.target = bp;
       best.intent = 'receive';
     }
+    attackers.sort((a, b) => a.t - b.t || a.p.index - b.p.index);
+    for (const a of attackers.slice(0, CROSS_DEFENDERS)) {
+      if (a.p === best) continue;
+      a.p.target = a.pt;
+      a.p.intent = 'receive';
+    }
   }
 }
+const CROSS_DEFENDERS = 3;
+/** meetPoint's look-ahead (s): a later time means nobody meets the ball in flight. */
+const MEET_HORIZON = 4;
 
 function endStep(s: MatchState, opts: StepOptions) {
   for (const p of s.players) {

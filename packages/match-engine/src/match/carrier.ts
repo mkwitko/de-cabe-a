@@ -5,14 +5,24 @@
  * with his own (noisy) estimate of P, and picks by softmax. The true P and the
  * best true utility are kept so the log can tell a bad choice from a bad kick.
  */
-import { exp, gaussian } from '../rules/math';
+import { exp, gaussian, logistic } from '../rules/math';
 import { dribbleChance, norm, weighted } from '../rules/duel';
 import { valueAt } from '../rules/value';
 import { goalAngle, xg as chanceOf } from '../rules/xg';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next, type Rng } from '../random';
 import { lineOf } from '../team';
-import { groundSpeed, kin, opponents, passSafety, pressureOn, mates } from './control';
+import {
+  groundSpeed,
+  kin,
+  leadTarget,
+  opponents,
+  passSafety,
+  pressureOn,
+  mates,
+  readingArrival,
+  shotClear,
+} from './control';
 import { arrivalTime } from '../kinematics';
 import type { MatchPlayer, MatchState } from './state';
 
@@ -50,10 +60,21 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
  */
 const SHOT_RESERVE = 0;
-/** Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER. */
-const SHOT_FOLLOW_UP = 1.6;
+/**
+ * Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER measured in the engine:
+ * later shots of the same side before it loses the ball add about 0.2 xG per unit of chance.
+ */
+const SHOT_FOLLOW_UP = 1.2;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.55;
+/** Seconds behind the play the passer's picture of the offside line is. PARAMETER (offsides per match, 02 §11). */
+const PERCEPTION_LAG = 0.45;
+/**
+ * Utility a lofted pass gives up for being a lofted pass: sides keep the ball rather than
+ * hit it long. PARAMETER calibrated on long-ball share (Série A 2025: the fourth most direct
+ * side plays 13.8% of passes long, Flashscore) and pass completion (02 §11).
+ */
+const LOFT_COST = 0.01;
 /**
  * A ball over the top lands with error, bounces and meets a keeper coming out:
  * measured success near 25% to 35% (calibration run, 2026-11-13). PARAMETER.
@@ -138,6 +159,8 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       lose: number;
       bias?: number;
       lossX?: number;
+      /** What he reads of `p`, when he cannot see all of it (the shot's lane). */
+      seen?: number;
     },
   ) => {
     // A shot's payoff is the whole goal, so an absolute error would make a 1% chance
@@ -146,7 +169,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     const g = gaussian(() => next(r));
     const est =
       a.kind === 'shot'
-        ? clamp(a.p * (1 + 8 * noise * g), 0, 0.99)
+        ? clamp((a.seen ?? a.p) * (1 + 8 * noise * g), 0, 0.99)
         : clamp(a.p + g * noise, 0.01, 0.99);
     const bias = a.bias ?? 0;
     out.push({
@@ -162,8 +185,14 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
   };
 
   // The opponents' offside line in our frame: how high they defend.
+  // He reads the line and his runners as they were PERCEPTION_LAG ago: a runner who has just
+  // crossed it at speed still looks onside. That is how most offsides happen (timing).
+  const seen = (p: MatchPlayer) => ({
+    x: p.pos.x - p.vel.x * PERCEPTION_LAG,
+    y: p.pos.y - p.vel.y * PERCEPTION_LAG,
+  });
   const oppXs = opponents(s, c.team)
-    .map((o) => toTeam(c, o.pos).x)
+    .map((o) => toTeam(c, seen(o)).x)
     .sort((a, b) => b - a);
   const oppLine = oppXs[1] ?? LENGTH;
 
@@ -180,13 +209,22 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     // Behind him he knows only what he checked before receiving (scanning, ADR-019).
     const see = inView ? 0.97 : 0.25 + 0.55 * weighted(c.attrs, { scanning: 0.6, vision: 0.4 });
     if (next(r) > see) continue;
-    const mt = toTeam(c, m.pos);
     const long = d > 32;
+    // Judged where the kick sends it: ahead of a moving receiver (leadTarget).
+    const aim = leadTarget(c.pos, m, long);
+    const mt = toTeam(c, aim);
+    // Runs into space start from where he is now.
+    const now = toTeam(c, m.pos);
+    // A team-mate in an offside position is not an option: the passer sees it, more surely
+    // the further off he is (PARAMETERS: 30% at the line, sure 2 m beyond, on what he perceives; 02 §6.5).
+    const beyond = toTeam(c, seen(m)).x - Math.max(oppLine, me.x, LENGTH / 2);
+    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.3 + 0.35 * beyond)) continue;
     // Nobody lofts the ball back towards his own goal: back passes to the box are short and along the ground.
     if (mt.x < 20 && mt.x < me.x && (long || d > 25)) continue;
     const lofted = long || allowed === 'throwIn' || (allowed === 'goalKick' && d > 30);
-    const speed = lofted ? 16 + 0.1 * d : groundSpeed(d);
-    const p = passSafety(s, c.team, c.pos, m.pos, speed, lofted, m) * (lofted ? LOFT_RISK : 1);
+    const ad = Math.sqrt((aim.x - c.pos.x) ** 2 + (aim.y - c.pos.y) ** 2);
+    const speed = lofted ? 16 + 0.1 * ad : groundSpeed(ad);
+    const p = passSafety(s, c.team, c.pos, aim, speed, lofted, m) * (lofted ? LOFT_RISK : 1);
     const forward = mt.x - me.x;
     let bias = 0;
     if (plan.progression === 'vertical' && forward > 8) bias += 0.004;
@@ -194,12 +232,14 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     if (counter && forward > 10) bias += 0.008;
     if (plan.progression === 'wide' && (mt.y < 14 || mt.y > WIDTH - 14)) bias += 0.004;
     if (plan.progression === 'central' && Math.abs(mt.y - CENTER.y) < 14) bias += 0.003;
+    // Teams prefer to keep the ball: a lofted pass pays a retention cost (LOFT_COST).
+    if (lofted) bias -= LOFT_COST;
     if (plan.buildUp === 'short' && lofted && me.x < 50) bias -= 0.01;
     if (plan.buildUp === 'long' && lofted && me.x < 50 && forward > 20) bias += 0.008;
     const win = valueAt(mt.x, mt.y) * (1 - 0.3 * pressureOn(s, m));
     push({
       kind: lofted ? 'long' : 'pass',
-      target: { ...m.pos },
+      target: aim,
       receiver: m,
       p,
       win,
@@ -215,11 +255,11 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       lineOf(m.role) === 'att' &&
       oppLine > 30 &&
       oppLine < 80 &&
-      mt.x < oppLine - 0.5
+      now.x < oppLine - 0.5
     ) {
       const space = flip(c.team, {
         x: Math.min(oppLine + 10, 86),
-        y: clamp(mt.y + (CENTER.y - mt.y) * 0.2, 6, WIDTH - 6),
+        y: clamp(now.y + (CENTER.y - now.y) * 0.2, 6, WIDTH - 6),
       });
       const od = Math.sqrt((space.x - c.pos.x) ** 2 + (space.y - c.pos.y) ** 2);
       // Both sides see the ball go: the runner gets no head start over the defenders (reacting: false).
@@ -243,12 +283,15 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
       allowed === 'open' &&
       lineOf(m.role) !== 'def' &&
       me.x > 35 &&
-      mt.x > me.x + 5 &&
-      mt.x < 90
+      now.x > me.x + 5 &&
+      now.x < 90
     ) {
       if (next(r) > 0.3 + 0.7 * weighted(c.attrs, { vision: 0.6, flair: 0.4 })) continue;
       // Space behind the line, short of the keeper's area (he would claim it).
-      const ahead = flip(c.team, { x: Math.min(mt.x + 9, 93), y: mt.y + (CENTER.y - mt.y) * 0.15 });
+      const ahead = flip(c.team, {
+        x: Math.min(now.x + 9, 93),
+        y: now.y + (CENTER.y - now.y) * 0.15,
+      });
       const td = Math.sqrt((ahead.x - c.pos.x) ** 2 + (ahead.y - c.pos.y) ** 2);
       const ts = groundSpeed(td) * 0.95;
       const tp = passSafety(s, c.team, c.pos, ahead, ts, false, m);
@@ -272,30 +315,49 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     me.x > 75 &&
     (me.y < 20 || me.y > WIDTH - 20)
   ) {
-    const inBox = mates(s, c.team).filter((m) => {
-      const t = toTeam(c, m.pos);
-      return t.x > 88.5 && t.y > 14 && t.y < WIDTH - 14 && m.index !== c.index;
-    });
-    const spot = flip(c.team, { x: 96, y: CENTER.y + (me.y < CENTER.y ? 2 : -2) });
-    const opp = opponents(s, c.team).filter((o) => {
-      const t = toTeam(c, o.pos);
-      return t.x > 88.5 && t.y > 14 && t.y < WIDTH - 14;
-    });
-    // A cross works when attackers in the box outnumber defenders there.
-    const p = clamp(
-      0.18 + 0.08 * (inBox.length - opp.length) + 0.25 * norm(c.attrs.crossing),
-      0.05,
-      0.6,
-    );
-    push({
-      kind: 'cross',
-      target: spot,
-      receiver: null,
-      p,
-      win: 0.16,
-      lose: 0.01,
-      bias: allowed === 'corner' ? 1 : 0.004 * (plan.finalThird.crosses - 3),
-    });
+    // Where to put it (research 18 H6; 02 §6.3): near post, penalty spot or far post. Each
+    // zone is judged with the same arrival physics as a pass: a team-mate must get there
+    // with the ball, before the first defender reading it and the keeper (PARAMETERS:
+    // cross speed 17 m/s, spreads 0.4 s and 0.3 s, accuracy by crossing).
+    const nearSide = me.y < CENTER.y ? -1 : 1;
+    const zones = [
+      { x: 99, y: CENTER.y + nearSide * 3 },
+      { x: 94, y: CENTER.y },
+      { x: 99, y: CENTER.y - nearSide * 4 },
+    ];
+    const accuracy = 0.55 + 0.45 * weighted(c.attrs, { crossing: 0.7, technique: 0.3 });
+    for (const z of zones) {
+      const pt = flip(c.team, z);
+      const tf = Math.sqrt((z.x - me.x) ** 2 + (z.y - me.y) ** 2) / 17;
+      let tA = Infinity;
+      for (const m of mates(s, c.team))
+        if (m.index !== c.index && lineOf(m.role) !== 'gk')
+          tA = Math.min(tA, arrivalTime(kin(m), pt, true));
+      let tD = Infinity;
+      for (const o of opponents(s, c.team)) tD = Math.min(tD, readingArrival(o, pt));
+      const p =
+        accuracy * logistic((tD - Math.max(tA, tf)) / 0.4) * logistic((tf + 0.3 - tA) / 0.3);
+      const head = chanceOf({
+        x: z.x,
+        y: z.y,
+        header: true,
+        pressure: 0.5,
+        keeperOut: 0,
+        afterCross: true,
+        counter: false,
+        directFreeKick: false,
+      });
+      push({
+        kind: 'cross',
+        target: pt,
+        receiver: null,
+        p,
+        win: head * SHOT_FOLLOW_UP,
+        lose: oppValue(z),
+        lossX: z.x,
+        bias: allowed === 'corner' ? 1 : 0.004 * (plan.finalThird.crosses - 3),
+      });
+    }
   }
 
   if (allowed === 'corner') return out;
@@ -308,11 +370,18 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     let bias = SHOT_RESERVE;
     if (far) bias += 0.006 * (plan.finalThird.shootFromDistance - 3);
     if (c.input.traits.includes('shootsFromDistance') && far) bias += 0.008;
+    // Bodies between him and the goal block part of the mouth (shotClear, the flight's block
+    // reach); the keeper is left to the save. He reads that only in part, better with good
+    // decisions (PARAMETER: 0% to 40%, shots per match, 02 §11). xG stays the chance.
+    const goal = flip(c.team, { x: LENGTH, y: CENTER.y });
+    const clear = shotClear(s, c);
+    const reads = 0.4 * decisions;
     push({
       kind: 'shot',
-      target: flip(c.team, { x: LENGTH, y: CENTER.y }),
+      target: goal,
       receiver: null,
-      p: chance,
+      p: chance * clear,
+      seen: chance * (1 - reads * (1 - clear)),
       // A shot is worth the goal plus what it leaves behind: rebounds and corners come
       // in proportion to its danger (PARAMETER, shots per match and by distance, 02 §11).
       win: SHOT_FOLLOW_UP,
@@ -419,13 +488,15 @@ function pick(out: Action[], c: MatchPlayer, pressure: number, r: Rng): Choice {
     };
   const decisions = norm(c.attrs.decisions);
   const composure = norm(c.attrs.composure);
-  // Softmax temperature: falls with decisions and composure, rises with pressure (02 §5.4). PARAMETER.
+  // Softmax temperature: falls with decisions and composure, rises with pressure and fatigue (02 §5.4). PARAMETER.
   // Flair widens the choice (creative players try more); decisions and composure narrow it (ADR-019).
   const tau =
     0.01 *
     (1.6 - 0.6 * decisions - 0.4 * composure) *
     (1 + 0.6 * pressure * (1 - composure)) *
-    (0.85 + 0.3 * norm(c.attrs.flair));
+    (0.85 + 0.3 * norm(c.attrs.flair)) *
+    // Tired legs, tired head (02 §5.4: temperature rises with fatigue). PARAMETER: +60% at 0.
+    (1 + 0.6 * (1 - c.stamina));
   const top = Math.max(...out.map((a) => a.ue));
   const w = out.map((a) => exp((a.ue - top) / tau));
   const total = w.reduce((x, y) => x + y, 0);

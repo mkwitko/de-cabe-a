@@ -112,6 +112,21 @@ const COUNTER_OUTLET = 60;
 const LOW_FLOOR_EXTRA: Record<Line, number> = { gk: 0, def: 4, mid: 3, att: 0 };
 const STEP_UP: Record<Line, number> = { gk: 1.5, def: 4, mid: 3, att: 2 };
 const BLOCK_SHIFT = { high: 9, mid: 0, low: -9 } as const;
+/**
+ * Box defence (research 18 §1, Forcher et al. 2024): with the ball near our goal the lines
+ * stay goal-side of it, the back line at least GOAL_SIDE metres deeper than the ball, never
+ * deeper than BOX_FLOOR; the forwards stay up as the outlet. PARAMETERS.
+ */
+const GOAL_SIDE: Record<Line, number> = { gk: 0, def: 5, mid: 2, att: -Infinity };
+const BOX_FLOOR: Record<Line, number> = { gk: 0, def: 3, mid: 8, att: 0 };
+/** Inside this distance of our goal the back line narrows to the goal mouth, down to BOX_NARROW of its width. PARAMETERS. */
+const NARROW_FROM = 30;
+const BOX_NARROW = 0.6;
+
+/** The keeper's spot with the ball: further out the higher the ball (PARAMETERS). */
+const keeperX = (focal: Vec2) => clamp(6 + focal.x * 0.12, 6, 20);
+/** With the ball the outfield players stand at least this far in front of the keeper (PARAMETER). */
+const BASE_GAP = 4;
 
 /**
  * Anchor of each slot (team frame). `lastLine` is the opponents' offside line
@@ -126,6 +141,10 @@ export function anchors(
   const base = inPossession ? plan.shapes.inPossession : plan.shapes.outOfPossession;
   const t = plan.team;
   const widthScale = 0.8 + 0.1 * (t.width - 1);
+  // Near our goal the back line closes towards the goal mouth (1 at NARROW_FROM, BOX_NARROW at 10 m).
+  const boxNarrow = inPossession
+    ? 1
+    : 1 - (1 - BOX_NARROW) * clamp((NARROW_FROM - focal.x) / (NARROW_FROM - 10), 0, 1);
   const out = base.map((b, slot) => {
     const line = lineOf(plan.roles[slot]!);
     const fx =
@@ -134,10 +153,12 @@ export function anchors(
     if (!inPossession && line !== 'gk') x += BLOCK_SHIFT[t.block];
     let y = inPossession
       ? CENTER.y + (b.y - CENTER.y) * widthScale + (focal.y - CENTER.y) * FOLLOW_Y[line]
-      : CENTER.y + (b.y - CENTER.y) * NARROW_OUT[line] + (focal.y - CENTER.y) * FOLLOW_Y_OUT[line];
+      : CENTER.y +
+        (b.y - CENTER.y) * NARROW_OUT[line] * (line === 'def' ? boxNarrow : 1) +
+        (focal.y - CENTER.y) * FOLLOW_Y_OUT[line] * (line === 'def' ? boxNarrow : 1);
     if (line === 'gk') {
       if (inPossession) {
-        x = clamp(6 + focal.x * 0.12, 6, 20);
+        x = keeperX(focal);
         y = CENTER.y + (focal.y - CENTER.y) * 0.12;
       } else {
         // On the line from the goal centre to the ball (02 §6.4), a quarter of the way, at most 6 m out.
@@ -159,7 +180,7 @@ export function anchors(
   return out.map((a) => {
     let x = a.line === 'gk' ? a.x : cx + (a.x - cx) * k;
     // The floor gives way when the ball is deeper than it: the line stays goal-side of the ball.
-    if (!inPossession)
+    if (!inPossession && a.line !== 'gk')
       x = Math.min(
         Math.max(
           x,
@@ -171,7 +192,10 @@ export function anchors(
         a.line === 'att' && t.onWin === 'counter'
           ? Math.max(BLOCK_TOP[t.block].att, COUNTER_OUTLET)
           : BLOCK_TOP[t.block][a.line],
+        Math.max(BOX_FLOOR[a.line], focal.x - GOAL_SIDE[a.line]),
       );
+    // With the ball nobody stands behind the keeper: the build-up starts in front of him.
+    if (inPossession && a.line !== 'gk') x = Math.max(x, keeperX(focal) + BASE_GAP);
     if (inPossession && a.line !== 'gk' && lastLine !== null)
       x = Math.min(x, Math.max(lastLine - 0.8, focal.x - 2));
     return { x: clamp(x, 1, LENGTH - 1), y: clamp(a.y, 1, WIDTH - 1) };
@@ -203,6 +227,8 @@ export const REST_BEHIND = 16;
 const pressReach = { high: LENGTH, mid: 70, low: 40 } as const;
 /** Bauer and Anzer (2021): a counter-press succeeds within 5 s or is over. */
 export const COUNTERPRESS_WINDOW = 5;
+/** PARAMETER: metres further up the pitch a block steps out on a press trigger. */
+const TRIGGER_REACH = 20;
 /** How far behind the ball (towards the opponents' goal) a block still marks options. */
 const MARK_BEHIND = { high: 25, mid: 6, low: 3 } as const;
 
@@ -223,6 +249,8 @@ export function tasksFor(
   counter = false,
   /** In the seconds after losing the ball: hunt it (numbers at the ball) or drop (`onLoss`). */
   afterLoss: 'counterPress' | 'regroup' | null = null,
+  /** A press trigger of the plan is on: the block steps out further than its usual reach. */
+  triggered = false,
 ): Task[] {
   const t = plan.team;
   const tasks: Task[] = [];
@@ -242,7 +270,8 @@ export function tasksFor(
     lastLine = Math.max(lastLine, ball.x);
     // Rest defence first: the plan's number stays behind the ball (02 §5.9).
     const n = t.restDefence;
-    const restX = Math.min(focal.x - REST_BEHIND, 62);
+    // Never behind the keeper: in the build-up the rest defence is the base in front of him.
+    const restX = Math.max(Math.min(focal.x - REST_BEHIND, 62), keeperX(focal) + BASE_GAP + 4);
     for (let i = 0; i < n; i++) {
       const y = CENTER.y + (i - (n - 1) / 2) * (n <= 2 ? 16 : 13);
       add('restDefence', `rest${i}`, { x: restX - (i === 0 || i === n - 1 ? 0 : 4), y });
@@ -286,7 +315,7 @@ export function tasksFor(
     ? true
     : afterLoss === 'regroup'
       ? ball.x <= 35
-      : ball.x <= pressReach[t.block] || t.pressIntensity >= 5;
+      : ball.x <= pressReach[t.block] + (triggered ? TRIGGER_REACH : 0) || t.pressIntensity >= 5;
   const goal = { x: 0, y: CENTER.y };
   const toGoal = (p: Vec2, d: number) => {
     const dx = goal.x - p.x;
@@ -305,9 +334,7 @@ export function tasksFor(
     'press',
     'press',
     engage
-      ? ball.x < 30
-        ? toGoal(focal, 2)
-        : focal
+      ? shepherd(ball.x < 30 ? toGoal(focal, 2) : focal, t.forceDirection, focal)
       : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
   );
   if (counterPress) add('press', 'press2', toGoal(focal, 3));
@@ -377,6 +404,19 @@ export function freeSpot(base: Vec2, opp: Vec2[], maxX = LENGTH): Vec2 {
     }
   }
   return best;
+}
+
+/**
+ * Showing the carrier one way (02 §8.1 forceDirection): the presser stands on the
+ * shoulder he must not go past: the inside one to send him outside, the outside one to
+ * send him in (PARAMETER: SHEPHERD metres).
+ */
+const SHEPHERD = 3;
+function shepherd(pt: Vec2, dir: 'inside' | 'outside' | null, focal: Vec2): Vec2 {
+  if (dir === null) return pt;
+  const towardCentre = focal.y < CENTER.y ? 1 : -1;
+  const s = dir === 'outside' ? towardCentre : -towardCentre;
+  return { x: pt.x, y: clamp(pt.y + SHEPHERD * s, 1, WIDTH - 1) };
 }
 
 /** PARAMETERS of the cost (seconds). */
