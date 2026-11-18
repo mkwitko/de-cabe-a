@@ -5,14 +5,23 @@
  * accepts, counters or refuses; a player put on the list draws bids sooner. A side that walks
  * away does not come back that season. Money goes through the ledger only when a deal closes.
  */
-import { ABROAD, FOREIGN_TIERS, sellAbroad, wantsToGo } from './abroad';
+import {
+  ABROAD,
+  FOREIGN_TIERS,
+  importFee,
+  sellAbroad,
+  signable,
+  stanceFor,
+  wantsToGo,
+} from './abroad';
 import type { CareerWorld } from '../career/advance';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { available, book, embargoed, wageRoom } from './books';
+import { available, book, booksOf, embargoed, wageRoom } from './books';
 import {
   CLAUSE_TIMES,
+  MAX_ROUNDS,
   answerFee,
   answerTerms,
   playerStance,
@@ -90,7 +99,9 @@ const cool = (w: CareerWorld, playerId: string) => {
 /** Why the person cannot open a talk for this player now; null when they can. */
 export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
   const season = w.season.season;
-  if (p.clubId === ABROAD) return 'abroad';
+  // Abroad, only the foreign market and veterans coming home; not one sold out this season.
+  if (p.clubId === ABROAD && (!signable(p, season) || w.moves?.[p.id]?.season === season))
+    return 'abroad';
   if (embargoed(w, w.clubId)) return 'embargo';
   if (squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD) return 'squadFull';
   if (w.cold?.[p.id] === season) return 'cold';
@@ -98,15 +109,15 @@ export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
   if (p.clubId === null) return playerStance(w.pack, p, null, clubOf(w, w.clubId), season).no;
   if (!windowOpen(w.day)) return 'window';
   if (w.moves?.[p.id]?.season === season) return 'justMoved';
+  // From abroad: no club here to ask, only the price and the player.
+  if (p.clubId === ABROAD) return stanceFor(w, p, w.clubId).no;
   if (!canLose(w, p)) return 'theirSquad';
   return playerStance(w.pack, p, clubOf(w, p.clubId), clubOf(w, w.clubId), season).no;
 }
 
 /** The monthly wage he would open with if the person sat at his table now. */
 export function openingWage(w: CareerWorld, p: PackPlayer): number {
-  const from = p.clubId === null ? null : clubOf(w, p.clubId);
-  const wants = playerStance(w.pack, p, from, clubOf(w, w.clubId), w.season.season);
-  return Math.round((wants.wage * 110) / 100);
+  return Math.round((stanceFor(w, p, w.clubId).wage * 110) / 100);
 }
 
 /** The contract a player opens with: ten percent over what he would take. */
@@ -138,6 +149,17 @@ export function openTalk(w: CareerWorld, playerId: string): Talk {
       asking: 0,
       fee: 0,
       wants: opening(wants, wants.fair),
+      day: w.day,
+    };
+  } else if (p.clubId === ABROAD) {
+    // The foreign market names one price and keeps to it.
+    talk = {
+      player: p.id,
+      seller: ABROAD,
+      mood: 'surplus',
+      stage: 'fee',
+      round: 0,
+      asking: importFee(w, p),
       day: w.day,
     };
   } else {
@@ -193,14 +215,20 @@ export function bidFee(w: CareerWorld, playerId: string, fee: number): FeeAnswer
   // An offer the club could not pay is not made: nothing is agreed on money that is not there.
   if (fee > w.ledger.cash) throw new Error('talk: cash');
   const season = w.season.season;
-  const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season);
   const round = talk.round + 1;
-  const a = answerFee(stance, fee, round);
+  const abroad = p.clubId === ABROAD;
+  const a: FeeAnswer = abroad
+    ? fee >= talk.asking
+      ? { kind: 'accept', fee: talk.asking }
+      : round >= MAX_ROUNDS
+        ? { kind: 'refuse', reason: 'final' }
+        : { kind: 'counter', fee: talk.asking }
+    : answerFee(sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season), fee, round);
   if (a.kind === 'refuse') cool(w, playerId);
   else if (a.kind === 'counter')
     w.talks = { ...w.talks, [playerId]: { ...talk, round, asking: a.fee } };
   else {
-    const wants = playerStance(w.pack, p, clubOf(w, p.clubId), clubOf(w, w.clubId), season);
+    const wants = stanceFor(w, p, w.clubId);
     w.talks = {
       ...w.talks,
       [playerId]: {
@@ -251,10 +279,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
       why: { ambition: 0, step: 0, raise: 0 },
       value: marketValue(w.pack, p, season),
     };
-  } else {
-    const from = talk.seller === null ? null : clubOf(w, talk.seller);
-    wants = playerStance(w.pack, p, from, clubOf(w, w.clubId), season);
-  }
+  } else wants = stanceFor(w, p, w.clubId);
   const round = talk.round + 1;
   const a = answerTerms(wants, terms, round);
   if (a.kind === 'refuse') cool(w, playerId);
@@ -263,7 +288,12 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
   else {
     if (renewal) renew(w, p, { ...a.terms, release: a.terms.release ?? null });
     else {
-      if (talk.seller !== null) {
+      if (talk.seller === ABROAD) {
+        // The fee leaves the league: only the person's books see it.
+        settle(w, p, ABROAD, talk.fee, 'buy');
+        const b = booksOf(w, w.clubId);
+        w.books = { ...w.books, [w.clubId]: { ...b, spent: b.spent + talk.fee } };
+      } else if (talk.seller !== null) {
         settle(w, p, talk.seller, talk.fee, 'buy');
         book(w, talk.seller, w.clubId, talk.fee);
       }

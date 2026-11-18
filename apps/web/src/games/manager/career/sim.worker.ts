@@ -92,6 +92,7 @@ import {
   type Intensity,
   type SquadPlayer,
   ABROAD,
+  signable,
   FOREIGN_TIERS,
   foreignName,
 } from '@decabeca/club-domain';
@@ -484,7 +485,8 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
       .filter(
         (p) =>
           p.clubId !== w.clubId &&
-          p.clubId !== ABROAD &&
+          // Abroad, only the foreign market and the veterans coming home (market/abroad.ts).
+          (p.clubId !== ABROAD || signable(p, w.season.season)) &&
           !w.talks?.[p.id] &&
           // Only those the club's scouts know of (market/scouting.ts).
           personKnows(w, p) &&

@@ -17,7 +17,7 @@ import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { ABROAD } from './abroad';
+import { ABROAD, signable } from './abroad';
 import { tierOfClub } from './books';
 import { eyeOf, eyeSpread, knows, levelError, seenCeiling, seenLevel } from './judgement';
 import { readingsOf } from './value';
@@ -42,6 +42,8 @@ export interface Scouting {
   missions: Mission[];
 }
 
+/** Scouting department level from which agents bring a club the players abroad. */
+const FOREIGN_EYE = 2;
 /** Days a scout spends in an area before reporting. */
 export const MISSION_DAYS = 28;
 /** Scouts the club can have away at once, by scouting department 1..5. */
@@ -125,7 +127,7 @@ export const stateOf = (pack: Pack, clubId: string) =>
 
 /** Whether the person's club knows him at all: anything above 0. */
 export const personKnows = (w: CareerWorld, p: PackPlayer) =>
-  p.clubId !== ABROAD && knowledgeOf(w, p) > 0;
+  (p.clubId !== ABROAD || signable(p, w.season.season)) && knowledgeOf(w, p) > 0;
 
 /** Each club's opponents this season: every club it shares a competition with. */
 const rivals = new WeakMap<object, Map<string, Set<string>>>();
@@ -150,7 +152,10 @@ function rivalsOf(w: CareerWorld, clubId: string): Set<string> {
  */
 export function clubKnows(w: CareerWorld, clubId: string, p: PackPlayer): boolean {
   if (p.clubId === clubId) return true;
-  if (p.clubId === ABROAD) return false;
+  // Abroad, agents bring the foreign market and the veterans coming home to clubs with a
+  // scouting department past the first level.
+  if (p.clubId === ABROAD)
+    return signable(p, w.season.season) && eyeOf(w.pack, clubId).scouting >= FOREIGN_EYE;
   if (p.clubId === null) return knows(w.pack, clubId, p, null, false);
   if (rivalsOf(w, clubId).has(p.clubId)) return true;
   return knows(

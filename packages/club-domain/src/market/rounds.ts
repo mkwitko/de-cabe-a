@@ -18,13 +18,11 @@ import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { available, book, booksOf, budgetOf, wageRoom } from './books';
-import { isImport } from '../career/development';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
   answerFee,
   answerTerms,
-  playerStance,
   sellerStance,
   type Role,
   type Terms,
@@ -32,7 +30,7 @@ import {
 import { fitFor, squadPlanOf, type Need } from './plan';
 import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
-import { ABROAD } from './abroad';
+import { ABROAD, importFee, signable, stanceFor } from './abroad';
 import { clubKnows } from './scouting';
 import { answerBid } from './talks';
 import { boardOverpay } from '../career/clubs';
@@ -170,29 +168,6 @@ interface Choice {
   p: PackPlayer;
   need: Need;
   why: Why;
-}
-
-/** Over his value a club pays to bring a player from abroad. PARÂMETRO. */
-const IMPORT_PREMIUM = 20;
-/** Over the wage he would ask at home a player wants to come from abroad. PARÂMETRO. */
-const IMPORT_WAGE = 25;
-/** Age from which a player sold abroad will come home. */
-const HOMECOMING = 30;
-
-/** A player abroad a club of the league can sign: the year's foreign market, or a veteran. */
-const signable = (p: PackPlayer, season: number) =>
-  isImport(p.id) || ageOf(p, season) >= HOMECOMING;
-
-/** The fee to bring him from abroad: it leaves the league. */
-const importFee = (w: CareerWorld, p: PackPlayer) =>
-  thousands((marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100);
-
-/** What he wants to sign, coming from his club, from nowhere or from abroad. */
-function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string) {
-  const club = (id: string) => w.pack.clubs.find((x) => x.id === id)!;
-  const from = p.clubId === null || p.clubId === ABROAD ? null : club(p.clubId);
-  const s = playerStance(w.pack, p, from, club(buyerId), w.season.season);
-  return p.clubId === ABROAD ? { ...s, wage: Math.round((s.wage * (100 + IMPORT_WAGE)) / 100) } : s;
 }
 
 /** The best signing for one need, or null: the whole market read through the club's filter. */

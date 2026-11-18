@@ -22,6 +22,8 @@ import type { PackPlayer } from '../pack/schema';
 import { booksOf, tierOfClub } from './books';
 import type { Deal } from './rounds';
 import { canLose } from './talks';
+import { isImport } from '../career/development';
+import { playerStance, type PlayerStance } from './deals';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** Where a player sold abroad sits in the pack. */
@@ -69,6 +71,31 @@ export const isAbroad = (id: string | null) => id !== null && id.startsWith(ABRO
 /** The face of a foreign buyer or of the abroad bucket, for lists and the inbox. */
 export const foreignName = (id: string) =>
   FOREIGN_TIERS.find((t) => t.id === id)?.name ?? (id === ABROAD ? 'Exterior' : id);
+
+// ── Bringing players in (04 §4.7) ────────────────────────────────────────────
+
+/** Over his value a club pays to bring a player from abroad; the fee leaves the league. */
+const IMPORT_PREMIUM = 20;
+/** Over the wage he would ask at home a player wants to come from abroad. */
+const IMPORT_WAGE = 25;
+/** Age from which a player sold abroad will come home. */
+const HOMECOMING = 30;
+
+/** A player abroad a club of the league can sign: the year's foreign market, or a veteran. */
+export const signable = (p: PackPlayer, season: number) =>
+  p.clubId === ABROAD && (isImport(p.id) || ageOf(p, season) >= HOMECOMING);
+
+/** The fee to bring him from abroad. */
+export const importFee = (w: CareerWorld, p: PackPlayer) =>
+  thousands((marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100);
+
+/** What he wants to sign for `buyerId`, coming from his club, from nowhere or from abroad. */
+export function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string): PlayerStance {
+  const club = (id: string) => w.pack.clubs.find((x) => x.id === id)!;
+  const from = p.clubId === null || p.clubId === ABROAD ? null : club(p.clubId);
+  const s = playerStance(w.pack, p, from, club(buyerId), w.season.season);
+  return p.clubId === ABROAD ? { ...s, wage: Math.round((s.wage * (100 + IMPORT_WAGE)) / 100) } : s;
+}
 
 /** The tier that would buy him, or null. */
 export function tierFor(w: CareerWorld, p: PackPlayer): ForeignTier | null {
