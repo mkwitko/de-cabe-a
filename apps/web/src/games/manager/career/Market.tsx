@@ -305,6 +305,83 @@ function BidRow({ bid, act }: { bid: MarketView['bids'][number]; act: Do }) {
 }
 
 /** The other side's answer, in a sentence. */
+/**
+ * Another club's squad: every name, the numbers only for players the club knows, and a scout
+ * to send on any one of them.
+ */
+function Squads(props: {
+  view: MarketView;
+  club: string | null;
+  pick: (id: string | null) => void;
+  act: Do;
+}) {
+  const { view, club, pick, act } = props;
+  const busy = view.scouting.away.length >= view.scouting.scouts;
+  return (
+    <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+      <h3 className={LABEL}>{t('market.squads')}</h3>
+      <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold">
+        {t('market.squadsPick')}
+        <select className={FIELD} value={club ?? ''} onChange={(e) => pick(e.target.value || null)}>
+          <option value="">{t('market.squadsNone')}</option>
+          {view.clubList.map((d) => (
+            <optgroup key={d.division} label={d.division}>
+              {d.clubs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
+      {view.other && (
+        <ul>
+          {view.other.players.map((p) => {
+            const known = (p.knowledge ?? 0) > 0;
+            return (
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+              >
+                <span className="flex min-w-0 flex-1 basis-48 items-center gap-3">
+                  <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
+                    {t('squad.position', { p: p.position })}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold">{p.name}</span>
+                    <span className="text-xs text-chalk-soft">
+                      {t('squad.age', { n: p.age })}
+                      {' · '}
+                      {known ? t('market.knowledge', { k: p.knowledge ?? 0 }) : t('market.unknown')}
+                    </span>
+                  </span>
+                  <span className="font-condensed text-xl leading-none font-black whitespace-nowrap tabular-nums">
+                    {!known
+                      ? '?'
+                      : p.range[0] === p.range[1]
+                        ? p.rating
+                        : t('market.band', { lo: p.range[0], hi: p.range[1] })}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  className={SMALL}
+                  disabled={p.watching || busy}
+                  aria-label={p.watching ? undefined : t('market.watchFor', { name: p.name })}
+                  onClick={() => act({ do: 'scout', area: `player:${p.id}` })}
+                >
+                  {p.watching ? t('market.watching') : t('market.watch')}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 /** The club's scouts: who is away, and a trip to send one on. */
 function Scouts({ s, act }: { s: MarketView['scouting']; act: Do }) {
   const free = s.areas.filter((a) => !s.away.some((m) => m.area === a.area));
@@ -382,16 +459,17 @@ export function Market(props: {
   const { ask, onError, onDeal } = props;
   const [view, setView] = useState<MarketView | null>(null);
   const [position, setPosition] = useState<string | null>(null);
+  const [club, setClub] = useState<string | null>(null);
 
   useEffect(() => {
-    ask({ type: 'market', position })
+    ask({ type: 'market', position, club })
       .then((r) => setView(r.market ?? null))
       .catch((e: Error) => onError(e.message));
-  }, [ask, onError, position]);
+  }, [ask, onError, position, club]);
 
   if (!view) return null;
   const act: Do = (a) => {
-    ask({ type: 'market', position, act: a })
+    ask({ type: 'market', position, club, act: a })
       .then((r) => {
         setView(r.market ?? null);
         onDeal(r);
@@ -581,6 +659,8 @@ export function Market(props: {
           </div>
 
           <Scouts key={view.scouting.away.map((m) => m.area).join()} s={view.scouting} act={act} />
+
+          <Squads view={view} club={club} pick={setClub} act={act} />
 
           <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
             <h3 className={LABEL}>{t('market.news')}</h3>

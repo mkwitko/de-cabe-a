@@ -917,7 +917,9 @@ function noteText(n: InboxItem, sim: SimView): string {
     case 'hired':
       return t('inbox.hired', { club: n.clubName });
     case 'scouted':
-      return t('inbox.scouted', { area: n.clubName, n: n.players });
+      return n.area.startsWith('player:')
+        ? t('inbox.watched', { name: n.clubName })
+        : t('inbox.scouted', { area: n.clubName, n: n.players });
     case 'cameUp':
       return t('inbox.cameUp', { n: n.players });
     case 'injury':

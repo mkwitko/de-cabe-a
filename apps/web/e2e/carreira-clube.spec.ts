@@ -425,6 +425,38 @@ test('career: send a scout from the market at 360 px', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test("career: look at another club's squad and ask a scout about one player at 360 px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/tecnico/carreira');
+  await page
+    .getByRole('button', { name: /^Assumir o / })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Mercado' }).click();
+  const squads = page
+    .locator('div.sala-slab')
+    .filter({ has: page.getByRole('heading', { name: 'Elencos' }) });
+  await expect(squads).toBeVisible({ timeout: 30_000 });
+  const pick = squads.getByLabel('Clube');
+  const first = await pick.locator('optgroup option').first().getAttribute('value');
+  await pick.selectOption(first!);
+  const rows = squads.getByRole('listitem');
+  await expect(rows.first()).toBeVisible();
+  expect(await rows.count()).toBeGreaterThan(10);
+  await rows
+    .first()
+    .getByRole('button', { name: /^Pedir relatório de / })
+    .click();
+  await expect(rows.getByRole('button', { name: 'Olheiro observando' })).toHaveCount(1);
+  await squads.screenshot({ path: 'test-results/elencos-360.png' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  expect(errors).toEqual([]);
+});
+
 test('career: the inbox keeps what happened across a reload', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   const errors: string[] = [];
