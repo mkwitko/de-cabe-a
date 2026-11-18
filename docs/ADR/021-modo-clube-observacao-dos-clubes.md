@@ -24,11 +24,26 @@ A chance de conhecer um jogador (`reach`, PARÂMETROS) é:
 Sempre conhecidos:
 
 - os jogadores do próprio clube;
+- os jogadores de todo clube que ele enfrenta em alguma competição da temporada (liga, copa, estadual), porque um clube estuda os adversários;
 - os jogadores que a pessoa coloca à venda, porque anunciar é justamente mostrar para todos.
 
 ## Consequências
 
 - O mercado fica regional e desigual. Clubes grandes, com bom scouting, enxergam o país. Clubes pequenos enxergam sobretudo o próprio estado e a elite.
 - A filtragem é barata: um hash por candidato, antes da leitura cara. A divisão de cada clube agora fica em cache por temporada (`tierOfClub`), o que também acelera o êxodo para o exterior.
-- **Teto:** o conhecimento não cresce com o tempo. Jogar contra um jogador ou observá-lo por uma temporada ainda não faz o clube conhecê-lo. Para corrigir, basta trocar o sorteio fixo por um limiar que sobe com as temporadas e com os jogos entre os clubes, ainda sem armazenamento.
-- O clube da pessoa continua vendo todos os jogadores, como hoje. O passo 4 muda isso, com observadores, relatórios e uma base de dados própria guardada no save.
+- **Teto:** fora os adversários da temporada, o conhecimento dos clubes da IA não cresce com o tempo. Quem foi adversário numa temporada e não é mais volta para o sorteio.
+
+## Passo 4: o conhecimento do clube da pessoa (2026-11-18)
+
+O clube da pessoa sabe de cada jogador um **percentual de conhecimento**, de 0 a 100 (`market/scouting.ts`). O dono pediu este modelo no lugar de um relatório com prazo de validade.
+
+- **Piso:** 25% para quem qualquer clube conheceria: a maior parte da Série A, o próprio estado e os adversários da temporada. 0% para os demais, que ficam fora da lista do mercado. Os jogadores do próprio clube contam como 100% e seguem a leitura do departamento de futebol.
+- **Sobe com relatórios:** o clube manda olheiros a uma divisão ou a um estado. Cada viagem leva 28 dias e ele pode ter de 1 a 3 olheiros fora ao mesmo tempo, conforme o departamento de scouting. O olheiro volta com 6 a 20 jogadores de quem o clube sabe menos de 50%, os melhores segundo o olhar do próprio clube, e cada um ganha de 20 a 40 pontos.
+- **Sobe com partidas:** cada jogo contra um clube dá 8 pontos a cada jogador do elenco dele.
+- **Desce com o tempo:** perde 1 ponto a cada 10 dias desde a última vez que subiu, até voltar ao piso. Os jogadores mudam, e a informação envelhece.
+- **Efeito na leitura:** a nota e o teto que o clube vê chegam mais perto da verdade e a margem de erro diminui na proporção do conhecimento. Com 100% a leitura é exata.
+- **Save:** só guarda os jogadores acima do piso (`w.scouting.known`: percentual e dia da última alta). Uma vez por mês o save solta quem voltou ao piso.
+
+Como isso muda os resultados das carreiras, `CAREER_RULES_VERSION` passou para 12.
+
+Teto: ainda não dá para pedir o relatório de um jogador específico (a opção B). Partidas contam o elenco inteiro do adversário, não só quem entrou em campo.

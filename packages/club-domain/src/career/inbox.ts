@@ -20,6 +20,8 @@ export type Note = { day: number } & (
   | { kind: 'contractEnded' | 'contractKept'; player: string }
   | { kind: 'contractsEnding'; players: number }
   | { kind: 'crop'; players: number }
+  /** A scout back from an area (a state or `tier:N`) with this many new players. */
+  | { kind: 'scouted'; area: string; players: number }
   | { kind: 'cameUp'; players: number }
   | {
       kind: 'injury';

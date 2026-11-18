@@ -85,6 +85,12 @@ const OFF = {
   own: [4, 3, 2, 1, 0],
 } as const;
 
+/** The most this club's scouts can be off on another club's player: level and ceiling. */
+export function eyeSpread(pack: Pack, clubId: string): { level: number; ceiling: number } {
+  const s = eyeOf(pack, clubId).scouting - 1;
+  return { level: OFF.level[s]!, ceiling: OFF.ceiling[s]! };
+}
+
 /** The most a club can misread another club's player's level, either way. */
 export const MAX_LEVEL_ERROR = OFF.level[0];
 

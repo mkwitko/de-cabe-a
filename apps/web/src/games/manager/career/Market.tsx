@@ -1,7 +1,8 @@
 /**
  * The market: bids other clubs made for the person's players, the talks the person opened (the
  * fee with the selling club, then the contract with the player), the players to go after, the
- * person's squad and its for-sale list, and the deals between the other clubs with each
+ * person's squad and its for-sale list, the club's scouts (only players they know are listed),
+ * and the deals between the other clubs with each
  * buyer's reasons (club-domain market/). A deal closes only when both tables agree.
  */
 import { useEffect, useState } from 'react';
@@ -49,6 +50,11 @@ function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
       {p.until !== null && <span>{t('market.until', { year: p.until })}</span>}
       <span>{t('market.potential', { lo: p.potential[0], hi: p.potential[1] })}</span>
       {p.release !== null && <span>{t('market.clause', { fee: money(p.release) })}</span>}
+      {p.knowledge !== null && (
+        <span className="font-bold text-club-gold">
+          {t('market.knowledge', { k: p.knowledge })}
+        </span>
+      )}
     </span>
   );
 }
@@ -299,8 +305,60 @@ function BidRow({ bid, act }: { bid: MarketView['bids'][number]; act: Do }) {
 }
 
 /** The other side's answer, in a sentence. */
+/** The club's scouts: who is away, and a trip to send one on. */
+function Scouts({ s, act }: { s: MarketView['scouting']; act: Do }) {
+  const free = s.areas.filter((a) => !s.away.some((m) => m.area === a.area));
+  const [area, setArea] = useState(free[0]?.area ?? '');
+  const busy = s.away.length >= s.scouts;
+  return (
+    <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+      <h3 className={LABEL}>{t('market.scouts')}</h3>
+      <p className="text-sm text-chalk-soft">{t('market.scoutsInfo', { n: s.scouts })}</p>
+      <p className="font-semibold">{t('market.scoutsKnown', { n: s.known })}</p>
+      {s.away.length > 0 && (
+        <ul>
+          {s.away.map((m) => (
+            <li key={m.area} className="border-t border-chalk/10 py-2 first:border-0">
+              {t('market.scoutAway', {
+                area: m.label,
+                date: `${m.back.slice(8, 10)}/${m.back.slice(5, 7)}`,
+              })}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="flex min-w-0 flex-1 basis-40 flex-col gap-1 text-sm font-semibold">
+          {t('market.scoutArea')}
+          <select
+            className={FIELD}
+            value={area}
+            disabled={busy || free.length === 0}
+            onChange={(e) => setArea(e.target.value)}
+          >
+            {free.map((a) => (
+              <option key={a.area} value={a.area}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className={GO}
+          disabled={busy || !free.some((a) => a.area === area)}
+          onClick={() => act({ do: 'scout', area })}
+        >
+          {t('market.scoutSend')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function saidText(said: NonNullable<MarketView['said']>): string {
   if (said.at === 'no') return t('market.saidNo', { r: said.reason });
+  if (said.at === 'scout') return t('market.saidScout', { area: said.area });
   if (said.at === 'fee')
     return t('market.saidFee', {
       k: said.answer.kind === 'refuse' ? said.answer.reason : said.answer.kind,
@@ -521,6 +579,8 @@ export function Market(props: {
               ))}
             </ul>
           </div>
+
+          <Scouts key={view.scouting.away.map((m) => m.area).join()} s={view.scouting} act={act} />
 
           <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
             <h3 className={LABEL}>{t('market.news')}</h3>
