@@ -220,6 +220,17 @@ describe('the passer judges the pass he plays', () => {
     expect(pass.p).toBeLessThan(0.3);
   });
 
+  it('a runner who has just crossed the line at speed still looks onside (offside from timing)', () => {
+    const s = bare();
+    const c = place(s, 7, 60, 34);
+    const m = place(s, 9, 86, 34);
+    m.vel = { x: 7, y: 0 };
+    place(s, 12, 84, 40);
+    place(s, 13, 84, 28);
+    place(s, 11, 103, 34);
+    expect(candidates(s, c, 'open').some((a) => a.receiver === m)).toBe(true);
+  });
+
   it('nobody plays a team-mate clearly offside', () => {
     const s = bare();
     const c = place(s, 7, 60, 34);

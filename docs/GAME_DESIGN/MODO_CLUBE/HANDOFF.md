@@ -171,6 +171,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   | Gols por chute | 0,102 | 0,134 | 0,085 a 0,10 |
 
   Com menos chute ruim, o time trabalha a bola até uma chance melhor. O excesso agora é só de qualidade de chance (`xG` por chute 0,172): a defesa perto do gol.
+- **Impedimento pelo tempo do lance** (2026-11-17, decisão do dono). O ajuste que piorava a leitura do passador (10% na linha, certeza a 3,6 m) foi desfeito. A leitura voltou a 30% na linha e certeza a 2 m, aplicada sobre o que ele percebe com atraso `PERCEPTION_LAG` (0,45 s). Impedimentos 1,29 por time (faixa 1,32 a 1,75). Próximo passo: o atacante que sai cedo na corrida conforme o `timing`.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)

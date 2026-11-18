@@ -67,6 +67,8 @@ const SHOT_RESERVE = 0;
 const SHOT_FOLLOW_UP = 1.2;
 /** Share of lofted balls that survive the landing, the bounce and the control. PARAMETER (long-ball completion, 02 §11). */
 const LOFT_RISK = 0.55;
+/** Seconds behind the play the passer's picture of the offside line is. PARAMETER (offsides per match, 02 §11). */
+const PERCEPTION_LAG = 0.45;
 /**
  * Utility a lofted pass gives up for being a lofted pass: sides keep the ball rather than
  * hit it long. PARAMETER calibrated on long-ball share (Série A 2025: the fourth most direct
@@ -183,8 +185,14 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
   };
 
   // The opponents' offside line in our frame: how high they defend.
+  // He reads the line and his runners as they were PERCEPTION_LAG ago: a runner who has just
+  // crossed it at speed still looks onside. That is how most offsides happen (timing).
+  const seen = (p: MatchPlayer) => ({
+    x: p.pos.x - p.vel.x * PERCEPTION_LAG,
+    y: p.pos.y - p.vel.y * PERCEPTION_LAG,
+  });
   const oppXs = opponents(s, c.team)
-    .map((o) => toTeam(c, o.pos).x)
+    .map((o) => toTeam(c, seen(o)).x)
     .sort((a, b) => b - a);
   const oppLine = oppXs[1] ?? LENGTH;
 
@@ -208,9 +216,9 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     // Runs into space start from where he is now.
     const now = toTeam(c, m.pos);
     // A team-mate in an offside position is not an option: the passer sees it, more surely
-    // the further off he is (PARAMETERS: 10% at the line, sure 3.6 m beyond, calibrated on offsides per match; 02 §6.5).
-    const beyond = now.x - Math.max(oppLine, me.x, LENGTH / 2);
-    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.1 + 0.25 * beyond)) continue;
+    // the further off he is (PARAMETERS: 30% at the line, sure 2 m beyond, on what he perceives; 02 §6.5).
+    const beyond = toTeam(c, seen(m)).x - Math.max(oppLine, me.x, LENGTH / 2);
+    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.3 + 0.35 * beyond)) continue;
     // Nobody lofts the ball back towards his own goal: back passes to the box are short and along the ground.
     if (mt.x < 20 && mt.x < me.x && (long || d > 25)) continue;
     const lofted = long || allowed === 'throwIn' || (allowed === 'goalKick' && d > 30);
