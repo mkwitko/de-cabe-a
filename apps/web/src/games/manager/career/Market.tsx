@@ -304,6 +304,44 @@ function BidRow({ bid, act }: { bid: MarketView['bids'][number]; act: Do }) {
   );
 }
 
+/** Another club as an institution: its money, who runs it, what it has built. */
+function Office({ office }: { office: NonNullable<MarketView['other']>['office'] }) {
+  return (
+    <dl className="grid grid-cols-1 gap-x-4 gap-y-2 border-t border-chalk/10 pt-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt className="text-chalk-soft">{t('market.officeCash')}</dt>
+        <dd
+          className={`font-condensed text-xl font-extrabold tabular-nums ${office.cash < 0 ? 'text-club-danger' : ''}`}
+        >
+          {t('career.cash', { value: office.cash })}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-chalk-soft">{t('market.officeBoard')}</dt>
+        <dd className="font-semibold">
+          {t('market.officeBoardText', { h: office.horizon, c: office.competence })}
+        </dd>
+      </div>
+      <div className="sm:col-span-2">
+        <dt className="text-chalk-soft">{t('board.structure')}</dt>
+        <dd className="flex flex-wrap gap-x-3 gap-y-1">
+          {office.structure.map((x) => (
+            <span key={x.front} className="whitespace-nowrap">
+              {t('board.front', { f: x.front })}{' '}
+              <span className="font-semibold tabular-nums">
+                {x.front === 'stadium' ? t('board.seats', { n: x.level }) : x.level}
+              </span>
+              {office.works.includes(x.front) && (
+                <span className="text-club-gold"> {t('market.officeWork')}</span>
+              )}
+            </span>
+          ))}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 /** The other side's answer, in a sentence. */
 /**
  * Another club's squad: every name, the numbers only for players the club knows, and a scout
@@ -335,6 +373,7 @@ function Squads(props: {
           ))}
         </select>
       </label>
+      {view.other && <Office office={view.other.office} />}
       {view.other && (
         <ul>
           {view.other.players.map((p) => {

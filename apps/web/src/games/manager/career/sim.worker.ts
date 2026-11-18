@@ -432,6 +432,17 @@ export interface MarketView {
   other: {
     club: ClubFace;
     players: (MarketPlayer & { watching: boolean })[];
+    /**
+     * The club as an institution, as the papers tell it: the cash of its last balance, who runs
+     * it and how well (a reading, not a number), its structure and the works under way.
+     */
+    office: {
+      cash: number;
+      horizon: 'short' | 'medium' | 'long';
+      competence: 'high' | 'mid' | 'low';
+      structure: { front: Front; level: number }[];
+      works: Front[];
+    };
   } | null;
   /** The club's scouts: how many it has, who is away and where they can go. */
   scouting: {
@@ -580,6 +591,19 @@ function marketView(
       other && clubs.has(other) && other !== w.clubId
         ? {
             club: face(clubs.get(other)!),
+            office: (() => {
+              const st = clubState(w, other);
+              const c = w.pack.clubs.find((x) => x.id === other)!;
+              const k = st.directors.competence;
+              return {
+                cash: st.cash,
+                horizon: st.directors.horizon,
+                competence:
+                  k >= 65 ? ('high' as const) : k >= 40 ? ('mid' as const) : ('low' as const),
+                structure: FRONTS.map((front) => ({ front, level: frontLevel(c, front) })),
+                works: (st.works ?? []).map((x) => x.front),
+              };
+            })(),
             players: w.pack.players
               .filter((p) => p.clubId === other)
               .map((p) => ({
