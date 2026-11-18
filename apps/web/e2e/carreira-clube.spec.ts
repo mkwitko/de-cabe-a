@@ -1,5 +1,21 @@
 /** Modo Clube career start (MC-176, MC-177): offers or free choice, then the season built in the browser. */
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/**
+ * The career stops on a window's last day (deadline day) before the next match: close the
+ * window until the match is next. Returns the play button.
+ */
+async function toMatch(page: Page) {
+  const play = page.getByRole('button', { name: 'Só o resultado' });
+  const close = page.getByRole('button', { name: 'Fechar a janela' });
+  for (let i = 0; i < 3; i++) {
+    await expect(play.or(close)).toBeEnabled({ timeout: 60_000 });
+    if (!(await close.isVisible())) break;
+    await close.click();
+  }
+  await expect(play).toBeEnabled({ timeout: 60_000 });
+  return play;
+}
 
 test.beforeEach(({ context }) =>
   context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
@@ -16,21 +32,19 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await page.screenshot({ path: 'test-results/carreira-ofertas-390.png', fullPage: true });
   await accept.first().click();
   const play = page.getByRole('button', { name: 'Só o resultado' });
-  await expect(play).toBeEnabled({ timeout: 30_000 });
+  await toMatch(page);
   await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
   await play.click();
   await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
-  await expect(play).toBeEnabled();
+  await toMatch(page);
   await play.click();
-  await expect(play).toBeEnabled({ timeout: 30_000 });
+  await toMatch(page);
   const mine = page.locator('tbody tr.text-club-gold');
   await expect(mine.locator('td').nth(2)).toHaveText('2');
   await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
   // Reloading opens the saved snapshot: the two matches are still there.
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Só o resultado' })).toBeEnabled({
-    timeout: 30_000,
-  });
+  await toMatch(page);
   await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('2');
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
@@ -64,8 +78,10 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   const play = page.getByRole('button', { name: 'Só o resultado' });
   const turn = page.getByRole('button', { name: 'Começar a temporada 2027' });
   for (let i = 0; i < 60 && !(await turn.isVisible()); i++) {
-    await expect(play.or(turn)).toBeEnabled({ timeout: 30_000 });
-    if (await play.isVisible()) await play.click();
+    const close = page.getByRole('button', { name: 'Fechar a janela' });
+    await expect(play.or(turn).or(close)).toBeEnabled({ timeout: 30_000 });
+    if (await close.isVisible()) await close.click();
+    else if (await play.isVisible()) await play.click();
   }
   await expect(page.getByText('Salários')).toBeVisible();
   await expect(page.getByText('Bilheteria')).toBeVisible();
@@ -189,7 +205,7 @@ for (const width of [360, 1280]) {
 
     // The eleven holds across rooms and the next match still plays.
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
-    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await page.getByRole('button', { name: 'Vestiário' }).click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
@@ -234,7 +250,7 @@ for (const width of [360, 1280]) {
     await page.getByRole('button', { name: /^Forte/ }).click();
     expect((await kept).status()).toBe(200);
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
-    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await page.reload();
     await page.getByRole('button', { name: 'Campo de treino' }).click();
@@ -358,7 +374,7 @@ for (const width of [360, 1280]) {
     ).toBeVisible();
 
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
-    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -395,7 +411,7 @@ for (const width of [360, 1280]) {
 
     // A match moves it, and the room says by how much and why.
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
-    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await page.getByRole('button', { name: 'Diretoria' }).click();
     await expect(page.getByText(/^(Vitória|Empate|Derrota) (como|em) /)).toBeVisible();
@@ -486,7 +502,7 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
   await expect(inbox.getByRole('listitem').filter({ hasText: 'Diretoria' })).not.toHaveCount(0, {
     timeout: 30_000,
   });
-  await page.getByRole('button', { name: 'Só o resultado' }).click();
+  await (await toMatch(page)).click();
   const result = inbox.getByRole('listitem').filter({ hasText: 'Imprensa' });
   await expect(result).toHaveCount(1, { timeout: 30_000 });
   const told = await result.innerText();
@@ -515,10 +531,10 @@ for (const width of [360, 1280]) {
       .first()
       .click();
     const play = page.getByRole('button', { name: 'Só o resultado' });
-    await expect(play).toBeEnabled({ timeout: 30_000 });
+    await toMatch(page);
     await play.click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
-    await expect(play).toBeEnabled({ timeout: 30_000 });
+    await toMatch(page);
     const old = await page.locator('tbody tr.text-club-gold td').nth(1).innerText();
 
     // The board's verdict written into the saved world, through the same API the game uses:
@@ -556,18 +572,16 @@ for (const width of [360, 1280]) {
     expect(box.x + box.width).toBeLessThanOrEqual(width);
     await page.screenshot({ path: `test-results/carreira-demissao-${width}.png` });
     await take.first().click();
-    await expect(play).toBeEnabled({ timeout: 30_000 });
+    await toMatch(page);
     await expect(page.getByText(/Você assumiu o /)).toBeVisible();
     const now = await page.locator('tbody tr.text-club-gold td').nth(1).innerText();
     expect(now).not.toBe(old);
     // The new job is in the save: a reload opens the career at the new club.
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Só o resultado' })).toBeEnabled({
-      timeout: 30_000,
-    });
+    await toMatch(page);
     expect(await page.locator('tbody tr.text-club-gold td').nth(1).innerText()).toBe(now);
     await play.click();
-    await expect(play).toBeEnabled({ timeout: 30_000 });
+    await toMatch(page);
     expect(errors).toEqual([]);
   });
 }

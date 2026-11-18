@@ -537,6 +537,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             onWatch={watch}
             onPlay={() => step('play')}
             onNextSeason={() => step('nextSeason')}
+            onMarket={() => setRoom('mercado')}
           />
           <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
             <Table sim={sim} clubId={sim.clubId} />
@@ -645,9 +646,44 @@ function NextMatch(props: {
   onWatch: (w: Watch) => void;
   onPlay: () => void;
   onNextSeason: () => void;
+  onMarket: () => void;
 }) {
   const { sim, busy } = props;
   const next = sim.next;
+  if (sim.deadline)
+    return (
+      <section aria-labelledby="career-next" className="sala-window flex flex-col justify-end">
+        <div className="sala-glass mx-auto flex w-full max-w-2xl flex-col items-center gap-4 text-center">
+          <h3
+            id="career-next"
+            className="font-condensed text-3xl leading-none font-black text-club-gold uppercase sm:text-5xl"
+          >
+            {t('career.deadline')}
+          </h3>
+          <p className="text-balance">
+            {t('career.deadlineText', { d: new Date(`${sim.deadline}T12:00:00Z`) })}
+          </p>
+          <div className="grid w-full max-w-md grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnPrimary} min-h-13 bg-club-gold`}
+              onClick={props.onMarket}
+            >
+              {t('career.deadlineMarket')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80`}
+              onClick={props.onPlay}
+            >
+              {t('career.deadlineGo')}
+            </button>
+          </div>
+        </div>
+      </section>
+    );
   return (
     <section
       key={next?.iso ?? 'over'}

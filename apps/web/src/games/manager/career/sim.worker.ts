@@ -171,6 +171,8 @@ export interface SimView {
     atHome: boolean;
     competition: string;
   } | null;
+  /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
+  deadline: string | null;
   /** The club's next matches after this one, by date. */
   fixtures: { iso: string; opponent: ClubFace; atHome: boolean; competition: string }[];
   /** The club's last five results, oldest first, from the club's side. */
@@ -884,6 +886,7 @@ function view(w: CareerWorld, ms: number): SimView {
     club: face(club),
     division: table.name,
     cash: w.ledger.cash,
+    deadline: pending?.kind === 'deadline' ? isoOf(pending.day) : null,
     next:
       pending?.kind === 'match'
         ? {
@@ -909,7 +912,7 @@ function view(w: CareerWorld, ms: number): SimView {
 /** Moves to the next decision; a snapshot to save when days were played on the way. */
 async function toNextDecision(w: CareerWorld): Promise<SimReply['save']> {
   const from = w.day;
-  pending = nextDecision(w);
+  pending = nextDecision(w, { deadlines: true });
   return w.day !== from
     ? { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) }
     : undefined;
@@ -928,6 +931,9 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         r.snapshot.byteLength > 0
           ? loadCareer(pack, r.seed, r.clubId, await gunzip(r.snapshot))
           : openCareer(pack, r.seed, r.clubId);
+      save = await toNextDecision(world);
+    } else if (world && r.type === 'play' && pending?.kind === 'deadline') {
+      // Deadline day passed on: the window closes and the days run to the next decision.
       save = await toNextDecision(world);
     } else if (world && r.type === 'play' && pending?.kind === 'match') {
       const from = world.day;

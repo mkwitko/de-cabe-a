@@ -77,7 +77,8 @@ export const ptBR = {
   'squad.starter': 'Titular',
   'squad.fresh': 'Fôlego {n}%',
   'market.open': 'Janela aberta',
-  'market.closed': 'Janela fechada. Abre de janeiro a abril e em julho.',
+  'market.closed':
+    'Janela fechada. As janelas da CBF vão até 27 de março e de 20 de julho a 11 de setembro; jogadores sem clube podem ser contratados a qualquer momento.',
   'market.cash': 'Caixa {cash}',
   'market.wageRoom': 'Folha: cabe mais {room} por mês',
   'market.noClub': 'Sem clube',
@@ -310,6 +311,11 @@ export const ptBR = {
   'career.watchHighlights': 'Melhores momentos',
   'career.lastResult': '{home} {a} × {b} {away}',
   'career.seasonOver': 'Temporada encerrada.',
+  'career.deadline': 'Último dia da janela',
+  'career.deadlineText':
+    'A janela de transferências fecha em {d, date, long}. Depois dela, só dá para contratar jogadores sem clube.',
+  'career.deadlineMarket': 'Fazer contratações',
+  'career.deadlineGo': 'Fechar a janela',
   'career.nextSeason': 'Começar a temporada {season}',
   'career.turn':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { nextDecision, openCareer, playDecision } from './advance';
 import { dayOf } from '../competition/calendar';
 import { generateDevPack } from '../generate/pack';
 import { windowOf, windowOpen, withMoves } from './market';
@@ -28,5 +29,23 @@ describe('transfers in the world (07)', () => {
     });
     expect(pack.players.find((x) => x.id === p.id)!.clubId).toBe(p.clubId);
     expect(withMoves(pack, {})).toBe(pack);
+  });
+
+  it('the screen stops once on the last day of each window, before playing it', () => {
+    const pack = generateDevPack();
+    const w = openCareer(pack, 3, pack.clubs[0]!.id);
+    const stops: number[] = [];
+    for (
+      let d = nextDecision(w, { deadlines: true });
+      d.kind !== 'seasonOver' && d.kind !== 'fired';
+      d = nextDecision(w, { deadlines: true })
+    ) {
+      if (d.kind === 'deadline') {
+        expect(windowOpen(w.day)).toBe(true);
+        expect(windowOpen(d.day + 1)).toBe(false);
+        stops.push(d.day);
+      } else playDecision(w, d);
+    }
+    expect(stops.map((d) => windowOf(d))).toEqual(['domestic', 'second']);
   });
 });

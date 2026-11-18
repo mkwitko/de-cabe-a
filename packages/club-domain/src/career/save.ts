@@ -48,6 +48,7 @@ interface Saved {
   listed?: CareerWorld['listed'];
   cold?: CareerWorld['cold'];
   scouting?: CareerWorld['scouting'];
+  deadline?: CareerWorld['deadline'];
   idle?: CareerWorld['idle'];
   loans?: CareerWorld['loans'];
   forLoan?: CareerWorld['forLoan'];
@@ -132,6 +133,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.listed && { listed: w.listed }),
     ...(w.cold && { cold: w.cold }),
     ...(w.scouting && { scouting: w.scouting }),
+    ...(w.deadline !== undefined && { deadline: w.deadline }),
     ...(w.idle && { idle: w.idle }),
     ...(w.loans && { loans: w.loans }),
     ...(w.forLoan && { forLoan: w.forLoan }),
@@ -188,6 +190,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.listed && { listed: saved.listed }),
     ...(saved.cold && { cold: saved.cold }),
     ...(saved.scouting && { scouting: saved.scouting }),
+    ...(saved.deadline !== undefined && { deadline: saved.deadline }),
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),
