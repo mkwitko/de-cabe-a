@@ -174,7 +174,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 - **Impedimento pelo tempo do lance** (2026-11-17, decisão do dono). O ajuste que piorava a leitura do passador (10% na linha, certeza a 3,6 m) foi desfeito. A leitura voltou a 30% na linha e certeza a 2 m, aplicada sobre o que ele percebe com atraso `PERCEPTION_LAG` (0,45 s). Impedimentos 1,29 por time (faixa 1,32 a 1,75). Próximo passo: o atacante que sai cedo na corrida conforme o `timing`.
 - **Atacante sozinho rumo ao gol** (2026-11-17 à noite, só medição; nada entrou).
   - As melhores chances vêm de condução de 10 m ou mais até o chute: `xG` de 0,23 a 0,25 por chute, cerca de 1,0 de `xG` por time por jogo, de 1,57 em jogo corrido. Na hora do chute há em média 0,7 defensor de linha entre o chutador e o gol.
-  - Medida: 8,6 lances por time por jogo com o portador a menos de 25 m do gol e nenhum defensor de linha do lado do gol. Esses lances nascem depois de desarme (2,2), bola longa (2,1), passe (2,0) e passe por cima (1,2). A pressão no passador é baixa (0,17). Referência de grandes chances: cerca de 2 por time, número de memória, sem fonte conferida.
+  - Medida: 8,6 lances por time por jogo com o portador a menos de 25 m do gol e nenhum defensor de linha do lado do gol. Esses lances nascem depois de desarme (2,2), bola longa (2,1), passe (2,0) e passe por cima (1,2). A pressão no passador é baixa (0,17). Essa medida não é "grande chance" da Opta (lance em que se espera o gol) e não se compara com ela; a comparação anterior com "cerca de 2 por time" usava número de memória e foi retirada.
   - Protótipos, todos revertidos:
 
     | Protótipo | Partidas | Gols por jogo | Nota |
@@ -211,7 +211,7 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   - Último passe antes: bola longa 2,4, passe 1,8, desarme 1,5, passe por cima 1,2, passe em profundidade 0,7.
   - No passe que antecede o lance, o recebedor está a 34 m do gol, com 4,3 defensores à frente dele e o mais próximo a 5,4 m. Só em 3% dos casos ele já estava atrás da última linha.
   - Ou seja: o atacante não recebe nas costas da defesa. Ele recebe na frente e passa por ela nos segundos seguintes.
-  - Sem referência publicada de grandes chances ou de distância média do chute (a página da Driblab não abre por leitura simples), não dá para dizer quanto disso é excesso.
+  - Sem referência publicada de grandes chances ou de distância média do chute (a página da Driblab não abre por leitura simples), não dá para dizer quanto disso é excesso. Um lance de 1,4 s sem defensor no caminho nem sempre é grande chance; só 2,8 chutes por time saem deles. Para comparar com grande chance é preciso a mesma definição (chance em que se espera o gol), não esta.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
