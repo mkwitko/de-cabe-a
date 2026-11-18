@@ -53,6 +53,7 @@ function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
       {p.knowledge !== null && (
         <span className="font-bold text-club-gold">
           {t('market.knowledge', { k: p.knowledge })}
+          {p.seenMonths !== null && ` · ${t('market.seenAgo', { n: p.seenMonths })}`}
         </span>
       )}
     </span>
@@ -320,6 +321,9 @@ function Squads(props: {
   return (
     <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
       <h3 className={LABEL}>{t('market.squads')}</h3>
+      <p className="text-sm text-chalk-soft">
+        {t('market.squadsInfo', { cost: money(view.scouting.watchCost) })}
+      </p>
       <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold">
         {t('market.squadsPick')}
         <select className={FIELD} value={club ?? ''} onChange={(e) => pick(e.target.value || null)}>
@@ -354,6 +358,7 @@ function Squads(props: {
                       {t('squad.age', { n: p.age })}
                       {' · '}
                       {known ? t('market.knowledge', { k: p.knowledge ?? 0 }) : t('market.unknown')}
+                      {p.seenMonths !== null && ` · ${t('market.seenAgo', { n: p.seenMonths })}`}
                     </span>
                   </span>
                   <span className="font-condensed text-xl leading-none font-black whitespace-nowrap tabular-nums">
@@ -429,6 +434,11 @@ function Scouts({ s, act }: { s: MarketView['scouting']; act: Do }) {
           {t('market.scoutSend')}
         </button>
       </div>
+      {free.some((a) => a.area === area) && (
+        <p className="text-sm text-chalk-soft tabular-nums">
+          {t('market.scoutCost', { cost: money(free.find((a) => a.area === area)!.cost) })}
+        </p>
+      )}
     </div>
   );
 }

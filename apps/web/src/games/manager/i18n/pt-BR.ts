@@ -146,7 +146,7 @@ export const ptBR = {
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
-    '{r, select, scout_busy {Todos os seus olheiros já estão viajando.} scout_already {Já há um olheiro nessa região.} scout_area {Não há clubes nessa região.} cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
+    '{r, select, scout_busy {Todos os seus olheiros já estão viajando.} scout_cash {O caixa não cobre a viagem do olheiro.} scout_already {Já há um olheiro nessa região.} scout_area {Não há clubes nessa região.} cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
   'market.scouts': 'Olheiros',
   'market.scoutsInfo':
@@ -159,7 +159,12 @@ export const ptBR = {
   'market.saidScout': 'Olheiro a caminho: {area}.',
   'market.knowledge': 'Conhecimento {k}%',
   'market.unknown': 'Desconhecido',
+  'market.seenAgo':
+    '{n, plural, =0 {visto este mês} one {visto há # mês} other {visto há # meses}}',
+  'market.scoutCost': 'Custo da viagem: {cost}',
   'market.squads': 'Elencos',
+  'market.squadsInfo':
+    'Um relatório de um só jogador ocupa um olheiro por uma semana e custa até {cost}.',
   'market.squadsPick': 'Clube',
   'market.squadsNone': 'Escolha um clube',
   'market.watch': 'Pedir relatório',
@@ -303,7 +308,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',
