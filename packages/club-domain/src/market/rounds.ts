@@ -31,6 +31,7 @@ import {
 import { fitFor, squadPlanOf, type Need } from './plan';
 import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
+import { ABROAD } from './abroad';
 import { answerBid } from './talks';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -212,7 +213,7 @@ function choose(
     if (!closed && bestSeen.length === SHORTLIST && level + MAX_LEVEL_ERROR < bestSeen[SHORTLIST - 1]!)
       closed = true;
     if (closed && !(p.clubId === w.clubId && listed.has(p.id))) continue;
-    if (p.clubId === buyerId || skip.has(p.id)) continue;
+    if (p.clubId === buyerId || p.clubId === ABROAD || skip.has(p.id)) continue;
     const theirs = p.clubId === w.clubId;
     // Without a club he costs no fee and asks nobody's leave.
     const free = p.clubId === null;

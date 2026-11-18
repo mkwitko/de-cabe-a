@@ -13,6 +13,7 @@ import type { CareerWorld } from './advance';
 import { note } from './inbox';
 import { clubLevel } from './training';
 import { markArrival } from '../market/judgement';
+import { ABROAD } from '../market/abroad';
 
 /** A player's club and contract after a move, by player id. */
 export type Moves = Record<
@@ -101,8 +102,8 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     players[i] = moved(players[i]!, stamped[id]!);
     // A renewal changes neither squad.
     if (from === to) continue;
-    if (from) touched.add(from);
-    if (to) touched.add(to);
+    if (from && from !== ABROAD) touched.add(from);
+    if (to && to !== ABROAD) touched.add(to);
     left.add(id);
   }
   w.moves = { ...w.moves, ...stamped };

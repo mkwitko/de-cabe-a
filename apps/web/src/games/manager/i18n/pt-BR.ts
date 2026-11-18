@@ -108,7 +108,7 @@ export const ptBR = {
   'market.talk': 'Negociar',
   'market.talkFor': 'Negociar {name}, {age} anos, nota {n}, valor {value}',
   'market.no':
-    '{r, select, window {Janela fechada} squadFull {Elenco cheio} theirSquad {Clube não libera} cold {Conversa encerrada} justMoved {Recém-contratado} loyal {Não quer sair} stepDown {Não aceita descer} role {Não vem para o banco} other {Sem acordo}}',
+    '{r, select, window {Janela fechada} squadFull {Elenco cheio} theirSquad {Clube não libera} cold {Conversa encerrada} justMoved {Recém-contratado} abroad {Jogando no exterior} loyal {Não quer sair} stepDown {Não aceita descer} role {Não vem para o banco} other {Sem acordo}}',
   'market.part': '{p, select, starter {Titular} cover {Reserva imediato} other {Sobra no elenco}}',
   'market.list': 'Pôr à venda',
   'market.unlist': 'Tirar da lista',

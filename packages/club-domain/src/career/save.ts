@@ -4,6 +4,7 @@
  * results; the browser replays only the days after the last snapshot, and only with the rules
  * version that wrote it (CAREER_RULES_VERSION).
  */
+import { ABROAD } from '../market/abroad';
 import { emptyCalendar, type Scheduled } from '../competition/calendar';
 import type { SeasonState } from '../competition/season';
 import { createLedger, type LedgerEntry } from '../finance/ledger';
@@ -77,7 +78,7 @@ function packMoves(pack: Pack, moves: Moves): PackedMoves {
   return {
     rows: Object.entries(moves).map(([id, m]) => [
       id,
-      m.clubId === null ? -1 : (place.get(m.clubId) ?? -1),
+      m.clubId === null ? -1 : m.clubId === ABROAD ? -2 : (place.get(m.clubId) ?? -1),
       m.wage,
       m.until ? Number(m.until.slice(0, 4)) : -1,
       m.release ?? -1,
@@ -93,7 +94,7 @@ function unpackMoves(pack: Pack, saved: PackedMoves | Moves | undefined): Moves 
   const moves: Moves = {};
   for (const [id, club, wage, until, release, season, joined] of saved.rows)
     moves[id] = {
-      clubId: club < 0 ? null : pack.clubs[club]!.id,
+      clubId: club === -2 ? ABROAD : club < 0 ? null : pack.clubs[club]!.id,
       wage,
       until: until < 0 ? '' : `${until}-12-31`,
       ...(release >= 0 && { release }),
