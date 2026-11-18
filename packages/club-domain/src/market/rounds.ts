@@ -492,7 +492,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         // The fee leaves the league: only the buyer's books see it.
         const b = booksOf(w, id);
         w.books = { ...w.books, [id]: { ...b, spent: b.spent + deal.fee } };
-      } else if (deal.from !== null) book(w, deal.from, id, deal.fee);
+      } else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);
       break;

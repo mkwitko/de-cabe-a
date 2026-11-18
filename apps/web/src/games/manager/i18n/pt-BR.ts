@@ -77,7 +77,8 @@ export const ptBR = {
   'squad.starter': 'Titular',
   'squad.fresh': 'Fôlego {n}%',
   'market.open': 'Janela aberta',
-  'market.closed': 'Janela fechada. Abre de janeiro a abril e em julho.',
+  'market.closed':
+    'Janela fechada. As janelas da CBF vão até 27 de março e de 20 de julho a 11 de setembro; jogadores sem clube podem ser contratados a qualquer momento.',
   'market.cash': 'Caixa {cash}',
   'market.wageRoom': 'Folha: cabe mais {room} por mês',
   'market.noClub': 'Sem clube',
@@ -146,7 +147,7 @@ export const ptBR = {
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} refused {Proposta por {name} recusada.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
-    '{r, select, scout_busy {Todos os seus olheiros já estão viajando.} scout_cash {O caixa não cobre a viagem do olheiro.} scout_already {Já há um olheiro nessa região.} scout_area {Não há clubes nessa região.} cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
+    '{r, select, loansOut {O clube já tem seis jogadores emprestados, o limite da FIFA.} loansIn {Seu clube já tem seis jogadores emprestados de outros, o limite da FIFA.} pairLimit {Já são três empréstimos com esse clube nesta temporada, o limite da FIFA.} scout_busy {Todos os seus olheiros já estão viajando.} scout_cash {O caixa não cobre a viagem do olheiro.} scout_already {Já há um olheiro nessa região.} scout_area {Não há clubes nessa região.} cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
   'market.scouts': 'Olheiros',
   'market.scoutsInfo':
@@ -188,6 +189,8 @@ export const ptBR = {
   'health.outLabel': 'Lesionado',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
+  'inbox.solidarity':
+    '{name}, formado no clube, foi vendido: a solidariedade rendeu {fee} ao caixa.',
   'inbox.watched': 'Chegou o relatório do olheiro sobre {name}: agora você o conhece melhor.',
   'inbox.scouted':
     '{n, plural, =0 {O olheiro voltou de {area} sem nomes novos.} one {O olheiro voltou de {area} com # jogador novo nos arquivos.} other {O olheiro voltou de {area} com # jogadores novos nos arquivos.}}',
@@ -308,6 +311,11 @@ export const ptBR = {
   'career.watchHighlights': 'Melhores momentos',
   'career.lastResult': '{home} {a} × {b} {away}',
   'career.seasonOver': 'Temporada encerrada.',
+  'career.deadline': 'Último dia da janela',
+  'career.deadlineText':
+    'A janela de transferências fecha em {d, date, long}. Depois dela, só dá para contratar jogadores sem clube.',
+  'career.deadlineMarket': 'Fazer contratações',
+  'career.deadlineGo': 'Fechar a janela',
   'career.nextSeason': 'Começar a temporada {season}',
   'career.turn':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',

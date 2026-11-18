@@ -10,9 +10,11 @@ import { roundsBetween } from './rounds';
 import { cannotTalk } from './talks';
 
 const pack = generateDevPack();
+/** The first market round (every 14 days) on or after a date. */
+const firstRound = (year: number, md: string) => Math.ceil(dayOf(`${year}-${md}`) / 14) * 14;
 const clubId = jobOffers(pack, 5)[0]!.clubId;
-const SEASON = roundsBetween(dayOf('2026-01-01'), dayOf('2026-04-30')).concat(
-  roundsBetween(dayOf('2026-07-01'), dayOf('2026-07-31')),
+const SEASON = roundsBetween(dayOf('2026-01-01'), dayOf('2026-03-31')).concat(
+  roundsBetween(dayOf('2026-07-15'), dayOf('2026-09-15')),
 );
 
 describe('the exodus abroad', () => {
@@ -50,13 +52,13 @@ describe('the exodus abroad', () => {
     const w = openCareer(pack, 91, clubId);
     const gone = new Set(SEASON.flatMap((d) => foreignRound(w, d)).map((d) => d.player));
     // The same season: nobody turns round at once.
-    expect(homecoming(w, dayOf('2026-07-01') + 1)).toEqual([]);
+    expect(homecoming(w, SEASON.at(-4)!)).toEqual([]);
     // Ten years on, in the January and July windows.
     w.season = { ...w.season, season: 2036 };
     const back = [];
     for (let y = 0; y < 3; y++)
-      for (const iso of [`2036-01-0${1 + y}`, `2036-07-0${1 + y}`])
-        back.push(...homecoming(w, dayOf(iso)));
+      for (const day of [firstRound(2036 + y, '01-05'), firstRound(2036 + y, '07-20')])
+        back.push(...homecoming(w, day));
     expect(back.length).toBeGreaterThan(0);
     for (const d of back) {
       expect(gone.has(d.player)).toBe(true);
@@ -65,6 +67,6 @@ describe('the exodus abroad', () => {
       expect(w.pack.players.find((p) => p.id === d.player)!.clubId).toBe(d.to);
     }
     // Outside a window's opening fortnight, nobody.
-    expect(homecoming(w, dayOf('2036-03-20'))).toEqual([]);
+    expect(homecoming(w, firstRound(2036, '01-05') + 14)).toEqual([]);
   });
 });

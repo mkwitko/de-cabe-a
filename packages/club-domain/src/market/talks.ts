@@ -298,7 +298,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
         w.books = { ...w.books, [w.clubId]: { ...b, spent: b.spent + talk.fee } };
       } else if (talk.seller !== null) {
         settle(w, p, talk.seller, talk.fee, 'buy');
-        book(w, talk.seller, w.clubId, talk.fee);
+        book(w, talk.seller, w.clubId, talk.fee, p);
       }
       movePlayer(w, p, w.clubId, {
         wage: a.terms.wage,
@@ -421,7 +421,7 @@ export function answerBid(
     until: `${season + wants.years}-12-31`,
     release: marketValue(w.pack, p, season) * CLAUSE_TIMES,
   });
-  book(w, w.clubId, bid.from, fee);
+  book(w, w.clubId, bid.from, fee, p);
   w.listed = (w.listed ?? []).filter((x) => x !== p.id);
   w.bids = (w.bids ?? []).filter((b) => b.player !== p.id);
   w.deals = [
