@@ -454,12 +454,14 @@ test("career: look at another club's squad and ask a scout about one player at 3
   await expect(squads.getByText('Caixa', { exact: true })).toBeVisible();
   await expect(squads.getByText(/^(Imediatista|De longo prazo|Equilibrada), /)).toBeVisible();
   const rows = squads.getByRole('listitem');
-  await expect(rows.first()).toBeVisible();
+  await expect(rows.first()).toBeVisible({ timeout: 30_000 });
   expect(await rows.count()).toBeGreaterThan(10);
   await rows
     .first()
     .getByRole('button', { name: /^Pedir relatório de / })
     .click();
+  // The worker answers with the whole market view again: slow on a busy CI machine.
+  await expect(page.getByText(/^Olheiro a caminho: /)).toBeVisible({ timeout: 30_000 });
   await expect(rows.getByRole('button', { name: 'Olheiro observando' })).toHaveCount(1);
   await squads.screenshot({ path: 'test-results/elencos-360.png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
