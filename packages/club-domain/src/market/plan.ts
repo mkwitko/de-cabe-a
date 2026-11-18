@@ -59,6 +59,17 @@ function plan(c: ClubIn): SquadPlan {
   const formation = formationOf(c.clubId);
   const roles = FORMATIONS[formation]!.roles;
   const positions = slotPositions(formation);
+  // A club with fewer than eleven (a foreign club holding a few of the pack's players, never in
+  // a competition here) has no eleven to plan around: all of them start, it seeks nobody.
+  const few = squadPlayers(c);
+  if (few.length < roles.length) {
+    const read = readingsOf(c.pack);
+    const level = few.length
+      ? Math.round(few.reduce((s, p) => s + read.get(p.id)!.level, 0) / few.length)
+      : 0;
+    const xi = few.map((p) => p.id);
+    return { formation, level, xi, cover: roles.map(() => null), needs: [], surplus: [] };
+  }
   const fit = slotRatings(c, formation);
   const known = slotLevels(c, formation);
   const xi = bestLineup(c, formation).xi;

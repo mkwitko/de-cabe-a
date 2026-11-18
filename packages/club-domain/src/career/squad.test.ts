@@ -35,6 +35,15 @@ describe('squad and line-up', () => {
     }
   });
 
+  it('fields a short squad: a second keeper plays out of goal', () => {
+    const mine = pack.players.filter((p) => p.clubId === clubId);
+    const gk = (p: (typeof mine)[number]) => p.positions.some((x) => x.position === 'GK');
+    const kept = [...mine.filter(gk).slice(0, 2), ...mine.filter((p) => !gk(p)).slice(0, 9)];
+    const others = pack.players.filter((p) => p.clubId !== clubId);
+    const l = bestLineup({ pack: { ...pack, players: [...others, ...kept] }, clubId }, '4-3-3');
+    expect(new Set(l.xi).size).toBe(11);
+  });
+
   it('refuses a repeated player, a stranger and a keeper out of goal', () => {
     const w = openCareer(pack, 41, clubId);
     const l = bestLineup(w, '4-3-3');

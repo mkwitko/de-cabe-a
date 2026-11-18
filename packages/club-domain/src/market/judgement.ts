@@ -85,6 +85,9 @@ const OFF = {
   own: [4, 3, 2, 1, 0],
 } as const;
 
+/** The most a club can misread another club's player's level, either way. */
+export const MAX_LEVEL_ERROR = OFF.level[0];
+
 /** A fixed number in -100..100 for a pair of ids and a purpose: the club's bias on that player. */
 function bias(seed: number, clubId: string, playerId: string, salt: number): number {
   let h = Math.imul(2166136261 ^ salt, 16777619) ^ seed;

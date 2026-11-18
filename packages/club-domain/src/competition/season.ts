@@ -327,8 +327,10 @@ export function nextDay(s: SeasonState): number | null {
  */
 export function matchesOn(s: SeasonState, day: number): string[] {
   const out: string[] = [];
-  for (const m of [...s.calendar.matches.values()]) {
-    if (m.played || m.day !== day) continue;
+  // The day's matches first, without copying the season: a move below only lands on a later day.
+  const today: Scheduled[] = [];
+  for (const m of s.calendar.matches.values()) if (!m.played && m.day === day) today.push(m);
+  for (const m of today) {
     const ko = s.meta.get(m.id)!.ko;
     if (ko && ko.leg > 0) {
       const first = s.calendar.matches.get(m.id.replace(/l\d+$/, `l${ko.leg - 1}`))!;

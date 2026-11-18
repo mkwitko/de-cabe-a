@@ -65,9 +65,20 @@ export type ClubIn = Pick<CareerWorld, 'pack' | 'clubId'>;
 
 /** A club's players, by id: read once per club (lib/pack-cache.ts). */
 const squad = (w: ClubIn): PackPlayer[] =>
-  cached(w.pack, 'squad', w.clubId, () =>
-    w.pack.players.filter((p) => p.clubId === w.clubId).sort((x, y) => (x.id < y.id ? -1 : 1)),
-  );
+  cached(w.pack, 'squad', w.clubId, () => {
+    // One pass over the pack fills every club still missing its squad: one filter per club
+    // would cost clubs × players on a new pack (829 × 15,700 in the real one).
+    const by = new Map<string, PackPlayer[]>();
+    for (const p of w.pack.players)
+      if (p.clubId) {
+        let l = by.get(p.clubId);
+        if (!l) by.set(p.clubId, (l = []));
+        l.push(p);
+      }
+    const sorted = (l: PackPlayer[]) => l.sort((x, y) => (x.id < y.id ? -1 : 1));
+    for (const [id, l] of by) if (id !== w.clubId) cached(w.pack, 'squad', id, () => sorted(l));
+    return sorted(by.get(w.clubId) ?? []);
+  });
 /** The squad as a list anyone may read. */
 export const squadPlayers = (w: ClubIn): readonly PackPlayer[] => squad(w);
 
@@ -231,13 +242,18 @@ export function bestLineup(
   const fit = slotRatings(w, formation);
   const left = out ? squad(w).filter((p) => !out.has(p.id)) : [...squad(w)];
   const xi = f.roles.map((role, i) => {
+    // A short squad fields whoever is left: a keeper plays out of goal, or an outfield player
+    // in it, rather than the club not turning up.
     let at = -1;
-    for (const [k, p] of left.entries())
-      if (
-        isKeeper(p) === isKeeperRole(role) &&
-        (at < 0 || fit.get(p.id)![i]! > fit.get(left[at]!.id)![i]!)
-      )
-        at = k;
+    for (const strict of [true, false]) {
+      for (const [k, p] of left.entries())
+        if (
+          (!strict || isKeeper(p) === isKeeperRole(role)) &&
+          (at < 0 || fit.get(p.id)![i]! > fit.get(left[at]!.id)![i]!)
+        )
+          at = k;
+      if (at >= 0) break;
+    }
     if (at < 0) throw new Error(`lineup: no player for ${role}`);
     return left.splice(at, 1)[0]!.id;
   });

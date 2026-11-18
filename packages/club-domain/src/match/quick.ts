@@ -53,9 +53,7 @@ export function clubStrength(pack: Pack): Map<string, number> {
 }
 
 /** `clubStrength` of one club, rating only its own players (not the whole world's). */
-export const clubStrengthOf = (pack: Pack, clubId: string): number | undefined => {
-  const rs = pack.players
-    .filter((p) => p.clubId === clubId)
-    .map((p) => bestRoles(p.attributes, 1)[0]!.rating);
+export const clubStrengthOf = (squad: readonly Pack['players'][number][]): number | undefined => {
+  const rs = squad.map((p) => bestRoles(p.attributes, 1)[0]!.rating);
   return rs.length ? top16(rs) : undefined;
 };
