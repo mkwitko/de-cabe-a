@@ -42,6 +42,8 @@ describe('transfers in the world (07)', () => {
     ) {
       if (d.kind === 'deadline') {
         expect(windowOpen(w.day)).toBe(true);
+        // The calendar stands on the deadline's eve: the rounds before it are played.
+        expect(w.day).toBe(d.day - 1);
         expect(windowOpen(d.day + 1)).toBe(false);
         stops.push(d.day);
       } else playDecision(w, d);

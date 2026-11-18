@@ -122,6 +122,7 @@ test('career: watch the club’s own match, change the plan, and its result coun
     .getByRole('button', { name: /^Assumir o / })
     .first()
     .click();
+  await toMatch(page);
   await page.getByRole('button', { name: 'Melhores momentos' }).click();
   await expect(page.getByText(/^Lance 1$/)).toBeVisible({ timeout: 60_000 });
   await page.screenshot({ path: 'test-results/carreira-partida-390.png', fullPage: true });
@@ -339,7 +340,7 @@ for (const width of [360, 1280]) {
     await expect(squad.getByRole('listitem')).toHaveCount(size + 1, { timeout: 30_000 });
     await expect(squad.getByRole('listitem').filter({ hasText: name })).not.toHaveCount(0);
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
-    await expect(page.getByText('Transferências')).toBeVisible();
+    await expect(page.getByText('Transferências', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Mercado' }).click();
 
     // A renewal opens the player's table alone: he says what he wants to stay.

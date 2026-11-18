@@ -253,6 +253,9 @@ export function nextDecision(w: CareerWorld, opts: { deadlines?: boolean } = {})
       for (let x = from + 1; x <= d; x++)
         if (windowOpen(x) && !windowOpen(x + 1)) {
           w.deadline = x;
+          // The world runs to the eve of the deadline (no matches before `d`): the other
+          // clubs' rounds, bids and scouts all happen before the person decides.
+          if (x - 1 > w.day) playDay(w, x - 1);
           return { kind: 'deadline', day: x };
         }
     }
