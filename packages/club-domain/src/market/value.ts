@@ -130,7 +130,9 @@ function readValue(pack: Pack, p: PackPlayer, season: number): number {
   const promise = 100 + Math.round((Math.min(room, 20) * 5 * young) / 6);
   const left = yearsLeft(p, season);
   const contract = left >= 3 ? 100 : left === 2 ? 88 : left === 1 ? 65 : 35;
-  return thousands((goingWage(pack, r.level) * monthsFor(r.level, age) * promise * contract) / 10_000);
+  return thousands(
+    (goingWage(pack, r.level) * monthsFor(r.level, age) * promise * contract) / 10_000,
+  );
 }
 
 /**
