@@ -413,7 +413,8 @@ describe('MC-039 referee', () => {
   it('fouls also come from aerial duels (02 §6.5 carga), more with aggression', () => {
     const d = (aggression: number) => ({ attrs: base({ aggression }), input: { traits: [] } });
     expect(aerialFoulChance(d(90))).toBeGreaterThan(aerialFoulChance(d(30)));
-    const rs = matches([1, 2, 3]);
+    // Aerial fouls are rare (few contested high balls, HANDOFF): enough matches to see one.
+    const rs = matches([1, 2, 3, 4, 5, 6, 7, 8]);
     const aerial = rs.flatMap((r) => r.events.filter((e) => e.kind === 'foul' && e.data.aerial));
     expect(aerial.length).toBeGreaterThan(0);
   });
