@@ -103,6 +103,20 @@ describe('clubs as institutions (04 §4.7)', () => {
     if (dear) expect(workAnswer(w, dear)).toBe('horizon');
   });
 
+  it('an election at a club of the division is news in the inbox', () => {
+    const w = openCareer(structuredClone(pack), 5, mine);
+    const div = nationalDivisions(w.pack).find((d) => w.season.members[d.id]?.includes(mine))!;
+    const voter = w.season.members[div.id]!.find(
+      (id) =>
+        id !== mine && w.pack.governance.find((g) => g.clubId === id)?.model === 'association',
+    )!;
+    const every = w.pack.governance.find((g) => g.clubId === voter)!.electionEverySeasons ?? 3;
+    clubsOf(w)[voter]!.directors.since = w.season.season - every;
+    planSeason(w, new Set());
+    expect(w.inbox?.some((n) => n.kind === 'directors' && n.club === voter)).toBe(true);
+    expect(clubsOf(w)[voter]!.directors.since).toBe(w.season.season);
+  });
+
   it('a level 5 front cannot be built further', () => {
     const w = openCareer(structuredClone(pack), 5, mine);
     const club = w.pack.clubs.find((c) => c.id === rival)!;

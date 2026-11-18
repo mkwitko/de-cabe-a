@@ -819,7 +819,8 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'loanOut' ||
                   n.kind === 'loanBack' ||
                   n.kind === 'hired' ||
-                  n.kind === 'fairplayRival'
+                  n.kind === 'fairplayRival' ||
+                  n.kind === 'directors'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion

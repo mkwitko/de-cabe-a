@@ -16,6 +16,8 @@ import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/boo
 import type { CareerWorld } from './advance';
 import { BY_TIER, gateOf } from './finance';
 import { postEntry } from '../finance/ledger';
+import { note } from './inbox';
+import { nationalDivisions } from './start';
 import { priced, pricesOf } from './prices';
 
 export type Horizon = 'short' | 'medium' | 'long';
@@ -247,6 +249,10 @@ function chooseFronts(
 export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void {
   const clubs = clubsOf(w);
   const season = w.season.season;
+  const division = nationalDivisions(w.pack).find((d) =>
+    w.season.members[d.id]?.includes(w.clubId),
+  );
+  const near = new Set(division ? w.season.members[division.id] : []);
   for (const club of w.pack.clubs) {
     const s = clubs[club.id]!;
     const r = fork(rngFrom(w.seed), `plan:${season}:${club.id}`);
@@ -269,7 +275,7 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     const gov = w.pack.governance.find((g) => g.clubId === club.id);
     const every = gov?.electionEverySeasons ?? (gov?.model === 'association' ? ELECTION_EVERY : 0);
     const turn = every > 0 ? (season - s.directors.since) % every === 0 : pick(r, SALE_ODDS) === 0;
-    if (turn && season > s.directors.since)
+    if (turn && season > s.directors.since) {
       // A relegated or broke club votes for whoever promises results now.
       s.directors = drawDirectors(
         w.pack,
@@ -278,6 +284,16 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
         season,
         relegated.has(club.id) || s.cash < 0 ? -15 : 0,
       );
+      // The person hears of their own club's and their division's.
+      if (club.id === w.clubId || near.has(club.id))
+        note(w, {
+          day: w.day,
+          kind: 'directors',
+          club: club.id,
+          why: every > 0 ? 'election' : 'sale',
+          horizon: s.directors.horizon,
+        });
+    }
     if (club.id === w.clubId) continue;
     // Money to spare after the reserve.
     const income = incomeOf(w, club.id);
