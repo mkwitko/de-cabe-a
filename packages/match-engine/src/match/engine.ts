@@ -395,7 +395,7 @@ function dribble(s: MatchState, c: MatchPlayer) {
       next(s.rngs.referee) <
       beatenFoulChance(d) * (d.cards === 1 ? 0.6 : 1) * (inOwnBox(d.team, c.pos) ? 0.15 : 1)
     ) {
-      foul(s, d, c, true);
+      foul(s, d, c, true, false, false, false);
       return;
     }
     d.tackleAt = s.tick + 8; // beaten: out of the play for two seconds
@@ -528,7 +528,7 @@ function tackles(s: MatchState) {
     // Tactical foul (research 18 §1.2 C): a counter just started, running at our half with
     // few of us goal-side; a player who reads the game stops it, less so on a yellow.
     if (!box && tacticalFoul(s, d, c)) {
-      foul(s, d, c, false, true);
+      foul(s, d, c, false, true, false, false);
       return;
     }
     if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.7 : 1))
@@ -541,7 +541,7 @@ function tackles(s: MatchState) {
     const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
     const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.15 : 1);
     if (next(s.rngs.referee) < pf) {
-      foul(s, d, c, behind);
+      foul(s, d, c, behind, false, false, won);
       return;
     }
     if (won) tackleWins(s, d, c);
@@ -559,6 +559,7 @@ export function foul(
   behind: boolean,
   tactical = false,
   aerial = false,
+  playedBall = true,
 ) {
   s.teams[d.team].stats.fouls++;
   emit(s, 'foul', d.team, d.index, c.index, c.pos, {
@@ -576,9 +577,12 @@ export function foul(
     d,
     {
       behind,
-      promising: cg.x > 70,
+      // Promising: near our goal, or past our midfield with few of us goal-side (a
+      // numbers-up attack). PARAMETERS: 70 m; 40 m and 3 players, keeper included.
+      promising: cg.x > 70 || (cg.x > 40 && goalSide <= 3),
       lastMan: goalSide === 0 && cg.x > 75 && Math.abs(cg.y - CENTER.y) < 20,
       tactical,
+      playedBall,
     },
     next(s.rngs.referee),
     next(s.rngs.referee),

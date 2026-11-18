@@ -38,11 +38,32 @@ export function beatenFoulChance(d: Tackler): number {
 }
 
 export interface FoulContext {
+  /** From behind: recorded on the event, not a reason for a card by itself (law 12). */
   behind: boolean;
+  /** The foul stops a promising attack (law 12: caution). */
   promising: boolean;
   lastMan: boolean;
   /** A deliberate foul to stop a counter: law 12 cautions it most of the time. */
   tactical?: boolean;
+  /** The challenge went for the ball (careless more than reckless when it did). */
+  playedBall?: boolean;
+}
+
+/**
+ * Chance of a yellow (law 12): careless fouls rarely; reckless ones (aggression, no attempt
+ * to play the ball) more; stopping a promising attack, and above all a deliberate stop of a
+ * counter, most. The direction of the challenge is not a reason by itself. PARAMETERS:
+ * yellows per foul, Série A about 0.16 to 0.18 (02 §11).
+ */
+export function cardChance(strictness: number, d: Tackler, c: FoulContext): number {
+  return (
+    (0.03 +
+      0.06 * norm(d.attrs.aggression) +
+      (c.playedBall === false ? 0.03 : 0) +
+      (c.promising ? 0.08 : 0) +
+      (c.tactical ? 0.3 : 0)) *
+    (0.7 + 0.6 * strictness)
+  );
 }
 
 /** 0 no card, 1 yellow, 2 straight red. `u` and `v` are two uniform draws. */
@@ -55,12 +76,5 @@ export function cardFor(
 ): 0 | 1 | 2 {
   if (c.lastMan && v < 0.02) return 2;
   if (v < 0.0008) return 2;
-  const p =
-    (0.06 +
-      (c.behind ? 0.12 : 0) +
-      (c.promising ? 0.12 : 0) +
-      (c.tactical ? 0.45 : 0) +
-      0.05 * norm(d.attrs.aggression)) *
-    (0.7 + 0.6 * strictness);
-  return u < p ? 1 : 0;
+  return u < cardChance(strictness, d, c) ? 1 : 0;
 }
