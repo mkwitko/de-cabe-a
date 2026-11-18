@@ -3,7 +3,8 @@ import { summary, transitions } from './summary';
 import type { MatchEvent } from '../contract';
 import { simulateMatch } from '../match/simulate';
 import { matchInput } from '../match/fixture';
-import { bootstrap } from './paired';
+import { bootstrap, pairedBench } from './paired';
+import type { Summary } from './summary';
 
 describe('paired bootstrap', () => {
   it('a constant change has no spread', () => {
@@ -16,6 +17,29 @@ describe('paired bootstrap', () => {
     expect(lo).toBeLessThan(0);
     expect(hi).toBeGreaterThan(0);
     expect(bootstrap(d)).toEqual([m, lo, hi]);
+  });
+});
+
+describe('paired bench comparison', () => {
+  it('reports the per-match change on the same seeds, and flags a change outside the interval', () => {
+    const one = (goals: number) =>
+      ({
+        score: [goals, 0],
+        shots: [10, 10],
+        xg: [1, 1],
+        onTarget: [4, 4],
+        fouls: [13, 13],
+        yellows: [2, 2],
+        reds: [0, 0],
+        corners: [5, 5],
+        passes: [400, 400],
+        offsides: [1, 1],
+      }) as unknown as Summary;
+    const A = Array.from({ length: 40 }, (_, i) => one(i % 4));
+    const B = A.map((s) => one(s.score[0] + 1));
+    const goals = pairedBench(A, B).find((l) => l.startsWith('goals'))!;
+    expect(goals).toContain('B−A +1.000 [1.000, 1.000] *');
+    expect(pairedBench(A, A).find((l) => l.startsWith('shotsPerTeam'))).not.toContain('*');
   });
 });
 
