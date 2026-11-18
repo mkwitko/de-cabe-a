@@ -36,25 +36,41 @@ export function windowOpen(day: number): boolean {
 }
 
 /** The pack with these moves applied: a new object, the players untouched otherwise. */
+/** One player after his move. */
+function moved(p: PackPlayer, m: Moves[string]): PackPlayer {
+  if (m.clubId === null) {
+    // Released: no club and no contract.
+    const { contract: _ended, ...free } = p;
+    return { ...free, clubId: null };
+  }
+  return {
+    ...p,
+    clubId: m.clubId,
+    contract: { wage: m.wage, until: m.until, releaseFee: m.release ?? null },
+  };
+}
+
 export function withMoves(pack: Pack, moves: Moves): Pack {
   if (Object.keys(moves).length === 0) return pack;
   return {
     ...pack,
     players: pack.players.map((p) => {
       const m = moves[p.id];
-      if (!m) return p;
-      if (m.clubId === null) {
-        // Released: no club and no contract.
-        const { contract: _ended, ...free } = p;
-        return { ...free, clubId: null };
-      }
-      return {
-        ...p,
-        clubId: m.clubId,
-        contract: { wage: m.wage, until: m.until, releaseFee: m.release ?? null },
-      };
+      return m ? moved(p, m) : p;
     }),
   };
+}
+
+/**
+ * Where each player sits in the pack's list. A move keeps the order, so the pack it makes
+ * shares the index of the one it came from: a single transfer costs one copy of the list and
+ * one replaced entry, not a pass over every player.
+ */
+const places = new WeakMap<Pack, Map<string, number>>();
+function placeOf(pack: Pack): Map<string, number> {
+  let by = places.get(pack);
+  if (!by) places.set(pack, (by = new Map(pack.players.map((p, i) => [p.id, i]))));
+  return by;
 }
 
 /**
@@ -69,11 +85,16 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
   const touched = new Set<string>();
   const left = new Set<string>();
   const stamped: Moves = {};
-  const byId = new Map(w.pack.players.map((p) => [p.id, p]));
+  const before = w.pack;
+  const at = placeOf(before);
+  const players = before.players.slice();
   for (const id of ids) {
-    const from = byId.get(id)?.clubId ?? null;
+    const i = at.get(id);
+    if (i === undefined) continue;
+    const from = players[i]!.clubId;
     const to = changes[id]!.clubId;
     stamped[id] = { ...changes[id]!, season };
+    players[i] = moved(players[i]!, stamped[id]!);
     // A renewal changes neither squad.
     if (from === to) continue;
     if (from) touched.add(from);
@@ -81,8 +102,8 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     left.add(id);
   }
   w.moves = { ...w.moves, ...stamped };
-  const before = w.pack;
-  w.pack = withMoves(before, stamped);
+  w.pack = { ...before, players };
+  places.set(w.pack, at);
   carryCache(before, w.pack, [...touched]);
   for (const id of left)
     // A new club starts to know him now.

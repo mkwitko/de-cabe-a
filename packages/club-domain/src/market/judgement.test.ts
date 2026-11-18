@@ -96,29 +96,19 @@ describe("directors' judgement (06 §2.3, 04 §8.2)", () => {
     expect(ask(withEye(clubA, 5)).floor).toBeGreaterThan(ask(withEye(clubA, 1)).floor);
   });
 
-  it('over a window, clubs with poor offices pay more for what they get', () => {
+  it('over a window, clubs with poor scouting misjudge what they buy by more', () => {
     const w = openCareer(pack, 97, jobOffers(pack, 5)[0]!.clubId);
     const day = dayOf('2026-04-16');
-    const deals = [0, 14, 28, 42].flatMap((k) => marketRound(w, day + k));
-    const ratio = (low: boolean) => {
-      const of = deals.filter((d) => eyeOf(pack, d.to).football <= 2 === low);
-      const paid = of.reduce((s, d) => s + d.fee, 0);
-      const worth = of.reduce(
-        (s, d) =>
-          s +
-          marketValue(
-            pack,
-            pack.players.find((p) => p.id === d.player)!,
-            2026,
-          ),
-        0,
-      );
-      return { n: of.length, ratio: paid / worth };
+    const deals = [0, 14, 28, 42].flatMap((k) => marketRound(w, day + k)).filter((d) => d.from);
+    const off = (poor: boolean) => {
+      const of = deals.filter((d) => eyeOf(pack, d.to).scouting <= 2 === poor);
+      const wrong = of.map((d) => Math.abs(d.seen - read.get(d.player)!.level));
+      return { n: of.length, mean: wrong.reduce((a, b) => a + b, 0) / Math.max(1, of.length) };
     };
-    const poor = ratio(true);
-    const fine = ratio(false);
+    const poor = off(true);
+    const fine = off(false);
     expect(poor.n).toBeGreaterThan(5);
     expect(fine.n).toBeGreaterThan(5);
-    expect(poor.ratio).toBeGreaterThan(fine.ratio);
+    expect(poor.mean).toBeGreaterThan(fine.mean);
   });
 });

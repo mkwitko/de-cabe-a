@@ -72,6 +72,8 @@ const WORTH_IT = 36;
 const REAL_NEED = 14;
 /** Bids for the person's players that may wait for an answer at once. */
 const OPEN_BIDS = 3;
+/** Candidates a club reads in full for one need, after the cheap sieve. */
+const SHORTLIST = 30;
 /** Points a listed player gains in a buyer's eyes. */
 const LISTED = 15;
 /** Days a bid for one of the person's players waits for an answer. */
@@ -193,7 +195,9 @@ function choose(
         pool.push(players.get(x.id)!);
       }
     }
-  pool.sort((a, b) => (a.id < b.id ? -1 : 1));
+  // First a cheap sieve over everyone in range; then only the best few sit through the costly
+  // reading (the selling club's plan, the player's mind, the points).
+  const short: { p: PackPlayer; sees: number; theirs: boolean; free: boolean }[] = [];
   for (const p of pool) {
     if (p.clubId === buyerId || skip.has(p.id)) continue;
     const theirs = p.clubId === w.clubId;
@@ -215,6 +219,16 @@ function choose(
     // Out of reach whatever the club's mood: a spare still costs 80% of his value.
     if (!free && marketValue(w.pack, p, season) * 6 > money * 10) continue;
     if (!free && !canLose(w, p)) continue;
+    short.push({ p, sees, theirs, free });
+  }
+  // The best the club sees, and whoever of the person's is on the list; ties by id.
+  short.sort(
+    (a, b) =>
+      Number(b.theirs && listed.has(b.p.id)) - Number(a.theirs && listed.has(a.p.id)) ||
+      b.sees - a.sees ||
+      (a.p.id < b.p.id ? -1 : 1),
+  );
+  for (const { p, theirs, free } of short.slice(0, SHORTLIST)) {
     const price = free
       ? 0
       : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season).floor;
