@@ -450,6 +450,9 @@ test("career: look at another club's squad and ask a scout about one player at 3
   const pick = squads.getByLabel('Clube');
   const first = await pick.locator('optgroup option').first().getAttribute('value');
   await pick.selectOption(first!);
+  // The club as an institution: its cash, who runs it and what it has built.
+  await expect(squads.getByText('Caixa', { exact: true })).toBeVisible();
+  await expect(squads.getByText(/^(Imediatista|De longo prazo|Equilibrada), /)).toBeVisible();
   const rows = squads.getByRole('listitem');
   await expect(rows.first()).toBeVisible();
   expect(await rows.count()).toBeGreaterThan(10);

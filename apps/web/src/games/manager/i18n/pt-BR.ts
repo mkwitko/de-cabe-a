@@ -222,6 +222,11 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'board.goal': 'Meta da temporada',
   'board.structure': 'Estrutura do clube',
+  'market.officeCash': 'Caixa',
+  'market.officeBoard': 'Diretoria',
+  'market.officeBoardText':
+    '{h, select, short {Imediatista} long {De longo prazo} other {Equilibrada}}, {c, select, high {bem avaliada} low {mal avaliada} other {de gestão mediana}}',
+  'market.officeWork': '(em obra)',
   'board.upkeep': 'Manutenção da estrutura: {cost} por temporada, descontada mês a mês.',
   'board.front':
     '{f, select, training {Centro de treinamento} youth {Categorias de base} medical {Departamento médico} scouting {Olheiros} football {Diretoria de futebol} stadium {Estádio} other {Estrutura}}',
