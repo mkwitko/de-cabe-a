@@ -106,6 +106,10 @@ const BLOCK_TOP: Record<'high' | 'mid' | 'low', Record<Line, number>> = {
   mid: { gk: LENGTH, def: 40, mid: 52, att: 64 },
   low: { gk: LENGTH, def: 26, mid: 37, att: 48 },
 };
+/** A side set to counter leaves its forwards this high without the ball (research 13 §3). PARAMETER. */
+const COUNTER_OUTLET = 60;
+/** A low block holds its line at the edge of the box, not on the penalty spot (research 13 §3). PARAMETERS. */
+const LOW_FLOOR_EXTRA: Record<Line, number> = { gk: 0, def: 4, mid: 3, att: 0 };
 const STEP_UP: Record<Line, number> = { gk: 1.5, def: 4, mid: 3, att: 2 };
 const BLOCK_SHIFT = { high: 9, mid: 0, low: -9 } as const;
 
@@ -157,8 +161,16 @@ export function anchors(
     // The floor gives way when the ball is deeper than it: the line stays goal-side of the ball.
     if (!inPossession)
       x = Math.min(
-        Math.max(x, Math.min(FLOOR_OUT[a.line], Math.max(2, focal.x - 3))),
-        BLOCK_TOP[t.block][a.line],
+        Math.max(
+          x,
+          Math.min(
+            FLOOR_OUT[a.line] + (t.block === 'low' ? LOW_FLOOR_EXTRA[a.line] : 0),
+            Math.max(2, focal.x - 3),
+          ),
+        ),
+        a.line === 'att' && t.onWin === 'counter'
+          ? Math.max(BLOCK_TOP[t.block].att, COUNTER_OUTLET)
+          : BLOCK_TOP[t.block][a.line],
       );
     if (inPossession && a.line !== 'gk' && lastLine !== null)
       x = Math.min(x, Math.max(lastLine - 0.8, focal.x - 2));
@@ -189,6 +201,8 @@ export const REST_BEHIND = 16;
 
 /** Where `us` would press: does the block allow engaging the ball at `ballX` (team frame)? */
 const pressReach = { high: LENGTH, mid: 70, low: 40 } as const;
+/** Bauer and Anzer (2021): a counter-press succeeds within 5 s or is over. */
+export const COUNTERPRESS_WINDOW = 5;
 /** How far behind the ball (towards the opponents' goal) a block still marks options. */
 const MARK_BEHIND = { high: 25, mid: 6, low: 3 } as const;
 
@@ -205,6 +219,10 @@ export function tasksFor(
   lastLine: number,
   /** Our back line's x (team frame), out of possession: nobody is marked below it. */
   ourLine = 0,
+  /** Just won it and set to counter: runners attack the space ahead of the ball (research 13 §3). */
+  counter = false,
+  /** In the seconds after losing the ball: hunt it (numbers at the ball) or drop (`onLoss`). */
+  afterLoss: 'counterPress' | 'regroup' | null = null,
 ): Task[] {
   const t = plan.team;
   const tasks: Task[] = [];
@@ -229,27 +247,46 @@ export function tasksFor(
       const y = CENTER.y + (i - (n - 1) / 2) * (n <= 2 ? 16 : 13);
       add('restDefence', `rest${i}`, { x: restX - (i === 0 || i === n - 1 ? 0 : 4), y });
     }
-    add('support', 'supportA', { x: focal.x + 2, y: focal.y - 11 });
-    add('support', 'supportB', { x: focal.x + 2, y: focal.y + 11 });
-    const wideX = Math.min(focal.x + 6, lastLine - 1);
+    add('support', 'supportA', freeSpot({ x: focal.x + 2, y: focal.y - 11 }, opp));
+    add('support', 'supportB', freeSpot({ x: focal.x + 2, y: focal.y + 11 }, opp));
+    // On a counter the runners go for the space behind, not for the ball (PARAMETERS: 65 and 80 m).
+    const wideX = counter
+      ? Math.max(Math.min(focal.x + 6, lastLine - 1), Math.min(65, lastLine - 1))
+      : Math.min(focal.x + 6, lastLine - 1);
     const edge = 3 + (3 - t.width) * 2.5;
     add('width', 'widthR', { x: wideX, y: edge });
     add('width', 'widthL', { x: wideX, y: WIDTH - edge });
-    add('depth', 'depth', { x: Math.max(lastLine - 1, focal.x + 4), y: CENTER.y + side * 6 });
+    add('depth', 'depth', {
+      x: counter ? Math.max(lastLine - 1, focal.x + 4) : Math.max(lastLine - 1, focal.x + 4),
+      y: CENTER.y + side * 6,
+    });
     if (focal.x > 70) {
       add('box', 'boxNear', { x: 95, y: CENTER.y + side * 4 });
       if (t.finalThird.boxPresence >= 3) add('box', 'boxFar', { x: 92, y: CENTER.y - side * 6 });
     } else {
-      add('betweenLines', 'between', {
-        x: Math.min(focal.x + 14, lastLine - 3),
-        y: CENTER.y - side * 8,
-      });
+      add(
+        'betweenLines',
+        'between',
+        freeSpot(
+          { x: Math.min(focal.x + 14, lastLine - 3), y: CENTER.y - side * 8 },
+          opp,
+          lastLine - 2,
+        ),
+      );
     }
     return tasks;
   }
 
   // Out of possession.
-  const engage = ball.x <= pressReach[t.block] || t.pressIntensity >= 5;
+  // Reaction to the loss (02 §8.1 onLoss; research 18 §1.2): for a few seconds a counter-pressing
+  // side hunts the ball wherever it is, with a second presser; a regrouping side drops into its
+  // block and only engages near its own goal (PARAMETERS: 5 s window, 35 m).
+  const counterPress = afterLoss === 'counterPress';
+  const engage = counterPress
+    ? true
+    : afterLoss === 'regroup'
+      ? ball.x <= 35
+      : ball.x <= pressReach[t.block] || t.pressIntensity >= 5;
   const goal = { x: 0, y: CENTER.y };
   const toGoal = (p: Vec2, d: number) => {
     const dx = goal.x - p.x;
@@ -261,11 +298,19 @@ export function tasksFor(
   const top = BLOCK_TOP[t.block].mid;
   // Engaging the carrier, or holding off goal-side at the block's front when the block does not press there.
   const hold = toGoal(focal, 6);
+  // Near our goal the presser engages from the goal side, in the carrier's path:
+  // a defender who is already goal-side takes the job ahead of a team-mate chasing
+  // from behind, who never catches a carrier running at goal (PARAMETERS: 30 m, 2 m).
   add(
     'press',
     'press',
-    engage ? focal : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
+    engage
+      ? ball.x < 30
+        ? toGoal(focal, 2)
+        : focal
+      : { x: Math.min(hold.x, BLOCK_TOP[t.block].att), y: hold.y },
   );
+  if (counterPress) add('press', 'press2', toGoal(focal, 3));
   const aboveLine = (q: Vec2) => ({ x: clamp(q.x, ourLine - 2, top), y: q.y });
   // The cover stays a step deeper than the block's front, so it never shares the lane-closer's line.
   if (t.pressIntensity >= 3 || ball.x < 40) {
@@ -294,11 +339,45 @@ export function tasksFor(
     )
     .sort((a, b) => a.d - b.d || a.i - b.i)
     .slice(0, marks);
-  for (const c of danger) add('mark', `mark${c.i}`, aboveLine(toGoal(c.o, 2)));
+  // Tight near the ball, looser further away (a marker 2 m off every option kills every pass). PARAMETER.
+  for (const c of danger)
+    add('mark', `mark${c.i}`, aboveLine(toGoal(c.o, Math.min(6, 2 + 0.12 * dist(c.o, focal)))));
   return tasks;
 }
 
 // ── Assignment ───────────────────────────────────────────────────────────────
+
+/**
+ * A support player looks for the free pocket near his spot, away from the
+ * opponents (research 18 §2.4: the free man, the third man). PARAMETERS:
+ * offsets up to 5 m, distance counted up to 8 m, 0.25 per metre moved.
+ */
+const POCKETS: Vec2[] = [
+  { x: 0, y: 0 },
+  { x: 4, y: 0 },
+  { x: -4, y: 0 },
+  { x: 0, y: 4 },
+  { x: 0, y: -4 },
+  { x: 3.5, y: 3.5 },
+  { x: 3.5, y: -3.5 },
+  { x: -3.5, y: 3.5 },
+  { x: -3.5, y: -3.5 },
+];
+export function freeSpot(base: Vec2, opp: Vec2[], maxX = LENGTH): Vec2 {
+  let best = base;
+  let bestScore = -Infinity;
+  for (const o of POCKETS) {
+    const q = { x: Math.min(base.x + o.x, maxX), y: clamp(base.y + o.y, 1, WIDTH - 1) };
+    let near = 8;
+    for (const p of opp) near = Math.min(near, dist(p, q));
+    const score = near - 0.25 * Math.sqrt(o.x * o.x + o.y * o.y);
+    if (score > bestScore) {
+      bestScore = score;
+      best = q;
+    }
+  }
+  return best;
+}
 
 /** PARAMETERS of the cost (seconds). */
 const ZONE_COST = 0.08; // per metre the task drags the player away from his anchor
@@ -350,7 +429,9 @@ export function assign(
     arrivalTime(kins.get(p.index)!, t.point, true) +
     ZONE_COST * dist(anchorsByIndex.get(p.index)!, t.point) +
     FATIGUE_COST * (1 - p.stamina) -
-    APTITUDE_GAIN * APTITUDE[t.kind][lineOf(p.role)];
+    APTITUDE_GAIN * APTITUDE[t.kind][lineOf(p.role)] -
+    // A player who reads cover takes the cover job (ADR-019).
+    (t.kind === 'cover' ? (1.5 * p.attrs.covering) / 99 : 0);
 
   // Each player's top-K tasks (by cost) bound what the greedy pass may give him.
   const allowed = new Map<number, Set<string>>();

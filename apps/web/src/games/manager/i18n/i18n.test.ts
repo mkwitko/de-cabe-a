@@ -51,3 +51,32 @@ describe('MC-146 t()', () => {
     expect(() => t('chave.inexistente')).toThrow();
   });
 });
+
+describe('keeper below expectation', () => {
+  it('reads as goals conceded, never as negative goals saved', async () => {
+    const { signed } = await import('../FriendlyPage');
+    const m = signed({ key: 'match.explain.keeper', params: { saved: -1.06, team: 0 } });
+    expect(tMessage(m)).toBe('Seu goleiro sofreu 1,06 gols além do esperado.');
+    const up = signed({ key: 'match.explain.keeper', params: { saved: 0.86, team: 1 } });
+    expect(tMessage(up)).toBe('O goleiro deles evitou 0,86 gols além do esperado.');
+  });
+});
+
+describe('kits', () => {
+  it('visitors change shirts when both clubs wear nearly the same colour', async () => {
+    const { kitsFor } = await import('../pitch');
+    const [h, a] = kitsFor(
+      { id: 'a', colours: ['#c060b0', '#203040'] },
+      { id: 'b', colours: ['#b85ab0', '#c070c0'] },
+    );
+    expect(h.fill).toBe('#c060b0');
+    expect(a.fill).not.toBe('#b85ab0');
+    // Different colours keep their own shirts.
+    expect(
+      kitsFor(
+        { id: 'a', colours: ['#ff0000', '#fff'] },
+        { id: 'b', colours: ['#0000ff', '#fff'] },
+      )[1].fill,
+    ).toBe('#0000ff');
+  });
+});

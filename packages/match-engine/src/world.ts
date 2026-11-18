@@ -6,10 +6,11 @@
 import type { Attributes, RoleId, TacticalPlan } from './contract';
 import { due } from './ball';
 import { maxSpeed, moveTowards, separate, type Mover } from './movement';
-import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from './pitch';
+import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from './pitch';
 import { fork, next, type Rng } from './random';
 import {
   anchors,
+  COUNTERPRESS_WINDOW,
   assign,
   lineOf,
   offsideLine,
@@ -26,6 +27,8 @@ export interface WorldPlayer extends TeamPlayer, Mover {
   /** Current target, world frame, and why. */
   target: Vec2;
   intent: TaskKind | 'anchor' | 'carry';
+  /** Until this tick the player is still reading a pass just played: he keeps his course. */
+  reactUntil?: number;
 }
 
 export interface TaskLog {
@@ -49,6 +52,10 @@ export interface World {
   familiarity: [number, number];
   assignments: [Assignment[], Assignment[]];
   log: TaskLog[];
+  /** Tick each team last lost the ball (the match engine sets it). */
+  lostAt?: [number, number];
+  /** Per team: just won the ball and set to counter (the match engine sets it each step). */
+  counter?: [boolean, boolean];
 }
 
 export interface TeamSetup {
@@ -107,10 +114,20 @@ export function createWorld(seed: Rng, teams: [TeamSetup, TeamSetup], kickoff: 0
  * and familiarity.
  */
 const compliance = (a: Attributes, fam: number) =>
-  0.8 + 0.18 * ((0.5 * a.teamwork + 0.5 * a.positioning) / 99) * fam;
+  0.8 +
+  0.18 *
+    ((0.25 * a.teamwork +
+      0.15 * a.positioning +
+      0.2 * a.discipline +
+      0.2 * a.tacticalReading +
+      0.2 * a.spatialAwareness) /
+      99) *
+    fam;
 
 /** PARAMETER: widest gap between neighbours of a back line without the ball, metres. */
 const BACK_SPACING = 13;
+/** PARAMETER: compliance lost per unit of plan demand when the side is not drilled at all. */
+const DEMAND_COST = 0.35;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
 /** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
@@ -142,8 +159,29 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
   const defX = mine.filter((p) => lineOf(p.role) === 'def').map((p) => anc[p.slot]!.x);
   const ourLine = defX.length ? Math.min(...defX) : 0;
 
+  // Seconds since we lost the ball (ticks of 0.25 s), for the plan's reaction to the loss.
+  const lost = w.lostAt?.[team];
+  const sinceLoss = !inPossession && lost !== undefined ? (w.tick - lost) / 4 : Infinity;
+  // Counter-press only with numbers at the ball (Bauer and Anzer 2021: superiority within 10 m).
+  const near = (ps: Vec2[]) => ps.filter((q) => dist(q, ball) < 10).length;
+  const afterLoss =
+    sinceLoss >= COUNTERPRESS_WINDOW
+      ? null
+      : plan.team.onLoss === 'counterPress' && near(mine.map((p) => flip(team, p.pos))) >= near(opp)
+        ? ('counterPress' as const)
+        : ('regroup' as const);
   if (event || due('coordination', w.tick)) {
-    const tasks = tasksFor(plan, inPossession, ball, focal, opp, lastLine, ourLine);
+    const tasks = tasksFor(
+      plan,
+      inPossession,
+      ball,
+      focal,
+      opp,
+      lastLine,
+      ourLine,
+      w.counter?.[team] ?? false,
+      afterLoss,
+    );
     // The carrier (or the intended receiver) is not available for tasks.
     const pool = mine.filter((p) => p.index !== w.ball.holder);
     const prev = new Map(w.assignments[team].map((a) => [a.player, a]));
@@ -155,7 +193,23 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       const old = prev.get(a.player);
       const p = w.players[a.player]!;
       const isNew = !old || old.task.key !== a.task.key;
-      if (isNew && !event && next(w.rng) > compliance(p.attrs, w.familiarity[team])) continue;
+      // A demanding plan (hard press, high block) needs drilling: without familiarity
+      // the task is missed more often (research 16 §1.1, team B and C). PARAMETER.
+      const demand = inPossession
+        ? 0
+        : Math.max(0, plan.team.pressIntensity - 3) / 2 + (plan.team.block === 'high' ? 0.5 : 0);
+      const drilled = w.familiarity[team] * (0.5 + 0.5 * (p.attrs.teamwork / 99));
+      const missDemand = DEMAND_COST * demand * (1 - drilled);
+      // On a pass the press must shift together on the trigger: an undrilled side
+      // misses that shift too (research 13 §1, 15 pressão coordenada). Ordinary
+      // reactions to the ball stay instant.
+      if (
+        isNew &&
+        (event
+          ? missDemand > 0 && next(w.rng) < missDemand
+          : next(w.rng) > compliance(p.attrs, w.familiarity[team]) - missDemand)
+      )
+        continue;
       if (isNew) {
         w.log.push({
           tick: w.tick,
@@ -179,7 +233,17 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     return pa - pb || a.index - b.index;
   });
   const fresh = new Map(
-    tasksFor(plan, inPossession, ball, focal, opp, lastLine, ourLine).map((t) => [t.key, t.point]),
+    tasksFor(
+      plan,
+      inPossession,
+      ball,
+      focal,
+      opp,
+      lastLine,
+      ourLine,
+      w.counter?.[team] ?? false,
+      afterLoss,
+    ).map((t) => [t.key, t.point]),
   );
   const targets: Vec2[] = [];
   for (const p of ordered) {
@@ -190,6 +254,8 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
     }
     const a = byPlayer.get(p.index);
     let pt = a ? (fresh.get(a.task.key) ?? a.task.point) : anc[p.slot]!;
+    // Timing of the run (ADR-019): a poor sense of it holds the runner back off the last line.
+    if (a && a.task.kind === 'depth') pt = { x: pt.x - 2.5 * (1 - p.attrs.timing / 99), y: pt.y };
     // With the ball, the rest defence is the players the plan leaves behind (02 §5.9);
     // everyone else without a task joins the play instead of idling deep in the shape.
     if (!a && inPossession && lineOf(p.role) !== 'gk')
@@ -246,7 +312,18 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
       break;
     }
   }
-  ordered.forEach((p, i) => (p.target = flip(team, targets[i]!)));
+  ordered.forEach((p, i) => {
+    // Switching from attack to defence takes a moment (research 13 §3: counters live on it):
+    // a player keeps his attacking run for up to a second, less with quick loss reaction.
+    const lost = w.lostAt?.[team];
+    if (
+      !inPossession &&
+      lost !== undefined &&
+      w.tick - lost < 1 + Math.round(3 * (1 - p.attrs.lossReaction / 99))
+    )
+      return;
+    p.target = flip(team, targets[i]!);
+  });
 }
 
 /** Moves every active player one step towards his target. The carrier is moved by the caller. */
@@ -261,12 +338,20 @@ export function movePlayers(w: World): void {
   }
   for (const p of w.players) {
     if (!p.active || p.index === w.ball.holder) continue;
-    const unit = p.intent === 'anchor' && lineOf(p.role) === 'def' && w.ball.possession !== p.team;
+    // Recovery run: with the ball behind him (nearer his own goal) a defender sprints back.
+    const behind =
+      w.ball.possession !== p.team && flip(p.team, w.ball.pos).x < flip(p.team, p.pos).x - 2;
+    const unit =
+      !behind && p.intent === 'anchor' && lineOf(p.role) === 'def' && w.ball.possession !== p.team;
     // Effort (02 §4 fôlego): urgent jobs at full speed; the rest jog, faster the further off they are.
     const dx = p.target.x - p.pos.x;
     const dy = p.target.y - p.pos.y;
-    const effort = URGENT.has(p.intent) ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
-    moveTowards(p, p.target, Math.min(unit ? lineCap[p.team] : Infinity, effort));
+    const effort =
+      URGENT.has(p.intent) || behind ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
+    // Reading the pass (kinematics reaction time): he carries on where he was going.
+    const course =
+      (p.reactUntil ?? 0) > w.tick ? { x: p.pos.x + p.vel.x, y: p.pos.y + p.vel.y } : p.target;
+    moveTowards(p, course, Math.min(unit ? lineCap[p.team] : Infinity, effort));
   }
   separate(w.players.filter((p) => p.active));
   for (const p of w.players) {

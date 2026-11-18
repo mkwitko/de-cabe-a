@@ -90,9 +90,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@decabeca/club-domain':
+        specifier: workspace:*
+        version: link:../../packages/club-domain
       '@decabeca/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@decabeca/match-engine':
+        specifier: workspace:*
+        version: link:../../packages/match-engine
       '@fontsource-variable/archivo':
         specifier: ^5.3.0
         version: 5.3.0
@@ -145,6 +151,10 @@ importers:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
+    devDependencies:
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
 
   packages/contracts:
     dependencies:

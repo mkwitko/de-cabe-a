@@ -6,6 +6,7 @@
  */
 import { z } from 'zod';
 import { AttributesSchema, PositionSchema, TraitSchema } from '@decabeca/match-engine';
+import { CompetitionSchema, checkCompetitions } from '../competition/schema';
 
 const id = z.string().min(1).max(64);
 const isoDate = z.iso.date();
@@ -305,18 +306,6 @@ export const PackYouthCompetitionSchema = z.strictObject({
   clubIds: z.array(id),
 });
 
-export const PackCompetitionSchema = z.strictObject({
-  id,
-  name: z.string().min(1).max(80),
-  type: z.enum(['league', 'cup', 'state', 'continental']),
-  /** National tier (1 = top) for leagues; null for cups. */
-  tier: z.number().int().min(1).max(10).nullable(),
-  season: z.number().int().min(1900).max(2200),
-  clubIds: z.array(id).min(2),
-  // MC-160 replaces this with the phase schema (ADR-016)
-  phases: z.array(z.unknown()),
-});
-
 export const PackSchema = z
   .strictObject({
     id,
@@ -335,7 +324,7 @@ export const PackSchema = z
         note: z.string().optional(),
       }),
     ),
-    competitions: z.array(PackCompetitionSchema),
+    competitions: z.array(CompetitionSchema),
     clubs: z.array(PackClubSchema),
     players: z.array(PackPlayerSchema),
     staff: z.array(PackStaffSchema),
@@ -351,7 +340,7 @@ export const PackSchema = z
     }),
   })
   .superRefine((pack, ctx) => {
-    const ids = (key: 'competitions' | 'clubs' | 'players' | 'staff' | 'cities' | 'academies') => {
+    const ids = (key: 'clubs' | 'players' | 'staff' | 'cities' | 'academies') => {
       const seen = new Set<string>();
       pack[key].forEach((row, i) => {
         if (seen.has(row.id))
@@ -363,7 +352,6 @@ export const PackSchema = z
     const clubs = ids('clubs');
     const staff = ids('staff');
     const cities = ids('cities');
-    ids('competitions');
     ids('players');
     ids('academies');
 
@@ -394,9 +382,7 @@ export const PackSchema = z
     pack.governance.forEach((g, i) =>
       ref(clubs.has(g.clubId), ['governance', i, 'clubId'], 'club'),
     );
-    pack.competitions.forEach((c, i) =>
-      c.clubIds.forEach((k, j) => ref(clubs.has(k), ['competitions', i, 'clubIds', j], 'club')),
-    );
+    checkCompetitions(pack.competitions, clubs, ctx);
     pack.academies.forEach((a, i) => ref(cities.has(a.cityId), ['academies', i, 'cityId'], 'city'));
     pack.youthCompetitions.forEach((y, i) =>
       y.clubIds.forEach((k, j) =>

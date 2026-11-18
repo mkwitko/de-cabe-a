@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 import * as root from './index';
+import { coachOf } from './presets';
 import {
   ATTRIBUTES,
   MatchInputSchema,
@@ -57,7 +58,7 @@ function team(prefix: string) {
       marking: [],
       setPieces: {},
     },
-    coach: { gameReading: 50, flexibility: 50 },
+    coach: coachOf(50),
   };
 }
 
@@ -80,8 +81,8 @@ describe('MC-145 contract', () => {
     expect(MatchInputSchema.parse(input)).toEqual(input);
   });
 
-  it('has 28 outfield and 6 goalkeeper attributes', () => {
-    expect(ATTRIBUTES).toHaveLength(34);
+  it('has 47 outfield and 7 goalkeeper attributes (ADR-019)', () => {
+    expect(ATTRIBUTES).toHaveLength(54);
   });
 
   it('never learns which team is the user (ADR-013 item 7)', () => {

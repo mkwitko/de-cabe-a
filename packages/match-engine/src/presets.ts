@@ -3,7 +3,7 @@
  * MC-050). Shapes are 11 points in the team frame (attacking +x) for a ball on
  * the centre spot. Slot order follows the role list of each formation.
  */
-import type { RoleId, TacticalPlan } from './contract';
+import { COACH_ATTRIBUTES, type Coach, type RoleId, type TacticalPlan } from './contract';
 
 type Pt = { x: number; y: number };
 const p = (x: number, y: number): Pt => ({ x, y });
@@ -143,6 +143,133 @@ export const FORMATIONS: Record<string, Formation> = {
       p(56, 34),
     ],
   },
+
+  '4-1-4-1': {
+    id: '4-1-4-1',
+    roles: [
+      'goalkeeper',
+      'supportFullBack',
+      'centreBack',
+      'centreBack',
+      'supportFullBack',
+      'anchor',
+      'wideWinger',
+      'boxToBox',
+      'playmaker',
+      'wideWinger',
+      'advancedForward',
+    ],
+    inPossession: [
+      p(8, 34),
+      p(40, 8),
+      p(30, 24),
+      p(30, 44),
+      p(40, 60),
+      p(42, 34),
+      p(68, 8),
+      p(56, 24),
+      p(56, 44),
+      p(68, 60),
+      p(80, 34),
+    ],
+    outOfPossession: [
+      p(5, 34),
+      p(23, 11),
+      p(21, 27),
+      p(21, 41),
+      p(23, 57),
+      p(29, 34),
+      p(38, 10),
+      p(38, 27),
+      p(38, 41),
+      p(38, 58),
+      p(54, 34),
+    ],
+  },
+  '3-5-2': {
+    id: '3-5-2',
+    roles: [
+      'goalkeeper',
+      'centreBack',
+      'centreBack',
+      'centreBack',
+      'wingBack',
+      'wingBack',
+      'anchor',
+      'boxToBox',
+      'playmaker',
+      'advancedForward',
+      'targetMan',
+    ],
+    inPossession: [
+      p(8, 34),
+      p(30, 18),
+      p(26, 34),
+      p(30, 50),
+      p(58, 5),
+      p(58, 63),
+      p(42, 34),
+      p(56, 24),
+      p(56, 44),
+      p(78, 28),
+      p(78, 40),
+    ],
+    outOfPossession: [
+      p(5, 34),
+      p(20, 20),
+      p(19, 34),
+      p(20, 48),
+      p(24, 6),
+      p(24, 62),
+      p(32, 34),
+      p(38, 24),
+      p(38, 44),
+      p(54, 29),
+      p(54, 39),
+    ],
+  },
+  '4-4-2 losango': {
+    id: '4-4-2 losango',
+    roles: [
+      'goalkeeper',
+      'wingBack',
+      'centreBack',
+      'centreBack',
+      'wingBack',
+      'anchor',
+      'boxToBox',
+      'boxToBox',
+      'playmaker',
+      'advancedForward',
+      'targetMan',
+    ],
+    inPossession: [
+      p(8, 34),
+      p(48, 6),
+      p(30, 24),
+      p(30, 44),
+      p(48, 62),
+      p(42, 34),
+      p(54, 22),
+      p(54, 46),
+      p(66, 34),
+      p(80, 28),
+      p(80, 40),
+    ],
+    outOfPossession: [
+      p(5, 34),
+      p(22, 10),
+      p(21, 27),
+      p(21, 41),
+      p(22, 58),
+      p(31, 34),
+      p(38, 23),
+      p(38, 45),
+      p(45, 34),
+      p(55, 29),
+      p(55, 39),
+    ],
+  },
 };
 
 export function defaultPlan(formation = '4-3-3'): TacticalPlan {
@@ -174,3 +301,9 @@ export function defaultPlan(formation = '4-3-3'): TacticalPlan {
     setPieces: {},
   };
 }
+
+/** A coach with every dimension at `level` (ADR-019), with optional overrides. */
+export const coachOf = (level = 60, over: Partial<Coach> = {}): Coach => ({
+  ...(Object.fromEntries(COACH_ATTRIBUTES.map((a) => [a, level])) as Coach),
+  ...over,
+});

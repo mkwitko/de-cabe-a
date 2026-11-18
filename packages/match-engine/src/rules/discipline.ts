@@ -25,6 +25,8 @@ export interface FoulContext {
   behind: boolean;
   promising: boolean;
   lastMan: boolean;
+  /** A deliberate foul to stop a counter: law 12 cautions it most of the time. */
+  tactical?: boolean;
 }
 
 /** 0 no card, 1 yellow, 2 straight red. `u` and `v` are two uniform draws. */
@@ -38,7 +40,11 @@ export function cardFor(
   if (c.lastMan && v < 0.02) return 2;
   if (v < 0.0008) return 2;
   const p =
-    (0.056 + (c.behind ? 0.11 : 0) + (c.promising ? 0.11 : 0) + 0.05 * norm(d.attrs.aggression)) *
+    (0.06 +
+      (c.behind ? 0.12 : 0) +
+      (c.promising ? 0.12 : 0) +
+      (c.tactical ? 0.45 : 0) +
+      0.05 * norm(d.attrs.aggression)) *
     (0.7 + 0.6 * strictness);
   return u < p ? 1 : 0;
 }

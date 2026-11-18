@@ -1,0 +1,97 @@
+/**
+ * Quick balance check on the key style matchups (MC-045), both sides alternating home.
+ * Run: pnpm --filter @decabeca/match-engine exec tsx src/calibration/matchups.ts [n]
+ */
+import type { TacticalPlan } from '../contract';
+import { matchInput, teamInput } from '../match/fixture';
+import { defaultPlan } from '../presets';
+import { writeFileSync } from 'node:fs';
+import { runMany } from './runner';
+import type { Summary } from './summary';
+
+const n = Number(process.argv[2] ?? 300);
+const style = (f: string, team: Partial<TacticalPlan['team']>) => () => {
+  const p = defaultPlan(f);
+  p.team = { ...p.team, ...team };
+  return p;
+};
+const plans: Record<string, () => TacticalPlan> = {
+  mid: style('4-4-2', {}),
+  press: style('4-3-3', { block: 'high', pressIntensity: 5, lineHeight: 4 }),
+  low: style('4-4-2', { block: 'low', lineHeight: 2, onWin: 'counter', onLoss: 'regroup' }),
+  regroup: style('4-4-2', { onLoss: 'regroup' }),
+  433: style('4-3-3', {}),
+  highOnly: style('4-3-3', { block: 'high', lineHeight: 4 }),
+  intensityOnly: style('4-3-3', { pressIntensity: 5 }),
+};
+async function main() {
+  const pairs = (process.argv[3] ?? 'press:mid,low:mid,press:low,433:mid')
+    .split(',')
+    .map((x) => x.split(':') as [string, string]);
+  // DUMP=file keeps every match (side A index and summary) for paired.ts.
+  const dump: Record<string, { ai: number[]; s: Summary[] }> = {};
+  for (const [a, b] of pairs) {
+    const inputs = Array.from({ length: n }, (_, i) => {
+      const A = teamInput(9000 + i, 65, plans[a]!(), `a${i}`);
+      // Optional familiarity of side A with its plan (argv[4], 0..1).
+      if (process.argv[4]) for (const p of A.players) p.familiarity = Number(process.argv[4]);
+      const B = teamInput(9500 + i, 65, plans[b]!(), `b${i}`);
+      return i % 2 === 0 ? matchInput(9000 + i, A, B) : matchInput(9000 + i, B, A);
+    });
+    const rs = await runMany(inputs);
+    dump[`${a}:${b}`] = { ai: rs.map((_, i) => (i % 2 === 0 ? 0 : 1)), s: rs };
+    let xa = 0,
+      xb = 0,
+      sa = 0,
+      sb = 0;
+    rs.forEach((s, i) => {
+      const ai = i % 2 === 0 ? 0 : 1;
+      xa += s.xg[ai]!;
+      xb += s.xg[1 - ai]!;
+      sa += s.shots[ai]!;
+      sb += s.shots[1 - ai]!;
+    });
+    console.log(
+      `  ${a}: xG ${(xa / n).toFixed(2)} from ${(sa / n).toFixed(1)} shots | ${b}: xG ${(xb / n).toFixed(2)} from ${(sb / n).toFixed(1)} shots`,
+    );
+    const by = (k: 'setPiece' | 'transition' | 'positional', side: 0 | 1) =>
+      (
+        rs.reduce(
+          (acc, s, i) => acc + s.xgBy[k][side === 0 ? (i % 2 === 0 ? 0 : 1) : i % 2 === 0 ? 1 : 0],
+          0,
+        ) / n
+      ).toFixed(2);
+    console.log(
+      `  xG by origin, ${a} / ${b}: set piece ${by('setPiece', 0)} / ${by('setPiece', 1)}, transition ${by('transition', 0)} / ${by('transition', 1)}, positional ${by('positional', 0)} / ${by('positional', 1)}`,
+    );
+    let w = 0,
+      d = 0,
+      ga = 0,
+      gb = 0,
+      ha = 0,
+      hb = 0;
+    rs.forEach((s, i) => {
+      const ai = i % 2 === 0 ? 0 : 1;
+      const bi = 1 - ai;
+      if (s.score[ai]! > s.score[bi]!) w++;
+      else if (s.score[ai] === s.score[bi]) d++;
+      ga += s.score[ai]!;
+      gb += s.score[bi]!;
+      ha += s.highWins[ai]!;
+      hb += s.highWins[bi]!;
+    });
+    // 95% margins: a share ± 1.96·sqrt(p(1−p)/n); a mean ± 1.96·sd/sqrt(n).
+    const pm = (k: number) => {
+      const p = k / n;
+      return `${(p * 100).toFixed(0)}% ±${(196 * Math.sqrt((p * (1 - p)) / n)).toFixed(0)}`;
+    };
+    const goalsA = rs.map((s, i) => s.score[i % 2 === 0 ? 0 : 1]!);
+    const mean = ga / n;
+    const sd = Math.sqrt(goalsA.reduce((acc, g) => acc + (g - mean) ** 2, 0) / (n - 1));
+    console.log(
+      `${a} vs ${b} (${n}): ${a} wins ${pm(w)}, draws ${pm(d)} | goals ${mean.toFixed(2)} ±${((1.96 * sd) / Math.sqrt(n)).toFixed(2)} - ${(gb / n).toFixed(2)} | high wins ${(ha / n).toFixed(1)}-${(hb / n).toFixed(1)}`,
+    );
+  }
+  if (process.env.DUMP) writeFileSync(process.env.DUMP, JSON.stringify(dump));
+}
+void main();

@@ -10,7 +10,7 @@ import {
   type TacticalPlan,
   type TeamInput,
 } from '../contract';
-import { defaultPlan } from '../presets';
+import { coachOf, defaultPlan } from '../presets';
 import { between, fork, rngFrom } from '../random';
 
 const POS: PlayerInput['positions'][] = [
@@ -66,7 +66,7 @@ export function teamInput(
       familiarity: 1,
     };
   });
-  return { players, plan, coach: { gameReading: 60, flexibility: 60 } };
+  return { players, plan, coach: coachOf() };
 }
 
 export function matchInput(

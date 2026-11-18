@@ -6,13 +6,17 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { generateMiniPack, teamForMatch } from '@decabeca/club-domain';
+import type { Moment } from './match-jobs';
+import { runMatchJob } from './match-pool';
+import { careerRoutes } from './career';
 import {
   CommandSchema,
+  coachOf,
   FORMATIONS,
   MATCH_MAX_CHUNK,
   MatchInputSchema,
   TeamInstructionsSchema,
-  advanceMatch,
+  type MatchChunk,
   defaultPlan,
   SANDBOX_MAX_CHUNK,
   SANDBOX_MAX_TICK,
@@ -39,7 +43,8 @@ const Body = z.strictObject({
 /**
  * Friendly match of corte 0,5 (TASKS MC-250): two clubs of the fictional
  * development pack, a formation and team instructions each, watched in chunks.
- * Stateless and pure: the same body always returns the same chunk.
+ * Pure: the same body always returns the same chunk. The workers keep each
+ * match alive between chunks only to make the next one cheap (match-pool.ts).
  */
 const pack = generateMiniPack();
 const clubIds = pack.clubs.map((c) => c.id) as [string, ...string[]];
@@ -50,28 +55,37 @@ const Side = z.strictObject({
   formation: z.enum(Object.keys(FORMATIONS) as [string, ...string[]]),
   instructions: TeamInstructionsSchema.partial(),
 });
-const FriendlyBody = z.strictObject({
+const Commands = z
+  .array(
+    z.strictObject({
+      atMs: z
+        .number()
+        .int()
+        .min(0)
+        .max(4 * 3_600_000),
+      team: z.union([z.literal(0), z.literal(1)]),
+      command: CommandSchema,
+    }),
+  )
+  .max(60);
+const Match = {
   seed: z.number().int().min(0).max(0x7fffffff),
   home: Side,
   away: Side,
   from: z.number().int().min(0).max(MAX_TICK),
+  commands: Commands,
+};
+const FriendlyBody = z.strictObject({
+  ...Match,
   count: z.number().int().min(1).max(MATCH_MAX_CHUNK),
-  commands: z
-    .array(
-      z.strictObject({
-        atMs: z
-          .number()
-          .int()
-          .min(0)
-          .max(4 * 3_600_000),
-        team: z.union([z.literal(0), z.literal(1)]),
-        command: CommandSchema,
-      }),
-    )
-    .max(60),
 });
+const MomentBody = z.strictObject({ ...Match, mode: z.enum(['extended', 'highlights', 'goals']) });
 
-function friendlyInput(b: z.infer<typeof FriendlyBody>) {
+/** The same match for the same clubs, plans and seed, whoever asks: the worker key. */
+const keyOf = (b: z.infer<typeof MomentBody | typeof FriendlyBody>) =>
+  JSON.stringify([b.seed, b.home, b.away]);
+
+export function friendlyInput(b: Pick<z.infer<typeof FriendlyBody>, 'seed' | 'home' | 'away'>) {
   const side = (x: z.infer<typeof Side>) => {
     const plan = defaultPlan(x.formation);
     plan.team = { ...plan.team, ...x.instructions } as typeof plan.team;
@@ -81,7 +95,9 @@ function friendlyInput(b: z.infer<typeof FriendlyBody>) {
   return MatchInputSchema.parse({
     engineVersion: 0,
     seed: b.seed,
-    teams: [side(b.home), side(b.away)],
+    // The person commands the home side live; its coach never changes the plan on his own (02 §10):
+    // attributes run 1 to 100 and a coach below 30 of flexibility keeps the plan.
+    teams: [{ ...side(b.home), coach: coachOf(60, { flexibility: 1 }) }, side(b.away)],
     conditions: {
       crowd: 0.7,
       altitudeM: 0,
@@ -100,6 +116,7 @@ function friendlyInput(b: z.infer<typeof FriendlyBody>) {
 }
 
 export const managerRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(careerRoutes);
   app.get('/manager/friendly/clubs', async () => ({
     clubs: pack.clubs.map((c) => {
       const squad = pack.players.filter((p) => p.clubId === c.id);
@@ -124,8 +141,34 @@ export const managerRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const b = req.body;
       const input = friendlyInput(b);
-      const chunk = advanceMatch(input, b.commands, b.from, b.count);
+      const chunk = await runMatchJob<MatchChunk>({
+        op: 'advance',
+        key: keyOf(b),
+        input,
+        commands: b.commands,
+        from: b.from,
+        count: b.count,
+      });
       return { ...chunk, lineups: input.teams.map((t) => t.players.map((p) => p.id)) };
+    },
+  );
+
+  // Highlights: the next moment from `from` on, with the plan changes so far (moments.ts).
+  app.post(
+    '/manager/friendly/moment',
+    { schema: { body: MomentBody }, config: { rateLimit: { max: 120, timeWindow: '1 minute' } } },
+    async (req) => {
+      const b = req.body;
+      const input = friendlyInput(b);
+      const m = await runMatchJob<Moment>({
+        op: 'moment',
+        key: keyOf(b),
+        input,
+        commands: b.commands,
+        from: b.from,
+        mode: b.mode,
+      });
+      return m;
     },
   );
 
