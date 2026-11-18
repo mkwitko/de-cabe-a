@@ -204,6 +204,14 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   - Os 60 m vêm da tarefa `width`: os dois pontas a 3 m das laterais.
   - Teste revertido: o ponta do lado longe da bola entra 12 m. A largura caiu para 46,7 m, mas os gols ficaram iguais (3,56 em 600 partidas) e a prova reprovou S3 e T9.
   - Pendente: largura publicada com a bola. Sem a bola, o time fica até um pouco abaixo do comprimento da faixa, então a forma defensiva não é o defeito.
+- **Atacante sozinho, métrica corrigida** (2026-11-17, só medição).
+  - Definição nova: nenhum defensor de linha a até 5 m da linha que liga o portador ao gol, com ele a menos de 25 m do gol.
+  - A conta por x antiga marcava como sozinho o ponta perto da linha de fundo com zagueiros na área.
+  - Resultado: 8,2 lances por time por jogo, de 1,4 s em média; 34% terminam em chute, cerca de 2,8 chutes por time.
+  - Último passe antes: bola longa 2,4, passe 1,8, desarme 1,5, passe por cima 1,2, passe em profundidade 0,7.
+  - No passe que antecede o lance, o recebedor está a 34 m do gol, com 4,3 defensores à frente dele e o mais próximo a 5,4 m. Só em 3% dos casos ele já estava atrás da última linha.
+  - Ou seja: o atacante não recebe nas costas da defesa. Ele recebe na frente e passa por ela nos segundos seguintes.
+  - Sem referência publicada de grandes chances ou de distância média do chute (a página da Driblab não abre por leitura simples), não dá para dizer quanto disso é excesso.
 - **ADR-018** (proposto, aguarda o dono): células de contexto das métricas da prova de coordenação, mudadas depois de ver o resultado; tabela separa melhora de comportamento e de medição.
 
 ### 6.1 Código que já existe (sandbox, tarefas MC-021 a MC-029b concluídas)
