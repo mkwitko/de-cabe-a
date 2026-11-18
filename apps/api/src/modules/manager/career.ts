@@ -5,6 +5,8 @@
  * validates the start and keeps the record.
  */
 import { createHash, randomInt } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
@@ -12,6 +14,7 @@ import {
   generateDevPack,
   jobOffers,
   nationalDivisions,
+  PackSchema,
   START_MODES,
 } from '@decabeca/club-domain';
 import { MATCH_ENGINE_VERSION } from '@decabeca/match-engine';
@@ -25,7 +28,14 @@ export const ownerOf = (req: { sessionId: string; userId: string | null }) =>
  * The career pack. The browser downloads the same pack as a static file named by its checksum
  * (apps/web vite.config.ts worldPacks, ADR-020); the API never serves it.
  */
-const pack = generateDevPack();
+/**
+ * `CLUB_PACK_PATH` points at a gzipped pack JSON (the real FM import, scripts/club-pack/import-fm.ts,
+ * never committed); without it the career runs on the generated `br-dev-1`, so tests need no file.
+ * A file is validated and keeps its own checksum as the version.
+ */
+const pack = process.env.CLUB_PACK_PATH
+  ? PackSchema.parse(JSON.parse(gunzipSync(readFileSync(process.env.CLUB_PACK_PATH)).toString()))
+  : generateDevPack();
 const packVersion = pack.checksum;
 const divisions = nationalDivisions(pack);
 const clubById = new Map(pack.clubs.map((c) => [c.id, c]));

@@ -249,6 +249,8 @@ export const PackStaffSchema = z.strictObject({
   field: PlayerFieldMarks,
 });
 
+export type PackStaff = z.infer<typeof PackStaffSchema>;
+
 export const PackStaffAssignmentSchema = z.strictObject({
   staffId: id,
   clubId: id,
@@ -258,6 +260,8 @@ export const PackStaffAssignmentSchema = z.strictObject({
   group: z.enum(['club', 'coach']),
   contract: ContractSchema,
 });
+
+export type PackStaffAssignment = z.infer<typeof PackStaffAssignmentSchema>;
 
 export const PackGovernanceSchema = z.strictObject({
   clubId: id,
@@ -390,4 +394,5 @@ export const PackSchema = z
       ),
     );
   });
+export type PackGovernance = z.infer<typeof PackGovernanceSchema>;
 export type Pack = z.infer<typeof PackSchema>;
