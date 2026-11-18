@@ -87,9 +87,9 @@ export function setIntensity(w: CareerWorld, intensity: Intensity): void {
 }
 
 /** After the club's match on `t.day`: the eleven leave their share on the pitch. */
-export function tire(t: Training, xi: readonly string[]): Training {
+export function tire(t: Training, xi: readonly string[], travel = 0): Training {
   const fresh = { ...t.fresh };
-  for (const id of xi) fresh[id] = Math.max(0, (fresh[id] ?? 1) - MATCH_COST);
+  for (const id of xi) fresh[id] = Math.max(0, (fresh[id] ?? 1) - MATCH_COST - travel);
   return { ...t, fresh };
 }
 

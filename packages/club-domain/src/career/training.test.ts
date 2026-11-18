@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { distanceKm, travelTire } from './travel';
 import { generateDevPack } from '../generate/pack';
 import { careerMatch, nextDecision, openCareer, playDecision, type CareerWorld } from './advance';
 import { loadCareer, saveCareer } from './save';
@@ -31,13 +32,18 @@ describe('training and freshness (08, corte 1)', () => {
     const xi = lineupOf(w).xi;
     const day = play(w);
     expect(w.training!.day).toBe(day);
-    expect(w.training!.fresh[xi[0]!]).toBe(1 - MATCH_COST);
+    // An away match costs the trip's legs too (travel.ts).
+    const m = [...w.season.calendar.matches.values()].find(
+      (x) => x.day === day && (x.home === clubId || x.away === clubId),
+    )!;
+    const trip = m.away === clubId ? travelTire(distanceKm(w.pack, m.home, m.away)) : 0;
+    expect(w.training!.fresh[xi[0]!]).toBe(1 - MATCH_COST - trip);
     const bench = pack.players.find((p) => p.clubId === clubId && !xi.includes(p.id))!.id;
     expect(w.training!.fresh[bench]).toBeUndefined();
     // Three days on: back by three days of a normal week; a light week gives more.
-    expect(trainingOn(w, day + 3).fresh[xi[0]!]).toBe(1 - MATCH_COST + RECOVERY.normal * 3);
+    expect(trainingOn(w, day + 3).fresh[xi[0]!]).toBe(1 - MATCH_COST - trip + RECOVERY.normal * 3);
     setIntensity(w, 'light');
-    expect(trainingOn(w, day + 3).fresh[xi[0]!]).toBe(1 - MATCH_COST + RECOVERY.light * 3);
+    expect(trainingOn(w, day + 3).fresh[xi[0]!]).toBe(1 - MATCH_COST - trip + RECOVERY.light * 3);
     // Fully rested players drop out of the record.
     expect(trainingOn(w, day + 30).fresh).toEqual({});
   });
