@@ -165,6 +165,30 @@ const baseLevels = (origin: Pack) =>
     );
   });
 
+/**
+ * The talent map (mapa de conhecimento §2.9): how many players of the pack a club formed
+ * (`origin.clubId`) who play at a professional level today. A club with a record of forming
+ * players brings better boys and more gems. PARÂMETROS.
+ */
+const FORMED_LEVEL = 58;
+const FORMER_TIERS: readonly { formed: number; quality: number; gem: number }[] = [
+  { formed: 20, quality: 2, gem: 4 },
+  { formed: 8, quality: 1, gem: 5 },
+  { formed: 0, quality: 0, gem: 6 },
+];
+export const formedBy = (pack: Pack): Map<string, number> =>
+  cached(pack, 'formedBy', WHOLE, () => {
+    const by = new Map<string, number>();
+    for (const p of pack.players) {
+      const club = p.origin?.clubId;
+      if (club && bestRoles(p.attributes, 1)[0]!.rating >= FORMED_LEVEL)
+        by.set(club, (by.get(club) ?? 0) + 1);
+    }
+    return by;
+  });
+const formerOf = (pack: Pack, clubId: string) =>
+  FORMER_TIERS.find((t) => (formedBy(pack).get(clubId) ?? 0) >= t.formed)!;
+
 /** Boys a club's academy brings up in a year, by its youth level 1..5. */
 const CROP = [3, 3, 4, 5, 6] as const;
 
@@ -184,12 +208,13 @@ export function crop(
   const level = baseLevels(origin).get(clubId) ?? 40;
   const youth = youthLevel ?? club.facilities.youth;
   const root = fork(rngFrom(seed), `crop:${season}:${clubId}`);
+  const former = formerOf(origin, clubId);
   const out: PackPlayer[] = [];
   for (let k = 0; k < CROP[youth - 1]!; k++) {
     const r = fork(root, `boy:${k}`);
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = 15 + pick(r, 3);
-    const quality = Math.max(20, level - 13 + youth + pick(r, 7));
+    const quality = Math.max(20, level - 13 + youth + former.quality + pick(r, 7));
     const made = generatePlayer(r, {
       id: `y${season}-${clubId}-${k}`,
       position,
@@ -197,8 +222,9 @@ export function crop(
       clubId,
       season,
     });
-    // One in six is the kind that outgrows the club; the rest reach about its level.
-    const gem = pick(r, 6) === 0 ? 10 + pick(r, 12) : 0;
+    // One in six is the kind that outgrows the club (one in four at a great former); the rest
+    // reach about its level.
+    const gem = pick(r, former.gem) === 0 ? 10 + pick(r, 12) : 0;
     const reach = (base: number) => clamp(level + base + gem + pick(r, 8));
     const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
     // A first contract: two fifths of what the market pays a man of his level today.
@@ -214,6 +240,8 @@ export function crop(
         ceiling: { technical: reach(-2), mental: reach(0), physical: reach(-4) },
       },
       contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },
+      // Formed here: the club's solidarity share when he is sold on.
+      origin: { ...made.origin, clubId },
     });
   }
   return out;
