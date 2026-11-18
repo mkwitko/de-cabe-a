@@ -1140,6 +1140,28 @@ function chaseLooseBall(s: MatchState) {
       best.target = bp;
       best.intent = 'receive';
     }
+    // A lofted pass to an opponent: the outfield defender nearest the target, within
+    // MARK_CONTEST metres, goes with him to where he meets the ball and jumps with him
+    // (aerial duel), even when a team-mate is quicker to the drop. PARAMETER.
+    if (
+      f.kind === 'pass' &&
+      f.to !== null &&
+      s.players[f.to]!.team !== team &&
+      (f.ball.z > 0.5 || f.ball.vz > 1)
+    ) {
+      const r = s.players[f.to]!;
+      let mk: MatchPlayer | null = null;
+      let md = MARK_CONTEST;
+      for (const p of mates(s, team)) {
+        if (lineOf(p.role) === 'gk' || p === best) continue;
+        const d = dist(p.pos, r.pos);
+        if (d < md) [md, mk] = [d, p];
+      }
+      if (mk) {
+        mk.target = r.intent === 'receive' ? r.target : meetPoint(r, f.ball, true).pt;
+        mk.intent = 'receive';
+      }
+    }
     attackers.sort((a, b) => a.t - b.t || a.p.index - b.p.index);
     for (const a of attackers.slice(0, CROSS_DEFENDERS)) {
       if (a.p === best) continue;
@@ -1149,6 +1171,7 @@ function chaseLooseBall(s: MatchState) {
   }
 }
 const CROSS_DEFENDERS = 3;
+const MARK_CONTEST = 6;
 /** meetPoint's look-ahead (s): a later time means nobody meets the ball in flight. */
 const MEET_HORIZON = 4;
 
