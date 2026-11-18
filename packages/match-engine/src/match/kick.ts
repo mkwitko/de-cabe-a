@@ -286,6 +286,13 @@ export function shoot(
   st.shots++;
   st.xg += chance;
   if (onTarget) st.shotsOnTarget++;
+  // Big chance (Opta: a chance a player should reasonably score, usually one-on-one or very
+  // close range; penalties count). Here: a penalty, a shot from 6 m or closer, or one in the
+  // box with a clear lane (shotClear 0.95) and little pressure on him (below 0.3). PARAMETERS.
+  const dGoal = Math.sqrt((LENGTH - me.x) ** 2 + (CENTER.y - me.y) ** 2);
+  const inBox = me.x >= LENGTH - 16.5 && Math.abs(me.y - CENTER.y) <= 20.16;
+  const big =
+    !!opts.penalty || dGoal <= 6 || (inBox && shotClear(s, c) >= 0.95 && pressureOn(s, c) < 0.3);
   const ev = emit(s, 'shot', team, c.index, null, from, {
     xg: Math.round(chance * 1000) / 1000,
     psxg: Math.round((onTarget ? pGoal / pOn : 0) * 1000) / 1000,
@@ -293,6 +300,7 @@ export function shoot(
     header: header ? 1 : 0,
     penalty: opts.penalty ? 1 : 0,
     x: Math.round(me.x),
+    ...(big ? { big: 1 } : {}),
     decided: goal ? 1 : 0,
     ...(c.firstTime ? { firstTime: 1 } : {}),
   });
