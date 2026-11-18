@@ -35,6 +35,12 @@ export function Board({ sim }: { sim: SimView }) {
           <p className={b.position <= b.goal ? 'text-chalk' : 'font-semibold text-club-danger'}>
             {t('board.position', { n: b.position })}
           </p>
+          <p className="text-chalk-soft">
+            {t('board.directors', {
+              h: b.directors.horizon,
+              n: b.directors.competence,
+            })}
+          </p>
         </div>
         <div className="flex flex-col gap-2 border-t border-chalk/10 pt-4">
           <h3 id="board-title" className={LABEL}>

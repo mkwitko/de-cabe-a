@@ -39,8 +39,8 @@ export interface ClubState {
   levels?: Partial<Record<Leveled, number>>;
   /** Stadium capacity, when it differs from the pack's. */
   capacity?: number;
-  /** A work under way, finished at the next season's turn. */
-  work?: { front: Front; cost: number };
+  /** Works under way, one a front at most, finished at the next season's turn. */
+  works?: { front: Front; cost: number }[];
   /** Money the directors put into the squad this season, on top of the budget. */
   kitty?: number;
   /** Seasons in a row the club ended with cash below zero. */
@@ -54,7 +54,7 @@ const RESERVE_MAX = 20;
 /** Building the level that follows `n` (index n-1), at opening prices. */
 const WORK_COST = [400_000, 1_500_000, 7_000_000, 40_000_000] as const;
 /** Upkeep a season of a front at level n (index n-1). The football office is people: dearer. */
-const UPKEEP = [50_000, 150_000, 500_000, 2_000_000, 6_000_000] as const;
+const UPKEEP = [15_000, 60_000, 300_000, 1_500_000, 5_000_000] as const;
 const OFFICE_UPKEEP = 3;
 /** Stadium: seats added by a work, as a share of the capacity, and the price of a seat. */
 const STADIUM_STEP = 15;
@@ -206,8 +206,17 @@ export function settleSeason(
 
 const firstSeason = (w: CareerWorld) => w.log?.[0]?.season ?? w.season.season;
 
-/** The front competent directors build next: the weakest the club's level asks for. */
-function chooseFront(w: CareerWorld, club: PackClub, s: ClubState, r: ReturnType<typeof rngFrom>) {
+/**
+ * The fronts the directors would build, first choice first. Competent ones take those under
+ * the level the club's division asks for, in the order of their horizon; a poor board misreads
+ * the needs and, past its competence, picks by whim.
+ */
+function chooseFronts(
+  w: CareerWorld,
+  club: PackClub,
+  s: ClubState,
+  r: ReturnType<typeof rngFrom>,
+): Front[] {
   const h = s.directors.horizon;
   const wants: Front[] =
     h === 'long'
@@ -220,12 +229,13 @@ function chooseFront(w: CareerWorld, club: PackClub, s: ClubState, r: ReturnType
   const full = gateOf(club) >= club.stadium.capacity;
   const useful = (f: Front) =>
     f === 'stadium' ? full : levelOf(club, f as Leveled) < Math.min(5, target);
-  // A poor board misreads the needs: past its competence, it picks by whim.
+  const open = (f: Front) => workCost(w, club, f) !== null;
   if (pick(r, 100) >= s.directors.competence) {
-    const open = FRONTS.filter((f) => workCost(w, club, f) !== null);
-    return open[pick(r, open.length)] ?? null;
+    const any = FRONTS.filter(open);
+    const whim = any[pick(r, any.length)];
+    return whim ? [whim] : [];
   }
-  return wants.find((f) => useful(f) && workCost(w, club, f) !== null) ?? null;
+  return wants.filter((f) => useful(f) && open(f));
 }
 
 /**
@@ -239,19 +249,15 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
   for (const club of w.pack.clubs) {
     const s = clubs[club.id]!;
     const r = fork(rngFrom(w.seed), `plan:${season}:${club.id}`);
-    // A finished work.
-    if (s.work) {
-      if (s.work.front === 'stadium')
+    // Works finished.
+    for (const { front } of s.works ?? []) {
+      if (front === 'stadium')
         s.capacity =
           club.stadium.capacity +
           Math.max(MIN_SEATS, Math.round((club.stadium.capacity * STADIUM_STEP) / 100));
-      else
-        s.levels = {
-          ...s.levels,
-          [s.work.front]: Math.min(5, levelOf(club, s.work.front) + 1),
-        };
-      delete s.work;
+      else s.levels = { ...s.levels, [front]: Math.min(5, levelOf(club, front) + 1) };
     }
+    delete s.works;
     // Upkeep left unpaid: a front loses a level.
     if ((s.red ?? 0) >= DECAY_AFTER) {
       const worn = FRONTS.filter((f) => f !== 'stadium' && levelOf(club, f) > 1) as Leveled[];
@@ -277,14 +283,15 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     const reserve = Math.round((income * RESERVE_MAX * s.directors.competence) / 10_000);
     const spare = s.cash - reserve;
     if (spare <= 0) continue;
-    const toStructure = Math.round((spare * STRUCTURE_SHARE[s.directors.horizon]) / 100);
-    const front = chooseFront(w, club, s, r);
-    const cost = front && workCost(w, club, front);
+    let toStructure = Math.round((spare * STRUCTURE_SHARE[s.directors.horizon]) / 100);
     let left = spare;
-    if (front && cost && cost <= toStructure) {
-      s.work = { front, cost };
+    for (const front of chooseFronts(w, club, s, r)) {
+      const cost = workCost(w, club, front)!;
+      if (cost > toStructure) continue;
+      s.works = [...(s.works ?? []), { front, cost }];
       s.cash -= cost;
       left -= cost;
+      toStructure -= cost;
     }
     // The rest backs the squad: fees this season, a share of it as wages for the bold.
     // Never more than a season of income in one go: the rest waits in the bank.

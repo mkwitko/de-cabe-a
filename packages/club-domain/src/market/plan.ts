@@ -41,6 +41,9 @@ export interface SquadPlan {
   /** The best player outside the eleven for each slot, or null. */
   cover: (string | null)[];
   needs: Need[];
+  /** The slot a club with money to spare would strengthen: its weakest starter, aimed above
+   * the eleven's level. Null for a club without an eleven. */
+  upgrade: Need | null;
   /** Players the plan has no use for, least useful first. */
   surplus: string[];
 }
@@ -49,6 +52,9 @@ export interface SquadPlan {
 const WEAK_LINK = 4;
 /** Cover must be within this of the eleven's level, and know the position. */
 const COVER_GAP = 9;
+/** Points over the eleven's level a club with money aims at when it strengthens. */
+const UPGRADE_STEP = 3;
+const UPGRADE_URGENCY = 60;
 /** Squad size a club is comfortable with. */
 export const COMFORT = 24;
 
@@ -68,7 +74,15 @@ function plan(c: ClubIn): SquadPlan {
       ? Math.round(few.reduce((s, p) => s + read.get(p.id)!.level, 0) / few.length)
       : 0;
     const xi = few.map((p) => p.id);
-    return { formation, level, xi, cover: roles.map(() => null), needs: [], surplus: [] };
+    return {
+      formation,
+      level,
+      xi,
+      cover: roles.map(() => null),
+      needs: [],
+      upgrade: null,
+      surplus: [],
+    };
   }
   const fit = slotRatings(c, formation);
   const known = slotLevels(c, formation);
@@ -118,6 +132,17 @@ function plan(c: ClubIn): SquadPlan {
       });
   }
   needs.sort((a, b) => b.urgency - a.urgency || a.slot - b.slot);
+  let weakest = 0;
+  for (let i = 1; i < roles.length; i++) if (seen(xi[i]!, i) < seen(xi[weakest]!, i)) weakest = i;
+  const w0 = roles[weakest]!;
+  const upgrade: Need = {
+    slot: weakest,
+    positions: positions[weakest]!,
+    keeper: w0 === 'goalkeeper' || w0 === 'sweeperKeeper',
+    kind: 'starter',
+    wanted: level + UPGRADE_STEP,
+    urgency: UPGRADE_URGENCY,
+  };
 
   // Left over: neither starting nor the cover of any slot; the weakest go first.
   const used = new Set([...xi, ...cover.filter((x): x is string => x !== null)]);
@@ -130,7 +155,7 @@ function plan(c: ClubIn): SquadPlan {
     )
     .map((p) => p.id);
 
-  return { formation, level, xi, cover, needs, surplus };
+  return { formation, level, xi, cover, needs, upgrade, surplus };
 }
 
 /** The slot rating a player would give this club in the slot of a need. */

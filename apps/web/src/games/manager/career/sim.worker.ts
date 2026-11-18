@@ -69,6 +69,7 @@ import {
   squadCost,
   strikesOf,
   costLimitOf,
+  clubState,
   jobsAfter,
   nationalDivisions,
   takeJob,
@@ -161,6 +162,8 @@ export interface SimView {
   board: {
     confidence: number;
     goal: number;
+    /** Who runs the club: how far they look and how well they read it (clubs.ts). */
+    directors: { horizon: 'short' | 'medium' | 'long'; competence: number };
     position: number;
     ultimatum: { matches: number; points: number } | null;
     last: BoardReason[];
@@ -684,6 +687,9 @@ function view(w: CareerWorld, ms: number): SimView {
     board: {
       confidence: boardOf(w).confidence,
       goal: boardOf(w).goal,
+      directors: (({ horizon, competence }) => ({ horizon, competence }))(
+        clubState(w, w.clubId).directors,
+      ),
       position: positionOf(w),
       ultimatum: boardOf(w).ultimatum ?? null,
       last: boardOf(w).last ?? [],

@@ -201,6 +201,8 @@ export const ptBR = {
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'board.goal': 'Meta da temporada',
+  'board.directors':
+    '{h, select, short {Diretoria imediatista: quer resultado já, libera mais verba para reforços e tem pouca paciência com derrotas.} long {Diretoria de longo prazo: segura verba para estrutura e base, dá tempo ao trabalho.} other {Diretoria equilibrada: cobra resultado sem abrir mão do planejamento.}} Competência {n} de 100.',
   'board.goalText': 'Terminar a {division} até o {n}º lugar.',
   'board.position': 'Hoje o clube é o {n}º.',
   'board.confidence': 'Confiança da direção',

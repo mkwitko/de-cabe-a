@@ -17,7 +17,7 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, booksOf, wageRoom } from './books';
+import { available, book, booksOf, budgetOf, wageRoom } from './books';
 import { isImport } from '../career/development';
 import {
   CLAUSE_TIMES,
@@ -375,6 +375,23 @@ const windowOf = (day: number) => {
   return `${iso.slice(0, 4)}-${iso.slice(5, 7) <= '06' ? 1 : 2}`;
 };
 
+/** Fees in hand, % of the season's income, from which a club strengthens past its needs. */
+const RICH = 20;
+
+/**
+ * What a club looks for this round: its two most pressing needs, and, with money to spare and
+ * room for one more, a starter above its level (04 §4.7: the rich reinvest).
+ */
+function needsOf(w: CareerWorld, clubId: string): Need[] {
+  const plan = squadPlanOf({ pack: w.pack, clubId });
+  const needs = plan.needs.slice(0, 2);
+  if (needs.length < 2 && plan.upgrade && clubId !== w.clubId) {
+    const income = budgetOf(w, clubId).income;
+    if (available(w, clubId) * 100 >= income * RICH) needs.push(plan.upgrade);
+  }
+  return needs;
+}
+
 /** One round of the market: each club, in the seed's order, tries one signing. */
 export function marketRound(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
@@ -407,7 +424,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     if (squadPlayers({ pack: w.pack, clubId: id }).length >= MAX_SQUAD) continue;
     const tried = new Set<string>();
     let found = false;
-    for (const need of squadPlanOf({ pack: w.pack, clubId: id }).needs.slice(0, 2)) {
+    for (const need of needsOf(w, id)) {
       const choice = choose(w, id, need, tried, freeOnly);
       if (!choice) continue;
       found = true;

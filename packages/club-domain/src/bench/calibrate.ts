@@ -130,7 +130,7 @@ function world(pack: Pack, seed: number, seasons: number) {
     cost: number[];
     /** Median cash, in seasons of income, by tier; clubs in the red; mean structure level. */
     cash: number[];
-    red: number;
+    red: number[];
     level: number[];
     horizons: string;
   }[] = [];
@@ -164,7 +164,11 @@ function world(pack: Pack, seed: number, seasons: number) {
             .map((c) => Math.round((w.clubs![c.id]!.cash * 100) / budgetOf(w, c.id).income)),
         ),
       ),
-      red: Object.values(w.clubs ?? {}).filter((c) => c.cash < 0).length,
+      red: [1, 2, 3, 4].map(
+        (tier) =>
+          pack.clubs.filter((c) => tierOfClub(w, c.id) === tier && (w.clubs?.[c.id]?.cash ?? 0) < 0)
+            .length,
+      ),
       level: [1, 2, 3, 4].map(
         (tier) =>
           Math.round(
@@ -290,7 +294,7 @@ function main() {
     out.push(
       `  season ${i + 1}: signings ${s.deals} | free agents ${s.free} | squads ${s.sizes[0]}..${s.sizes[1]} | wage bills x${r1(s.bill * 100) / 100}` +
         ` | fair play: warned ${s.fair[0]}, embargo ${s.fair[1]}, docked ${s.fair[2]} | median squad cost % by tier ${s.cost.join(' ')}` +
-        ` | cash %income ${s.cash.join(' ')} red ${s.red} | structure ${s.level.join(' ')} | horizons ${s.horizons}`,
+        ` | cash %income ${s.cash.join(' ')} red ${s.red.join(' ')} | structure ${s.level.join(' ')} | horizons ${s.horizons}`,
     );
   out.push(
     `  strength drift by tier after ${w.perSeason.length} seasons: ${w.drift.join(' ')} | mean age ${w.age}`,

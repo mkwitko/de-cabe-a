@@ -49,6 +49,8 @@ export const incomeOf = (w: CareerWorld, clubId: string) =>
     pricesOf(w).prices,
   );
 
+/** Points of income added to the person's fees by their directors' horizon. */
+const PURSE: Record<Horizon, number> = { short: 4, medium: 0, long: -3 };
 /** Share of the directors' squad money a short-sighted board lets go to wages. */
 const KITTY_WAGES: Record<Horizon, number> = { short: 40, medium: 20, long: 10 };
 
@@ -59,13 +61,18 @@ function readBudget(w: CareerWorld, clubId: string): Budget {
   const s = clubId === w.clubId ? undefined : w.clubs?.[clubId];
   const kitty = s?.kitty ?? 0;
   const toWages = s ? Math.round((kitty * KITTY_WAGES[s.directors.horizon]) / 100) : 0;
+  // The person's directors: the short-sighted open the purse, the far-sighted hold it for later.
+  const purse = clubId === w.clubId ? PURSE[w.clubs?.[clubId]?.directors.horizon ?? 'medium'] : 0;
   // In the red, the fees wait for the debt: half of what is owed comes off them.
   const owed = s && s.cash < 0 ? Math.round(-s.cash / 2) : 0;
   return {
     income,
     // 6% to 16% of the income goes to fees; 55% to 75% may go to wages; plus what the
     // directors put in from the cash.
-    transfer: Math.max(0, thousands((income * (6 + risk / 10)) / 100) + kitty - toWages - owed),
+    transfer: Math.max(
+      0,
+      thousands((income * (6 + purse + risk / 10)) / 100) + kitty - toWages - owed,
+    ),
     wageCap: Math.round(((income * (55 + risk / 5)) / 100 + toWages) / 12),
   };
 }

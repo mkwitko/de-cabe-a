@@ -3,6 +3,7 @@ import { generateDevPack } from '../generate/pack';
 import { budgetOf } from '../market/books';
 import { openCareer } from './advance';
 import { clubsOf, planSeason, settleSeason, withClubs, workCost } from './clubs';
+import { goalFor } from './board';
 import { nationalDivisions } from './start';
 
 const pack = generateDevPack();
@@ -18,8 +19,8 @@ describe('clubs as institutions (04 §4.7)', () => {
     s.cash = budgetOf(w, rival).income;
     s.directors = { competence: 95, horizon: 'long', since: w.season.season };
     planSeason(w, new Set());
-    expect(s.work).toBeDefined();
-    expect(s.work!.front).not.toBe('stadium');
+    expect(s.works?.length).toBeGreaterThan(0);
+    expect(s.works![0]!.front).not.toBe('stadium');
     const level = club.facilities.youth;
     // The work is in use at the next turn.
     planSeason(w, new Set());
@@ -47,6 +48,17 @@ describe('clubs as institutions (04 §4.7)', () => {
     const t = openCareer(structuredClone(pack), 5, mine);
     clubsOf(t)[rival]!.cash = -fees * 4;
     expect(budgetOf(t, rival).transfer).toBeLessThan(fees);
+  });
+
+  it("the person's directors set the goal and the purse by their horizon", () => {
+    const w = openCareer(structuredClone(pack), 5, mine);
+    const d = clubsOf(w)[mine]!.directors;
+    clubsOf(w)[mine]!.directors = { ...d, horizon: 'short' };
+    const short = { goal: goalFor(w), fees: budgetOf(w, mine).transfer };
+    const t = openCareer(structuredClone(pack), 5, mine);
+    clubsOf(t)[mine]!.directors = { ...d, horizon: 'long' };
+    expect(goalFor(t)).toBeGreaterThan(short.goal);
+    expect(budgetOf(t, mine).transfer).toBeLessThan(short.fees);
   });
 
   it('a level 5 front cannot be built further', () => {
