@@ -220,8 +220,10 @@ export function crop(
 }
 
 /** Players the foreign market offers each season, and their levels and ages. PARÂMETRO. */
-const IMPORTS = 60;
-const IMPORT_QUALITY: [number, number] = [55, 78];
+const IMPORTS = 70;
+/** Quality from 58 to 85, the better of two draws: the clubs here buy from the top of the
+ * South American market and bring players home from Europe. */
+const IMPORT_QUALITY: [number, number] = [58, 85];
 const IMPORT_AGES: [number, number] = [22, 32];
 
 /** True for a player of the foreign market who has not signed for a club of the league. */
@@ -239,7 +241,8 @@ export function imports(origin: Pack, seed: number, season: number, wages = BASE
     const r = fork(root, `player:${k}`);
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = IMPORT_AGES[0] + pick(r, IMPORT_AGES[1] - IMPORT_AGES[0] + 1);
-    const quality = IMPORT_QUALITY[0] + pick(r, IMPORT_QUALITY[1] - IMPORT_QUALITY[0] + 1);
+    const span = IMPORT_QUALITY[1] - IMPORT_QUALITY[0] + 1;
+    const quality = IMPORT_QUALITY[0] + Math.max(pick(r, span), pick(r, span));
     const made = generatePlayer(r, {
       id: `f${season}-${k}`,
       position,

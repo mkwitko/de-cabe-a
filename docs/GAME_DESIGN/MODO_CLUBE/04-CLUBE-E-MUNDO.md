@@ -160,6 +160,8 @@ O que cada traço muda:
 | Horizonte longo | 65% para estrutura, com base e CT primeiro; 10% do dinheiro do elenco pode virar folha |
 | Competência | Reserva guardada, de 0% a 20% da receita. Acerto na escolha da obra: abaixo da competência, a obra é escolhida por capricho. Ágio na mesa de compra, até 20 pontos acima do valor para a pior direção |
 
+**Mercado de fora.** Cada temporada traz 70 jogadores do exterior, nível 58 a 85 (o melhor de dois sorteios, para pesar na faixa alta), que os clubes daqui podem contratar pagando o valor mais 20% (o dinheiro sai da liga) e 25% a mais de salário. Quem foi vendido para fora volta a partir dos 30 anos. Estrangeiro não contratado sai do jogo na virada. Clube com verba de sobra (20% da receita) busca titular três pontos acima do próprio nível.
+
 **Estrutura.** Seis frentes: CT, base, departamento médico, olheiros, diretoria de futebol (pessoas, então manutenção três vezes maior) e estádio. Cada obra sobe um nível e fica pronta na virada seguinte; havendo verba, a direção toca várias frentes ao mesmo tempo, uma obra por frente. Custos dos níveis 2 a 5, a preço de abertura: R$ 0,4 mi, 1,5 mi, 7 mi e 40 mi; a obra que faz sentido custa de 20% a 40% da receita da divisão em que ela faz sentido (§6). Manutenção anual por nível de 1 a 5: R$ 15 mil, 60 mil, 300 mil, 1,5 mi e 5 mi. O estádio ganha 15% de lugares (no mínimo 2 mil) a R$ 5 mil por lugar, e só ajuda quando lota. A direção competente olha o nível que a divisão pede (5 na Série A, 2 na D) e o estádio só quando ele enche. Todos os números são PARÂMETROS.
 
 ## 5. Patrocínio, TV e comercial
