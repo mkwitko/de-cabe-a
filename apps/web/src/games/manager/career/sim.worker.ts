@@ -57,6 +57,7 @@ import {
   watchedIn,
   scoutAreas,
   scoutsOf,
+  tripCost,
   sendScout,
   seenLevel,
   myWageRoom,
@@ -369,6 +370,8 @@ export interface MarketPlayer {
   release: number | null;
   /** How much the club knows of him, 0..100 (market/scouting.ts); null for its own players. */
   knowledge: number | null;
+  /** Whole months since the club last learned of him; null when it never looked. */
+  seenMonths: number | null;
 }
 export interface MarketView {
   open: boolean;
@@ -448,7 +451,9 @@ export interface MarketView {
   scouting: {
     scouts: number;
     away: { area: string; label: string; back: string }[];
-    areas: { area: string; label: string }[];
+    areas: { area: string; label: string; cost: number }[];
+    /** What a week watching one player costs, near and far. */
+    watchCost: number;
     /** Players in the club's files from scouts' reports. */
     known: number;
   };
@@ -501,6 +506,7 @@ function marketView(
       range: rep?.range ?? levelRange(w.pack, w.clubId, p),
       potential: rep?.potential ?? ceilingRange(w.pack, w.clubId, p),
       knowledge: rep?.knowledge ?? null,
+      seenMonths: rep?.seen != null ? Math.floor((w.day - rep.seen) / 30) : null,
       release: p.contract?.releaseFee ?? null,
       wage: p.contract?.wage ?? 0,
       value: marketValue(w.pack, p, season),
@@ -625,7 +631,12 @@ function marketView(
         label: areaLabel(w, m.area),
         back: isoOf(m.until),
       })),
-      areas: scoutAreas(w).map((area) => ({ area, label: areaLabel(w, area) })),
+      areas: scoutAreas(w).map((area) => ({
+        area,
+        label: areaLabel(w, area),
+        cost: tripCost(w, area),
+      })),
+      watchCost: tripCost(w, 'player:'),
       known: Object.keys(w.scouting?.known ?? {}).length,
     },
     news: (w.deals ?? [])

@@ -86,10 +86,23 @@ const OFF = {
 } as const;
 
 /** The most this club's scouts can be off on another club's player: level and ceiling. */
-export function eyeSpread(pack: Pack, clubId: string): { level: number; ceiling: number } {
+export function eyeSpread(
+  pack: Pack,
+  clubId: string,
+  p: PackPlayer,
+): { level: number; ceiling: number } {
   const s = eyeOf(pack, clubId).scouting - 1;
-  return { level: OFF.level[s]!, ceiling: OFF.ceiling[s]! };
+  return { level: OFF.level[s]!, ceiling: ceilingOff(pack, OFF.ceiling[s]!, p) };
 }
+
+/**
+ * What a young player may become is the hardest call: the ceiling error grows by YOUNG_DOUBT
+ * percent up to YOUNG_AGE. PARÂMETROS.
+ */
+const YOUNG_AGE = 21;
+const YOUNG_DOUBT = 150;
+const ceilingOff = (pack: Pack, spread: number, p: PackPlayer) =>
+  ageOf(p, clockOf(pack).season) <= YOUNG_AGE ? Math.round((spread * YOUNG_DOUBT) / 100) : spread;
 
 /** The most a club can misread another club's player's level, either way. */
 export const MAX_LEVEL_ERROR = OFF.level[0];
@@ -164,7 +177,9 @@ export const seenLevel = (pack: Pack, clubId: string, p: PackPlayer): number =>
 export function seenCeiling(pack: Pack, clubId: string, p: PackPlayer): number {
   const eye = eyeOf(pack, clubId);
   const spread =
-    p.clubId === clubId ? OFF.own[eye.football - 1]! * 2 : OFF.ceiling[eye.scouting - 1]!;
+    p.clubId === clubId
+      ? OFF.own[eye.football - 1]! * 2
+      : ceilingOff(pack, OFF.ceiling[eye.scouting - 1]!, p);
   const seen = readingsOf(pack).get(p.id)!.ceiling + off(pack, spread, clubId, p.id, 2);
   return Math.max(seenLevel(pack, clubId, p), Math.min(99, seen));
 }
@@ -236,7 +251,9 @@ export function levelRange(pack: Pack, clubId: string, p: PackPlayer): [number, 
 export function ceilingRange(pack: Pack, clubId: string, p: PackPlayer): [number, number] {
   const eye = eyeOf(pack, clubId);
   const spread =
-    p.clubId === clubId ? OFF.own[eye.football - 1]! * 2 : OFF.ceiling[eye.scouting - 1]!;
+    p.clubId === clubId
+      ? OFF.own[eye.football - 1]! * 2
+      : ceilingOff(pack, OFF.ceiling[eye.scouting - 1]!, p);
   const seen = seenCeiling(pack, clubId, p);
   return [Math.max(1, seen - spread), Math.min(99, seen + spread)];
 }
