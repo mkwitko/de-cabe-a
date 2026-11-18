@@ -150,7 +150,7 @@ export const ptBR = {
   'market.news': 'Negócios entre clubes',
   'market.scouts': 'Olheiros',
   'market.scoutsInfo':
-    '{n, plural, one {Você tem # olheiro.} other {Você tem # olheiros.}} Cada viagem leva 4 semanas e traz os melhores jogadores da região que você ainda não conhecia. Cada relatório e cada jogo contra o clube de um jogador aumentam o quanto você o conhece; sem novas informações, o conhecimento cai com o tempo. Quanto mais você conhece, mais perto da verdade ficam a nota e o potencial. Na lista do mercado só aparecem jogadores que o clube conhece.',
+    '{n, plural, one {Você tem # olheiro.} other {Você tem # olheiros.}} Cada viagem leva 4 semanas e traz os melhores jogadores da região que você ainda não conhecia; um relatório de um só jogador (em Elencos) leva 1 semana e conta mais. Cada relatório e cada jogo contra o clube de um jogador aumentam o quanto você o conhece; sem novas informações, o conhecimento cai com o tempo. Quanto mais você conhece, mais perto da verdade ficam a nota e o potencial. Na lista do mercado só aparecem jogadores que o clube conhece.',
   'market.scoutsKnown':
     '{n, plural, =0 {Nenhum jogador nos seus arquivos ainda.} one {# jogador nos seus arquivos.} other {# jogadores nos seus arquivos.}}',
   'market.scoutAway': '{area}: volta em {date}',
@@ -158,6 +158,13 @@ export const ptBR = {
   'market.scoutSend': 'Mandar olheiro',
   'market.saidScout': 'Olheiro a caminho: {area}.',
   'market.knowledge': 'Conhecimento {k}%',
+  'market.unknown': 'Desconhecido',
+  'market.squads': 'Elencos',
+  'market.squadsPick': 'Clube',
+  'market.squadsNone': 'Escolha um clube',
+  'market.watch': 'Pedir relatório',
+  'market.watchFor': 'Pedir relatório de {name}',
+  'market.watching': 'Olheiro observando',
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
     '{to} contratou {name} do {from} por {fee} para ser {for, select, starter {titular} other {reserva}}.',
@@ -176,6 +183,7 @@ export const ptBR = {
   'health.outLabel': 'Lesionado',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
+  'inbox.watched': 'Chegou o relatório do olheiro sobre {name}: agora você o conhece melhor.',
   'inbox.scouted':
     '{n, plural, =0 {O olheiro voltou de {area} sem nomes novos.} one {O olheiro voltou de {area} com # jogador novo nos arquivos.} other {O olheiro voltou de {area} com # jogadores novos nos arquivos.}}',
   'inbox.cameUp':

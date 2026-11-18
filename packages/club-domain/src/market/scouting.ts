@@ -184,13 +184,32 @@ const inArea = (w: CareerWorld, area: string, clubId: string) =>
 
 export type ScoutNo = 'busy' | 'area' | 'already';
 
-/** Sends a scout to an area from `day`; the reason it cannot, or null. */
+/** A scout watching one player: `player:<id>`. */
+export const PLAYER_AREA = 'player:';
+/** Days a scout spends watching one player. */
+export const WATCH_DAYS = 7;
+/** A report on one player is worth this much more than one from a trip, in percent. */
+const WATCH_BONUS = 150;
+
+/** The player a mission watches, or null for a trip to an area. */
+export const watchedIn = (area: string) =>
+  area.startsWith(PLAYER_AREA) ? area.slice(PLAYER_AREA.length) : null;
+
+/**
+ * Sends a scout from `day` to an area (a division, a state) or to watch one player
+ * (`player:<id>`, another club's); the reason it cannot, or null.
+ */
 export function sendScout(w: CareerWorld, area: string, day: number): ScoutNo | null {
-  if (!scoutAreas(w).includes(area)) return 'area';
+  const watched = watchedIn(area);
+  if (watched !== null) {
+    const p = w.pack.players.find((x) => x.id === watched);
+    if (!p || p.clubId === w.clubId || p.clubId === ABROAD) return 'area';
+  } else if (!scoutAreas(w).includes(area)) return 'area';
   const s = w.scouting ?? { known: {}, missions: [] };
   if (s.missions.some((m) => m.area === area)) return 'already';
   if (s.missions.length >= scoutsOf(w)) return 'busy';
-  w.scouting = { ...s, missions: [...s.missions, { area, from: day, until: day + MISSION_DAYS }] };
+  const until = day + (watched !== null ? WATCH_DAYS : MISSION_DAYS);
+  w.scouting = { ...s, missions: [...s.missions, { area, from: day, until }] };
   return null;
 }
 
@@ -213,6 +232,15 @@ export function scoutingDay(w: CareerWorld, day: number): void {
   const reports = REPORTS[eyeOf(w.pack, w.clubId).scouting - 1]!;
   for (const m of s.missions) {
     if (m.until > day) continue;
+    const watched = watchedIn(m.area);
+    if (watched !== null) {
+      // One player, watched for a week: a sharper report than a trip's.
+      const p = byId.get(watched);
+      w.scouting = { known, missions: s.missions };
+      if (p) learn(w, known, p, Math.round((gain * WATCH_BONUS) / 100), m.until);
+      note(w, { day: m.until, kind: 'scouted', area: m.area, players: p ? 1 : 0 });
+      continue;
+    }
     // The best players there the club knows least of (under half), as its own eye ranks them.
     const found = w.pack.players
       .filter(

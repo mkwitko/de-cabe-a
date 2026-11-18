@@ -5,6 +5,7 @@ import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers } from '../career/start';
 import {
   MISSION_DAYS,
+  WATCH_DAYS,
   FADE_DAYS,
   MATCH_GAIN,
   facedClub,
@@ -87,6 +88,20 @@ describe("the person's scouts", () => {
     w.scouting = { known: { [p.id]: { k: 100, day: w.day } }, missions: [] };
     const r = personReading(w, p);
     expect(r.range[0]).toBe(r.range[1]);
+  });
+
+  it('a scout watches one player for a week and knows him better than a trip would', () => {
+    const w = openCareer(pack, 3, clubId);
+    const p = w.pack.players.find((x) => x.clubId && x.clubId !== clubId && !personKnows(w, x))!;
+    expect(sendScout(w, `player:${p.id}`, 5)).toBeNull();
+    expect(sendScout(w, `player:${p.id}`, 5)).toBe('already');
+    const mine = w.pack.players.find((x) => x.clubId === clubId)!;
+    expect(sendScout(w, `player:${mine.id}`, 5)).toBe('area');
+    scoutingDay(w, 5 + WATCH_DAYS);
+    w.day = 5 + WATCH_DAYS;
+    expect(knowledgeOf(w, p)).toBeGreaterThanOrEqual(30);
+    expect(personKnows(w, p)).toBe(true);
+    expect(w.inbox!.at(-1)).toMatchObject({ kind: 'scouted', area: `player:${p.id}`, players: 1 });
   });
 
   it('no more scouts away than the department has', () => {
