@@ -31,6 +31,10 @@ export interface Summary {
    * 13% to 21%; Opta Analyst, Premier League 2025/26: 14.9%); losses and how many are won back
    * within 5 s (Bauer and Anzer 2021: counter-press success).
    */
+  /** Big chances (Opta-like, shot event `big`), those after a team-mate's pass, and their goals. */
+  bigChances: [number, number];
+  bigFromPass: [number, number];
+  bigGoals: [number, number];
   highTurnovers: [number, number];
   highTurnoverShots: [number, number];
   losses: [number, number];
@@ -105,6 +109,23 @@ export function summary(r: MatchResult): Summary {
           .length,
     ),
     setPieceGoals: pair(goalsFrom),
+    ...(() => {
+      const b: Record<'n' | 'pass' | 'goal', [number, number]> = {
+        n: [0, 0],
+        pass: [0, 0],
+        goal: [0, 0],
+      };
+      r.events.forEach((e, i) => {
+        if (e.kind !== 'shot' || !e.data.big || e.team === null) return;
+        b.n[e.team]++;
+        const prev = r.events[i - 1];
+        if (prev?.kind === 'reception' && prev.playerId === e.playerId && prev.otherId)
+          b.pass[e.team]++;
+        const nx = r.events.slice(i + 1).find((q) => q.kind === 'shot' || q.kind === 'goal');
+        if (nx?.kind === 'goal' && nx.team === e.team) b.goal[e.team]++;
+      });
+      return { bigChances: b.n, bigFromPass: b.pass, bigGoals: b.goal };
+    })(),
     firstFactor: r.explanation.factors[0]?.message.key ?? null,
     factors: r.explanation.factors.map((f) => f.message.key),
     distance: r.players.reduce((a, p) => a + p.distanceM, 0) / r.players.length,
