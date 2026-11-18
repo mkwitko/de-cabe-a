@@ -89,6 +89,8 @@ export interface CareerWorld {
   listed?: string[];
   /** Doors shut for a season: a player, or `club:player` for a bidder. */
   cold?: Record<string, number>;
+  /** The boys of the person's academy, by id: under contract, out of the first team. */
+  academy?: string[];
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
   /** Each finished season: its moves and what the person did that the next year grew from. */
@@ -320,6 +322,9 @@ export interface SeasonTurn {
   move: Move | null;
 }
 
+/** The age at which a boy leaves the academy for the first team whatever the person did. */
+const FIRST_TEAM_AGE = 19;
+
 /**
  * From a finished season to the next (05 §3, MC-172): titles, promotion and relegation by the
  * regulations, then the new season drawn from the career seed. The ledger carries on.
@@ -378,7 +383,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
         clubId: w.clubId,
         intensity: w.training?.intensity ?? 'normal',
         played: Object.fromEntries(
-          squad.map((p) => [p.id, share(p.id) >= 60 ? 2 : share(p.id) >= 25 ? 1 : 0]),
+          // A boy in the academy plays with his own age: neither held back nor pushed on.
+          squad.map((p) => [
+            p.id,
+            w.academy?.includes(p.id) || share(p.id) >= 25 ? (share(p.id) >= 60 ? 2 : 1) : 0,
+          ]),
         ),
       },
       released,
@@ -389,11 +398,24 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   // The moves in force stay (each player's club and contract); those of players gone do not.
   const alive = new Set(w.pack.players.map((p) => p.id));
   w.moves = Object.fromEntries(Object.entries(w.moves ?? {}).filter(([id]) => alive.has(id)));
-  // The academy's boys of the year are in the squad.
-  const boys = w.pack.players.filter(
-    (p) => p.clubId === w.clubId && p.id.startsWith(`y${year}-`),
-  ).length;
+  // The year's boys go to the academy. Those already there stay until nineteen, when the club
+  // brings them up by itself; a boy sold or let go is no longer the academy's.
+  const kept = new Set(w.academy ?? []);
+  const ageNow = (p: { birthDate: string }) => year - Number(p.birthDate.slice(0, 4));
+  let boys = 0;
+  let up = 0;
+  const academy: string[] = [];
+  for (const p of w.pack.players) {
+    if (p.clubId !== w.clubId) continue;
+    const fresh = p.id.startsWith(`y${year}-`);
+    if (fresh) boys++;
+    if (fresh || (kept.has(p.id) && ageNow(p) < FIRST_TEAM_AGE)) academy.push(p.id);
+    else if (kept.has(p.id)) up++;
+  }
+  if (academy.length) w.academy = academy;
+  else delete w.academy;
   if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
+  if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;
   delete w.played;
   const levels = clubLevels(w.pack);

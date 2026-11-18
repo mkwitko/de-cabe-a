@@ -77,6 +77,21 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await expect(page.getByText(/, temporada 2027/)).toBeVisible();
   await page.reload();
   await expect(page.getByText(/, temporada 2027/)).toBeVisible({ timeout: 30_000 });
+  // The year's boys are in the academy, out of the first team until brought up.
+  await page.getByRole('button', { name: 'Campo de treino' }).click();
+  await expect(page.getByRole('heading', { name: 'Base' })).toBeVisible({ timeout: 30_000 });
+  const up = page.getByRole('button', { name: /^Subir .+ para o elenco$/ });
+  const boys = await up.count();
+  expect(boys).toBeGreaterThan(0);
+  await page.screenshot({ path: 'test-results/carreira-base-1280.png', fullPage: true });
+  await up.first().click();
+  await expect(up).toHaveCount(boys - 1);
+  await page.reload();
+  await page.getByRole('button', { name: 'Campo de treino' }).click();
+  await expect(page.getByRole('heading', { name: 'Base' })).toBeVisible({ timeout: 30_000 });
+  await expect(up).toHaveCount(boys - 1);
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.screenshot({ path: 'test-results/carreira-base-360.png', fullPage: true });
 });
 
 test('career: watch the club’s own match, change the plan, and its result counts', async ({

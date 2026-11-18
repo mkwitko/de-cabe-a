@@ -26,6 +26,8 @@ import {
   type MomentMode,
   upcomingFor,
   lineupOf,
+  academyPlayers,
+  promote,
   planOf,
   type PlanChoice,
   setLineup,
@@ -107,6 +109,7 @@ export type SimRequest = { id: number } & (
   /** The training ground: the week's intensity and everyone's freshness. */
   | { type: 'training' }
   | { type: 'train'; intensity: Intensity }
+  | { type: 'promote'; playerId: string }
   /** The market: the person's players to sell and the best of the others, by position. */
   | { type: 'market'; position: string | null; act?: MarketAct }
   | { type: 'nextSeason' }
@@ -229,6 +232,15 @@ export interface TrainingView {
     starter: boolean;
     out: { kind: InjuryKind; days: number } | null;
   }[];
+  /** The academy's boys: the level and the ceiling as the club's staff read them. */
+  academy: {
+    id: string;
+    name: string;
+    age: number;
+    position: string;
+    rating: number;
+    potential: [number, number];
+  }[];
 }
 
 function trainingView(w: CareerWorld): TrainingView {
@@ -256,6 +268,16 @@ function trainingView(w: CareerWorld): TrainingView {
         out: outOf(w, p.id),
       }))
       .sort((a, b) => Number(b.starter) - Number(a.starter) || a.fresh - b.fresh),
+    academy: academyPlayers(w)
+      .map((p) => ({
+        id: p.id,
+        name: p.knownAs ?? p.name,
+        age: w.season.season - Number(p.birthDate.slice(0, 4)),
+        position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
+        rating: seenLevel(w.pack, w.clubId, p),
+        potential: ceilingRange(w.pack, w.clubId, p),
+      }))
+      .sort((a, b) => b.potential[1] - a.potential[1] || (a.id < b.id ? -1 : 1)),
   };
 }
 
@@ -748,10 +770,11 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
       return;
     }
-    if (world && (r.type === 'training' || r.type === 'train')) {
+    if (world && (r.type === 'training' || r.type === 'train' || r.type === 'promote')) {
       if (r.type === 'train') setIntensity(world, r.intensity);
+      if (r.type === 'promote') promote(world, r.playerId);
       const reply: SimReply = { id: r.id, training: trainingView(world) };
-      if (r.type === 'train')
+      if (r.type !== 'training')
         reply.save = {
           from: world.day,
           to: world.day,

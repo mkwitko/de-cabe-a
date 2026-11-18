@@ -165,7 +165,16 @@ export const ptBR = {
   'health.out': '{n, plural, one {Lesionado: volta em # dia} other {Lesionado: volta em # dias}}',
   'health.outLabel': 'Lesionado',
   'inbox.crop':
-    '{n, plural, one {# garoto da base subiu} other {# garotos da base subiram}} para o elenco. Quem joga cresce mais.',
+    '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
+  'inbox.cameUp':
+    '{n, plural, one {# garoto fez 19 anos e subiu} other {# garotos fizeram 19 anos e subiram}} da base para o elenco.',
+  'academy.title': 'Base',
+  'academy.hint':
+    'Na base o garoto cresce no ritmo dele. No elenco cresce mais se jogar e menos se ficar parado. Aos 19 anos ele sobe sozinho.',
+  'academy.empty': 'Nenhum garoto na base agora. A próxima safra chega na virada da temporada.',
+  'academy.line': '{age} anos, nota {rating}, potencial {lo} a {hi}',
+  'academy.promote': 'Subir',
+  'academy.promoteName': 'Subir {name} para o elenco',
   'inbox.contractsEnding':
     '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
   'inbox.clausePaid': 'O {club} pagou a multa de {name}: {fee}. Ele foi embora.',

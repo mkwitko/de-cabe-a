@@ -14,7 +14,7 @@ import {
   type SeasonLog,
 } from './development';
 import { loadCareer, saveCareer } from './save';
-import { setLineup, lineupOf } from './squad';
+import { academyPlayers, lineupOf, promote, setLineup, squadOf } from './squad';
 import { jobOffers } from './start';
 import { setIntensity } from './training';
 
@@ -202,5 +202,15 @@ describe('a year passes (03 §3)', () => {
     expect(again.deals).toEqual(w.deals);
     // Loading replays the years: it must stay quick.
     expect(ms).toBeLessThan(4000);
+    // The boys are the academy's: under contract, out of the first team until brought up.
+    const boys = w.academy!;
+    expect(boys.length).toBeGreaterThan(0);
+    expect(again.academy).toEqual(boys);
+    expect(boys.every((id) => /^y202[789]-/.test(id))).toBe(true);
+    expect(squadOf(w).some((p) => boys.includes(p.id))).toBe(false);
+    expect(academyPlayers(w).map((p) => p.id)).toEqual(boys);
+    promote(w, boys[0]!);
+    expect(squadOf(w).some((p) => p.id === boys[0])).toBe(true);
+    expect(() => promote(w, boys[0]!)).toThrow('academy');
   }, 180_000);
 });

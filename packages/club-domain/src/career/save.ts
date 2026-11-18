@@ -21,7 +21,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 7;
+export const CAREER_RULES_VERSION = 9;
 
 interface Saved {
   v: number;
@@ -48,6 +48,7 @@ interface Saved {
   forLoan?: CareerWorld['forLoan'];
   log?: CareerWorld['log'];
   injuries?: CareerWorld['injuries'];
+  academy?: CareerWorld['academy'];
   starts?: CareerWorld['starts'];
   played?: CareerWorld['played'];
 }
@@ -126,6 +127,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.forLoan && { forLoan: w.forLoan }),
     ...(w.log && { log: w.log }),
     ...(w.injuries && { injuries: w.injuries }),
+    ...(w.academy && { academy: w.academy }),
     ...(w.starts && { starts: w.starts }),
     ...(w.played !== undefined && { played: w.played }),
   };
@@ -178,6 +180,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.forLoan && { forLoan: saved.forLoan }),
     ...(saved.log && { log }),
     ...(saved.injuries && { injuries: saved.injuries }),
+    ...(saved.academy && { academy: saved.academy }),
     ...(saved.starts && { starts: saved.starts }),
     ...(saved.played !== undefined && { played: saved.played }),
   };

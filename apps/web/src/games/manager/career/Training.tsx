@@ -2,6 +2,7 @@
  * The training ground: one choice, the week's intensity, and what it costs. A light week gives
  * legs back faster and lets the drill slip; a hard one does the opposite (club-domain
  * career/training.ts). The list shows each player's freshness on the day of the next match.
+ * Below, the academy: the boys under contract who are not in the first team until brought up.
  */
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
@@ -118,7 +119,7 @@ export function Training(props: {
                   n: p.fresh,
                   state: t('training.state', { s: state }),
                 })}
-                className="flex min-h-12 items-center gap-3 border-t border-chalk/10 py-1.5"
+                className="flex min-h-12 min-w-0 items-center gap-3 border-t border-chalk/10 py-1.5"
               >
                 <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
                   {t('squad.position', { p: p.position })}
@@ -155,6 +156,53 @@ export function Training(props: {
               </li>
             );
           })}
+        </ul>
+      </div>
+
+      <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5 lg:col-span-2">
+        <h3 id="academy-title" className={LABEL}>
+          {t('academy.title')}
+        </h3>
+        <p className="text-chalk-soft">
+          {view.academy.length ? t('academy.hint') : t('academy.empty')}
+        </p>
+        <ul aria-labelledby="academy-title" className="grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
+          {view.academy.map((p) => (
+            <li
+              key={p.id}
+              className="flex min-h-14 min-w-0 items-center gap-3 border-t border-chalk/10 py-1.5"
+            >
+              <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
+                {t('squad.position', { p: p.position })}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{p.name}</span>
+                <span className="block text-sm text-chalk-soft">
+                  {t('academy.line', {
+                    age: p.age,
+                    rating: p.rating,
+                    lo: p.potential[0],
+                    hi: p.potential[1],
+                  })}
+                </span>
+              </span>
+              <button
+                type="button"
+                aria-label={t('academy.promoteName', { name: p.name })}
+                className="min-h-11 shrink-0 rounded-lg bg-club-gold px-3 font-condensed text-lg leading-none font-extrabold text-ink uppercase"
+                onClick={() =>
+                  ask({ type: 'promote', playerId: p.id })
+                    .then((r) => {
+                      setView(r.training ?? null);
+                      onPicked(r);
+                    })
+                    .catch((e: Error) => onError(e.message))
+                }
+              >
+                {t('academy.promote')}
+              </button>
+            </li>
+          ))}
         </ul>
       </div>
     </section>

@@ -61,21 +61,33 @@ type Position = PackPlayer['positions'][number]['position'];
 const isKeeper = (p: PackPlayer) => p.positions.some((x) => x.position === 'GK');
 const isKeeperRole = (r: RoleId) => r === 'goalkeeper' || r === 'sweeperKeeper';
 /** A club in a pack: all the line-up rules need. A career world is one. */
-export type ClubIn = Pick<CareerWorld, 'pack' | 'clubId'>;
+export type ClubIn = Pick<CareerWorld, 'pack' | 'clubId' | 'academy'>;
 
-/** A club's players, by id: read once per club (lib/pack-cache.ts). */
-const squad = (w: ClubIn): PackPlayer[] =>
+/** Everyone under contract with the club, by id: read once per club (lib/pack-cache.ts). */
+const everyone = (w: ClubIn): PackPlayer[] =>
   cached(w.pack, 'squad', w.clubId, () =>
     w.pack.players.filter((p) => p.clubId === w.clubId).sort((x, y) => (x.id < y.id ? -1 : 1)),
   );
+/** The first team: the club's players less the boys still in the person's academy. */
+const squad = (w: ClubIn): PackPlayer[] =>
+  w.academy?.length ? everyone(w).filter((p) => !w.academy!.includes(p.id)) : everyone(w);
+/** The boys of the person's academy: under contract, not yet in the first team. */
+export const academyPlayers = (w: ClubIn): readonly PackPlayer[] =>
+  w.academy?.length ? everyone(w).filter((p) => w.academy!.includes(p.id)) : [];
+
+/** Brings a boy up to the first team, for good: from now he can be picked. */
+export function promote(w: CareerWorld, id: string): void {
+  if (!w.academy?.includes(id)) throw new Error('academy: not there');
+  w.academy = w.academy.filter((x) => x !== id);
+}
 /** The squad as a list anyone may read. */
 export const squadPlayers = (w: ClubIn): readonly PackPlayer[] => squad(w);
 
 /** Whole years on 1 January of the season: the same all season long. */
 const ageOf = (p: PackPlayer, season: number) => season - Number(p.birthDate.slice(0, 4));
 
-export function squadOf(w: CareerWorld): SquadPlayer[] {
-  return squad(w).map((p) => ({
+export function squadOf(w: CareerWorld, of: readonly PackPlayer[] = squad(w)): SquadPlayer[] {
+  return of.map((p) => ({
     id: p.id,
     name: p.knownAs ?? p.name,
     age: ageOf(p, w.season.season),

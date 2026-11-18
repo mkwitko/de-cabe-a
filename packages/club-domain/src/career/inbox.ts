@@ -19,6 +19,7 @@ export type Note = { day: number } & (
   | { kind: 'contractEnded' | 'contractKept'; player: string }
   | { kind: 'contractsEnding'; players: number }
   | { kind: 'crop'; players: number }
+  | { kind: 'cameUp'; players: number }
   | {
       kind: 'injury';
       player: string;

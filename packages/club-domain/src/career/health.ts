@@ -9,7 +9,7 @@
  */
 import { FORMATIONS } from '@decabeca/match-engine';
 import type { CareerWorld } from './advance';
-import { bestLineup, lineupOf, slotRatings, type Lineup } from './squad';
+import { bestLineup, lineupOf, slotRatings, squadPlayers, type Lineup } from './squad';
 import type { Training } from './training';
 
 export const INJURIES = ['knock', 'muscle', 'sprain', 'serious'] as const;
@@ -61,7 +61,7 @@ export function fielded(w: CareerWorld, day: number): Lineup {
   const roles = FORMATIONS[picked.formation]!.roles;
   const fit = slotRatings(w, picked.formation);
   const xi = [...picked.xi];
-  const squad = w.pack.players.filter((p) => p.clubId === w.clubId);
+  const squad = squadPlayers(w);
   for (const [i, id] of picked.xi.entries()) {
     if (!out.has(id)) continue;
     const keeper = roles[i] === 'goalkeeper' || roles[i] === 'sweeperKeeper';
