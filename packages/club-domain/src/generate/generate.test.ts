@@ -5,6 +5,9 @@ import { PackSchema } from '../pack/schema';
 import { SQUAD, generatePlayer, generateSquad } from './player';
 import { matchCount } from '../competition/season';
 import { generateDevPack, generateMiniPack, packChecksum } from './pack';
+import { realDivisions } from './competitions';
+import { CompetitionSchema } from '../competition/schema';
+import { regulationsFor } from '../competition/outcomes';
 
 describe('MC-013 generators', () => {
   it('same command, same result', () => {
@@ -114,5 +117,36 @@ describe('MC-014 mini pack competitions', () => {
     const c = generateMiniPack().competitions[0]!;
     expect(c.phases.map((x) => x.kind)).toEqual(['liga', 'mata-mata', 'final']);
     expect(matchCount(c)).toBe(28 + 2 + 1);
+  });
+});
+
+describe('realDivisions (05 §8, 2027 formats)', () => {
+  const ids = (n: number, p: string) => Array.from({ length: n }, (_, i) => `${p}${i}`);
+  const comps = realDivisions(2027, [ids(20, 'a'), ids(20, 'b'), ids(24, 'c'), ids(96, 'd')]);
+
+  it('parses; Série C has 24 clubs in 2027 and 28 in 2028, D refills from the ranking', () => {
+    comps.forEach((c) => CompetitionSchema.parse(c));
+    const sizes = comps.map((c) => `${c.id}@${c.season}:${c.size}/${c.clubIds.length}`);
+    expect(sizes).toEqual([
+      'div-1@2027:20/20',
+      'div-2@2027:20/20',
+      'div-3@2027:24/24',
+      'div-3@2028:28/0',
+      'div-4@2027:96/96',
+    ]);
+    expect(comps.find((c) => c.id === 'div-4')!.refill).toBe('ranking');
+  });
+
+  it('every window keeps at least two match dates in any year (weekday windows move with the calendar)', () => {
+    for (const year of [2027, 2028, 2029, 2030]) {
+      for (const c of regulationsFor(comps, year))
+        for (const p of c.phases) {
+          const days = new Set<number>();
+          for (let t = Date.parse(p.dates.start); t <= Date.parse(p.dates.end); t += 864e5)
+            if (p.dates.weekdays.includes(new Date(t).getUTCDay())) days.add(t);
+          const legs = p.kind === 'liga' || p.kind === 'grupos' ? 2 : p.legs;
+          expect(days.size, `${c.id} ${p.id} ${year}`).toBeGreaterThanOrEqual(legs);
+        }
+    }
   });
 });

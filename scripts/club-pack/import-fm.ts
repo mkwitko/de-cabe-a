@@ -30,8 +30,10 @@ import {
   type PackClub,
   type PackPlayer,
 } from '../../packages/club-domain/src/index';
-import { devDivisions } from '../../packages/club-domain/src/generate/competitions';
+import { realDivisions } from '../../packages/club-domain/src/generate/competitions';
 import { FIRST_NAMES, LAST_NAMES, NICKNAMES } from '../../packages/club-domain/src/generate/names';
+
+import { parseCsv } from './lib/csv';
 
 const BRAZIL = '189';
 /** The save was exported in December 2026 (last played fixture 2026-12-17); the pack opens 2027. */
@@ -55,41 +57,6 @@ const DIR = resolve(dirArg);
 const OUT = resolve(
   outArg ?? fileURLToPath(new URL('../../apps/api/club-packs/br-fm26-1.json.gz', import.meta.url)),
 );
-
-// ── RFC 4180 reader: quoted fields hold JSON with commas, quotes and newlines ────────────────────
-
-function parseCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = '';
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i]!;
-    if (quoted) {
-      if (ch !== '"') field += ch;
-      else if (text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else quoted = false;
-    } else if (ch === '"') quoted = true;
-    else if (ch === ',') {
-      row.push(field);
-      field = '';
-    } else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && text[i + 1] === '\n') i++;
-      row.push(field);
-      field = '';
-      if (row.length > 1 || row[0] !== '') rows.push(row);
-      row = [];
-    } else field += ch;
-  }
-  if (field !== '' || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  const head = rows.shift()!;
-  return rows.map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
-}
 
 const manifest: Pack['manifest'] = [];
 function load(file: string, note?: string) {
@@ -133,6 +100,10 @@ const stadiumRows = load('stadiums.csv');
 const financeRows = load('finances.csv', 'latest month per club');
 const sponsorRows = load('sponsorships.csv');
 const tableRows = load('league-tables.csv', 'competitions 124/136/137/2227 = Série A/B/C/D');
+const fixtureRows = load(
+  'fixtures.csv',
+  'played results of competitions 124/136/137/2227: 2026 play-offs and knockouts',
+);
 console.log(`read CSVs in ${Date.now() - t0} ms`);
 
 const nations = (
@@ -141,7 +112,7 @@ const nations = (
   }
 ).map;
 
-// ── Competitions: which clubs play the four national divisions ───────────────────────────────────
+// ── Competitions: which clubs play the four national divisions in 2026, and in 2027 ─────────────
 // competitions.csv has no names. Identified by famous clubs in league-tables.csv: 124 holds
 // Flamengo and Palmeiras (38 rounds), 136 CRB, Juventude, Cuiabá (Série B), 137 Amazonas, Caxias,
 // Paysandu (Série C, 20 clubs) and 2227 is sixteen tables of six (Série D, 96 clubs).
@@ -153,7 +124,9 @@ const tables = (competition: string) =>
   tableRows
     .filter((r) => r.competition_id === competition)
     .map((r) =>
-      (JSON.parse(r.rows) as { team_id: number }[]).map((x) => clubByTeam.get(String(x.team_id))),
+      (JSON.parse(r.rows) as { position: number; team_id: number }[])
+        .sort((a, b) => a.position - b.position)
+        .map((x) => clubByTeam.get(String(x.team_id))),
     );
 const whole = (competition: string, size: number) => {
   const t = tables(competition).find((x) => x.length === size && x.every(Boolean));
@@ -166,14 +139,103 @@ const serieC = whole('137', 20);
 const groupsD = tables('2227').filter((x) => x.length === 6 && x.every(Boolean)) as string[][];
 if (groupsD.length !== 16) throw new Error(`Série D: ${groupsD.length} groups of six, expected 16`);
 const serieD = groupsD.flat();
-const inDivision = new Map<string, number>(); // club uid -> tier
+const inDivision = new Map<string, number>(); // club uid -> tier in 2026
 [serieA, serieB, serieC, serieD].forEach((d, i) => d.forEach((u) => inDivision.set(u, i + 1)));
 if (inDivision.size !== 156) throw new Error(`divisions overlap or repeat: ${inDivision.size}/156`);
-// Série D groups are the region the draw keeps together: the save has no state for a city, so a
-// city of a Série D club gets the tag of its group ('R0'..'RF'), real regional groups, fake UF.
-const regionOfClub = new Map<string, string>();
-groupsD.forEach((g, i) =>
-  g.forEach((u) => regionOfClub.set(u, 'R' + i.toString(16).toUpperCase())),
+
+// 2026 promotion and relegation (05 §8), from the save's own finished season.
+type Tie = { clubs: [string, string]; goals: Record<string, number> };
+const fixturesOf = (competition: string) =>
+  fixtureRows.filter((r) => r.competition_id === competition && r.played === 'true');
+const clubOfTeam = (t: string) => {
+  const u = clubByTeam.get(t);
+  if (!u) throw new Error(`fixture team ${t} has no club`);
+  return u;
+};
+/** Two-leg ties: the matches grouped by pair, goals added up (no away-goals rule). */
+function tiesOf(rows: Record<string, string>[]): Tie[] {
+  const m = new Map<string, Tie>();
+  for (const r of rows) {
+    const [h, a] = [clubOfTeam(r.home_team_id!), clubOfTeam(r.away_team_id!)];
+    const key = [h, a].sort().join('|');
+    const t = m.get(key) ?? { clubs: [h, a].sort() as [string, string], goals: { [h]: 0, [a]: 0 } };
+    t.goals[h]! += num(r.home_goals);
+    t.goals[a]! += num(r.away_goals);
+    m.set(key, t);
+  }
+  return [...m.values()];
+}
+/** Winner on aggregate; a level aggregate goes to `tie` (the save's fixtures hold no penalties). */
+const winnerOf = (t: Tie, tie: (a: string, b: string) => string) =>
+  t.goals[t.clubs[0]]! === t.goals[t.clubs[1]]!
+    ? tie(...t.clubs)
+    : t.goals[t.clubs[0]]! > t.goals[t.clubs[1]]!
+      ? t.clubs[0]
+      : t.clubs[1];
+const better = (table: string[]) => (a: string, b: string) =>
+  table.indexOf(a) < table.indexOf(b) ? a : b;
+
+// Série B: two up direct and two through the play-off (3rd v 6th, 4th v 5th). The play-off is every
+// match of competition 136 outside the 38-round stage.
+const stageSizes = new Map<string, number>();
+for (const r of fixturesOf('136'))
+  stageSizes.set(r.stage_id!, (stageSizes.get(r.stage_id!) ?? 0) + 1);
+const bMain = [...stageSizes].sort((x, y) => y[1] - x[1])[0]![0];
+const bPlayoff = tiesOf(fixturesOf('136').filter((r) => r.stage_id !== bMain));
+if (
+  bPlayoff.length !== 2 ||
+  !bPlayoff.every((t) => t.clubs.every((u) => serieB.indexOf(u) >= 2 && serieB.indexOf(u) <= 5))
+)
+  throw new Error('Série B play-off: expected two ties between 3rd and 6th');
+const bUp = [...serieB.slice(0, 2), ...bPlayoff.map((t) => winnerOf(t, better(serieB)))];
+// Série C: the top two of each group of four go up; the bottom two of the 20-club table go down.
+const groupsC = tables('137').filter((x) => x.length === 4 && x.every(Boolean)) as string[][];
+if (groupsC.length !== 2) throw new Error(`Série C: ${groupsC.length} groups of four, expected 2`);
+const cUp = groupsC.flatMap((g) => g.slice(0, 2));
+const cDown = serieC.slice(18);
+// Série D: the four semi-finalists go up, and so do the two winners of the play-off between the four
+// quarter-final losers (six, 05 §8).
+const dRounds = fixturesOf('2227');
+const clubsIn = (round: string) =>
+  new Set(
+    dRounds
+      .filter((r) => r.round === round)
+      .flatMap((r) => [clubOfTeam(r.home_team_id!), clubOfTeam(r.away_team_id!)]),
+  );
+const semis = clubsIn('semi_final');
+const quarterLosers = new Set([...clubsIn('quarter_final')].filter((u) => !semis.has(u)));
+const dPlayoff = tiesOf(
+  dRounds.filter(
+    (r) =>
+      quarterLosers.has(clubOfTeam(r.home_team_id!)) &&
+      quarterLosers.has(clubOfTeam(r.away_team_id!)),
+  ),
+);
+if (semis.size !== 4 || quarterLosers.size !== 4 || dPlayoff.length !== 2)
+  throw new Error('Série D knockout: expected 4 semi-finalists and a play-off of 2 ties');
+const dUp = [
+  ...semis,
+  ...dPlayoff.map((t) =>
+    winnerOf(t, () => {
+      throw new Error('Série D play-off level on aggregate: penalties are not in the save');
+    }),
+  ),
+];
+const aDown = serieA.slice(16);
+const bDown = serieB.slice(16);
+const without = (xs: string[], ...out: string[][]) =>
+  xs.filter((u) => !out.some((o) => o.includes(u)));
+const reputation = new Map(clubRows.map((c) => [c.uid, num(c.reputation)]));
+const seeded = (xs: string[]) =>
+  [...xs].sort((a, b) => reputation.get(b)! - reputation.get(a)! || Number(a) - Number(b));
+const a27 = seeded([...without(serieA, aDown), ...bUp]);
+const b27 = seeded([...without(serieB, bUp, bDown), ...aDown, ...cUp]);
+const c27 = seeded([...without(serieC, cUp, cDown), ...bDown, ...dUp]);
+const d27keep = [...without(serieD, dUp), ...cDown];
+if ([a27.length, b27.length, c27.length].join() !== '20,20,24' || d27keep.length !== 92)
+  throw new Error(`2027 divisions: ${[a27, b27, c27, d27keep].map((x) => x.length)}`);
+report.notes.push(
+  `2026 -> 2027 (from the save's final tables and knockouts): Série A down ${aDown.length}, Série B up ${bUp.length} (2 direct + 2 play-off) and down ${bDown.length}, Série C up ${cUp.length} and down ${cDown.length}, Série D up ${dUp.length} (4 semi-finalists + 2 play-off winners). Série C 2027 has 24 clubs, as 05 §8.`,
 );
 
 // ── Clubs in scope ───────────────────────────────────────────────────────────────────────────────
@@ -183,14 +245,61 @@ const brazilianMen = (u: string) => {
   const c = clubById.get(u);
   return c !== undefined && c.nation_id === BRAZIL && c.gender === 'men';
 };
-const squadOf = new Map<string, Record<string, string>[]>();
+// Squads (MC-017, 03 §1.3, market MAX_SQUAD = 42): the senior squad is FM's first team
+// (team_slot 0). Reserve and U18 slots (1, 2) stay out; a club with fewer than MIN_SQUAD seniors
+// is topped up from its reserves, best first; a club above MAX_SQUAD loses its lowest-rated.
+const MIN_SQUAD = 22;
+const MAX_SQUAD = 42;
+const byClub = new Map<string, Record<string, string>[]>();
 for (const p of playerRows) {
   if (!p.club_uid) drop('player without club');
   else if (!brazilianMen(p.club_uid)) drop('player at a club outside the Brazilian men clubs');
-  else (squadOf.get(p.club_uid) ?? squadOf.set(p.club_uid, []).get(p.club_uid)!).push(p);
+  else (byClub.get(p.club_uid) ?? byClub.set(p.club_uid, []).get(p.club_uid)!).push(p);
 }
-const scope = new Set<string>([...squadOf.keys(), ...inDivision.keys()]);
-for (const u of inDivision.keys())
+const ability = (p: Record<string, string>) => num(p.ability_current);
+const isKeeper = (p: Record<string, string>) => num(p.positions_gk) >= 15;
+const squadOf = new Map<string, Record<string, string>[]>();
+for (const [uid, rows] of byClub) {
+  const senior = rows.filter((p) => p.team_slot === '0');
+  const rest = rows.filter((p) => p.team_slot !== '0').sort((a, b) => ability(b) - ability(a));
+  while (senior.length < MIN_SQUAD && rest.length) {
+    senior.push(rest.shift()!);
+    est('squad: reserve promoted to reach 22 seniors');
+  }
+  // two keepers at least: the best reserve keeper comes up when the first team has fewer
+  while (senior.filter(isKeeper).length < 2 && rest.some(isKeeper)) {
+    senior.push(rest.splice(rest.findIndex(isKeeper), 1)[0]!);
+    est('squad: reserve keeper promoted to reach 2 keepers');
+  }
+  for (let i = 0; i < rest.length; i++)
+    drop('player in a reserve or U18 slot, outside the senior squad');
+  if (senior.length > MAX_SQUAD) {
+    senior.sort((a, b) => ability(b) - ability(a));
+    const kept = senior.slice(0, MAX_SQUAD);
+    const cut = senior.slice(MAX_SQUAD);
+    // never trim away the second keeper
+    while (kept.filter(isKeeper).length < 2 && cut.some(isKeeper)) {
+      const gk = cut.splice(cut.findIndex(isKeeper), 1)[0]!;
+      const out = [...kept].reverse().find((p) => !isKeeper(p))!;
+      kept.splice(kept.indexOf(out), 1, gk);
+      cut.push(out);
+    }
+    for (let i = 0; i < cut.length; i++)
+      drop('senior player over the 42 squad limit (lowest rated)');
+    squadOf.set(uid, kept);
+  } else squadOf.set(uid, senior);
+}
+// Série D 2027 has 96 places and 92 known members: the four best-reputed clubs of the save outside
+// every division (state-championship qualifiers in real life) fill it.
+const placed = new Set([...a27, ...b27, ...c27, ...d27keep]);
+const fill = seeded([...squadOf.keys()].filter((u) => !placed.has(u))).slice(
+  0,
+  96 - d27keep.length,
+);
+const d27 = seeded([...d27keep, ...fill]);
+report.estimated['division: Série D 2027 place filled by an outside club'] = fill.length;
+const scope = new Set<string>([...squadOf.keys(), ...a27, ...b27, ...c27, ...d27]);
+for (const u of scope)
   if (!brazilianMen(u)) throw new Error(`division club ${u} is not a Brazilian men club`);
 
 // ── Players ──────────────────────────────────────────────────────────────────────────────────────
@@ -369,17 +478,28 @@ function positionsOf(p: Record<string, string>) {
 }
 
 /**
- * FM trait -> engine trait. Everything else (killer balls, channels, weaker foot...) is dropped
- * and counted; "unknown" is a trait bit the export could not name.
+ * FM trait (PPM) -> engine trait, by the save's numeric `traits_code`. The export names only 16 of
+ * the 63 codes (`unknown` for the rest); comparing code with name on every player that has both
+ * gives the first block, which is certain. The second block is INFERRED from what the players who
+ * carry the code look like (mean z-score of attributes, positions, feet) and is marked as such in
+ * the report: 3 (off_the_ball +1.3, forwards), 6 (marking, tackling, DM/MC), 17 (temperament
+ * -1.1, sportsmanship -1.0), 57 and 58 (left and right wing positions; right foot 92 / left foot
+ * 94, so they cut inside). Everything else (killer balls, channels, weaker foot...) is dropped and
+ * counted.
  */
-const TRAIT_MAP: Record<string, (typeof TRAITS)[number]> = {
-  shoots_from_distance: 'shootsFromDistance',
-  runs_with_ball_often: 'triesDribbles',
-  knocks_ball_past_opponent: 'triesDribbles',
-  gets_forward_whenever_possible: 'getsIntoBox',
-  likes_to_try_to_beat_offside_trap: 'getsIntoBox',
-  dives_into_tackles: 'divesIntoTackles',
-  dictates_tempo: 'holdsBall',
+const TRAIT_CODE: Record<number, { trait: (typeof TRAITS)[number]; certain: boolean }> = {
+  5: { trait: 'getsIntoBox', certain: true }, // gets_forward_whenever_possible
+  8: { trait: 'shootsFromDistance', certain: true },
+  13: { trait: 'getsIntoBox', certain: true }, // likes_to_try_to_beat_offside_trap
+  22: { trait: 'holdsBall', certain: true }, // dictates_tempo
+  27: { trait: 'triesDribbles', certain: true }, // knocks_ball_past_opponent
+  37: { trait: 'divesIntoTackles', certain: true },
+  51: { trait: 'triesDribbles', certain: true }, // runs_with_ball_often
+  3: { trait: 'getsIntoBox', certain: false },
+  6: { trait: 'playsSimple', certain: false },
+  17: { trait: 'arguesWithReferee', certain: false },
+  57: { trait: 'cutsInside', certain: false },
+  58: { trait: 'cutsInside', certain: false },
 };
 const droppedTraits: Record<string, number> = {};
 
@@ -440,11 +560,19 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
     20,
     36,
   );
+  const traitCodes = (p.traits_code ? p.traits_code.split(';') : []).map(Number);
+  const names = p.traits ? p.traits.split(';') : [];
   const traits = [
     ...new Set(
-      (p.traits ? p.traits.split(';') : []).flatMap((t) => {
-        if (TRAIT_MAP[t]) return [TRAIT_MAP[t]!];
-        if (t !== '' && t !== 'unknown') droppedTraits[t] = (droppedTraits[t] ?? 0) + 1;
+      traitCodes.flatMap((code, i) => {
+        const m = TRAIT_CODE[code];
+        if (m) {
+          if (!m.certain) est('traits: engine trait inferred from an unnamed FM trait code');
+          return [m.trait];
+        }
+        const name = names[i] ?? 'unknown';
+        const key = name === 'unknown' ? `code ${code} (unnamed)` : name;
+        droppedTraits[key] = (droppedTraits[key] ?? 0) + 1;
         return [];
       }),
     ),
@@ -543,15 +671,139 @@ const SPONSOR_NAME: Record<string, string> = {
 };
 
 const hashByte = (s: string, i: number) => createHash('sha1').update(s).digest()[i]!;
-/** Colours are not in the save: a deterministic pair from the club uid (not the real colours). */
+/** Fallback when Wikidata has no official colour: a deterministic pair from the club uid (NOT the real colours). */
 const colourOf = (uid: string, k: number) =>
   '#' +
   [0, 1, 2]
     .map((i) => (48 + (hashByte(uid, k * 3 + i) % 176)).toString(16).padStart(2, '0'))
     .join('');
 
-const root = rngFrom(20261117);
+// ── Geography: scripts/club-pack/enrich-fm-clubs.ts -> data/br-club-geo.json (Wikidata + openfootball)
+type GeoCity = {
+  name: string;
+  state: string | null;
+  lat: number | null;
+  lon: number | null;
+  population: number | null;
+  altitudeM: number | null;
+};
+const geo = JSON.parse(
+  readFileSync(new URL('./data/br-club-geo.json', import.meta.url), 'utf8'),
+) as {
+  clubs: Record<
+    string,
+    {
+      qid: string;
+      city?: string;
+      stadium?: { name: string | null; capacity: number | null };
+      colours?: string[];
+    }
+  >;
+  cities: Record<string, GeoCity>;
+  openfootball: Record<
+    string,
+    { city: string; state: string | null; stadium?: { name: string; capacity: number } }
+  >;
+};
+const slug = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 const cities = new Map<string, Pack['cities'][number]>();
+// PARÂMETRO: neutral climate and a flat income for every city (no source in the save or in the
+// open data used here; IBGE income and INMET climate would be the next sources).
+const NEUTRAL = Array.from({ length: 12 }, () => ({ rainMm: 100, tempC: 22, humidity: 70 }));
+function addCity(id: string, c: GeoCity): string {
+  if (!cities.has(id)) {
+    if (c.lat === null || c.lon === null) est('city: no coordinates, centre of Brazil');
+    if (c.population === null) est('city: no population');
+    cities.set(id, {
+      id,
+      name: c.name.slice(0, 80),
+      state: c.state ?? 'XX',
+      population: Math.round(c.population ?? 0),
+      income: 2000,
+      altitudeM: clamp(c.altitudeM ?? 0, 0, 4500),
+      lat: c.lat ?? -15,
+      lon: c.lon ?? -50,
+      climate: NEUTRAL,
+    });
+  }
+  return id;
+}
+const wdCityByName = new Map(
+  Object.entries(geo.cities).map(([q, c]) => [`${slug(c.name)}|${c.state}`, q] as const),
+);
+// 1 Wikidata (club -> headquarters or stadium municipality), 2 openfootball (city of the big clubs),
+// 3 the other clubs of the same FM city_id (one resolved city among them), else a placeholder.
+const cityOfClub = new Map<string, string>();
+for (const uid of scope) {
+  const g = geo.clubs[uid];
+  const of = geo.openfootball[uid];
+  if (g?.city && geo.cities[g.city])
+    cityOfClub.set(uid, addCity(`wd-${g.city}`, geo.cities[g.city]!));
+  else if (of) {
+    const q = wdCityByName.get(`${slug(of.city)}|${of.state}`);
+    cityOfClub.set(
+      uid,
+      q
+        ? addCity(`wd-${q}`, geo.cities[q]!)
+        : addCity(`of-${slug(of.city)}-${(of.state ?? 'xx').toLowerCase()}`, {
+            name: of.city,
+            state: of.state,
+            lat: null,
+            lon: null,
+            population: null,
+            altitudeM: null,
+          }),
+    );
+    est('city: from openfootball (name and state only)');
+  }
+}
+const fmCity = new Map<string, Set<string>>();
+for (const [uid, id] of cityOfClub) {
+  const k = clubById.get(uid)!.city_id!;
+  (fmCity.get(k) ?? fmCity.set(k, new Set()).get(k)!).add(id);
+}
+for (const uid of scope) {
+  const ids = fmCity.get(clubById.get(uid)!.city_id!);
+  if (!cityOfClub.has(uid) && ids?.size === 1) {
+    cityOfClub.set(uid, [...ids][0]!);
+    est('city: taken from another club of the same FM city_id');
+  }
+}
+// What is still unresolved gets a placeholder; a Série D club takes the state of its 2026 group
+// (the regional draw keeps the group together), otherwise 'XX'.
+const stateOfGroupmates = (uid: string) => {
+  const grp = groupsD.find((g) => g.includes(uid));
+  const states = (grp ?? [])
+    .map((u) => cities.get(cityOfClub.get(u) ?? '')?.state)
+    .filter((x): x is string => !!x && x !== 'XX');
+  const n = new Map<string, number>();
+  for (const x of states) n.set(x, (n.get(x) ?? 0) + 1);
+  return [...n].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'XX';
+};
+for (const uid of scope)
+  if (!cityOfClub.has(uid)) {
+    const state = stateOfGroupmates(uid);
+    cityOfClub.set(
+      uid,
+      addCity(`fm-city-${clubById.get(uid)!.city_id}-${state}`, {
+        name: `Cidade ${clubById.get(uid)!.city_id}`,
+        state,
+        lat: null,
+        lon: null,
+        population: null,
+        altitudeM: null,
+      }),
+    );
+    est('city: unresolved placeholder (name "Cidade N")');
+  }
+
+const root = rngFrom(20261117);
 const clubs: PackClub[] = [];
 const staff: Pack['staff'] = [];
 const assignments: Pack['assignments'] = [];
@@ -559,7 +811,7 @@ const governance: Pack['governance'] = [];
 
 // Goal of the board inside a division: rank by reputation, like the dev pack's rank-based goal.
 const goalOf = new Map<string, number>();
-for (const d of [serieA, serieB, serieC, serieD]) {
+for (const d of [a27, b27, c27, d27]) {
   [...d]
     .sort((a, b) => num(clubById.get(b)!.reputation) - num(clubById.get(a)!.reputation))
     .forEach((u, i) => goalOf.set(u, Math.min(d.length, i + 3)));
@@ -576,33 +828,27 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
   const lvl = Math.max(1, Math.min(5, Math.round((strength - 35) / 10)));
   if (!rep) est('club: no reputation, strength 30');
 
-  // City: FM gives only city_id (no names, no state): one placeholder per (city_id, region).
-  const region = regionOfClub.get(uid) ?? 'XX';
-  const cityKey = `fm-city-${c.city_id}${region === 'XX' ? '' : '-' + region}`;
-  if (!cities.has(cityKey))
-    cities.set(cityKey, {
-      id: cityKey,
-      name: `Cidade ${c.city_id}`,
-      state: region,
-      population: 0,
-      income: 2000,
-      altitudeM: 0,
-      lat: -15,
-      lon: -50,
-      // PARÂMETRO: neutral climate for every placeholder city (no source in the save)
-      climate: Array.from({ length: 12 }, () => ({ rainMm: 100, tempC: 22, humidity: 70 })),
-    });
+  const cityKey = cityOfClub.get(uid)!;
 
   // Stadium: the biggest one the club owns or calls home; names are mostly empty in the save.
   const st = (stadiumsOf.get(uid) ?? []).sort(
     (a, b) => num(b.total_capacity) - num(a.total_capacity),
   )[0];
   const capacity = st ? clamp(num(st.total_capacity), 0, 120_000) : 0;
-  if (!st || !capacity) est('stadium: capacity estimated from reputation');
+  if (!capacity && !(geo.clubs[uid]?.stadium?.capacity || geo.openfootball[uid]?.stadium?.capacity))
+    est('stadium: capacity estimated from reputation');
   const shared = st && st.home_club_uids.includes(';');
+  // Name: Wikidata home venue, then openfootball, then the save, then a placeholder. Capacity: the
+  // save when it has one (the game's own number), else Wikidata (P1083), else openfootball.
+  const wdSt = geo.clubs[uid]?.stadium;
+  const ofSt = geo.openfootball[uid]?.stadium;
+  const named = wdSt?.name || ofSt?.name || st?.name;
+  if (!named) est('stadium: name is a placeholder');
+  const openCap = wdSt?.capacity || ofSt?.capacity || 0;
+  if (!capacity && openCap) est('stadium: capacity from Wikidata/openfootball');
   const stadium: PackClub['stadium'] = {
-    name: (st?.name || `Estádio ${c.short_name || c.name}`).slice(0, 80),
-    capacity: capacity || money.capacity,
+    name: (named || `Estádio ${c.short_name || c.name}`).slice(0, 80),
+    capacity: capacity || clamp(openCap, 0, 120_000) || money.capacity,
     pitch: lvl >= 3 ? 'good' : 'average',
     drainage: lvl,
     arrangement: st
@@ -627,13 +873,18 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
   const sp = (sponsorsOf.get(uid) ?? []).filter((s) => num(s.annual_value) > 0 && s.end);
   if (!sp.length) est('sponsors: none in the save');
 
+  const official = geo.clubs[uid]?.colours;
+  if (!official?.length) est('club colours: hash fallback, not the real colours');
+  const colours: PackClub['colours'] = official?.length
+    ? [official[0]!, official[1] ?? (official[0] === '#ffffff' ? '#000000' : '#ffffff')]
+    : [colourOf(uid, 0), colourOf(uid, 1)];
   const body = estimatedBody(r, strength, 'inferred', 'low');
   const club: PackClub = {
     id: `fm-c${uid}`,
     name: c.name.slice(0, 80),
     shortName: (c.short_name || c.name).slice(0, 24),
     cityId: cityKey,
-    colours: [colourOf(uid, 0), colourOf(uid, 1)],
+    colours,
     stadium,
     reputation: clamp(100 * Math.sqrt(Math.min(rep, 8000) / 8000), 0, 100),
     initialCash,
@@ -665,8 +916,26 @@ if (!clubs.length) throw new Error('no clubs');
 // ── Pack ─────────────────────────────────────────────────────────────────────────────────────────
 
 const ids = (list: string[]) => list.map((u) => `fm-c${u}`);
-const competitions = devDivisions(SEASON, [serieA, serieB, serieC, serieD].map(ids));
-['Série A', 'Série B', 'Série C', 'Série D'].forEach((name, i) => (competitions[i]!.name = name));
+const competitions = realDivisions(SEASON, [a27, b27, c27, d27].map(ids));
+
+// Rivals (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID"): HEURISTIC,
+// the up to three best-reputed other clubs of the same FM city_id that are in the pack.
+const byFmCity = new Map<string, string[]>();
+for (const c of clubs) {
+  const k = clubById.get(c.id.slice(4))!.city_id!;
+  (byFmCity.get(k) ?? byFmCity.set(k, []).get(k)!).push(c.id);
+}
+const repOf = new Map(clubs.map((c) => [c.id, c.reputation]));
+for (const c of clubs) {
+  c.rivals = (byFmCity.get(clubById.get(c.id.slice(4))!.city_id!) ?? [])
+    .filter((k) => k !== c.id)
+    .sort((a, b) => repOf.get(b)! - repOf.get(a)! || a.localeCompare(b))
+    .slice(0, 3);
+}
+const rivalStats = {
+  clubsWithRivals: clubs.filter((c) => c.rivals.length).length,
+  largestSameCityGroup: Math.max(...[...byFmCity.values()].map((g) => g.length)),
+};
 
 const draft: Pack = {
   id: 'br-fm26-1',
@@ -703,6 +972,50 @@ writeFileSync(OUT, gz);
 
 // ── Quality report ───────────────────────────────────────────────────────────────────────────────
 
+// Squad validation (03 §1.3 / MC-017, not in club-domain yet): 22..42 seniors, two keepers, the 13
+// positions covered at level 2+. Counted per division of 2027 and for the other clubs.
+const COVERED = 13;
+const tierOf = new Map<string, string>();
+competitions.forEach((c) => c.clubIds.forEach((k) => tierOf.set(k, c.name)));
+const squadCheck: Record<string, Record<string, number>> = {};
+for (const club of clubs) {
+  const sq = players.filter((p) => p.clubId === club.id);
+  const keepers = sq.filter((p) => p.positions[0]!.position === 'GK').length;
+  const covered = new Set(
+    sq.flatMap((p) => p.positions.filter((q) => q.level >= 2).map((q) => q.position)),
+  );
+  const row = (squadCheck[tierOf.get(club.id) ?? 'outside the divisions'] ??= {
+    clubs: 0,
+    below22: 0,
+    above42: 0,
+    fewerThan2Keepers: 0,
+    lessThan13Positions: 0,
+  });
+  row.clubs!++;
+  if (sq.length < MIN_SQUAD) row.below22!++;
+  if (sq.length > MAX_SQUAD) row.above42!++;
+  if (keepers < 2) row.fewerThan2Keepers!++;
+  if (covered.size < COVERED) row.lessThan13Positions!++;
+}
+
+const inDivisions = clubs.filter((c) => tierOf.has(c.id));
+const geoQuality = {
+  divisionClubs: inDivisions.length,
+  withRealCity: inDivisions.filter((c) => !c.cityId.startsWith('fm-city-')).length,
+  withOfficialColours: inDivisions.filter((c) => geo.clubs[c.id.slice(4)]?.colours?.length).length,
+};
+
+const unmappedNations = players.filter((p) => p.nationality === 'XX').length;
+report.notes.push(
+  `nations: ${unmappedNations} players with an unidentified nation (the ${Object.keys(nations).length} ids of fm-nations.json cover every player kept); the pack stores ISO codes only, names are not stored (Intl.DisplayNames('pt-BR') resolves all ${new Set(Object.values(nations)).size} codes when a name is needed)`,
+  'regulations (05 §8): A, B, C (24 clubs in 2027, 28 in 2028) and D as realDivisions(); from 2028 C sends six down and D refills from the ranking: PARÂMETRO, not published',
+  'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
+  'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
+  'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
+  'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
+  'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
+);
+
 const out = {
   pack: pack.id,
   season: pack.season,
@@ -727,6 +1040,9 @@ const out = {
   drops: report.drops,
   estimated: report.estimated,
   droppedFmTraits: droppedTraits,
+  geography: geoQuality,
+  squads: squadCheck,
+  rivals: rivalStats,
   notes: report.notes,
   output: OUT,
 };
