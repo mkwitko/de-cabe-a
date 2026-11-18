@@ -27,6 +27,7 @@ import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { goingWage } from '../market/value';
+import { BASE, priced } from './prices';
 import { bestRoles } from '../player/ratings';
 import type { Intensity } from './training';
 
@@ -171,7 +172,13 @@ const CROP = [3, 3, 4, 5, 6] as const;
  * A club's crop for `season`: fifteen to seventeen years old, well under the first team today,
  * a few of them with a ceiling far above it. Better academies bring more and better.
  */
-export function crop(origin: Pack, clubId: string, seed: number, season: number): PackPlayer[] {
+export function crop(
+  origin: Pack,
+  clubId: string,
+  seed: number,
+  season: number,
+  wages = BASE,
+): PackPlayer[] {
   const club = origin.clubs.find((c) => c.id === clubId)!;
   const level = baseLevels(origin).get(clubId) ?? 40;
   const youth = club.facilities.youth;
@@ -194,7 +201,9 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
     const reach = (base: number) => clamp(level + base + gem + pick(r, 8));
     const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
     // A first contract: two fifths of what the market pays a man of his level today.
-    const wage = Math.round((goingWage(origin, bestRoles(attributes, 1)[0]!.rating) * 40) / 100);
+    const wage = Math.round(
+      (priced(goingWage(origin, bestRoles(attributes, 1)[0]!.rating), wages) * 40) / 100,
+    );
     out.push({
       ...made,
       birthDate: `${season - age}${made.birthDate.slice(4)}`,
@@ -216,6 +225,10 @@ export function crop(origin: Pack, clubId: string, seed: number, season: number)
 export interface SeasonLog {
   season: number;
   growth: string;
+  /** The next season's price rate and indices (prices.ts); absent in logs written before. */
+  rate?: number;
+  prices?: number;
+  wages?: number;
 }
 
 /** What the person did in the season that the growth of their players reads. */
@@ -309,6 +322,6 @@ export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
     if (growth === null || retires(p, seed, season)) continue;
     players.push(develop(p, seed, season, growth));
   }
-  for (const c of origin.clubs) players.push(...crop(origin, c.id, seed, season));
+  for (const c of origin.clubs) players.push(...crop(origin, c.id, seed, season, log.wages));
   return { ...pack, players };
 }

@@ -40,6 +40,7 @@ import { setJudgementClock } from '../market/judgement';
 import { carryCache } from '../lib/pack-cache';
 import { isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
+import { nextPrices, pricesOf } from './prices';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
 import { bestLineup, teamWith, type Lineup } from './squad';
 import {
@@ -400,6 +401,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   );
   const log: SeasonLog = {
     season: played,
+    ...nextPrices(w.seed, year, pricesOf(w)),
     growth: codeOf(
       w.pack,
       {

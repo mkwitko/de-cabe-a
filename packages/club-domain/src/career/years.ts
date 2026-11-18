@@ -9,15 +9,19 @@ import { goingWages } from '../market/value';
 import type { Pack } from '../pack/schema';
 import { evolve, type SeasonLog } from './development';
 import { withMoves, type Moves } from './market';
+import { BASE, priced } from './prices';
+
+/** The opening pack's going wages brought to the market's wage index. */
+const wagesAt = (origin: Pack, index = BASE) => goingWages(origin).map((x) => priced(x, index));
 
 /**
  * The pack for the season after `log.season`. The readings of the old pack are not carried:
  * every level changed. The going wage by level stays the one of the pack the career opened
- * with, the market's fixed yardstick.
+ * with, the market's yardstick, brought to the year's wage index (prices.ts).
  */
 export function yearOn(pack: Pack, origin: Pack, seed: number, log: SeasonLog): Pack {
   const next = evolve(pack, origin, seed, log);
-  recache(next, 'goingWages', WHOLE, goingWages(origin));
+  recache(next, 'goingWages', WHOLE, wagesAt(origin, log.wages));
   return next;
 }
 
@@ -48,6 +52,6 @@ export function rebuildPack(
   }
   for (const log of logs) pack = yearOn(pack, origin, seed, log);
   const moved = withMoves(pack, moves);
-  if (moved !== pack) recache(moved, 'goingWages', WHOLE, goingWages(origin));
+  if (moved !== pack) recache(moved, 'goingWages', WHOLE, goingWages(pack));
   return moved;
 }

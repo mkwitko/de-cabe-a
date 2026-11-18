@@ -7,6 +7,7 @@
  */
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
+import { pricesOf } from '../career/prices';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
 import { thousands } from './value';
@@ -41,7 +42,7 @@ export function budgetOf(w: CareerWorld, clubId: string): Budget {
 
 function readBudget(w: CareerWorld, clubId: string): Budget {
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
-  const income = seasonIncome(club, tierOfClub(w, clubId));
+  const income = seasonIncome(club, tierOfClub(w, clubId), pricesOf(w).prices);
   const risk = club.profile.financialRisk;
   return {
     income,
