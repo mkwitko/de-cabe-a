@@ -178,10 +178,11 @@ export function crop(
   seed: number,
   season: number,
   wages = BASE,
+  youthLevel?: number,
 ): PackPlayer[] {
   const club = origin.clubs.find((c) => c.id === clubId)!;
   const level = baseLevels(origin).get(clubId) ?? 40;
-  const youth = club.facilities.youth;
+  const youth = youthLevel ?? club.facilities.youth;
   const root = fork(rngFrom(seed), `crop:${season}:${clubId}`);
   const out: PackPlayer[] = [];
   for (let k = 0; k < CROP[youth - 1]!; k++) {
@@ -229,7 +230,15 @@ export interface SeasonLog {
   rate?: number;
   prices?: number;
   wages?: number;
+  /** Each club's academy level for the crop, one digit a club in the opening pack's order. */
+  youth?: string;
 }
+
+/** The academies' levels as `SeasonLog.youth` keeps them. */
+export const youthOf = (origin: Pack, pack: Pack): string => {
+  const now = new Map(pack.clubs.map((c) => [c.id, c.facilities.youth]));
+  return origin.clubs.map((c) => now.get(c.id) ?? c.facilities.youth).join('');
+};
 
 /** What the person did in the season that the growth of their players reads. */
 export interface Mine {
@@ -322,6 +331,9 @@ export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
     if (growth === null || retires(p, seed, season)) continue;
     players.push(develop(p, seed, season, growth));
   }
-  for (const c of origin.clubs) players.push(...crop(origin, c.id, seed, season, log.wages));
+  origin.clubs.forEach((c, i) => {
+    const youth = log.youth ? Number(log.youth[i]) : undefined;
+    players.push(...crop(origin, c.id, seed, season, log.wages, youth));
+  });
   return { ...pack, players };
 }

@@ -34,13 +34,14 @@ import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
 import { returnLoans, type Loan } from '../market/loans';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
-import { codeOf, type SeasonLog } from './development';
+import { codeOf, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { carryCache } from '../lib/pack-cache';
 import { isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
 import { nextPrices, pricesOf } from './prices';
+import { planSeason, settleSeason, withClubs, type ClubState } from './clubs';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
 import { bestLineup, teamWith, type Lineup } from './squad';
 import {
@@ -107,6 +108,8 @@ export interface CareerWorld {
   forLoan?: string[];
   /** Seasons in a row each club ended over the fair play limit; absent when none (fairplay.ts). */
   fairplay?: Record<string, number>;
+  /** Every club's cash, directors and structure; absent before the first season's turn. */
+  clubs?: Record<string, ClubState>;
   /** Clubs that found nobody worth buying in the window `span` and sit the rest of it out. */
   idle?: { span: string; clubs: string[] };
 }
@@ -302,17 +305,20 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
 }
 
 /** The person's division table as it stands; in a group phase, their group. */
-export function divisionTable(w: CareerWorld): { name: string; rows: Row[] } {
-  const div = nationalDivisions(w.pack).find((x) => w.season.members[x.id]?.includes(w.clubId));
+export const divisionTable = (w: CareerWorld) => divisionTableOf(w, w.clubId);
+
+/** The table of a club's national division as it stands, or as it ended. */
+export function divisionTableOf(w: CareerWorld, clubId: string): { name: string; rows: Row[] } {
+  const div = nationalDivisions(w.pack).find((x) => w.season.members[x.id]?.includes(clubId));
   const comp = div && w.season.competitions.find((c) => c.id === div.id);
   if (!div || !comp) return { name: '', rows: [] };
   const first = comp.phases[0]!;
   const done = w.season.results[comp.id]?.[first.id];
-  const finished = done?.tables.find((t) => t.some((r) => r.clubId === w.clubId));
+  const finished = done?.tables.find((t) => t.some((r) => r.clubId === clubId));
   if (finished) return { name: div.name, rows: finished };
   const run = w.season.running.get(`${comp.id}/${first.id}`);
   const group =
-    (run?.kind === 'table' ? run.groups.find((g) => g.includes(w.clubId)) : undefined) ??
+    (run?.kind === 'table' ? run.groups.find((g) => g.includes(clubId)) : undefined) ??
     w.season.members[div.id]!;
   const inGroup = new Set(group);
   // Display order only; phase outcomes use the competition's own tie-breakers.
@@ -354,6 +360,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
       confidence: Math.max(0, judged.confidence + verdict.board),
       last: [...(judged.last ?? []), { kind: 'fairplay', value: verdict.board }],
     };
+  // Every other club's accounts for the season, with the squads it was played with.
+  settleSeason(w, (id) => {
+    const rows = divisionTableOf(w, id).rows;
+    return { position: rows.findIndex((r) => r.clubId === id) + 1, places: rows.length };
+  });
   // Loans end with the season: everyone goes back before the contracts are looked at.
   returnLoans(w);
   // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
@@ -402,6 +413,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   const log: SeasonLog = {
     season: played,
     ...nextPrices(w.seed, year, pricesOf(w)),
+    youth: youthOf(w.origin, w.pack),
     growth: codeOf(
       w.pack,
       {
@@ -420,6 +432,10 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   };
   w.log = [...(w.log ?? []), log];
   w.pack = yearOn(w.pack, w.origin, w.seed, log);
+  // Works finished, directors elected, the money to spare split (clubs.ts); the pack then
+  // carries the structure as it now stands.
+  planSeason(w, new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)));
+  w.pack = withClubs(w.pack, w.clubs);
   // The moves in force stay (each player's club and contract); those of players gone do not.
   const alive = new Set(w.pack.players.map((p) => p.id));
   w.moves = Object.fromEntries(Object.entries(w.moves ?? {}).filter(([id]) => alive.has(id)));

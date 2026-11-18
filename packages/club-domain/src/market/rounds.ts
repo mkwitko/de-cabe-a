@@ -33,6 +33,7 @@ import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './
 import { lendListed } from './loans';
 import { ABROAD } from './abroad';
 import { answerBid } from './talks';
+import { boardOverpay } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** The terms of a buying club's choice, in points. */
@@ -298,7 +299,9 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
     const worth = seenValue(w.pack, buyerId, p, season);
     const most = Math.min(
       available(w, buyerId),
-      thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
+      thousands(
+        (worth * (100 + Math.round(need.urgency / 2) + hand.pays + boardOverpay(w, buyerId))) / 100,
+      ),
     );
     let offer = Math.min(most, thousands((worth * hand.opens) / 100));
     for (let round = 1; round <= MAX_ROUNDS && fee < 0; round++) {
@@ -399,7 +402,9 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         const worth = seenValue(w.pack, id, choice.p, season);
         const most = Math.min(
           available(w, id),
-          thousands((worth * (100 + Math.round(need.urgency / 2) + hand.pays)) / 100),
+          thousands(
+            (worth * (100 + Math.round(need.urgency / 2) + hand.pays + boardOverpay(w, id))) / 100,
+          ),
         );
         const clause = choice.p.contract?.releaseFee ?? null;
         const pays = clause !== null && clause <= most;

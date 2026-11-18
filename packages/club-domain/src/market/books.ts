@@ -8,6 +8,7 @@
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
 import { pricesOf } from '../career/prices';
+import type { Horizon } from '../career/clubs';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
 import { thousands } from './value';
@@ -40,15 +41,32 @@ export function budgetOf(w: CareerWorld, clubId: string): Budget {
   return b;
 }
 
+/** A club's income for the season in the division it plays, at the season's prices. */
+export const incomeOf = (w: CareerWorld, clubId: string) =>
+  seasonIncome(
+    w.pack.clubs.find((c) => c.id === clubId)!,
+    tierOfClub(w, clubId),
+    pricesOf(w).prices,
+  );
+
+/** Share of the directors' squad money a short-sighted board lets go to wages. */
+const KITTY_WAGES: Record<Horizon, number> = { short: 40, medium: 20, long: 10 };
+
 function readBudget(w: CareerWorld, clubId: string): Budget {
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
-  const income = seasonIncome(club, tierOfClub(w, clubId), pricesOf(w).prices);
+  const income = incomeOf(w, clubId);
   const risk = club.profile.financialRisk;
+  const s = clubId === w.clubId ? undefined : w.clubs?.[clubId];
+  const kitty = s?.kitty ?? 0;
+  const toWages = s ? Math.round((kitty * KITTY_WAGES[s.directors.horizon]) / 100) : 0;
+  // In the red, the fees wait for the debt: half of what is owed comes off them.
+  const owed = s && s.cash < 0 ? Math.round(-s.cash / 2) : 0;
   return {
     income,
-    // 6% to 16% of the income goes to fees; 55% to 75% may go to wages.
-    transfer: thousands((income * (6 + risk / 10)) / 100),
-    wageCap: Math.round((income * (55 + risk / 5)) / 100 / 12),
+    // 6% to 16% of the income goes to fees; 55% to 75% may go to wages; plus what the
+    // directors put in from the cash.
+    transfer: Math.max(0, thousands((income * (6 + risk / 10)) / 100) + kitty - toWages - owed),
+    wageCap: Math.round(((income * (55 + risk / 5)) / 100 + toWages) / 12),
   };
 }
 
