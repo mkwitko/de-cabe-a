@@ -25,7 +25,7 @@ import {
 } from './squad';
 import { formationOf } from '../match/fixture-input';
 import { MISSING, rivalOut } from './health';
-import { clubStrength } from '../match/quick';
+import { clubStrengthOf } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
 
@@ -148,7 +148,7 @@ export function clubLevel(pack: Pack, clubId: string): { strength: number; eleve
       eleven: l.xi.reduce((s, id, i) => s + fit.get(id)![i]!, 0) / 16,
     };
   } catch {
-    const plain = clubStrength(pack).get(clubId) ?? 50;
+    const plain = clubStrengthOf(pack, clubId) ?? 50;
     return { strength: plain, eleven: (plain * 11) / 16 };
   }
 }

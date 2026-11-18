@@ -4,10 +4,11 @@ import { roleRating } from '../player/ratings';
 import { PackSchema } from '../pack/schema';
 import { SQUAD, generatePlayer, generateSquad } from './player';
 import { matchCount } from '../competition/season';
-import { generateDevPack, generateMiniPack, packChecksum } from './pack';
 import { realDivisions } from './competitions';
 import { CompetitionSchema } from '../competition/schema';
 import { regulationsFor } from '../competition/outcomes';
+import { generateDevPack, generateMiniPack, packChecksum, slimPack } from './pack';
+import { nextDecision, openCareer, playDecision } from '../career/advance';
 
 describe('MC-013 generators', () => {
   it('same command, same result', () => {
@@ -148,5 +149,22 @@ describe('realDivisions (05 §8, 2027 formats)', () => {
           expect(days.size, `${c.id} ${p.id} ${year}`).toBeGreaterThanOrEqual(legs);
         }
     }
+  });
+});
+
+describe('slimPack', () => {
+  it('keeps the checksum, is smaller, and plays the same career as the full pack', () => {
+    const pack = generateDevPack();
+    const slim = slimPack(pack);
+    expect(slim.checksum).toBe(pack.checksum);
+    expect(JSON.stringify(slim).length).toBeLessThan(JSON.stringify(pack).length);
+    const play = (p: typeof pack) => {
+      const w = openCareer(p, 7, p.clubs[0]!.id);
+      const d = nextDecision(w);
+      if (d.kind === 'match') playDecision(w, d);
+      const { pack: _a, origin: _b, ...rest } = w;
+      return JSON.stringify(rest);
+    };
+    expect(play(slim)).toBe(play(pack));
   });
 });

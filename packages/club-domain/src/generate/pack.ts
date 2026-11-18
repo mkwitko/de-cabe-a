@@ -342,3 +342,14 @@ export function generateDevPack(seed = 20261116): Pack {
 
 /** sha256 of the pack's JSON with the checksum field blanked. */
 export const packChecksum = (pack: Pack) => sha256Hex(JSON.stringify({ ...pack, checksum: '' }));
+
+/**
+ * The pack as the browser downloads it: per-field provenance marks (`field`, about half of a real
+ * pack's bytes) are data-quality metadata the career never reads, so they are dropped. The file
+ * is still named by the full pack's `checksum` (the version the API stores); the checksum does not
+ * cover the slim bytes and the simulation does not depend on what was dropped.
+ */
+export const slimPack = (pack: Pack): Pack => ({
+  ...pack,
+  players: pack.players.map((p) => ({ ...p, field: {} })),
+});

@@ -36,6 +36,12 @@ export function quickResult(seed: number, home: number, away: number): Outcome {
   };
 }
 
+const top16 = (rs: number[]) =>
+  rs
+    .sort((a, b) => b - a)
+    .slice(0, 16)
+    .reduce((a, b) => a + b, 0) / 16;
+
 export function clubStrength(pack: Pack): Map<string, number> {
   const by = new Map<string, number[]>();
   for (const p of pack.players)
@@ -43,13 +49,13 @@ export function clubStrength(pack: Pack): Map<string, number> {
       (by.get(p.clubId) ?? by.set(p.clubId, []).get(p.clubId)!).push(
         bestRoles(p.attributes, 1)[0]!.rating,
       );
-  return new Map(
-    [...by].map(([c, rs]) => [
-      c,
-      rs
-        .sort((a, b) => b - a)
-        .slice(0, 16)
-        .reduce((a, b) => a + b, 0) / 16,
-    ]),
-  );
+  return new Map([...by].map(([c, rs]) => [c, top16(rs)]));
 }
+
+/** `clubStrength` of one club, rating only its own players (not the whole world's). */
+export const clubStrengthOf = (pack: Pack, clubId: string): number | undefined => {
+  const rs = pack.players
+    .filter((p) => p.clubId === clubId)
+    .map((p) => bestRoles(p.attributes, 1)[0]!.rating);
+  return rs.length ? top16(rs) : undefined;
+};

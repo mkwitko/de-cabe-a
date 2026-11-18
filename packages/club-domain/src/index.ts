@@ -8,6 +8,7 @@ export {
   generateDevPack,
   generateMiniPack,
   packChecksum,
+  slimPack,
   staffing,
 } from './generate/pack';
 export { teamForMatch } from './match/lineup';
