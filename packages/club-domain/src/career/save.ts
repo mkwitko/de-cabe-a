@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 12;
+export const CAREER_RULES_VERSION = 13;
 
 interface Saved {
   v: number;
@@ -47,6 +47,7 @@ interface Saved {
   bids?: CareerWorld['bids'];
   listed?: CareerWorld['listed'];
   cold?: CareerWorld['cold'];
+  scouting?: CareerWorld['scouting'];
   idle?: CareerWorld['idle'];
   loans?: CareerWorld['loans'];
   forLoan?: CareerWorld['forLoan'];
@@ -130,6 +131,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.bids && { bids: w.bids }),
     ...(w.listed && { listed: w.listed }),
     ...(w.cold && { cold: w.cold }),
+    ...(w.scouting && { scouting: w.scouting }),
     ...(w.idle && { idle: w.idle }),
     ...(w.loans && { loans: w.loans }),
     ...(w.forLoan && { forLoan: w.forLoan }),
@@ -185,6 +187,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.bids && { bids: saved.bids }),
     ...(saved.listed && { listed: saved.listed }),
     ...(saved.cold && { cold: saved.cold }),
+    ...(saved.scouting && { scouting: saved.scouting }),
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),

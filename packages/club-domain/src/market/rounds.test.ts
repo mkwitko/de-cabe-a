@@ -41,9 +41,10 @@ describe('the market between clubs (07 §6, 04 §8)', () => {
       // Nobody of the person's club is taken without asking, and the person buys for themselves.
       expect([d.from, d.to]).not.toContain(clubId);
       expect(d.why.need).toBeGreaterThanOrEqual(14);
+      // A hole clears the market's bar (36); an upgrade of a club with money to spare a lower one.
       expect(
         d.why.need + d.why.fit + d.why.growth + d.why.resale - d.why.cost - d.why.wages,
-      ).toBeGreaterThanOrEqual(36);
+      ).toBeGreaterThanOrEqual(6);
       // The fee stays in reach of what he is worth: from a spare sold by a weak office to a
       // key man bought by one that overpays.
       const value = marketValue(

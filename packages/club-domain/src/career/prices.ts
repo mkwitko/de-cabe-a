@@ -4,14 +4,14 @@
  * tickets, prizes, works, and the going wage of the market, which in football runs a point
  * ahead of prices. Contracts already signed stay as written; the next renewal or signing pays
  * the new price. The indices are kept in the season's log (`SeasonLog`), so a loaded career
- * walks the same prices. Integers; the base of an index is `BASE`; every number is a PARÂMETRO.
+ * walks the same prices. Integers; the base of an index is `PRICE_BASE`; every number is a PARÂMETRO.
  */
 import { fork, pick, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from './advance';
 import type { SeasonLog } from './development';
 
 /** An index of 10 000 is the price of the season the career opened in. */
-export const BASE = 10_000;
+export const PRICE_BASE = 10_000;
 /** The yearly rate, in tenths of a percent: 3.0% to 7.0%. */
 const RATE_MIN = 30;
 const RATE_MAX = 70;
@@ -27,7 +27,7 @@ export interface Prices {
   wages: number;
 }
 
-const OPENING: Prices = { rate: 45, prices: BASE, wages: BASE };
+const OPENING: Prices = { rate: 45, prices: PRICE_BASE, wages: PRICE_BASE };
 
 /** Prices of the season after `log`'s, or of the opening season with no log. */
 const pricesIn = (log: readonly SeasonLog[]): Prices => {
@@ -52,4 +52,4 @@ export function nextPrices(seed: number, year: number, now: Prices): Prices {
 }
 
 /** An amount at the opening season's prices, brought to an index. */
-export const priced = (amount: number, index: number) => Math.round((amount * index) / BASE);
+export const priced = (amount: number, index: number) => Math.round((amount * index) / PRICE_BASE);

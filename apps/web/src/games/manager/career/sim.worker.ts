@@ -52,6 +52,11 @@ import {
   loanFee,
   ceilingRange,
   levelRange,
+  personKnows,
+  personReading,
+  scoutAreas,
+  scoutsOf,
+  sendScout,
   seenLevel,
   myWageRoom,
   squadPlanOf,
@@ -314,7 +319,8 @@ export type MarketAct =
   | { do: 'list' | 'lend'; playerId: string; on: boolean }
   | { do: 'borrow'; playerId: string }
   | { do: 'bid'; bidId: string; answer: 'accept' | 'refuse' }
-  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number };
+  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number }
+  | { do: 'scout'; area: string };
 
 /** A player as the market lists him. */
 export interface MarketPlayer {
@@ -337,6 +343,8 @@ export interface MarketPlayer {
   potential: [number, number];
   /** His release clause; null without one. */
   release: number | null;
+  /** How much the club knows of him, 0..100 (market/scouting.ts); null for its own players. */
+  knowledge: number | null;
 }
 export interface MarketView {
   open: boolean;
@@ -391,11 +399,20 @@ export interface MarketView {
     office: number;
     why: Why;
   }[];
+  /** The club's scouts: how many it has, who is away and where they can go. */
+  scouting: {
+    scouts: number;
+    away: { area: string; label: string; back: string }[];
+    areas: { area: string; label: string }[];
+    /** Players in the club's files from scouts' reports. */
+    known: number;
+  };
   /** The other side's answer to what the person just did. */
   said?:
     | { at: 'fee'; answer: FeeAnswer }
     | { at: 'terms'; answer: TermsAnswer; name: string }
     | { at: 'bid'; answer: BidAnswer; name: string }
+    | { at: 'scout'; area: string }
     /** What the person asked could not be done; the reason, for the screen to say. */
     | { at: 'no'; reason: string };
 }
@@ -404,6 +421,13 @@ const MARKET_ROWS = 40;
 const NO_CLUB: ClubFace = { name: '', shortName: '', colours: ['#3a4a42', '#9aa59f'] };
 const NEWS_ROWS = 15;
 
+/** A scouting area for the screen: a division's name, or the state's code. */
+export function areaLabel(w: CareerWorld, area: string): string {
+  if (!area.startsWith('tier:')) return area;
+  const tier = Number(area.slice(5));
+  return nationalDivisions(w.pack).find((d) => d.tier === tier)?.name ?? area;
+}
+
 function marketView(w: CareerWorld, position: string | null): MarketView {
   const season = w.season.season;
   const clubs = new Map<string, ClubFace>([
@@ -411,21 +435,26 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
     ...ABROAD_FACES,
   ]);
   const byId = new Map(w.pack.players.map((p) => [p.id, p]));
-  const row = (p: Pack['players'][number]): MarketPlayer => ({
-    id: p.id,
-    name: p.knownAs ?? p.name,
-    age: season - Number(p.birthDate.slice(0, 4)),
-    position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
-    rating: seenLevel(w.pack, w.clubId, p),
-    range: levelRange(w.pack, w.clubId, p),
-    potential: ceilingRange(w.pack, w.clubId, p),
-    release: p.contract?.releaseFee ?? null,
-    wage: p.contract?.wage ?? 0,
-    value: marketValue(w.pack, p, season),
-    club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
-    free: p.clubId === null,
-    until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
-  });
+  const row = (p: Pack['players'][number]): MarketPlayer => {
+    // Another club's player is read through what the club knows of him (scouts, matches).
+    const rep = p.clubId === w.clubId ? null : personReading(w, p);
+    return {
+      id: p.id,
+      name: p.knownAs ?? p.name,
+      age: season - Number(p.birthDate.slice(0, 4)),
+      position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
+      rating: rep?.rating ?? seenLevel(w.pack, w.clubId, p),
+      range: rep?.range ?? levelRange(w.pack, w.clubId, p),
+      potential: rep?.potential ?? ceilingRange(w.pack, w.clubId, p),
+      knowledge: rep?.knowledge ?? null,
+      release: p.contract?.releaseFee ?? null,
+      wage: p.contract?.wage ?? 0,
+      value: marketValue(w.pack, p, season),
+      club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
+      free: p.clubId === null,
+      until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
+    };
+  };
   const plan = squadPlanOf({ pack: w.pack, clubId: w.clubId });
   const room = myWageRoom(w);
   // Within reach: willing to talk, a price the cash covers (a club asks up to 1.7 times the
@@ -457,6 +486,8 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
           p.clubId !== w.clubId &&
           p.clubId !== ABROAD &&
           !w.talks?.[p.id] &&
+          // Only those the club's scouts know of (market/scouting.ts).
+          personKnows(w, p) &&
           (!position || p.positions.some((x) => x.position === position && x.level === 3)),
       )
       .map((p) => ({
@@ -494,6 +525,16 @@ function marketView(w: CareerWorld, position: string | null): MarketView {
       from: face(clubs.get(b.from)!),
       fee: b.fee,
     })),
+    scouting: {
+      scouts: scoutsOf(w),
+      away: (w.scouting?.missions ?? []).map((m) => ({
+        area: m.area,
+        label: areaLabel(w, m.area),
+        back: isoOf(m.until),
+      })),
+      areas: scoutAreas(w).map((area) => ({ area, label: areaLabel(w, area) })),
+      known: Object.keys(w.scouting?.known ?? {}).length,
+    },
     news: (w.deals ?? [])
       .slice(-NEWS_ROWS)
       .reverse()
@@ -550,6 +591,12 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
           ? answerBid(w, act.bidId, { kind: 'counter', fee: act.fee })
           : answerBid(w, act.bidId, { kind: act.answer });
       return { at: 'bid', answer, name: who };
+    }
+    case 'scout': {
+      const no = sendScout(w, act.area, w.day);
+      return no
+        ? { at: 'no', reason: `scout_${no}` }
+        : { at: 'scout', area: areaLabel(w, act.area) };
     }
   }
 }
@@ -682,7 +729,13 @@ function view(w: CareerWorld, ms: number): SimView {
                 : n.kind === 'season'
                   ? n.champion
                   : '',
-          )?.name ?? (n.kind === 'bid' || n.kind === 'sold' ? foreignName(n.club) : ''),
+          )?.name ??
+          (n.kind === 'bid' || n.kind === 'sold'
+            ? foreignName(n.club)
+            : // A scout's report: the area's name, for the screen.
+              n.kind === 'scouted'
+              ? areaLabel(w, n.area)
+              : ''),
       })),
     board: {
       confidence: boardOf(w).confidence,

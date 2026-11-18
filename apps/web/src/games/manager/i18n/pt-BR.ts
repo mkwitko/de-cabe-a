@@ -146,8 +146,18 @@ export const ptBR = {
   'market.saidBid':
     '{k, select, sold {{name} vendido.} raised {O clube subiu a oferta.} tooDear {O clube desistiu de {name}.} squadThin {Seu elenco ficaria abaixo do mínimo: negócio desfeito.} budget {O clube não tem como pagar: negócio desfeito.} other {{name} não quis ir: negócio desfeito.}}',
   'market.saidNo':
-    '{r, select, cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
+    '{r, select, scout_busy {Todos os seus olheiros já estão viajando.} scout_already {Já há um olheiro nessa região.} scout_area {Não há clubes nessa região.} cash {Seu caixa não cobre esse valor.} wageCap {A diretoria barrou: esse salário não cabe na folha.} noMinutes {Ele não viria: não jogaria no seu time.} starter {O clube não empresta um titular.} theirSquad {O clube não tem elenco para liberar.} embargo {Fair play financeiro: o clube está proibido de contratar nesta temporada.} squadFull {Seu elenco está cheio.} window {A janela está fechada.} cold {Essa conversa foi encerrada até a próxima temporada.} other {Não foi possível fazer isso agora.}}',
   'market.news': 'Negócios entre clubes',
+  'market.scouts': 'Olheiros',
+  'market.scoutsInfo':
+    '{n, plural, one {Você tem # olheiro.} other {Você tem # olheiros.}} Cada viagem leva 4 semanas e traz os melhores jogadores da região que você ainda não conhecia. Cada relatório e cada jogo contra o clube de um jogador aumentam o quanto você o conhece; sem novas informações, o conhecimento cai com o tempo. Quanto mais você conhece, mais perto da verdade ficam a nota e o potencial. Na lista do mercado só aparecem jogadores que o clube conhece.',
+  'market.scoutsKnown':
+    '{n, plural, =0 {Nenhum jogador nos seus arquivos ainda.} one {# jogador nos seus arquivos.} other {# jogadores nos seus arquivos.}}',
+  'market.scoutAway': '{area}: volta em {date}',
+  'market.scoutArea': 'Região',
+  'market.scoutSend': 'Mandar olheiro',
+  'market.saidScout': 'Olheiro a caminho: {area}.',
+  'market.knowledge': 'Conhecimento {k}%',
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
     '{to} contratou {name} do {from} por {fee} para ser {for, select, starter {titular} other {reserva}}.',
@@ -166,6 +176,8 @@ export const ptBR = {
   'health.outLabel': 'Lesionado',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
+  'inbox.scouted':
+    '{n, plural, =0 {O olheiro voltou de {area} sem nomes novos.} one {O olheiro voltou de {area} com # jogador novo nos arquivos.} other {O olheiro voltou de {area} com # jogadores novos nos arquivos.}}',
   'inbox.cameUp':
     '{n, plural, one {# garoto fez 19 anos e subiu} other {# garotos fizeram 19 anos e subiram}} da base para o elenco.',
   'academy.title': 'Base',

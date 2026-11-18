@@ -362,6 +362,26 @@ Cruzamento (2026-11-16, ordem aprovada item 5): o cruzador avalia primeiro pau, 
 - Disputa: o companheiro chega até 0,5 s depois do primeiro defensor de linha (`AERIAL_CLOSE`), o goleiro não chega antes desse defensor, e o companheiro vence pela diferença de força aérea (`aerialScore`, escala 0,07, o ruído do duelo).
 
 Em 2000 partidas, mesmas sementes: gols 3,23 para 3,26 (dentro do ruído), chutes 12,5 nos dois, amarelos 3,17 para 3,09, escanteios 6,3 para 6,6. Em 100 partidas: cruzamentos de jogo corrido de 10,3 para 11,8 por time, cabeceios de 14,1% para 14,8% dos chutes, disputas aéreas com os dois times perto estáveis (10,3 e 10,1 por jogo, contra cerca de 25 na Série A). As disputas que faltam não vêm do cruzamento: vêm da bola longa, cujo alvo está em média a 10 m do adversário mais próximo no momento do passe. Testes em `match.test.ts` ("a team-mate level with his marker at the spot is a duel, not a lost ball" e "the duel is worth more for a team-mate who is better in the air").
+
+**Marcador do alvo disputa a bola longa (DECISÃO, 2026-11-18).**
+
+- Regra: num passe alto para um adversário, o defensor de linha mais próximo do alvo, a até 6 m dele, vai junto até onde o alvo encontra a bola e salta com ele. Vale mesmo quando um companheiro chega antes à queda.
+- PARÂMETRO: 6 m (`MARK_CONTEST`).
+- Motivo: medido em 30 partidas, eram 19,6 bolas altas por time para o centroavante. O defensor mais próximo estava a 5,1 m no passe. Durante o voo, ele segurava a linha 37% do tempo e ia à bola só 27%. Ele tocava primeiro em 7% das bolas. Antes, só o mais rápido de cada lado ia à bola.
+- Raio medido em 600 partidas: 0 m deu 3,34 gols; 4 m deu 3,10; 6 m deu 2,97; 8 m deu 2,98.
+
+Confirmação em 2000 partidas, mesmas sementes:
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Gols por jogo | 3,26 | 2,98 |
+| Chutes por time | 12,5 | 11,7 |
+| Gols por chute | 0,131 | 0,127 |
+| Faltas por time | 12,7 | 13,5 |
+| Amarelos por time | 3,09 | 3,25 |
+| Escanteios por time | 6,6 | 6,3 |
+
+Em 100 partidas, as disputas aéreas com os dois times perto sobem de 10,1 para 16,1 por jogo (Série A: cerca de 25). Os cabeceios sobem de 14,8% para 17,9% dos chutes. As faltas entram na faixa. Os chutes caem para baixo da faixa (12,6 a 13,6), ponto em aberto. Testes em `match.test.ts` ("the target's marker on a lofted pass").
 Quem disputa: os jogadores que alcançam o ponto de queda a tempo. Vence por logística de `impulsão`, altura, `cabeceio`, `força`, `posicionamento` (quem chegou antes e parado leva vantagem), `agressividade`. O vencedor direciona com erro; perder a disputa não tira o jogador do lance (segunda bola). Goleiro dentro da área disputa com as mãos, com alcance maior.
 
 ### 6.4 Goleiro

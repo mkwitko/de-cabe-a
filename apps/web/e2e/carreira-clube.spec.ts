@@ -402,6 +402,29 @@ for (const width of [360, 1280]) {
   });
 }
 
+test('career: send a scout from the market at 360 px', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/tecnico/carreira');
+  await page
+    .getByRole('button', { name: /^Assumir o / })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Mercado' }).click();
+  const scouts = page
+    .locator('div.sala-slab')
+    .filter({ has: page.getByRole('heading', { name: 'Olheiros' }) });
+  await expect(scouts).toBeVisible({ timeout: 30_000 });
+  await scouts.getByRole('button', { name: 'Mandar olheiro' }).click();
+  await expect(page.getByText(/^Olheiro a caminho: /)).toBeVisible();
+  await expect(scouts.getByRole('listitem')).toHaveCount(1);
+  await expect(scouts.getByRole('listitem')).toContainText(/volta em \d\d\/\d\d/);
+  await scouts.screenshot({ path: 'test-results/olheiros-360.png' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  expect(errors).toEqual([]);
+});
+
 test('career: the inbox keeps what happened across a reload', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   const errors: string[] = [];

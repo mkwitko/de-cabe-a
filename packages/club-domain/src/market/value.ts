@@ -2,7 +2,7 @@
  * What a player is worth (07 §1). There is no single price read off his attributes:
  *
  * - his **market value** is what the market would pay today: the going wage for his level, more
- *   months of it the younger he is, more again for what he may still become, less as his
+ *   months of it the better and the younger he is, more again for what he may still become, less as his
  *   contract runs out;
  * - his **sporting value** to one club is how much he helps that club (plan.ts, deals.ts).
  *
@@ -65,9 +65,42 @@ export function goingWages(pack: Pack): number[] {
 export const goingWage = (pack: Pack, level: number) =>
   goingWages(pack)[Math.max(0, Math.min(99, level))]!;
 
-/** Months of the going wage a player is worth, by age: youth sells for more. */
-const monthsFor = (age: number) =>
-  age <= 21 ? 22 : age <= 24 ? 18 : age <= 28 ? 12 : age <= 31 ? 6 : 3;
+/**
+ * Months of the going wage a player in his prime is worth, by level: a squad player sells for
+ * about a year of wages, a Série A starter for six, the league's best for eight (fewer months past 69: the going wage itself climbs steeply there). PARÂMETRO,
+ * fitted on the FM26 save's transfer values of Brazilian players (median per level and age,
+ * 2026-11-18): the old flat 12 months left a Série A starter at a tenth of what FM prices him.
+ */
+const LEVEL_MONTHS: readonly [number, number][] = [
+  [57, 10],
+  [60, 13],
+  [63, 35],
+  [66, 75],
+  [69, 95],
+  [74, 45],
+];
+/** Percent of the prime months by age, same fit: youth sells on promise, veterans hold to 33. */
+const AGE_PERCENT: readonly [number, number][] = [
+  [19, 600],
+  [21, 400],
+  [23, 160],
+  [33, 100],
+  [36, 30],
+  [99, 10],
+];
+
+function monthsFor(level: number, age: number): number {
+  const first = LEVEL_MONTHS[0]!;
+  let months = first[1];
+  for (let i = 1; i < LEVEL_MONTHS.length; i++) {
+    const [l0, m0] = LEVEL_MONTHS[i - 1]!;
+    const [l1, m1] = LEVEL_MONTHS[i]!;
+    if (level >= l1) months = m1;
+    else if (level > l0) months = m0 + Math.round(((m1 - m0) * (level - l0)) / (l1 - l0));
+  }
+  const pct = AGE_PERCENT.find(([until]) => age <= until)![1];
+  return Math.round((months * pct) / 100);
+}
 
 /** Whole years left on a contract on 1 January of `season`; 0 when it ends that year. */
 export const yearsLeft = (p: PackPlayer, season: number) =>
@@ -97,7 +130,9 @@ function readValue(pack: Pack, p: PackPlayer, season: number): number {
   const promise = 100 + Math.round((Math.min(room, 20) * 5 * young) / 6);
   const left = yearsLeft(p, season);
   const contract = left >= 3 ? 100 : left === 2 ? 88 : left === 1 ? 65 : 35;
-  return thousands((goingWage(pack, r.level) * monthsFor(age) * promise * contract) / 10_000);
+  return thousands(
+    (goingWage(pack, r.level) * monthsFor(r.level, age) * promise * contract) / 10_000,
+  );
 }
 
 /**

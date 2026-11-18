@@ -8,7 +8,7 @@ import { dayOf, isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
 import type { PackClub } from '../pack/schema';
 import type { CareerWorld } from './advance';
-import { BASE, priced, pricesOf } from './prices';
+import { PRICE_BASE, priced, pricesOf } from './prices';
 import { nationalDivisions } from './start';
 
 /**
@@ -37,7 +37,7 @@ export const gateOf = (c: Pick<PackClub, 'stadium' | 'fans'>): number =>
 export const seasonIncome = (
   c: Pick<PackClub, 'stadium' | 'fans' | 'sponsors'>,
   tier: number,
-  prices = BASE,
+  prices = PRICE_BASE,
 ) =>
   priced(
     BY_TIER[tier]!.tv +

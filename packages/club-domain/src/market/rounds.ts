@@ -33,6 +33,7 @@ import { fitFor, squadPlanOf, type Need } from './plan';
 import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
 import { ABROAD } from './abroad';
+import { clubKnows } from './scouting';
 import { answerBid } from './talks';
 import { boardOverpay } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
@@ -68,9 +69,16 @@ export interface Deal {
 /** Days between rounds inside a window. */
 export const ROUND_DAYS = 14;
 /** Signings a club makes in a season, at most. */
-const SIGNINGS = 4;
+const SIGNINGS = 6;
 /** Free agents a club may sign past that: no fee, a short wait for the paperwork. */
 const FREE_EXTRA = 2;
+/**
+ * A club with this share of its season's transfer budget still unspent also looks to improve its
+ * weakest starter, not only to fill holes (plan.ts `upgrade`).
+ */
+const SPARE = 50;
+/** Rounds a club that found nobody sits out before it reads the market again. */
+const IDLE_ROUNDS = 3;
 /** A choice must be worth this many points to go to the table. */
 const WORTH_IT = 36;
 /** And the need itself must carry at least this much of it: no buying on promise alone. */
@@ -203,7 +211,7 @@ function choose(
   const bidOn = new Set((w.bids ?? []).map((b) => b.player));
   const listed = new Set(w.listed ?? []);
   let best: Choice | null = null;
-  let score = WORTH_IT - 1;
+  let score = (need.worth ?? WORTH_IT) - 1;
   // Only those who know one of the positions and sit in the level the need asks for.
   const index = byPosition(w.pack);
   const seen = new Set<string>();
@@ -260,6 +268,8 @@ function choose(
       continue;
     const r = read.get(p.id)!;
     if (r.keeper !== need.keeper) continue;
+    // Only players its scouts know; the person's listed players are offered to everyone.
+    if (!(theirs && listed.has(p.id)) && !clubKnows(w, buyerId, p)) continue;
     // The buyer's own reading (a hash per player) last: the cheap tests weed out most first.
     // Just arrived somewhere: not for sale again this season.
     if (!free && w.moves?.[p.id]?.season === season) continue;
@@ -375,23 +385,6 @@ const windowOf = (day: number) => {
   return `${iso.slice(0, 4)}-${iso.slice(5, 7) <= '06' ? 1 : 2}`;
 };
 
-/** Fees in hand, % of the season's income, from which a club strengthens past its needs. */
-const RICH = 20;
-
-/**
- * What a club looks for this round: its two most pressing needs, and, with money to spare and
- * room for one more, a starter above its level (04 §4.7: the rich reinvest).
- */
-function needsOf(w: CareerWorld, clubId: string): Need[] {
-  const plan = squadPlanOf({ pack: w.pack, clubId });
-  const needs = plan.needs.slice(0, 2);
-  if (needs.length < 2 && plan.upgrade && clubId !== w.clubId) {
-    const income = budgetOf(w, clubId).income;
-    if (available(w, clubId) * 100 >= income * RICH) needs.push(plan.upgrade);
-  }
-  return needs;
-}
-
 /** One round of the market: each club, in the seed's order, tries one signing. */
 export function marketRound(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
@@ -413,9 +406,9 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     // model of its own, not a full market reading for hundreds of idle clubs.
     .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
     .sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1));
-  // A club that found nobody worth the table sits out the rest of the window: the market it
-  // read does not change enough in a few weeks to look again.
-  const span = windowOf(day);
+  // A club that found nobody worth the table sits out a few rounds: the market it read does not
+  // change enough in a fortnight to look again.
+  const span = `${windowOf(day)}:${Math.floor(day / (ROUND_DAYS * IDLE_ROUNDS))}`;
   const idle = new Set(w.idle?.span === span ? w.idle.clubs : []);
   for (const { id } of order) {
     const count = signed.get(id) ?? 0;
@@ -424,7 +417,11 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     if (squadPlayers({ pack: w.pack, clubId: id }).length >= MAX_SQUAD) continue;
     const tried = new Set<string>();
     let found = false;
-    for (const need of needsOf(w, id)) {
+    const plan = squadPlanOf({ pack: w.pack, clubId: id });
+    const needs = plan.needs.slice(0, 2);
+    if (plan.upgrade && available(w, id) * 100 >= budgetOf(w, id).transfer * SPARE)
+      needs.push(plan.upgrade);
+    for (const need of needs) {
       const choice = choose(w, id, need, tried, freeOnly);
       if (!choice) continue;
       found = true;

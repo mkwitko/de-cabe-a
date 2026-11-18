@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { BASE, nextPrices, pricesOf } from './prices';
+import { PRICE_BASE, nextPrices, pricesOf } from './prices';
 
 describe('inflation (04 §4.7)', () => {
   it('draws a rate of 3% to 7% each season; wages run a point ahead of prices', () => {
     let now = pricesOf({});
-    expect(now.prices).toBe(BASE);
+    expect(now.prices).toBe(PRICE_BASE);
     for (let year = 2027; year < 2047; year++) {
       const next = nextPrices(7, year, now);
       expect(next.rate).toBeGreaterThanOrEqual(30);
@@ -15,7 +15,7 @@ describe('inflation (04 §4.7)', () => {
       now = next;
     }
     // Twenty years at 3% to 7% a year.
-    expect(now.prices).toBeGreaterThan(BASE * 1.8);
-    expect(now.prices).toBeLessThan(BASE * 3.9);
+    expect(now.prices).toBeGreaterThan(PRICE_BASE * 1.8);
+    expect(now.prices).toBeLessThan(PRICE_BASE * 3.9);
   });
 });

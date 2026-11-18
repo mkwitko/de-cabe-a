@@ -27,7 +27,7 @@ import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { goingWage } from '../market/value';
-import { BASE, priced } from './prices';
+import { PRICE_BASE, priced } from './prices';
 import { bestRoles } from '../player/ratings';
 import type { Intensity } from './training';
 
@@ -177,7 +177,7 @@ export function crop(
   clubId: string,
   seed: number,
   season: number,
-  wages = BASE,
+  wages = PRICE_BASE,
   youthLevel?: number,
 ): PackPlayer[] {
   const club = origin.clubs.find((c) => c.id === clubId)!;
@@ -234,7 +234,12 @@ export const isImport = (id: string) => /^f\d+-/.test(id);
  * Brazilian club can bring in. They sit abroad, on the wage the market pays their level, and
  * leave the game at the season's end if nobody here signed them.
  */
-export function imports(origin: Pack, seed: number, season: number, wages = BASE): PackPlayer[] {
+export function imports(
+  origin: Pack,
+  seed: number,
+  season: number,
+  wages = PRICE_BASE,
+): PackPlayer[] {
   const root = fork(rngFrom(seed), `imports:${season}`);
   const out: PackPlayer[] = [];
   for (let k = 0; k < IMPORTS; k++) {

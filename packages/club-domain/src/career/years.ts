@@ -9,10 +9,11 @@ import { goingWages } from '../market/value';
 import type { Pack } from '../pack/schema';
 import { evolve, type SeasonLog } from './development';
 import { withMoves, type Moves } from './market';
-import { BASE, priced } from './prices';
+import { PRICE_BASE, priced } from './prices';
 
 /** The opening pack's going wages brought to the market's wage index. */
-const wagesAt = (origin: Pack, index = BASE) => goingWages(origin).map((x) => priced(x, index));
+const wagesAt = (origin: Pack, index = PRICE_BASE) =>
+  goingWages(origin).map((x) => priced(x, index));
 
 /**
  * The pack for the season after `log.season`. The readings of the old pack are not carried:

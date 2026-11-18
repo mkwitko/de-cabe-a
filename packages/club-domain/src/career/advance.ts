@@ -28,6 +28,7 @@ import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
+import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
 import { foreignRound } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
@@ -112,6 +113,8 @@ export interface CareerWorld {
   clubs?: Record<string, ClubState>;
   /** Clubs that found nobody worth buying in the window `span` and sit the rest of it out. */
   idle?: { span: string; clubs: string[] };
+  /** The person's scouts away and the players in the club's files (market/scouting.ts). */
+  scouting?: Scouting;
 }
 
 export type Decision =
@@ -151,6 +154,7 @@ function playDay(
     // Then the foreign buyers, once the clubs here had their turn.
     foreignRound(w, round);
   }
+  scoutingDay(w, day);
   postMonths(w, w.day, day);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
@@ -161,6 +165,7 @@ function playDay(
     record(w.season, id, o);
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) {
+      facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       postHomeMatch(w, id, day);
       const eleven = fielded(w, day).xi;
       // Who was hurt, read with the legs each had at kick-off.

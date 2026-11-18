@@ -127,8 +127,9 @@ describe('the person buys at two tables', () => {
 });
 
 describe("other clubs bid for the person's players", () => {
-  // A first-division club: its players are wanted. The weakest club's are not.
-  const bigId = nationalDivisions(pack)[0]!.clubIds[3]!;
+  // A mid-table first-division club: its players are wanted and other clubs here can pay for
+  // them. The top clubs' players cost more than a domestic budget; the weakest club's are not wanted.
+  const bigId = nationalDivisions(pack)[0]!.clubIds[8]!;
   const mine = (p: { clubId: string | null }) => p.clubId === bigId;
   /** Rounds until a bid lands, listing the whole squad to draw one. */
   const withBid = (seed: number) => {

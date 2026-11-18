@@ -31,6 +31,8 @@ export interface Need {
   wanted: number;
   /** 1..100: how much it hurts. */
   urgency: number;
+  /** Points a signing must be worth for it; absent: the market's usual bar (rounds.ts). */
+  worth?: number;
 }
 
 export interface SquadPlan {
@@ -41,8 +43,10 @@ export interface SquadPlan {
   /** The best player outside the eleven for each slot, or null. */
   cover: (string | null)[];
   needs: Need[];
-  /** The slot a club with money to spare would strengthen: its weakest starter, aimed above
-   * the eleven's level. Null for a club without an eleven. */
+  /**
+   * The weakest slot of the eleven as a chance to improve on, not a hole: a signing over the
+   * team's level there. Null for a club without an eleven.
+   */
   upgrade: Need | null;
   /** Players the plan has no use for, least useful first. */
   surplus: string[];
@@ -50,11 +54,17 @@ export interface SquadPlan {
 
 /** Below the eleven's level by this much, a starter is a weak link. */
 const WEAK_LINK = 4;
+/** An upgrade must beat the eleven's level by this much: a clear step up, not a sideways move. */
+const UPGRADE = 3;
+/** How much an upgrade weighs against real needs (urgency 1..100). */
+const UPGRADE_URGENCY = 60;
+/**
+ * The bar an upgrade must clear: what he brings worth more than what he costs. Lower than a
+ * hole's bar, which also pays for the hurry: a club with money spends it on getting better.
+ */
+const UPGRADE_WORTH = 6;
 /** Cover must be within this of the eleven's level, and know the position. */
 const COVER_GAP = 9;
-/** Points over the eleven's level a club with money aims at when it strengthens. */
-const UPGRADE_STEP = 3;
-const UPGRADE_URGENCY = 60;
 /** Squad size a club is comfortable with. */
 export const COMFORT = 24;
 
@@ -134,14 +144,14 @@ function plan(c: ClubIn): SquadPlan {
   needs.sort((a, b) => b.urgency - a.urgency || a.slot - b.slot);
   let weakest = 0;
   for (let i = 1; i < roles.length; i++) if (seen(xi[i]!, i) < seen(xi[weakest]!, i)) weakest = i;
-  const w0 = roles[weakest]!;
   const upgrade: Need = {
     slot: weakest,
     positions: positions[weakest]!,
-    keeper: w0 === 'goalkeeper' || w0 === 'sweeperKeeper',
+    keeper: roles[weakest] === 'goalkeeper' || roles[weakest] === 'sweeperKeeper',
     kind: 'starter',
-    wanted: level + UPGRADE_STEP,
+    wanted: level + UPGRADE,
     urgency: UPGRADE_URGENCY,
+    worth: UPGRADE_WORTH,
   };
 
   // Left over: neither starting nor the cover of any slot; the weakest go first.
