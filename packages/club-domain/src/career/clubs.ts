@@ -15,6 +15,7 @@ import { goingWages } from '../market/value';
 import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/books';
 import type { CareerWorld } from './advance';
 import { BY_TIER, gateOf } from './finance';
+import { postEntry } from '../finance/ledger';
 import { priced, pricesOf } from './prices';
 
 export type Horizon = 'short' | 'medium' | 'long';
@@ -302,3 +303,59 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
 /** Points a club pays over the value at the table, from its directors: up to +20 for the worst. */
 export const boardOverpay = (w: CareerWorld, clubId: string): number =>
   Math.max(0, Math.round((50 - (clubsOf(w)[clubId]?.directors.competence ?? 50)) / 2));
+
+// ── The person's works (04 §4.7, 06 §5.2: a work is proposed, the board decides) ────────────
+
+/** Why the board turns a work down; null when it signs. */
+export type WorkNo = 'top' | 'busy' | 'cash' | 'horizon' | 'useless';
+
+/** Share of a season's income a work may cost before the directors balk, by horizon. */
+const WORK_APPETITE: Record<Horizon, number> = { short: 15, medium: 40, long: 100 };
+/** Competence from which a board sees a stadium that never fills is money thrown away. */
+const SEES_WASTE = 50;
+
+/** What the board would say to a work on `front` today. */
+export function workAnswer(w: CareerWorld, front: Front): WorkNo | null {
+  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
+  const s = clubState(w, w.clubId);
+  const cost = workCost(w, club, front);
+  if (cost === null) return 'top';
+  if ((s.works ?? []).some((x) => x.front === front)) return 'busy';
+  const income = incomeOf(w, w.clubId);
+  const reserve = Math.round((income * RESERVE_MAX * s.directors.competence) / 10_000);
+  if (cost > w.ledger.cash - reserve) return 'cash';
+  if (cost * 100 > income * WORK_APPETITE[s.directors.horizon]) return 'horizon';
+  if (
+    front === 'stadium' &&
+    s.directors.competence >= SEES_WASTE &&
+    gateOf(club) < club.stadium.capacity
+  )
+    return 'useless';
+  return null;
+}
+
+/**
+ * The person proposes a work. Signed, it is paid now from the ledger and is in use at the next
+ * season's turn (`planSeason`). Returns the board's answer.
+ */
+export function proposeWork(w: CareerWorld, front: Front): WorkNo | null {
+  const no = workAnswer(w, front);
+  if (no) return no;
+  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
+  const cost = workCost(w, club, front)!;
+  const s = clubState(w, w.clubId);
+  s.works = [...(s.works ?? []), { front, cost }];
+  postEntry(w.ledger, {
+    key: `work:${w.season.season}:${front}`,
+    kind: 'works',
+    ref: `work:${front}`,
+    amount: -cost,
+    day: w.ledger.today,
+    dueDay: w.ledger.today,
+  });
+  return null;
+}
+
+/** A front's level today, for the screen. */
+export const frontLevel = (club: PackClub, front: Front): number =>
+  front === 'stadium' ? club.stadium.capacity : levelOf(club, front);

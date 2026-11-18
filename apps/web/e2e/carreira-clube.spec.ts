@@ -387,6 +387,12 @@ for (const width of [360, 1280]) {
     await expect(page.getByText('Nada ainda. A confiança muda a cada jogo seu.')).toBeVisible();
     await expect(page.getByText(/^Sem ultimato\./)).toBeVisible();
 
+    // The structure: a work is proposed and the board answers, yes or no with its reason.
+    await expect(page.getByRole('heading', { name: 'Estrutura do clube' })).toBeVisible();
+    await expect(page.getByText(/^Manutenção da estrutura: /)).toBeVisible();
+    await page.getByRole('button', { name: 'Propor obra: Departamento médico' }).click();
+    await expect(page.getByRole('status')).toHaveText(/^(A diretoria (aprovou|negou)|Já há)/);
+
     // A match moves it, and the room says by how much and why.
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
     await page.getByRole('button', { name: 'Só o resultado' }).click();

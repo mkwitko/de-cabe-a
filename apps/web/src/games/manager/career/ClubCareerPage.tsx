@@ -11,7 +11,7 @@ import type { ClubFace, InboxItem, MatchClub, SimReply, SimRequest, SimView } fr
 import { Squad } from './Squad';
 import { Training } from './Training';
 import { Market } from './Market';
-import { Board, Fired } from './Board';
+import { Board, type WorkSaid, Fired } from './Board';
 import {
   Match,
   PLAN,
@@ -370,6 +370,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   };
 
   const [tunnel, setTunnel] = useState(false);
+  const [workSaid, setWorkSaid] = useState<WorkSaid>(null);
   const [room, setRoom] = useState<Room>('sala');
   const watch = (mode: Watch) => {
     if (!ask) return;
@@ -492,7 +493,27 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           </button>
         ))}
       </nav>
-      {room === 'diretoria' && <Board sim={sim} />}
+      {room === 'diretoria' && (
+        <Board
+          sim={sim}
+          busy={busy}
+          said={workSaid}
+          onWork={
+            ask
+              ? (front) => {
+                  setBusy(true);
+                  ask({ type: 'work', front })
+                    .then((reply) => {
+                      deal(reply);
+                      if (reply.work) setWorkSaid(reply.work);
+                    })
+                    .catch((err: Error) => setError(err.message))
+                    .finally(() => setBusy(false));
+                }
+              : undefined
+          }
+        />
+      )}
       {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
       {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
       {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}

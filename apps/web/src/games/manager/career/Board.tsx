@@ -5,6 +5,7 @@
  */
 import { btnPrimary } from '../../../components/ui';
 import { t } from '../i18n';
+import type { Front, WorkNo } from '@decabeca/club-domain';
 import type { SimView } from './sim.worker';
 
 const LABEL =
@@ -18,7 +19,20 @@ const BAR = {
   edge: 'bg-club-danger',
 } as const;
 
-export function Board({ sim }: { sim: SimView }) {
+/** A work the person proposed and the board's answer: null when it signed. */
+export type WorkSaid = { front: Front; no: WorkNo | null } | null;
+
+export function Board({
+  sim,
+  busy = false,
+  said = null,
+  onWork,
+}: {
+  sim: SimView;
+  busy?: boolean;
+  said?: WorkSaid;
+  onWork?: ((front: Front) => void) | undefined;
+}) {
   const b = sim.board;
   const state = stateOf(b.confidence);
   const f = b.fairplay;
@@ -152,6 +166,53 @@ export function Board({ sim }: { sim: SimView }) {
               : t('board.calm')}
           </p>
         </div>
+      </div>
+      <div className="sala-slab flex flex-col gap-3 p-4 sm:p-5 lg:col-span-2">
+        <h3 id="structure-title" className={LABEL}>
+          {t('board.structure')}
+        </h3>
+        <p className="text-chalk-soft">
+          {t('board.upkeep', { cost: t('career.cash', { value: b.upkeep }) })}
+        </p>
+        {said && (
+          <p role="status" className={said.no ? 'font-semibold text-club-danger' : 'font-semibold'}>
+            {said.no
+              ? t('board.workNo', { r: said.no })
+              : t('board.workYes', { f: t('board.front', { f: said.front }) })}
+          </p>
+        )}
+        <ul aria-labelledby="structure-title" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {b.structure.map((x) => (
+            <li key={x.front} className="flex flex-col gap-2 rounded-lg border border-chalk/10 p-3">
+              <span className="font-condensed text-lg leading-tight font-extrabold uppercase">
+                {t('board.front', { f: x.front })}
+              </span>
+              <span className="tabular-nums">
+                {x.front === 'stadium'
+                  ? t('board.seats', { n: x.level })
+                  : t('board.level', { n: x.level })}
+              </span>
+              <span className="text-sm text-chalk-soft">
+                {x.building
+                  ? t('board.building')
+                  : x.cost === null
+                    ? t('board.top')
+                    : t('board.workCost', { cost: t('career.cash', { value: x.cost }) })}
+              </span>
+              {onWork && !x.building && x.cost !== null && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  aria-label={t('board.proposeName', { f: t('board.front', { f: x.front }) })}
+                  className="min-h-11 rounded-lg border border-chalk/20 px-3 font-condensed font-extrabold uppercase hover:bg-chalk/10 disabled:opacity-50"
+                  onClick={() => onWork(x.front)}
+                >
+                  {t('board.propose')}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

@@ -21,10 +21,11 @@ import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
 import type { PackPlayer } from '../pack/schema';
 import { booksOf, tierOfClub, wageRoom } from './books';
-import { CLAUSE_TIMES, playerStance } from './deals';
+import { CLAUSE_TIMES, playerStance, type PlayerStance } from './deals';
 import { fitFor, squadPlanOf } from './plan';
 import type { Deal } from './rounds';
 import { canLose } from './talks';
+import { isImport } from '../career/development';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** Where a player sold abroad sits in the pack. */
@@ -87,6 +88,30 @@ export const isAbroad = (id: string | null) => id !== null && id.startsWith(ABRO
 /** The face of a foreign buyer or of the abroad bucket, for lists and the inbox. */
 export const foreignName = (id: string) =>
   FOREIGN_TIERS.find((t) => t.id === id)?.name ?? (id === ABROAD ? 'Exterior' : id);
+
+// ── Bringing players in (04 §4.7) ────────────────────────────────────────────
+
+/** Over his value a club pays to bring a player from abroad; the fee leaves the league. */
+const IMPORT_PREMIUM = 20;
+/** Over the wage he would ask at home a player wants to come from abroad. */
+const IMPORT_WAGE = 25;
+/**
+ * A player abroad a club of the league can sign: the year's foreign market. Those sold from
+ * here come home by themselves (`homecoming`). `season` kept for the callers' reading.
+ */
+export const signable = (p: PackPlayer, _season: number) => p.clubId === ABROAD && isImport(p.id);
+
+/** The fee to bring him from abroad. */
+export const importFee = (w: CareerWorld, p: PackPlayer) =>
+  thousands((marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100);
+
+/** What he wants to sign for `buyerId`, coming from his club, from nowhere or from abroad. */
+export function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string): PlayerStance {
+  const club = (id: string) => w.pack.clubs.find((x) => x.id === id)!;
+  const from = p.clubId === null || p.clubId === ABROAD ? null : club(p.clubId);
+  const s = playerStance(w.pack, p, from, club(buyerId), w.season.season);
+  return p.clubId === ABROAD ? { ...s, wage: Math.round((s.wage * (100 + IMPORT_WAGE)) / 100) } : s;
+}
 
 /** The tier that would buy him, or null. */
 export function tierFor(w: CareerWorld, p: PackPlayer): ForeignTier | null {

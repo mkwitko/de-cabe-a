@@ -76,6 +76,14 @@ import {
   strikesOf,
   costLimitOf,
   clubState,
+  FRONTS,
+  frontLevel,
+  proposeWork,
+  upkeepOf,
+  workAnswer,
+  workCost,
+  type Front,
+  type WorkNo,
   jobsAfter,
   nationalDivisions,
   takeJob,
@@ -93,6 +101,7 @@ import {
   type Intensity,
   type SquadPlayer,
   ABROAD,
+  signable,
   FOREIGN_TIERS,
   foreignName,
 } from '@decabeca/club-domain';
@@ -138,6 +147,8 @@ export type SimRequest = { id: number } & (
   | { type: 'matchMoment'; from: number; commands: TimedCommand[]; mode: MomentMode }
   /** Records the watched result and moves on, like `play`. */
   | { type: 'matchFinish' }
+  /** The person proposes a work on the club's structure; the board answers (clubs.ts). */
+  | { type: 'work'; front: Front }
 );
 
 export interface SimView {
@@ -169,6 +180,17 @@ export interface SimView {
   board: {
     confidence: number;
     goal: number;
+    /** The club's structure, front by front, and what the next work on each would cost. */
+    structure: {
+      front: Front;
+      /** Level 1..5, or seats for the stadium. */
+      level: number;
+      cost: number | null;
+      building: boolean;
+      no: WorkNo | null;
+    }[];
+    /** The structure's upkeep for a season. */
+    upkeep: number;
     /** Who runs the club: how far they look and how well they read it (clubs.ts). */
     directors: { horizon: 'short' | 'medium' | 'long'; competence: number };
     position: number;
@@ -505,7 +527,8 @@ function marketView(
       .filter(
         (p) =>
           p.clubId !== w.clubId &&
-          p.clubId !== ABROAD &&
+          // Abroad, only the foreign market and the veterans coming home (market/abroad.ts).
+          (p.clubId !== ABROAD || signable(p, w.season.season)) &&
           !w.talks?.[p.id] &&
           // Only those the club's scouts know of (market/scouting.ts).
           personKnows(w, p) &&
@@ -673,6 +696,8 @@ function squadView(w: CareerWorld): SquadView {
 
 export interface SimReply {
   id: number;
+  /** The board's answer to a proposed work: null when it signed. */
+  work?: { front: Front; no: WorkNo | null };
   squad?: SquadView;
   training?: TrainingView;
   market?: MarketView;
@@ -786,6 +811,17 @@ function view(w: CareerWorld, ms: number): SimView {
     board: {
       confidence: boardOf(w).confidence,
       goal: boardOf(w).goal,
+      structure: FRONTS.map((front) => {
+        const club = byId.get(w.clubId)!;
+        return {
+          front,
+          level: frontLevel(club, front),
+          cost: workCost(w, club, front),
+          building: (clubState(w, w.clubId).works ?? []).some((x) => x.front === front),
+          no: workAnswer(w, front),
+        };
+      }),
+      upkeep: upkeepOf(w, byId.get(w.clubId)!),
       directors: (({ horizon, competence }) => ({ horizon, competence }))(
         clubState(w, w.clubId).directors,
       ),
@@ -903,6 +939,24 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         bytes: await gzip(saveCareer(world)),
         still: true,
       };
+    }
+    if (world && r.type === 'work') {
+      const no = proposeWork(world, r.front);
+      const reply: SimReply = {
+        id: r.id,
+        work: { front: r.front, no },
+        view: view(world, Math.round(performance.now() - t)),
+      };
+      if (!no)
+        reply.save = {
+          from: world.day,
+          to: world.day,
+          season: world.season.season,
+          bytes: await gzip(saveCareer(world)),
+          still: true,
+        };
+      self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
+      return;
     }
     if (world && r.type === 'market') {
       let said: MarketView['said'];
