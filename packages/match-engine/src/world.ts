@@ -153,6 +153,9 @@ const URGENT = new Set<WorldPlayer['intent']>([
   'box',
 ]);
 const JOG = 1.8;
+const DROP_RUN = 2;
+/** PARAMETER: metres from our goal line above which a dropping back line runs. */
+const DROP_ABOVE = 30;
 const JOG_GAIN = 0.25;
 /** PARAMETER: deepest a player outside the rest defence stays behind the ball with it (T9 counts beyond 12 m). */
 const JOIN_BEHIND = 10;
@@ -412,8 +415,17 @@ export function movePlayers(w: World): void {
     // Effort (02 §4 fôlego): urgent jobs at full speed; the rest jog, faster the further off they are.
     const dx = p.target.x - p.pos.x;
     const dy = p.target.y - p.pos.y;
+    // A back line dropping off (its spot behind it, towards our goal) runs: a line that
+    // jogs back is caught by a carrier running at it (S6, 2026-11-19). PARAMETER: 2 m.
+    // Only a line still up the pitch: near our box it is already at its floor.
+    const dropping =
+      unit &&
+      flip(p.team, p.target).x < flip(p.team, p.pos).x - DROP_RUN &&
+      flip(p.team, p.pos).x > DROP_ABOVE;
     const effort =
-      URGENT.has(p.intent) || behind ? Infinity : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
+      URGENT.has(p.intent) || behind || dropping
+        ? Infinity
+        : JOG + JOG_GAIN * Math.sqrt(dx * dx + dy * dy);
     // Reading the pass (kinematics reaction time): he carries on where he was going.
     const course =
       (p.reactUntil ?? 0) > w.tick ? { x: p.pos.x + p.vel.x, y: p.pos.y + p.vel.y } : p.target;
