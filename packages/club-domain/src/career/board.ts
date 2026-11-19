@@ -5,6 +5,7 @@
  * confidence brings an ultimatum (points in a number of matches); failing it ends the job.
  * Integers only; every number is a PARÂMETRO, not calibrated.
  */
+import { moodOf } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import { divisionTable, type CareerWorld } from './advance';
 import { clubsOf, type Horizon } from './clubs';
@@ -13,7 +14,10 @@ export type Odds = 'favourite' | 'even' | 'underdog';
 /** One line of why the confidence moved, for the screen: a fact and its points. */
 export type BoardReason =
   | { kind: 'result'; result: 'W' | 'D' | 'L'; odds: Odds; value: number }
-  | { kind: 'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet' | 'fairplay'; value: number };
+  | {
+      kind: 'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet' | 'fairplay' | 'protest';
+      value: number;
+    };
 
 export interface Board {
   /** 0..100. */
@@ -43,6 +47,8 @@ const BY_ODDS: Record<Odds, Record<'W' | 'D' | 'L', number>> = {
 };
 /** A match played with the cash below zero. Light: the pack's money is not the person's doing. */
 const IN_THE_RED = -1;
+/** Supporters' mood (stadium.ts `moodOf`) at or under which a defeat brings a protest. */
+export const PROTEST = -60;
 const GOAL_MET = 15;
 const GOAL_MISSED = -10;
 
@@ -79,6 +85,8 @@ export function boardAfterMatch(
   w: CareerWorld,
   match: { home: string; away: string },
   o: Outcome,
+  /** The match's day: the supporters' mood is read with this result in. */
+  day?: number,
 ): Board {
   const b = boardOf(w);
   if (b.fired) return b;
@@ -91,6 +99,16 @@ export function boardAfterMatch(
   const value = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w)] : 0);
   const last: BoardReason[] = [{ kind: 'result', result, odds, value }];
   if (w.ledger.cash < 0) last.push({ kind: 'cash', value: IN_THE_RED });
+  // A defeat that tips the supporters over: they protest once a crisis, and the board hears them
+  // (more when the supporters are impatient), not again at every defeat of the same run.
+  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
+  if (
+    result === 'L' &&
+    day !== undefined &&
+    moodOf(w.pack, w.season, w.clubId, day + 1) <= PROTEST &&
+    moodOf(w.pack, w.season, w.clubId, day) > PROTEST
+  )
+    last.push({ kind: 'protest', value: club.fans.patience < 50 ? -2 : -1 });
   let confidence = clamp(b.confidence + last.reduce((s, r) => s + r.value, 0));
   const next: Board = { confidence, goal: b.goal, last };
 

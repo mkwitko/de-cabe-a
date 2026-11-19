@@ -235,6 +235,8 @@ export const ptBR = {
     '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
   'inbox.sponsor':
     'Contrato renovado com {name}: {value} por ano, {years, plural, one {por # temporada} other {por # temporadas}}.',
+  'inbox.protest':
+    'A torcida protestou depois da derrota: cobra a diretoria e o técnico. A paciência do conselho diminuiu.',
   'inbox.closedDoors':
     'Jogo de portões fechados, por punição do STJD: sem torcida, sem bilheteria.',
   'inbox.courtBan':
@@ -281,7 +283,7 @@ export const ptBR = {
   'board.result':
     '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
   'board.reason':
-    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} other {Ultimato cumprido}}',
+    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} protest {Protesto da torcida} other {Ultimato cumprido}}',
   'board.up': '+{n}',
   'board.down': '−{n}',
   'board.ultimatum': 'Ultimato',

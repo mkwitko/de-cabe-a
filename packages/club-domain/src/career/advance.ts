@@ -220,7 +220,8 @@ function playDay(
       const spent = Object.values(training.fresh).filter((f) => f < 0.5).length;
       if (spent >= 3) note(w, { day, kind: 'tired', players: spent });
       const before = w.board;
-      w.board = boardAfterMatch(w, m, o);
+      w.board = boardAfterMatch(w, m, o, day);
+      if (w.board.last?.some((r) => r.kind === 'protest')) note(w, { day, kind: 'protest' });
       if (w.board.ultimatum && !before?.ultimatum)
         note(w, { day, kind: 'ultimatum', ...w.board.ultimatum });
       if (w.board.last?.some((r) => r.kind === 'ultimatumMet'))

@@ -15,6 +15,7 @@ export type Note = { day: number } & (
   | { kind: 'cashRed' }
   | { kind: 'closedDoors' }
   | { kind: 'sponsor'; name: string; annual: number; years: number }
+  | { kind: 'protest' }
   | { kind: 'courtBan'; matches: number }
   | { kind: 'tired'; players: number }
   | { kind: 'bought' | 'sold' | 'loanIn' | 'loanOut'; player: string; club: string; fee: number }

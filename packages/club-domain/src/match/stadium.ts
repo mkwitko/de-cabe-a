@@ -101,6 +101,40 @@ export function closedDoors(pack: Pack, s: SeasonState, id: string): boolean {
   return false;
 }
 
+/**
+ * Supporters' mood (mapa §2.13, entrega 10): the points of the club's last five matches before
+ * `day`, a derby counting twice, against the 1.5 a match of an ordinary run; −100 (five defeats)
+ * to +100 (five wins). Read from the season's results, so the season and the save agree.
+ */
+const FORM_MATCHES = 5;
+export function moodOf(pack: Pack, s: SeasonState, clubId: string, day: number): number {
+  const club = clubOf(pack, clubId);
+  const played = [...(s.calendar.byClub.get(clubId) ?? [])]
+    .filter((m) => m.day < day && s.outcomes.has(m.id))
+    .sort((a, b) => b.day - a.day || (a.id < b.id ? -1 : 1))
+    .slice(0, FORM_MATCHES);
+  if (!played.length) return 0;
+  let points = 0;
+  let weight = 0;
+  for (const m of played) {
+    const o = s.outcomes.get(m.id)!;
+    const [mine, theirs] = m.home === clubId ? o.goals : [o.goals[1], o.goals[0]];
+    const other = clubOf(pack, m.home === clubId ? m.away : m.home);
+    const w = club && other && derby(club, other) ? 2 : 1;
+    points += w * (mine > theirs ? 3 : mine === theirs ? 1 : 0);
+    weight += w;
+  }
+  // 0 points is −100, 1.5 a match is 0, 3 a match is +100; a run shorter than five weighs less,
+  // so one defeat on the first day is not a crisis.
+  return Math.round(((points - 1.5 * weight) * 200 * played.length) / (3 * weight * FORM_MATCHES));
+}
+
+/**
+ * Share of the crowd a run moves, per cent at the end of the scale, for supporters of no
+ * loyalty; the loyal come anyway. a confirmar (no published estimate, research 2026-11-18).
+ */
+const FORM_SWING = 20;
+
 /** Paying public at match `id`: 0 behind closed doors, else the usual crowd moved by the match. */
 export function crowdAt(pack: Pack, s: SeasonState, id: string): number {
   const m = s.calendar.matches.get(id);
@@ -110,7 +144,11 @@ export function crowdAt(pack: Pack, s: SeasonState, id: string): number {
   if (!home || !away || closedDoors(pack, s, id)) return 0;
   const phase = s.meta.get(id)?.ko ? KNOCKOUT : 0;
   const pull = Math.min(BIG_VISITOR_MAX, Math.max(0, away.reputation - home.reputation) >> 1);
-  const extra = 100 + (derby(home, away) ? DERBY : 0) + phase + pull;
+  const day = s.calendar.matches.get(id)!.day;
+  const form = Math.round(
+    (moodOf(pack, s, home.id, day) * FORM_SWING * (100 - home.fans.loyalty)) / 10_000,
+  );
+  const extra = 100 + (derby(home, away) ? DERBY : 0) + phase + pull + form;
   return Math.min(home.stadium.capacity, Math.round((usualCrowd(home) * extra) / 100));
 }
 
