@@ -61,8 +61,8 @@ const WIDTH = 68;
 export const L2 = {
   /** Pressure: a defender this close (m) presses fully; steps out by press intensity and block. */
   pressRange: 7.4502,
-  pressStep: 1.6,
-  counterPressStep: 3,
+  pressStep: 2.16,
+  counterPressStep: 2.22222,
   /** Chance per action that the nearest defender challenges, times pressure. */
   challenge: 0.486,
   /** Pass reading: defenders within laneRadius of the line, within recvRadius of the receiver. */
@@ -71,41 +71,44 @@ export const L2 = {
   passBase: 0,
   passLane: 0.0456,
   passRecv: 0.05,
-  passError: 0.20527,
+  passError: 0.1747,
   /** Passes into the final third meet the packed defence: extra failure at the goal line. */
-  passFinal: 0.30332,
+  passFinal: 0.378,
   /** Utility offset of carrying the ball (take-ons are rarer than passes). */
   carryBias: -0.00443,
   /** Share of cleared crosses that go behind for a corner; tactical fouls per chance. */
   clearCorner: 0.7349,
-  tacticalFoul: 0.4489,
+  tacticalFoul: 0.71207,
   /** Forward passes are read more often (receivers marked goal-side): per 20 m of progress. */
   passForward: 0.3,
   /** Shooting bar: utility a shot loses before it beats keeping the ball; a shot from outside 20 m gains farShot. */
   shotBar: 0.00963,
-  farShot: 0.004,
+  farShot: 0.0034,
   /** Value lost when the ball is lost, as a share of the opponents' value there. */
-  lossWeight: 3.7001,
+  lossWeight: 4.34762,
   /** Decision noise: utility spread for a player of decisions 0. */
-  noise: 0.02187,
+  noise: 0.02952,
   /** Carry: metres a carry gains, and its pace (m/s). */
   carry: 7.4061,
   carrySpeed: 5.5,
   /** Seconds per action beyond the settle time, and ball speed of a pass. */
-  timeScale: 0.84,
+  timeScale: 0.75,
   passSpeed: 14,
   /** Metres a second a marker closes on the receiver while the pass travels. */
   closeSpeed: 5.148,
   /** Under pressure a defender or the keeper clears it long: utility per unit of pressure. */
-  longRelief: 0.0085,
+  longRelief: 0.00999,
   longBias: 0.0097,
+  /** Utility of a ball over the top. */
+  overBias: 0,
+  overBase: 0.55519,
   /** Shots: blockers near the line from the shooter to the goal. */
   blockRadius: 3,
   blockWeight: 0.52,
   /** Crosses and through balls. */
   aerialDifficulty: 0.0872,
-  crossAccuracy: 0.3668,
-  throughOffside: 0.2689,
+  crossAccuracy: 0.49518,
+  throughOffside: 0.15588,
   /** Foul chance in the defenders' own box, times the chance elsewhere. */
   boxCare: 0.0231,
   /** Share of free kicks near goal taken as a direct shot. */
@@ -115,19 +118,27 @@ export const L2 = {
   /** Running per player in play (m/s) by line, and the intensity that drains stamina. */
   speed: { gk: 1.95, def: 3.9, mid: 4.3, att: 4.1 } as Record<Line, number>,
   intensity: 1.05,
+  /** Extra effort per press-intensity level (and per block step), and per tempo level. */
+  pressDrain: 0.11892,
+  tempoDrain: 0.03447,
+  /** Share of a forward pass's risk that open space behind a short defence removes. */
+  spaceBehind: 0.44444,
   /** A counter needs fewer than this many opponents goal-side of the ball. */
   counterBack: 5,
   /** Milliseconds the side that lost the ball takes to get back into its defensive shape. */
   recover: 6086.9565,
   /** Seconds of possession after which the carrier risks the most, and that floor of caution. */
-  patience: 40,
+  patience: 54,
   patienceFloor: 0.3,
   /** A team-mate closer than this to his marker steps away into space (findSpace). */
   space: 6,
+  /** How much movement against marking moves him (findSpace), and the spread of the race for a ball in behind. */
+  spaceSkill: 0.5875,
+  raceSpread: 1.14894,
   /** Metres a player strays from his anchor, each way (uniform). */
   jitter: 13.05185,
   /** Utility per metre of progress the plan's progression gives (vertical +, circulate −). */
-  progression: 6e-5,
+  progression: 5e-5,
   /** Utility bonuses for the plan's instructions (per level away from 3). */
   bias: 0.004,
 };
@@ -167,6 +178,8 @@ interface Player2 {
     chase: number;
     vision: number;
     cross: number;
+    /** Long passing for a ball over the top. */
+    long: number;
     sync: number;
     /** Dribble and tackle sides (rules/duel.ts), with and against the ball. */
     drib: number;
@@ -398,6 +411,7 @@ function player(input: PlayerInput, team: 0 | 1, slot: number, role: RoleId): Pl
       chase: weighted(input.attributes, { pace: 0.4, acceleration: 0.3, positioning: 0.3 }),
       vision: weighted(input.attributes, { vision: 0.6, passing: 0.4 }),
       cross: weighted(input.attributes, { crossing: 0.6, technique: 0.2, longPassing: 0.2 }),
+      long: weighted(input.attributes, { longPassing: 0.6, technique: 0.2, vision: 0.2 }),
       sync: pressSync(input.attributes, input.familiarity),
       antic: 0.6 + 0.8 * norm(input.attributes.anticipation),
       drib: dribbleAttack(input.attributes),
@@ -497,7 +511,14 @@ function body(s: State2): void {
     p.msOn += seconds * 1000;
     const v = L2.speed[p.line] * (0.85 + 0.3 * norm(p.attrs.workRate));
     p.distance += v * seconds;
-    drain(p, v * L2.intensity, seconds);
+    // Pressing and a high block cost legs (research 13 §1); tempo too.
+    const t = s.plans[p.team].team;
+    const effort =
+      1 +
+      L2.pressDrain *
+        (t.pressIntensity - 3 + (t.block === 'high' ? 1 : t.block === 'low' ? -1 : 0)) +
+      L2.tempoDrain * (t.tempo - 3);
+    drain(p, v * L2.intensity * effort, seconds);
     if (!p.injured && next(s.r.injury) < injuryRisk(p, seconds)) injure(s, p, false);
   }
   coachAndBench(s);
@@ -626,7 +647,11 @@ function findSpace(
     if (!near) continue;
     const gap = Math.sqrt(nd);
     if (gap >= L2.space || gap < 1e-6) continue;
-    const skill = clamp(0.5 + norm(m.p.attrs.offTheBall) - norm(near.p.attrs.marking), 0, 1);
+    const skill = clamp(
+      0.5 + L2.spaceSkill * (norm(m.p.attrs.offTheBall) - norm(near.p.attrs.marking)),
+      0,
+      1,
+    );
     const step = (L2.space - gap) * skill;
     const x = m.at.x + ((m.at.x - near.at.x) / gap) * step;
     m.at = {
@@ -694,7 +719,7 @@ function challenger(s: State2, defs: { p: Player2; at: Pt }[], at: Pt) {
   return order.length > 1 && next(s.r.execution) < 0.33 ? order[1]!.d : order[0]!.d;
 }
 
-type Kind = 'pass' | 'through' | 'long' | 'carry' | 'shot' | 'cross';
+type Kind = 'pass' | 'through' | 'long' | 'over' | 'carry' | 'shot' | 'cross';
 interface Option {
   kind: Kind;
   to: Player2 | null;
@@ -730,10 +755,16 @@ function act(s: State2): void {
   const plan = s.plans[A].team;
   // A counter attacks a defence caught short (research 13 §3): only while fewer than
   // L2.counterBack of the other side's outfield players are goal-side of the ball.
-  const counter =
-    plan.onWin === 'counter' &&
-    s.clockMs - s.wonMs < 6000 &&
-    defs.filter((d) => d.p.line !== 'gk' && d.at.x > s.ball.x).length < L2.counterBack;
+  const goalSide = defs.filter((d) => d.p.line !== 'gk' && d.at.x > s.ball.x).length;
+  const fresh = s.clockMs - s.wonMs < 6000;
+  const counter = plan.onWin === 'counter' && fresh && goalSide < L2.counterBack;
+  // Space behind a defence caught short (research 13 §3): just after winning the ball, the fewer
+  // of them goal-side, the more a forward pass finds open grass. A side set to counter goes
+  // for it; one set to keep the ball takes half of it.
+  const open = fresh
+    ? (Math.max(0, L2.counterBack - goalSide) / L2.counterBack) *
+      (plan.onWin === 'counter' ? 1 : 0.5)
+    : 0;
   // How well the nearest defender presses with the others (research 13 §1).
   const sync = nearest(defs, s.ball).p.k.sync;
   // A defender close enough challenges before the carrier settles (02 §6).
@@ -751,15 +782,13 @@ function act(s: State2): void {
     if (next(s.r.execution) < tackleOdds(d.p.k.tack, c.k.tackD, behind)) {
       if (next(s.r.referee) < foulChance(d.p, behind, true) * careful * boxCare(s.ball))
         return foul(s, d.p, c, false, s.ball, true, behind);
-      say(s, 'tackle', D, d.p, c, world(A, s.ball), { won: 1 });
-      d.p.score += 0.12;
-      return give(s, d.p, mirror(s.ball), true);
+      return tackleWins(s, d.p, c);
     }
     if (next(s.r.referee) < foulChance(d.p, behind, false) * careful * boxCare(s.ball))
       return foul(s, d.p, c, false, s.ball, false, behind);
     say(s, 'tackle', D, d.p, c, world(A, s.ball), { won: 0 });
   }
-  const options = choices(s, c, mates, defs, pressure, counter);
+  const options = choices(s, c, mates, defs, pressure, counter, open);
   const noise = L2.noise * (1.1 - norm(c.attrs.decisions));
   let best = options[0]!;
   let bu = -Infinity;
@@ -793,6 +822,7 @@ function choices(
   defs: { p: Player2; at: Pt }[],
   pressure: number,
   counter: boolean,
+  open = 0,
 ): Option[] {
   const A = s.att;
   const t = s.plans[A].team;
@@ -850,6 +880,7 @@ function choices(
       const air = m.p.k.air - marker.p.k.air;
       fail = Math.max(fail, 1 - contest(air, -0.05, 0.12) * (0.9 - sigma * 2));
     }
+    if (fwd > 0) fail *= 1 - L2.spaceBehind * open;
     const p = clamp(1 - fail, 0.02, 0.99);
     const gain = valueAt(m.at.x, m.at.y) * (1 - 0.35 * recv);
     let u = p * gain - (1 - p) * lossK * valueAt(LENGTH - m.at.x, WIDTH - m.at.y) - here * 0.2;
@@ -876,7 +907,7 @@ function choices(
     ) {
       const into = { x: Math.min(LENGTH - 6, line + 7), y: m.at.y };
       const chaser = nearest(defs, into);
-      const race = contest(m.p.k.run - chaser.p.k.chase, 0.08, 0.12);
+      const race = contest(m.p.k.run - chaser.p.k.chase, 0.08, L2.raceSpread);
       const vision = c.k.vision;
       const pt = clamp(race * (0.45 + 0.5 * vision) - L2.passError * sigma, 0.02, 0.95);
       out.push({
@@ -889,6 +920,26 @@ function choices(
           (1 - pt) * lossK * valueAt(LENGTH - into.x, WIDTH - into.y) -
           here * 0.2 +
           L2.bias * (t.finalThird.throughBalls - 3),
+      });
+    }
+    // Ball over the top (level 1 `over`): from deep, lofted into the space behind a high line,
+    // for a forward to run onto. Long passing makes it land; the race decides who gets there.
+    if (m.p.line === 'att' && line < 75 && m.at.x > line - 10 && b.x < line - 15) {
+      const into = { x: Math.min(LENGTH - 8, line + 12), y: m.at.y };
+      const chaser = nearest(defs, into);
+      const race = contest(m.p.k.run - chaser.p.k.chase, 0.08, L2.raceSpread);
+      const pt = clamp(race * (L2.overBase + 0.5 * c.k.long) - L2.passError * sigma, 0.02, 0.9);
+      out.push({
+        kind: 'over',
+        to: m.p,
+        at: into,
+        p: pt,
+        u:
+          pt * valueAt(into.x, into.y) -
+          (1 - pt) * lossK * valueAt(LENGTH - into.x, WIDTH - into.y) -
+          here * 0.2 +
+          L2.overBias +
+          (t.buildUp === 'long' ? 0.004 : 0),
       });
     }
   }
@@ -975,11 +1026,12 @@ function pass(
   const d = dist(s.ball, o.at);
   play(s, A, settle + d / L2.passSpeed);
   st.passes++;
-  const kindCode = o.kind === 'pass' ? 0 : o.kind === 'through' ? 1 : 2;
+  // Same codes as level 1 (match/kick.ts): pass 0, through 1, long 2, over 5.
+  const kindCode = o.kind === 'pass' ? 0 : o.kind === 'through' ? 1 : o.kind === 'over' ? 5 : 2;
   say(s, 'pass', A, c, o.to, world(A, s.ball), { d: Math.round(d), kind: kindCode });
   const receiver = o.to!;
   // Offside on a ball in behind, or to a forward ahead of the line (02 §6.5).
-  if (o.kind === 'through') {
+  if (o.kind === 'through' || o.kind === 'over') {
     const trap = s.plans[D].team.offsideTrap ? 1.5 : 1;
     const p =
       L2.throughOffside *
@@ -1022,7 +1074,6 @@ function pass(
 
 function carry(s: State2, c: Player2, o: Option, defs: { p: Player2; at: Pt }[]): void {
   const A = s.att;
-  const D = other(A);
   const d = { p: o.to! };
   play(s, A, L2.carry / (L2.carrySpeed * (0.8 + 0.4 * norm(c.attrs.pace))));
   if (next(s.r.execution) < (o.threat ?? 0)) {
@@ -1036,13 +1087,48 @@ function carry(s: State2, c: Player2, o: Option, defs: { p: Player2; at: Pt }[])
       say(s, 'dribble', A, c, d.p, world(A, s.ball), { won: 0 });
       if (next(s.r.referee) < foulChance(d.p, false, true) * boxCare(s.ball))
         return foul(s, d.p, c, false, s.ball, true);
-      say(s, 'tackle', D, d.p, c, world(A, s.ball), { won: 1 });
-      d.p.score += 0.12;
-      return give(s, d.p, mirror(s.ball), true);
+      return tackleWins(s, d.p, c);
     }
   }
   if (!inBox(s.ball) && tacticalStop(s, d.p, defs)) return foul(s, d.p, c, true);
   s.ball = o.at;
+}
+
+/**
+ * A won tackle, as level 1 (match/engine.ts tackleWins): near the touchline it often goes out
+ * for a throw-in, near the goal line for a corner; otherwise the tackler keeps it more often the
+ * better his technique, or it runs loose to whoever is nearer (a duel does not always give a
+ * clean ball).
+ */
+function tackleWins(s: State2, d: Player2, c: Player2): void {
+  const A = c.team;
+  const D = d.team;
+  const at = s.ball;
+  say(s, 'tackle', D, d, c, world(A, at), { won: 1 });
+  d.score += 0.12;
+  if (Math.min(at.y, WIDTH - at.y) < 8 && next(s.r.execution) < 0.45) {
+    const out = { x: at.x, y: at.y < WIDTH / 2 ? 0.5 : WIDTH - 0.5 };
+    say(s, 'throwIn', A, null, null, world(A, out));
+    dead(s, 'throwIn');
+    return give(s, nearest(placed(s, A), out).p, out, false);
+  }
+  if (at.x > LENGTH - 12 && next(s.r.execution) < 0.5) return corner(s, A, at.y);
+  if (next(s.r.execution) < 0.55 + 0.3 * norm(d.attrs.technique))
+    return give(s, d, mirror(at), true);
+  // Loose: the nearer of the two sides' closest players, by a coin weighted on distance.
+  const loose = {
+    x: at.x + (next(s.r.execution) - 0.5) * 6,
+    y: at.y + (next(s.r.execution) - 0.5) * 6,
+  };
+  const m = nearest(
+    placed(s, A).filter((x) => x.p !== c),
+    loose,
+  );
+  const o = nearest(placed(s, D), loose);
+  const dm = dist(m.at, loose);
+  const dd = dist(o.at, loose);
+  if (next(s.r.execution) < dd / (dm + dd || 1)) return give(s, m.p, loose, false);
+  give(s, o.p, mirror(loose), true);
 }
 
 /**

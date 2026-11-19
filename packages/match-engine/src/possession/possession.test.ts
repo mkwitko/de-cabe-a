@@ -168,9 +168,6 @@ const CASES: Case[] = [
     metric: transitionXg,
     side: 'A',
     sign: 1,
-    // Measured 2026-11-19: t 0.3 in 200 paired matches. A counter needs a defence caught short,
-    // and without a space-behind term it rarely is (same gap as rest defence).
-    open: 'level 2 has no space-behind term for a counter yet (HANDOFF 2026-11-19)',
   },
   {
     name: 'rest defence: opponents create less on the break',
@@ -179,9 +176,10 @@ const CASES: Case[] = [
     metric: transitionXg,
     side: 'B',
     sign: -1,
-    // Measured 2026-11-19: no effect either way (0.75 against 0.74 xG in 200 matches). The
-    // players caught upfield press the ball as much as the rest defence covers behind it.
-    open: 'level 2 has no space-behind term for a counter yet (HANDOFF 2026-11-19)',
+    // Measured 2026-11-19, with the space-behind term: still slightly the wrong way (t −0.9 in
+    // 200 paired matches). The players caught upfield press the ball back as much as the rest
+    // defence covers behind it.
+    open: 'rest defence trades counter-press for cover the wrong way at level 2 (HANDOFF 2026-11-19)',
   },
   {
     name: 'offside trap: opponents caught more',

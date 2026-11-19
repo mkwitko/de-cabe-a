@@ -187,6 +187,27 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
     3. novo ajuste com `mfit` em todas as células;
     4. validação com 2.500 partidas por célula (cache do nível 1 em geração);
     5. ligar na carreira.
+- **Nível 2, segunda rodada** (2026-11-19, noite).
+  - Causa isolada: igualar grupos de atributos entre favorito e azarão no confronto de favorito forte.
+    - Saldo de gols, nível 1 contra nível 2: nenhum grupo igualado 2,22 / 4,68; duelo 1,81 / 2,41; físico 1,59 / 2,39.
+    - Velocidade e aceleração sozinhas levam o nível 2 de 4,2 a 2,7.
+  - Correções:
+    - o desarme ganho segue o nível 1: lateral, linha de fundo ou bola solta;
+    - a corrida pela bola nas costas tem espalhamento próprio do nível 2 (`raceSpread`);
+    - o jogador livre se desmarca menos pela diferença de atributos (`spaceSkill`).
+  - Mecanismos novos:
+    - espaço nas costas de uma defesa curta logo depois de ganhar a bola. O contra-ataque passou a mover a métrica: o teste de coerência agora passa;
+    - bola por cima da linha alta (código 5, como no nível 1);
+    - cansaço de pressão e de ritmo.
+  - Relatório no conjunto de calibragem: 94 reprovações, contra 101 antes.
+    - Favorito forte: saldo de 2,78 contra 2,19 (antes 4,67).
+    - Favorito leve: 1,03 contra 0,86.
+    - Equilibrado: resultado e `xG` batem; gols 2,15 contra 2,46.
+  - Pendente nos confrontos de estilo, sempre com o lado que ataca a defesa do outro estilo criando pouco:
+    - pressão alta contra saída curta: diferença de `xG` 2,07 contra 1,27;
+    - bloco baixo contra posse: o time de posse cria cerca de metade do `xG` do nível 1;
+    - jogo direto contra linha alta: o jogo direto cria cerca de metade.
+  - Defesa de segurança continua em aberto.
 - **Disputas aéreas: origem medida** (60 partidas, 15,1 por jogo contra cerca de 25).
   - Passe longo em jogo corrido 7,5; escanteio 3,6; passe por cima 1,3; afastamento 0,7; cruzamento em jogo corrido 0,6; falta 0,5; tiro de meta 0,5; bola longa do goleiro em jogo corrido 0,3.
   - Tiro de meta e reposição do goleiro quase não geram disputa: há só 1,4 tiro de meta longo por time.
