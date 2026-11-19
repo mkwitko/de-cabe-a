@@ -13,6 +13,10 @@ import { upkeepOf } from './clubs';
 import { nationalDivisions } from './start';
 import { closedDoors, crowdAt, punishmentAt, ticketOf, usualCrowd } from '../match/stadium';
 import { note } from './inbox';
+import { CURRENCIES, rateOf } from '../market/currency';
+
+/** A month's move of the rate, in tenths of a percent, that makes news. PARÂMETRO. */
+const FX_NEWS = 70;
 
 /**
  * PARÂMETRO by national tier (04 §4, table "Milhões de reais por temporada", middle of each
@@ -165,6 +169,13 @@ function monthlyBills(w: CareerWorld, day: number) {
     const owed = club.initialDebt - Math.round((club.initialDebt * paid) / DEBT_MONTHS);
     post('debt', -Math.round(club.initialDebt / DEBT_MONTHS));
     post('interest', -Math.round((owed * DEBT_RATE) / 1200));
+  }
+  // A month the real swung hard against the dollar or the euro: the directors hear of it.
+  for (const currency of CURRENCIES) {
+    const now = rateOf(w, currency, day);
+    const before = rateOf(w, currency, day - 1);
+    const change = Math.round(((now - before) * 1000) / before);
+    if (Math.abs(change) >= FX_NEWS) note(w, { day, kind: 'fx', currency, rate: now, change });
   }
   const { prices } = pricesOf(w);
   post('tv', Math.round(priced(tier.tv, prices) / 12));
