@@ -9,25 +9,120 @@
   "population": 213400000,
   "floor": 0.5,
   "clubs": [
-    { "club": "Flamengo", "state": "RJ", "aliases": ["CR Flamengo", "Clube de Regatas do Flamengo"], "share": 21.2 },
-    { "club": "Corinthians", "state": "SP", "aliases": ["SC Corinthians Paulista", "Sport Club Corinthians Paulista"], "share": 11.9 },
-    { "club": "Palmeiras", "state": "SP", "aliases": ["SE Palmeiras", "Sociedade Esportiva Palmeiras"], "share": 6.5 },
-    { "club": "São Paulo", "state": "SP", "aliases": ["São Paulo FC", "São Paulo Futebol Clube"], "share": 6.4 },
-    { "club": "Vasco da Gama", "state": "RJ", "aliases": ["Vasco", "CR Vasco da Gama", "Club de Regatas Vasco da Gama"], "share": 3.4 },
-    { "club": "Grêmio", "state": "RS", "aliases": ["Grêmio FBPA", "Grêmio Foot-Ball Porto Alegrense"], "share": 3.0 },
-    { "club": "Cruzeiro", "state": "MG", "aliases": ["Cruzeiro EC", "Cruzeiro Esporte Clube", "Cruzeiro Esporte Clube SAF"], "share": 2.3 },
-    { "club": "Atlético Mineiro", "state": "MG", "aliases": ["Atlético-MG", "Atlético MG", "CA Mineiro", "Clube Atlético Mineiro"], "share": 2.3 },
-    { "club": "Bahia", "state": "BA", "aliases": ["EC Bahia", "Esporte Clube Bahia"], "share": 2.2 },
-    { "club": "Santos", "state": "SP", "aliases": ["Santos FC", "Santos Futebol Clube"], "share": 2.0 },
-    { "club": "Internacional", "state": "RS", "aliases": ["SC Internacional", "Sport Club Internacional"], "share": 1.7 },
-    { "club": "Botafogo", "state": "RJ", "aliases": ["Botafogo FR", "Botafogo de Futebol e Regatas"], "share": 1.5 },
-    { "club": "Sport", "state": "PE", "aliases": ["Sport Recife", "Sport Club do Recife"], "share": 1.3 },
-    { "club": "Fluminense", "state": "RJ", "aliases": ["Fluminense FC", "Fluminense Football Club"], "share": 0.9 },
-    { "club": "Vitória", "state": "BA", "aliases": ["EC Vitória", "Esporte Clube Vitória"], "share": 0.8 },
-    { "club": "Fortaleza", "state": "CE", "aliases": ["Fortaleza EC", "Fortaleza Esporte Clube"], "share": 0.7 },
-    { "club": "Ceará", "state": "CE", "aliases": ["Ceará SC", "Ceará Sporting Club"], "share": 0.7 },
-    { "club": "Santa Cruz", "state": "PE", "aliases": ["Santa Cruz FC", "Santa Cruz Futebol Clube"], "share": 0.6 },
-    { "club": "Athletico Paranaense", "state": "PR", "aliases": ["Athletico-PR", "Club Athletico Paranaense"], "share": 0.5 },
+    {
+      "club": "Flamengo",
+      "state": "RJ",
+      "aliases": ["CR Flamengo", "Clube de Regatas do Flamengo"],
+      "share": 21.2
+    },
+    {
+      "club": "Corinthians",
+      "state": "SP",
+      "aliases": ["SC Corinthians Paulista", "Sport Club Corinthians Paulista"],
+      "share": 11.9
+    },
+    {
+      "club": "Palmeiras",
+      "state": "SP",
+      "aliases": ["SE Palmeiras", "Sociedade Esportiva Palmeiras"],
+      "share": 6.5
+    },
+    {
+      "club": "São Paulo",
+      "state": "SP",
+      "aliases": ["São Paulo FC", "São Paulo Futebol Clube"],
+      "share": 6.4
+    },
+    {
+      "club": "Vasco da Gama",
+      "state": "RJ",
+      "aliases": ["Vasco", "CR Vasco da Gama", "Club de Regatas Vasco da Gama"],
+      "share": 3.4
+    },
+    {
+      "club": "Grêmio",
+      "state": "RS",
+      "aliases": ["Grêmio FBPA", "Grêmio Foot-Ball Porto Alegrense"],
+      "share": 3.0
+    },
+    {
+      "club": "Cruzeiro",
+      "state": "MG",
+      "aliases": ["Cruzeiro EC", "Cruzeiro Esporte Clube", "Cruzeiro Esporte Clube SAF"],
+      "share": 2.3
+    },
+    {
+      "club": "Atlético Mineiro",
+      "state": "MG",
+      "aliases": ["Atlético-MG", "Atlético MG", "CA Mineiro", "Clube Atlético Mineiro"],
+      "share": 2.3
+    },
+    {
+      "club": "Bahia",
+      "state": "BA",
+      "aliases": ["EC Bahia", "Esporte Clube Bahia"],
+      "share": 2.2
+    },
+    {
+      "club": "Santos",
+      "state": "SP",
+      "aliases": ["Santos FC", "Santos Futebol Clube"],
+      "share": 2.0
+    },
+    {
+      "club": "Internacional",
+      "state": "RS",
+      "aliases": ["SC Internacional", "Sport Club Internacional"],
+      "share": 1.7
+    },
+    {
+      "club": "Botafogo",
+      "state": "RJ",
+      "aliases": ["Botafogo FR", "Botafogo de Futebol e Regatas"],
+      "share": 1.5
+    },
+    {
+      "club": "Sport",
+      "state": "PE",
+      "aliases": ["Sport Recife", "Sport Club do Recife"],
+      "share": 1.3
+    },
+    {
+      "club": "Fluminense",
+      "state": "RJ",
+      "aliases": ["Fluminense FC", "Fluminense Football Club"],
+      "share": 0.9
+    },
+    {
+      "club": "Vitória",
+      "state": "BA",
+      "aliases": ["EC Vitória", "Esporte Clube Vitória"],
+      "share": 0.8
+    },
+    {
+      "club": "Fortaleza",
+      "state": "CE",
+      "aliases": ["Fortaleza EC", "Fortaleza Esporte Clube"],
+      "share": 0.7
+    },
+    {
+      "club": "Ceará",
+      "state": "CE",
+      "aliases": ["Ceará SC", "Ceará Sporting Club"],
+      "share": 0.7
+    },
+    {
+      "club": "Santa Cruz",
+      "state": "PE",
+      "aliases": ["Santa Cruz FC", "Santa Cruz Futebol Clube"],
+      "share": 0.6
+    },
+    {
+      "club": "Athletico Paranaense",
+      "state": "PR",
+      "aliases": ["Athletico-PR", "Club Athletico Paranaense"],
+      "share": 0.5
+    },
     { "club": "Remo", "state": "PA", "aliases": ["Clube do Remo"], "share": 0.5 }
   ]
 }
