@@ -147,3 +147,27 @@ describe('injuries (08, corte 1)', () => {
     expect(new Set(theirs).size).toBe(11);
   });
 });
+
+it('the eleven holds no more foreigners than the season allows', async () => {
+  const { foreignLimit } = await import('./squad');
+  expect([2026, 2027, 2028, 2029, 2030, 2035].map(foreignLimit)).toEqual([9, 8, 7, 6, 5, 5]);
+  const w = openCareer(structuredClone(pack), 3, clubId);
+  // Every player of the club made a foreigner: only `limit` of them may start.
+  w.pack = {
+    ...w.pack,
+    players: w.pack.players.map((p, k) =>
+      p.clubId === clubId && k % 9 !== 0 ? { ...p, nationality: 'AR' } : p,
+    ),
+  };
+  const limit = foreignLimit(w.season.season);
+  const foreign = (ids: readonly string[]) =>
+    ids.filter((id) => w.pack.players.find((p) => p.id === id)!.nationality !== 'BR').length;
+  // The person names the best eleven, foreigners or not.
+  const free = bestLineup(w, lineupOf(w).formation);
+  expect(foreign(free.xi)).toBeGreaterThan(limit);
+  setLineup(w, free);
+  expect(foreign(fielded(w, 1).xi)).toBeLessThanOrEqual(limit);
+  expect(foreign(bestLineup(w, lineupOf(w).formation, undefined, limit).xi)).toBeLessThanOrEqual(
+    limit,
+  );
+});

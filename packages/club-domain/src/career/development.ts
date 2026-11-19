@@ -22,6 +22,7 @@ import {
   pick,
   rngFrom,
   type AttributeId,
+  type Rng,
 } from '@decabeca/match-engine';
 import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
@@ -252,10 +253,62 @@ export function crop(
  * league pays abroad about what the Banco Central counts (US$ 180-235 mi in 2024-2025, reality
  * bench).
  */
-const IMPORTS = 200;
-/** Quality from 58 to 85, the better of two draws: the clubs here buy from the top of the
- * South American market and bring players home from Europe. */
-const IMPORT_QUALITY: [number, number] = [55, 84];
+const IMPORTS = 320;
+/**
+ * Quality from 52 to 82, one draw: most who come are the middle of the South American market,
+ * cheap next to a Brazilian of the same level, a few are stars back from Europe.
+ */
+const IMPORT_QUALITY: [number, number] = [52, 82];
+/**
+ * Where they come from, per hundred: the foreigners of the Série A 2025 by nationality
+ * (Tribuna do Planalto: 47 Argentines, 27 Uruguayans, 19 Colombians, 8 Ecuadorians, 7
+ * Portuguese; Itatiaia: 7 Paraguayans, 7 Chileans, 2 Venezuelans, 2 Bolivians).
+ */
+const IMPORT_NATIONS: readonly [string, number][] = [
+  ['AR', 36],
+  ['UY', 20],
+  ['CO', 15],
+  ['EC', 6],
+  ['PY', 6],
+  ['CL', 5],
+  ['PT', 5],
+  ['VE', 2],
+  ['PE', 2],
+  ['BO', 2],
+  ['ES', 1],
+];
+/** Names for those who come from the Spanish-speaking market; the Portuguese keep Brazil's. */
+const HISPANIC_FIRST = (
+  'Agustín Alan Alejandro Andrés Bruno Camilo Cristian Diego Emiliano Enzo Esteban Facundo ' +
+  'Federico Franco Gastón Gonzalo Ignacio Joaquín Jorge Juan Julián Leandro Lucas Lucio Manuel ' +
+  'Marcos Martín Matías Maximiliano Nahuel Nicolás Pablo Rodrigo Santiago Sebastián Tomás Valentín'
+).split(' ');
+const HISPANIC_LAST = (
+  'Acosta Aguirre Álvarez Benítez Cabrera Castro Cáceres Díaz Domínguez Fernández Flores ' +
+  'Giménez Gómez González Gutiérrez Herrera Ibáñez López Medina Méndez Molina Morales Muñoz ' +
+  'Núñez Ortiz Pereyra Ramírez Ríos Rodríguez Romero Rojas Sánchez Sosa Suárez Torres Vargas ' +
+  'Vázquez Villalba Zapata'
+).split(' ');
+
+/** A foreign market player's nation and name, drawn apart from the rest of him. */
+function foreignerOf(
+  r: Rng,
+  made: PackPlayer,
+): Pick<PackPlayer, 'nationality' | 'name' | 'knownAs'> {
+  const f = fork(r, 'nation');
+  let roll = pick(f, 100);
+  let nation = IMPORT_NATIONS[0]![0];
+  for (const [n, share] of IMPORT_NATIONS) {
+    nation = n;
+    if (roll < share) break;
+    roll -= share;
+  }
+  if (nation === 'PT') return { nationality: nation, name: made.name, knownAs: made.knownAs };
+  const first = HISPANIC_FIRST[pick(f, HISPANIC_FIRST.length)]!;
+  const last = HISPANIC_LAST[pick(f, HISPANIC_LAST.length)]!;
+  // Known by the surname, the way the press calls them here.
+  return { nationality: nation, name: `${first} ${last}`, knownAs: last };
+}
 const IMPORT_AGES: [number, number] = [22, 32];
 
 /** True for a player of the foreign market who has not signed for a club of the league. */
@@ -279,7 +332,7 @@ export function imports(
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = IMPORT_AGES[0] + pick(r, IMPORT_AGES[1] - IMPORT_AGES[0] + 1);
     const span = IMPORT_QUALITY[1] - IMPORT_QUALITY[0] + 1;
-    const quality = IMPORT_QUALITY[0] + Math.max(pick(r, span), pick(r, span));
+    const quality = IMPORT_QUALITY[0] + pick(r, span);
     const made = generatePlayer(r, {
       id: `f${season}-${k}`,
       position,
@@ -291,6 +344,7 @@ export function imports(
     const wage = priced(goingWage(origin, bestRoles(attributes, 1)[0]!.rating), wages);
     out.push({
       ...made,
+      ...foreignerOf(r, made),
       birthDate: `${season - age}${made.birthDate.slice(4)}`,
       attributes,
       contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },

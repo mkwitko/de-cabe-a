@@ -27,6 +27,8 @@ import {
   type Currency,
   rateOf,
   suspendedIn,
+  foreignLimit,
+  isForeign,
   type Moment,
   type MomentMode,
   upcomingFor,
@@ -276,6 +278,8 @@ export interface SquadView {
     banned: boolean;
   })[];
   strength: number;
+  /** Foreigners in the eleven and how many the rules allow this season. */
+  foreigners: { named: number; limit: number };
   plan: PlanChoice;
 }
 
@@ -779,6 +783,13 @@ function squadView(w: CareerWorld): SquadView {
       banned: banned.has(p.id),
     })),
     strength: Math.round(myStrength(w, then)),
+    foreigners: {
+      named: l.xi.filter((id) => {
+        const p = w.pack.players.find((x) => x.id === id);
+        return p !== undefined && isForeign(p);
+      }).length,
+      limit: foreignLimit(w.season.season),
+    },
     plan: planOf(w),
   };
 }

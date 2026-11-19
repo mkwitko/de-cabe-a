@@ -75,6 +75,14 @@ export function Squad(props: {
           <h3 id="squad-title" className={LABEL}>
             {t('squad.title')}
           </h3>
+          <p
+            className={`text-sm ${squad.foreigners.named > squad.foreigners.limit ? 'font-bold text-club-danger' : 'text-chalk-soft'}`}
+          >
+            {t('squad.foreigners', {
+              ...squad.foreigners,
+              over: String(squad.foreigners.named > squad.foreigners.limit),
+            })}
+          </p>
           <p className="text-sm text-chalk-soft">
             {t('squad.strength')}
             <span className="ml-2 font-condensed text-2xl leading-none font-black text-chalk tabular-nums">

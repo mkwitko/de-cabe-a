@@ -230,11 +230,7 @@ export function bidFee(w: CareerWorld, playerId: string, fee: number): FeeAnswer
   const round = talk.round + 1;
   const abroad = p.clubId === ABROAD;
   const a: FeeAnswer = abroad
-    ? fee >= talk.asking
-      ? { kind: 'accept', fee: talk.asking }
-      : round >= MAX_ROUNDS
-        ? { kind: 'refuse', reason: 'final' }
-        : { kind: 'counter', fee: talk.asking }
+    ? answerAbroad(importFee(w, p), talk.asking, fee, round)
     : answerFee(
         sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season, inRed(w, p.clubId)),
         fee,
@@ -476,4 +472,19 @@ export function answerBid(
     },
   ].slice(-80);
   return { kind: 'sold', fee };
+}
+
+/**
+ * A club abroad haggles too: under its asking price it meets the offer halfway, never below
+ * FOREIGN_FLOOR % of what it first asked; an offer at the ask or above closes it. PARÂMETRO.
+ */
+const FOREIGN_FLOOR = 85;
+function answerAbroad(first: number, asking: number, fee: number, round: number): FeeAnswer {
+  if (fee >= asking) return { kind: 'accept', fee: asking };
+  if (round >= MAX_ROUNDS) return { kind: 'refuse', reason: 'final' };
+  const counter = Math.max(
+    thousands((first * FOREIGN_FLOOR) / 100),
+    thousands(asking - (asking - fee) / 2),
+  );
+  return counter <= fee ? { kind: 'accept', fee } : { kind: 'counter', fee: counter };
 }

@@ -37,17 +37,18 @@ describe('the foreign market (04 §4.7)', () => {
     const cash = w.ledger.cash;
     const talk = openTalk(w, p.id);
     expect(talk.asking).toBe(importFee(w, p));
-    // Under the price: it holds.
+    // Under the price: it comes down halfway, never below 85% of its first ask.
     expect(bidFee(w, p.id, Math.round(talk.asking / 2)).kind).toBe('counter');
-    const a = bidFee(w, p.id, talk.asking);
+    const asked = w.talks![p.id]!.asking;
+    expect(asked).toBeLessThan(talk.asking);
+    expect(asked).toBeGreaterThanOrEqual(Math.floor((talk.asking * 85) / 100 / 1000) * 1000);
+    const a = bidFee(w, p.id, asked);
     expect(a.kind).toBe('accept');
     const wants = w.talks![p.id]!.wants!;
     const signed = bidTerms(w, p.id, wants);
     expect(signed.kind).toBe('accept');
     expect(w.pack.players.find((x) => x.id === p.id)!.clubId).toBe(clubId);
-    expect(w.ledger.cash).toBe(
-      cash - talk.asking - commission(agentOf(w.pack, p), talk.asking, wants.wage),
-    );
+    expect(w.ledger.cash).toBe(cash - asked - commission(agentOf(w.pack, p), asked, wants.wage));
   });
 
   it('clubs with a scouting department hear of players abroad; the sold young do not come back', () => {

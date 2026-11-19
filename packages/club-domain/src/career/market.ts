@@ -127,7 +127,7 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     // A new club starts to know him now.
     if (stamped[id]!.clubId) markArrival(w.pack, id, season);
   for (const clubId of touched) {
-    const level = clubLevel(w.pack, clubId);
+    const level = clubLevel(w.pack, clubId, w.season.season);
     w.strength.set(clubId, level.strength);
     w.eleven.set(clubId, level.eleven);
   }
