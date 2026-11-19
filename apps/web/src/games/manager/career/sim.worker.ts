@@ -126,6 +126,9 @@ import {
   seasonReview,
   type HistoryEntry,
   type SeasonReview,
+  newsOf,
+  todoOf,
+  type Todo,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -247,13 +250,18 @@ export interface SimView {
     /** After a dismissal: the clubs that offer the job, each with its division. */
     offers: (ClubFace & { clubId: string; division: string })[];
   };
-  /** The inbox, newest first: each note with its clubs named and its date. */
+  /** The inbox's news, newest first: each note with its clubs named and its date. */
   inbox: InboxItem[];
+  /** What waits for the person's answer, with names; answered or expired ones are gone. */
+  todo: TodoItem[];
+  /** True while the person has made no decision yet on a new career (first-week guide). */
+  fresh: boolean;
   /** ms the last step took on this device. */
   ms: number;
 }
 
 /** A note as the screen reads it: the fact, its date, and club ids turned into names. */
+export type TodoItem = Todo & { playerName: string; clubName: string };
 export type InboxItem = Note & { iso: string; clubName: string };
 const INBOX_SHOWN = 12;
 
@@ -896,12 +904,19 @@ function view(w: CareerWorld, ms: number): SimView {
     atHome: u.home === w.clubId,
     competition: competition(u.competitionId),
   }));
+  // On deadline day the next match is still the next match: shown beside the window decision.
+  const match =
+    pending?.kind === 'match'
+      ? pending
+      : pending?.kind === 'deadline'
+        ? upcomingFor(s, w.clubId, 1)[0]
+        : undefined;
   return {
     season: w.season.season,
     today: isoOf(w.day),
     form,
     // The first one is the next match, shown on its own.
-    fixtures: pending?.kind === 'match' ? upcoming.slice(1) : upcoming,
+    fixtures: match ? upcoming.slice(1) : upcoming,
     fx: CURRENCIES.map((currency) => {
       const rate = rateOf(w, currency);
       const opened = rateOf(w, currency, dayOf(`${w.season.season}-01-01`));
@@ -915,7 +930,28 @@ function view(w: CareerWorld, ms: number): SimView {
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
     turn,
-    inbox: (w.inbox ?? [])
+    todo: todoOf(w).map((t) => ({
+      ...t,
+      playerName:
+        t.kind === 'bid'
+          ? (() => {
+              const p = w.pack.players.find((x) => x.id === t.player);
+              return p?.knownAs ?? p?.name ?? '';
+            })()
+          : t.kind === 'agentOffer'
+            ? t.player
+            : '',
+      clubName:
+        t.kind === 'bid'
+          ? (byId.get(t.from)?.name ?? foreignName(t.from))
+          : t.kind === 'approach'
+            ? (byId.get(t.club)?.name ?? '')
+            : t.kind === 'agentOffer'
+              ? (byId.get(t.club)?.name ?? '')
+              : '',
+    })),
+    fresh: w.hiredDay !== undefined && w.day - w.hiredDay <= 7,
+    inbox: newsOf(w)
       .slice(-INBOX_SHOWN)
       .reverse()
       .map((n) => ({
@@ -995,27 +1031,26 @@ function view(w: CareerWorld, ms: number): SimView {
     history: (w.history ?? []).map((h) => ({ ...h, club: byId.get(h.clubId)?.shortName ?? '' })),
     cash: w.ledger.cash,
     deadline: pending?.kind === 'deadline' ? isoOf(pending.day) : null,
-    next:
-      pending?.kind === 'match'
-        ? {
-            iso: isoOf(pending.day),
-            home: face(byId.get(pending.home)!),
-            away: face(byId.get(pending.away)!),
-            atHome: pending.home === w.clubId,
-            competition: competition(pending.competitionId),
-            banned: {
-              theirs: namesOf(
+    next: match
+      ? {
+          iso: isoOf(match.day),
+          home: face(byId.get(match.home)!),
+          away: face(byId.get(match.away)!),
+          atHome: match.home === w.clubId,
+          competition: competition(match.competitionId),
+          banned: {
+            theirs: namesOf(
+              w,
+              suspendedIn(
                 w,
-                suspendedIn(
-                  w,
-                  pending.competitionId,
-                  pending.home === w.clubId ? pending.away : pending.home,
-                ),
+                match.competitionId,
+                match.home === w.clubId ? match.away : match.home,
               ),
-              ours: namesOf(w, suspendedIn(w, pending.competitionId)),
-            },
-          }
-        : null,
+            ),
+            ours: namesOf(w, suspendedIn(w, match.competitionId)),
+          },
+        }
+      : null,
     last,
     table: table.rows.map((r) => ({
       clubId: r.clubId,
@@ -1029,9 +1064,10 @@ function view(w: CareerWorld, ms: number): SimView {
 }
 
 /** Moves to the next decision; a snapshot to save when days were played on the way. */
-async function toNextDecision(w: CareerWorld): Promise<SimReply['save']> {
+async function toNextDecision(w: CareerWorld, hired = false): Promise<SimReply['save']> {
   const from = w.day;
   pending = nextDecision(w, { deadlines: true });
+  if (hired) w.hiredDay = w.day;
   return w.day !== from
     ? { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) }
     : undefined;
@@ -1050,7 +1086,9 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         r.snapshot.byteLength > 0
           ? loadCareer(pack, r.seed, r.clubId, await gunzip(r.snapshot))
           : openCareer(pack, r.seed, r.clubId);
-      save = await toNextDecision(world);
+      // A new career: the person arrives on the day of their first decision, not on day 0.
+      const hired = r.snapshot.byteLength === 0;
+      save = await toNextDecision(world, hired);
     } else if (world && r.type === 'play' && pending?.kind === 'deadline') {
       // Deadline day passed on: the window closes and the days run to the next decision.
       save = await toNextDecision(world);

@@ -32,6 +32,17 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await page.screenshot({ path: 'test-results/carreira-ofertas-390.png', fullPage: true });
   await accept.first().click();
   const play = page.getByRole('button', { name: 'Só o resultado' });
+  // A new career shows the next match even on deadline day, a first-week guide, and an inbox
+  // split into what asks for an answer and the news.
+  await expect(page.getByText('Próximo jogo', { exact: true }).first()).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(page.getByRole('region', { name: 'Primeiros passos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pede resposta' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Notícias' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
+  await page.getByRole('button', { name: 'Pular guia' }).click();
+  await expect(page.getByRole('region', { name: 'Primeiros passos' })).toHaveCount(0);
   await toMatch(page);
   await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
   await play.click();
@@ -186,7 +197,7 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await page.getByRole('button', { name: 'Vestiário', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Escalação' })).toBeVisible({ timeout: 30_000 });
     const board = page.locator('.sala-board button');
     await expect(board).toHaveCount(11);
@@ -233,7 +244,7 @@ for (const width of [360, 1280]) {
 
     // The pick is kept on the server at once: a reload brings it back.
     await page.reload();
-    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await page.getByRole('button', { name: 'Vestiário', exact: true }).click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `), {
       timeout: 30_000,
     });
@@ -246,7 +257,7 @@ for (const width of [360, 1280]) {
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await page.getByRole('button', { name: 'Vestiário', exact: true }).click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -323,7 +334,7 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Mercado' }).click();
+    await page.getByRole('button', { name: 'Mercado', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Jogadores no mercado' })).toBeVisible({
       timeout: 30_000,
     });
@@ -374,12 +385,12 @@ for (const width of [360, 1280]) {
 
     // The signing is in the snapshot and in the accounts.
     await page.reload();
-    await page.getByRole('button', { name: 'Mercado' }).click();
+    await page.getByRole('button', { name: 'Mercado', exact: true }).click();
     await expect(squad.getByRole('listitem')).toHaveCount(size + 1, { timeout: 30_000 });
     await expect(squad.getByRole('listitem').filter({ hasText: name })).not.toHaveCount(0);
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
     await expect(page.getByText('Transferências', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Mercado' }).click();
+    await page.getByRole('button', { name: 'Mercado', exact: true }).click();
 
     // A renewal opens the player's table alone: he says what he wants to stay.
     const own = squad.getByRole('listitem').nth(1);
@@ -433,7 +444,7 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Diretoria' }).click();
+    await page.getByRole('button', { name: 'Diretoria', exact: true }).click();
     await expect(page.getByText(/^Terminar a .+ até o \d+º lugar\.$/)).toBeVisible({
       timeout: 30_000,
     });
@@ -452,7 +463,7 @@ for (const width of [360, 1280]) {
     await page.getByRole('button', { name: 'Sala do técnico' }).click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Diretoria' }).click();
+    await page.getByRole('button', { name: 'Diretoria', exact: true }).click();
     await expect(page.getByText(/^(Vitória|Empate|Derrota) (como|em) /)).toBeVisible();
     await expect(page.getByText(/^[+−]\d+$/).first()).toBeVisible();
     const overflow = await page.evaluate(
@@ -472,7 +483,7 @@ test('career: send a scout from the market at 360 px', async ({ page }) => {
     .getByRole('button', { name: /^Assumir o / })
     .first()
     .click();
-  await page.getByRole('button', { name: 'Mercado' }).click();
+  await page.getByRole('button', { name: 'Mercado', exact: true }).click();
   const scouts = page
     .locator('div.sala-slab')
     .filter({ has: page.getByRole('heading', { name: 'Olheiros' }) });
@@ -497,7 +508,7 @@ test("career: look at another club's squad and ask a scout about one player at 3
     .getByRole('button', { name: /^Assumir o / })
     .first()
     .click();
-  await page.getByRole('button', { name: 'Mercado' }).click();
+  await page.getByRole('button', { name: 'Mercado', exact: true }).click();
   const squads = page
     .locator('div.sala-slab')
     .filter({ has: page.getByRole('heading', { name: 'Elencos' }) });

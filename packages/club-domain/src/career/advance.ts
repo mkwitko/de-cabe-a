@@ -111,6 +111,8 @@ export interface CareerWorld {
   board?: Board;
   /** Season the person took the job (the outgoing directors' man, when since then; clubs.ts). */
   hired?: number;
+  /** The day of the person's first decision: older notes happened before they arrived. */
+  hiredDay?: number;
   /** What happened, newest last (inbox.ts). */
   inbox?: Note[];
   /** Fees each club paid and received this season (market/books.ts). */
