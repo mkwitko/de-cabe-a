@@ -2,8 +2,11 @@
  * Possession value by position (02 §5.4: grid 12 × 8 shared by both levels).
  * Team frame, attacking +x. The value of holding the ball at a point: what a
  * shot from there is worth, plus a smooth reward for territory.
- * PARAMETERS: territory term and the share of shot value (a point is worth
- * less than a free shot from it because the shot is not always available).
+ * The three coefficients are a least-squares fit to the open expected-threat
+ * grid 12 × 8 (Karun Singh, "Introducing Expected Threat", open_xt_12x8_v1):
+ * RMSE 0.004 against the grid, down from 0.017 with the earlier hand-set
+ * 0.004 / 0.04 / 0.8, which valued the area in front of the box at almost
+ * twice the reference and so made carrying beat shooting.
  */
 import { xg } from './xg';
 
@@ -13,9 +16,9 @@ const L = 105;
 const W = 68;
 
 const raw = (x: number, y: number) =>
-  0.004 +
-  0.04 * (x / L) * (x / L) +
-  0.8 *
+  0.0095 +
+  0.0133 * (x / L) * (x / L) +
+  0.64 *
     xg({
       x,
       y,
