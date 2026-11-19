@@ -5,6 +5,8 @@
  * themselves yet. A club lends who its plan does not start, and a player goes only where he
  * will play. Integers; every number is a PARÂMETRO.
  */
+import { ruleOn } from '../rules/registry';
+import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
 import { movePlayer, settle, windowOpen } from '../career/market';
@@ -34,13 +36,13 @@ const MIN_KEEPERS = 2;
  * once, and at most three loans with the same club a season. Boys of 21 or under that the club
  * formed do not count.
  */
-const LOANS_MAX = 6;
-const PAIR_MAX = 3;
-const FREE_AGE = 21;
+/** FIFA's loan limits in force (rules/registry.ts). */
+const limits = (w: CareerWorld) =>
+  ruleOn('loans', w.day > 0 ? isoOf(w.day) : `${w.season.season}-01-01`);
 
 /** Whether a loan counts toward FIFA's limits: not a boy the owner formed. */
 const counts = (w: CareerWorld, p: PackPlayer, owner: string) =>
-  !(ageOf(p, w.season.season) <= FREE_AGE && p.origin?.clubId === owner);
+  !(ageOf(p, w.season.season) <= limits(w).exemptAge && p.origin?.clubId === owner);
 
 /** Loans that count, out from `owner`, in at `to`, and between the two this season. */
 function loanCounts(w: CareerWorld, owner: string, to: string) {
@@ -95,9 +97,10 @@ export function cannotBorrow(w: CareerWorld, p: PackPlayer, to: string): LoanNo 
   if (thin(w, p)) return 'theirSquad';
   if (counts(w, p, p.clubId)) {
     const n = loanCounts(w, p.clubId, to);
-    if (n.out >= LOANS_MAX) return 'loansOut';
-    if (n.inn >= LOANS_MAX) return 'loansIn';
-    if (n.pair >= PAIR_MAX) return 'pairLimit';
+    const l = limits(w);
+    if (n.out >= l.atOnce) return 'loansOut';
+    if (n.inn >= l.atOnce) return 'loansIn';
+    if (n.pair >= l.samePair) return 'pairLimit';
   }
   // He goes to play: a place in the eleven or the rotation there.
   const role = fairRole({ pack: w.pack, clubId: to }, p, w.season.season);

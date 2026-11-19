@@ -5,6 +5,8 @@
  * finance: what they have spent and earned in the market this season is kept in the career
  * (`w.books`) and counted against the budget. Integers; every number is a PARÂMETRO.
  */
+import { ruleOn } from '../rules/registry';
+import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
 import { pricesOf } from '../career/prices';
@@ -205,7 +207,6 @@ export function book(w: CareerWorld, from: string, to: string, fee: number, p: P
  * formed the player (`origin.clubId`), 5% of a sale abroad (FIFA's mechanism) and 6% of one
  * between clubs here (CBF). PARÂMETROS. The person's club pays and receives through its ledger.
  */
-const SOLIDARITY = { abroad: 5, here: 6 };
 
 export function solidarity(
   w: CareerWorld,
@@ -217,7 +218,8 @@ export function solidarity(
   const formed = p.origin?.clubId;
   if (!formed || formed === seller || fee <= 0) return;
   if (!w.pack.clubs.some((c) => c.id === formed)) return;
-  const share = thousands((fee * (abroad ? SOLIDARITY.abroad : SOLIDARITY.here)) / 100);
+  const rate = ruleOn('solidarity', w.day > 0 ? isoOf(w.day) : `${w.season.season}-01-01`);
+  const share = thousands((fee * (abroad ? rate.abroad : rate.here)) / 100);
   if (share <= 0) return;
   const entry = (amount: number, side: string) =>
     postEntry(w.ledger, {

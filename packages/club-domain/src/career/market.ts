@@ -5,6 +5,7 @@
  * rebuild it. Who buys whom and for how much is decided in `market/` (the clubs' rounds and the
  * person's two tables); money goes through the ledger and nowhere else.
  */
+import { ruleOn } from '../rules/registry';
 import { isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
 import { carryCache } from '../lib/pack-cache';
@@ -33,18 +34,19 @@ export type Moves = Record<
 >;
 
 /**
- * The CBF's transfer windows (2026 calendar): the first to 3 March, a domestic one for clubs
- * here only from 4 to 27 March (after the state championships), and the second from 20 July to
- * 11 September. PARÂMETRO: the dates move a little each year. The first opens on 5 January in
- * the CBF's calendar; here it opens with the year, since a career starts on 1 January and its
- * first days would otherwise find the market shut.
+ * The CBF's transfer windows in force that year (rules/registry.ts): a first, a domestic one for
+ * clubs here only after the state championships, and a second.
  */
 export type TransferWindow = 'first' | 'domestic' | 'second';
 export function windowOf(day: number): TransferWindow | null {
-  const md = isoOf(day).slice(5);
-  if (md <= '03-03') return 'first';
-  if (md >= '03-04' && md <= '03-27') return 'domestic';
-  if (md >= '07-20' && md <= '09-11') return 'second';
+  const iso = isoOf(day);
+  const md = iso.slice(5);
+  const w = ruleOn('windows', iso);
+  const inside = (span: readonly [string, string] | null) =>
+    span !== null && md >= span[0] && md <= span[1];
+  if (inside(w.first)) return 'first';
+  if (inside(w.domestic)) return 'domestic';
+  if (inside(w.second)) return 'second';
   return null;
 }
 export const windowOpen = (day: number): boolean => windowOf(day) !== null;
