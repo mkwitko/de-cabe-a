@@ -862,6 +862,60 @@ for (const uid of scope)
     est('city: unresolved placeholder (name "Cidade N")');
   }
 
+// Birthplaces (origin.cityId): Wikidata's place of birth for Brazilian footballers
+// (data/birthplaces.json, fetch-birthplaces.ts), matched on the birth date and the name: the
+// label equal to the player's known or full name, or all its words inside the full name; a date
+// with two such candidates is left alone. FM has no birthplace.
+const BIRTHS = (
+  JSON.parse(readFileSync(new URL('./data/birthplaces.json', import.meta.url), 'utf8')) as {
+    players: {
+      qid: string;
+      name: string;
+      birth: string;
+      place: {
+        qid: string;
+        name: string;
+        state: string;
+        lat: number | null;
+        lon: number | null;
+        population: number | null;
+      };
+    }[];
+  }
+).players;
+let bornKnown = 0;
+{
+  const byDate = new Map<string, typeof BIRTHS>();
+  for (const b of BIRTHS) (byDate.get(b.birth) ?? byDate.set(b.birth, []).get(b.birth)!).push(b);
+  const words = (x: string) =>
+    fold(x)
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+  for (const pl of players) {
+    const names = [pl.knownAs, pl.name].filter((x): x is string => !!x);
+    const full = new Set(names.flatMap(words));
+    const hits = (byDate.get(pl.birthDate) ?? []).filter((b) => {
+      const label = words(b.name);
+      return (
+        names.some((n) => fold(n) === fold(b.name)) ||
+        (label.length >= 2 && label.every((x) => full.has(x)))
+      );
+    });
+    if (hits.length !== 1) continue;
+    const at = hits[0]!.place;
+    const cityId = addCity(`wd-${at.qid}`, {
+      name: at.name,
+      state: at.state,
+      lat: at.lat,
+      lon: at.lon,
+      population: at.population,
+      altitudeM: null,
+    });
+    pl.origin = { ...pl.origin, cityId };
+    bornKnown++;
+  }
+}
+
 const root = rngFrom(20261117);
 const clubs: PackClub[] = [];
 const staff: Pack['staff'] = [];
@@ -1198,6 +1252,7 @@ report.notes.push(
   `fans: ${fansResearched} clubs with their supporters from data/fans.json (Ipsos-Ipec 2025), the rest estimated from the public or reputation`,
   `attendance: ${attendanceResearched} clubs with their 2025 average public and ticket from data/attendance.json (ge, mktesportivo); fans.demand is the share of seats filled on an ordinary day, fans.priceSensitivity sets the ticket`,
   `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
+  `birthplace: ${bornKnown} players matched to Wikidata's place of birth (data/birthplaces.json, by birth date and name)`,
   `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
   'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
   'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',

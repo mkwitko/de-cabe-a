@@ -184,3 +184,49 @@ it('a season of the club’s own boys in the eleven lifts the board, more where 
   expect(at(50)).toBe(4);
   expect(at(0)).toBe(0);
 });
+
+it('local men formed at another club of the same state lift the board where fans prize it', () => {
+  const at = (identity: number, sameState: boolean) => {
+    const w = openCareer(structuredClone(pack), 3, clubId);
+    const city = (id: string) => w.pack.clubs.find((c) => c.id === id)!.cityId;
+    const state = (id: string) => w.pack.cities.find((c) => c.id === city(id))!.state;
+    const other = w.pack.clubs.find(
+      (c) => c.id !== clubId && (state(c.id) === state(clubId)) === sameState,
+    );
+    if (!other) return -1;
+    const mine = w.pack.players.filter((p) => p.clubId === clubId).slice(0, 11);
+    w.pack = {
+      ...w.pack,
+      clubs: w.pack.clubs.map((c) =>
+        c.id === clubId ? { ...c, fans: { ...c.fans, localIdentity: identity } } : c,
+      ),
+      players: w.pack.players.map((p) =>
+        mine.some((m) => m.id === p.id) ? { ...p, origin: { clubId: other.id } } : p,
+      ),
+    };
+    w.starts = Object.fromEntries(mine.map((p) => [p.id, 10]));
+    return boardAfterSeason(w).last!.find((r) => r.kind === 'locals')?.value ?? 0;
+  };
+  expect(at(100, false)).toBe(0);
+  const local = at(100, true);
+  if (local === -1) return;
+  expect(local).toBe(5);
+  expect(at(0, true)).toBe(0);
+});
+
+it('a birthplace in the state counts as local, wherever he was formed', () => {
+  const w = openCareer(structuredClone(pack), 3, clubId);
+  const home = w.pack.clubs.find((c) => c.id === clubId)!.cityId;
+  const mine = w.pack.players.filter((p) => p.clubId === clubId).slice(0, 11);
+  w.pack = {
+    ...w.pack,
+    clubs: w.pack.clubs.map((c) =>
+      c.id === clubId ? { ...c, fans: { ...c.fans, localIdentity: 100 } } : c,
+    ),
+    players: w.pack.players.map((p) =>
+      mine.some((m) => m.id === p.id) ? { ...p, origin: { cityId: home } } : p,
+    ),
+  };
+  w.starts = Object.fromEntries(mine.map((p) => [p.id, 10]));
+  expect(boardAfterSeason(w).last!.find((r) => r.kind === 'locals')?.value).toBe(5);
+});
