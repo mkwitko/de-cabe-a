@@ -16,6 +16,10 @@ export type Note = { day: number } & (
   | { kind: 'closedDoors' }
   | { kind: 'sponsor'; name: string; annual: number; years: number }
   | { kind: 'protest' }
+  /** A club of the person's division sacked its coach (coaches.ts). */
+  | { kind: 'coachSacked'; club: string }
+  /** A bigger club with a vacancy calls the person (coaches.ts `approaches`). */
+  | { kind: 'approach'; club: string }
   /** The press makes a story of a winless run (board.ts `pressureOf`). */
   | { kind: 'press'; matches: number }
   | { kind: 'courtBan'; matches: number }

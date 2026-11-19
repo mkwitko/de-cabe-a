@@ -477,6 +477,34 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       <Scene plate={PLATE[room] ?? room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       <ClubBar sim={sim} />
+      {sim.board.offers.map((o) => (
+        <aside
+          key={o.clubId}
+          aria-label={t('career.approach', { club: o.name })}
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-club-gold/40 p-3"
+        >
+          <p className="min-w-0 flex-1">
+            {t('career.approachText', { club: o.name, division: o.division })}
+          </p>
+          <button
+            type="button"
+            disabled={busy || !ask}
+            className="min-h-11 rounded-lg bg-club-gold px-4 font-bold text-ink"
+            onClick={() => {
+              if (!ask) return;
+              setBusy(true);
+              ask({ type: 'takeJob', clubId: o.clubId })
+                .then(apply)
+                .catch((err: Error) => {
+                  setBusy(false);
+                  setError(err.message);
+                });
+            }}
+          >
+            {t('career.approachTake', { club: o.name })}
+          </button>
+        </aside>
+      ))}
       <nav
         aria-label={t('career.rooms')}
         className="sala-rooms flex max-w-full gap-1 self-start overflow-x-auto p-1"
@@ -904,6 +932,8 @@ const FROM = {
   sponsor: 'finance',
   protest: 'press',
   press: 'press',
+  coachSacked: 'press',
+  approach: 'board',
   courtBan: 'press',
   tired: 'staff',
   bought: 'market',
@@ -984,6 +1014,10 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.protest');
     case 'press':
       return t('inbox.press', { n: n.matches });
+    case 'coachSacked':
+      return t('inbox.coachSacked', { club: n.clubName });
+    case 'approach':
+      return t('inbox.approach', { club: n.clubName });
     case 'courtBan':
       return t('inbox.courtBan', { n: n.matches });
     case 'tired':

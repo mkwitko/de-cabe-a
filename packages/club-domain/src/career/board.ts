@@ -9,6 +9,8 @@ import { moodOf } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import { divisionTable, type CareerWorld } from './advance';
 import { clubsOf, electionYear, type Horizon } from './clubs';
+import { nationalDivisions } from './start';
+import type { SeasonState } from '../competition/season';
 
 export type Odds = 'favourite' | 'even' | 'underdog';
 /** One line of why the confidence moved, for the screen: a fact and its points. */
@@ -42,6 +44,8 @@ export interface Board {
 }
 
 const START = 60;
+/** Where a new coach's board starts, the person's or another club's. */
+export const BENCH_START = START;
 const ULTIMATUM = { matches: 5, points: 7 } as const;
 /** Where the confidence is put back when an ultimatum is met. */
 const RELIEF = 35;
@@ -77,8 +81,30 @@ const GOAL_SLACK: Record<Horizon, number> = { short: 1, medium: 2, long: 3 };
 const LOSS_WEIGHT: Record<Horizon, number> = { short: -1, medium: 0, long: 1 };
 
 /** In an election year the board looks at the vote only: short-sighted whatever its horizon. */
-const horizonOf = (w: CareerWorld): Horizon =>
-  electionYear(w, w.clubId) ? 'short' : (clubsOf(w)[w.clubId]?.directors.horizon ?? 'medium');
+const horizonOf = (w: CareerWorld, clubId = w.clubId): Horizon =>
+  electionYear(w, clubId) ? 'short' : (clubsOf(w)[clubId]?.directors.horizon ?? 'medium');
+
+/** Each club's national division this season, its members; and the pressures, once a season. */
+const seasonal = new WeakMap<
+  SeasonState,
+  { members: Map<string, readonly string[]>; pressure: Map<string, number> }
+>();
+const seasonOf = (w: CareerWorld) => {
+  let s = seasonal.get(w.season);
+  if (!s) {
+    const members = new Map<string, readonly string[]>();
+    for (const d of nationalDivisions(w.pack)) {
+      const ids = w.season.members[d.id] ?? d.clubIds;
+      for (const id of ids) members.set(id, ids);
+    }
+    s = { members, pressure: new Map() };
+    seasonal.set(w.season, s);
+  }
+  return s;
+};
+/** The clubs of `clubId`'s national division this season; undefined outside them. */
+export const divisionOf = (w: CareerWorld, clubId: string): readonly string[] | undefined =>
+  seasonOf(w).members.get(clubId);
 
 /** A board that starts over under a new president: first confidence, this season's goal. */
 export const freshBoard = (w: CareerWorld): Board => ({ confidence: START, goal: goalFor(w) });
@@ -92,23 +118,47 @@ export const freshBoard = (w: CareerWorld): Board => ({ confidence: START, goal:
  * the goal towards the club's place by stature, makes defeats cost more, and lets the press turn
  * a winless run into a crisis. PARÂMETROS: the biggest of a table near 80, the smallest near 20.
  */
-export function pressureOf(w: CareerWorld): number {
-  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
-  const model = w.pack.governance.find((g) => g.clubId === w.clubId)?.model ?? 'association';
-  const rows = divisionTable(w).rows;
+export function pressureOf(w: CareerWorld, clubId = w.clubId): number {
+  const memo = seasonOf(w).pressure;
+  const known = memo.get(clubId);
+  if (known !== undefined) return known;
+  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const model = w.pack.governance.find((g) => g.clubId === clubId)?.model ?? 'association';
+  const rows = divisionOf(w, clubId) ?? [clubId];
   const rep = (id: string) => w.pack.clubs.find((c) => c.id === id)?.reputation ?? 0;
-  const bigger = rows.filter((r) => rep(r.clubId) > club.reputation).length;
+  const bigger = rows.filter((id) => rep(id) > club.reputation).length;
   // +30 the biggest of the table, -30 the smallest.
   const standing = rows.length > 1 ? 30 - Math.round((60 * bigger) / (rows.length - 1)) : 0;
   const press = Math.round(Math.max(0, club.reputation - 50) / 5);
   const f = club.fans;
-  return clamp(
+  const p = clamp(
     40 +
       standing +
       press +
       Math.round((f.demand + f.ambition - f.patience) / 6) +
       OWNER_HASTE[model],
   );
+  memo.set(clubId, p);
+  return p;
+}
+
+/**
+ * What one result is worth to a club's board: against the odds the two squads set, a defeat
+ * weighing more for an impatient board, and up to half again under the pressure on the club.
+ */
+export function resultValue(
+  w: CareerWorld,
+  clubId: string,
+  rival: string,
+  mine: number,
+  theirs: number,
+): { result: 'W' | 'D' | 'L'; odds: Odds; value: number } {
+  const result = mine > theirs ? 'W' : mine < theirs ? 'L' : 'D';
+  const gap = (w.strength.get(clubId) ?? 0) - (w.strength.get(rival) ?? 0);
+  const odds: Odds = gap > CLEAR_GAP ? 'favourite' : gap < -CLEAR_GAP ? 'underdog' : 'even';
+  const base = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w, clubId)] : 0);
+  const p = pressureOf(w, clubId);
+  return { result, odds, value: base < 0 ? Math.trunc((base * (200 + p)) / 200) : base };
 }
 
 /**
@@ -147,14 +197,14 @@ export function boardAfterMatch(
   if (b.fired) return b;
   const atHome = match.home === w.clubId;
   const [mine, theirs] = atHome ? o.goals : [o.goals[1], o.goals[0]];
-  const result = mine > theirs ? 'W' : mine < theirs ? 'L' : 'D';
-  const gap =
-    (w.strength.get(w.clubId) ?? 0) - (w.strength.get(atHome ? match.away : match.home) ?? 0);
-  const odds: Odds = gap > CLEAR_GAP ? 'favourite' : gap < -CLEAR_GAP ? 'underdog' : 'even';
   const p = pressureOf(w);
-  const base = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w)] : 0);
-  // Under pressure a bad result weighs more: up to half again at the most.
-  const value = base < 0 ? Math.trunc((base * (200 + p)) / 200) : base;
+  const { result, odds, value } = resultValue(
+    w,
+    w.clubId,
+    atHome ? match.away : match.home,
+    mine,
+    theirs,
+  );
   const last: BoardReason[] = [{ kind: 'result', result, odds, value }];
   const winless = result === 'W' ? 0 : (b.winless ?? 0) + 1;
   // A winless run in the papers: a story at its third match, and again every three more.
@@ -199,13 +249,18 @@ const OWNER_HASTE = { association: 0, ownedSaf: 10, groupSaf: 15 } as const;
 const PRESS_RUN = 3;
 const PRESS = 50;
 const PRESS_LOUD = 75;
-export function patienceOf(w: CareerWorld): number {
-  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
-  const model = w.pack.governance.find((g) => g.clubId === w.clubId)?.model ?? 'association';
+export function patienceOf(w: CareerWorld, clubId = w.clubId): number {
+  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const model = w.pack.governance.find((g) => g.clubId === clubId)?.model ?? 'association';
   return Math.max(0, club.profile.patience - OWNER_HASTE[model]);
 }
-/** Below this confidence the board sets an ultimatum: 15 for the most patient, 35 for the least. */
-const thresholdOf = (w: CareerWorld) => 15 + Math.round((100 - patienceOf(w)) / 5);
+/**
+ * Below this confidence the board acts: 15 for the most patient, 35 for the least. The person
+ * gets an ultimatum first; another club's coach is sacked (coaches.ts).
+ */
+export const thresholdFor = (w: CareerWorld, clubId: string) =>
+  15 + Math.round((100 - patienceOf(w, clubId)) / 5);
+const thresholdOf = (w: CareerWorld) => thresholdFor(w, w.clubId);
 /** The ultimatum: more matches for a patient board, at the same points a match. */
 function ultimatumOf(w: CareerWorld): { matches: number; points: number } {
   const matches = 3 + Math.round(patienceOf(w) / 30);

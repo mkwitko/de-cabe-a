@@ -99,6 +99,7 @@ import {
   type Front,
   type WorkNo,
   jobsAfter,
+  approaches,
   nationalDivisions,
   takeJob,
   positionOf,
@@ -910,7 +911,9 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'agentOffer' ||
                   n.kind === 'fairplayRival' ||
                   n.kind === 'directors' ||
-                  n.kind === 'election'
+                  n.kind === 'election' ||
+                  n.kind === 'coachSacked' ||
+                  n.kind === 'approach'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion
@@ -952,7 +955,8 @@ function view(w: CareerWorld, ms: number): SimView {
         strikes: strikesOf(w, w.clubId),
         points: s.deduct?.[w.clubId] ?? 0,
       },
-      offers: jobsAfter(w).map((clubId) => ({
+      // After a dismissal, the clubs that call; in a job, the bigger clubs that approached.
+      offers: (boardOf(w).fired ? jobsAfter(w) : approaches(w)).map((clubId) => ({
         clubId,
         ...face(byId.get(clubId)!),
         division:
@@ -1058,7 +1062,11 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: world.season.season,
         bytes: await gzip(saveCareer(world)),
       };
-    } else if (world && r.type === 'takeJob' && pending?.kind === 'fired') {
+    } else if (
+      world &&
+      r.type === 'takeJob' &&
+      (pending?.kind === 'fired' || approaches(world).includes(r.clubId))
+    ) {
       const from = world.day;
       takeJob(world, r.clubId);
       last = null;
