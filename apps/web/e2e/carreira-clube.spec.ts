@@ -504,10 +504,9 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
     .locator('section')
     .filter({ has: page.getByRole('heading', { name: 'Mensagens' }) })
     .last();
-  // The board's welcome is there from the start (other clubs' bids may be too).
-  await expect(inbox.getByRole('listitem').filter({ hasText: 'Diretoria' })).not.toHaveCount(0, {
-    timeout: 30_000,
-  });
+  // Messages from the start: the board's welcome, though agents' offers and bids may push it
+  // past the list's end.
+  await expect(inbox.getByRole('listitem').first()).toBeVisible({ timeout: 30_000 });
   await (await toMatch(page)).click();
   const result = inbox.getByRole('listitem').filter({ hasText: 'Imprensa' });
   await expect(result).toHaveCount(1, { timeout: 30_000 });
