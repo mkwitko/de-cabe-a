@@ -233,6 +233,8 @@ export const ptBR = {
   'inbox.ultimatumMet': 'Ultimato cumprido. A direção recua.',
   'inbox.goal':
     '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
+  'inbox.sponsor':
+    'Contrato renovado com {name}: {value} por ano, {years, plural, one {por # temporada} other {por # temporadas}}.',
   'inbox.closedDoors':
     'Jogo de portões fechados, por punição do STJD: sem torcida, sem bilheteria.',
   'inbox.courtBan':
