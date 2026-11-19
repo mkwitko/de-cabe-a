@@ -122,17 +122,44 @@ export function clubsOf(w: CareerWorld): Record<string, ClubState> {
 
 export const clubState = (w: CareerWorld, clubId: string): ClubState => clubsOf(w)[clubId]!;
 
-/** The pack with every club's structure as it now stands. */
-export function withClubs(pack: Pack, clubs: Record<string, ClubState> | undefined): Pack {
+/**
+ * What fame moves, per point of national fame above (or below) the club's name in the pack: the
+ * share of seats filled on an ordinary day, in half points, and the sponsors' money, in per cent.
+ * A title (+14) brings 7 points of occupancy and 21 % more from sponsors; a relegation (−8) takes
+ * 4 and 12 %. PARÂMETRO.
+ */
+const FAME_DEMAND_HALVES = 1;
+const FAME_SPONSORS = 3 / 2;
+
+/**
+ * The pack with every club's structure as it now stands. `origin` is the career's opening pack:
+ * fame moves the public and the sponsors from what the club had there, so it never compounds.
+ */
+export function withClubs(
+  pack: Pack,
+  clubs: Record<string, ClubState> | undefined,
+  origin: Pack = pack,
+): Pack {
   if (!clubs) return pack;
+  const first = new Map(origin.clubs.map((c) => [c.id, c]));
   let changed = false;
   const next = pack.clubs.map((c) => {
     const s = clubs[c.id];
     if (!s || (!s.levels && s.capacity === undefined && !s.fame)) return c;
     changed = true;
     const l = s.levels ?? {};
+    const was = first.get(c.id) ?? c;
+    const lift = s.fame ? s.fame.national - was.reputation : 0;
     return {
       ...c,
+      fans: {
+        ...c.fans,
+        demand: clamp(was.fans.demand + Math.trunc((lift * FAME_DEMAND_HALVES) / 2), 1, 100),
+      },
+      sponsors: was.sponsors.map((x) => ({
+        ...x,
+        annual: Math.max(0, Math.round((x.annual * (100 + lift * FAME_SPONSORS)) / 100)),
+      })),
       facilities: {
         training: l.training ?? c.facilities.training,
         youth: l.youth ?? c.facilities.youth,
@@ -441,7 +468,8 @@ export function rootsOf(club: PackClub, tier: number): Fame {
 export const fameOf = (w: CareerWorld, clubId: string): Fame => {
   const s = clubState(w, clubId);
   if (s.fame) return s.fame;
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  // The roots are the club's name in the opening pack: the career's pack carries today's fame.
+  const club = (w.origin ?? w.pack).clubs.find((c) => c.id === clubId)!;
   return rootsOf(club, tierOfClub(w, clubId));
 };
 
@@ -462,6 +490,7 @@ export function updateFame(
   moves: ReadonlyMap<string, 'promotion' | 'relegation'>,
 ): void {
   const clubs = clubsOf(w);
+  const first = new Map((w.origin ?? w.pack).clubs.map((c) => [c.id, c]));
   for (const club of w.pack.clubs) {
     const s = clubs[club.id]!;
     const at = place(club.id);
@@ -477,7 +506,7 @@ export function updateFame(
     if (move) add(FAME_GAIN[move]);
     now.international += s.exported ?? 0;
     delete s.exported;
-    const roots = rootsOf(club, at.tier);
+    const roots = rootsOf(first.get(club.id) ?? club, at.tier);
     // A step toward the roots each season, at least a point while it is not there.
     const fade = (x: number, root: number) =>
       clamp(

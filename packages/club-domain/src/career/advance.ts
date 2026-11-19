@@ -488,7 +488,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   // Works finished, directors elected, the money to spare split (clubs.ts); the pack then
   // carries the structure as it now stands.
   planSeason(w, new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)));
-  w.pack = withClubs(w.pack, w.clubs);
+  w.pack = withClubs(w.pack, w.clubs, w.origin);
   // The moves in force stay (each player's club and contract); those of players gone do not.
   const alive = new Set(w.pack.players.map((p) => p.id));
   w.moves = Object.fromEntries(Object.entries(w.moves ?? {}).filter(([id]) => alive.has(id)));

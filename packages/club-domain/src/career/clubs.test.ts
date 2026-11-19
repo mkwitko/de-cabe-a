@@ -132,9 +132,22 @@ describe('clubs as institutions (04 §4.7)', () => {
     expect(withClubs(w.pack, w.clubs).clubs.find((c) => c.id === rival)!.reputation).toBe(
       won.national,
     );
+    // A full house and richer sponsors follow the title, from the club's opening figures.
+    w.pack = withClubs(w.pack, w.clubs, w.origin);
+    const after = w.pack.clubs.find((c) => c.id === rival)!;
+    const lift = won.national - club.reputation;
+    expect(after.fans.demand).toBe(Math.min(100, club.fans.demand + Math.trunc(lift / 2)));
+    const sum = (c: typeof club) => c.sponsors.reduce((t, x) => t + x.annual, 0);
+    if (sum(club) > 0) expect(sum(after)).toBeGreaterThan(sum(club));
+    // Seasons go by as in a career: the pack carries today's fame, the roots stay the pack's.
     const quiet = () => ({ position: 10, places: 20, tier: 1 });
-    for (let k = 0; k < 15; k++) updateFame(w, quiet, new Map());
+    for (let k = 0; k < 15; k++) {
+      updateFame(w, quiet, new Map());
+      w.pack = withClubs(w.pack, w.clubs, w.origin);
+    }
     expect(fameOf(w, rival).national).toBeLessThan(won.national);
+    const faded = w.pack.clubs.find((c) => c.id === rival)!;
+    expect(Math.abs(faded.fans.demand - club.fans.demand)).toBeLessThanOrEqual(1);
     expect(Math.abs(fameOf(w, rival).national - club.reputation)).toBeLessThanOrEqual(2);
   });
 
