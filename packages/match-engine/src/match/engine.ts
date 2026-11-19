@@ -289,6 +289,12 @@ function gainBall(s: MatchState, p: MatchPlayer, restart = false) {
   }
 }
 
+/**
+ * A blocked shot or cross goes behind for a corner this share of the time; otherwise it ricochets
+ * into play (PARAMETER, one rule for any block; set by corners per match, 02 §11, 2026-11-19).
+ */
+const BLOCK_BEHIND = 0.58;
+
 function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number, vz = 0) {
   s.owner = null;
   s.flight = {
@@ -366,11 +372,26 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   if (s.flight.kind !== 'shot')
     for (const o of opponents(s, c.team)) o.reactUntil = s.tick + Math.round(readTime(o) / DT);
   if (s.flight.blocked !== undefined && s.flight.blocked >= 0) {
-    s.lastTouch = s.flight.blocked;
-    setRestart(s, 'corner', c.team, {
-      x: c.team === 0 ? LENGTH : 0,
-      y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
-    });
+    // The closer gets a foot to the cross: the same ricochet rule as a blocked shot.
+    const blocker = s.players[s.flight.blocked]!;
+    s.lastTouch = blocker.index;
+    if (next(s.rngs.execution) < BLOCK_BEHIND) {
+      setRestart(s, 'corner', c.team, {
+        x: c.team === 0 ? LENGTH : 0,
+        y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
+      });
+      return;
+    }
+    const b = s.flight.ball;
+    const keep = 0.3 + 0.4 * next(s.rngs.execution);
+    const side = gaussian(() => next(s.rngs.execution));
+    looseBall(
+      s,
+      blocker.index,
+      c.pos,
+      b.vx * keep - b.vy * side * 0.6,
+      b.vy * keep + b.vx * side * 0.6,
+    );
     return;
   }
   s.owner = null;
@@ -768,8 +789,7 @@ function touch(s: MatchState, p: MatchPlayer) {
     // Block: the ball keeps part of its pace and changes direction (often behind for a corner).
     emit(s, 'save', p.team, p.index, kicker.index, p.pos, { block: 1 });
     p.score += 0.1;
-    // A blocked shot goes behind for a corner a good share of the time (PARAMETER, corners per match 02 §11).
-    if (next(s.rngs.execution) < 0.72) {
+    if (next(s.rngs.execution) < BLOCK_BEHIND) {
       setRestart(s, 'corner', kicker.team, {
         x: p.team === 0 ? 0 : LENGTH,
         y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
