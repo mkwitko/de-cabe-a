@@ -193,6 +193,7 @@ export const ptBR = {
     '{k, select, knock {pancada} muscle {lesão muscular} sprain {entorse} other {lesão grave}}',
   'health.out': '{n, plural, one {Lesionado: volta em # dia} other {Lesionado: volta em # dias}}',
   'health.outLabel': 'Lesionado',
+  'squad.banned': 'Suspenso',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
   'inbox.solidarity':
@@ -235,6 +236,8 @@ export const ptBR = {
     '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
   'inbox.sponsor':
     'Contrato renovado com {name}: {value} por ano, {years, plural, one {por # temporada} other {por # temporadas}}.',
+  'inbox.suspension':
+    '{why, select, yellows {{name} recebeu o terceiro amarelo e cumpre suspensão automática no próximo jogo da competição.} red {{name} foi expulso e cumpre suspensão automática no próximo jogo da competição.} other {O STJD julgou a expulsão de {name}: mais {n, plural, one {# jogo} other {# jogos}} de suspensão.}}',
   'inbox.protest':
     'A torcida protestou depois da derrota: cobra a diretoria e o técnico. A paciência do conselho diminuiu.',
   'inbox.closedDoors':

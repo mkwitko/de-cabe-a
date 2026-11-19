@@ -11,6 +11,8 @@ import { FORMATIONS } from '@decabeca/match-engine';
 import type { CareerWorld } from './advance';
 import { bestLineup, lineupOf, slotRatings, squadPlayers, type Lineup } from './squad';
 import type { Training } from './training';
+import { suspendedIn } from './discipline';
+import { matchesOn } from '../competition/season';
 
 export const INJURIES = ['knock', 'muscle', 'sprain', 'serious'] as const;
 export type InjuryKind = (typeof INJURIES)[number];
@@ -59,6 +61,18 @@ export function injuredOn(w: CareerWorld, day: number): Set<string> {
   return out;
 }
 
+/** The person's players who cannot play on `day`: injured, or banned from that day's match. */
+export function outOn(w: CareerWorld, day: number): Set<string> {
+  const out = injuredOn(w, day);
+  if (!w.discipline) return out;
+  for (const id of matchesOn(w.season, day)) {
+    const m = w.season.meta.get(id)!;
+    if (m.home === w.clubId || m.away === w.clubId)
+      for (const p of suspendedIn(w, m.competitionId)) out.add(p);
+  }
+  return out;
+}
+
 /**
  * The eleven that takes the pitch on `day`: the one in force, with each man who cannot play
  * replaced in his slot by the best fit of those left. The eleven the person picked is not
@@ -66,7 +80,7 @@ export function injuredOn(w: CareerWorld, day: number): Set<string> {
  */
 export function fielded(w: CareerWorld, day: number): Lineup {
   const picked = lineupOf(w);
-  const out = injuredOn(w, day);
+  const out = outOn(w, day);
   if (!picked.xi.some((id) => out.has(id))) return picked;
   const roles = FORMATIONS[picked.formation]!.roles;
   const fit = slotRatings(w, picked.formation);
@@ -169,4 +183,4 @@ export const MISSING = 11;
 
 /** For a squad to field without the injured: the coach's best eleven of those fit. */
 export const fitLineup = (w: CareerWorld, formation: string, day: number): Lineup =>
-  bestLineup(w, formation, injuredOn(w, day));
+  bestLineup(w, formation, outOn(w, day));

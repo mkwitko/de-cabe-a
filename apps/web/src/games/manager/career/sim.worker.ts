@@ -22,6 +22,8 @@ import {
   careerMatch,
   nextMoment,
   outcomeOf,
+  type Booking,
+  suspendedIn,
   type Moment,
   type MomentMode,
   upcomingFor,
@@ -263,6 +265,8 @@ export interface SquadView {
     fresh: number;
     /** Days until he is back from injury; null when fit. */
     out: number | null;
+    /** Barred from the next match by a suspension. */
+    banned: boolean;
   })[];
   strength: number;
   plan: PlanChoice;
@@ -747,6 +751,8 @@ function squadView(w: CareerWorld): SquadView {
   const f = FORMATIONS[l.formation]!;
   const fit = slotRatings(w, l.formation);
   const known = slotLevels(w, l.formation);
+  const banned =
+    pending?.kind === 'match' ? suspendedIn(w, pending.competitionId) : new Set<string>();
   return {
     formation: l.formation,
     formations: Object.keys(FORMATIONS),
@@ -759,6 +765,7 @@ function squadView(w: CareerWorld): SquadView {
       keeper: p.positions.includes('GK'),
       fresh: percent(then.fresh[p.id] ?? 1),
       out: outOf(w, p.id)?.days ?? null,
+      banned: banned.has(p.id),
     })),
     strength: Math.round(myStrength(w, then)),
     plan: planOf(w),
@@ -1134,7 +1141,15 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       live = null;
       const from = world.day;
       const d = pending;
-      const o = playDecision(world, d, outcomeOf(result));
+      // Who the referee booked on screen; a second yellow comes as a red with `second`.
+      const booked = new Map<string, Booking>();
+      for (const ev of result.events)
+        if (ev.kind === 'card' && ev.playerId)
+          booked.set(ev.playerId, {
+            playerId: ev.playerId,
+            card: ev.data.card === 2 ? (ev.data.second ? 'second' : 'red') : 'yellow',
+          });
+      const o = playDecision(world, d, outcomeOf(result), [...booked.values()]);
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
       last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
       const after = await toNextDecision(world);

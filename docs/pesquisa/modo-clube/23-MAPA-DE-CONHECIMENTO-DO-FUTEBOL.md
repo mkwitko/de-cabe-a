@@ -142,7 +142,7 @@ Meta: cada regra vira dado com teste (entrada, saída esperada, artigo citado), 
 | Entidade/relação | Atributos-chave | Comportamento que altera | Evidência/fonte | Estado | Prio |
 | --- | --- | --- | --- | --- | --- |
 | Árbitro | rigor, média de cartões | Cartões, pênaltis | Médias por árbitro 2025 (Itatiaia, Correio Braziliense), expulsões (ge) | existe: `match/referee.ts`, painel fictício com o rigor real; cartões nos jogos rápidos e rigor no motor | P3 |
-| Disciplina | cartões, suspensão, STJD | Desfalques | Regulamento | parcial: suspensão simples, sem STJD | P3 |
+| Disciplina | cartões, suspensão, STJD | Desfalques | Regulamento Geral de Competições da CBF, CBJD | existe: `career/discipline.ts`; três amarelos e expulsão suspendem no jogo seguinte da competição; vermelho direto julgado pelo STJD 14 dias depois; só o clube da pessoa, homem a homem | P3 |
 
 ### 2.13 Cultura e torcida (baixa prioridade)
 

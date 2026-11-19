@@ -39,6 +39,8 @@ export type Note = { day: number } & (
       injury: 'knock' | 'muscle' | 'sprain' | 'serious';
       days: number;
     }
+  /** A ban: three yellows, a sending-off, or what the sports court added. */
+  | { kind: 'suspension'; player: string; matches: number; why: 'yellows' | 'red' | 'court' }
   | { kind: 'bid' | 'clausePaid'; player: string; club: string; fee: number }
   | { kind: 'prize'; position: number; amount: number }
   /** The person's club ended a season over the fair play limit: the cost and what follows. */
