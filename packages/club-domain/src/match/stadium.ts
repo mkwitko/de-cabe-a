@@ -24,8 +24,8 @@ import type { Pack, PackClub } from '../pack/schema';
 const clubOf = (pack: Pack, id: string): PackClub | undefined =>
   cached(pack, 'stadium:clubs', WHOLE, () => new Map(pack.clubs.map((c) => [c.id, c]))).get(id);
 
-/** Average ticket by national tier, R$: Série A 51 (2025, Máquina do Esporte), B 26 (gate over public, mktesportivo 2025); C and D a confirmar. */
-export const TICKET_BY_TIER: Record<number, number> = { 1: 51, 2: 26, 3: 18, 4: 12 };
+/** Average ticket by national tier, R$: Série A 51 (2025, Máquina do Esporte), B 26 (gate over public, mktesportivo 2025); C 15 (R$ 7,2 mi in 150 matches, A União), D a confirmar. */
+export const TICKET_BY_TIER: Record<number, number> = { 1: 51, 2: 26, 3: 15, 4: 12 };
 
 /** Paying public on an ordinary home league day. */
 export const usualCrowd = (c: Pick<PackClub, 'stadium' | 'fans'>): number =>

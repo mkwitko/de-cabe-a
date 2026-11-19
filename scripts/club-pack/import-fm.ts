@@ -980,8 +980,10 @@ const ids = (list: string[]) => list.map((u) => `fm-c${u}`);
  * Stadium operation (mapa de conhecimento §2.11): `fans.demand` is the share of seats a club fills
  * on an ordinary league day and `fans.priceSensitivity` sets its ticket against the tier's
  * (match/stadium.ts). From data/attendance.json (Brasileirão 2025, ge and mktesportivo) where the
- * club is there; else the median of the researched clubs of its 2027 division, and for C and D,
- * with no published average, a confirmar.
+ * club is there; else the median of the researched clubs of its 2027 division. Série C has a
+ * league average only (3.466 paying a match in 2025, DGABC): its clubs fill the share of seats
+ * that gives it over their median stadium. Série D has none published: the same share as C, a
+ * confirmar.
  */
 const ATTENDANCE = (
   JSON.parse(readFileSync(new URL('./data/attendance.json', import.meta.url), 'utf8')) as {
@@ -996,7 +998,8 @@ const ATTENDANCE = (
   }
 ).clubs;
 const TIER_TICKET: Record<number, number> = { 1: 51, 2: 26 };
-const NO_DATA_DEMAND: Record<number, number> = { 3: 15, 4: 8 };
+/** Série C 2025, paying public a match (DGABC). */
+const SERIE_C_AVERAGE = 3466;
 let attendanceResearched = 0;
 {
   const tierOfUid = new Map<string, number>();
@@ -1023,15 +1026,24 @@ let attendanceResearched = 0;
     attendanceResearched++;
   }
   const median = (xs: number[]) => [...xs].sort((x, y) => x - y)[xs.length >> 1]!;
+  const capC = median(
+    clubs
+      .filter((c) => tierOfUid.get(c.id) === 3 && c.stadium.capacity > 0)
+      .map((c) => c.stadium.capacity),
+  );
+  const lowerShare = clamp(Math.round((100 * SERIE_C_AVERAGE) / Math.max(1, capC)), 1, 100);
   for (const club of clubs) {
     if (found.has(club)) continue;
     const t = tierOfUid.get(club.id) ?? 4;
-    const known = byTier.get(t);
-    club.fans.demand = known?.length ? median(known) : (NO_DATA_DEMAND[t] ?? NO_DATA_DEMAND[4]!);
+    // A and B by their researched clubs; below, the Série C average.
+    const known = t <= 2 ? byTier.get(t) : undefined;
+    club.fans.demand = known?.length ? median(known) : lowerShare;
     est(
       known?.length
         ? 'fans: demand is the median of researched clubs of the division'
-        : 'fans: demand a confirmar (no published average for Série C/D)',
+        : t === 3
+          ? 'fans: demand from the Série C 2025 average over the median stadium'
+          : 'fans: demand as Série C, a confirmar (no published Série D average)',
     );
   }
 }

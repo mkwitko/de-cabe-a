@@ -24,7 +24,8 @@ const PRIZE_SHARE = 4;
 export const BY_TIER: Record<number, { tv: number }> = {
   1: { tv: 120_000_000 },
   2: { tv: 14_500_000 },
-  3: { tv: 1_300_000 },
+  // Série C 2025: R$ 32 mi in quotas and prizes plus R$ 3 mi extra over 20 clubs (Soccerway, A União).
+  3: { tv: 1_750_000 },
   4: { tv: 500_000 },
 };
 
