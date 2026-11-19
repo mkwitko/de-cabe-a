@@ -143,7 +143,8 @@ const TARGETS: Target[] = [
   {
     name: 'Cartões por jogo na Série A',
     range: [4.5, 6.0],
-    source: 'Brasileirão 2025: mais de cinco por jogo; árbitros de 4,0 a 7,3 (Itatiaia, Correio Braziliense; a confirmar)',
+    source:
+      'Brasileirão 2025: mais de cinco por jogo; árbitros de 4,0 a 7,3 (Itatiaia, Correio Braziliense; a confirmar)',
     confirmed: false,
     measure: (w) => cardsIn(w, (c) => c[0] + c[1]),
   },
