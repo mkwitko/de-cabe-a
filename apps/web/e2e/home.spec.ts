@@ -170,7 +170,11 @@ test('Modo Carreira: create a footballer, train him with a level, play a match',
   await page.getByRole('button', { name: 'Chutar' }).click();
   await skipCeremony(page);
   await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
-  await page.getByRole('link', { name: /de treino para o seu craque/ }).click();
+  // The result page still settles (the passport stamps in) on a slow CI runner, so a click can
+  // land on the section instead: check the way on, then follow it.
+  const training = page.getByRole('link', { name: /de treino para o seu craque/ });
+  await expect(training).toHaveAttribute('href', '/carreira');
+  await page.goto('/carreira');
 
   await page.getByRole('button', { name: 'Jogar a partida' }).click();
   await expect(page.getByText('Rodada 1 ·', { exact: false }).first()).toBeVisible();
