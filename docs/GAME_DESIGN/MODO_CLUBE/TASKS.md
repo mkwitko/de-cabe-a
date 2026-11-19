@@ -116,8 +116,8 @@ Benchmark MC-028 (2026-11-13; escopo e ambiente em `02` §11): 94 ms por 90 minu
 | ID | Tarefa | P | Tam | Dep | Aceite e teste |
 | --- | --- | --- | --- | --- | --- |
 | MC-046 | EM ANDAMENTO (2026-11-19: `possession/engine.ts` joga a partida inteira com o contrato do nível 1, eventos nomeados, núcleo compartilhado ampliado; cerca de 10 ms por partida numa máquina carregada, meta de 2 ms pendente; ainda fora da carreira, ver `02` §12 DECISÃO). Engine por posses em 18 zonas, jogador contra jogador (`02` §12) | P0 | XG | 145, 012 | eventos nomeados; até 2 ms por partida |
-| MC-046b | EM ANDAMENTO (2026-11-19: perto no confronto equilibrado; reprova nos de força e nos de estilo, ver `02` §12). Equivalência **estatística** com o nível 1 | P0 | G | 046, 044, 252 | cinco grupos de métricas equivalentes em toda a matriz de confrontos, pelo protocolo de `TEST_STRATEGY.md` §2.1 |
-| MC-167 | EM ANDAMENTO (2026-11-19: `possession/possession.test.ts`, 11 de 13 instruções no sentido declarado; contra-ataque e defesa de segurança em aberto). Testes de coerência tática próprios do nível 2 | P0 | M | 046 | cada instrução move a métrica declarada no sentido declarado |
+| MC-046b | EM ANDAMENTO (2026-11-19: perto no equilibrado e nos de força; reprova nos de estilo, ver `02` §12). Equivalência **estatística** com o nível 1 | P0 | G | 046, 044, 252 | cinco grupos de métricas equivalentes em toda a matriz de confrontos, pelo protocolo de `TEST_STRATEGY.md` §2.1 |
+| MC-167 | EM ANDAMENTO (2026-11-19: `possession/possession.test.ts`, 12 de 13 instruções no sentido declarado; defesa de segurança em aberto). Testes de coerência tática próprios do nível 2 | P0 | M | 046 | cada instrução move a métrica declarada no sentido declarado |
 | MC-168 | Rodízio de elenco dos rivais por fadiga e por prioridade entre competições | P1 | M | 046, 160 | time em duas competições na semana não repete os onze com fôlego abaixo do limite |
 
 ## Competições, calendário e carreira

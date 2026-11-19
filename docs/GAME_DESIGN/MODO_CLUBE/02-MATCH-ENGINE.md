@@ -658,8 +658,9 @@ DECISÃO (2026-11-19, implementação do nível 2, `possession/engine.ts`): o qu
   - a progressão do plano inclina a escolha só um pouco. Um peso grande fazia o time de posse circular para sempre contra o bloco baixo: com o peso grande, 0,3 de `xG`; com o leve, 1,1.
 - **Estado em 2026-11-19 (não pronto para a carreira)**:
   - no jogo equilibrado o nível 2 já fica perto do nível 1;
-  - a força ainda pesa demais: no confronto de favorito forte, o favorito marca cerca de 4,6 gols no nível 2, contra 2,7 no nível 1;
-  - o contra-ataque e a defesa de segurança ainda não movem a métrica que declaram. Falta um termo de espaço nas costas da defesa.
+  - nos confrontos de força o saldo ficou perto do nível 1 (favorito forte 2,8 contra 2,2), depois que o desarme passou a seguir o nível 1 e a corrida nas costas ganhou espalhamento próprio;
+  - nos confrontos de estilo, o lado que ataca a defesa do outro estilo ainda cria pouco;
+  - o contra-ataque usa o espaço nas costas de uma defesa curta; a defesa de segurança ainda não move a métrica que declara.
   - Por isso a carreira continua com o nível 3. A ligação já escrita (tabela e mata-matas da pessoa no nível 2, o resto do mundo no nível 3, desgaste de viagem nas pernas do visitante) entra quando o protocolo aprovar.
 
 O usuário pode abrir o relatório de qualquer jogo do dia, de qualquer competição: placar, autores, estatísticas, notas e os três fatores por setor. Rever em campo só existe nos jogos do próprio clube.
