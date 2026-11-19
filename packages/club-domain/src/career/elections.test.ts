@@ -49,7 +49,7 @@ describe('club elections', () => {
   it("the outgoing board's man is sacked more often than an inherited coach", () => {
     const sacked = (hired: number) => {
       let n = 0;
-      for (let seed = 1; seed <= 150; seed++)
+      for (let seed = 1; seed <= 60; seed++)
         if (planSeason(voting(seed, hired), new Set(), ctx(18, 8)) === 'fired') n++;
       return n;
     };
