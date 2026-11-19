@@ -15,6 +15,7 @@ import { gunzipSync } from 'node:zlib';
 import { nextDecision, openCareer, playDecision, type CareerWorld } from '../career/advance';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { ABROAD, isAbroad } from '../market/abroad';
+import { isImport } from '../career/development';
 import { OPENING, rateOf } from '../market/currency';
 import { dayOf } from '../competition/calendar';
 import { booksOf, budgetOf } from '../market/books';
@@ -190,6 +191,28 @@ const TARGETS: Target[] = [
     source: 'Calibração interna do êxodo (FIFA: cerca de 1.000 saídas por ano, todos os níveis)',
     confirmed: false,
     measure: (w) => Object.values(w.moves ?? {}).filter((m) => isAbroad(m.clubId)).length,
+  },
+  {
+    name: 'Estrangeiros contratados por temporada (pack)',
+    // Série A squads held 123 foreigners in 2024 and 137-139 in 2025 (Goal, Trivela): with the
+    // ones who leave, some 45 arrive a year in the top flight, a few more below it.
+    range: [35, 90],
+    source: 'Goal e Trivela: 123 estrangeiros na Série A 2024, 137-139 em 2025',
+    confirmed: false,
+    measure: (w) =>
+      Object.entries(w.moves ?? {}).filter(([id, m]) => isImport(id) && !isAbroad(m.clubId)).length,
+  },
+  {
+    name: 'Estrangeiros nos elencos da Série A (%)',
+    // Itatiaia: foreigners are 16% of the Série A players; Série A 2026 opened with 151.
+    range: [12, 22],
+    source: 'Itatiaia: estrangeiros são 16% dos jogadores do Brasileirão',
+    confirmed: false,
+    measure: (w) => {
+      const clubs = new Set(w.season.members[serieA(w).id] ?? []);
+      const squad = w.pack.players.filter((p) => p.clubId !== null && clubs.has(p.clubId));
+      return (100 * squad.filter((p) => p.nationality !== 'BR').length) / Math.max(1, squad.length);
+    },
   },
 ];
 
