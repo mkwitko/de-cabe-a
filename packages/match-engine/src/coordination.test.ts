@@ -6,7 +6,9 @@
 import { describe, expect, it } from 'vitest';
 import { DT } from './movement';
 import { defaultPlan } from './presets';
-import { anchors, lineOf } from './team';
+import { anchors, assign, lineOf, tasksFor } from './team';
+import { teamInput } from './match/fixture';
+import type { RoleId } from './contract';
 import { SCENARIOS, play } from './coordination.scenarios';
 import { BANDS, t1, t2, t3, t5, t9, type Sample } from './trajectories';
 
@@ -150,5 +152,41 @@ describe('T1 in the box counts extra bodies, not markers (ADR-020)', () => {
         0.25,
       ).maxInBox,
     ).toBe(2);
+  });
+});
+
+describe('positions with the ball (02 §5.11, 2026-11-18)', () => {
+  const opp = [
+    { x: 80, y: 20 },
+    { x: 80, y: 48 },
+    { x: 60, y: 34 },
+  ];
+  it('the wingers hold the width high, 5 m short of the opponents last line', () => {
+    const tasks = tasksFor(defaultPlan('4-3-3'), true, { x: 45, y: 34 }, { x: 45, y: 34 }, opp, 80);
+    const width = tasks.filter((t) => t.kind === 'width');
+    expect(width).toHaveLength(2);
+    for (const t of width) expect(t.point.x).toBeCloseTo(75, 5);
+  });
+  it('a forward takes the depth ahead of a midfielder already near the spot', () => {
+    const attrs = teamInput(1).players[5]!.attributes;
+    const p = (index: number, role: RoleId, slot: number) => ({
+      index,
+      team: 0 as const,
+      slot,
+      role,
+      attrs,
+      pos: { x: role === 'boxToBox' ? 76 : 60, y: 34 + (index - 1.5) * 2 },
+      vel: { x: 0, y: 0 },
+      stamina: 1,
+      active: true,
+    });
+    const players = [p(1, 'boxToBox', 8), p(2, 'advancedForward', 9)];
+    const task = { kind: 'depth' as const, key: 'depth', point: { x: 78, y: 34 }, priority: 0 };
+    const anc = new Map([
+      [1, { x: 60, y: 34 }],
+      [2, { x: 60, y: 34 }],
+    ]);
+    const [a] = assign([task], players, anc, 0, { owners: {} }, false, true);
+    expect(a!.player).toBe(2);
   });
 });
