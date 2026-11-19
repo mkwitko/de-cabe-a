@@ -15,7 +15,8 @@ export type Odds = 'favourite' | 'even' | 'underdog';
 export type BoardReason =
   | { kind: 'result'; result: 'W' | 'D' | 'L'; odds: Odds; value: number }
   | {
-      kind: 'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet' | 'fairplay' | 'protest';
+      kind:
+        'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet' | 'fairplay' | 'protest' | 'homegrown';
       value: number;
     };
 
@@ -152,9 +153,31 @@ export function boardAfterSeason(w: CareerWorld): Board {
   if (b.fired) return b;
   const met = positionOf(w) <= b.goal;
   const value = met ? GOAL_MET : GOAL_MISSED;
+  const last: BoardReason[] = [{ kind: met ? 'goalMet' : 'goalMissed', value }];
+  const homegrown = homegrownOf(w);
+  if (homegrown > 0) last.push({ kind: 'homegrown', value: homegrown });
   return {
     ...b,
-    confidence: clamp(b.confidence + value),
-    last: [{ kind: met ? 'goalMet' : 'goalMissed', value }],
+    confidence: clamp(b.confidence + value + homegrown),
+    last,
   };
+}
+
+/**
+ * Confidence a season of the club's own boys in the eleven earns, up to HOMEGROWN at a whole
+ * season of them before supporters who prize their academy most (fans' youthPride, 0..100):
+ * "crias da casa" sell shirts and patience. Formed at the club means its academy's mark on him
+ * (`origin.clubId`). PARÂMETRO.
+ */
+const HOMEGROWN = 8;
+function homegrownOf(w: CareerWorld): number {
+  const starts = Object.entries(w.starts ?? {});
+  const total = starts.reduce((s, [, n]) => s + n, 0);
+  if (!total) return 0;
+  const ours = new Set(
+    w.pack.players.filter((p) => p.origin?.clubId === w.clubId).map((p) => p.id),
+  );
+  const own = starts.reduce((s, [id, n]) => s + (ours.has(id) ? n : 0), 0);
+  const pride = w.pack.clubs.find((c) => c.id === w.clubId)!.fans.youthPride;
+  return Math.floor((HOMEGROWN * own * pride) / (total * 100));
 }
