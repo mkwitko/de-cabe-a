@@ -3,7 +3,7 @@
  * by one of three offers from the last one; then the career home. The world is built in the
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
@@ -570,6 +570,14 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                   </dd>
                 </div>
               </dl>
+              <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-chalk/15 pt-3 text-sm tabular-nums">
+                {sim.fx.map((x) => (
+                  <Fragment key={x.currency}>
+                    <dt className="text-chalk-soft">{t('career.fx', { c: x.currency })}</dt>
+                    <dd>{t('career.fxRate', { rate: x.rate, change: x.change / 10 })}</dd>
+                  </Fragment>
+                ))}
+              </dl>
             </section>
           </section>
         </>
@@ -722,6 +730,20 @@ function NextMatch(props: {
             <span className="mx-2 text-club-gold">/</span>
             {next.competition}
           </p>
+          {(next.banned.theirs.length > 0 || next.banned.ours.length > 0) && (
+            <p className="text-center text-sm text-balance text-chalk-soft">
+              {next.banned.ours.length > 0 && (
+                <span className="block">
+                  {t('career.bannedOurs', { names: next.banned.ours.join(', ') })}
+                </span>
+              )}
+              {next.banned.theirs.length > 0 && (
+                <span className="block">
+                  {t('career.bannedTheirs', { names: next.banned.theirs.join(', ') })}
+                </span>
+              )}
+            </p>
+          )}
           <div className="grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-[1.2fr_1fr_1fr] sm:whitespace-nowrap">
             <button
               type="button"
@@ -903,6 +925,8 @@ const FROM = {
   injury: 'staff',
   suspension: 'staff',
   prize: 'finance',
+  fx: 'finance',
+  owners: 'board',
   fairplay: 'finance',
   fairplayRival: 'press',
   directors: 'board',
@@ -1030,6 +1054,15 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.contractsEnding', { n: n.players });
     case 'window':
       return t('inbox.window', { open: BOOL[Number(n.open)]! });
+    case 'owners':
+      return t('inbox.owners', { value: t('career.cash', { value: n.amount }) });
+    case 'fx':
+      return t('inbox.fx', {
+        c: n.currency,
+        rate: n.rate / 10_000,
+        change: Math.abs(n.change) / 10,
+        up: String(n.change > 0),
+      });
     case 'prize':
       return t('inbox.prize', {
         position: n.position,

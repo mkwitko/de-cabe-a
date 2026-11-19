@@ -15,6 +15,8 @@ import { gunzipSync } from 'node:zlib';
 import { nextDecision, openCareer, playDecision, type CareerWorld } from '../career/advance';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { ABROAD, isAbroad } from '../market/abroad';
+import { OPENING, rateOf } from '../market/currency';
+import { dayOf } from '../competition/calendar';
 import { booksOf, budgetOf } from '../market/books';
 import { squadPlanOf } from '../market/plan';
 import { ageOf } from '../market/value';
@@ -31,7 +33,8 @@ interface Target {
   measure: (w: CareerWorld) => number;
 }
 
-const BRL_PER_USD = 5.5;
+/** The rate the career opens at (PTAX, currency.ts): the targets in dollars, in its reais. */
+const BRL_PER_USD = OPENING.USD / 10_000;
 const serieA = (w: CareerWorld) => nationalDivisions(w.pack).find((d) => d.tier === 1)!;
 const serieAClubs = (w: CareerWorld) => w.season.members[serieA(w).id] ?? [];
 
@@ -48,6 +51,13 @@ function cardsIn(w: CareerWorld, pick: (c: [number, number]) => number): number 
   return sum / Math.max(1, games);
 }
 
+/**
+ * Reais of the season at the rate the targets were set at: the targets are dollars, so a
+ * season the real swung is read back in dollars (the rate at mid-season, currency.ts).
+ */
+const atOpeningRate = (w: CareerWorld, reais: number) =>
+  (reais * OPENING.USD) / rateOf(w, 'USD', dayOf(`${w.season.season}-07-01`));
+
 const TARGETS: Target[] = [
   {
     name: 'Vendas ao exterior na temporada (R$ bi)',
@@ -56,7 +66,7 @@ const TARGETS: Target[] = [
     source: 'Banco Central 2025 (US$ 554 mi) e FIFA Global Transfer Report 2025 (US$ 689 mi)',
     confirmed: true,
     // The foreign side's book (abroad.ts): what foreign clubs paid for the league's players.
-    measure: (w) => (w.books?.[ABROAD]?.spent ?? 0) / 1e9,
+    measure: (w) => atOpeningRate(w, w.books?.[ABROAD]?.spent ?? 0) / 1e9,
   },
   {
     name: 'Compras do exterior na temporada (R$ bi)',
@@ -65,7 +75,7 @@ const TARGETS: Target[] = [
     range: [(150e6 * BRL_PER_USD) / 1e9, (300e6 * BRL_PER_USD) / 1e9],
     source: 'Banco Central, SGS 22858/22857: US$ 180 mi (2024) e 235 mi (2025) pagos ao exterior',
     confirmed: true,
-    measure: (w) => (w.books?.[ABROAD]?.earned ?? 0) / 1e9,
+    measure: (w) => atOpeningRate(w, w.books?.[ABROAD]?.earned ?? 0) / 1e9,
   },
   {
     // CIES counts the players who play in the league, not whole registered squads: the

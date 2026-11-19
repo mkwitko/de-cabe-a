@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
-import { nextDecision, openCareer, playDecision } from './advance';
+import { careerMatch, nextDecision, openCareer, playDecision } from './advance';
 import { TRIAL_DAYS, afterMatch, bookingsOf, sitCourt, suspendedIn } from './discipline';
 import { fielded } from './health';
 import { loadCareer, saveCareer } from './save';
@@ -21,7 +21,7 @@ it('the third yellow bars a man from the next match of that competition only', (
   // He sits the next one out, and the count started again.
   afterMatch(w, 'liga', 3, []);
   expect(suspendedIn(w, 'liga').has('p')).toBe(false);
-  expect(w.discipline!.yellows.liga!.p).toBeUndefined();
+  expect(w.cards![w.clubId]!.yellows.liga!.p).toBeUndefined();
 });
 
 it('a straight red goes to court; a second yellow does not', () => {
@@ -30,10 +30,10 @@ it('a straight red goes to court; a second yellow does not', () => {
     { playerId: 'a', card: 'red' },
     { playerId: 'b', card: 'second' },
   ]);
-  expect(w.discipline!.trials.map((t) => t.playerId)).toEqual(['a']);
+  expect(w.cards![w.clubId]!.trials.map((t) => t.playerId)).toEqual(['a']);
   expect(sitCourt(w, 10 + TRIAL_DAYS - 1)).toEqual([]);
   sitCourt(w, 10 + TRIAL_DAYS);
-  expect(w.discipline!.trials).toEqual([]);
+  expect(w.cards![w.clubId]!.trials).toEqual([]);
 });
 
 it('the court adds matches to some straight reds, none to most', () => {
@@ -80,5 +80,28 @@ it('a season brings bans, the banned man does not play, and the save keeps them'
   expect(bans).toBeGreaterThan(1);
   expect(checked).toBeGreaterThan(0);
   const back = loadCareer(structuredClone(pack), 3, clubId, saveCareer(w));
-  expect(back.discipline).toEqual(w.discipline);
+  expect(back.cards).toEqual(w.cards);
+});
+
+it('rivals keep their own books: their banned men miss the match against the person', () => {
+  const w = fresh();
+  let seen = 0;
+  for (
+    let d = nextDecision(w);
+    d.kind === 'match' && w.season.season === 2026;
+    d = nextDecision(w)
+  ) {
+    const rival = d.home === w.clubId ? d.away : d.home;
+    const banned = suspendedIn(w, d.competitionId, rival);
+    if (banned.size) {
+      const { input, mine } = careerMatch(w, d);
+      for (const p of input.teams[1 - mine]!.players.slice(0, 11))
+        expect(banned.has(p.id)).toBe(false);
+      seen++;
+    }
+    playDecision(w, d);
+  }
+  // Every club of the divisions books cards, not only the person's.
+  expect(Object.keys(w.cards ?? {}).length).toBeGreaterThan(20);
+  expect(seen).toBeGreaterThan(0);
 });

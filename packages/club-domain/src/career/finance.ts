@@ -6,13 +6,17 @@
  */
 import { dayOf, isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
-import type { PackClub } from '../pack/schema';
+import type { Pack, PackClub } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import { PRICE_BASE, priced, pricesOf } from './prices';
 import { upkeepOf } from './clubs';
 import { nationalDivisions } from './start';
 import { closedDoors, crowdAt, punishmentAt, ticketOf, usualCrowd } from '../match/stadium';
 import { note } from './inbox';
+import { CURRENCIES, rateOf } from '../market/currency';
+
+/** A month's move of the rate, in tenths of a percent, that makes news. PARÂMETRO. */
+const FX_NEWS = 70;
 
 /**
  * PARÂMETRO by national tier (04 §4, table "Milhões de reais por temporada", middle of each
@@ -29,6 +33,62 @@ export const BY_TIER: Record<number, { tv: number }> = {
   4: { tv: 500_000 },
 };
 
+/**
+ * Members' dues (sócio-torcedor) for each 100 of gate money: Série A 2023, R$ 705 mi from
+ * members against R$ 806 mi at the gate (Convocados 2024). Clubs that fill their ground sell
+ * plans to the same crowd. The ratio is the Série A's; below it is an ESTIMATE, not a target
+ * to tune. PARÂMETRO.
+ */
+export const MEMBERS_PER_GATE = 87;
+/**
+ * The year's cups, expected money by national tier: the Copa do Brasil (2025 first phase:
+ * R$ 1.54 mi for Série A, R$ 1.38 mi for B, R$ 830 mil for C, D and the rest; more each round
+ * won) and the state championship (TV quotas from R$ 35 mi for São Paulo's big four and
+ * R$ 9-10 mi for Minas and Rio Grande do Sul's to R$ 333-700 mil in Pernambuco, Paraná and
+ * Goiás; Sport Insider via Lance!, 2025-2026). Not every Série D club gets into the Copa do
+ * Brasil. Only the Copa do Brasil quotas are official; the state share and the rounds won are
+ * ESTIMATES, not targets to tune. PARÂMETRO.
+ */
+export const CUPS: Record<number, number> = {
+  1: 14_000_000,
+  2: 3_500_000,
+  3: 1_800_000,
+  4: 400_000,
+};
+
+/**
+ * Share of a season's loss the owners cover at the turn, in percent. Below the top flight the
+ * accounts do not close on football money: Náutico ran fifteen years in the red on R$ 25-31 mi
+ * of revenue (Itatiaia, Diario de Pernambuco 2026). An SAF's investor puts capital in (more a
+ * passionate one, less one who bought to sell), a multi-club group more; an association lives
+ * on its patrons and councillors' loans. The rest stays as debt. PARÂMETRO.
+ */
+const OWNERS_COVER = { association: 25, builder: 50, speculator: 30, passionate: 70 } as const;
+const GROUP_COVER = 15;
+
+/** What the owners put in to cover `loss` (a positive number) of a club's season. */
+export function ownersCover(pack: Pick<Pack, 'governance'>, clubId: string, loss: number): number {
+  const g = pack.governance.find((x) => x.clubId === clubId);
+  const share =
+    OWNERS_COVER[g?.ownerProfile ?? 'association'] + (g?.model === 'groupSaf' ? GROUP_COVER : 0);
+  return loss > 0 ? Math.round((loss * share) / 100) : 0;
+}
+
+/** The person's club ended the season in the red: the owners' share of the hole, booked. */
+export function postOwners(w: CareerWorld): number {
+  const amount = ownersCover(w.pack, w.clubId, -w.ledger.cash);
+  if (amount > 0)
+    postEntry(w.ledger, {
+      key: `owners:${w.season.season}`,
+      kind: 'owners',
+      ref: `season:${w.season.season}`,
+      amount,
+      day: w.ledger.today,
+      dueDay: w.ledger.today,
+    });
+  return amount;
+}
+
 const DEBT_MONTHS = 60;
 /**
  * Interest on the old debt, percent a year: Brazilian clubs' debt is mostly tax debt renegotiated
@@ -42,7 +102,18 @@ const HOME_MATCHES = 19;
 /** Paying public a club draws on an ordinary home day (match/stadium.ts). */
 export const gateOf = usualCrowd;
 
-/** What a club takes in a season in a tier: TV, sponsors and the gate of its home matches. */
+/** A season's gate money of the home league matches on ordinary days. */
+const seasonGate = (c: Pick<PackClub, 'stadium' | 'fans'>, tier: number) =>
+  gateOf(c) * ticketOf(c, tier) * HOME_MATCHES;
+
+/** Members' dues for a season, in a tier (at base prices). */
+export const membersOf = (c: Pick<PackClub, 'stadium' | 'fans'>, tier: number) =>
+  Math.round((seasonGate(c, tier) * MEMBERS_PER_GATE) / 100);
+
+/**
+ * What a club takes in a season in a tier: TV, sponsors, the gate of its home matches, its
+ * members' dues and the cups.
+ */
 export const seasonIncome = (
   c: Pick<PackClub, 'stadium' | 'fans' | 'sponsors'>,
   tier: number,
@@ -50,8 +121,10 @@ export const seasonIncome = (
 ) =>
   priced(
     BY_TIER[tier]!.tv +
+      CUPS[tier]! +
       c.sponsors.reduce((s, x) => s + x.annual, 0) +
-      gateOf(c) * ticketOf(c, tier) * HOME_MATCHES,
+      seasonGate(c, tier) +
+      membersOf(c, tier),
     prices,
   );
 
@@ -67,7 +140,8 @@ export function attendance(w: CareerWorld): number {
 
 function monthlyBills(w: CareerWorld, day: number) {
   const month = isoOf(day).slice(0, 7);
-  const tier = BY_TIER[tierOf(w)]!;
+  const tierNo = tierOf(w);
+  const tier = BY_TIER[tierNo]!;
   const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
   const wages =
     w.pack.players.reduce((s, p) => s + (p.clubId === w.clubId ? (p.contract?.wage ?? 0) : 0), 0) +
@@ -96,8 +170,17 @@ function monthlyBills(w: CareerWorld, day: number) {
     post('debt', -Math.round(club.initialDebt / DEBT_MONTHS));
     post('interest', -Math.round((owed * DEBT_RATE) / 1200));
   }
+  // A month the real swung hard against the dollar or the euro: the directors hear of it.
+  for (const currency of CURRENCIES) {
+    const now = rateOf(w, currency, day);
+    const before = rateOf(w, currency, day - 1);
+    const change = Math.round(((now - before) * 1000) / before);
+    if (Math.abs(change) >= FX_NEWS) note(w, { day, kind: 'fx', currency, rate: now, change });
+  }
   const { prices } = pricesOf(w);
   post('tv', Math.round(priced(tier.tv, prices) / 12));
+  post('members', Math.round(priced(membersOf(club, tierNo), prices) / 12));
+  post('cups', Math.round(priced(CUPS[tierNo]!, prices) / 12));
   post('sponsors', Math.round(priced(sponsors, prices) / 12));
 }
 

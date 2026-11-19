@@ -28,6 +28,7 @@ import { affinity, agentOf, networkOf } from './agents';
 import { isImport } from '../career/development';
 import { fameOf, noteExport } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
+import { atRate, currencyOfNation, type Currency } from './currency';
 
 /** Where a player sold abroad sits in the pack. */
 export const ABROAD = 'abroad';
@@ -41,17 +42,59 @@ export interface ForeignTier {
   ages: [number, number];
   /** Chance of an offer over a whole season of windows, in tenths of a percent, at Série A. */
   chance: number;
-  /** Fee as a percentage of his value. */
+  /** Fee as a percentage of his value, at the opening exchange rate. */
   pays: number;
+  /** The money it pays in: its fee follows the rate (currency.ts). */
+  currency: Currency;
 }
 
 /** Best first: a player gets offers from the first tier he reaches. */
 export const FOREIGN_TIERS: readonly ForeignTier[] = [
-  { id: 'abroad:eu1', name: 'Elite europeia', level: 73, ages: [17, 24], chance: 560, pays: 200 },
-  { id: 'abroad:eu2', name: 'Europa', level: 68, ages: [18, 27], chance: 330, pays: 140 },
-  { id: 'abroad:gulf', name: 'Golfo Pérsico', level: 66, ages: [25, 33], chance: 220, pays: 130 },
-  { id: 'abroad:asia', name: 'Ásia e EUA', level: 62, ages: [20, 31], chance: 190, pays: 110 },
-  { id: 'abroad:minor', name: 'Exterior', level: 57, ages: [20, 30], chance: 125, pays: 100 },
+  {
+    id: 'abroad:eu1',
+    name: 'Elite europeia',
+    level: 73,
+    ages: [17, 24],
+    chance: 560,
+    pays: 220,
+    currency: 'EUR',
+  },
+  {
+    id: 'abroad:eu2',
+    name: 'Europa',
+    level: 68,
+    ages: [18, 27],
+    chance: 330,
+    pays: 155,
+    currency: 'EUR',
+  },
+  {
+    id: 'abroad:gulf',
+    name: 'Golfo Pérsico',
+    level: 66,
+    ages: [25, 33],
+    chance: 220,
+    pays: 145,
+    currency: 'USD',
+  },
+  {
+    id: 'abroad:asia',
+    name: 'Ásia e EUA',
+    level: 62,
+    ages: [20, 31],
+    chance: 190,
+    pays: 120,
+    currency: 'USD',
+  },
+  {
+    id: 'abroad:minor',
+    name: 'Exterior',
+    level: 57,
+    ages: [20, 30],
+    chance: 125,
+    pays: 110,
+    currency: 'USD',
+  },
 ];
 
 /** A young talent's ceiling that the elite tier buys on promise. */
@@ -108,7 +151,13 @@ export const signable = (p: PackPlayer, _season: number) => p.clubId === ABROAD 
 
 /** The fee to bring him from abroad. */
 export const importFee = (w: CareerWorld, p: PackPlayer) =>
-  thousands((marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100);
+  thousands(
+    atRate(
+      w,
+      currencyOfNation(p.nationality),
+      (marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100,
+    ),
+  );
 
 /** What he wants to sign for `buyerId`, coming from his club, from nowhere or from abroad. */
 export function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string): PlayerStance {
@@ -135,7 +184,7 @@ export const wantsToGo = (p: PackPlayer) =>
 
 /** The fee a tier offers for him. */
 export const foreignFee = (w: CareerWorld, p: PackPlayer, t: ForeignTier) =>
-  thousands((marketValue(w.pack, p, w.season.season) * t.pays) / 100);
+  thousands(atRate(w, t.currency, (marketValue(w.pack, p, w.season.season) * t.pays) / 100));
 
 /** Sends a player abroad: he leaves the league for good; the fee goes to his club's season. */
 export function sellAbroad(w: CareerWorld, p: PackPlayer, fee: number): void {

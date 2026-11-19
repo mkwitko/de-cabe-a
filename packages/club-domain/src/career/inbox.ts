@@ -42,7 +42,11 @@ export type Note = { day: number } & (
   /** A ban: three yellows, a sending-off, or what the sports court added. */
   | { kind: 'suspension'; player: string; matches: number; why: 'yellows' | 'red' | 'court' }
   | { kind: 'bid' | 'clausePaid'; player: string; club: string; fee: number }
+  /** The real moved hard against a currency this month: the rate (×10 000), change in ‰. */
+  | { kind: 'fx'; currency: 'USD' | 'EUR'; rate: number; change: number }
   | { kind: 'prize'; position: number; amount: number }
+  /** The owners covered part of the season's loss. */
+  | { kind: 'owners'; amount: number }
   /** The person's club ended a season over the fair play limit: the cost and what follows. */
   | { kind: 'fairplay'; strikes: number; cost: number; points: number; fine?: number }
   /** A club of the person's division starts the season with points taken off. */

@@ -30,6 +30,8 @@ import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
 import {
   afterMatch,
   bookingsOf,
+  rivalPitch,
+  suspendedIn,
   newSeasonDiscipline,
   sitCourt,
   type Booking,
@@ -54,7 +56,7 @@ import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
-import { postPrize } from './finance';
+import { postOwners, postPrize } from './finance';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
 import { tierOfClub } from '../market/books';
@@ -113,8 +115,8 @@ export interface CareerWorld {
   academy?: string[];
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
-  /** The person's players' cards and bans (discipline.ts); absent before the first card. */
-  discipline?: Discipline;
+  /** Each club's cards and bans, by club (discipline.ts); absent before the first card. */
+  cards?: Record<string, Discipline>;
   /** Each finished season: its moves and what the person did that the next year grew from. */
   log?: SeasonLog[];
   /** Matches each of the person's players started this season, and how many the club played. */
@@ -214,6 +216,16 @@ function playDay(
           );
     record(w.season, id, o);
     out.set(id, o);
+    // The other clubs' cards fall on their best men; the person's are dealt below.
+    for (const [side, clubId] of [m.home, m.away].entries())
+      if (clubId !== w.clubId)
+        afterMatch(
+          w,
+          m.competitionId,
+          day,
+          bookingsOf(w, rivalPitch(w, clubId, m.competitionId), o.cards[side]!, day, clubId),
+          clubId,
+        );
     if (m.home === w.clubId || m.away === w.clubId) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       postHomeMatch(w, id, day);
@@ -350,14 +362,26 @@ export function playDecision(
   )!;
 }
 
-/** Another club's eleven for the day: its best, without the starters it is short of. */
-function rivalEleven(w: CareerWorld, c: { pack: Pack; clubId: string }, day: number): Lineup {
+/** Another club's eleven for the day: its best, without the starters it is short of or banned. */
+function rivalEleven(
+  w: CareerWorld,
+  c: { pack: Pack; clubId: string },
+  day: number,
+  competitionId: string,
+): Lineup {
   const formation = formationOf(c.clubId);
-  const best = bestLineup(c, formation);
+  // The banned do not travel; of those who do, some starters are short (health.ts).
+  const banned = suspendedIn(w, competitionId, c.clubId);
+  let best: Lineup;
+  try {
+    best = bestLineup(c, formation, banned);
+  } catch {
+    best = bestLineup(c, formation);
+  }
   const out = rivalOutIds(w, c.clubId, best.xi, day);
   if (out.size === 0) return best;
   try {
-    return bestLineup(c, formation, out);
+    return bestLineup(c, formation, new Set([...out, ...banned]));
   } catch {
     // No one left for a slot without them: they play.
     return best;
@@ -381,7 +405,7 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
           fresh: (id) => training.fresh[id] ?? 1,
           familiarity: drilled(training.drill),
         })
-      : teamWith(c, rivalEleven(w, c, d.day), {
+      : teamWith(c, rivalEleven(w, c, d.day, d.competitionId), {
           fresh: () => rivalFresh(w, clubId, d.day),
           familiarity: drilled(RIVAL_DRILL),
         });
@@ -467,6 +491,8 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     });
   const prize = postPrize(w, position, divisionTable(w).rows.length);
   if (prize > 0) note(w, { day: w.day, kind: 'prize', position, amount: prize });
+  const owners = postOwners(w);
+  if (owners > 0) note(w, { day: w.day, kind: 'owners', amount: owners });
   const played = w.season.season;
   const divisionId = w.season.competitions.find((c) => c.name === divisionTable(w).name)?.id;
   const year = w.season.season + 1;

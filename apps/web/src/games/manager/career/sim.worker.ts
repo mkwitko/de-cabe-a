@@ -23,6 +23,9 @@ import {
   nextMoment,
   outcomeOf,
   type Booking,
+  CURRENCIES,
+  type Currency,
+  rateOf,
   suspendedIn,
   type Moment,
   type MomentMode,
@@ -165,6 +168,8 @@ export interface SimView {
   club: { name: string; shortName: string; colours: [string, string] };
   /** This season's money by kind (wages, tv, sponsors, tickets, debt). */
   money: { kind: string; amount: number }[];
+  /** Reais per dollar and per euro today, and the move since the season opened, in ‰. */
+  fx: { currency: Currency; rate: number; change: number }[];
   /** After a season turn: titles of the person's division and the club's move. */
   turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
   division: string;
@@ -177,6 +182,8 @@ export interface SimView {
     away: ClubFace;
     atHome: boolean;
     competition: string;
+    /** Names of the opponent's players banned from this match, and the person's own. */
+    banned: { theirs: string[]; ours: string[] };
   } | null;
   /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
   deadline: string | null;
@@ -271,6 +278,10 @@ export interface SquadView {
   strength: number;
   plan: PlanChoice;
 }
+
+/** Display names of a set of players, as they go by. */
+const namesOf = (w: CareerWorld, ids: ReadonlySet<string>) =>
+  w.pack.players.filter((p) => ids.has(p.id)).map((p) => p.knownAs ?? p.name);
 
 /** The day the squad is being prepared for: the next match, or today. */
 const matchDay = (w: CareerWorld) => (pending?.kind === 'match' ? pending.day : w.day);
@@ -851,6 +862,15 @@ function view(w: CareerWorld, ms: number): SimView {
     form,
     // The first one is the next match, shown on its own.
     fixtures: pending?.kind === 'match' ? upcoming.slice(1) : upcoming,
+    fx: CURRENCIES.map((currency) => {
+      const rate = rateOf(w, currency);
+      const opened = rateOf(w, currency, dayOf(`${w.season.season}-01-01`));
+      return {
+        currency,
+        rate: rate / 10_000,
+        change: Math.round(((rate - opened) * 1000) / opened),
+      };
+    }),
     money: Object.entries(money.byKind)
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
@@ -936,6 +956,17 @@ function view(w: CareerWorld, ms: number): SimView {
             away: face(byId.get(pending.away)!),
             atHome: pending.home === w.clubId,
             competition: competition(pending.competitionId),
+            banned: {
+              theirs: namesOf(
+                w,
+                suspendedIn(
+                  w,
+                  pending.competitionId,
+                  pending.home === w.clubId ? pending.away : pending.home,
+                ),
+              ),
+              ours: namesOf(w, suspendedIn(w, pending.competitionId)),
+            },
           }
         : null,
     last,

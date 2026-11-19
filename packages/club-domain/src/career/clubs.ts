@@ -14,7 +14,7 @@ import { WHOLE, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/books';
 import type { CareerWorld } from './advance';
-import { BY_TIER, DEBT_RATE, gateOf } from './finance';
+import { BY_TIER, DEBT_RATE, gateOf, ownersCover } from './finance';
 
 /** A stadium is worth enlarging when an ordinary day already fills this share of it, per cent. */
 const FULL_HOUSE = 85;
@@ -241,6 +241,7 @@ export function settleSeason(
       upkeepOf(w, club) -
       debt;
     s.cash -= leakOf(w, club.id, s);
+    s.cash += ownersCover(w.pack, club.id, -s.cash);
     s.red = s.cash < 0 ? (s.red ?? 0) + 1 : 0;
     delete s.kitty;
   }
