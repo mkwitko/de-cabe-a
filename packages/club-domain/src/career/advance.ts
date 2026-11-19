@@ -27,6 +27,15 @@ import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
+import {
+  afterMatch,
+  bookingsOf,
+  newSeasonDiscipline,
+  sitCourt,
+  type Booking,
+  type Discipline,
+  type Sentence,
+} from './discipline';
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
@@ -104,6 +113,8 @@ export interface CareerWorld {
   academy?: string[];
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
+  /** The person's players' cards and bans (discipline.ts); absent before the first card. */
+  discipline?: Discipline;
   /** Each finished season: its moves and what the person did that the next year grew from. */
   log?: SeasonLog[];
   /** Matches each of the person's players started this season, and how many the club played. */
@@ -145,7 +156,7 @@ export type Decision =
 function playDay(
   w: CareerWorld,
   day: number,
-  given?: { id: string; outcome: Outcome },
+  given?: { id: string; outcome: Outcome; bookings?: readonly Booking[] | undefined },
 ): Map<string, Outcome> {
   const out = new Map<string, Outcome>();
   // The person's club as it stands that day (rest and training since the last one applied).
@@ -172,6 +183,21 @@ function playDay(
   }
   scoutingDay(w, day);
   postMonths(w, w.day, day);
+  const names = () => new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+  const banned = (sentences: Sentence[]) => {
+    if (!sentences.length) return;
+    const n = names();
+    for (const x of sentences)
+      note(w, {
+        day,
+        kind: 'suspension',
+        player: n.get(x.playerId) ?? '',
+        matches: x.matches,
+        why: x.why,
+      });
+  };
+  // The sports court sits before the day's matches: what it adds is served from today.
+  banned(sitCourt(w, day));
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     const o =
@@ -196,12 +222,20 @@ function playDay(
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);
       training = tire(training, eleven, travelTire(km));
-      const names = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+      const mine = m.home === w.clubId ? 0 : 1;
+      // The cards: who got them on screen, or drawn among the eleven for a match not watched.
+      const squad = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
+      const bookings =
+        given?.id === id && given.bookings
+          ? given.bookings.filter((b) => squad.has(b.playerId))
+          : bookingsOf(w, eleven, o.cards[mine], day);
+      banned(afterMatch(w, m.competitionId, day, bookings));
+      const n = names();
       for (const [pid, i] of Object.entries(hurt))
         note(w, {
           day,
           kind: 'injury',
-          player: names.get(pid) ?? '',
+          player: n.get(pid) ?? '',
           injury: i.kind,
           days: i.until - day,
         });
@@ -307,9 +341,13 @@ export function playDecision(
   w: CareerWorld,
   d: Extract<Decision, { kind: 'match' }>,
   watched?: Outcome,
+  /** Who was booked on screen; the person's players only count. */
+  bookings?: readonly Booking[],
 ): Outcome {
   if (nextDay(w.season) !== d.day) throw new Error('career: that match is not next');
-  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched }).get(d.matchId)!;
+  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched, bookings }).get(
+    d.matchId,
+  )!;
 }
 
 /** Another club's eleven for the day: its best, without the starters it is short of. */
@@ -515,6 +553,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;
   delete w.played;
+  newSeasonDiscipline(w);
   // Each office has had another season with its players.
   setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.moves));
   // Rival squads cleared for the new season, read with the new clock: spares go, and

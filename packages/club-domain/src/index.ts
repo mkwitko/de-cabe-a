@@ -55,6 +55,7 @@ export * from './market/agents';
 export * from './career/development';
 export * from './career/years';
 export * from './career/health';
+export * from './career/discipline';
 export * from './career/jobs';
 export { attendance, tierOf } from './career/finance';
 export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';

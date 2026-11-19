@@ -901,6 +901,7 @@ const FROM = {
   homecoming: 'market',
   solidarity: 'finance',
   injury: 'staff',
+  suspension: 'staff',
   prize: 'finance',
   fairplay: 'finance',
   fairplayRival: 'press',
@@ -1023,6 +1024,8 @@ function noteText(n: InboxItem, sim: SimView): string {
         kind: t('health.kind', { k: n.injury }),
         days: n.days,
       });
+    case 'suspension':
+      return t('inbox.suspension', { name: n.player, n: n.matches, why: n.why });
     case 'contractsEnding':
       return t('inbox.contractsEnding', { n: n.players });
     case 'window':
