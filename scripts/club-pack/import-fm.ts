@@ -546,6 +546,23 @@ const droppedTraits: Record<string, number> = {};
 
 const CEILING_GAIN = { technical: 0.45, mental: 0.55, physical: 0.3 };
 
+/**
+ * The club that formed him (solidarity, training compensation, the talent map): FM's
+ * home_grown_club_uids, the clubs where he trained three years between 15 and 21; the first one
+ * the pack keeps. FM: high confidence for who formed him.
+ */
+let formedKnown = 0;
+function formedAt(
+  p: Record<string, string>,
+): { origin: { clubId: string } } | Record<string, never> {
+  for (const u of (p.home_grown_club_uids ?? '').split(';'))
+    if (u && squadOf.has(u)) {
+      formedKnown++;
+      return { origin: { clubId: `fm-c${u}` } };
+    }
+  return {};
+}
+
 function playerOf(p: Record<string, string>, clubUid: string, id: string): PackPlayer | null {
   const positions = positionsOf(p);
   if (!positions) return (drop('player without a position >= 12'), null);
@@ -671,6 +688,7 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
     },
     traits,
     clubId: `fm-c${clubUid}`,
+    ...formedAt(p),
     contract: { wage: monthlyBrl(num(p.contract_wage)), until, releaseFee: null },
     ...(loan ? { loanFromClubId: `fm-c${p.loan_parent_club_uid}` } : {}),
     field,
@@ -1054,6 +1072,7 @@ report.notes.push(
   'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
   'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
   `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
+  `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
   'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
   'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
 );
