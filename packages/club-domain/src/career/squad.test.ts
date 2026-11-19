@@ -14,6 +14,7 @@ import {
   slotFamiliarity,
   slotLevels,
   slotPositions,
+  isForeign,
 } from './squad';
 import { jobOffers } from './start';
 import { RIVAL_DRILL, drilled, myStrength, trainingOn } from './training';
@@ -158,3 +159,9 @@ function openAt(day: number) {
   nextDecision(w);
   return w;
 }
+
+it('a foreigner with a Brazilian passport is not a foreigner in the squad', () => {
+  expect(isForeign({ nationality: 'AR' })).toBe(true);
+  expect(isForeign({ nationality: 'IT', secondNationality: 'BR' })).toBe(false);
+  expect(isForeign({ nationality: 'BR', secondNationality: 'IT' })).toBe(false);
+});

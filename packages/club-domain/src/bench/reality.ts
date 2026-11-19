@@ -20,6 +20,7 @@ import { OPENING, rateOf } from '../market/currency';
 import { dayOf } from '../competition/calendar';
 import { booksOf, budgetOf } from '../market/books';
 import { squadPlanOf } from '../market/plan';
+import { isForeign } from '../career/squad';
 import { ageOf } from '../market/value';
 import { ticketOf, usualCrowd } from '../match/stadium';
 import { PackSchema, type Pack } from '../pack/schema';
@@ -211,7 +212,7 @@ const TARGETS: Target[] = [
     measure: (w) => {
       const clubs = new Set(w.season.members[serieA(w).id] ?? []);
       const squad = w.pack.players.filter((p) => p.clubId !== null && clubs.has(p.clubId));
-      return (100 * squad.filter((p) => p.nationality !== 'BR').length) / Math.max(1, squad.length);
+      return (100 * squad.filter(isForeign).length) / Math.max(1, squad.length);
     },
   },
   {

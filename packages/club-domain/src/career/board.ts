@@ -306,7 +306,7 @@ function homegrownOf(w: CareerWorld): number {
 }
 
 /**
- * Confidence a season of local men in the eleven earns, born in the club's state (`origin.cityId`,
+ * Confidence a season of local men in the eleven earns, born in the club's state (`birthCityId`,
  * Wikidata's place of birth) or, when that is unknown, formed at a club of it (`origin.clubId`,
  * FM's home_grown_club_uids): "prata da casa" of the region, up to LOCALS at a whole season of them before supporters who prize local
  * identity most (fans' localIdentity). The club's own boys count once, under homegrown. PARÂMETRO.
@@ -327,8 +327,8 @@ function localsOf(w: CareerWorld): number {
       p.id,
       p.origin?.clubId === w.clubId
         ? undefined
-        : p.origin?.cityId
-          ? cityState.get(p.origin.cityId)
+        : p.birthCityId
+          ? cityState.get(p.birthCityId)
           : p.origin?.clubId && stateOf(p.origin.clubId),
     ]),
   );

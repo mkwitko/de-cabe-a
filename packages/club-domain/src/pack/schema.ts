@@ -67,6 +67,8 @@ export const PackPlayerSchema = z.strictObject({
   knownAs: z.string().min(1).max(40).optional(),
   birthDate: isoDate,
   nationality: z.string().length(2),
+  /** Another citizenship he holds (Wikidata P27): a Brazilian passport makes a foreigner count as Brazilian in a squad. */
+  secondNationality: z.string().length(2).optional(),
   birthCityId: id.optional(),
   heightCm: z.number().int().min(150).max(210).optional(),
   foot: z.enum(['right', 'left', 'both']),
