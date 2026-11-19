@@ -890,7 +890,7 @@ function Form({ sim }: { sim: SimView }) {
                 <span
                   className={`mt-0.5 shrink-0 rounded px-1.5 text-xs font-bold uppercase ${f.side > 0 ? 'bg-club-gold/20 text-club-gold' : 'bg-club-danger/20 text-club-danger'}`}
                 >
-                  {t('career.whySide', { s: f.side > 0 ? 'for' : 'against' })}
+                  {t('career.whySide', { s: sideOf(f.side) })}
                 </span>
                 <span>{t('career.whyFact', { k: f.kind, n: f.n })}</span>
               </li>
@@ -1238,3 +1238,6 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
     </section>
   );
 }
+
+/** A fact's side as the report's select reads it. */
+const sideOf = (side: number) => (side > 0 ? 'for' : 'against');
