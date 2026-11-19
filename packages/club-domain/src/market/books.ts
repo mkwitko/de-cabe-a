@@ -104,8 +104,15 @@ function readBudget(w: CareerWorld, clubId: string): Budget {
   };
 }
 
+/**
+ * Monthly wage cost. Only the person's club gets the image-rights saving (image.ts): the rivals' wages are
+ * calibrated against real balance sheets as total cost already, so their bill stays the contract wage.
+ */
 export const wageBill = (w: CareerWorld, clubId: string) =>
-  squadPlayers({ pack: w.pack, clubId }).reduce((s, p) => s + wageCost(w, p), 0);
+  squadPlayers({ pack: w.pack, clubId }).reduce(
+    (s, p) => s + (clubId === w.clubId ? wageCost(w, p) : (p.contract?.wage ?? 0)),
+    0,
+  );
 
 export interface Books {
   spent: number;
