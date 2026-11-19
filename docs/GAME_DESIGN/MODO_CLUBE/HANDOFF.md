@@ -164,10 +164,8 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   - Amarelos 2,13 e vermelhos 0,085, logo abaixo das faixas. Os vermelhos são quase todos segundo amarelo.
   - Escanteios 5,5, no limite da faixa.
   - Chute depois de perda alta 20%, dentro de Opta 13% a 21%.
-- **Próximo passo: volume de chutes, sobretudo de fora da área** (2,9 por time contra 5,4 na Série A).
-  - Causa provável: o valor de posse (`rules/value.ts`) vale 80% do `xG` de um chute livre daquele ponto, um PARÂMETRO sem fonte. Levar a bola 7 m até a entrada da área vale cerca de 0,09; chutar de 25 m vale cerca de 0,025. Então o condutor só chuta de longe quando é parado.
-  - Calibrar exige uma grade de valor de posse com fonte (por exemplo, a xT publicada).
-  - Mexe em toda decisão do motor: fazer em PR próprio, com comparação pareada.
+- **Valor de posse ajustado à xT publicada** (2026-11-18 à noite, #145, `02`). Gols 2,79 para 2,09, gols por chute 0,096 (na faixa), grandes chances 2,15 para 1,22, passes 433 para 489, passes progressivos (definição FBref, novo na bancada) 20,0 para 17,4 por time. Empates subiram de 27% para 38% (Série A 27,5%), porque os gols caíram. O dono aceitou assim; o ajuste de posicionamento deve devolver gols e trazer os empates de volta à referência.
+- **Próximo passo, decisão do dono: posicionamento e movimentação sem bola.** O motor progride pouco: 17 passes progressivos por time contra cerca de 45 do Palmeiras em 2024 (FBref; falta a média da liga). Os times trocam passes de lado e entram pouco na área. Começar medindo onde estão os companheiros livres à frente da bola quando o condutor decide.
 - **Disputas aéreas: origem medida** (60 partidas, 15,1 por jogo contra cerca de 25).
   - Passe longo em jogo corrido 7,5; escanteio 3,6; passe por cima 1,3; afastamento 0,7; cruzamento em jogo corrido 0,6; falta 0,5; tiro de meta 0,5; bola longa do goleiro em jogo corrido 0,3.
   - Tiro de meta e reposição do goleiro quase não geram disputa: há só 1,4 tiro de meta longo por time.
