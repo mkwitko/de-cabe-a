@@ -42,6 +42,7 @@ import {
 } from './discipline';
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
+import { entryOf, seasonReview, type HistoryEntry } from './history';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
 import { agentOffers, type AgentLedger } from '../market/agents';
@@ -142,6 +143,8 @@ export interface CareerWorld {
   /** Matches each of the person's players started this season, and how many the club played. */
   starts?: Record<string, number>;
   played?: number;
+  /** One entry per season played, whichever club the person coached (history.ts). */
+  history?: HistoryEntry[];
   /** Players on loan this season, by id: who owns each and the contract he returns to. */
   loans?: Record<string, Loan>;
   /** The person's players offered on loan. */
@@ -506,6 +509,8 @@ const FIRST_TEAM_AGE = 19;
  */
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
+  // The season's story, read before anything turns.
+  const entry = entryOf(seasonReview(w)!);
   let judged = boardAfterSeason(w);
   // The season's accounts are judged as the squads stood while it was played.
   const verdict = judgeFairPlay(w);
@@ -548,6 +553,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (prize > 0) note(w, { day: w.day, kind: 'prize', position, amount: prize });
   const owners = postOwners(w);
   if (owners > 0) note(w, { day: w.day, kind: 'owners', amount: owners });
+  w.history = [...(w.history ?? []), entry];
   const played = w.season.season;
   const divisionId = w.season.competitions.find((c) => c.name === divisionTable(w).name)?.id;
   const year = w.season.season + 1;

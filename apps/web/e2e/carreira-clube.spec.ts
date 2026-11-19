@@ -86,11 +86,44 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await expect(page.getByText('Salários')).toBeVisible();
   await expect(page.getByText('Bilheteria')).toBeVisible();
   await page.screenshot({ path: 'test-results/carreira-fim-1280.png', fullPage: true });
+  // The season read back: the board's verdict, the record, the most-used players.
+  const review = page.getByTestId('season-review');
+  await expect(review).toContainText('Balanço da temporada 2026');
+  await expect(review).toContainText(/Meta (não )?cumprida/);
+  await expect(review).toContainText(/Gols: \d+ pró, \d+ contra/);
+  await page.screenshot({
+    path: `${process.env.SHOTS_DIR ?? 'test-results'}/season-end-1280.png`,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await review.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `${process.env.SHOTS_DIR ?? 'test-results'}/season-end-390.png`,
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
   await turn.click();
   await expect(page.getByText(/^Temporada 2026: \S+ campeão da divisão\./)).toBeVisible({
     timeout: 30_000,
   });
   await expect(page.getByText(/, temporada 2027/)).toBeVisible();
+  // The season is now in the club's history, in the boardroom.
+  await page.getByRole('button', { name: 'Diretoria' }).click();
+  const history = page.getByRole('heading', { name: 'História' });
+  await expect(history).toBeVisible();
+  await expect(page.getByText(/^2026$/)).toBeVisible();
+  await history.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `${process.env.SHOTS_DIR ?? 'test-results'}/history-1280.png`,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await history.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `${process.env.SHOTS_DIR ?? 'test-results'}/history-390.png`,
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page
+    .getByRole('button', { name: 'Sala do técnico' })
+    .click()
+    .catch(() => {});
   await page.reload();
   await expect(page.getByText(/, temporada 2027/)).toBeVisible({ timeout: 30_000 });
   // The year's boys are in the academy, out of the first team until brought up.

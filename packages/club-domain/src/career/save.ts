@@ -68,6 +68,7 @@ interface Saved {
   clubs?: Record<string, ClubState>;
   starts?: CareerWorld['starts'];
   played?: CareerWorld['played'];
+  history?: CareerWorld['history'];
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -160,6 +161,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.clubs && { clubs: w.clubs }),
     ...(w.starts && { starts: w.starts }),
     ...(w.played !== undefined && { played: w.played }),
+    ...(w.history && { history: w.history }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -226,5 +228,6 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.clubs && { clubs: saved.clubs }),
     ...(saved.starts && { starts: saved.starts }),
     ...(saved.played !== undefined && { played: saved.played }),
+    ...(saved.history && { history: saved.history }),
   };
 }
