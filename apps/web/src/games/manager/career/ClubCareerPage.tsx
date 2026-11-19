@@ -903,6 +903,7 @@ const FROM = {
   injury: 'staff',
   suspension: 'staff',
   prize: 'finance',
+  owners: 'board',
   fairplay: 'finance',
   fairplayRival: 'press',
   directors: 'board',
@@ -1030,6 +1031,8 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.contractsEnding', { n: n.players });
     case 'window':
       return t('inbox.window', { open: BOOL[Number(n.open)]! });
+    case 'owners':
+      return t('inbox.owners', { value: t('career.cash', { value: n.amount }) });
     case 'prize':
       return t('inbox.prize', {
         position: n.position,
