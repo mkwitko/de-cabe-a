@@ -109,7 +109,7 @@ export function squadOf(w: CareerWorld, of: readonly PackPlayer[] = squad(w)): S
 
 /** The line-up in force: the person's, or the coach's best for the club's usual formation. */
 export const lineupOf = (w: CareerWorld): Lineup =>
-  w.lineup ?? bestLineup(w, formationOf(w.clubId));
+  w.lineup ?? bestLineup(w, formationOf(w.clubId), undefined, foreignLimit(w.season.season));
 
 /**
  * Takes the person's line-up. Eleven different players of the club, and a keeper in goal and
@@ -243,31 +243,46 @@ export function slotFamiliarity(w: ClubIn, l: Lineup): number[] {
  * The best eleven for a formation counting positions: slot by slot in the formation's order, the
  * free player with the highest slot rating (ties by id). What "the coach's eleven" offers.
  */
+/**
+ * Foreigners a club may name for a match (CBF, Regulamento Geral de Competições): nine until
+ * 2026; eight in 2027, one fewer a year down to five from 2030 (CBF and the clubs, Sep 2026).
+ * More than that can never start, so the eleven is held to it.
+ */
+export const foreignLimit = (season: number) =>
+  season <= 2026 ? 9 : Math.max(5, 8 - (season - 2027));
+export const isForeign = (p: { nationality: string }) => p.nationality !== 'BR';
+
 export function bestLineup(
   w: ClubIn,
   formation: string,
   /** Players who cannot be picked (the injured). */
   out?: ReadonlySet<string>,
+  /** Foreigners the eleven may hold (`foreignLimit`). */
+  foreigners = Infinity,
 ): Lineup {
   const f = FORMATIONS[formation];
   if (!f) throw new Error(`lineup: unknown formation ${formation}`);
   const fit = slotRatings(w, formation);
   const left = out ? squad(w).filter((p) => !out.has(p.id)) : [...squad(w)];
+  let abroad = 0;
   const xi = f.roles.map((role, i) => {
     // A short squad fields whoever is left: a keeper plays out of goal, or an outfield player
-    // in it, rather than the club not turning up.
+    // in it, rather than the club not turning up; past the limit of foreigners, a Brazilian.
     let at = -1;
     for (const strict of [true, false]) {
       for (const [k, p] of left.entries())
         if (
-          (!strict || isKeeper(p) === isKeeperRole(role)) &&
+          (!strict ||
+            (isKeeper(p) === isKeeperRole(role) && (abroad < foreigners || !isForeign(p)))) &&
           (at < 0 || fit.get(p.id)![i]! > fit.get(left[at]!.id)![i]!)
         )
           at = k;
       if (at >= 0) break;
     }
     if (at < 0) throw new Error(`lineup: no player for ${role}`);
-    return left.splice(at, 1)[0]!.id;
+    const p = left.splice(at, 1)[0]!;
+    if (isForeign(p)) abroad++;
+    return p.id;
   });
   return { formation, xi };
 }

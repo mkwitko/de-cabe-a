@@ -68,6 +68,8 @@ export const ptBR = {
   'squad.formation': 'Formação',
   'squad.auto': 'Escalação do treinador',
   'squad.strength': 'Força do time',
+  'squad.foreigners':
+    'Estrangeiros: {named}/{limit}{over, select, true { — acima do limite: os últimos ficam de fora} other {}}',
   'squad.list': 'Elenco',
   'squad.pick': 'Quem joga de {role}?',
   'squad.hint':

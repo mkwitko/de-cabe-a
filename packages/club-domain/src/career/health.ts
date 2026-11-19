@@ -9,7 +9,15 @@
  */
 import { FORMATIONS } from '@decabeca/match-engine';
 import type { CareerWorld } from './advance';
-import { bestLineup, lineupOf, slotRatings, squadPlayers, type Lineup } from './squad';
+import {
+  bestLineup,
+  foreignLimit,
+  isForeign,
+  lineupOf,
+  slotRatings,
+  squadPlayers,
+  type Lineup,
+} from './squad';
 import type { Training } from './training';
 import { suspendedIn } from './discipline';
 import { matchesOn } from '../competition/season';
@@ -81,6 +89,13 @@ export function outOn(w: CareerWorld, day: number): Set<string> {
 export function fielded(w: CareerWorld, day: number): Lineup {
   const picked = lineupOf(w);
   const out = outOn(w, day);
+  // Past the limit of foreigners, the last of them named sits out like a man hurt.
+  const limit = foreignLimit(w.season.season);
+  const foreign = new Set(
+    w.pack.players.filter((p) => p.clubId === w.clubId && isForeign(p)).map((p) => p.id),
+  );
+  const named = picked.xi.filter((id) => foreign.has(id) && !out.has(id));
+  for (const id of named.slice(limit)) out.add(id);
   if (!picked.xi.some((id) => out.has(id))) return picked;
   const roles = FORMATIONS[picked.formation]!.roles;
   const fit = slotRatings(w, picked.formation);
@@ -90,8 +105,9 @@ export function fielded(w: CareerWorld, day: number): Lineup {
     if (!out.has(id)) continue;
     const keeper = roles[i] === 'goalkeeper' || roles[i] === 'sweeperKeeper';
     let best: string | null = null;
+    const room = xi.filter((x) => foreign.has(x) && !out.has(x)).length < limit;
     for (const p of squad) {
-      if (out.has(p.id) || xi.includes(p.id)) continue;
+      if (out.has(p.id) || xi.includes(p.id) || (!room && foreign.has(p.id))) continue;
       if (p.positions.some((x) => x.position === 'GK') !== keeper) continue;
       if (
         !best ||
@@ -183,4 +199,4 @@ export const MISSING = 11;
 
 /** For a squad to field without the injured: the coach's best eleven of those fit. */
 export const fitLineup = (w: CareerWorld, formation: string, day: number): Lineup =>
-  bestLineup(w, formation, outOn(w, day));
+  bestLineup(w, formation, outOn(w, day), foreignLimit(w.season.season));

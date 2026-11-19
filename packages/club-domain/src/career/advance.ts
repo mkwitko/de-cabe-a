@@ -61,7 +61,7 @@ import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
 import { tierOfClub } from '../market/books';
 import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
-import { bestLineup, teamWith, type Lineup } from './squad';
+import { bestLineup, foreignLimit, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
   clubLevels,
@@ -370,18 +370,20 @@ function rivalEleven(
   competitionId: string,
 ): Lineup {
   const formation = formationOf(c.clubId);
-  // The banned do not travel; of those who do, some starters are short (health.ts).
+  // The banned do not travel; of those who do, some starters are short (health.ts); past the
+  // season's limit of foreigners, Brazilians start (squad.ts).
   const banned = suspendedIn(w, competitionId, c.clubId);
+  const limit = foreignLimit(w.season.season);
   let best: Lineup;
   try {
-    best = bestLineup(c, formation, banned);
+    best = bestLineup(c, formation, banned, limit);
   } catch {
-    best = bestLineup(c, formation);
+    best = bestLineup(c, formation, undefined, limit);
   }
   const out = rivalOutIds(w, c.clubId, best.xi, day);
   if (out.size === 0) return best;
   try {
-    return bestLineup(c, formation, new Set([...out, ...banned]));
+    return bestLineup(c, formation, new Set([...out, ...banned]), limit);
   } catch {
     // No one left for a slot without them: they play.
     return best;
