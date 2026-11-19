@@ -65,6 +65,17 @@ describe('the board (06, corte 1)', () => {
     });
   });
 
+  it('inherited debt does not count against the coach; unpaid wages do', () => {
+    const w = openCareer(pack, 71, clubId);
+    const match = { home: clubId, away: pack.clubs.find((c) => c.id !== clubId)!.id };
+    const draw = score(0, 0, true);
+    const clean = boardAfterMatch(w, match, draw).confidence;
+    w.ledger.cash = -50_000_000;
+    expect(boardAfterMatch(w, match, draw).confidence).toBe(clean);
+    w.arrears = 1;
+    expect(boardAfterMatch(w, match, draw).confidence).toBe(clean - 1);
+  });
+
   it('losing brings an ultimatum; meeting it lifts the pressure', () => {
     const w = openCareer(pack, 71, clubId);
     for (let i = 0; i < 40 && !boardOf(w).ultimatum; i++) play(w, 0, 3);
