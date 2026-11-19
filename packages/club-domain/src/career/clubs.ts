@@ -55,6 +55,8 @@ export interface ClubState {
   fame?: Fame;
   /** International points from players sold to Europe this season. */
   exported?: number;
+  /** Sponsorship deals signed during the career, in place of the pack's (`renewSponsors`). */
+  sponsors?: PackClub['sponsors'];
 }
 
 /** Share of the money to spare that goes into structure, by horizon. */
@@ -124,16 +126,16 @@ export const clubState = (w: CareerWorld, clubId: string): ClubState => clubsOf(
 
 /**
  * What fame moves, per point of national fame above (or below) the club's name in the pack: the
- * share of seats filled on an ordinary day, in half points, and the sponsors' money, in per cent.
- * A title (+14) brings 7 points of occupancy and 21 % more from sponsors; a relegation (−8) takes
- * 4 and 12 %. PARÂMETRO.
+ * share of seats filled on an ordinary day, in half points, and the sponsors' money at the next
+ * renewal, in per cent. A title (+14) brings 7 points of occupancy and 21 % more at renewal; a
+ * relegation (−8) takes 4 and 12 %. PARÂMETRO.
  */
 const FAME_DEMAND_HALVES = 1;
 const FAME_SPONSORS = 3 / 2;
 
 /**
  * The pack with every club's structure as it now stands. `origin` is the career's opening pack:
- * fame moves the public and the sponsors from what the club had there, so it never compounds.
+ * fame moves the public from what the club had there, so it never compounds.
  */
 export function withClubs(
   pack: Pack,
@@ -145,7 +147,7 @@ export function withClubs(
   let changed = false;
   const next = pack.clubs.map((c) => {
     const s = clubs[c.id];
-    if (!s || (!s.levels && s.capacity === undefined && !s.fame)) return c;
+    if (!s || (!s.levels && s.capacity === undefined && !s.fame && !s.sponsors)) return c;
     changed = true;
     const l = s.levels ?? {};
     const was = first.get(c.id) ?? c;
@@ -156,10 +158,7 @@ export function withClubs(
         ...c.fans,
         demand: clamp(was.fans.demand + Math.trunc((lift * FAME_DEMAND_HALVES) / 2), 1, 100),
       },
-      sponsors: was.sponsors.map((x) => ({
-        ...x,
-        annual: Math.max(0, Math.round((x.annual * (100 + lift * FAME_SPONSORS)) / 100)),
-      })),
+      sponsors: s.sponsors ?? was.sponsors,
       facilities: {
         training: l.training ?? c.facilities.training,
         youth: l.youth ?? c.facilities.youth,
@@ -350,6 +349,7 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
           horizon: s.directors.horizon,
         });
     }
+    renewSponsors(w, club.id, s);
     if (club.id === w.clubId) continue;
     // Money to spare after the reserve.
     const income = incomeOf(w, club.id);
@@ -370,6 +370,45 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     // Never more than a season of income in one go: the rest waits in the bank.
     s.kitty = Math.min(left, income);
   }
+}
+
+/**
+ * Sponsorship money by national tier, relative: a shirt in the Série B is worth under half of one
+ * in the Série A, and far less below. PARÂMETRO, a confirmar.
+ */
+const SPONSOR_TIER: Record<number, number> = { 1: 100, 2: 45, 3: 15, 4: 6 };
+/** A renewed deal runs one to three seasons. */
+const SPONSOR_YEARS = 3;
+
+/**
+ * Deals that ended before this season are signed again, at the pack's figure moved by the
+ * club's name today (`FAME_SPONSORS` per point over its opening reputation) and by its division
+ * against the one it started in; a deal runs until its own end, at the price it was signed for.
+ */
+export function renewSponsors(w: CareerWorld, clubId: string, s: ClubState): void {
+  const season = w.season.season;
+  const r = fork(rngFrom(w.seed), `sponsors:${season}:${clubId}`);
+  const opening = w.origin.clubs.find((c) => c.id === clubId);
+  if (!opening?.sponsors.length) return;
+  const deals = s.sponsors ?? opening.sponsors;
+  const start = `${season}-01-01`;
+  if (deals.every((x) => x.until >= start)) return;
+  const was = nationalDivisions(w.origin).find((d) => d.clubIds.includes(clubId))?.tier ?? 4;
+  const tier = tierOfClub(w, clubId);
+  const lift = fameOf(w, clubId).national - opening.reputation;
+  s.sponsors = deals.map((x, i) => {
+    if (x.until >= start) return x;
+    const base = opening.sponsors[i]?.annual ?? x.annual;
+    const annual = Math.max(
+      0,
+      Math.round(
+        (base * (100 + lift * FAME_SPONSORS) * SPONSOR_TIER[tier]!) / (100 * SPONSOR_TIER[was]!),
+      ),
+    );
+    const years = 1 + pick(r, SPONSOR_YEARS);
+    if (clubId === w.clubId) note(w, { day: w.day, kind: 'sponsor', name: x.name, annual, years });
+    return { ...x, annual, until: `${season + years - 1}-12-31` };
+  });
 }
 
 /** Points a club pays over the value at the table, from its directors: up to +20 for the worst. */

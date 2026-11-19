@@ -9,6 +9,7 @@ import {
   updateFame,
   planSeason,
   proposeWork,
+  renewSponsors,
   settleSeason,
   withClubs,
   workAnswer,
@@ -132,13 +133,11 @@ describe('clubs as institutions (04 §4.7)', () => {
     expect(withClubs(w.pack, w.clubs).clubs.find((c) => c.id === rival)!.reputation).toBe(
       won.national,
     );
-    // A full house and richer sponsors follow the title, from the club's opening figures.
+    // A fuller house follows the title, from the club's opening figures.
     w.pack = withClubs(w.pack, w.clubs, w.origin);
     const after = w.pack.clubs.find((c) => c.id === rival)!;
     const lift = won.national - club.reputation;
     expect(after.fans.demand).toBe(Math.min(100, club.fans.demand + Math.trunc(lift / 2)));
-    const sum = (c: typeof club) => c.sponsors.reduce((t, x) => t + x.annual, 0);
-    if (sum(club) > 0) expect(sum(after)).toBeGreaterThan(sum(club));
     // Seasons go by as in a career: the pack carries today's fame, the roots stay the pack's.
     const quiet = () => ({ position: 10, places: 20, tier: 1 });
     for (let k = 0; k < 15; k++) {
@@ -149,6 +148,29 @@ describe('clubs as institutions (04 §4.7)', () => {
     const faded = w.pack.clubs.find((c) => c.id === rival)!;
     expect(Math.abs(faded.fans.demand - club.fans.demand)).toBeLessThanOrEqual(1);
     expect(Math.abs(fameOf(w, rival).national - club.reputation)).toBeLessThanOrEqual(2);
+  });
+
+  it('a deal that ended is signed again, dearer after a title, and runs to its own end', () => {
+    const w = openCareer(structuredClone(pack), 5, mine);
+    const club = w.origin.clubs.find((c) => c.sponsors.length && c.id !== mine)!;
+    const s = clubsOf(w)[club.id]!;
+    s.fame = { ...fameOf(w, club.id), national: club.reputation + 10 };
+    const ended = club.sponsors.map((x) => ({ ...x, until: `${w.season.season - 1}-12-31` }));
+    s.sponsors = ended;
+    renewSponsors(w, club.id, s);
+    const now = s.sponsors!;
+    now.forEach((x, i) => {
+      expect(x.until > `${w.season.season}-01-01`).toBe(true);
+      // +10 of fame is 15 % more, in the same division.
+      expect(x.annual).toBe(Math.round((club.sponsors[i]!.annual * 115) / 100));
+    });
+    // In force, nothing moves.
+    const kept = structuredClone(now);
+    renewSponsors(w, club.id, s);
+    expect(s.sponsors).toEqual(kept);
+    expect(
+      withClubs(w.pack, w.clubs, w.origin).clubs.find((c) => c.id === club.id)!.sponsors,
+    ).toEqual(kept);
   });
 
   it('a level 5 front cannot be built further', () => {
