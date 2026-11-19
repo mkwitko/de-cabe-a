@@ -238,6 +238,10 @@ export const ptBR = {
     'Contrato renovado com {name}: {value} por ano, {years, plural, one {por # temporada} other {por # temporadas}}.',
   'inbox.suspension':
     '{why, select, yellows {{name} recebeu o terceiro amarelo e cumpre suspensão automática no próximo jogo da competição.} red {{name} foi expulso e cumpre suspensão automática no próximo jogo da competição.} other {O STJD julgou a expulsão de {name}: mais {n, plural, one {# jogo} other {# jogos}} de suspensão.}}',
+  'career.fx': '{c, select, USD {Dólar} other {Euro}}',
+  'career.fxRate': 'R$ {rate, number, ::.00} ({change, number, ::+.0}% no ano)',
+  'inbox.fx':
+    '{up, select, true {O real desabou: o {c, select, USD {dólar} other {euro}} subiu {change, number, ::.0}% no mês e vale R$ {rate, number, ::.00}. Contratar no exterior ficou mais caro; vender para fora rende mais.} other {O real se valorizou: o {c, select, USD {dólar} other {euro}} caiu {change, number, ::.0}% no mês e vale R$ {rate, number, ::.00}. Contratar no exterior ficou mais barato; vender para fora rende menos.}}',
   'inbox.owners':
     'A temporada fechou no vermelho. Os donos do clube aportaram {value} para cobrir parte do prejuízo; o resto vira dívida.',
   'inbox.protest':
