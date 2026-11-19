@@ -18,7 +18,7 @@ import type { CareerWorld } from '../career/advance';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { available, book, booksOf, embargoed, wageRoom } from './books';
+import { available, book, booksOf, embargoed, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -168,7 +168,13 @@ export function openTalk(w: CareerWorld, playerId: string): Talk {
       day: w.day,
     };
   } else {
-    const stance = sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season);
+    const stance = sellerStance(
+      { pack: w.pack, clubId: p.clubId },
+      p,
+      w.clubId,
+      season,
+      inRed(w, p.clubId),
+    );
     talk = {
       player: p.id,
       seller: p.clubId,
@@ -228,7 +234,11 @@ export function bidFee(w: CareerWorld, playerId: string, fee: number): FeeAnswer
       : round >= MAX_ROUNDS
         ? { kind: 'refuse', reason: 'final' }
         : { kind: 'counter', fee: talk.asking }
-    : answerFee(sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season), fee, round);
+    : answerFee(
+        sellerStance({ pack: w.pack, clubId: p.clubId }, p, w.clubId, season, inRed(w, p.clubId)),
+        fee,
+        round,
+      );
   if (a.kind === 'refuse') cool(w, playerId);
   else if (a.kind === 'counter')
     w.talks = { ...w.talks, [playerId]: { ...talk, round, asking: a.fee } };

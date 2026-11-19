@@ -241,3 +241,7 @@ export function solidarity(
     w.books = { ...w.books, [formed]: { ...b, earned: b.earned + share } };
   }
 }
+
+/** A club of the world in the red at the last season's turn (career/clubs.ts): it must sell. */
+export const inRed = (w: CareerWorld, clubId: string) =>
+  clubId !== w.clubId && (w.clubs?.[clubId]?.cash ?? 0) < 0;

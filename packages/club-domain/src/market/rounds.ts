@@ -17,7 +17,7 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, booksOf, budgetOf, wageRoom } from './books';
+import { available, book, booksOf, budgetOf, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -307,7 +307,8 @@ function choose(
       ? 0
       : p.clubId === ABROAD
         ? importFee(w, p)
-        : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season).floor;
+        : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season, inRed(w, p.clubId!))
+            .floor;
     if (price > money) continue;
     const wants = stanceFor(w, p, buyerId);
     if (wants.no || wants.wage > room) continue;
@@ -332,7 +333,7 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   // Abroad, the price is the price: paid or not.
   if (from === ABROAD) fee = importFee(w, p) <= available(w, buyerId) ? importFee(w, p) : -1;
   else if (from !== null) {
-    const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season);
+    const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season, inRed(w, from));
     // The most the club pays: over what it thinks he is worth by how much it needs him and by
     // how loose its office is at the table, never over its budget.
     const hand = bargaining(w.pack, buyerId);

@@ -331,7 +331,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',
