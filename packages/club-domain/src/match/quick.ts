@@ -22,7 +22,14 @@ function expSeries(x: number): number {
  * about 49 % of the wins (Série A 2023-2025: 47-50 %), an empty stadium about 42 % (2020, played
  * behind closed doors: netvasco). PARÂMETRO.
  */
-export function quickResult(seed: number, home: number, away: number, crowd = 0.6): Outcome {
+export function quickResult(
+  seed: number,
+  home: number,
+  away: number,
+  crowd = 0.6,
+  /** The referee's cards and sendings-off a match on average (referee.ts). */
+  whistle = { cards: 5.2, reds: 0.31 },
+): Outcome {
   const r = rngFrom(seed);
   const goals = (mean: number) => {
     // Knuth: fine for means under 5.
@@ -37,9 +44,10 @@ export function quickResult(seed: number, home: number, away: number, crowd = 0.
       goals(Math.max(0.2, 1.15 - 0.25 * crowd - 0.3 * d)),
     ],
     shootout: null,
+    // Each side gets half the referee's yellows and half his sendings-off, Poisson.
     cards: [
-      [Math.floor(next(r) * 3), next(r) < 0.05 ? 1 : 0],
-      [Math.floor(next(r) * 3), next(r) < 0.05 ? 1 : 0],
+      [goals((whistle.cards - whistle.reds) / 2), goals(whistle.reds / 2)],
+      [goals((whistle.cards - whistle.reds) / 2), goals(whistle.reds / 2)],
     ],
   };
 }
