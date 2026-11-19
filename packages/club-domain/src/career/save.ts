@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 21;
+export const CAREER_RULES_VERSION = 22;
 
 interface Saved {
   v: number;
@@ -157,7 +157,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
   // A log from before the yearly growth was kept by character cannot be replayed: skipped.
   const log = (saved.log ?? []).filter((l) => typeof l.growth === 'string');
   const opening = log[0]?.season ?? (saved.season as SeasonState).season;
-  const pack = withClubs(rebuildPack(base, seed, log, moves, opening), saved.clubs);
+  const pack = withClubs(rebuildPack(base, seed, log, moves, opening), saved.clubs, base);
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.

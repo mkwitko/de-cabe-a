@@ -975,6 +975,78 @@ if (!clubs.length) throw new Error('no clubs');
 // ── Pack ─────────────────────────────────────────────────────────────────────────────────────────
 
 const ids = (list: string[]) => list.map((u) => `fm-c${u}`);
+
+/**
+ * Stadium operation (mapa de conhecimento §2.11): `fans.demand` is the share of seats a club fills
+ * on an ordinary league day and `fans.priceSensitivity` sets its ticket against the tier's
+ * (match/stadium.ts). From data/attendance.json (Brasileirão 2025, ge and mktesportivo) where the
+ * club is there; else the median of the researched clubs of its 2027 division. Série C has a
+ * league average only (3.466 paying a match in 2025, DGABC): its clubs fill the share of seats
+ * that gives it over their median stadium. Série D has none published: the same share as C, a
+ * confirmar.
+ */
+const ATTENDANCE = (
+  JSON.parse(readFileSync(new URL('./data/attendance.json', import.meta.url), 'utf8')) as {
+    clubs: {
+      club: string;
+      state: string;
+      aliases: string[];
+      division2025: 'A' | 'B';
+      avgAttendance: number;
+      avgTicket: number | null;
+    }[];
+  }
+).clubs;
+const TIER_TICKET: Record<number, number> = { 1: 51, 2: 26 };
+/** Série C 2025, paying public a match (DGABC). */
+const SERIE_C_AVERAGE = 3466;
+let attendanceResearched = 0;
+{
+  const tierOfUid = new Map<string, number>();
+  [a27, b27, c27, d27].forEach((list, i) => list.forEach((u) => tierOfUid.set(`fm-c${u}`, i + 1)));
+  const found = new Map<PackClub, (typeof ATTENDANCE)[number]>();
+  for (const club of clubs) {
+    const names = [fold(club.name), fold(club.shortName)];
+    const state = cities.get(club.cityId)?.state;
+    const a = ATTENDANCE.find(
+      (x) => x.state === state && [x.club, ...x.aliases].some((n) => names.includes(fold(n))),
+    );
+    if (a && club.stadium.capacity > 0) found.set(club, a);
+  }
+  const byTier = new Map<number, number[]>();
+  for (const [club, a] of found) {
+    const demand = clamp(Math.round((100 * a.avgAttendance) / club.stadium.capacity), 1, 100);
+    club.fans.demand = demand;
+    const tierTicket = TIER_TICKET[a.division2025 === 'A' ? 1 : 2]!;
+    // ticket = tier's × (200 − 2 × sensitivity) / 100 (match/stadium.ts)
+    if (a.avgTicket)
+      club.fans.priceSensitivity = clamp(Math.round(100 - (50 * a.avgTicket) / tierTicket), 0, 87);
+    const t = tierOfUid.get(club.id) ?? 4;
+    (byTier.get(t) ?? byTier.set(t, []).get(t)!).push(demand);
+    attendanceResearched++;
+  }
+  const median = (xs: number[]) => [...xs].sort((x, y) => x - y)[xs.length >> 1]!;
+  const capC = median(
+    clubs
+      .filter((c) => tierOfUid.get(c.id) === 3 && c.stadium.capacity > 0)
+      .map((c) => c.stadium.capacity),
+  );
+  const lowerShare = clamp(Math.round((100 * SERIE_C_AVERAGE) / Math.max(1, capC)), 1, 100);
+  for (const club of clubs) {
+    if (found.has(club)) continue;
+    const t = tierOfUid.get(club.id) ?? 4;
+    // A and B by their researched clubs; below, the Série C average.
+    const known = t <= 2 ? byTier.get(t) : undefined;
+    club.fans.demand = known?.length ? median(known) : lowerShare;
+    est(
+      known?.length
+        ? 'fans: demand is the median of researched clubs of the division'
+        : t === 3
+          ? 'fans: demand from the Série C 2025 average over the median stadium'
+          : 'fans: demand as Série C, a confirmar (no published Série D average)',
+    );
+  }
+}
 const competitions = realDivisions(SEASON, [a27, b27, c27, d27].map(ids));
 
 // Rivals (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID"): HEURISTIC,
@@ -1071,6 +1143,7 @@ report.notes.push(
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
   'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
   'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
+  `attendance: ${attendanceResearched} clubs with their 2025 average public and ticket from data/attendance.json (ge, mktesportivo); fans.demand is the share of seats filled on an ordinary day, fans.priceSensitivity sets the ticket`,
   `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
   `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
   'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',

@@ -1,0 +1,447 @@
+{
+  "generated": "2026-11-18",
+  "season": 2025,
+  "note": "Paying public per home league match and average ticket (R$), Brasileirão 2025. Série A: ge table via netvasco; Série B: mktesportivo (gross gate per club; ticket derived). Série C and D: no published source found.",
+  "leagues": {
+    "A": {
+      "avgAttendance": 25531,
+      "avgTicket": 51.35,
+      "grossGate": 518000000,
+      "sources": [
+        "https://br.soccerway.com/noticias/futebol-brasileirao-betano-flamengo-tem-maior-publico-do-brasileirao-pelo-4-ano-seguido-veja-ranking/fH6vdRTH",
+        "https://maquinadoesporte.com.br/futebol/apesar-de-leve-recuo-no-publico-brasileirao-2025-registra-maior-arrecadacao-do-ultimo-trienio/"
+      ]
+    }
+  },
+  "interdiction": {
+    "rule": "RGC art. 64: perda de mando may be played with gates closed, no ticket sales, in violence/serious disorder cases",
+    "typicalMatches": "1 to 2 for homophobic chants/disorder at first instance; 6-8 for serious riots (Ceará 6, Santos 8). Pleno often reduces or converts to closing a sector.",
+    "frequencyPerSeasonSerieA": null,
+    "frequencyNote": "No aggregate count found; cases appear several times per season",
+    "closedDoorsCommon": true,
+    "examples": [
+      {
+        "club": "Vitória",
+        "case": "Ba-Vi 16 Oct 2025 (R28): 12 Feb 2026 STJD 2 mandos + R$100k; 9 Mar 2026 Pleno dropped closed-doors, kept R$80k chants fine, 30% gate of next game forfeited",
+        "source": "https://www.correio24horas.com.br/esportes/stjd-reduz-punicao-do-vitoria-e-libera-torcida-no-barradao-apos-confusao-em-ba-vi-0326"
+      },
+      {
+        "club": "Santos",
+        "case": "8 mandos lost, closed gates, 150 km from Vila Belmiro, R$80k, after clássico vs Corinthians on 21 June (year not confirmed on page)",
+        "source": "https://br.soccerway.com/noticias/futebol-serie-a-stjd-condena-santos-a-oito-jogos-longe-da-vila-belmiro-com-portoes-fechados/UBN1FR8t"
+      },
+      {
+        "club": "Ceará",
+        "case": "6 mandos lost, closed gates, R$100k, pitch invasion (first instance; year not confirmed)",
+        "source": "https://www.tupi.fm/esportes/ceara-e-punido-pelo-stjd-com-perda-de-seis-mandos-de-campo-mas-nao-perdera-pontos/"
+      },
+      {
+        "club": "Corinthians",
+        "case": "1 closed-doors game for homophobic chants, kept by Pleno; later converted to sector closure (Apr 2026)",
+        "source": "https://www.lance.com.br/corinthians/pleno-do-stjd-mantem-punicao-e-corinthians-jogara-uma-partida-no-brasileirao-sem-torcida.html"
+      }
+    ]
+  },
+  "clubs": [
+    {
+      "club": "Flamengo",
+      "state": "RJ",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 58554,
+      "avgTicket": 73.5,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Cruzeiro",
+      "state": "MG",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 40158,
+      "avgTicket": 58.93,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Corinthians",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 39941,
+      "avgTicket": 71.26,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Bahia",
+      "state": "BA",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 38160,
+      "avgTicket": 36.56,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Palmeiras",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 34935,
+      "avgTicket": 71.83,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Ceará",
+      "state": "CE",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 34702,
+      "avgTicket": 20.77,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "São Paulo",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 28659,
+      "avgTicket": 52.52,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Fluminense",
+      "state": "RJ",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 26724,
+      "avgTicket": 48.55,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Fortaleza",
+      "state": "CE",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 26391,
+      "avgTicket": 22.1,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Grêmio",
+      "state": "RS",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 25526,
+      "avgTicket": 55.59,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Internacional",
+      "state": "RS",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 24365,
+      "avgTicket": 47.17,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Atlético-MG",
+      "state": "MG",
+      "aliases": ["Atlético Mineiro"],
+      "division2025": "A",
+      "avgAttendance": 24175,
+      "avgTicket": 52.42,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Vitória",
+      "state": "BA",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 22144,
+      "avgTicket": 26.42,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Vasco",
+      "state": "RJ",
+      "aliases": ["Vasco da Gama"],
+      "division2025": "A",
+      "avgAttendance": 21471,
+      "avgTicket": 75.98,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Santos",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 17011,
+      "avgTicket": 66.56,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Botafogo",
+      "state": "RJ",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 14772,
+      "avgTicket": 55.29,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Sport",
+      "state": "PE",
+      "aliases": ["Sport Recife"],
+      "division2025": "A",
+      "avgAttendance": 14017,
+      "avgTicket": 50.34,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Juventude",
+      "state": "RS",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 8060,
+      "avgTicket": 56.72,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Mirassol",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "A",
+      "avgAttendance": 6287,
+      "avgTicket": 62.19,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Bragantino",
+      "state": "SP",
+      "aliases": ["RB Bragantino", "Red Bull Bragantino"],
+      "division2025": "A",
+      "avgAttendance": 4916,
+      "avgTicket": 37.41,
+      "ticketFrom": "published",
+      "source": "https://www.netvasco.com.br/n/374433/vasco-teve-a-5-maior-media-de-renda-e-o-maior-ticket-medio-do-brasileiro-2025 (ge table); occupancy: https://www.netvasco.com.br/n/376059/vasco-teve-a-6-maior-taxa-de-ocupacao-de-estadio-entre-os-times-da-serie-a-em-2025"
+    },
+    {
+      "club": "Coritiba",
+      "state": "PR",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 22048,
+      "avgTicket": 24.65,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Athletico-PR",
+      "state": "PR",
+      "aliases": ["Athletico Paranaense"],
+      "division2025": "B",
+      "avgAttendance": 19545,
+      "avgTicket": 26.43,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Remo",
+      "state": "PA",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 19341,
+      "avgTicket": 42.98,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Paysandu",
+      "state": "PA",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 10727,
+      "avgTicket": 34.45,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Criciúma",
+      "state": "SC",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 9154,
+      "avgTicket": 23.3,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Goiás",
+      "state": "GO",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 8502,
+      "avgTicket": 16.46,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Chapecoense",
+      "state": "SC",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 7696,
+      "avgTicket": 29.44,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Avaí",
+      "state": "SC",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 6156,
+      "avgTicket": 27.29,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Vila Nova",
+      "state": "GO",
+      "aliases": ["Vila Nova (GO)"],
+      "division2025": "B",
+      "avgAttendance": 5404,
+      "avgTicket": 13.82,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "CRB",
+      "state": "AL",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 4368,
+      "avgTicket": 13.86,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Atlético-GO",
+      "state": "GO",
+      "aliases": ["Atlético Goianiense"],
+      "division2025": "B",
+      "avgAttendance": 3807,
+      "avgTicket": 9.6,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Operário-PR",
+      "state": "PR",
+      "aliases": ["Operário (PR)", "Operário"],
+      "division2025": "B",
+      "avgAttendance": 3549,
+      "avgTicket": 21.38,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Botafogo-SP",
+      "state": "SP",
+      "aliases": ["Botafogo (SP)"],
+      "division2025": "B",
+      "avgAttendance": 2491,
+      "avgTicket": 23.01,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Cuiabá",
+      "state": "MT",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 2416,
+      "avgTicket": 14.14,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Ferroviária",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 2038,
+      "avgTicket": 16.33,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Novorizontino",
+      "state": "SP",
+      "aliases": ["Grêmio Novorizontino"],
+      "division2025": "B",
+      "avgAttendance": 1524,
+      "avgTicket": 16.69,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Athletic Club",
+      "state": "MG",
+      "aliases": ["Athletic (MG)", "Athletic"],
+      "division2025": "B",
+      "avgAttendance": 1457,
+      "avgTicket": 27.81,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "América-MG",
+      "state": "MG",
+      "aliases": ["América Mineiro", "América (MG)"],
+      "division2025": "B",
+      "avgAttendance": 1311,
+      "avgTicket": 22.88,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Volta Redonda",
+      "state": "RJ",
+      "aliases": [],
+      "division2025": "B",
+      "avgAttendance": 985,
+      "avgTicket": 25.84,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Amazonas",
+      "state": "AM",
+      "aliases": ["Amazonas FC"],
+      "division2025": "B",
+      "avgAttendance": 928,
+      "avgTicket": 29.22,
+      "ticketFrom": "gate / (attendance × 19 home matches)",
+      "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    }
+  ]
+}

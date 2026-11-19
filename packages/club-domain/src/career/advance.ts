@@ -20,6 +20,7 @@ import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
 import { formationOf, matchInputFor } from '../match/fixture-input';
+import { crowdShare } from '../match/stadium';
 import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
@@ -180,6 +181,8 @@ function playDay(
             seedOf(w.seed, id),
             strength(m.home),
             (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
+            // The crowd carries the home side; behind closed doors it is gone (match/stadium.ts).
+            crowdShare(w.pack, w.season, id),
           );
     record(w.season, id, o);
     out.set(id, o);
@@ -485,7 +488,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   // Works finished, directors elected, the money to spare split (clubs.ts); the pack then
   // carries the structure as it now stands.
   planSeason(w, new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)));
-  w.pack = withClubs(w.pack, w.clubs);
+  w.pack = withClubs(w.pack, w.clubs, w.origin);
   // The moves in force stay (each player's club and contract); those of players gone do not.
   const alive = new Set(w.pack.players.map((p) => p.id));
   w.moves = Object.fromEntries(Object.entries(w.moves ?? {}).filter(([id]) => alive.has(id)));

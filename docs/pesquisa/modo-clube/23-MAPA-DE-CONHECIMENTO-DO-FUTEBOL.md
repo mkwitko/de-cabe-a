@@ -134,8 +134,8 @@ Meta: cada regra vira dado com teste (entrada, saída esperada, artigo citado), 
 | Entidade/relação | Atributos-chave | Comportamento que altera | Evidência/fonte | Estado | Prio |
 | --- | --- | --- | --- | --- | --- |
 | Estádio | capacidade, gramado, arranjo (próprio, municipal, alugado) | Público, mando, custo | FM26, clubes | existe: `pack/schema.ts` (`stadium`) | P1 |
-| Público e bilheteria | média, preço, sensibilidade | Receita de jogo | Súmulas CBF | parcial: bilheteria em `career/finance.ts`, sem média real | P1 |
-| Interdição e mando alternativo | jogos fora, punição | Perda de mando | CBF | falta | P3 |
+| Público e bilheteria | média, preço, sensibilidade | Receita de jogo, peso da torcida no mando | ge e mktesportivo 2025 (`scripts/club-pack/data/attendance.json`) | existe: `match/stadium.ts`; 39 clubes de A e B com público e ingresso reais; C e D a confirmar | P1 |
+| Interdição e mando alternativo | jogos fora, punição | Perda de mando | RGC art. 64; casos Vitória, Ceará, Santos | existe: portões fechados em `match/stadium.ts` (sem mando em outra cidade) | P3 |
 
 ### 2.12 Arbitragem e disciplina (baixa prioridade)
 
