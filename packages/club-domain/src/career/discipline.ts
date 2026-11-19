@@ -4,10 +4,14 @@
  * one at once. A straight red also goes to the sports court (STJD), which judges it about two
  * weeks later and may add matches: most get no more than the automatic one, a violent act gets
  * several. Bans are served in the competition they were earned in and carry over to its next
- * edition; the yellow count does not cross the season. Only the person's players are tracked
- * man by man, like injuries (health.ts). Every roll is a fixed number of the career's seed.
+ * edition; the yellow count does not cross the season. Every club of the national divisions
+ * keeps its own book (`w.cards`), so the person meets rivals short of their banned men. Every
+ * roll is a fixed number of the career's seed.
  */
 import type { CareerWorld } from './advance';
+import { matchesOn } from '../competition/season';
+import { readingsOf } from '../market/value';
+import { squadPlayers } from './squad';
 
 export type Card = 'yellow' | 'red' | 'second';
 export interface Booking {
@@ -53,9 +57,11 @@ function draw(seed: number, id: string, day: number, salt: number): number {
   return (h >>> 0) % 10_000;
 }
 
-/** The person's players barred from a match of `competitionId`. */
-export function suspendedIn(w: CareerWorld, competitionId: string): Set<string> {
-  const bans = w.discipline?.bans[competitionId] ?? {};
+const EMPTY = (): Discipline => ({ yellows: {}, bans: {}, trials: [] });
+
+/** A club's players barred from a match of `competitionId`; the person's club by default. */
+export function suspendedIn(w: CareerWorld, competitionId: string, clubId = w.clubId): Set<string> {
+  const bans = w.cards?.[clubId]?.bans[competitionId] ?? {};
   return new Set(Object.keys(bans).filter((id) => bans[id]! > 0));
 }
 
@@ -69,8 +75,9 @@ export function bookingsOf(
   onPitch: readonly string[],
   [yellows, reds]: [number, number],
   day: number,
+  clubId = w.clubId,
 ): Booking[] {
-  const players = new Map(w.pack.players.map((p) => [p.id, p]));
+  const players = new Map(squadPlayers({ pack: w.pack, clubId }).map((p) => [p.id, p]));
   const weight = (id: string) => {
     const p = players.get(id);
     if (!p) return 1;
@@ -82,7 +89,7 @@ export function bookingsOf(
   const pick = (salt: number) => {
     const left = onPitch.filter((id) => !taken.has(id));
     const total = left.reduce((a, id) => a + weight(id), 0);
-    let r = draw(w.seed, `${w.clubId}:${salt}`, day, 20) % Math.max(1, total);
+    let r = draw(w.seed, `${clubId}:${salt}`, day, 20) % Math.max(1, total);
     for (const id of left) if ((r -= weight(id)) < 0) return id;
     return left[0];
   };
@@ -101,6 +108,41 @@ export function bookingsOf(
   return out;
 }
 
+/** Men a club not tracked eleven by eleven puts on the pitch: its fourteen best. */
+const PITCH = 14;
+
+/** A rival's best by level, without those banned from `competitionId`. */
+function bestOf(w: CareerWorld, clubId: string, competitionId: string): string[] {
+  const read = readingsOf(w.pack);
+  const out = suspendedIn(w, competitionId, clubId);
+  return squadPlayers({ pack: w.pack, clubId })
+    .filter((p) => !out.has(p.id))
+    .map((p) => p.id)
+    .sort((a, b) => read.get(b)!.level - read.get(a)!.level || (a < b ? -1 : 1));
+}
+
+/** Who of a rival may be booked in a match of `competitionId`: its fourteen best not banned. */
+export const rivalPitch = (w: CareerWorld, clubId: string, competitionId: string) =>
+  bestOf(w, clubId, competitionId).slice(0, PITCH);
+
+/** How many of a rival's best eleven are banned from its match on `day`. */
+export function bannedStarters(w: CareerWorld, clubId: string, day: number): number {
+  if (!w.cards?.[clubId]) return 0;
+  for (const id of matchesOn(w.season, day)) {
+    const m = w.season.meta.get(id)!;
+    if (m.home !== clubId && m.away !== clubId) continue;
+    const out = suspendedIn(w, m.competitionId, clubId);
+    if (!out.size) return 0;
+    const read = readingsOf(w.pack);
+    const best = squadPlayers({ pack: w.pack, clubId })
+      .map((p) => p.id)
+      .sort((a, b) => read.get(b)!.level - read.get(a)!.level || (a < b ? -1 : 1))
+      .slice(0, 11);
+    return best.filter((p) => out.has(p)).length;
+  }
+  return 0;
+}
+
 /** What a ban or a sentence says in the inbox: the player and the matches. */
 export interface Sentence {
   playerId: string;
@@ -109,16 +151,19 @@ export interface Sentence {
 }
 
 /**
- * The person's club played a match of `competitionId` on `day` with `bookings`: those who sat
- * it out serve a match, then the new cards count.
+ * A club (the person's by default) played a match of `competitionId` on `day` with `bookings`:
+ * those who sat it out serve a match, then the new cards count.
  */
 export function afterMatch(
   w: CareerWorld,
   competitionId: string,
   day: number,
   bookings: readonly Booking[],
+  clubId = w.clubId,
 ): Sentence[] {
-  const d: Discipline = structuredClone(w.discipline ?? { yellows: {}, bans: {}, trials: [] });
+  const was = w.cards?.[clubId];
+  if (!was && !bookings.length) return [];
+  const d: Discipline = was ? structuredClone(was) : EMPTY();
   const out: Sentence[] = [];
   const bans = (d.bans[competitionId] ??= {});
   for (const id of Object.keys(bans)) if (--bans[id]! <= 0) delete bans[id];
@@ -138,14 +183,26 @@ export function afterMatch(
         d.trials.push({ day: day + TRIAL_DAYS, playerId: b.playerId, competitionId });
     }
   }
-  w.discipline = d;
+  w.cards = { ...w.cards, [clubId]: d };
   return out;
 }
 
-/** The court sits, before the day's matches, for every straight red judged by `day`. */
+/**
+ * The court sits, before the day's matches, for every straight red judged by `day`, of every
+ * club. Returns the person's club's sentences, for the inbox.
+ */
 export function sitCourt(w: CareerWorld, day: number): Sentence[] {
-  if (!w.discipline?.trials.some((t) => t.day <= day)) return [];
-  const d: Discipline = structuredClone(w.discipline);
+  let mine: Sentence[] = [];
+  for (const [clubId, d] of Object.entries(w.cards ?? {})) {
+    if (!d.trials.some((t) => t.day <= day)) continue;
+    const out = judge(w, clubId, day);
+    if (clubId === w.clubId) mine = out;
+  }
+  return mine;
+}
+
+function judge(w: CareerWorld, clubId: string, day: number): Sentence[] {
+  const d: Discipline = structuredClone(w.cards![clubId]!);
   const out: Sentence[] = [];
   d.trials = d.trials.filter((t) => {
     if (t.day > day) return true;
@@ -163,15 +220,17 @@ export function sitCourt(w: CareerWorld, day: number): Sentence[] {
     }
     return false;
   });
-  w.discipline = d;
+  w.cards = { ...w.cards, [clubId]: d };
   return out;
 }
 
 /** A new season: the yellow count starts again; bans and pending trials carry over. */
 export function newSeasonDiscipline(w: CareerWorld): void {
-  if (!w.discipline) return;
-  const { bans, trials } = w.discipline;
-  if (!trials.length && Object.values(bans).every((b) => !Object.keys(b).length))
-    delete w.discipline;
-  else w.discipline = { yellows: {}, bans, trials };
+  if (!w.cards) return;
+  const kept: Record<string, Discipline> = {};
+  for (const [clubId, { bans, trials }] of Object.entries(w.cards))
+    if (trials.length || Object.values(bans).some((b) => Object.keys(b).length))
+      kept[clubId] = { yellows: {}, bans, trials };
+  if (Object.keys(kept).length) w.cards = kept;
+  else delete w.cards;
 }
