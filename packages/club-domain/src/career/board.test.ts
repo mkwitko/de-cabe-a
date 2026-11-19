@@ -8,7 +8,7 @@ import {
   startNextSeason,
   type CareerWorld,
 } from './advance';
-import { boardAfterMatch, boardOf, goalFor, positionOf } from './board';
+import { boardAfterMatch, boardAfterSeason, boardOf, goalFor, positionOf } from './board';
 import { loadCareer, saveCareer } from './save';
 import { jobOffers } from './start';
 
@@ -104,4 +104,25 @@ describe('the board (06, corte 1)', () => {
     ]);
     expect(w.board!.goal).toBe(goalFor(w));
   });
+});
+
+it('a season of the club’s own boys in the eleven lifts the board, more where fans prize them', () => {
+  const at = (pride: number) => {
+    const w = openCareer(structuredClone(pack), 3, clubId);
+    const mine = w.pack.players.filter((p) => p.clubId === clubId).slice(0, 11);
+    w.pack = {
+      ...w.pack,
+      clubs: w.pack.clubs.map((c) =>
+        c.id === clubId ? { ...c, fans: { ...c.fans, youthPride: pride } } : c,
+      ),
+      players: w.pack.players.map((p) =>
+        mine.some((m) => m.id === p.id) ? { ...p, origin: { ...p.origin, clubId } } : p,
+      ),
+    };
+    w.starts = Object.fromEntries(mine.map((p) => [p.id, 10]));
+    return boardAfterSeason(w).last!.find((r) => r.kind === 'homegrown')?.value ?? 0;
+  };
+  expect(at(100)).toBe(8);
+  expect(at(50)).toBe(4);
+  expect(at(0)).toBe(0);
 });
