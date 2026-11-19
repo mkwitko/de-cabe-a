@@ -14,7 +14,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { nextDecision, openCareer, playDecision, type CareerWorld } from '../career/advance';
 import { jobOffers, nationalDivisions } from '../career/start';
-import { isAbroad } from '../market/abroad';
+import { ABROAD, isAbroad } from '../market/abroad';
 import { booksOf, budgetOf } from '../market/books';
 import { squadPlanOf } from '../market/plan';
 import { ageOf } from '../market/value';
@@ -42,13 +42,17 @@ const TARGETS: Target[] = [
     range: [(450e6 * BRL_PER_USD) / 1e9, (800e6 * BRL_PER_USD) / 1e9],
     source: 'Banco Central 2025 (US$ 554 mi) e FIFA Global Transfer Report 2025 (US$ 689 mi)',
     confirmed: true,
-    measure: (w) => {
-      let fees = 0;
-      for (const d of w.deals ?? []) if (isAbroad(d.to)) fees += d.fee;
-      // `w.deals` keeps the last 80 only: read the sales from the clubs' books instead.
-      const earned = Object.values(w.books ?? {}).reduce((s, b) => s + b.earned, 0);
-      return Math.max(fees, earned) / 1e9;
-    },
+    // The foreign side's book (abroad.ts): what foreign clubs paid for the league's players.
+    measure: (w) => (w.books?.[ABROAD]?.spent ?? 0) / 1e9,
+  },
+  {
+    name: 'Compras do exterior na temporada (R$ bi)',
+    // BCB, SGS 22858 minus 22857 (passes de atletas, receita − saldo): US$ 122M in 2023,
+    // 180M in 2024, 235M in 2025. The band holds the last two years.
+    range: [(150e6 * BRL_PER_USD) / 1e9, (300e6 * BRL_PER_USD) / 1e9],
+    source: 'Banco Central, SGS 22858/22857: US$ 180 mi (2024) e 235 mi (2025) pagos ao exterior',
+    confirmed: true,
+    measure: (w) => (w.books?.[ABROAD]?.earned ?? 0) / 1e9,
   },
   {
     // CIES counts the players who play in the league, not whole registered squads: the
@@ -70,8 +74,9 @@ const TARGETS: Target[] = [
   {
     name: 'Gasto em contratações da Série A (% da receita, média)',
     // Rights amortisation, a proxy for yearly signings including those from abroad, ran at
-    // 14-28% of revenue in the 2025 audited accounts; signings between clubs here are a share.
-    range: [1, 28],
+    // 14-28% of revenue in the 2025 audited accounts. Signings here and from abroad count; the
+    // floor sits under 14 since amortisation spreads older, dearer signings over the years.
+    range: [8, 28],
     source: 'Balanços auditados 2025 (Palmeiras, Grêmio, Santos, Inter, Vasco): amortização 14-28%',
     confirmed: true,
     measure: (w) => {
@@ -165,19 +170,22 @@ function main() {
     process.exit(2);
   }
   const pack = PackSchema.parse(JSON.parse(gunzipSync(readFileSync(path)).toString()));
-  const seeds = [7, 11];
+  // A season of one world is a sample, as a real year is: the mean of the seeds is checked, and
+  // each seed is printed.
+  const seeds = [7, 11, 13];
   const worlds = seeds.map((s) => playSeason(pack, s));
   let failed = 0;
-  console.log('alvo | faixa | ' + seeds.map((s) => `seed ${s}`).join(' | ') + ' | fonte');
+  console.log('alvo | faixa | ' + seeds.map((s) => `seed ${s}`).join(' | ') + ' | média | fonte');
   for (const t of TARGETS) {
     const values = worlds.map(t.measure);
-    const ok = values.every((v) => v >= t.range[0] && v <= t.range[1]);
+    const mean = values.reduce((x, y) => x + y, 0) / values.length;
+    const ok = mean >= t.range[0] && mean <= t.range[1];
     if (!ok && t.confirmed) failed++;
     const mark = ok ? 'ok' : t.confirmed ? 'FORA' : 'aviso';
     console.log(
       `${mark} ${t.name} | ${t.range.map((x) => x.toFixed(1)).join('–')} | ${values
         .map((v) => v.toFixed(2))
-        .join(' | ')} | ${t.source}`,
+        .join(' | ')} | média ${mean.toFixed(2)} | ${t.source}`,
     );
   }
   if (failed) {

@@ -47,11 +47,11 @@ export interface ForeignTier {
 
 /** Best first: a player gets offers from the first tier he reaches. */
 export const FOREIGN_TIERS: readonly ForeignTier[] = [
-  { id: 'abroad:eu1', name: 'Elite europeia', level: 73, ages: [17, 24], chance: 450, pays: 200 },
-  { id: 'abroad:eu2', name: 'Europa', level: 68, ages: [18, 27], chance: 260, pays: 140 },
-  { id: 'abroad:gulf', name: 'Golfo Pérsico', level: 66, ages: [25, 33], chance: 180, pays: 130 },
-  { id: 'abroad:asia', name: 'Ásia e EUA', level: 62, ages: [20, 31], chance: 150, pays: 110 },
-  { id: 'abroad:minor', name: 'Exterior', level: 57, ages: [20, 30], chance: 100, pays: 100 },
+  { id: 'abroad:eu1', name: 'Elite europeia', level: 73, ages: [17, 24], chance: 560, pays: 200 },
+  { id: 'abroad:eu2', name: 'Europa', level: 68, ages: [18, 27], chance: 330, pays: 140 },
+  { id: 'abroad:gulf', name: 'Golfo Pérsico', level: 66, ages: [25, 33], chance: 220, pays: 130 },
+  { id: 'abroad:asia', name: 'Ásia e EUA', level: 62, ages: [20, 31], chance: 190, pays: 110 },
+  { id: 'abroad:minor', name: 'Exterior', level: 57, ages: [20, 30], chance: 125, pays: 100 },
 ];
 
 /** A young talent's ceiling that the elite tier buys on promise. */
@@ -142,8 +142,28 @@ export function sellAbroad(w: CareerWorld, p: PackPlayer, fee: number): void {
   const from = p.clubId!;
   movePlayer(w, p, ABROAD, { wage: 0, until: `${w.season.season + YEARS_ABROAD}-12-31` });
   const got = booksOf(w, from);
-  w.books = { ...w.books, [from]: { ...got, earned: got.earned + fee } };
+  // The foreign side's book: what it paid here (`spent`) and what it sold here (`earned`).
+  const world = booksOf(w, ABROAD);
+  w.books = {
+    ...w.books,
+    [from]: { ...got, earned: got.earned + fee },
+    [ABROAD]: { ...world, spent: world.spent + fee },
+  };
   solidarity(w, p, from, fee, true);
+}
+
+/**
+ * A player bought from abroad: the fee leaves the league. The buyer's books see it spent and the
+ * foreign side's book (`ABROAD`) sees it earned, so the season's imports can be read back.
+ */
+export function bookImport(w: CareerWorld, buyerId: string, fee: number): void {
+  const b = booksOf(w, buyerId);
+  const world = booksOf(w, ABROAD);
+  w.books = {
+    ...w.books,
+    [buyerId]: { ...b, spent: b.spent + fee },
+    [ABROAD]: { ...world, earned: world.earned + fee },
+  };
 }
 
 /** One round of foreign offers. Returns the sales between the world's clubs and abroad. */

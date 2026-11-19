@@ -7,6 +7,7 @@
  */
 import {
   ABROAD,
+  bookImport,
   FOREIGN_TIERS,
   importFee,
   sellAbroad,
@@ -18,7 +19,7 @@ import type { CareerWorld } from '../career/advance';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { available, book, booksOf, embargoed, wageRoom, inRed } from './books';
+import { available, book, embargoed, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -307,10 +308,8 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
     if (renewal) renew(w, p, { ...a.terms, release: a.terms.release ?? null });
     else {
       if (talk.seller === ABROAD) {
-        // The fee leaves the league: only the person's books see it.
         settle(w, p, ABROAD, talk.fee, 'buy');
-        const b = booksOf(w, w.clubId);
-        w.books = { ...w.books, [w.clubId]: { ...b, spent: b.spent + talk.fee } };
+        bookImport(w, w.clubId, talk.fee);
       } else if (talk.seller !== null) {
         settle(w, p, talk.seller, talk.fee, 'buy');
         book(w, talk.seller, w.clubId, talk.fee, p);
