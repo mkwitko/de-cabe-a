@@ -50,6 +50,22 @@ export const ptBR = {
   'career.fixtures': 'Depois',
   'career.venueShort': '{v, select, home {Casa} other {Fora}}',
   'career.inbox': 'Mensagens',
+  'career.todo': 'Pede resposta',
+  'career.todoEmpty': 'Nada esperando por você.',
+  'career.news': 'Notícias',
+  'career.todoText':
+    '{k, select, bid {O {club} fez proposta de {fee} por {name}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} other {{n} jogadores terminam o contrato este ano.}}',
+  'career.todoGo':
+    '{k, select, bid {Responder no Mercado} approach {Ver convite} agentOffer {Ver no Mercado} other {Ver no Mercado}}',
+  'guide.title': 'Primeiros passos',
+  'guide.step': 'Primeiros passos: {n} de {total}',
+  'guide.text':
+    '{k, select, vestiario {Vestiário: monte a escalação e a tática do time. Sem isso, o treinador escolhe por você.} mercado {Mercado: a janela de transferências está aberta. Aqui você contrata, vende e responde às propostas.} diretoria {Diretoria: veja a meta da temporada e a confiança do presidente. É por ela que você é cobrado.} other {Jogar: volte à sala do técnico e jogue a partida. Assista ou veja só o resultado.}}',
+  'guide.go':
+    '{k, select, vestiario {Ir ao Vestiário} mercado {Ir ao Mercado} other {Ir à Diretoria}}',
+  'guide.next': 'Próximo',
+  'guide.skip': 'Pular guia',
+  'guide.done': 'Entendi',
   'career.from':
     '{f, select, board {Diretoria} press {Imprensa} staff {Comissão} market {Mercado} other {Financeiro}}',
   'career.msgWelcome':
@@ -411,6 +427,8 @@ export const ptBR = {
   'career.deadline': 'Último dia da janela',
   'career.deadlineText':
     'A janela de transferências fecha em {d, date, long}. Depois dela, só dá para contratar jogadores sem clube.',
+  'career.deadlineWhy':
+    'Você chegou no último dia da janela: se quiser reforçar ou vender alguém, é agora. Se não, feche a janela e siga para o jogo.',
   'career.deadlineMarket': 'Fazer contratações',
   'career.deadlineGo': 'Fechar a janela',
   'career.nextSeason': 'Começar a temporada {season}',

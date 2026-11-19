@@ -481,6 +481,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       {sim.board.offers.map((o) => (
         <aside
           key={o.clubId}
+          id={`convite-${o.clubId}`}
           aria-label={t('career.approach', { club: o.name })}
           className="flex flex-wrap items-center gap-3 rounded-xl border border-club-gold/40 p-3"
         >
@@ -522,6 +523,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           </button>
         ))}
       </nav>
+      {sim.fresh && <Guide careerId={career.id} onRoom={setRoom} />}
       {room === 'diretoria' && (
         <Board
           sim={sim}
@@ -573,7 +575,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             <div className="flex min-w-0 flex-col">
               <Form sim={sim} />
               <Fixtures sim={sim} />
-              <Inbox sim={sim} />
+              <Inbox sim={sim} onRoom={setRoom} />
             </div>
             <section className={PANEL}>
               <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
@@ -700,6 +702,26 @@ function NextMatch(props: {
           <p className="text-balance">
             {t('career.deadlineText', { d: new Date(`${sim.deadline}T12:00:00Z`) })}
           </p>
+          {next && (
+            <div className="flex w-full flex-col items-center gap-2 border-t border-chalk/15 pt-3">
+              <p className="font-condensed text-lg font-extrabold text-club-gold uppercase">
+                {t('career.next')}
+              </p>
+              <div className="flex items-center gap-3">
+                <Crest club={next.home} size="lg" />
+                <span className="font-condensed text-2xl font-black text-club-gold">×</span>
+                <Crest club={next.away} size="lg" />
+              </div>
+              <p className="text-sm font-semibold text-balance">
+                {next.home.shortName} × {next.away.shortName}
+                <span className="mx-2 text-club-gold">/</span>
+                {t('career.dateLong', { d: new Date(`${next.iso}T12:00:00Z`) })}
+                <span className="mx-2 text-club-gold">/</span>
+                {next.competition}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-balance text-chalk-soft">{t('career.deadlineWhy')}</p>
           <div className="grid w-full max-w-md grid-cols-2 gap-2">
             <button
               type="button"
@@ -1156,11 +1178,52 @@ function noteText(n: InboxItem, sim: SimView): string {
   }
 }
 
-/** What the club was told, newest first: kept in the career, so it is there after a reload. */
-function Inbox({ sim }: { sim: SimView }) {
+/** Where each kind of request is answered. */
+const TODO_ROOM = { bid: 'mercado', agentOffer: 'mercado', contractsEnding: 'mercado' } as const;
+
+/** What asks for an answer (with the way to it), then the news, newest first. */
+function Inbox({ sim, onRoom }: { sim: SimView; onRoom: (r: Room) => void }) {
   return (
     <section className={PANEL}>
       <h3 className={LABEL}>{t('career.inbox')}</h3>
+      <h4 className="font-condensed text-base font-extrabold uppercase">{t('career.todo')}</h4>
+      {sim.todo.length === 0 ? (
+        <p className="text-chalk-soft">{t('career.todoEmpty')}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {sim.todo.map((x, i) => (
+            <li
+              key={`${x.kind}-${i}`}
+              className="flex flex-wrap items-center gap-2 border-t border-chalk/10 pt-2 first:border-0 first:pt-0"
+            >
+              <p className="min-w-[14rem] flex-1">
+                {t('career.todoText', {
+                  k: x.kind,
+                  club: x.clubName,
+                  where: x.clubName ? ` (${x.clubName})` : '',
+                  name: x.playerName,
+                  fee: x.kind === 'bid' ? t('career.cash', { value: x.fee }) : '',
+                  n: x.kind === 'contractsEnding' ? x.players : 0,
+                })}
+              </p>
+              <button
+                type="button"
+                className={`${btnSecondary} min-h-11 px-3 text-base`}
+                onClick={() =>
+                  x.kind === 'approach'
+                    ? document
+                        .getElementById(`convite-${x.club}`)
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    : onRoom(TODO_ROOM[x.kind])
+                }
+              >
+                {t('career.todoGo', { k: x.kind })}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <h4 className="mt-2 font-condensed text-base font-extrabold uppercase">{t('career.news')}</h4>
       {sim.inbox.length === 0 ? (
         <p className="text-chalk-soft">{t('inbox.empty')}</p>
       ) : (
@@ -1187,6 +1250,68 @@ function Inbox({ sim }: { sim: SimView }) {
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+const GUIDE = ['vestiario', 'mercado', 'diretoria', 'jogar'] as const;
+const guideKey = (id: string) => `clube-guia:${id}`;
+
+/** The first week's guide: one card per step, each linking to its room; remembered as done. */
+function Guide({ careerId, onRoom }: { careerId: string; onRoom: (r: Room) => void }) {
+  const [step, setStep] = useState(0);
+  const [done, setDone] = useState(() => {
+    try {
+      return localStorage.getItem(guideKey(careerId)) === '1';
+    } catch {
+      return false;
+    }
+  });
+  if (done) return null;
+  const finish = () => {
+    try {
+      localStorage.setItem(guideKey(careerId), '1');
+    } catch {
+      // Private mode: the guide only comes back on the next visit.
+    }
+    setDone(true);
+  };
+  const key = GUIDE[step]!;
+  const last = step === GUIDE.length - 1;
+  return (
+    <section aria-label={t('guide.title')} className={`${PANEL} border border-club-gold/40`}>
+      <h3 className={LABEL}>{t('guide.step', { n: step + 1, total: GUIDE.length })}</h3>
+      <p className="text-balance">{t('guide.text', { k: key })}</p>
+      <div className="flex flex-wrap gap-2">
+        {!last && (
+          <button
+            type="button"
+            className={`${btnPrimary} min-h-11 bg-club-gold px-4 text-base`}
+            onClick={() => {
+              onRoom(key as Room);
+              setStep(step + 1);
+            }}
+          >
+            {t('guide.go', { k: key })}
+          </button>
+        )}
+        <button
+          type="button"
+          className={`${btnSecondary} min-h-11 px-4 text-base`}
+          onClick={last ? finish : () => setStep(step + 1)}
+        >
+          {last ? t('guide.done') : t('guide.next')}
+        </button>
+        {!last && (
+          <button
+            type="button"
+            className="min-h-11 px-3 text-chalk-soft underline"
+            onClick={finish}
+          >
+            {t('guide.skip')}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

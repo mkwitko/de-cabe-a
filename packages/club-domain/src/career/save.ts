@@ -41,6 +41,7 @@ interface Saved {
   moves?: PackedMoves | Moves;
   board?: Board;
   hired?: number;
+  hiredDay?: number;
   inbox?: Note[];
   books?: CareerWorld['books'];
   deals?: CareerWorld['deals'];
@@ -135,6 +136,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.moves && { moves: packMoves(w.pack, w.moves) }),
     ...(w.board && { board: w.board }),
     ...(w.hired !== undefined && { hired: w.hired }),
+    ...(w.hiredDay !== undefined && { hiredDay: w.hiredDay }),
     ...(w.inbox && { inbox: w.inbox }),
     ...(w.books && { books: w.books }),
     ...(w.deals && { deals: w.deals }),
@@ -202,6 +204,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.moves && { moves }),
     ...(saved.board && { board: saved.board }),
     ...(saved.hired !== undefined && { hired: saved.hired }),
+    ...(saved.hiredDay !== undefined && { hiredDay: saved.hiredDay }),
     ...(saved.inbox && { inbox: saved.inbox }),
     ...(saved.books && { books: saved.books }),
     ...(saved.deals && { deals: saved.deals }),
