@@ -62,8 +62,20 @@ export const cardsOf = (ref: Referee): number =>
 /** Sendings-off a match: 0.21 at the most lenient, 0.52 at the strictest, 0.31 for the pool. */
 export const redsOf = (ref: Referee): number => (REDS * (67 + ref.strictness)) / 100 / 100;
 
-/** What `quickResult` reads of the referee of match `id`. */
-export function whistleOf(s: SeasonState, id: string): { cards: number; reds: number } {
+/**
+ * Cards in a derby, per cent of an ordinary match: the big Brazilian derbies since 2016 ran 6.4
+ * to 7.8 cards a match (Bolavip via Super Rádio Tupi: Atlético-MG x Cruzeiro 7.8, Fla-Flu 6.9,
+ * Gre-Nal 6.8, Fluminense x Vasco 6.4) against about five in the league. PARÂMETRO.
+ */
+export const DERBY_CARDS = 130;
+
+/** What `quickResult` reads of the referee of match `id`; more of everything in a derby. */
+export function whistleOf(
+  s: SeasonState,
+  id: string,
+  derby = false,
+): { cards: number; reds: number } {
   const ref = refereeOf(s, id);
-  return { cards: cardsOf(ref), reds: redsOf(ref) };
+  const k = derby ? DERBY_CARDS / 100 : 1;
+  return { cards: cardsOf(ref) * k, reds: redsOf(ref) * k };
 }
