@@ -879,6 +879,7 @@ const FROM = {
   goal: 'board',
   cashRed: 'finance',
   closedDoors: 'press',
+  sponsor: 'finance',
   courtBan: 'press',
   tired: 'staff',
   bought: 'market',
@@ -940,6 +941,12 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('career.msgCash');
     case 'closedDoors':
       return t('inbox.closedDoors');
+    case 'sponsor':
+      return t('inbox.sponsor', {
+        name: n.name,
+        value: t('career.cash', { value: n.annual }),
+        years: n.years,
+      });
     case 'courtBan':
       return t('inbox.courtBan', { n: n.matches });
     case 'tired':
