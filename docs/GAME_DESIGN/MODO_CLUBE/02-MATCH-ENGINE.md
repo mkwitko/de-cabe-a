@@ -385,7 +385,7 @@ Confirmação em 2000 partidas, mesmas sementes, contra o `main` anterior: gols 
 
 - Regra: `valueAt` (`rules/value.ts`) mantém a fórmula do motor (território mais uma parcela do `xG` de um chute livre). Os três coeficientes agora são um ajuste por mínimos quadrados à grade aberta de expected threat 12 × 8 (Karun Singh, "Introducing Expected Threat", `open_xt_12x8_v1`): 0,0095 + 0,0133 (x/L)² + 0,64 `xG`.
 - Erro contra a grade: 0,004 (antes 0,017 com 0,004 / 0,04 / 0,8 sem fonte). A zona 14, a cerca de 23 m do gol, valia 0,066 contra 0,035 da referência.
-- Bancada pareada, 600 partidas: gols 2,79 para 2,09; chutes por time 10,1 para 10,8; gols por chute 0,138 para 0,096 (entra na faixa); grandes chances 2,15 para 1,22; passes por time 433 para 489.
+- Bancada pareada, 600 partidas: gols 2,79 para 2,09; chutes por time 10,1 para 10,8; gols por chute 0,138 para 0,096 (entra na faixa); grandes chances 2,15 para 1,22; passes por time 433 para 489; mandante, empate e visitante de 41%, 27% e 32% para 34%, 38% e 28% (Série A: 47,6%, 27,5% e 24,9%). Os empates sobem porque os gols caem.
 - Passes progressivos, definição FBref (`progressivePasses` em `calibration/summary.ts`), 200 partidas: 20,0 para 17,4 por time. Referência parcial: o Palmeiras fez cerca de 45 por jogo no Brasileirão 2024 (FBref, 1.707 em 38 jogos). Falta a média da liga.
 - Decisão do dono: entra assim, não precisa estar perfeito. O próximo passo é o posicionamento e a movimentação sem bola: o motor progride pouco (menos da metade da referência parcial) e troca passes de lado. O peso do risco de perder a bola (`lossW`) não foi mexido.
 
