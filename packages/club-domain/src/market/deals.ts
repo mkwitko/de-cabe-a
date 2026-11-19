@@ -110,6 +110,8 @@ export interface Terms {
   role: Role;
   /** Release clause the club writes in; absent or null for none. */
   release?: number | null;
+  /** Image-rights share of his pay, 0 to 40 (image.ts); absent: the club's usual one. */
+  image?: number;
 }
 
 export type PlayerNo = 'loyal' | 'stepDown' | 'role' | 'final';

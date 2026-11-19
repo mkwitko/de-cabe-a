@@ -5,6 +5,7 @@
  * finance: what they have spent and earned in the market this season is kept in the career
  * (`w.books`) and counted against the budget. Integers; every number is a PARÂMETRO.
  */
+import { wageCost } from './image';
 import { ruleOn } from '../rules/registry';
 import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
@@ -104,7 +105,7 @@ function readBudget(w: CareerWorld, clubId: string): Budget {
 }
 
 export const wageBill = (w: CareerWorld, clubId: string) =>
-  squadPlayers({ pack: w.pack, clubId }).reduce((s, p) => s + (p.contract?.wage ?? 0), 0);
+  squadPlayers({ pack: w.pack, clubId }).reduce((s, p) => s + wageCost(w, p), 0);
 
 export interface Books {
   spent: number;

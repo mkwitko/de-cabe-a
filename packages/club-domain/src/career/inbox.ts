@@ -48,6 +48,8 @@ export type Note = { day: number } & (
   /** Wages unpaid for `months`; paid up again; a player who ended his contract over them. */
   | { kind: 'arrears'; months: number }
   | { kind: 'arrearsPaid' }
+  /** A labour claim over an image-rights share: back charges and fine paid. */
+  | { kind: 'imageClaim'; player: string; amount: number }
   | { kind: 'walkout'; player: string }
   /** The owners covered part of the season's loss. */
   | { kind: 'owners'; amount: number }

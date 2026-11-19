@@ -96,6 +96,7 @@ function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
   const [years, setYears] = useState(talk.wants?.years ?? 3);
   const [role, setRole] = useState(talk.wants?.role ?? 'rotation');
   const [clause, setClause] = useState('');
+  const [image, setImage] = useState('');
   const playerId = p.id;
   return (
     <li className="flex flex-col gap-3 border-t border-chalk/10 py-4 first:border-0 first:pt-0">
@@ -222,6 +223,18 @@ function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
                 className={FIELD}
               />
             </label>
+            <label className="flex flex-col gap-1 text-sm">
+              {t('market.imageLabel')}
+              <select value={image} onChange={(e) => setImage(e.target.value)} className={FIELD}>
+                <option value="">{t('market.imageUsual')}</option>
+                {[0, 10, 20, 30, 40].map((s) => (
+                  <option key={s} value={s}>
+                    {t('market.imageShare', { s })}
+                  </option>
+                ))}
+              </select>
+              <span className="text-chalk-soft">{t('market.imageHint')}</span>
+            </label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               <button
                 type="button"
@@ -235,6 +248,7 @@ function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
                       years,
                       role,
                       release: clause.trim() ? Math.round(Number(clause)) || null : null,
+                      ...(image !== '' && { image: Number(image) }),
                     },
                   })
                 }
@@ -244,7 +258,14 @@ function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
               <button
                 type="button"
                 className={SMALL}
-                onClick={() => talk.wants && act({ do: 'terms', playerId, terms: talk.wants })}
+                onClick={() =>
+                  talk.wants &&
+                  act({
+                    do: 'terms',
+                    playerId,
+                    terms: { ...talk.wants, ...(image !== '' && { image: Number(image) }) },
+                  })
+                }
               >
                 {t('market.takeAsk')}
               </button>

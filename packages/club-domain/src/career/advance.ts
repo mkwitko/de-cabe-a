@@ -49,6 +49,7 @@ import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
+import { settleImageClaims, type ImageDeal } from '../market/image';
 import { returnLoans, type Loan } from '../market/loans';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
 import { codeOf, withImports, youthOf, type SeasonLog } from './development';
@@ -139,6 +140,8 @@ export interface CareerWorld {
   scouting?: Scouting;
   /** The person's club's standing with agents (market/agents.ts). */
   agents?: AgentLedger;
+  /** Image-rights contracts the person signed, by player (market/image.ts). */
+  image?: Record<string, ImageDeal>;
   /** The last window deadline the person was stopped at (nextDecision with deadlines). */
   deadline?: number;
 }
@@ -500,6 +503,8 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   returnLoans(w);
   // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
   expireContracts(w);
+  // Labour claims over image-rights shares above the safe line (market/image.ts).
+  settleImageClaims(w);
   const position = positionOf(w);
   if (!judged.fired)
     note(w, {

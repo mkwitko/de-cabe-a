@@ -38,6 +38,7 @@ import { comeBack, type Why } from './rounds';
 import { agentOf, aiCommission, commission, dealtWith, type Agent } from './agents';
 import { postEntry } from '../finance/ledger';
 import { renew, renewalTerms } from './contracts';
+import { IMAGE_MAX, setImage } from './image';
 import { seenLevel } from './judgement';
 import { marketValue, readingsOf, thousands } from './value';
 
@@ -270,7 +271,9 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
     terms.wage < 0 ||
     !Number.isInteger(terms.years) ||
     terms.years < 1 ||
-    terms.years > 5
+    terms.years > 5 ||
+    (terms.image !== undefined &&
+      (!Number.isInteger(terms.image) || terms.image < 0 || terms.image > IMAGE_MAX))
   )
     throw new Error('talk: terms');
   if (talk.fee > w.ledger.cash) throw new Error('talk: cash');
@@ -316,6 +319,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
         release: a.terms.release ?? null,
       });
     }
+    setImage(w, p, terms.image, a.terms.wage);
     // The agent's commission, paid by the club that signs (renewals too).
     payCommission(w, agent, p, talk.fee, a.terms.wage);
     dealtWith(w, agent, true);
