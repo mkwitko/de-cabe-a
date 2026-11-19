@@ -234,6 +234,10 @@ export const ptBR = {
     '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita, acima do limite da CBF. Advertência pública.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). Multa de {fine}.} 3 {Fair play financeiro: terceira temporada acima do limite ({cost}%). Multa de {fine} e registro de atletas bloqueado: o clube não pode contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Multa de {fine}, registro bloqueado e {points} pontos a menos na tabela.}}',
   'inbox.directors':
     '{mine, select, yes {{why, select, sale {O clube foi vendido. O novo dono} other {Eleição no clube. A nova diretoria}} é {h, select, short {imediatista: quer resultado já, com mais verba para reforços e menos paciência.} long {de longo prazo: segura verba para estrutura e base e dá tempo ao trabalho.} other {equilibrada.}} A meta da temporada foi refeita.} other {{why, select, sale {O {club} foi vendido} other {O {club} elegeu nova diretoria}}, {h, select, short {imediatista} long {de longo prazo} other {equilibrada}}.}}',
+  'inbox.election':
+    '{mine, select, yes {{r, select, reelected {Eleição no clube: situação reeleita. A diretoria segue e a sua confiança também.} other {Eleição no clube: a oposição venceu. {out, select, yes {O novo presidente quer treinador próprio: você foi demitido.} other {O novo presidente manteve você, mas a confiança recomeça do zero e a meta foi refeita.}}}}} other {{r, select, reelected {No {club}, a situação foi reeleita.} other {No {club}, a oposição venceu a eleição}}{h, select, short {, com diretoria imediatista.} long {, com diretoria de longo prazo.} other {.}}}}',
+  'inbox.electionYear':
+    'Ano de eleição: a diretoria olha para o voto de fim de temporada. Mais pressa por resultado, mais verba para reforços e menos para estrutura.',
   'inbox.fairplayRival':
     'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
   'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
@@ -296,6 +300,7 @@ export const ptBR = {
   'board.workYes': 'A diretoria aprovou a obra: {f} fica pronta na virada da temporada.',
   'board.workNo':
     '{r, select, cash {A diretoria negou: o caixa não cobre a obra e a reserva que ela quer manter.} horizon {A diretoria negou: obra cara demais para quem quer resultado agora.} useless {A diretoria negou: o estádio não lota, ampliar seria dinheiro jogado fora.} busy {Já há uma obra nessa frente.} top {Essa frente já está no nível máximo.} other {A diretoria negou.}}',
+  'board.electionYear': 'Ano de eleição',
   'board.directors':
     '{h, select, short {Diretoria imediatista: quer resultado já, libera mais verba para reforços e tem pouca paciência com derrotas.} long {Diretoria de longo prazo: segura verba para estrutura e base, dá tempo ao trabalho.} other {Diretoria equilibrada: cobra resultado sem abrir mão do planejamento.}} Competência {n} de 100.',
   'board.goalText': 'Terminar a {division} até o {n}º lugar.',

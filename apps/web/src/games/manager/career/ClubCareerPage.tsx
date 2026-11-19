@@ -934,6 +934,8 @@ const FROM = {
   fairplay: 'finance',
   fairplayRival: 'press',
   directors: 'board',
+  election: 'board',
+  electionYear: 'board',
   season: 'press',
 } as const;
 const FROM_TONE = {
@@ -1028,6 +1030,16 @@ function noteText(n: InboxItem, sim: SimView): string {
         h: n.horizon,
         mine: n.club === sim.clubId ? 'yes' : 'no',
       });
+    case 'election':
+      return t('inbox.election', {
+        club: n.clubName,
+        r: n.result,
+        h: n.horizon,
+        mine: n.club === sim.clubId ? 'yes' : 'no',
+        out: n.coachOut ? 'yes' : 'no',
+      });
+    case 'electionYear':
+      return t('inbox.electionYear');
     case 'hired':
       return t('inbox.hired', { club: n.clubName });
     case 'solidarity':

@@ -49,6 +49,11 @@ export function Board({
           <p className={b.position <= b.goal ? 'text-chalk' : 'font-semibold text-club-danger'}>
             {t('board.position', { n: b.position })}
           </p>
+          {b.election && (
+            <p className="font-condensed text-xl font-extrabold text-club-gold uppercase">
+              {t('board.electionYear')}
+            </p>
+          )}
           <p className="text-chalk-soft">
             {t('board.directors', {
               h: b.directors.horizon,

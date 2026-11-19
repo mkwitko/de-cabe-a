@@ -64,6 +64,17 @@ export type Note = { day: number } & (
       why: 'election' | 'sale';
       horizon: 'short' | 'medium' | 'long';
     }
+  /** The vote at an association club's turn: the incumbents stay or the opposition wins. */
+  | {
+      kind: 'election';
+      club: string;
+      result: 'reelected' | 'opposition';
+      horizon: 'short' | 'medium' | 'long';
+      /** The new president sacked the person (their club only). */
+      coachOut?: true;
+    }
+  /** The season being played ends in a vote of the person's club's board. */
+  | { kind: 'electionYear' }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }
 );
 
