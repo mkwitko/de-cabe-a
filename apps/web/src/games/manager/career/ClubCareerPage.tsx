@@ -878,6 +878,8 @@ const FROM = {
   ultimatumMet: 'board',
   goal: 'board',
   cashRed: 'finance',
+  closedDoors: 'press',
+  courtBan: 'press',
   tired: 'staff',
   bought: 'market',
   sold: 'market',
@@ -936,6 +938,10 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.goal', { met: BOOL[Number(n.met)]!, position: n.position, goal: n.goal });
     case 'cashRed':
       return t('career.msgCash');
+    case 'closedDoors':
+      return t('inbox.closedDoors');
+    case 'courtBan':
+      return t('inbox.courtBan', { n: n.matches });
     case 'tired':
       return t('inbox.tired', { n: n.players });
     case 'bought':

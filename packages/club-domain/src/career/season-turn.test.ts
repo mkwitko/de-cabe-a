@@ -9,7 +9,8 @@ import {
   startNextSeason,
   type CareerWorld,
 } from './advance';
-import { attendance } from './finance';
+import { tierOf } from './finance';
+import { crowdAt, ticketOf } from '../match/stadium';
 import { loadCareer, saveCareer } from './save';
 import { nationalDivisions } from './start';
 
@@ -34,7 +35,9 @@ describe('career money (04 §4)', () => {
       ([id, m]) => m.home === club && w.season.outcomes.has(id),
     ).length;
     expect(kinds('tickets')).toHaveLength(homes);
-    expect(kinds('tickets')[0]!.amount).toBe(attendance(w) * 18);
+    const first = kinds('tickets')[0]!;
+    const own = w.pack.clubs.find((c) => c.id === w.clubId)!;
+    expect(first.amount).toBe(crowdAt(w.pack, w.season, first.ref) * ticketOf(own, tierOf(w)));
     expect(checkLedger(w.ledger)).toEqual([]);
     expect(w.ledger.cash).toBe(cashFromEntries(w.ledger));
     // Retrying a day never pays twice: a snapshot reloaded carries the same entries.

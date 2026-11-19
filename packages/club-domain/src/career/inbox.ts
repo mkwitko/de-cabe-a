@@ -13,6 +13,8 @@ export type Note = { day: number } & (
   | { kind: 'ultimatumMet' }
   | { kind: 'goal'; met: boolean; position: number; goal: number }
   | { kind: 'cashRed' }
+  | { kind: 'closedDoors' }
+  | { kind: 'courtBan'; matches: number }
   | { kind: 'tired'; players: number }
   | { kind: 'bought' | 'sold' | 'loanIn' | 'loanOut'; player: string; club: string; fee: number }
   | { kind: 'loanBack'; player: string; club: string }

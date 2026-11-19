@@ -15,6 +15,9 @@ import { goingWages } from '../market/value';
 import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/books';
 import type { CareerWorld } from './advance';
 import { BY_TIER, DEBT_RATE, gateOf } from './finance';
+
+/** A stadium is worth enlarging when an ordinary day already fills this share of it, per cent. */
+const FULL_HOUSE = 85;
 import { postEntry } from '../finance/ledger';
 import { note } from './inbox';
 import { nationalDivisions } from './start';
@@ -255,7 +258,7 @@ function chooseFronts(
         : ['stadium', 'medical', 'football', 'training', 'scouting', 'youth'];
   // The level a club of its tier should have: 5 in the first division down to 2 in the fourth.
   const target = 6 - tierOfClub(w, club.id);
-  const full = gateOf(club) >= club.stadium.capacity;
+  const full = gateOf(club) * 100 >= club.stadium.capacity * FULL_HOUSE;
   const useful = (f: Front) =>
     f === 'stadium' ? full : levelOf(club, f as Leveled) < Math.min(5, target);
   const open = (f: Front) => workCost(w, club, f) !== null;
@@ -370,7 +373,7 @@ export function workAnswer(w: CareerWorld, front: Front): WorkNo | null {
   if (
     front === 'stadium' &&
     s.directors.competence >= SEES_WASTE &&
-    gateOf(club) < club.stadium.capacity
+    gateOf(club) * 100 < club.stadium.capacity * FULL_HOUSE
   )
     return 'useless';
   return null;

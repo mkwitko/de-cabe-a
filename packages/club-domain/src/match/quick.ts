@@ -16,8 +16,13 @@ function expSeries(x: number): number {
   return sum;
 }
 
-/** Score-only result (level 3): Poisson goals from the two squads' strength. PARÂMETRO. */
-export function quickResult(seed: number, home: number, away: number): Outcome {
+/**
+ * Score-only result (level 3): Poisson goals from the two squads' strength and the share of the
+ * home stadium taken (0..1, match/stadium.ts). Between equals a crowd of 60 % gives the home side
+ * about 49 % of the wins (Série A 2023-2025: 47-50 %), an empty stadium about 42 % (2020, played
+ * behind closed doors: netvasco). PARÂMETRO.
+ */
+export function quickResult(seed: number, home: number, away: number, crowd = 0.6): Outcome {
   const r = rngFrom(seed);
   const goals = (mean: number) => {
     // Knuth: fine for means under 5.
@@ -27,7 +32,10 @@ export function quickResult(seed: number, home: number, away: number): Outcome {
   };
   const d = (home - away) / 10;
   return {
-    goals: [goals(Math.max(0.2, 1.45 + 0.35 * d)), goals(Math.max(0.2, 1.1 - 0.3 * d))],
+    goals: [
+      goals(Math.max(0.2, 1.3 + 0.35 * crowd + 0.35 * d)),
+      goals(Math.max(0.2, 1.15 - 0.25 * crowd - 0.3 * d)),
+    ],
     shootout: null,
     cards: [
       [Math.floor(next(r) * 3), next(r) < 0.05 ? 1 : 0],

@@ -18,6 +18,7 @@ import { isAbroad } from '../market/abroad';
 import { booksOf, budgetOf } from '../market/books';
 import { squadPlanOf } from '../market/plan';
 import { ageOf } from '../market/value';
+import { ticketOf, usualCrowd } from '../match/stadium';
 import { PackSchema, type Pack } from '../pack/schema';
 
 interface Target {
@@ -79,6 +80,46 @@ const TARGETS: Target[] = [
         (id) => (100 * booksOf(w, id).spent) / Math.max(1, budgetOf(w, id).income),
       );
       return shares.reduce((a, b) => a + b, 0) / Math.max(1, shares.length);
+    },
+  },
+  {
+    // The pack's 2027 Série A is not 2025's (the FM save's own promotions): a wider range.
+    name: 'Público médio da Série A (mil)',
+    range: [21, 30],
+    source: 'ge 2025: 25.531 pagantes por jogo (Máquina do Esporte)',
+    confirmed: true,
+    measure: (w) => {
+      const ids = serieAClubs(w);
+      const crowds = ids.map((id) => usualCrowd(w.pack.clubs.find((c) => c.id === id)!));
+      return crowds.reduce((a, b) => a + b, 0) / Math.max(1, crowds.length) / 1000;
+    },
+  },
+  {
+    name: 'Bilheteria bruta da Série A na temporada (R$ mi)',
+    range: [400, 650],
+    source: 'Máquina do Esporte: R$ 518 mi brutos no Brasileirão 2025',
+    confirmed: true,
+    measure: (w) =>
+      serieAClubs(w).reduce((s, id) => {
+        const c = w.pack.clubs.find((x) => x.id === id)!;
+        return s + usualCrowd(c) * ticketOf(c, 1) * 19;
+      }, 0) / 1e6,
+  },
+  {
+    name: 'Vitórias do mandante na Série A (%)',
+    range: [44, 53],
+    source: 'Brasileirão 2023-2025: 46,8 %, 47,4 %, 50,3 % (Wikipedia, tabela de resultados)',
+    confirmed: true,
+    measure: (w) => {
+      const id = serieA(w).id;
+      let home = 0;
+      let games = 0;
+      for (const [match, o] of w.season.outcomes) {
+        if (w.season.meta.get(match)?.competitionId !== id) continue;
+        if (o.goals[0] > o.goals[1]) home++;
+        games++;
+      }
+      return (100 * home) / Math.max(1, games);
     },
   },
   {

@@ -12,6 +12,7 @@ import {
 } from '@decabeca/match-engine';
 import { deciderRules } from '../competition/knockout';
 import { seedOf, type Outcome, type SeasonState } from '../competition/season';
+import { crowdShare } from './stadium';
 import type { Pack } from '../pack/schema';
 import { teamForMatch } from './lineup';
 
@@ -35,7 +36,7 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
       teamForMatch(pack, k, defaultPlan(formationOf(k))),
     ) as MatchInput['teams'],
     conditions: {
-      crowd: 1,
+      crowd: crowdShare(pack, s, id),
       altitudeM: city?.altitudeM ?? 0,
       pitch: home.stadium.pitch,
       weather: 'clear',
