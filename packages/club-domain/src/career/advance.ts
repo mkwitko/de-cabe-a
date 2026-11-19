@@ -287,6 +287,9 @@ function playDay(
       const before = w.board;
       w.board = boardAfterMatch(w, m, o, day);
       if (w.board.last?.some((r) => r.kind === 'protest')) note(w, { day, kind: 'protest' });
+      // The press story: at a run's third winless match, and again each three more.
+      if (w.board.last?.some((r) => r.kind === 'press'))
+        note(w, { day, kind: 'press', matches: w.board.winless! });
       if (w.board.ultimatum && !before?.ultimatum)
         note(w, { day, kind: 'ultimatum', ...w.board.ultimatum });
       if (w.board.last?.some((r) => r.kind === 'ultimatumMet'))

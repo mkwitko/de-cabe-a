@@ -16,6 +16,8 @@ export type Note = { day: number } & (
   | { kind: 'closedDoors' }
   | { kind: 'sponsor'; name: string; annual: number; years: number }
   | { kind: 'protest' }
+  /** The press makes a story of a winless run (board.ts `pressureOf`). */
+  | { kind: 'press'; matches: number }
   | { kind: 'courtBan'; matches: number }
   | { kind: 'tired'; players: number }
   | { kind: 'bought' | 'sold' | 'loanIn' | 'loanOut'; player: string; club: string; fee: number }
