@@ -77,6 +77,17 @@ export const FOREIGN_TIERS: readonly ForeignTier[] = [
     pays: 145,
     currency: 'USD',
   },
+  // Portugal: the busiest route out of Brazil (FIFA Global Transfer Report 2025: 184 of 1,005
+  // departures), young men of the middle of the league, cheap, to be sold on in Europe.
+  {
+    id: 'abroad:pt',
+    name: 'Portugal',
+    level: 60,
+    ages: [18, 26],
+    chance: 140,
+    pays: 85,
+    currency: 'EUR',
+  },
   {
     id: 'abroad:asia',
     name: 'Ásia e EUA',

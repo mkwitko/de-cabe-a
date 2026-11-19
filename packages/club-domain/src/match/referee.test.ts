@@ -30,3 +30,13 @@ describe('referees (mapa §2.12)', () => {
     expect(strict).toBeGreaterThan(lenient);
   });
 });
+
+it('a derby draws more cards than an ordinary match with the same referee', async () => {
+  const { whistleOf, DERBY_CARDS } = await import('./referee');
+  expect(DERBY_CARDS).toBeGreaterThan(100);
+  const s = { seed: 5 } as Parameters<typeof whistleOf>[0];
+  const plain = whistleOf(s, 'm1');
+  const hot = whistleOf(s, 'm1', true);
+  expect(hot.cards / plain.cards).toBeCloseTo(DERBY_CARDS / 100);
+  expect(hot.reds / plain.reds).toBeCloseTo(DERBY_CARDS / 100);
+});

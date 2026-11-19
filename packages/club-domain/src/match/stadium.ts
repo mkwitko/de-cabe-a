@@ -52,6 +52,13 @@ const INCIDENT_LOSS = 2; // multiplier
 export const derby = (home: PackClub, away: PackClub): boolean =>
   home.rivals.includes(away.id) || away.rivals.includes(home.id);
 
+/** Whether two clubs of the pack, by id, are rivals. */
+export function isDerby(pack: Pack, home: string, away: string): boolean {
+  const h = clubOf(pack, home);
+  const a = clubOf(pack, away);
+  return !!h && !!a && derby(h, a);
+}
+
 /** The home side's league and cup matches of the season, in date order. */
 function homeMatches(s: SeasonState, clubId: string) {
   return [...(s.calendar.byClub.get(clubId) ?? [])]
