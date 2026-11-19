@@ -21,6 +21,7 @@ import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
 import { formationOf, matchInputFor } from '../match/fixture-input';
 import { crowdShare } from '../match/stadium';
+import { whistleOf } from '../match/referee';
 import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
@@ -183,6 +184,7 @@ function playDay(
             (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
             // The crowd carries the home side; behind closed doors it is gone (match/stadium.ts).
             crowdShare(w.pack, w.season, id),
+            whistleOf(w.season, id),
           );
     record(w.season, id, o);
     out.set(id, o);

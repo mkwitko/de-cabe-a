@@ -35,6 +35,19 @@ const BRL_PER_USD = 5.5;
 const serieA = (w: CareerWorld) => nationalDivisions(w.pack).find((d) => d.tier === 1)!;
 const serieAClubs = (w: CareerWorld) => w.season.members[serieA(w).id] ?? [];
 
+/** Mean per Série A match of what `pick` reads of each side's [yellows, reds]. */
+function cardsIn(w: CareerWorld, pick: (c: [number, number]) => number): number {
+  const id = serieA(w).id;
+  let sum = 0;
+  let games = 0;
+  for (const [match, o] of w.season.outcomes) {
+    if (w.season.meta.get(match)?.competitionId !== id) continue;
+    sum += pick(o.cards[0]) + pick(o.cards[1]);
+    games++;
+  }
+  return sum / Math.max(1, games);
+}
+
 const TARGETS: Target[] = [
   {
     name: 'Vendas ao exterior na temporada (R$ bi)',
@@ -126,6 +139,21 @@ const TARGETS: Target[] = [
       }
       return (100 * home) / Math.max(1, games);
     },
+  },
+  {
+    name: 'Cartões por jogo na Série A',
+    range: [4.5, 6.0],
+    source:
+      'Brasileirão 2025: mais de cinco por jogo; árbitros de 4,0 a 7,3 (Itatiaia, Correio Braziliense; a confirmar)',
+    confirmed: false,
+    measure: (w) => cardsIn(w, (c) => c[0] + c[1]),
+  },
+  {
+    name: 'Expulsões por jogo na Série A',
+    range: [0.2, 0.4],
+    source: 'ge 2025: 83 expulsões em 27 rodadas, 0,31 por jogo (via 90min)',
+    confirmed: true,
+    measure: (w) => cardsIn(w, (c) => c[1]),
   },
   {
     name: 'Gols por jogo na Série A',
