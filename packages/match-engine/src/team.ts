@@ -220,6 +220,9 @@ const APTITUDE: Record<TaskKind, Record<Line, number>> = {
   receive: { gk: 1, def: 1, mid: 1, att: 1 },
 };
 
+/** PARAMETER: metres short of the opponents' last line the wingers hold the width (02 §5.11). */
+const WIDTH_OFF_LINE = 5;
+
 /** Rest defence stands this far behind the ball (02 §5.9); T9 counts players more than 12 m behind. */
 export const REST_BEHIND = 16;
 
@@ -279,9 +282,12 @@ export function tasksFor(
     add('support', 'supportA', freeSpot({ x: focal.x + 2, y: focal.y - 11 }, opp));
     add('support', 'supportB', freeSpot({ x: focal.x + 2, y: focal.y + 11 }, opp));
     // On a counter the runners go for the space behind, not for the ball (PARAMETERS: 65 and 80 m).
+    // The wingers hold the width high, short of the opponents' last line, to pin their
+    // full-backs (positional play: width and depth together); they drop only with the ball
+    // ahead of that height (PARAMETER: WIDTH_OFF_LINE, set by offsides per match, 02 §11).
     const wideX = counter
       ? Math.max(Math.min(focal.x + 6, lastLine - 1), Math.min(65, lastLine - 1))
-      : Math.min(focal.x + 6, lastLine - 1);
+      : Math.max(Math.min(focal.x + 6, lastLine - 1), lastLine - WIDTH_OFF_LINE);
     const edge = 3 + (3 - t.width) * 2.5;
     add('width', 'widthR', { x: wideX, y: edge });
     add('width', 'widthL', { x: wideX, y: WIDTH - edge });
@@ -435,6 +441,29 @@ const KEEP_MARGIN = 0.6; // a task changes owner only if the new cost is this mu
 /** Each defender considers only its three cheapest tasks (research 11 §1.7). */
 const TOP_K = 3;
 
+/**
+ * With the ball each role keeps its own job (02a: the role on the team sheet): the forward
+ * gives depth, the winger width, the playmaker comes between the lines. Without it the
+ * line aptitude above is enough. PARAMETER: ROLE_GAIN seconds of arrival time; at 2 the
+ * depth changes hands about a third less often and the winger keeps the width 92% of the time.
+ */
+const ROLE_GAIN = 2;
+const ROLE_JOBS: Partial<Record<RoleId, TaskKind[]>> = {
+  centreBack: ['restDefence'],
+  libero: ['restDefence'],
+  invertedFullBack: ['restDefence', 'support'],
+  wingBack: ['width'],
+  anchor: ['restDefence', 'support'],
+  deepPlaymaker: ['support'],
+  boxToBox: ['support', 'box'],
+  playmaker: ['betweenLines', 'support'],
+  wideWinger: ['width'],
+  insideForward: ['width', 'betweenLines'],
+  falseNine: ['betweenLines', 'support'],
+  advancedForward: ['depth', 'box'],
+  targetMan: ['depth', 'box'],
+};
+
 export function assign(
   tasks: Task[],
   players: TeamPlayer[],
@@ -466,6 +495,7 @@ export function assign(
     (t.kind !== 'support' || t.point.x > BUILD_UP_X)
       ? OUT_OF_ZONE
       : 0) +
+    (inPossession && ROLE_JOBS[p.role]?.includes(t.kind) ? -ROLE_GAIN : 0) +
     arrivalTime(kins.get(p.index)!, t.point, true) +
     ZONE_COST * dist(anchorsByIndex.get(p.index)!, t.point) +
     FATIGUE_COST * (1 - p.stamina) -

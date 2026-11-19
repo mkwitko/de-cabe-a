@@ -134,7 +134,11 @@ const DEMAND_COST = 0.35;
 const TRAP_STEP = 5;
 /** PARAMETER: metres two teammates keep between them while moving (T3 counts under 2 m). */
 const PERSONAL_SPACE = 3;
-/** Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target). */
+/**
+ * Intents run at full speed; the others jog (PARAMETERS: base jog m/s and m/s per metre off target).
+ * With the ball the attacking jobs are runs, not jogs: a jogging winger stayed 7 m behind his
+ * spot as the ball moved up (2026-11-18 measurement).
+ */
 const URGENT = new Set<WorldPlayer['intent']>([
   'press',
   'receive',
@@ -143,6 +147,10 @@ const URGENT = new Set<WorldPlayer['intent']>([
   'closeLane',
   'depth',
   'carry',
+  'width',
+  'betweenLines',
+  'support',
+  'box',
 ]);
 const JOG = 1.8;
 const JOG_GAIN = 0.25;
@@ -310,14 +318,31 @@ export function coordinate(w: World, team: 0 | 1, event: boolean): void {
         holder.team !== team &&
         mine.some((q) => dist(q.pos, holder.pos) < 2.5);
       const trap = plan.team.offsideTrap && ((w.triggered?.[team] ?? false) || closed);
+      // A defender who stepped out of the line to mark or press is still its edge: the
+      // others slide towards him so the gap beside him stays a line gap (02 §5.3, "fecha o
+      // buraco de quem sai"). With one out on each side they share the space between them.
+      const outYs = ordered
+        .map((p, i) => ({ p, t: targets[i]! }))
+        .filter(({ p, t }) => lineOf(p.role) === 'def' && p.intent !== 'anchor' && t.x < cx + 12)
+        .map(({ t }) => t.y);
+      let ys2 = line.map((_, k) => cy + (k - (line.length - 1) / 2) * spacing);
+      const lo = Math.max(...outYs.filter((y) => y < ys2[0]!), -Infinity);
+      const hi = Math.min(...outYs.filter((y) => y > ys2[ys2.length - 1]!), Infinity);
+      if (lo > -Infinity && hi < Infinity) {
+        const gap = (hi - lo) / (line.length + 1);
+        if (gap > spacing) ys2 = line.map((_, k) => lo + (k + 1) * gap);
+      } else if (hi < Infinity && hi - ys2[ys2.length - 1]! > BACK_SPACING) {
+        const d = hi - ys2[ys2.length - 1]! - BACK_SPACING;
+        ys2 = ys2.map((y) => y + d);
+      } else if (lo > -Infinity && ys2[0]! - lo > BACK_SPACING) {
+        const d = ys2[0]! - lo - BACK_SPACING;
+        ys2 = ys2.map((y) => y - d);
+      }
       line.forEach(({ p, i }, k) => {
         const step = trap
           ? TRAP_STEP * w.familiarity[team] * (0.5 + 0.5 * (p.attrs.concentration / 99))
           : 0;
-        targets[i] = {
-          x: cx + step,
-          y: clamp(cy + (k - (line.length - 1) / 2) * spacing, 2, WIDTH - 2),
-        };
+        targets[i] = { x: cx + step, y: clamp(ys2[k]!, 2, WIDTH - 2) };
       });
     }
   }

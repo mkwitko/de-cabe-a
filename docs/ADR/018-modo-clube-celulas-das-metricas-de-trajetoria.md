@@ -19,9 +19,9 @@ Faixas (`BANDS` em `trajectories.ts`) ficam como estavam. Definições:
 
 Mudanças de comportamento feitas na mesma calibragem (não de métrica), em `02` §5.11: bloco médio e baixo sem bola não pressiona acima da frente do bloco; a cobertura fica 6 m atrás da frente do bloco; zagueiros centrais com bola só fazem defesa de descanso ou apoio curto na saída (até x = 45); quem não está na defesa de descanso acompanha a jogada a no máximo 10 m atrás da bola; dois companheiros a menos de 3 m se afastam, contando o portador.
 
-## Proposta pendente (2026-11-16, não aplicada)
+## Item 7 (proposto em 2026-11-16, aplicado em 2026-11-19 com aceite do dono)
 
-7. **T1 e T2 por altura de bloco no bloco baixo.** Com a linha do bloco baixo na entrada da área (piso de 14 m para a defesa e 19 m para o meio, `LOW_FLOOR_EXTRA` em `team.ts`), o cenário S3 passa a ter 4 defensores perto da bola fora da área e vão de 22,7 a 24,1 m entre zagueiros em 7 de 12 sementes. É o comportamento esperado de um bloco baixo compacto (pesquisa 13 §3) e o que reduziu os gols sofridos por ele de 2,44 para 1,92 por jogo. TEST_STRATEGY §4.1 já pede faixa por altura de bloco; a proposta é T1 máximo 4 e T2 vão 25 m na célula de bloco baixo. Só vale com aceite do dono; até lá a prova fica vermelha nesse cenário.
+7. **T2 por altura de bloco no bloco baixo.** Aplicado: vão da última linha p95 de 23 m no bloco baixo, 22 m nos blocos médio e alto (`BANDS.T2backGapP95` em `trajectories.ts`); T1 não mudou. Motivo da aplicação: com o posicionamento com bola por função (`02` §5.11, DECISÃO de 2026-11-19), o S3 chega a 22,2 m em 1 de 8 sementes pela marcação homem a homem perto da área. Texto original da proposta: Com a linha do bloco baixo na entrada da área (piso de 14 m para a defesa e 19 m para o meio, `LOW_FLOOR_EXTRA` em `team.ts`), o cenário S3 passa a ter 4 defensores perto da bola fora da área e vão de 22,7 a 24,1 m entre zagueiros em 7 de 12 sementes. É o comportamento esperado de um bloco baixo compacto (pesquisa 13 §3) e o que reduziu os gols sofridos por ele de 2,44 para 1,92 por jogo. TEST_STRATEGY §4.1 já pede faixa por altura de bloco; a proposta é T1 máximo 4 e T2 vão 25 m na célula de bloco baixo. Só vale com aceite do dono; até lá a prova fica vermelha nesse cenário.
 
 ## O que mudou no jogo e o que mudou na régua
 
