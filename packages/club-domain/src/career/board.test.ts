@@ -224,7 +224,7 @@ it('a birthplace in the state counts as local, wherever he was formed', () => {
       c.id === clubId ? { ...c, fans: { ...c.fans, localIdentity: 100 } } : c,
     ),
     players: w.pack.players.map((p) =>
-      mine.some((m) => m.id === p.id) ? { ...p, origin: { cityId: home } } : p,
+      mine.some((m) => m.id === p.id) ? { ...p, birthCityId: home } : p,
     ),
   };
   w.starts = Object.fromEntries(mine.map((p) => [p.id, 10]));

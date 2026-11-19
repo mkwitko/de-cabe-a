@@ -250,7 +250,9 @@ export function slotFamiliarity(w: ClubIn, l: Lineup): number[] {
  */
 export const foreignLimit = (season: number) =>
   season <= 2026 ? 9 : Math.max(5, 8 - (season - 2027));
-export const isForeign = (p: { nationality: string }) => p.nationality !== 'BR';
+/** Foreign in a matchday squad: neither his nationality nor a second one is Brazilian. */
+export const isForeign = (p: { nationality: string; secondNationality?: string | undefined }) =>
+  p.nationality !== 'BR' && p.secondNationality !== 'BR';
 
 export function bestLineup(
   w: ClubIn,

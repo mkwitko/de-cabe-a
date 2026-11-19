@@ -60,3 +60,9 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 
 - Wikidata (CC0), SPARQL por ano de nascimento 1980-2011: futebolistas (P106 Q937857) brasileiros (P27 Q155) com data (P569) e local de nascimento (P19), estado (P131* ate Q485258), coordenadas (P625) e populacao (P1082). Gerado por `fetch-birthplaces.ts`.
 - Casamento em `import-fm.ts`: mesma data de nascimento e nome (igual ao conhecido/completo, ou todas as palavras do rotulo dentro do nome completo); data com dois candidatos fica sem. Cobertura 2027: Serie A 57%, B 38%, C 24%, D 11%.
+
+## Segunda nacionalidade (`secondNationality`, data/citizenships.json)
+
+- Wikidata (CC0), SPARQL por ano de nascimento: futebolistas com cidadania brasileira (P27 Q155) e outra (P27 com ISO P297). Gerado por `fetch-citizenships.ts`; casado em `import-fm.ts` como a naturalidade. 18 jogadores no pacote (ex.: Rafael Toloi IT+BR, Jorginho IT+BR, Coutinho BR+ES).
+- `second_nation_ids` do FM nao e usado: marca Brasil para estrangeiros sem passaporte brasileiro (Mercado, Cuello, Ferraresi).
+- `birthCityId` (campo de naturalidade do esquema) passa a guardar a naturalidade, em vez de `origin.cityId`.

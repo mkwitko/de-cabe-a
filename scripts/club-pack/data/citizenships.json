@@ -1,0 +1,709 @@
+{
+  "generated": "2026-11-19",
+  "source": "Wikidata SPARQL (CC0): P106 Q937857, P27 Q155 plus another P27 with its ISO code P297, P569",
+  "players": [
+    { "qid": "Q100832872", "name": "Daniel Gagliardi", "birth": "1997-01-21", "others": ["US"] },
+    { "qid": "Q102260164", "name": "Metinho", "birth": "2003-04-23", "others": ["CD"] },
+    { "qid": "Q10268484", "name": "Douglas Santos", "birth": "1994-03-22", "others": ["RU"] },
+    { "qid": "Q10299231", "name": "Héracles", "birth": "1992-09-18", "others": ["PT"] },
+    {
+      "qid": "Q10333326",
+      "name": "Murilo Ribeiro de Almeida",
+      "birth": "1989-01-21",
+      "others": ["TL"]
+    },
+    { "qid": "Q10336442", "name": "Neuciano Gusmão", "birth": "1988-12-26", "others": ["BG"] },
+    {
+      "qid": "Q10364297",
+      "name": "Romário Correia de Souza",
+      "birth": "1992-01-15",
+      "others": ["PT"]
+    },
+    { "qid": "Q104521348", "name": "David Costa", "birth": "2001-01-05", "others": ["PT"] },
+    { "qid": "Q104914253", "name": "Lucas Lima", "birth": "2002-04-02", "others": ["SE"] },
+    {
+      "qid": "Q10513877",
+      "name": "William Douglas De Amorim",
+      "birth": "1991-12-15",
+      "others": ["RO"]
+    },
+    {
+      "qid": "Q10516966",
+      "name": "Marcos Vinicius Dos Santos Rosa",
+      "birth": "1988-09-13",
+      "others": ["KR"]
+    },
+    { "qid": "Q10551729", "name": "Raphael Guzzo", "birth": "1995-01-06", "others": ["PT"] },
+    { "qid": "Q10553869", "name": "Daniel De Silva", "birth": "1997-03-06", "others": ["AU"] },
+    { "qid": "Q105552766", "name": "Lenny Lobato", "birth": "2001-02-03", "others": ["AR"] },
+    { "qid": "Q10556394", "name": "Claudiney Rincón", "birth": "1980-03-15", "others": ["GQ"] },
+    { "qid": "Q1062715", "name": "Wellingsson de Souza", "birth": "1989-09-07", "others": ["CN"] },
+    { "qid": "Q106702093", "name": "Samuele Vignato", "birth": "2004-02-24", "others": ["IT"] },
+    { "qid": "Q109428", "name": "Diego Ribas da Cunha", "birth": "1985-02-28", "others": ["IT"] },
+    { "qid": "Q109658707", "name": "Bernardo Oliveira", "birth": "2004-03-16", "others": ["AU"] },
+    { "qid": "Q1100643", "name": "Paulo André", "birth": "1983-08-20", "others": ["IT"] },
+    { "qid": "Q111283318", "name": "Henrique Devens", "birth": "1997-06-20", "others": ["LU"] },
+    {
+      "qid": "Q1118798",
+      "name": "Paulo Vinícius de Souza Nascimento",
+      "birth": "1984-08-12",
+      "others": ["PT"]
+    },
+    {
+      "qid": "Q1124971",
+      "name": "Eric de Oliveira Pereira",
+      "birth": "1985-12-05",
+      "others": ["RO"]
+    },
+    {
+      "qid": "Q112788241",
+      "name": "Fernandes Oliveira Thiago",
+      "birth": "1992-05-09",
+      "others": ["ID"]
+    },
+    { "qid": "Q112988026", "name": "Q112988026", "birth": "1985-10-19", "others": ["RU"] },
+    { "qid": "Q113178768", "name": "Gabriel Mentz", "birth": "1998-08-11", "others": ["MT"] },
+    { "qid": "Q113335052", "name": "Léo Scienza", "birth": "1998-09-13", "others": ["LU"] },
+    { "qid": "Q113656961", "name": "Isa Matos", "birth": "2002-08-12", "others": ["NG"] },
+    { "qid": "Q1154792", "name": "Adriano Foglia", "birth": "1981-04-25", "others": ["IT"] },
+    { "qid": "Q116143183", "name": "Carmel Oliveira", "birth": "2000-02-23", "others": ["US"] },
+    { "qid": "Q116174935", "name": "Gustavo Furtado", "birth": "2001-02-14", "others": ["PT"] },
+    { "qid": "Q1162995", "name": "Daniel Vier", "birth": "1982-05-16", "others": ["DE"] },
+    { "qid": "Q116449437", "name": "João Mendes", "birth": "2005-02-25", "others": ["ES"] },
+    { "qid": "Q117655", "name": "Igor de Camargo", "birth": "1983-05-12", "others": ["BE"] },
+    { "qid": "Q120667469", "name": "Luigi Gaspar", "birth": "2004-03-11", "others": ["GB"] },
+    { "qid": "Q121073744", "name": "Enzo Alves", "birth": "2009-09-16", "others": ["ES"] },
+    { "qid": "Q121600508", "name": "Welber Jardim", "birth": "2007-04-25", "others": ["ID"] },
+    {
+      "qid": "Q122499162",
+      "name": "Ullrich Pereira Souza",
+      "birth": "2003-07-11",
+      "others": ["FR"]
+    },
+    {
+      "qid": "Q124130703",
+      "name": "Dennis de Sousa Oelsner",
+      "birth": "1996-06-26",
+      "others": ["DE"]
+    },
+    { "qid": "Q124837380", "name": "Ronaldo De Jesús", "birth": "2001-04-21", "others": ["PY"] },
+    { "qid": "Q125739523", "name": "Robson Matheus", "birth": "2002-05-18", "others": ["BO"] },
+    { "qid": "Q126903", "name": "Lucas Piazón", "birth": "1994-01-20", "others": ["IT"] },
+    {
+      "qid": "Q127255816",
+      "name": "Klaidher Vittorio Bravin Macedo",
+      "birth": "1999-01-18",
+      "others": ["IT"]
+    },
+    { "qid": "Q128525336", "name": "Claudio de Oliveira", "birth": "2008-12-08", "others": ["GT"] },
+    { "qid": "Q128796704", "name": "Miguel Carvalho", "birth": "2005-03-09", "others": ["ES"] },
+    { "qid": "Q129261687", "name": "Matteo Amoroso", "birth": "2003-01-03", "others": ["IT"] },
+    {
+      "qid": "Q129676734",
+      "name": "Pedro Arcanjo Ferrari Da Silva",
+      "birth": "1994-11-03",
+      "others": ["IT"]
+    },
+    { "qid": "Q130416078", "name": "Filipe Bordon", "birth": "2005-06-24", "others": ["IT"] },
+    { "qid": "Q130545743", "name": "Fellipe Jack", "birth": "2006-01-12", "others": ["IT"] },
+    { "qid": "Q131173800", "name": "Gabriel Pereira", "birth": "2005-01-07", "others": ["SV"] },
+    {
+      "qid": "Q1323061",
+      "name": "Reinaldo Elias da Costa",
+      "birth": "1984-06-13",
+      "others": ["AU"]
+    },
+    { "qid": "Q132830374", "name": "JuJu Harris", "birth": "2007-01-18", "others": ["US"] },
+    { "qid": "Q134070771", "name": "Ivan Molina", "birth": "2008-04-07", "others": ["VE"] },
+    { "qid": "Q135038923", "name": "Lithierry Silva", "birth": "2001-05-14", "others": ["AE"] },
+    { "qid": "Q135501613", "name": "Valentina Amaral", "birth": "2005-04-05", "others": ["US"] },
+    { "qid": "Q136311304", "name": "Mateus Peloggia", "birth": "2003-05-19", "others": ["IT"] },
+    { "qid": "Q136465151", "name": "Thaís Lima", "birth": "2008-04-11", "others": ["AO", "PT"] },
+    { "qid": "Q137773933", "name": "Iago Bento", "birth": "1999-01-15", "others": ["KH"] },
+    { "qid": "Q139500359", "name": "Henrique Simeone", "birth": "2007-06-12", "others": ["MX"] },
+    {
+      "qid": "Q140028106",
+      "name": "Yasmim Cardozo",
+      "birth": "2008-10-10",
+      "others": ["PT", "TH"]
+    },
+    { "qid": "Q140472046", "name": "Pedro Caldieraro", "birth": "2005-08-16", "others": ["IT"] },
+    { "qid": "Q140596527", "name": "Everton", "birth": "2007-04-12", "others": ["FR"] },
+    { "qid": "Q1406883", "name": "Fernando de Moraes", "birth": "1980-01-21", "others": ["AU"] },
+    { "qid": "Q1408157", "name": "Marcelo Grohe", "birth": "1987-01-13", "others": ["DE"] },
+    { "qid": "Q141192578", "name": "João Gabriel", "birth": "2007-04-06", "others": ["IT", "LB"] },
+    { "qid": "Q141314694", "name": "Vinicius Gomes", "birth": "1998-04-19", "others": ["PT"] },
+    { "qid": "Q141496138", "name": "Marlon Júnior", "birth": "2005-08-25", "others": ["PT"] },
+    { "qid": "Q141505193", "name": "Jonathan Silva", "birth": "2004-04-24", "others": ["IT"] },
+    { "qid": "Q141514583", "name": "Q141514583", "birth": "1997-03-15", "others": ["IT"] },
+    { "qid": "Q141959489", "name": "Jaime Ewald Kniess", "birth": "1994-08-02", "others": ["KZ"] },
+    { "qid": "Q141966485", "name": "Q141966485", "birth": "1999-07-26", "others": ["KZ"] },
+    { "qid": "Q1487225", "name": "Ramon Bueno Ardite", "birth": "1984-09-27", "others": ["IT"] },
+    { "qid": "Q1493831", "name": "Thiago Rangel Cionek", "birth": "1986-04-21", "others": ["PL"] },
+    {
+      "qid": "Q14943735",
+      "name": "Alex Henrique da Silva",
+      "birth": "1982-01-06",
+      "others": ["AM"]
+    },
+    { "qid": "Q15131481", "name": "Henrique Luvannor", "birth": "1990-05-19", "others": ["MD"] },
+    { "qid": "Q15215049", "name": "Bressan", "birth": "1993-01-15", "others": ["IT"] },
+    {
+      "qid": "Q15241347",
+      "name": "Ramiro Moschen Benetti",
+      "birth": "1993-05-22",
+      "others": ["IT"]
+    },
+    { "qid": "Q1526579", "name": "Renan Wagner", "birth": "1990-11-17", "others": ["DE"] },
+    { "qid": "Q1526579", "name": "Renan Wagner", "birth": "1991-12-19", "others": ["DE"] },
+    {
+      "qid": "Q152968",
+      "name": "Kevin Kurányi",
+      "birth": "1982-03-02",
+      "others": ["DE", "HU", "PA"]
+    },
+    { "qid": "Q15711499", "name": "Fernando Leitão", "birth": "1981-01-03", "others": ["PT"] },
+    { "qid": "Q15714161", "name": "Murilo Ferreira", "birth": "1989-03-10", "others": ["IT"] },
+    { "qid": "Q15726232", "name": "Gabriel Lima", "birth": "1987-08-19", "others": ["IT"] },
+    { "qid": "Q15831207", "name": "Wanderson", "birth": "1988-01-02", "others": ["BG"] },
+    { "qid": "Q15878652", "name": "Gabriel Boschilia", "birth": "1996-03-05", "others": ["IT"] },
+    { "qid": "Q15939909", "name": "Felipe Gedoz", "birth": "1993-07-12", "others": ["UY"] },
+    {
+      "qid": "Q15964397",
+      "name": "Sérgio Antônio Soler de Oliveira Júnior",
+      "birth": "1995-03-15",
+      "others": ["CN"]
+    },
+    { "qid": "Q16211829", "name": "Paulo Azzi", "birth": "1994-07-15", "others": ["IT"] },
+    { "qid": "Q16224918", "name": "Leo Fernandes", "birth": "1991-12-23", "others": ["US"] },
+    { "qid": "Q16234626", "name": "Katsutoshi Henmi", "birth": "1992-07-30", "others": ["JP"] },
+    {
+      "qid": "Q16337465",
+      "name": "Fernando Henrique da Conceição",
+      "birth": "1993-03-16",
+      "others": ["CN"]
+    },
+    { "qid": "Q1634101", "name": "Wellington Paulista", "birth": "1983-04-22", "others": ["ES"] },
+    { "qid": "Q1634101", "name": "Wellington Paulista", "birth": "1984-04-22", "others": ["ES"] },
+    { "qid": "Q164575", "name": "Paulo Assunção", "birth": "1980-01-25", "others": ["PT"] },
+    {
+      "qid": "Q1657832",
+      "name": "André Luiz Silva do Nascimento",
+      "birth": "1980-01-27",
+      "others": ["FR"]
+    },
+    {
+      "qid": "Q166506",
+      "name": "Jorge Samir Cruz Campos",
+      "birth": "1987-04-23",
+      "others": ["HR"]
+    },
+    { "qid": "Q16662745", "name": "Manuel Perez", "birth": "1991-05-11", "others": ["FR"] },
+    { "qid": "Q16745198", "name": "Malcom", "birth": "1997-02-26", "others": ["RU"] },
+    { "qid": "Q167698", "name": "Éder Citadin Martins", "birth": "1986-11-15", "others": ["IT"] },
+    {
+      "qid": "Q1678717",
+      "name": "Jailson Severiano Alves",
+      "birth": "1984-10-11",
+      "others": ["AT"]
+    },
+    { "qid": "Q16886086", "name": "Thiago De Lima Silva", "birth": "1983-11-01", "others": ["AT"] },
+    {
+      "qid": "Q17037506",
+      "name": "Rafael Enrique Pérez Almeida",
+      "birth": "1990-01-09",
+      "others": ["CO"]
+    },
+    { "qid": "Q17074511", "name": "Ederson Moraes", "birth": "1993-08-17", "others": ["PT"] },
+    { "qid": "Q172720", "name": "Daniel Alves", "birth": "1983-05-06", "others": ["ES"] },
+    { "qid": "Q17327541", "name": "Wanderson", "birth": "1994-10-07", "others": ["BE"] },
+    { "qid": "Q17493", "name": "Thiago Alcântara", "birth": "1991-04-11", "others": ["ES"] },
+    { "qid": "Q17612132", "name": "Bruno Bonicontro", "birth": "1991-04-20", "others": ["US"] },
+    { "qid": "Q17612305", "name": "Gabriel", "birth": "1988-06-18", "others": ["PT"] },
+    { "qid": "Q17619350", "name": "Andreas Pereira", "birth": "1996-01-01", "others": ["BE"] },
+    { "qid": "Q1770561", "name": "Caio Canedo Corrêa", "birth": "1990-08-09", "others": ["AE"] },
+    {
+      "qid": "Q179069",
+      "name": "Artur Guilherme Moraes Gusmão",
+      "birth": "1981-01-25",
+      "others": ["IT"]
+    },
+    {
+      "qid": "Q180164",
+      "name": "Alan Douglas Borges de Carvalho",
+      "birth": "1989-07-10",
+      "others": ["CN"]
+    },
+    { "qid": "Q180444", "name": "Eduardo da Silva", "birth": "1983-02-25", "others": ["HR"] },
+    { "qid": "Q18128250", "name": "Dyego Sousa", "birth": "1989-09-14", "others": ["PT"] },
+    { "qid": "Q183210", "name": "Brandão", "birth": "1980-06-16", "others": ["FR"] },
+    {
+      "qid": "Q18637649",
+      "name": "Fábio Virginio de Lima",
+      "birth": "1993-06-30",
+      "others": ["AE"]
+    },
+    { "qid": "Q18706446", "name": "Ozu Moreira", "birth": "1986-01-21", "others": ["JP"] },
+    { "qid": "Q18759001", "name": "Ana Carolina Cannone", "birth": "1995-02-21", "others": ["IT"] },
+    { "qid": "Q18812018", "name": "Rafael Paulo Glaeser", "birth": "1982-10-21", "others": ["IT"] },
+    { "qid": "Q18921427", "name": "Fellipe Bertoldo", "birth": "1991-01-05", "others": ["TL"] },
+    { "qid": "Q191885", "name": "Thiago Motta", "birth": "1982-08-28", "others": ["IT"] },
+    {
+      "qid": "Q1957458",
+      "name": "Edmilson Junior Paulo da Silva",
+      "birth": "1994-08-19",
+      "others": ["BE", "QA"]
+    },
+    { "qid": "Q19772570", "name": "Diogo Kachuba", "birth": "1990-02-16", "others": ["BO"] },
+    { "qid": "Q19803470", "name": "Suzane Pires", "birth": "1992-08-17", "others": ["PT"] },
+    { "qid": "Q19957238", "name": "Daniel Miller", "birth": "1995-04-19", "others": ["IL"] },
+    { "qid": "Q20047629", "name": "Rodrigo Pinho", "birth": "1991-05-30", "others": ["DE"] },
+    { "qid": "Q20171396", "name": "Felipe Carvalho", "birth": "1993-09-18", "others": ["UY"] },
+    {
+      "qid": "Q202592",
+      "name": "Overath Breitner da Silva Medina",
+      "birth": "1989-09-09",
+      "others": ["VE"]
+    },
+    { "qid": "Q2058502", "name": "Maurício Alves", "birth": "1990-01-02", "others": ["IT"] },
+    {
+      "qid": "Q2065799",
+      "name": "Carlos Esteban Frontini",
+      "birth": "1981-08-19",
+      "others": ["AR"]
+    },
+    { "qid": "Q2073162", "name": "Marcos Pizzelli", "birth": "1984-10-03", "others": ["AM"] },
+    { "qid": "Q20740845", "name": "Fernando Boldrin", "birth": "1989-02-23", "others": ["PT"] },
+    { "qid": "Q21000949", "name": "Felipe Dorta", "birth": "1996-06-17", "others": ["AT"] },
+    {
+      "qid": "Q21020124",
+      "name": "Leonardo César Jardim",
+      "birth": "1995-03-20",
+      "others": ["IT"]
+    },
+    { "qid": "Q210453", "name": "Thiago Silva", "birth": "1984-09-22", "others": ["FR"] },
+    { "qid": "Q210950", "name": "Luisão", "birth": "1981-02-13", "others": ["PT"] },
+    { "qid": "Q215040", "name": "Maxwell", "birth": "1981-08-27", "others": ["NL"] },
+    { "qid": "Q21518688", "name": "Carlos", "birth": "1996-12-29", "others": ["PY"] },
+    {
+      "qid": "Q2151930",
+      "name": "Wellington Rocha dos Santos",
+      "birth": "1990-10-04",
+      "others": ["TL"]
+    },
+    {
+      "qid": "Q2165393",
+      "name": "Romário Pereira Sipião",
+      "birth": "1985-08-10",
+      "others": ["SE"]
+    },
+    { "qid": "Q219298", "name": "Ai Kesen", "birth": "1989-07-13", "others": ["CN"] },
+    { "qid": "Q2193752", "name": "Danilo Sousa Campos", "birth": "1990-01-13", "others": ["BE"] },
+    { "qid": "Q220593", "name": "Lucas Leiva", "birth": "1987-01-09", "others": ["IT"] },
+    { "qid": "Q228616", "name": "Marta Vieira da Silva", "birth": "1986-02-19", "others": ["SE"] },
+    {
+      "qid": "Q2301511",
+      "name": "Michel Macedo Rocha Machado",
+      "birth": "1990-02-15",
+      "others": ["ES"]
+    },
+    { "qid": "Q2316179", "name": "Fábio Santos", "birth": "1985-09-16", "others": ["PT"] },
+    {
+      "qid": "Q23771470",
+      "name": "Cláudio Luiz Rodrigues Parisi",
+      "birth": "1997-01-28",
+      "others": ["RU"]
+    },
+    { "qid": "Q2394997", "name": "Ricardo Baiano", "birth": "1980-09-13", "others": ["BA"] },
+    { "qid": "Q2444565", "name": "Mário Fernandes", "birth": "1990-09-19", "others": ["RU"] },
+    { "qid": "Q245852", "name": "Rodrigo Tabata", "birth": "1980-11-19", "others": ["QA"] },
+    {
+      "qid": "Q2468436",
+      "name": "Rômulo Souza Orestes Caldeira",
+      "birth": "1987-05-22",
+      "others": ["IT"]
+    },
+    {
+      "qid": "Q2529972",
+      "name": "Aluísio Chaves Ribeiro Moraes Júnior",
+      "birth": "1987-04-04",
+      "others": ["UA"]
+    },
+    { "qid": "Q2626107", "name": "João Pedro Galvão", "birth": "1992-03-09", "others": ["IT"] },
+    {
+      "qid": "Q2626579",
+      "name": "Marcos Magno Morales Tavares",
+      "birth": "1984-03-30",
+      "others": ["SI"]
+    },
+    { "qid": "Q2752693", "name": "Renan Bardini Bressan", "birth": "1988-11-03", "others": ["BY"] },
+    { "qid": "Q27778631", "name": "Emily Lima", "birth": "1980-09-29", "others": ["PT"] },
+    { "qid": "Q27795", "name": "Magno Macedo Novaes", "birth": "1983-03-30", "others": ["FR"] },
+    { "qid": "Q27852", "name": "Ilan", "birth": "1980-09-18", "others": ["IT"] },
+    {
+      "qid": "Q27881412",
+      "name": "Rafaelson Bezerra Fernandes",
+      "birth": "1997-03-30",
+      "others": ["VN"]
+    },
+    { "qid": "Q28063863", "name": "Alexandre Matão", "birth": "1986-03-26", "others": ["BH"] },
+    {
+      "qid": "Q28131394",
+      "name": "Luiz Felipe Ramos Marchi",
+      "birth": "1997-03-22",
+      "others": ["IT"]
+    },
+    { "qid": "Q28606367", "name": "Endrick Parafita", "birth": "1995-03-07", "others": ["MY"] },
+    {
+      "qid": "Q28699492",
+      "name": "Francisco Hyun-sol Kim",
+      "birth": "1991-05-16",
+      "others": ["KR", "PY"]
+    },
+    { "qid": "Q28973866", "name": "Vinícius Júnior", "birth": "2000-07-12", "others": ["ES"] },
+    { "qid": "Q298172", "name": "Roger Guerreiro", "birth": "1982-05-25", "others": ["PL"] },
+    { "qid": "Q3072407", "name": "Michel Souza da Silva", "birth": "1986-08-22", "others": ["PT"] },
+    {
+      "qid": "Q3087194",
+      "name": "Frederico Augusto Pieruccini Moojen",
+      "birth": "1983-02-25",
+      "others": ["CA"]
+    },
+    {
+      "qid": "Q30947806",
+      "name": "Hamilton De Souza Junior",
+      "birth": "1990-10-26",
+      "others": ["PT"]
+    },
+    { "qid": "Q310598", "name": "Marcus Túlio Tanaka", "birth": "1981-04-24", "others": ["JP"] },
+    { "qid": "Q310697", "name": "Michel Bastos", "birth": "1983-08-02", "others": ["FR"] },
+    {
+      "qid": "Q311872",
+      "name": "Philippe Coutinho",
+      "birth": "1992-06-12",
+      "others": ["ES", "PT"]
+    },
+    { "qid": "Q313082", "name": "Diego Alves", "birth": "1985-06-24", "others": ["IT"] },
+    {
+      "qid": "Q313741",
+      "name": "Andrés D'Alessandro",
+      "birth": "1981-04-15",
+      "others": ["AR", "IT"]
+    },
+    { "qid": "Q316836", "name": "Nenê", "birth": "1981-07-19", "others": ["ES"] },
+    { "qid": "Q31760", "name": "Jussiê", "birth": "1983-09-19", "others": ["FR"] },
+    {
+      "qid": "Q322691",
+      "name": "Rodrigo Pereira Possebon",
+      "birth": "1989-02-13",
+      "others": ["IT"]
+    },
+    { "qid": "Q326387", "name": "Léo Baptistão", "birth": "1992-08-26", "others": ["ES"] },
+    { "qid": "Q326476", "name": "Jonas", "birth": "1984-04-01", "others": ["IT"] },
+    { "qid": "Q3301259", "name": "Luis Gustavo Ledes", "birth": "1992-09-28", "others": ["PT"] },
+    { "qid": "Q3302219", "name": "André Neitzke", "birth": "1986-11-24", "others": ["IT"] },
+    {
+      "qid": "Q3445830",
+      "name": "Marcelo Nascimento da Costa",
+      "birth": "1984-08-24",
+      "others": ["BG"]
+    },
+    { "qid": "Q359160", "name": "Jadson", "birth": "1983-10-05", "others": ["IT"] },
+    { "qid": "Q3610202", "name": "Alessandro Patias", "birth": "1985-07-08", "others": ["IT"] },
+    { "qid": "Q3610695", "name": "Alex Merlim", "birth": "1986-07-15", "others": ["IT"] },
+    { "qid": "Q3612926", "name": "Aloísio", "birth": "1988-06-10", "others": ["CN"] },
+    { "qid": "Q3707157", "name": "Diego Cavinato", "birth": "1985-05-06", "others": ["IT"] },
+    { "qid": "Q3756488", "name": "Gabriel Miraglia", "birth": "1987-07-02", "others": ["IT"] },
+    { "qid": "Q375830", "name": "Adrianinho", "birth": "1980-07-11", "others": ["AT"] },
+    { "qid": "Q3759324", "name": "Gelson Junior Saiotti", "birth": "1987-02-15", "others": ["IT"] },
+    { "qid": "Q376394", "name": "Rodrigo Moreno Machado", "birth": "1991-03-06", "others": ["ES"] },
+    { "qid": "Q3810078", "name": "Jorginho", "birth": "1991-12-20", "others": ["IT"] },
+    { "qid": "Q3811817", "name": "Júnior Morais", "birth": "1986-07-22", "others": ["RO"] },
+    {
+      "qid": "Q38136",
+      "name": "Marcelo Vieira da Silva Júnior",
+      "birth": "1988-05-12",
+      "others": ["ES"]
+    },
+    {
+      "qid": "Q3840504",
+      "name": "Luiz Martin Carlos Júnior",
+      "birth": "1989-01-13",
+      "others": ["QA"]
+    },
+    { "qid": "Q3887042", "name": "Otávio", "birth": "1995-02-09", "others": ["PT"] },
+    { "qid": "Q39230", "name": "Marquinhos", "birth": "1994-05-14", "others": ["PT"] },
+    { "qid": "Q3928977", "name": "Rafael Tolói", "birth": "1990-10-10", "others": ["IT"] },
+    { "qid": "Q3934132", "name": "Rhodolfo", "birth": "1986-08-11", "others": ["IT"] },
+    { "qid": "Q3939949", "name": "Rodolfo Fortino", "birth": "1983-04-30", "others": ["IT"] },
+    { "qid": "Q39444", "name": "Ronaldinho Gaúcho", "birth": "1980-03-21", "others": ["ES"] },
+    {
+      "qid": "Q3962034",
+      "name": "Cirilo Tadeus Cardoso Filho",
+      "birth": "1980-01-20",
+      "others": ["RU"]
+    },
+    { "qid": "Q4060619", "name": "Huỳnh Kesley Alves", "birth": "1981-12-23", "others": ["VN"] },
+    { "qid": "Q42728914", "name": "Rodrygo", "birth": "2001-01-09", "others": ["ES"] },
+    {
+      "qid": "Q4283807",
+      "name": "Fernando Maciel Gonçalves",
+      "birth": "1980-08-16",
+      "others": ["ES"]
+    },
+    {
+      "qid": "Q436821",
+      "name": "Cássio José de Abreu Oliveira",
+      "birth": "1980-01-08",
+      "others": ["AU"]
+    },
+    {
+      "qid": "Q4502177",
+      "name": "Natanael de Souza Santos Junior",
+      "birth": "1985-12-25",
+      "others": ["KR"]
+    },
+    { "qid": "Q45023307", "name": "Paulo Josué", "birth": "1989-03-13", "others": ["MY"] },
+    { "qid": "Q455611", "name": "Rafael Alcântara", "birth": "1993-02-12", "others": ["ES"] },
+    { "qid": "Q459707", "name": "Diego Costa", "birth": "1988-10-07", "others": ["ES"] },
+    { "qid": "Q461279", "name": "Leah Fortune", "birth": "1990-12-13", "others": ["US"] },
+    {
+      "qid": "Q461505",
+      "name": "Ederson Honorato Campos",
+      "birth": "1986-01-13",
+      "others": ["IT"]
+    },
+    {
+      "qid": "Q4716351",
+      "name": "Alessandro Ferreira Leonardo",
+      "birth": "1987-03-10",
+      "others": ["CN"]
+    },
+    { "qid": "Q485697", "name": "Pepe", "birth": "1984-02-26", "others": ["PT"] },
+    {
+      "qid": "Q485991",
+      "name": "Anselmo Vendrechovski Júnior",
+      "birth": "1982-09-16",
+      "others": ["PL"]
+    },
+    { "qid": "Q486208", "name": "Almir Lopes de Luna", "birth": "1982-05-20", "others": ["KR"] },
+    {
+      "qid": "Q495136",
+      "name": "Bérgson Gustavo Silveira da Silva",
+      "birth": "1991-02-09",
+      "others": ["KR"]
+    },
+    { "qid": "Q495316", "name": "Vágner Luiz da Silva", "birth": "1981-09-13", "others": ["KR"] },
+    { "qid": "Q495841", "name": "Vinícius Lopes", "birth": "1988-01-29", "others": ["KR"] },
+    { "qid": "Q498524", "name": "Danilo Neco", "birth": "1986-01-27", "others": ["KR"] },
+    { "qid": "Q5218074", "name": "Daniel Matsunaga", "birth": "1988-11-28", "others": ["PH"] },
+    { "qid": "Q5274662", "name": "Diego Ferraresso", "birth": "1992-05-21", "others": ["BG"] },
+    {
+      "qid": "Q5274681",
+      "name": "Diego da Silva Giaretta",
+      "birth": "1983-11-27",
+      "others": ["KR"]
+    },
+    { "qid": "Q5274756", "name": "Diego Oliveira", "birth": "1990-06-22", "others": ["KR"] },
+    { "qid": "Q531814", "name": "Kaká", "birth": "1982-04-22", "others": ["IT"] },
+    { "qid": "Q5340762", "name": "Eduardo Sasha", "birth": "1992-02-24", "others": ["IT"] },
+    { "qid": "Q5370912", "name": "Emerson Palmieri", "birth": "1994-08-03", "others": ["IT"] },
+    { "qid": "Q539080", "name": "Edmar Aparecida", "birth": "1980-06-16", "others": ["UA"] },
+    {
+      "qid": "Q548234",
+      "name": "Sidney Cristiano dos Santos",
+      "birth": "1981-05-20",
+      "others": ["TR"]
+    },
+    { "qid": "Q5530231", "name": "Geison Moura", "birth": "1986-07-16", "others": ["MY"] },
+    { "qid": "Q5561536", "name": "Mauricio Viana", "birth": "1987-06-14", "others": ["CL"] },
+    { "qid": "Q5561536", "name": "Mauricio Viana", "birth": "1989-06-14", "others": ["CL"] },
+    {
+      "qid": "Q5615957",
+      "name": "Guilherme Capra Bacinello",
+      "birth": "1986-10-03",
+      "others": ["PT"]
+    },
+    { "qid": "Q56280687", "name": "Yago César", "birth": "1997-05-26", "others": ["MX"] },
+    { "qid": "Q57148", "name": "Cacau", "birth": "1981-03-27", "others": ["DE"] },
+    {
+      "qid": "Q577979",
+      "name": "Silvino João de Carvalho",
+      "birth": "1981-05-20",
+      "others": ["TR"]
+    },
+    { "qid": "Q581330", "name": "Humberto Honorio", "birth": "1983-07-21", "others": ["IT"] },
+    { "qid": "Q58323172", "name": "Bruno Guimarães", "birth": "1997-11-16", "others": ["ES"] },
+    {
+      "qid": "Q59255",
+      "name": "Sandro Ranieri Guimarães Cordeiro",
+      "birth": "1989-03-15",
+      "others": ["PT"]
+    },
+    {
+      "qid": "Q5934188",
+      "name": "Hugo Maximiliano Soria Sánchez",
+      "birth": "1990-02-16",
+      "others": ["UY"]
+    },
+    {
+      "qid": "Q5964203",
+      "name": "Hélio José de Souza Gonçalves",
+      "birth": "1986-01-31",
+      "others": ["CN"]
+    },
+    { "qid": "Q59649459", "name": "Lucas Beltrán", "birth": "2001-03-29", "others": ["IT"] },
+    { "qid": "Q602311", "name": "Lucas Michel Mendes", "birth": "1990-07-03", "others": ["QA"] },
+    { "qid": "Q60452465", "name": "Catarina Macario", "birth": "1999-10-04", "others": ["US"] },
+    {
+      "qid": "Q60603",
+      "name": "Thiago Xavier Rodrigues Corrêa",
+      "birth": "1983-12-27",
+      "others": ["FR"]
+    },
+    { "qid": "Q60735648", "name": "André Anderson", "birth": "1999-09-23", "others": ["IT"] },
+    { "qid": "Q607752", "name": "Gökçek Vederson", "birth": "1981-07-22", "others": ["TR"] },
+    {
+      "qid": "Q6173158",
+      "name": "Jeferson Paulo Rodrigues de Souza",
+      "birth": "1981-12-14",
+      "others": ["TG"]
+    },
+    {
+      "qid": "Q62198",
+      "name": "Amauri Carvalho de Oliveira",
+      "birth": "1980-06-03",
+      "others": ["IT"]
+    },
+    { "qid": "Q625816", "name": "Luís Carlos Fernandes", "birth": "1985-07-25", "others": ["KR"] },
+    { "qid": "Q64167371", "name": "Fernando Costanza", "birth": "1998-11-29", "others": ["IT"] },
+    { "qid": "Q644235", "name": "Wellington Silva", "birth": "1993-01-06", "others": ["ES"] },
+    { "qid": "Q6525974", "name": "Leonardo Drugovich", "birth": "1989-04-21", "others": ["PY"] },
+    { "qid": "Q65260797", "name": "João Figueiredo", "birth": "1996-05-27", "others": ["MY"] },
+    {
+      "qid": "Q654041",
+      "name": "Ariclenes da Silva Ferreira",
+      "birth": "1985-12-11",
+      "others": ["RU"]
+    },
+    {
+      "qid": "Q65548476",
+      "name": "Felipe Silva Correa dos Santos",
+      "birth": "1997-01-03",
+      "others": ["BJ"]
+    },
+    { "qid": "Q65718498", "name": "Maurício", "birth": "2001-06-22", "others": ["PY"] },
+    { "qid": "Q660159", "name": "Evandro", "birth": "1986-08-23", "others": ["RS"] },
+    {
+      "qid": "Q66309094",
+      "name": "Erik Jorgens de Menezes",
+      "birth": "2001-02-18",
+      "others": ["AE"]
+    },
+    {
+      "qid": "Q66724763",
+      "name": "Eduardo Dos Santos Haesler",
+      "birth": "1999-02-10",
+      "others": ["DE"]
+    },
+    {
+      "qid": "Q6696890",
+      "name": "Luciano Valente de Deus",
+      "birth": "1981-06-12",
+      "others": ["KR"]
+    },
+    {
+      "qid": "Q673450",
+      "name": "Douglas Franco Teixeira",
+      "birth": "1988-01-12",
+      "others": ["NL"]
+    },
+    { "qid": "Q677923", "name": "Fábio", "birth": "1980-09-30", "others": ["IT"] },
+    { "qid": "Q681938", "name": "Marlos", "birth": "1988-06-07", "others": ["UA"] },
+    { "qid": "Q687140", "name": "Leonardo Bittencourt", "birth": "1993-12-19", "others": ["DE"] },
+    { "qid": "Q7001581", "name": "Daniel Giasson", "birth": "1987-08-24", "others": ["IT"] },
+    { "qid": "Q703407", "name": "Fabiano Santacroce", "birth": "1986-08-24", "others": ["IT"] },
+    { "qid": "Q7126026", "name": "Pakorn Prempak", "birth": "1993-02-02", "others": ["TH"] },
+    { "qid": "Q7155323", "name": "Paulo Victor", "birth": "1987-01-12", "others": ["IT"] },
+    { "qid": "Q721239", "name": "Rafael Schmitz", "birth": "1980-12-17", "others": ["FR"] },
+    { "qid": "Q72219351", "name": "Johnny Cardoso", "birth": "2001-09-20", "others": ["IT", "US"] },
+    { "qid": "Q727531", "name": "Mert Nobre", "birth": "1980-11-06", "others": ["TR"] },
+    { "qid": "Q728014", "name": "Vampeta", "birth": "1984-07-18", "others": ["IT"] },
+    { "qid": "Q7322659", "name": "Ricardo Goulart", "birth": "1991-06-05", "others": ["CN"] },
+    {
+      "qid": "Q7323703",
+      "name": "Richard Almeida de Oliveira",
+      "birth": "1989-03-20",
+      "others": ["AZ"]
+    },
+    { "qid": "Q733212", "name": "Michel Garbini Pereira", "birth": "1981-06-09", "others": ["IT"] },
+    { "qid": "Q7420226", "name": "Santiago Biglieri", "birth": "1986-02-11", "others": ["AR"] },
+    { "qid": "Q766251", "name": "Marcos Ferreira Xavier", "birth": "1982-02-18", "others": ["AZ"] },
+    { "qid": "Q770796", "name": "Adryan", "birth": "1994-08-10", "others": ["PT"] },
+    { "qid": "Q78027448", "name": "Gláuber", "birth": "2000-05-22", "others": ["AE"] },
+    { "qid": "Q785320", "name": "Edivaldo Rojas Hermoza", "birth": "1985-11-17", "others": ["BO"] },
+    { "qid": "Q8172513", "name": "Ivanildo Rodrigues", "birth": "1988-02-12", "others": ["QA"] },
+    { "qid": "Q83880808", "name": "Camilo Reijers", "birth": "1999-02-23", "others": ["NL"] },
+    { "qid": "Q84175046", "name": "Leandro Spadacio", "birth": "2000-02-17", "others": ["AE"] },
+    { "qid": "Q9028594", "name": "Marcelo Messias", "birth": "1981-11-09", "others": ["SV"] },
+    { "qid": "Q905206", "name": "Diego Tardelli", "birth": "1985-05-10", "others": ["IT"] },
+    {
+      "qid": "Q91213689",
+      "name": "Giovana Quieroz Costa",
+      "birth": "2003-06-21",
+      "others": ["ES"]
+    },
+    {
+      "qid": "Q923774",
+      "name": "Matheus Leite Nascimento",
+      "birth": "1983-01-15",
+      "others": ["PT"]
+    },
+    { "qid": "Q924825", "name": "Marcos González", "birth": "1980-06-09", "others": ["CL"] },
+    { "qid": "Q925802", "name": "Leandro de Almeida", "birth": "1982-03-19", "others": ["HU"] },
+    {
+      "qid": "Q931784",
+      "name": "Emmanuel Danilo Clementino Silva",
+      "birth": "1982-03-05",
+      "others": ["GQ"]
+    },
+    { "qid": "Q932851", "name": "Matías Aguirregaray", "birth": "1989-04-01", "others": ["UY"] },
+    {
+      "qid": "Q935459",
+      "name": "João Natailton Ramos dos Santos",
+      "birth": "1988-12-25",
+      "others": ["RU"]
+    },
+    { "qid": "Q96083275", "name": "Natascha Honegger", "birth": "1997-09-27", "others": ["CH"] },
+    { "qid": "Q96211488", "name": "Matheus Nunes", "birth": "1998-08-27", "others": ["PT"] },
+    {
+      "qid": "Q969808",
+      "name": "Maicon Marques Bitencourt",
+      "birth": "1990-02-18",
+      "others": ["PT"]
+    },
+    {
+      "qid": "Q969901",
+      "name": "Guilherme Alvim Marinato",
+      "birth": "1985-12-12",
+      "others": ["RU"]
+    },
+    { "qid": "Q971732", "name": "Danilo Fernando Avelar", "birth": "1989-06-09", "others": ["IT"] },
+    { "qid": "Q97361004", "name": "Flamarion", "birth": "1996-07-30", "others": ["GE"] },
+    {
+      "qid": "Q97750573",
+      "name": "Angelina Alonso Constantino",
+      "birth": "2000-01-26",
+      "others": ["US"]
+    },
+    {
+      "qid": "Q98085696",
+      "name": "Katielle Caunana Ribeiro Aquilera",
+      "birth": "1997-02-23",
+      "others": ["PY"]
+    },
+    { "qid": "Q988410", "name": "Itaparica", "birth": "1980-07-08", "others": ["CN"] },
+    { "qid": "Q99293427", "name": "André Becker", "birth": "1996-07-26", "others": ["DE"] },
+    { "qid": "Q99614996", "name": "Gustavo Mantuan", "birth": "2001-06-20", "others": ["IT"] }
+  ]
+}
