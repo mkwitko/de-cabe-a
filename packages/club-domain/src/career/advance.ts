@@ -62,7 +62,14 @@ import { postOwners, postPrize } from './finance';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
 import { tierOfClub } from '../market/books';
-import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
+import {
+  boardAfterMatch,
+  boardAfterSeason,
+  freshBoard,
+  goalFor,
+  positionOf,
+  type Board,
+} from './board';
 import { bestLineup, foreignLimit, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
@@ -99,6 +106,8 @@ export interface CareerWorld {
   moves?: Moves;
   /** The board's goal and confidence; absent before the person's first match (board.ts). */
   board?: Board;
+  /** Season the person took the job (the outgoing directors' man, when since then; clubs.ts). */
+  hired?: number;
   /** What happened, newest last (inbox.ts). */
   inbox?: Note[];
   /** Fees each club paid and received this season (market/books.ts). */
@@ -318,6 +327,7 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
     seed,
     ...start,
     day: 0,
+    hired: start.season.season,
     ...clubLevels(pack, start.season.season),
   };
   note(w, { day: 0, kind: 'welcome' });
@@ -494,9 +504,17 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
       last: [...(judged.last ?? []), { kind: 'fairplay', value: verdict.board }],
     };
   // Every other club's accounts for the season, with the squads it was played with.
+  const placed = new Map<string, { position: number; places: number }>();
   const placeOf = (id: string) => {
-    const rows = divisionTableOf(w, id).rows;
-    return { position: rows.findIndex((r) => r.clubId === id) + 1, places: rows.length };
+    let at = placed.get(id);
+    if (!at) {
+      const rows = divisionTableOf(w, id).rows;
+      placed.set(
+        id,
+        (at = { position: rows.findIndex((r) => r.clubId === id) + 1, places: rows.length }),
+      );
+    }
+    return at;
   };
   settleSeason(w, placeOf);
   // Loans end with the season: everyone goes back before the contracts are looked at.
@@ -579,7 +597,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   w.pack = yearOn(w.pack, w.origin, w.seed, log);
   // Works finished, directors elected, the money to spare split (clubs.ts); the pack then
   // carries the structure as it now stands.
-  planSeason(w, new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)));
+  const vote = planSeason(
+    w,
+    new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)),
+    { placed: (id) => placed.get(id), board: judged },
+  );
   w.pack = withClubs(w.pack, w.clubs, w.origin);
   // The moves in force stay (each player's club and contract); those of players gone do not.
   const alive = new Set(w.pack.players.map((p) => p.id));
@@ -618,6 +640,9 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (w.lineup?.xi.some((id) => !here.has(id))) delete w.lineup;
   // The goal is set again for the table the club is now in.
   w.board = { ...judged, goal: goalFor(w) };
+  // A new president: the board's confidence starts over, or he brings his own coach.
+  if (vote === 'fresh') w.board = freshBoard(w);
+  if (vote === 'fired') w.board = { ...freshBoard(w), fired: true };
   // Every club's market season starts again; open talks and bids do not cross the year.
   delete w.books;
   delete w.talks;

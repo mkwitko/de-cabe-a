@@ -115,8 +115,11 @@ describe('clubs as institutions (04 §4.7)', () => {
     )!;
     const every = w.pack.governance.find((g) => g.clubId === voter)!.electionEverySeasons ?? 3;
     clubsOf(w)[voter]!.directors.since = w.season.season - every;
-    planSeason(w, new Set());
-    expect(w.inbox?.some((n) => n.kind === 'directors' && n.club === voter)).toBe(true);
+    // A last place at the table: the opposition wins whatever the draw.
+    planSeason(w, new Set(), {
+      placed: (id) => (id === voter ? { position: 20, places: 20 } : undefined),
+    });
+    expect(w.inbox?.some((n) => n.kind === 'election' && n.club === voter)).toBe(true);
     expect(clubsOf(w)[voter]!.directors.since).toBe(w.season.season);
   });
 

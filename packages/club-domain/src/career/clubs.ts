@@ -76,6 +76,51 @@ const MIN_SEATS = 2_000;
 const DEBT_SEASONS = 5;
 /** An association elects its board this often when the pack does not say. */
 const ELECTION_EVERY = 3;
+/**
+ * Election politics. Brazilian association clubs elect the president through the conselho
+ * deliberativo or a member vote, for a fixed term (3 years at Palmeiras since the statute change,
+ * Sport and Ceara alike; Flamengo debated 3 vs 4), held in Nov/Dec at the season's turn. A new
+ * president often brings his own football director and coach, and an election year brings
+ * short-term spending and impatience. Sources: tribunapr.com.br "conselho do palmeiras aprova
+ * ampliacao do mandato presidencial para 3 anos"; lance.com.br "Eleicoes Fluminense: guia
+ * completo"; folhape.com.br "Eleicoes no Sport". Every number is a PARAMETRO, not calibrated.
+ */
+/** Extra money the directors put in the squad in an election year, % of a season's income. */
+const ELECTION_SPEND = 50;
+/** Support for the incumbent before the table, the cash and the draw count, 0..100. */
+const VOTE_START = 50;
+/** Swing of the final table: top of it adds up to this, the bottom takes it, scaled by the fans. */
+const VOTE_TABLE = 40;
+/** The person's goal met adds this to the incumbent's support, missed takes it. */
+const VOTE_GOAL = 10;
+const VOTE_BROKE = 15;
+const VOTE_RELEGATED = 20;
+/** The draw: the voters' mood on the day, plus or minus 20. */
+const VOTE_NOISE = 41;
+/** Below this support the opposition wins. */
+const VOTE_LINE = 45;
+/** Chance (%) a new president brings his own coach; plus when the coach is the outgoing board's man; goal. */
+const COACH_OWN = 15;
+const COACH_HIS_MAN = 25;
+const COACH_MISSED = 20;
+const COACH_MET = -10;
+
+/** Whether the season being played ends in a vote of the club's board (association clubs). */
+export function electionYear(w: CareerWorld, clubId: string, season = w.season.season): boolean {
+  const gov = w.pack.governance.find((g) => g.clubId === clubId);
+  const every = gov?.electionEverySeasons ?? (gov?.model === 'association' ? ELECTION_EVERY : 0);
+  const s = clubsOf(w)[clubId];
+  return every > 0 && !!s && (season + 1 - s.directors.since) % every === 0;
+}
+
+/** What the turn gives the vote: each club's final place and the person's board goal. */
+export interface VoteContext {
+  placed?: (id: string) => { position: number; places: number } | undefined;
+  board?: { goal: number };
+}
+/** The person's own club after the vote: kept, the board starts over, or the new president sacks him. */
+export type Vote = 'reelected' | 'fresh' | 'fired';
+
 /** One season in this many a club owned by a company is sold. */
 const SALE_ODDS = 12;
 /** Seasons in the red after which the structure starts to fall apart for want of upkeep. */
@@ -302,7 +347,12 @@ function chooseFronts(
  * or a sale comes, and the money to spare split between structure and squad. The person's club
  * keeps its directors here but its money in the ledger (finance.ts): it builds nothing alone.
  */
-export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void {
+export function planSeason(
+  w: CareerWorld,
+  relegated: ReadonlySet<string>,
+  ctx: VoteContext = {},
+): Vote | undefined {
+  let vote: Vote | undefined;
   const clubs = clubsOf(w);
   const season = w.season.season;
   const division = nationalDivisions(w.pack).find((d) =>
@@ -332,24 +382,67 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     const every = gov?.electionEverySeasons ?? (gov?.model === 'association' ? ELECTION_EVERY : 0);
     const turn = every > 0 ? (season - s.directors.since) % every === 0 : pick(r, SALE_ODDS) === 0;
     if (turn && season > s.directors.since) {
+      const broke = s.cash < 0;
+      const down = relegated.has(club.id);
+      let ousted = every === 0;
+      let out = false;
+      if (every > 0) {
+        // The vote: how the incumbents' term ended, against a draw (integers, from the seed).
+        const v = fork(rngFrom(w.seed), `vote:${season}:${club.id}`);
+        const at = ctx.placed?.(club.id);
+        const top = at && at.places > 1 ? ((at.places - at.position) * 100) / (at.places - 1) : 50;
+        let support =
+          VOTE_START +
+          Math.round(((top - 50) * VOTE_TABLE * (160 - club.fans.patience)) / (100 * 80)) -
+          (broke ? VOTE_BROKE : 0) -
+          (down ? VOTE_RELEGATED : 0) +
+          pick(v, VOTE_NOISE) -
+          20;
+        const goal = club.id === w.clubId ? ctx.board?.goal : undefined;
+        const met = goal !== undefined && at !== undefined && at.position <= goal;
+        if (goal !== undefined) support += met ? VOTE_GOAL : -VOTE_GOAL;
+        ousted = support < VOTE_LINE;
+        if (club.id === w.clubId) {
+          // The new president may want his own coach: likelier when this one is the outgoing
+          // board's man (hired in its term) and the results did not defend him.
+          const hisMan = (w.hired ?? -1) >= s.directors.since;
+          const risk = clamp(
+            COACH_OWN + (hisMan ? COACH_HIS_MAN : 0) + (met ? COACH_MET : COACH_MISSED),
+            0,
+            80,
+          );
+          out = ousted && pick(v, 100) < risk;
+          vote = !ousted ? 'reelected' : out ? 'fired' : 'fresh';
+        }
+      }
       // A relegated or broke club votes for whoever promises results now.
-      s.directors = drawDirectors(
-        w.pack,
-        club.id,
-        w.seed,
-        season,
-        relegated.has(club.id) || s.cash < 0 ? -15 : 0,
-      );
+      if (ousted)
+        s.directors = drawDirectors(w.pack, club.id, w.seed, season, down || broke ? -15 : 0);
       // The person hears of their own club's and their division's.
       if (club.id === w.clubId || near.has(club.id))
-        note(w, {
-          day: w.day,
-          kind: 'directors',
-          club: club.id,
-          why: every > 0 ? 'election' : 'sale',
-          horizon: s.directors.horizon,
-        });
+        note(
+          w,
+          every > 0
+            ? {
+                day: w.day,
+                kind: 'election',
+                club: club.id,
+                result: ousted ? 'opposition' : 'reelected',
+                horizon: s.directors.horizon,
+                ...(out && { coachOut: true as const }),
+              }
+            : {
+                day: w.day,
+                kind: 'directors',
+                club: club.id,
+                why: 'sale',
+                horizon: s.directors.horizon,
+              },
+        );
     }
+    // The vote is coming: the person hears of it as the season starts.
+    const political = electionYear(w, club.id, season);
+    if (political && club.id === w.clubId) note(w, { day: w.day, kind: 'electionYear' });
     renewSponsors(w, club.id, s);
     if (club.id === w.clubId) continue;
     // Money to spare after the reserve.
@@ -357,7 +450,9 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     const reserve = Math.round((income * RESERVE_MAX * s.directors.competence) / 10_000);
     const spare = s.cash - reserve;
     if (spare <= 0) continue;
-    let toStructure = Math.round((spare * STRUCTURE_SHARE[s.directors.horizon]) / 100);
+    // In an election year they look at the next vote only: little structure, more squad.
+    const horizon = political ? 'short' : s.directors.horizon;
+    let toStructure = Math.round((spare * STRUCTURE_SHARE[horizon]) / 100);
     let left = spare;
     for (const front of chooseFronts(w, club, s, r)) {
       const cost = workCost(w, club, front)!;
@@ -369,8 +464,12 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     }
     // The rest backs the squad: fees this season, a share of it as wages for the bold.
     // Never more than a season of income in one go: the rest waits in the bank.
-    s.kitty = Math.min(left, income);
+    s.kitty = Math.min(
+      left,
+      political ? Math.round((income * (100 + ELECTION_SPEND)) / 100) : income,
+    );
   }
+  return vote;
 }
 
 /**

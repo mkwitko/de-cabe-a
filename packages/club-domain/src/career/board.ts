@@ -8,7 +8,7 @@
 import { moodOf } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import { divisionTable, type CareerWorld } from './advance';
-import { clubsOf, type Horizon } from './clubs';
+import { clubsOf, electionYear, type Horizon } from './clubs';
 
 export type Odds = 'favourite' | 'even' | 'underdog';
 /** One line of why the confidence moved, for the screen: a fact and its points. */
@@ -67,7 +67,12 @@ const GOAL_SLACK: Record<Horizon, number> = { short: 1, medium: 2, long: 3 };
 /** Extra points a defeat costs with the board, by horizon: patience. */
 const LOSS_WEIGHT: Record<Horizon, number> = { short: -1, medium: 0, long: 1 };
 
-const horizonOf = (w: CareerWorld): Horizon => clubsOf(w)[w.clubId]?.directors.horizon ?? 'medium';
+/** In an election year the board looks at the vote only: short-sighted whatever its horizon. */
+const horizonOf = (w: CareerWorld): Horizon =>
+  electionYear(w, w.clubId) ? 'short' : (clubsOf(w)[w.clubId]?.directors.horizon ?? 'medium');
+
+/** A board that starts over under a new president: first confidence, this season's goal. */
+export const freshBoard = (w: CareerWorld): Board => ({ confidence: START, goal: goalFor(w) });
 
 /** The goal for the table the club is in, from its rank by squad strength and the directors. */
 export function goalFor(w: CareerWorld): number {

@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 43;
+export const CAREER_RULES_VERSION = 44;
 
 interface Saved {
   v: number;
@@ -40,6 +40,7 @@ interface Saved {
   /** The moves in force, packed (`packMoves`); a plain map in snapshots of older versions. */
   moves?: PackedMoves | Moves;
   board?: Board;
+  hired?: number;
   inbox?: Note[];
   books?: CareerWorld['books'];
   deals?: CareerWorld['deals'];
@@ -129,6 +130,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.training && { training: w.training }),
     ...(w.moves && { moves: packMoves(w.pack, w.moves) }),
     ...(w.board && { board: w.board }),
+    ...(w.hired !== undefined && { hired: w.hired }),
     ...(w.inbox && { inbox: w.inbox }),
     ...(w.books && { books: w.books }),
     ...(w.deals && { deals: w.deals }),
@@ -191,6 +193,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.training && { training: saved.training }),
     ...(saved.moves && { moves }),
     ...(saved.board && { board: saved.board }),
+    ...(saved.hired !== undefined && { hired: saved.hired }),
     ...(saved.inbox && { inbox: saved.inbox }),
     ...(saved.books && { books: saved.books }),
     ...(saved.deals && { deals: saved.deals }),

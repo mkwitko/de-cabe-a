@@ -47,6 +47,7 @@ export function takeJob(w: CareerWorld, clubId: string): void {
   if (!jobsAfter(w).includes(clubId)) throw new Error('job: not offered');
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
   w.clubId = clubId;
+  w.hired = w.season.season;
   // ponytail: the other clubs keep no ledger, so the new club's cash is the pack's opening
   // cash; its real cash when rivals have books (04 §4.1).
   w.ledger = createLedger(w.day, [

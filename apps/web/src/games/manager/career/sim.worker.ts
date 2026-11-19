@@ -87,6 +87,7 @@ import {
   strikesOf,
   costLimitOf,
   clubState,
+  electionYear,
   fameOf,
   type Fame,
   FRONTS,
@@ -214,6 +215,8 @@ export interface SimView {
     fame: Fame;
     /** Who runs the club: how far they look and how well they read it (clubs.ts). */
     directors: { horizon: 'short' | 'medium' | 'long'; competence: number };
+    /** The season being played ends in a vote of the club's board. */
+    election: boolean;
     position: number;
     ultimatum: { matches: number; points: number } | null;
     last: BoardReason[];
@@ -906,7 +909,8 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'hired' ||
                   n.kind === 'agentOffer' ||
                   n.kind === 'fairplayRival' ||
-                  n.kind === 'directors'
+                  n.kind === 'directors' ||
+                  n.kind === 'election'
                 ? n.club
                 : n.kind === 'season'
                   ? n.champion
@@ -937,6 +941,7 @@ function view(w: CareerWorld, ms: number): SimView {
       directors: (({ horizon, competence }) => ({ horizon, competence }))(
         clubState(w, w.clubId).directors,
       ),
+      election: electionYear(w, w.clubId),
       position: positionOf(w),
       ultimatum: boardOf(w).ultimatum ?? null,
       last: boardOf(w).last ?? [],

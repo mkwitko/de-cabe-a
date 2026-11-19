@@ -579,8 +579,10 @@ for (const width of [360, 1280]) {
     await take.first().click();
     await toMatch(page);
     await expect(page.getByText(/Você assumiu o /)).toBeVisible();
-    const now = await page.locator('tbody tr.text-club-gold td').nth(1).innerText();
-    expect(now).not.toBe(old);
+    // The table follows the new club once the worker's next view lands: wait for it.
+    const mine = page.locator('tbody tr.text-club-gold td').nth(1);
+    await expect(mine).not.toHaveText(old);
+    const now = await mine.innerText();
     // The new job is in the save: a reload opens the career at the new club.
     await page.reload();
     await toMatch(page);
