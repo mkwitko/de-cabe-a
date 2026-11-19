@@ -32,6 +32,8 @@ export { matchInputFor, outcomeOf } from './match/fixture-input';
 export * from './finance/ledger';
 export * from './career/start';
 export * from './career/advance';
+export { signingEffect, type SigningEffect } from './career/preview';
+export { matchReport, type FactKind, type ReportFact } from './career/report';
 export { clubStrength, quickResult } from './match/quick';
 export * from './career/save';
 export * from './career/squad';

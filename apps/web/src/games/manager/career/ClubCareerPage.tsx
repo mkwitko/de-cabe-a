@@ -881,6 +881,23 @@ function Form({ sim }: { sim: SimView }) {
           ))}
         </ol>
       )}
+      {sim.last && sim.last.why.length > 0 && (
+        <div className="flex flex-col gap-2 border-t border-chalk/10 pt-3">
+          <h4 className={LABEL}>{t('career.why')}</h4>
+          <ol className="flex flex-col gap-1.5">
+            {sim.last.why.map((f) => (
+              <li key={f.kind} className="flex items-start gap-2 text-sm">
+                <span
+                  className={`mt-0.5 shrink-0 rounded px-1.5 text-xs font-bold uppercase ${f.side > 0 ? 'bg-club-gold/20 text-club-gold' : 'bg-club-danger/20 text-club-danger'}`}
+                >
+                  {t('career.whySide', { s: f.side > 0 ? 'for' : 'against' })}
+                </span>
+                <span>{t('career.whyFact', { k: f.kind, n: f.n })}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
       {sim.last && (
         <p className="sr-only" aria-live="polite">
           {t('career.lastResult', {

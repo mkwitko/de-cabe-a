@@ -88,8 +88,65 @@ function Head({ p, club }: { p: MarketPlayer; club?: boolean }) {
   );
 }
 
+/** The consequences of the terms on the table: cash, wage bill and room, and the best eleven. */
+function Preview({
+  talk,
+  wage,
+  books,
+}: {
+  talk: MarketView['talks'][number];
+  wage: number;
+  books: Pick<MarketView, 'cash' | 'bill' | 'wageRoom'>;
+}) {
+  const renew = talk.kind === 'renew';
+  const delta = wage - (renew ? talk.player.wage : 0);
+  const room = books.wageRoom - delta;
+  const sign = (v: number) => (v > 0 ? '+' : v < 0 ? '-' : '') + money(Math.abs(v));
+  const e = talk.effect;
+  return (
+    <div className="flex flex-col gap-1 rounded-lg bg-chalk/5 p-3 text-sm tabular-nums">
+      <h4 className={LABEL}>{t('market.previewTitle')}</h4>
+      <p>
+        {t('market.previewCash', {
+          after: money(books.cash - (talk.fee ?? 0)),
+          now: money(books.cash),
+        })}
+      </p>
+      <p>
+        {t('market.previewBill', {
+          after: money(books.bill + delta),
+          delta: sign(delta),
+          now: money(books.bill),
+        })}
+      </p>
+      <p className={room < 0 ? 'font-semibold text-club-danger' : ''}>
+        {room < 0
+          ? t('market.previewOver', { over: money(-room) })
+          : t('market.previewRoom', { room: money(room) })}
+      </p>
+      <p>
+        {renew || !e
+          ? t('market.previewRenew')
+          : e.enters
+            ? t('market.previewEnters', { rating: e.rating })
+            : t('market.previewBench')}{' '}
+        {e?.displaced &&
+          t('market.previewPushes', { name: e.displaced.name, old: e.displaced.rating })}
+      </p>
+    </div>
+  );
+}
+
 /** One talk: the fee against the club's asking price, then the contract against the player's. */
-function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
+function Talk({
+  talk,
+  act,
+  books,
+}: {
+  talk: MarketView['talks'][number];
+  act: Do;
+  books: Pick<MarketView, 'cash' | 'bill' | 'wageRoom'>;
+}) {
   const p = talk.player;
   const [fee, setFee] = useState(String(p.value));
   const [wage, setWage] = useState(String(talk.wants?.wage ?? p.wage));
@@ -211,6 +268,7 @@ function Talk({ talk, act }: { talk: MarketView['talks'][number]; act: Do }) {
                 </select>
               </label>
             </div>
+            <Preview talk={talk} wage={Math.round(Number(wage)) || 0} books={books} />
             <label className="flex flex-col gap-1 text-sm">
               {t('market.yourClause')}
               <input
@@ -602,6 +660,7 @@ export function Market(props: {
                 key={`${k.player.id}-${k.stage}-${k.asking}-${k.wants?.wage ?? 0}`}
                 talk={k}
                 act={act}
+                books={view}
               />
             ))}
           </ul>

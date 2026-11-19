@@ -61,6 +61,7 @@ import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
 import { postOwners, postPrize } from './finance';
+import { matchReport, type ReportFact } from './report';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
 import { tierOfClub } from '../market/books';
@@ -163,6 +164,8 @@ export interface CareerWorld {
   image?: Record<string, ImageDeal>;
   /** The last window deadline the person was stopped at (nextDecision with deadlines). */
   deadline?: number;
+  /** Why the person's last match went as it did (report.ts); not saved, read right after it. */
+  report?: ReportFact[];
 }
 
 export type Decision =
@@ -259,6 +262,7 @@ function playDay(
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       postHomeMatch(w, id, day);
       const km = postAwayTrip(w, id, day);
+      w.report = matchReport(w, id, day, training);
       const eleven = fielded(w, day).xi;
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);

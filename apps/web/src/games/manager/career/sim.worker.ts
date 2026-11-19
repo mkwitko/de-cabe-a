@@ -71,6 +71,10 @@ import {
   sendScout,
   seenLevel,
   myWageRoom,
+  signingEffect,
+  wageBill,
+  type ReportFact,
+  type SigningEffect,
   squadPlanOf,
   eyeOf,
   MAX_ROUNDS,
@@ -202,7 +206,15 @@ export interface SimView {
   fixtures: { iso: string; opponent: ClubFace; atHome: boolean; competition: string }[];
   /** The club's last five results, oldest first, from the club's side. */
   form: { result: 'W' | 'D' | 'L'; goals: [number, number]; opponent: ClubFace; atHome: boolean }[];
-  last: { home: ClubFace; away: ClubFace; goals: [number, number] } | null;
+  last: {
+    home: ClubFace;
+    away: ClubFace;
+    goals: [number, number];
+    /** The biggest facts behind the person's result (report.ts); empty when nothing stood out. */
+    why: ReportFact[];
+    /** Which side the person's club was: 0 home, 1 away. */
+    mine: 0 | 1;
+  } | null;
   table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
   /** The board: the season's goal, its confidence, and what last moved it. */
   board: {
@@ -426,6 +438,8 @@ export interface MarketView {
   cash: number;
   /** Monthly wage the board still lets the club add. */
   wageRoom: number;
+  /** The monthly wage bill now. */
+  bill: number;
   /** Forty of the other clubs' players for the position asked: those within reach first. */
   /** `asks`: the monthly wage he would open with at the person's table. */
   targets: (MarketPlayer & {
@@ -457,6 +471,8 @@ export interface MarketView {
     release: number | null;
     fee: number | null;
     wants: Terms | null;
+    /** What he does to the best eleven, while the terms are open for a man not yet here. */
+    effect: SigningEffect | null;
   }[];
   /** Bids waiting for an answer. */
   bids: { id: string; player: MarketPlayer; from: ClubFace; fee: number }[];
@@ -581,6 +597,7 @@ function marketView(
     open: windowOpen(w.day),
     cash: w.ledger.cash,
     wageRoom: myWageRoom(w),
+    bill: wageBill(w, w.clubId),
     mine: w.pack.players
       .filter((p) => p.clubId === w.clubId)
       .map((p) => ({
@@ -634,6 +651,7 @@ function marketView(
       release: t.release ?? null,
       fee: t.fee ?? null,
       wants: t.wants ?? null,
+      effect: t.stage === 'terms' && t.seller !== w.clubId ? signingEffect(w, t.player) : null,
     })),
     // A bid coming back after a refusal shows once the club announces it.
     bids: (w.bids ?? [])
@@ -1041,7 +1059,13 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const d = pending;
       const o = playDecision(world, d);
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
-      last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
+      last = {
+        home: face(byId.get(d.home)!),
+        away: face(byId.get(d.away)!),
+        goals: o.goals,
+        why: world.report ?? [],
+        mine: d.home === world.clubId ? 0 : 1,
+      };
       const after = await toNextDecision(world);
       save = {
         from,
@@ -1215,7 +1239,13 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
           });
       const o = playDecision(world, d, outcomeOf(result), [...booked.values()]);
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
-      last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
+      last = {
+        home: face(byId.get(d.home)!),
+        away: face(byId.get(d.away)!),
+        goals: o.goals,
+        why: world.report ?? [],
+        mine: d.home === world.clubId ? 0 : 1,
+      };
       const after = await toNextDecision(world);
       save = {
         from,
