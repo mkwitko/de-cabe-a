@@ -103,6 +103,7 @@ export function History({ history }: { history: SimView['history'] }) {
         <ul aria-labelledby="history-title">
           {rows.map((h) => {
             const star = h.champion || h.move === 'promotion' || h.cups.length > 0;
+            const met = verdictOf(h);
             return (
               <li
                 key={h.season}
@@ -117,7 +118,7 @@ export function History({ history }: { history: SimView['history'] }) {
                     division: h.division,
                     n: h.position,
                     goal: h.goal,
-                    met: h.fired ? 'fired' : h.met ? 'met' : 'missed',
+                    met,
                   })}
                 </span>
                 {star && (
@@ -147,3 +148,7 @@ export function History({ history }: { history: SimView['history'] }) {
     </div>
   );
 }
+
+/** The season's verdict as the history row's select reads it. */
+const verdictOf = (h: { fired?: boolean; met: boolean }) =>
+  h.fired ? 'fired' : h.met ? 'met' : 'missed';
