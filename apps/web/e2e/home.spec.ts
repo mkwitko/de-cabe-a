@@ -64,7 +64,10 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
   ).toHaveCount(7);
-  await expect(page.getByRole('link', { name: 'Próxima fase · 2' })).toBeVisible();
+  // On a day whose Desafio do Dia holds this level, the end screen leads back to it instead.
+  await expect(
+    page.getByRole('link', { name: /^(Próxima fase · 2|Voltar ao Desafio do Dia)$/ }),
+  ).toBeVisible();
 
   // Reações (2.5): react, then tap again to undo
   const craque = page.getByRole('button', { name: /^Craque!/ });
