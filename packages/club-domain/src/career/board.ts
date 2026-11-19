@@ -175,7 +175,21 @@ export function goalFor(w: CareerWorld): number {
   const bigger = rows.filter((r) => rep(r.clubId) > rep(w.clubId)).length;
   const p = pressureOf(w);
   const rank = Math.round((stronger * (100 - p) + bigger * p) / 100);
-  return Math.max(1, Math.min(rows.length, rank + GOAL_SLACK[horizonOf(w)]));
+  return Math.max(1, Math.min(safeOf(w, rows.length), rank + GOAL_SLACK[horizonOf(w)]));
+}
+
+/**
+ * The last place that stays in the division: no board sets going down as the season's goal,
+ * however weak the squad. The first relegation place of the division's league phase, else the
+ * table's last.
+ */
+function safeOf(w: CareerWorld, places: number): number {
+  const div = nationalDivisions(w.pack).find((d) =>
+    (w.season.members[d.id] ?? d.clubIds).includes(w.clubId),
+  );
+  const comp = div && w.season.competitions.find((c) => c.id === div.id);
+  const down = comp?.phases[0]?.outcomes.find((o) => o.kind === 'relegation');
+  return down ? Math.min(places, down.positions[0] - 1) : places;
 }
 
 /** The club's position in its table today, 1 = top. */

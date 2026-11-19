@@ -7,6 +7,7 @@ import {
   playDecision,
   startNextSeason,
   type CareerWorld,
+  divisionTable,
 } from './advance';
 import {
   boardAfterMatch,
@@ -17,7 +18,7 @@ import {
   pressureOf,
 } from './board';
 import { loadCareer, saveCareer } from './save';
-import { jobOffers } from './start';
+import { jobOffers, nationalDivisions } from './start';
 
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 5)[0]!.clubId;
@@ -229,4 +230,13 @@ it('a birthplace in the state counts as local, wherever he was formed', () => {
   };
   w.starts = Object.fromEntries(mine.map((p) => [p.id, 10]));
   expect(boardAfterSeason(w).last!.find((r) => r.kind === 'locals')?.value).toBe(5);
+});
+
+it('the board never sets relegation as the goal, however weak the squad', () => {
+  // A club of the second division: 20 clubs, the last four go down.
+  const club = nationalDivisions(pack)[1]!.clubIds[3]!;
+  const w = openCareer(structuredClone(pack), 3, club);
+  w.strength.set(club, 1);
+  expect(divisionTable(w).rows).toHaveLength(20);
+  expect(goalFor(w)).toBeLessThanOrEqual(16);
 });
