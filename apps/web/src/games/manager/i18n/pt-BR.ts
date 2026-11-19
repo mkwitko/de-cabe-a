@@ -89,6 +89,11 @@ export const ptBR = {
   'market.potential': 'Potencial {lo} a {hi}',
   'market.clause': 'Multa {fee}',
   'market.payClause': 'Pagar a multa',
+  'market.imageLabel': 'Direito de imagem (parte do salário)',
+  'market.imageUsual': 'Padrão do clube',
+  'market.imageShare': '{s}% do salário',
+  'market.imageHint':
+    'Lei Pelé: até 40%. Sem encargos para o clube e menos imposto para o jogador, mas acima de 30% a Justiça do Trabalho pode reclassificar como salário.',
   'market.yourClause': 'Multa rescisória em reais (opcional)',
   'market.borrow': 'Emprestar',
   'market.borrowFor': 'Pegar {name} emprestado até o fim da temporada por {fee}',
@@ -251,6 +256,8 @@ export const ptBR = {
   'inbox.arrears':
     '{n, plural, one {O caixa está no vermelho e os salários do mês não foram pagos. O elenco sente: rende menos em campo.} other {Salários atrasados há # meses. O vestiário está em pé de guerra{n, select, 2 { — no terceiro mês a Lei Pelé deixa os jogadores rescindirem} other {: quem tem mercado pode ir embora de graça}}.}}',
   'inbox.arrearsPaid': 'Os salários atrasados foram quitados. O vestiário respira de novo.',
+  'inbox.imageClaim':
+    '{name} ganhou na Justiça do Trabalho: o direito de imagem era salário disfarçado. O clube pagou {value} em encargos atrasados e multa.',
   'inbox.walkout':
     '{name} entrou na Justiça pelos salários atrasados, rescindiu o contrato e saiu de graça.',
   'inbox.protest':
@@ -362,7 +369,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Copa do Brasil e estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Copa do Brasil e estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} lawsuit {Condenação trabalhista} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',

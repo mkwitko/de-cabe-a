@@ -16,6 +16,7 @@ import { squadPlayers } from './squad';
 import { seedOf } from '../competition/season';
 import { marketValue } from '../market/value';
 import { incomeOf } from '../market/books';
+import { flagGrudge } from '../market/image';
 
 /** The credit a club gets before it stops paying: months of its season's income. */
 const CREDIT_MONTHS = 4;
@@ -69,6 +70,7 @@ export function monthTurned(w: CareerWorld, day: number): void {
     if (left <= MIN_SQUAD || (keeper && keepers <= 2)) continue;
     left--;
     if (keeper) keepers--;
+    flagGrudge(w, p);
     releasePlayer(w, p);
     note(w, { day, kind: 'walkout', player: p.knownAs ?? p.name });
   }

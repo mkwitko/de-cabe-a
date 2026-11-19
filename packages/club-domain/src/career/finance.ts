@@ -4,6 +4,7 @@
  * an idempotency key, so replaying a day never pays twice. Rivals get their season summary from
  * the same rules later (04 §4.1).
  */
+import { wageCost } from '../market/image';
 import { dayOf, isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
 import type { Pack, PackClub } from '../pack/schema';
@@ -144,7 +145,7 @@ function monthlyBills(w: CareerWorld, day: number) {
   const tier = BY_TIER[tierNo]!;
   const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
   const wages =
-    w.pack.players.reduce((s, p) => s + (p.clubId === w.clubId ? (p.contract?.wage ?? 0) : 0), 0) +
+    w.pack.players.reduce((s, p) => s + (p.clubId === w.clubId ? wageCost(w, p) : 0), 0) +
     w.pack.assignments.reduce((s, a) => s + (a.clubId === w.clubId ? a.contract.wage : 0), 0);
   const sponsors = club.sponsors
     .filter((x) => x.until >= isoOf(day))

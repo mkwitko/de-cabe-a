@@ -928,6 +928,7 @@ const FROM = {
   arrears: 'staff',
   arrearsPaid: 'staff',
   walkout: 'press',
+  imageClaim: 'finance',
   fx: 'finance',
   owners: 'board',
   fairplay: 'finance',
@@ -1070,6 +1071,11 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.arrears', { n: n.months });
     case 'arrearsPaid':
       return t('inbox.arrearsPaid');
+    case 'imageClaim':
+      return t('inbox.imageClaim', {
+        name: n.player,
+        value: t('career.cash', { value: n.amount }),
+      });
     case 'walkout':
       return t('inbox.walkout', { name: n.player });
     case 'prize':
