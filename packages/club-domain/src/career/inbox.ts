@@ -45,6 +45,10 @@ export type Note = { day: number } & (
   /** The real moved hard against a currency this month: the rate (×10 000), change in ‰. */
   | { kind: 'fx'; currency: 'USD' | 'EUR'; rate: number; change: number }
   | { kind: 'prize'; position: number; amount: number }
+  /** Wages unpaid for `months`; paid up again; a player who ended his contract over them. */
+  | { kind: 'arrears'; months: number }
+  | { kind: 'arrearsPaid' }
+  | { kind: 'walkout'; player: string }
   /** The owners covered part of the season's loss. */
   | { kind: 'owners'; amount: number }
   /** The person's club ended a season over the fair play limit: the cost and what follows. */

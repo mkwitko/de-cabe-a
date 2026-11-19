@@ -27,6 +27,7 @@ import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
+import { monthTurned, moraleOf, strengthOwed } from './arrears';
 import {
   afterMatch,
   bookingsOf,
@@ -113,6 +114,8 @@ export interface CareerWorld {
   cold?: Record<string, number>;
   /** The boys of the person's academy, by id: under contract, out of the first team. */
   academy?: string[];
+  /** Months of wages the person's club owes its squad (arrears.ts); absent when paid up. */
+  arrears?: number;
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
   /** Each club's cards and bans, by club (discipline.ts); absent before the first card. */
@@ -164,7 +167,9 @@ function playDay(
   // The person's club as it stands that day (rest and training since the last one applied).
   let training = trainingOn(w, day);
   const strength = (clubId: string) =>
-    clubId === w.clubId ? myStrength(w, training, fielded(w, day)) : rivalStrength(w, clubId, day);
+    clubId === w.clubId
+      ? strengthOwed(w, myStrength(w, training, fielded(w, day)))
+      : rivalStrength(w, clubId, day);
   const cashBefore = w.ledger.cash;
   if (windowOpen(w.day) !== windowOpen(day)) {
     note(w, { day, kind: 'window', open: windowOpen(day) });
@@ -276,9 +281,14 @@ function playDay(
         note(w, { day, kind: 'ultimatumMet' });
     }
   }
+  // A month turned on the way: were the wages paid?
+  let turned = false;
+  for (let d = Math.max(w.day + 1, dayOf(`${w.season.season}-01-01`)); d <= day; d++)
+    if (isoOf(d).endsWith('-01')) turned = true;
   w.training = training;
   w.day = day;
   advanceLedger(w.ledger, day);
+  if (turned) monthTurned(w, day);
   if (cashBefore >= 0 && w.ledger.cash < 0) note(w, { day, kind: 'cashRed' });
   return out;
 }
@@ -413,6 +423,7 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
       ? teamWith(c, fielded(w, d.day), {
           fresh: (id) => training.fresh[id] ?? 1,
           familiarity: drilled(training.drill),
+          morale: moraleOf(w),
         })
       : teamWith(c, rivalEleven(w, c, d.day, d.competitionId), {
           fresh: () => rivalFresh(w, clubId, d.day),

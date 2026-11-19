@@ -311,7 +311,7 @@ export function lineupStrength(w: ClubIn, l: Lineup): number {
 export function teamWith(
   c: ClubIn,
   l: Lineup,
-  state: { fresh: (id: string) => number; familiarity: number },
+  state: { fresh: (id: string) => number; familiarity: number; morale?: number },
 ): TeamInput {
   const plan = defaultPlan(l.formation);
   if (l.plan) plan.team = { ...plan.team, ...l.plan };
@@ -322,6 +322,7 @@ export function teamWith(
     players: team.players.map((p, i) => ({
       ...p,
       condition: state.fresh(p.id),
+      ...(state.morale !== undefined && { morale: state.morale }),
       ...(i < 11 && { familiarity: known[i]! * state.familiarity }),
     })),
   };

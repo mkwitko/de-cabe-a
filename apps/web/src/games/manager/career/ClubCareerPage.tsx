@@ -925,6 +925,9 @@ const FROM = {
   injury: 'staff',
   suspension: 'staff',
   prize: 'finance',
+  arrears: 'staff',
+  arrearsPaid: 'staff',
+  walkout: 'press',
   fx: 'finance',
   owners: 'board',
   fairplay: 'finance',
@@ -1063,6 +1066,12 @@ function noteText(n: InboxItem, sim: SimView): string {
         change: Math.abs(n.change) / 10,
         up: String(n.change > 0),
       });
+    case 'arrears':
+      return t('inbox.arrears', { n: n.months });
+    case 'arrearsPaid':
+      return t('inbox.arrearsPaid');
+    case 'walkout':
+      return t('inbox.walkout', { name: n.player });
     case 'prize':
       return t('inbox.prize', {
         position: n.position,
