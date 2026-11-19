@@ -11,7 +11,7 @@
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { movePlayer, windowOpen } from '../career/market';
-import { squadPlayers } from '../career/squad';
+import { foreignLimit, isForeign, squadPlayers } from '../career/squad';
 import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
@@ -202,6 +202,9 @@ interface Choice {
 }
 
 /** The best signing for one need, or null: the whole market read through the club's filter. */
+/** Foreigners a club keeps beyond the match limit before it stops signing them. */
+export const FOREIGN_SPARES = 3;
+
 function choose(
   w: CareerWorld,
   buyerId: string,
@@ -216,6 +219,11 @@ function choose(
   const room = wageRoom(w, buyerId);
   const bidOn = new Set((w.bids ?? []).map((b) => b.player));
   const listed = new Set(w.listed ?? []);
+  // A club already holding more foreigners than it may name for a match plus a few spares
+  // (injuries, bans, rotation) looks at Brazilians only.
+  const foreignFull =
+    squadPlayers({ pack: w.pack, clubId: buyerId }).filter(isForeign).length >=
+    foreignLimit(season) + FOREIGN_SPARES;
   let best: Choice | null = null;
   let score = (need.worth ?? WORTH_IT) - 1;
   // Only those who know one of the positions and sit in the level the need asks for.
@@ -262,6 +270,7 @@ function choose(
     if (p.clubId === buyerId || skip.has(p.id)) continue;
     const abroad = p.clubId === ABROAD;
     if (abroad && !signable(p, season)) continue;
+    if (foreignFull && isForeign(p)) continue;
     const theirs = p.clubId === w.clubId;
     // Without a club he costs no fee and asks nobody's leave.
     const free = p.clubId === null;
