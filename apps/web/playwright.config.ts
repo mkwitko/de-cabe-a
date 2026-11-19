@@ -24,6 +24,9 @@ export default defineConfig({
     permissions: ['clipboard-read', 'clipboard-write'],
     // The production build registers sw.js; a cache layer has no place in an isolated test.
     serviceWorkers: 'block',
+    // A failure on CI leaves its trace in test-results (uploaded by ci.yml): the only way to see
+    // why a test that never fails locally timed out there.
+    trace: 'retain-on-failure',
   },
   projects: [
     {
