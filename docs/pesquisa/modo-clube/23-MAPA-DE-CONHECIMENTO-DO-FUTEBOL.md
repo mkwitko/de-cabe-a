@@ -148,7 +148,7 @@ Meta: cada regra vira dado com teste (entrada, saída esperada, artigo citado), 
 
 | Entidade/relação | Atributos-chave | Comportamento que altera | Evidência/fonte | Estado | Prio |
 | --- | --- | --- | --- | --- | --- |
-| Torcida | tamanho, lealdade, paciência, identidade local | Pressão, público, humor | Pesquisas públicas; valores estimados | existe: `pack/schema.ts` (`fans`) | P2 |
+| Torcida | tamanho, lealdade, paciência, identidade local | Pressão, público, humor | Pesquisas públicas; valores estimados | existe: `fans` no pack; humor pela forma em `match/stadium.ts` (`moodOf`), público e protesto (`career/board.ts`) | P2 |
 | Rivalidades e clássicos | pares, intensidade | Peso do jogo | Wikidata, FM26 | parcial: `rivals` sem intensidade | P3 |
 
 ### 2.14 Calibração
