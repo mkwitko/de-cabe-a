@@ -182,6 +182,8 @@ export interface SimView {
     away: ClubFace;
     atHome: boolean;
     competition: string;
+    /** Names of the opponent's players banned from this match, and the person's own. */
+    banned: { theirs: string[]; ours: string[] };
   } | null;
   /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
   deadline: string | null;
@@ -276,6 +278,10 @@ export interface SquadView {
   strength: number;
   plan: PlanChoice;
 }
+
+/** Display names of a set of players, as they go by. */
+const namesOf = (w: CareerWorld, ids: ReadonlySet<string>) =>
+  w.pack.players.filter((p) => ids.has(p.id)).map((p) => p.knownAs ?? p.name);
 
 /** The day the squad is being prepared for: the next match, or today. */
 const matchDay = (w: CareerWorld) => (pending?.kind === 'match' ? pending.day : w.day);
@@ -950,6 +956,17 @@ function view(w: CareerWorld, ms: number): SimView {
             away: face(byId.get(pending.away)!),
             atHome: pending.home === w.clubId,
             competition: competition(pending.competitionId),
+            banned: {
+              theirs: namesOf(
+                w,
+                suspendedIn(
+                  w,
+                  pending.competitionId,
+                  pending.home === w.clubId ? pending.away : pending.home,
+                ),
+              ),
+              ours: namesOf(w, suspendedIn(w, pending.competitionId)),
+            },
           }
         : null,
     last,

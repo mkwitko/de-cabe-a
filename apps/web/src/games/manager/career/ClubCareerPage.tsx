@@ -730,6 +730,20 @@ function NextMatch(props: {
             <span className="mx-2 text-club-gold">/</span>
             {next.competition}
           </p>
+          {(next.banned.theirs.length > 0 || next.banned.ours.length > 0) && (
+            <p className="text-center text-sm text-balance text-chalk-soft">
+              {next.banned.ours.length > 0 && (
+                <span className="block">
+                  {t('career.bannedOurs', { names: next.banned.ours.join(', ') })}
+                </span>
+              )}
+              {next.banned.theirs.length > 0 && (
+                <span className="block">
+                  {t('career.bannedTheirs', { names: next.banned.theirs.join(', ') })}
+                </span>
+              )}
+            </p>
+          )}
           <div className="grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-[1.2fr_1fr_1fr] sm:whitespace-nowrap">
             <button
               type="button"

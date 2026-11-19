@@ -26,6 +26,7 @@ import {
 } from './squad';
 import { formationOf } from '../match/fixture-input';
 import { MISSING, rivalOut } from './health';
+import { bannedStarters } from './discipline';
 import { clubStrengthOf } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
@@ -169,4 +170,6 @@ export function rivalFresh(w: CareerWorld, clubId: string, day: number): number 
 export const rivalStrength = (w: CareerWorld, clubId: string, day: number): number =>
   (w.strength.get(clubId) ?? 50) -
   (w.eleven.get(clubId) ?? 0) *
-    (1 - freshFactor(rivalFresh(w, clubId, day)) + (rivalOut(w, clubId, day) * MISSING) / 1000);
+    (1 -
+      freshFactor(rivalFresh(w, clubId, day)) +
+      ((rivalOut(w, clubId, day) + bannedStarters(w, clubId, day)) * MISSING) / 1000);

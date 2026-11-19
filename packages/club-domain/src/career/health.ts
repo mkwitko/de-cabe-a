@@ -64,7 +64,7 @@ export function injuredOn(w: CareerWorld, day: number): Set<string> {
 /** The person's players who cannot play on `day`: injured, or banned from that day's match. */
 export function outOn(w: CareerWorld, day: number): Set<string> {
   const out = injuredOn(w, day);
-  if (!w.discipline) return out;
+  if (!w.cards?.[w.clubId]) return out;
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     if (m.home === w.clubId || m.away === w.clubId)

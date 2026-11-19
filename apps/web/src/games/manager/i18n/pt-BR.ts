@@ -194,6 +194,8 @@ export const ptBR = {
   'health.out': '{n, plural, one {Lesionado: volta em # dia} other {Lesionado: volta em # dias}}',
   'health.outLabel': 'Lesionado',
   'squad.banned': 'Suspenso',
+  'career.bannedOurs': 'Suspensos do seu time: {names}',
+  'career.bannedTheirs': 'Desfalques do adversário por suspensão: {names}',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
   'inbox.solidarity':
