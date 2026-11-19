@@ -25,6 +25,7 @@ export type BoardReason =
         | 'fairplay'
         | 'protest'
         | 'homegrown'
+        | 'locals'
         | 'press';
       value: number;
     };
@@ -276,9 +277,11 @@ export function boardAfterSeason(w: CareerWorld): Board {
   const last: BoardReason[] = [{ kind: met ? 'goalMet' : 'goalMissed', value }];
   const homegrown = homegrownOf(w);
   if (homegrown > 0) last.push({ kind: 'homegrown', value: homegrown });
+  const locals = localsOf(w);
+  if (locals > 0) last.push({ kind: 'locals', value: locals });
   return {
     ...b,
-    confidence: clamp(b.confidence + value + homegrown),
+    confidence: clamp(b.confidence + value + homegrown + locals),
     last,
   };
 }
@@ -300,4 +303,36 @@ function homegrownOf(w: CareerWorld): number {
   const own = starts.reduce((s, [id, n]) => s + (ours.has(id) ? n : 0), 0);
   const pride = w.pack.clubs.find((c) => c.id === w.clubId)!.fans.youthPride;
   return Math.floor((HOMEGROWN * own * pride) / (total * 100));
+}
+
+/**
+ * Confidence a season of local men in the eleven earns, born in the club's state (`origin.cityId`,
+ * Wikidata's place of birth) or, when that is unknown, formed at a club of it (`origin.clubId`,
+ * FM's home_grown_club_uids): "prata da casa" of the region, up to LOCALS at a whole season of them before supporters who prize local
+ * identity most (fans' localIdentity). The club's own boys count once, under homegrown. PARÂMETRO.
+ */
+const LOCALS = 5;
+function localsOf(w: CareerWorld): number {
+  const starts = Object.entries(w.starts ?? {});
+  const total = starts.reduce((s, [, n]) => s + n, 0);
+  if (!total) return 0;
+  const cityState = new Map(w.pack.cities.map((c) => [c.id, c.state]));
+  const stateOf = (clubId: string) =>
+    cityState.get(w.pack.clubs.find((c) => c.id === clubId)?.cityId ?? '');
+  const home = stateOf(w.clubId);
+  if (!home) return 0;
+  // Born in the state (Wikidata, when known), else formed at a club of it.
+  const from = new Map(
+    w.pack.players.map((p) => [
+      p.id,
+      p.origin?.clubId === w.clubId
+        ? undefined
+        : p.origin?.cityId
+          ? cityState.get(p.origin.cityId)
+          : p.origin?.clubId && stateOf(p.origin.clubId),
+    ]),
+  );
+  const local = starts.reduce((s, [id, n]) => s + (from.get(id) === home ? n : 0), 0);
+  const identity = w.pack.clubs.find((c) => c.id === w.clubId)!.fans.localIdentity;
+  return Math.floor((LOCALS * local * identity) / (total * 100));
 }

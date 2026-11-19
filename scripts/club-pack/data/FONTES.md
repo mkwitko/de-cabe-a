@@ -55,3 +55,8 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - Ipsos-Ipec / O Globo, campo 5-9 jun 2025 (2.000 entrevistas, 132 municipios, margem 2,2 p.p.): 20 clubes de 0,5% para cima, aplicados a populacao IBGE 2025. https://tvtnews.com.br/maiores-torcidas-do-brasil-nova-pesquisa-2025/ e https://www.diariodepernambuco.com.br/esportes-dp/sport/2025/07/amp/7795455-pesquisa-aponta-o-sport-com-a-13-maior-torcida-do-pais-santa-cruz-tambem-ocupa-o-top-20.html
 - Conferencia: CBF/Nexus, nov 2025 (mesma ordem no top 10). https://www.netvasco.com.br/n/372844/pesquisa-de-torcidas-encomendada-pela-cbf-diz-que-o-vasco-tem-5-da-preferencia-no-brasil
 - Abaixo de 0,5%: estimado (publico 2025 x razao mediana dos clubes pesquisados, ou reputacao), marcado no relatorio.
+
+## Naturalidade (`origin.cityId`, data/birthplaces.json)
+
+- Wikidata (CC0), SPARQL por ano de nascimento 1980-2011: futebolistas (P106 Q937857) brasileiros (P27 Q155) com data (P569) e local de nascimento (P19), estado (P131* ate Q485258), coordenadas (P625) e populacao (P1082). Gerado por `fetch-birthplaces.ts`.
+- Casamento em `import-fm.ts`: mesma data de nascimento e nome (igual ao conhecido/completo, ou todas as palavras do rotulo dentro do nome completo); data com dois candidatos fica sem. Cobertura 2027: Serie A 57%, B 38%, C 24%, D 11%.
