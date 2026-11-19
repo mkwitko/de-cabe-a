@@ -1,8 +1,9 @@
 /**
  * The career calendar (MC-084, 01 §4, ADR-020): the world moves day by day until the next day
- * the person has to decide something (for now, their club's match). Every other match is a
- * level 3 result from the season seed, so the same pack, seed and day always rebuild the same
- * world: the server keeps only the day, the browser replays up to it.
+ * the person has to decide something (for now, their club's match). The other matches of the
+ * person's table and ties are played by the level 2 engine (02 §12), the rest of the world gets
+ * a level 3 result; both from the season seed, so the same pack, seed and day always rebuild the
+ * same world: the server keeps only the day, the browser replays up to it.
  */
 import { standings, type Row } from '../competition/league';
 import {
@@ -19,10 +20,10 @@ import { regulationsFor, type Move } from '../competition/outcomes';
 import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
-import { formationOf, matchInputFor } from '../match/fixture-input';
+import { formationOf, matchInputFor, outcomeOf } from '../match/fixture-input';
 import { crowdShare, isDerby } from '../match/stadium';
 import { whistleOf } from '../match/referee';
-import { coachOf } from '@decabeca/match-engine';
+import { coachOf, simulateLevel2, type MatchInput, type MatchResult } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
@@ -207,28 +208,37 @@ function playDay(
   banned(sitCourt(w, day));
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
+    const sim =
+      given?.id !== id && playedOut(w, m)
+        ? simulateLevel2(engineInput(w, id, day, training))
+        : null;
     const o =
       given?.id === id
         ? given.outcome
-        : // The away side loses a little on a long trip (travel.ts).
-          quickResult(
-            seedOf(w.seed, id),
-            strength(m.home),
-            (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
-            // The crowd carries the home side; behind closed doors it is gone (match/stadium.ts).
-            crowdShare(w.pack, w.season, id),
-            whistleOf(w.season, id, isDerby(w.pack, m.home, m.away)),
-          );
+        : sim
+          ? outcomeOf(sim)
+          : // The away side loses a little on a long trip (travel.ts).
+            quickResult(
+              seedOf(w.seed, id),
+              strength(m.home),
+              (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
+              // The crowd carries the home side; behind closed doors it is gone (match/stadium.ts).
+              crowdShare(w.pack, w.season, id),
+              whistleOf(w.season, id, isDerby(w.pack, m.home, m.away)),
+            );
     record(w.season, id, o);
     out.set(id, o);
-    // The other clubs' cards fall on their best men; the person's are dealt below.
+    // The other clubs' cards: who got them in the simulated match, or drawn among their best men
+    // for a level 3 result; the person's are dealt below.
     for (const [side, clubId] of [m.home, m.away].entries())
       if (clubId !== w.clubId)
         afterMatch(
           w,
           m.competitionId,
           day,
-          bookingsOf(w, rivalPitch(w, clubId, m.competitionId), o.cards[side]!, day, clubId),
+          sim
+            ? bookedIn(sim, side as 0 | 1)
+            : bookingsOf(w, rivalPitch(w, clubId, m.competitionId), o.cards[side]!, day, clubId),
           clubId,
         );
     if (m.home === w.clubId || m.away === w.clubId) {
@@ -239,13 +249,15 @@ function playDay(
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);
       training = tire(training, eleven, travelTire(km));
-      const mine = m.home === w.clubId ? 0 : 1;
-      // The cards: who got them on screen, or drawn among the eleven for a match not watched.
+      const side = m.home === w.clubId ? 0 : 1;
+      // The cards: who got them on screen or in the simulated match.
       const squad = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
       const bookings =
         given?.id === id && given.bookings
           ? given.bookings.filter((b) => squad.has(b.playerId))
-          : bookingsOf(w, eleven, o.cards[mine], day);
+          : sim
+            ? bookedIn(sim, side)
+            : bookingsOf(w, eleven, o.cards[side], day);
       banned(afterMatch(w, m.competitionId, day, bookings));
       const n = names();
       for (const [pid, i] of Object.entries(hurt))
@@ -291,6 +303,21 @@ function playDay(
   if (turned) monthTurned(w, day);
   if (cashBefore >= 0 && w.ledger.cash < 0) note(w, { day, kind: 'cashRed' });
   return out;
+}
+
+/**
+ * Matches the level 2 engine plays (02 §12): those of the person's table, their group in a
+ * group phase, and the knockout ties of a competition they are in; the rest of the world gets a
+ * level 3 result. ponytail: the whole competition once level 2 costs its 2 ms target.
+ */
+function playedOut(w: CareerWorld, m: { competitionId: string; phaseId: string; home: string }) {
+  const run = w.season.running.get(`${m.competitionId}/${m.phaseId}`);
+  if (!run) return false;
+  if (run.kind === 'table')
+    return run.groups.some((g) => g.includes(w.clubId) && g.includes(m.home));
+  return [...(w.season.calendar.byClub.get(w.clubId) ?? [])].some(
+    (x) => x.competitionId === m.competitionId,
+  );
 }
 
 const clubPlays = (w: CareerWorld, day: number) =>
@@ -364,7 +391,7 @@ export function nextDecision(w: CareerWorld, opts: { deadlines?: boolean } = {})
 
 /**
  * Plays the day of the person's next match (their match and everyone else's). Their match takes
- * `watched` when they watched it with the match engine; otherwise a level 3 result.
+ * `watched` when they watched it with the match engine; otherwise the level 2 engine plays it.
  */
 export function playDecision(
   w: CareerWorld,
@@ -414,25 +441,47 @@ function rivalEleven(
  * is the person's side in the input.
  */
 export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>) {
-  const input = matchInputFor(w.pack, w.season, d.matchId);
+  const input = engineInput(w, d.matchId, d.day, trainingOn(w, d.day));
   const mine: 0 | 1 = d.home === w.clubId ? 0 : 1;
-  const training = trainingOn(w, d.day);
-  input.teams = [d.home, d.away].map((clubId) => {
-    const c = { pack: w.pack, clubId };
-    return clubId === w.clubId
-      ? teamWith(c, fielded(w, d.day), {
-          fresh: (id) => training.fresh[id] ?? 1,
-          familiarity: drilled(training.drill),
-          morale: moraleOf(w),
-        })
-      : teamWith(c, rivalEleven(w, c, d.day, d.competitionId), {
-          fresh: () => rivalFresh(w, clubId, d.day),
-          familiarity: drilled(RIVAL_DRILL),
-        });
-  }) as typeof input.teams;
   input.teams[mine] = { ...input.teams[mine], coach: coachOf(60, { flexibility: 1 }) };
   return { input, mine };
 }
+
+/**
+ * A match of the day for either engine: each club fields an eleven by position (squad.ts), the
+ * other clubs their coach's best, the person's club the one they picked, with their
+ * instructions, freshness and drill.
+ */
+function engineInput(w: CareerWorld, id: string, day: number, training: Training): MatchInput {
+  const m = w.season.meta.get(id)!;
+  const input = matchInputFor(w.pack, w.season, id);
+  // The away side arrives with less in the legs after a long trip (travel.ts).
+  const trip = (1000 - awayLoss(distanceKm(w.pack, m.home, m.away))) / 1000;
+  input.teams = [m.home, m.away].map((clubId, side) => {
+    const c = { pack: w.pack, clubId };
+    const legs = side === 1 ? trip : 1;
+    return clubId === w.clubId
+      ? teamWith(c, fielded(w, day), {
+          fresh: (pid) => (training.fresh[pid] ?? 1) * legs,
+          familiarity: drilled(training.drill),
+          morale: moraleOf(w),
+        })
+      : teamWith(c, rivalEleven(w, c, day, m.competitionId), {
+          fresh: () => rivalFresh(w, clubId, day) * legs,
+          familiarity: drilled(RIVAL_DRILL),
+        });
+  }) as MatchInput['teams'];
+  return input;
+}
+
+/** Who was booked in a simulated match, for one side (discipline.ts). */
+const bookedIn = (r: MatchResult, side: 0 | 1): Booking[] =>
+  r.events
+    .filter((e) => e.kind === 'card' && e.team === side && e.playerId)
+    .map((e) => ({
+      playerId: e.playerId!,
+      card: e.data.card === 2 ? (e.data.second ? 'second' : 'red') : 'yellow',
+    }));
 
 /** The person's division table as it stands; in a group phase, their group. */
 export const divisionTable = (w: CareerWorld) => divisionTableOf(w, w.clubId);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { distanceKm, travelTire } from './travel';
+import { awayLoss, distanceKm, travelTire } from './travel';
 import { generateDevPack } from '../generate/pack';
 import { careerMatch, nextDecision, openCareer, playDecision, type CareerWorld } from './advance';
 import { loadCareer, saveCareer } from './save';
@@ -79,12 +79,15 @@ describe('training and freshness (08, corte 1)', () => {
     const t = trainingOn(w, d.day);
     const m = careerMatch(w, d);
     const mine = m.input.teams[m.mine].players;
-    expect(mine[0]!.condition).toBe(t.fresh[mine[0]!.id] ?? 1);
+    // The away side also carries the trip in its legs (travel.ts).
+    const trip = (1000 - awayLoss(distanceKm(w.pack, d.home, d.away))) / 1000;
+    const legs = (side: 0 | 1) => (side === 1 ? trip : 1);
+    expect(mine[0]!.condition).toBe((t.fresh[mine[0]!.id] ?? 1) * legs(m.mine));
     expect(Math.max(...mine.slice(0, 11).map((p) => p.familiarity))).toBe(drilled(t.drill));
     // The other club tires by the same rule, from the days since its last match.
     const rival = d.home === clubId ? d.away : d.home;
     const theirs = m.input.teams[m.mine === 0 ? 1 : 0].players;
-    expect(theirs[0]!.condition).toBe(rivalFresh(w, rival, d.day));
+    expect(theirs[0]!.condition).toBe(rivalFresh(w, rival, d.day) * legs(m.mine === 0 ? 1 : 0));
     let lastDay = -1;
     for (const x of w.season.calendar.byClub.get(rival)!)
       if (x.played && x.day < d.day) lastDay = Math.max(lastDay, x.day);
