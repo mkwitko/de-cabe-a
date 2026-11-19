@@ -38,7 +38,8 @@ describe('MC-246 coordination proof', () => {
             a.mean > BANDS.T1mean && `T1 mean ${a.mean.toFixed(2)}`,
             a.max > BANDS.T1max && `T1 max ${a.max}`,
             a.maxInBox > BANDS.T1maxInBox && `T1 box max ${a.maxInBox}`,
-            b.backGapP95 > BANDS.T2backGapP95[sc.plans[team].team.block] && `T2 back gap ${b.backGapP95.toFixed(1)}`,
+            b.backGapP95 > BANDS.T2backGapP95[sc.plans[team].team.block] &&
+              `T2 back gap ${b.backGapP95.toFixed(1)}`,
             b.betweenLinesP95 > BANDS.T2betweenLinesP95[sc.plans[team].team.block] &&
               `T2 lines ${b.betweenLinesP95.toFixed(1)}`,
           ].filter(Boolean);
