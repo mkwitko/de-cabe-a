@@ -54,7 +54,7 @@ import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
-import { postPrize } from './finance';
+import { postOwners, postPrize } from './finance';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
 import { tierOfClub } from '../market/books';
@@ -467,6 +467,8 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     });
   const prize = postPrize(w, position, divisionTable(w).rows.length);
   if (prize > 0) note(w, { day: w.day, kind: 'prize', position, amount: prize });
+  const owners = postOwners(w);
+  if (owners > 0) note(w, { day: w.day, kind: 'owners', amount: owners });
   const played = w.season.season;
   const divisionId = w.season.competitions.find((c) => c.name === divisionTable(w).name)?.id;
   const year = w.season.season + 1;
