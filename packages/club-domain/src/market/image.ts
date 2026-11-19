@@ -20,8 +20,14 @@ import type { PackPlayer } from '../pack/schema';
 
 /** The law's cap: image rights are at most this % of his total pay. */
 export const IMAGE_MAX = 40;
-/** Above this share the contract looks like a disguised wage and a claim can come. PARÂMETRO. */
+/** The share the person's club uses unless they choose another: the market's, up to this. */
 export const IMAGE_SAFE = 30;
+/**
+ * Above this share a claim can come, likelier the larger the share: the larger it is, the more it
+ * looks like a disguised wage. No share is free of it, so the saving is a bet, not a gift.
+ * PARÂMETRO.
+ */
+const RISK_FROM = 10;
 /** Charges on payroll the club skips on the image share: INSS patronal 20% + FGTS 8%. */
 const CHARGES = 28;
 /** The same saving as a % of the pay's total cost to the club: 28 / 128. */
@@ -30,7 +36,7 @@ const SAVED = 22;
 const YEARS_BACK = 3;
 /** Fine over the back charges, %. */
 const FINE = 75;
-/** Chance per season that a claim over a share above the safe line is filed, %. PARÂMETRO. */
+/** Chance per season of a claim, % for every 20 points of share above `RISK_FROM`: 6% at 30%. */
 const CLAIM = 6;
 /** Extra chance when the player left on bad terms (he walked out over arrears), %. PARÂMETRO. */
 const GRUDGE = 30;
@@ -97,10 +103,15 @@ export function flagGrudge(w: CareerWorld, p: PackPlayer) {
 export function settleImageClaims(w: CareerWorld): void {
   const season = w.season.season;
   const kept: Record<string, ImageDeal> = {};
-  for (const [id, d] of Object.entries(w.image ?? {}).sort(([a], [b]) => (a < b ? -1 : 1))) {
+  // The person's deals, and the usual share of everyone else in the squad.
+  const deals: Record<string, ImageDeal> = { ...w.image };
+  for (const p of w.pack.players)
+    if (p.clubId === w.clubId && !deals[p.id])
+      deals[p.id] = { club: w.clubId, share: imageShare(w, p), wage: p.contract?.wage ?? 0 };
+  for (const [id, d] of Object.entries(deals).sort(([a], [b]) => (a < b ? -1 : 1))) {
     const p = w.pack.players.find((x) => x.id === id);
-    if (d.club === w.clubId && d.share > IMAGE_SAFE) {
-      const chance = CLAIM + (d.bad ? GRUDGE : 0);
+    if (d.club === w.clubId && d.share > RISK_FROM) {
+      const chance = Math.round(((d.share - RISK_FROM) * CLAIM) / 20) + (d.bad ? GRUDGE : 0);
       if (pick(rngFrom(seedOf(w.seed, `image:${season}:${id}`)), 100) < chance) {
         const back = Math.round((d.wage * d.share * CHARGES * 12 * YEARS_BACK) / 10_000);
         const amount = Math.round((back * (100 + FINE)) / 100);
@@ -115,7 +126,7 @@ export function settleImageClaims(w: CareerWorld): void {
         note(w, { day: w.day, kind: 'imageClaim', player: p?.knownAs ?? p?.name ?? id, amount });
       }
     }
-    if (p && p.clubId === w.clubId) kept[id] = d;
+    if (p && p.clubId === w.clubId && w.image?.[id]) kept[id] = d;
   }
   if (Object.keys(kept).length) w.image = kept;
   else delete w.image;

@@ -26,17 +26,18 @@ describe('image rights', () => {
     const { w, p } = world(40);
     expect(wageCost(w, p)).toBe(200_000 - 17_600);
   });
-  it('no claim at the safe line; claims at 40% with a grudge in some seeds', () => {
-    const safe = world(IMAGE_SAFE);
-    settleImageClaims(safe.w);
-    expect(safe.w.inbox).toBeUndefined();
-    let claims = 0;
-    for (let seed = 0; seed < 50; seed++) {
-      const { w } = world(40, true, seed);
-      settleImageClaims(w);
-      claims += w.inbox?.length ?? 0;
-    }
-    expect(claims).toBeGreaterThan(5);
-    expect(claims).toBeLessThan(50);
+  it('claims grow with the share: none at 10%, some at 30%, more at 40% with a grudge', () => {
+    const count = (share: number, bad = false) => {
+      let claims = 0;
+      for (let seed = 0; seed < 200; seed++) {
+        const { w } = world(share, bad, seed);
+        settleImageClaims(w);
+        claims += (w.inbox ?? []).filter((n) => n.kind === 'imageClaim').length;
+      }
+      return claims;
+    };
+    expect(count(10)).toBe(0);
+    expect(count(IMAGE_SAFE)).toBeGreaterThan(0);
+    expect(count(40, true)).toBeGreaterThan(count(IMAGE_SAFE));
   });
 });

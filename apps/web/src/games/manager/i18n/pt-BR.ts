@@ -93,7 +93,7 @@ export const ptBR = {
   'market.imageUsual': 'Padrão do clube',
   'market.imageShare': '{s}% do salário',
   'market.imageHint':
-    'Lei Pelé: até 40%. Sem encargos para o clube e menos imposto para o jogador, mas acima de 30% a Justiça do Trabalho pode reclassificar como salário.',
+    'Lei Pelé: até 40%. Sem encargos para o clube e menos imposto para o jogador, mas quanto maior a parcela, maior o risco de a Justiça do Trabalho reclassificar como salário (a partir de 10%).',
   'market.yourClause': 'Multa rescisória em reais (opcional)',
   'market.borrow': 'Emprestar',
   'market.borrowFor': 'Pegar {name} emprestado até o fim da temporada por {fee}',
