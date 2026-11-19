@@ -37,6 +37,9 @@
       "ignoreGhsas": [
         "GHSA-fc5q-39xc-vjpf"
       ]
+    },
+    "overrides": {
+      "effect@<3.22.1": "^3.22.5"
     }
   }
 }
