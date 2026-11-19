@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 38;
+export const CAREER_RULES_VERSION = 39;
 
 interface Saved {
   v: number;
@@ -56,6 +56,7 @@ interface Saved {
   log?: CareerWorld['log'];
   injuries?: CareerWorld['injuries'];
   cards?: CareerWorld['cards'];
+  arrears?: CareerWorld['arrears'];
   academy?: CareerWorld['academy'];
   fairplay?: CareerWorld['fairplay'];
   /** Every club's cash, directors and structure (clubs.ts). */
@@ -143,6 +144,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.log && { log: w.log }),
     ...(w.injuries && { injuries: w.injuries }),
     ...(w.cards && { cards: w.cards }),
+    ...(w.arrears && { arrears: w.arrears }),
     ...(w.academy && { academy: w.academy }),
     ...(w.fairplay && { fairplay: w.fairplay }),
     ...(w.clubs && { clubs: w.clubs }),
@@ -203,6 +205,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.log && { log }),
     ...(saved.injuries && { injuries: saved.injuries }),
     ...(saved.cards && { cards: saved.cards }),
+    ...(saved.arrears && { arrears: saved.arrears }),
     ...(saved.academy && { academy: saved.academy }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),
     ...(saved.clubs && { clubs: saved.clubs }),

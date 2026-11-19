@@ -68,6 +68,7 @@ export function takeJob(w: CareerWorld, clubId: string): void {
     'forLoan',
     'academy',
     'injuries',
+    'arrears',
     'starts',
     'played',
   ] as const)

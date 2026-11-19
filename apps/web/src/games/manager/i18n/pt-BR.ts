@@ -248,6 +248,11 @@ export const ptBR = {
     '{up, select, true {O real desabou: o {c, select, USD {dólar} other {euro}} subiu {change, number, ::.0}% no mês e vale R$ {rate, number, ::.00}. Contratar no exterior ficou mais caro; vender para fora rende mais.} other {O real se valorizou: o {c, select, USD {dólar} other {euro}} caiu {change, number, ::.0}% no mês e vale R$ {rate, number, ::.00}. Contratar no exterior ficou mais barato; vender para fora rende menos.}}',
   'inbox.owners':
     'A temporada fechou no vermelho. Os donos do clube aportaram {value} para cobrir parte do prejuízo; o resto vira dívida.',
+  'inbox.arrears':
+    '{n, plural, one {O caixa está no vermelho e os salários do mês não foram pagos. O elenco sente: rende menos em campo.} other {Salários atrasados há # meses. O vestiário está em pé de guerra{n, select, 2 { — no terceiro mês a Lei Pelé deixa os jogadores rescindirem} other {: quem tem mercado pode ir embora de graça}}.}}',
+  'inbox.arrearsPaid': 'Os salários atrasados foram quitados. O vestiário respira de novo.',
+  'inbox.walkout':
+    '{name} entrou na Justiça pelos salários atrasados, rescindiu o contrato e saiu de graça.',
   'inbox.protest':
     'A torcida protestou depois da derrota: cobra a diretoria e o técnico. A paciência do conselho diminuiu.',
   'inbox.closedDoors':
