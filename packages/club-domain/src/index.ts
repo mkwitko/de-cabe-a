@@ -38,6 +38,7 @@ export * from './career/squad';
 export * from './career/training';
 export * from './career/market';
 export * from './career/board';
+export * from './career/history';
 export * from './career/inbox';
 export * from './market/value';
 export * from './market/plan';

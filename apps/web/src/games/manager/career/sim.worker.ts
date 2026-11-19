@@ -119,6 +119,9 @@ import {
   signable,
   FOREIGN_TIERS,
   foreignName,
+  seasonReview,
+  type HistoryEntry,
+  type SeasonReview,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -177,6 +180,10 @@ export interface SimView {
   /** After a season turn: titles of the person's division and the club's move. */
   turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
   division: string;
+  /** At the season's end, before the turn: the season read back (club-domain history.ts). */
+  review: SeasonReview | null;
+  /** The career's seasons, oldest first, each with the club's short name. */
+  history: (HistoryEntry & { club: string })[];
   cash: number;
   /** The world's date. */
   today: string;
@@ -966,6 +973,8 @@ function view(w: CareerWorld, ms: number): SimView {
     clubId: w.clubId,
     club: face(club),
     division: table.name,
+    review: pending?.kind === 'seasonOver' ? seasonReview(w) : null,
+    history: (w.history ?? []).map((h) => ({ ...h, club: byId.get(h.clubId)?.shortName ?? '' })),
     cash: w.ledger.cash,
     deadline: pending?.kind === 'deadline' ? isoOf(pending.day) : null,
     next:

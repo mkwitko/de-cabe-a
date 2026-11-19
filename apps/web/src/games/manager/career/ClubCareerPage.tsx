@@ -3,6 +3,7 @@
  * by one of three offers from the last one; then the career home. The world is built in the
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
+import { SeasonReview } from './SeasonReview';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
@@ -804,6 +805,7 @@ function NextMatch(props: {
           <p className="font-condensed text-3xl leading-none font-black uppercase sm:text-5xl">
             {t('career.seasonOver')}
           </p>
+          {sim.review && <SeasonReview review={sim.review} />}
           <button
             type="button"
             disabled={busy}

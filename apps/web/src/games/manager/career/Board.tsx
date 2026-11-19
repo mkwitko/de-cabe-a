@@ -7,6 +7,7 @@ import { btnPrimary } from '../../../components/ui';
 import { t } from '../i18n';
 import type { Front, WorkNo } from '@decabeca/club-domain';
 import type { SimView } from './sim.worker';
+import { History } from './SeasonReview';
 
 const LABEL =
   'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
@@ -220,6 +221,7 @@ export function Board({
           ))}
         </ul>
       </div>
+      <History history={sim.history} />
     </section>
   );
 }
