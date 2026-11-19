@@ -77,6 +77,26 @@ describe('release clauses (07 §2)', () => {
     expect(bidTerms(w, target.p.id, { ...wants, release: clause }).kind).toBe('accept');
     expect(w.pack.players.find((x) => x.id === target.p.id)!.contract!.releaseFee).toBe(clause);
   });
+
+  it('the image share the person writes into a signing is kept, and past the law it is refused', () => {
+    const w = openCareer(pack, 101, clubId);
+    const target = w.pack.players
+      .filter(
+        (p) =>
+          p.clubId && p.clubId !== 'abroad' && p.clubId !== clubId && cannotTalk(w, p) === null,
+      )
+      .map((p) => ({ p, s: sellerStance({ pack: w.pack, clubId: p.clubId! }, p, clubId, 2026) }))
+      .filter((x) => x.s.asking <= w.ledger.cash && (x.p.contract?.wage ?? 0) * 2 <= myWageRoom(w))
+      .sort((a, b) => a.s.asking - b.s.asking || (a.p.id < b.p.id ? -1 : 1))[0];
+    if (!target) return;
+    const talk = openTalk(w, target.p.id);
+    bidFee(w, target.p.id, talk.asking);
+    const wants = w.talks![target.p.id]!.wants!;
+    expect(() => bidTerms(w, target.p.id, { ...wants, image: 41 })).toThrow();
+    expect(bidTerms(w, target.p.id, { ...wants, image: 25 }).kind).toBe('accept');
+    expect(w.image?.[target.p.id]).toMatchObject({ club: clubId, share: 25 });
+    expect(loadCareer(pack, 101, clubId, saveCareer(w)).image?.[target.p.id]?.share).toBe(25);
+  });
 });
 
 describe('what an eye sees (06 §2.3)', () => {

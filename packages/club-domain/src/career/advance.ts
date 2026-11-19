@@ -20,7 +20,7 @@ import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
 import { formationOf, matchInputFor } from '../match/fixture-input';
-import { crowdShare, isDerby } from '../match/stadium';
+import { crowdShare, isDerby, moodOf } from '../match/stadium';
 import { whistleOf } from '../match/referee';
 import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
@@ -612,7 +612,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   const vote = planSeason(
     w,
     new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)),
-    { placed: (id) => placed.get(id), board: judged },
+    {
+      placed: (id) => placed.get(id),
+      board: judged,
+      mood: (id) => moodOf(w.pack, w.season, id, w.day + 1),
+    },
   );
   w.pack = withClubs(w.pack, w.clubs, w.origin);
   // The moves in force stay (each player's club and contract); those of players gone do not.

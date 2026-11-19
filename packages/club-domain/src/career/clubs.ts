@@ -99,6 +99,8 @@ const VOTE_RELEGATED = 20;
 const VOTE_NOISE = 41;
 /** Below this support the opposition wins. */
 const VOTE_LINE = 45;
+/** The supporters' mood as the season ends: at its best (+100) adds this, at its worst takes it. */
+const VOTE_MOOD = 15;
 /** Chance (%) a new president brings his own coach; plus when the coach is the outgoing board's man; goal. */
 const COACH_OWN = 15;
 const COACH_HIS_MAN = 25;
@@ -117,6 +119,8 @@ export function electionYear(w: CareerWorld, clubId: string, season = w.season.s
 export interface VoteContext {
   placed?: (id: string) => { position: number; places: number } | undefined;
   board?: { goal: number };
+  /** Supporters' mood as the season ends, -100..100 (match/stadium.ts `moodOf`). */
+  mood?: (id: string) => number;
 }
 /** The person's own club after the vote: kept, the board starts over, or the new president sacks him. */
 export type Vote = 'reelected' | 'fresh' | 'fired';
@@ -401,6 +405,8 @@ export function planSeason(
         const goal = club.id === w.clubId ? ctx.board?.goal : undefined;
         const met = goal !== undefined && at !== undefined && at.position <= goal;
         if (goal !== undefined) support += met ? VOTE_GOAL : -VOTE_GOAL;
+        // The members vote with the last weeks in their heads.
+        support += Math.round(((ctx.mood?.(club.id) ?? 0) * VOTE_MOOD) / 100);
         ousted = support < VOTE_LINE;
         if (club.id === w.clubId) {
           // The new president may want his own coach: likelier when this one is the outgoing
