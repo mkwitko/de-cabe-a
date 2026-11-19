@@ -8,7 +8,14 @@ import {
   startNextSeason,
   type CareerWorld,
 } from './advance';
-import { boardAfterMatch, boardAfterSeason, boardOf, goalFor, positionOf } from './board';
+import {
+  boardAfterMatch,
+  boardAfterSeason,
+  boardOf,
+  goalFor,
+  positionOf,
+  pressureOf,
+} from './board';
 import { loadCareer, saveCareer } from './save';
 import { jobOffers } from './start';
 
@@ -74,6 +81,46 @@ describe('the board (06, corte 1)', () => {
     expect(boardAfterMatch(w, match, draw).confidence).toBe(clean);
     w.arrears = 1;
     expect(boardAfterMatch(w, match, draw).confidence).toBe(clean - 1);
+  });
+
+  it('a club under pressure asks more, and the press makes a story of a winless run', () => {
+    const calm = openCareer(pack, 71, clubId);
+    // The same club as the smallest of its table and as its biggest, with demanding supporters.
+    const as = (reputation: number) =>
+      openCareer(
+        {
+          ...pack,
+          clubs: pack.clubs.map((c) =>
+            c.id === clubId
+              ? {
+                  ...c,
+                  reputation,
+                  fans: { ...c.fans, demand: 100, ambition: 100, patience: 0 },
+                }
+              : c,
+          ),
+        },
+        71,
+        clubId,
+      );
+    const small = as(1);
+    const loud = as(100);
+    expect(pressureOf(loud)).toBeGreaterThan(pressureOf(calm));
+    expect(pressureOf(loud)).toBeGreaterThanOrEqual(75);
+    // Size counts against the table: the smallest of it is asked far less.
+    expect(pressureOf(small)).toBeLessThan(pressureOf(loud) - 40);
+    // The biggest is asked for the top whatever its squad.
+    expect(goalFor(loud)).toBeLessThanOrEqual(goalFor(calm));
+    expect(goalFor(loud)).toBeLessThanOrEqual(3);
+    const match = { home: clubId, away: pack.clubs.find((c) => c.id !== clubId)!.id };
+    const draw = score(1, 1, true);
+    for (let k = 0; k < 2; k++) loud.board = boardAfterMatch(loud, match, draw);
+    expect(loud.board!.last!.some((r) => r.kind === 'press')).toBe(false);
+    loud.board = boardAfterMatch(loud, match, draw);
+    expect(loud.board.winless).toBe(3);
+    expect(loud.board.last).toContainEqual({ kind: 'press', value: -2 });
+    loud.board = boardAfterMatch(loud, match, score(1, 0, true));
+    expect(loud.board.winless).toBeUndefined();
   });
 
   it('losing brings an ultimatum; meeting it lifts the pressure', () => {

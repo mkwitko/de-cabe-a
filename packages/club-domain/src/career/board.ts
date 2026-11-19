@@ -16,7 +16,14 @@ export type BoardReason =
   | { kind: 'result'; result: 'W' | 'D' | 'L'; odds: Odds; value: number }
   | {
       kind:
-        'cash' | 'goalMet' | 'goalMissed' | 'ultimatumMet' | 'fairplay' | 'protest' | 'homegrown';
+        | 'cash'
+        | 'goalMet'
+        | 'goalMissed'
+        | 'ultimatumMet'
+        | 'fairplay'
+        | 'protest'
+        | 'homegrown'
+        | 'press';
       value: number;
     };
 
@@ -30,6 +37,8 @@ export interface Board {
   fired?: true;
   /** Why the confidence last moved. */
   last?: BoardReason[];
+  /** League and cup matches in a row without a win: the press counts them. */
+  winless?: number;
 }
 
 const START = 60;
@@ -74,12 +83,48 @@ const horizonOf = (w: CareerWorld): Horizon =>
 /** A board that starts over under a new president: first confidence, this season's goal. */
 export const freshBoard = (w: CareerWorld): Board => ({ confidence: START, goal: goalFor(w) });
 
-/** The goal for the table the club is in, from its rank by squad strength and the directors. */
+/**
+ * The pressure on the job, 0..100 (06 §2.8). Not the club's size alone but its size against the
+ * table it plays in now: the biggest club of the Série B is asked for promotion and feels it, the
+ * same club back in the Série A, among the smallest there, is asked to stay up. On top, the press
+ * its stature brings (a giant is on the sports pages every day), what its supporters ask (demand,
+ * ambition) against how long they wait (patience), and owners who answer to investors. It pulls
+ * the goal towards the club's place by stature, makes defeats cost more, and lets the press turn
+ * a winless run into a crisis. PARÂMETROS: the biggest of a table near 80, the smallest near 20.
+ */
+export function pressureOf(w: CareerWorld): number {
+  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
+  const model = w.pack.governance.find((g) => g.clubId === w.clubId)?.model ?? 'association';
+  const rows = divisionTable(w).rows;
+  const rep = (id: string) => w.pack.clubs.find((c) => c.id === id)?.reputation ?? 0;
+  const bigger = rows.filter((r) => rep(r.clubId) > club.reputation).length;
+  // +30 the biggest of the table, -30 the smallest.
+  const standing = rows.length > 1 ? 30 - Math.round((60 * bigger) / (rows.length - 1)) : 0;
+  const press = Math.round(Math.max(0, club.reputation - 50) / 5);
+  const f = club.fans;
+  return clamp(
+    40 +
+      standing +
+      press +
+      Math.round((f.demand + f.ambition - f.patience) / 6) +
+      OWNER_HASTE[model],
+  );
+}
+
+/**
+ * The goal for the table the club is in: its rank by squad strength, pulled towards its rank by
+ * stature (reputation) as hard as the pressure on it (a giant with a poor squad is still asked
+ * for the top), then the directors' slack.
+ */
 export function goalFor(w: CareerWorld): number {
   const rows = divisionTable(w).rows;
   const mine = w.strength.get(w.clubId) ?? 0;
   const stronger = rows.filter((r) => (w.strength.get(r.clubId) ?? 0) > mine).length;
-  return Math.max(1, Math.min(rows.length, stronger + GOAL_SLACK[horizonOf(w)]));
+  const rep = (id: string) => w.pack.clubs.find((c) => c.id === id)?.reputation ?? 0;
+  const bigger = rows.filter((r) => rep(r.clubId) > rep(w.clubId)).length;
+  const p = pressureOf(w);
+  const rank = Math.round((stronger * (100 - p) + bigger * p) / 100);
+  return Math.max(1, Math.min(rows.length, rank + GOAL_SLACK[horizonOf(w)]));
 }
 
 /** The club's position in its table today, 1 = top. */
@@ -106,8 +151,15 @@ export function boardAfterMatch(
   const gap =
     (w.strength.get(w.clubId) ?? 0) - (w.strength.get(atHome ? match.away : match.home) ?? 0);
   const odds: Odds = gap > CLEAR_GAP ? 'favourite' : gap < -CLEAR_GAP ? 'underdog' : 'even';
-  const value = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w)] : 0);
+  const p = pressureOf(w);
+  const base = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w)] : 0);
+  // Under pressure a bad result weighs more: up to half again at the most.
+  const value = base < 0 ? Math.trunc((base * (200 + p)) / 200) : base;
   const last: BoardReason[] = [{ kind: 'result', result, odds, value }];
+  const winless = result === 'W' ? 0 : (b.winless ?? 0) + 1;
+  // A winless run in the papers: a story at its third match, and again every three more.
+  if (winless >= PRESS_RUN && winless % PRESS_RUN === 0 && p >= PRESS)
+    last.push({ kind: 'press', value: p >= PRESS_LOUD ? -2 : -1 });
   if (w.arrears) last.push({ kind: 'cash', value: IN_ARREARS });
   // A defeat that tips the supporters over: they protest once a crisis, and the board hears them
   // (more when the supporters are impatient), not again at every defeat of the same run.
@@ -120,7 +172,7 @@ export function boardAfterMatch(
   )
     last.push({ kind: 'protest', value: club.fans.patience < 50 ? -2 : -1 });
   let confidence = clamp(b.confidence + last.reduce((s, r) => s + r.value, 0));
-  const next: Board = { confidence, goal: b.goal, last };
+  const next: Board = { confidence, goal: b.goal, last, ...(winless && { winless }) };
 
   if (b.ultimatum) {
     const left = {
@@ -134,7 +186,7 @@ export function boardAfterMatch(
       last.push({ kind: 'ultimatumMet', value: lift });
     } else if (left.matches <= 0) next.fired = true;
     else next.ultimatum = left;
-  } else if (confidence < pressureOf(w)) next.ultimatum = ultimatumOf(w);
+  } else if (confidence < thresholdOf(w)) next.ultimatum = ultimatumOf(w);
   return next;
 }
 
@@ -143,13 +195,17 @@ export function boardAfterMatch(
  * investors (a SAF, more so a multi-club group). PARÂMETROS.
  */
 const OWNER_HASTE = { association: 0, ownedSaf: 10, groupSaf: 15 } as const;
+/** Winless matches in a row the press makes a story of, and the pressure it takes (loud above). */
+const PRESS_RUN = 3;
+const PRESS = 50;
+const PRESS_LOUD = 75;
 export function patienceOf(w: CareerWorld): number {
   const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
   const model = w.pack.governance.find((g) => g.clubId === w.clubId)?.model ?? 'association';
   return Math.max(0, club.profile.patience - OWNER_HASTE[model]);
 }
 /** Below this confidence the board sets an ultimatum: 15 for the most patient, 35 for the least. */
-const pressureOf = (w: CareerWorld) => 15 + Math.round((100 - patienceOf(w)) / 5);
+const thresholdOf = (w: CareerWorld) => 15 + Math.round((100 - patienceOf(w)) / 5);
 /** The ultimatum: more matches for a patient board, at the same points a match. */
 function ultimatumOf(w: CareerWorld): { matches: number; points: number } {
   const matches = 3 + Math.round(patienceOf(w) / 30);

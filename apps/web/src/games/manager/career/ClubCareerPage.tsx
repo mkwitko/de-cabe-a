@@ -903,6 +903,7 @@ const FROM = {
   closedDoors: 'press',
   sponsor: 'finance',
   protest: 'press',
+  press: 'press',
   courtBan: 'press',
   tired: 'staff',
   bought: 'market',
@@ -981,6 +982,8 @@ function noteText(n: InboxItem, sim: SimView): string {
       });
     case 'protest':
       return t('inbox.protest');
+    case 'press':
+      return t('inbox.press', { n: n.matches });
     case 'courtBan':
       return t('inbox.courtBan', { n: n.matches });
     case 'tired':

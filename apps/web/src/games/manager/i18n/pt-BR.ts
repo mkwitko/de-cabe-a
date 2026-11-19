@@ -264,6 +264,8 @@ export const ptBR = {
     '{name} ganhou na Justiça do Trabalho: o direito de imagem era salário disfarçado. O clube pagou {value} em encargos atrasados e multa.',
   'inbox.walkout':
     '{name} entrou na Justiça pelos salários atrasados, rescindiu o contrato e saiu de graça.',
+  'inbox.press':
+    'A imprensa fala em crise: {n} jogos sem vencer. A cobrança chega à diretoria, e a paciência com o técnico encurta.',
   'inbox.protest':
     'A torcida protestou depois da derrota: cobra a diretoria e o técnico. A paciência do conselho diminuiu.',
   'inbox.closedDoors':
@@ -313,7 +315,7 @@ export const ptBR = {
   'board.result':
     '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
   'board.reason':
-    '{k, select, cash {Salários atrasados} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} protest {Protesto da torcida} homegrown {A torcida aplaude os crias da casa} other {Ultimato cumprido}}',
+    '{k, select, cash {Salários atrasados} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} protest {Protesto da torcida} homegrown {A torcida aplaude os crias da casa} press {Crise na imprensa} other {Ultimato cumprido}}',
   'board.up': '+{n}',
   'board.down': '−{n}',
   'board.ultimatum': 'Ultimato',
