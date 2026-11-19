@@ -333,6 +333,10 @@ function Office({ office }: { office: NonNullable<MarketView['other']>['office']
         </dd>
       </div>
       <div className="sm:col-span-2">
+        <dt className="text-chalk-soft">{t('market.officeFame')}</dt>
+        <dd>{t('board.fame', { ...office.fame })}</dd>
+      </div>
+      <div className="sm:col-span-2">
         <dt className="text-chalk-soft">{t('board.structure')}</dt>
         <dd className="flex flex-wrap gap-x-3 gap-y-1">
           {office.structure.map((x) => (

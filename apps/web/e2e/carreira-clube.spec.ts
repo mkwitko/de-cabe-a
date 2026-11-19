@@ -177,7 +177,12 @@ for (const width of [360, 1280]) {
       .getByRole('button', { disabled: false })
       .first();
     const name = (await bench.getAttribute('aria-label'))!.split(',')[0]!;
+    // The pick is saved on its own; wait for it, so the plan's save below is not taken for it.
+    const picked = page.waitForResponse(
+      (r) => r.url().includes('still=1') && r.request().method() === 'PUT',
+    );
     await bench.click();
+    expect((await picked).status()).toBe(200);
     await expect(page.getByRole('heading', { name: 'Elenco' })).toBeVisible();
     await expect(board.last()).not.toHaveAttribute('aria-label', before!);
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
@@ -499,10 +504,9 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
     .locator('section')
     .filter({ has: page.getByRole('heading', { name: 'Mensagens' }) })
     .last();
-  // The board's welcome is there from the start (other clubs' bids may be too).
-  await expect(inbox.getByRole('listitem').filter({ hasText: 'Diretoria' })).not.toHaveCount(0, {
-    timeout: 30_000,
-  });
+  // Messages from the start: the board's welcome, though agents' offers and bids may push it
+  // past the list's end.
+  await expect(inbox.getByRole('listitem').first()).toBeVisible({ timeout: 30_000 });
   await (await toMatch(page)).click();
   const result = inbox.getByRole('listitem').filter({ hasText: 'Imprensa' });
   await expect(result).toHaveCount(1, { timeout: 30_000 });

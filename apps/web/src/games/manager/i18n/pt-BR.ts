@@ -222,6 +222,8 @@ export const ptBR = {
   'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
   'inbox.fairplay':
     '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita, acima do limite da CBF. Advertência pública.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). Multa de {fine}.} 3 {Fair play financeiro: terceira temporada acima do limite ({cost}%). Multa de {fine} e registro de atletas bloqueado: o clube não pode contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Multa de {fine}, registro bloqueado e {points} pontos a menos na tabela.}}',
+  'inbox.directors':
+    '{mine, select, yes {{why, select, sale {O clube foi vendido. O novo dono} other {Eleição no clube. A nova diretoria}} é {h, select, short {imediatista: quer resultado já, com mais verba para reforços e menos paciência.} long {de longo prazo: segura verba para estrutura e base e dá tempo ao trabalho.} other {equilibrada.}} A meta da temporada foi refeita.} other {{why, select, sale {O {club} foi vendido} other {O {club} elegeu nova diretoria}}, {h, select, short {imediatista} long {de longo prazo} other {equilibrada}}.}}',
   'inbox.fairplayRival':
     'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
   'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
@@ -245,6 +247,9 @@ export const ptBR = {
   'market.officeBoardText':
     '{h, select, short {Imediatista} long {De longo prazo} other {Equilibrada}}, {c, select, high {bem avaliada} low {mal avaliada} other {de gestão mediana}}',
   'market.officeWork': '(em obra)',
+  'market.officeFame': 'Fama',
+  'board.fame':
+    'Fama: {national} no Brasil, {continental} na América do Sul, {international} no mundo (de 0 a 100). Títulos e campanhas aumentam; o tempo sem conquistas devolve à história do clube.',
   'board.upkeep': 'Manutenção da estrutura: {cost} por temporada, descontada mês a mês.',
   'board.front':
     '{f, select, training {Centro de treinamento} youth {Categorias de base} medical {Departamento médico} scouting {Olheiros} football {Diretoria de futebol} stadium {Estádio} other {Estrutura}}',

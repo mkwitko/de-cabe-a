@@ -174,6 +174,7 @@ export function Board({
         <p className="text-chalk-soft">
           {t('board.upkeep', { cost: t('career.cash', { value: b.upkeep }) })}
         </p>
+        <p>{t('board.fame', { ...b.fame })}</p>
         {said && (
           <p role="status" className={said.no ? 'font-semibold text-club-danger' : 'font-semibold'}>
             {said.no

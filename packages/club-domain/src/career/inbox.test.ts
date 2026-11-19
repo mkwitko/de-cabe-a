@@ -16,7 +16,10 @@ describe('the inbox', () => {
     expect(w.inbox).toEqual([{ day: 0, kind: 'welcome' }]);
     // A signing closed at the two tables is told, inside the window that opens the year.
     const target = w.pack.players
-      .filter((x) => x.clubId && x.clubId !== clubId && cannotTalk(w, x) === null)
+      .filter(
+        (x) =>
+          x.clubId && x.clubId !== 'abroad' && x.clubId !== clubId && cannotTalk(w, x) === null,
+      )
       .map((x) => ({
         x,
         ask: sellerStance({ pack: w.pack, clubId: x.clubId! }, x, clubId, 2026).asking,
@@ -47,7 +50,8 @@ describe('the inbox', () => {
     const position = positionOf(w);
     const cash = w.ledger.cash;
     startNextSeason(w);
-    const kinds = w.inbox!.map((n) => n.kind);
+    // Elections and club sales elsewhere in the division may come too (clubs.ts).
+    const kinds = w.inbox!.map((n) => n.kind).filter((k) => k !== 'directors');
     // The turn tells, in order: the goal, the prize, the season, and the academy's boys.
     expect(kinds.slice(-4)).toEqual(['goal', 'prize', 'season', 'crop']);
     const prize = w.inbox!.find((n) => n.kind === 'prize')!;

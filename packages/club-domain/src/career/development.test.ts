@@ -8,6 +8,7 @@ import {
   develop,
   drive,
   evolve,
+  imports,
   growthOf,
   retires,
   type Mine,
@@ -189,7 +190,8 @@ describe('a year passes (03 §3)', () => {
     expect(w.pack.players.some((p) => p.id.startsWith('y2029-'))).toBe(true);
     expect(w.log!.some((l) => l.growth.includes('!'))).toBe(true);
     // One character a player for each finished season: that is all the log keeps.
-    expect(w.log![0]!.growth.length).toBe(pack.players.length);
+    // The opening pack and the first season's foreign market (04 §4.7).
+    expect(w.log![0]!.growth.length).toBe(pack.players.length + imports(pack, 61, 2026).length);
     expect(w.log![0]!.growth).toMatch(/^[!0-v]+$/);
     const t = performance.now();
     const again = loadCareer(pack, 61, clubId, saveCareer(w));

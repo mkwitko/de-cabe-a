@@ -900,6 +900,7 @@ const FROM = {
   prize: 'finance',
   fairplay: 'finance',
   fairplayRival: 'press',
+  directors: 'board',
   season: 'press',
 } as const;
 const FROM_TONE = {
@@ -975,6 +976,13 @@ function noteText(n: InboxItem, sim: SimView): string {
       });
     case 'fairplayRival':
       return t('inbox.fairplayRival', { club: n.clubName, points: n.points });
+    case 'directors':
+      return t('inbox.directors', {
+        club: n.clubName,
+        why: n.why,
+        h: n.horizon,
+        mine: n.club === sim.clubId ? 'yes' : 'no',
+      });
     case 'hired':
       return t('inbox.hired', { club: n.clubName });
     case 'solidarity':

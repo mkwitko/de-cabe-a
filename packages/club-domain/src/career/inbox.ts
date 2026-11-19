@@ -41,6 +41,13 @@ export type Note = { day: number } & (
   | { kind: 'fairplay'; strikes: number; cost: number; points: number; fine?: number }
   /** A club of the person's division starts the season with points taken off. */
   | { kind: 'fairplayRival'; club: string; points: number }
+  /** New directors at the person's club or one of their division (clubs.ts). */
+  | {
+      kind: 'directors';
+      club: string;
+      why: 'election' | 'sale';
+      horizon: 'short' | 'medium' | 'long';
+    }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }
 );
 

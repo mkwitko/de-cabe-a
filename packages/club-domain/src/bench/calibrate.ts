@@ -6,6 +6,9 @@
  * Policies: `auto` never touches anything; `light`/`hard` only set the training week;
  * `seller` sells whoever a club bids for and lists the squad; `keeper` renews every contract.
  */
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { clubsOf, type Horizon } from '../career/clubs';
 import { generateDevPack } from '../generate/pack';
 import {
   nextDecision,
@@ -57,8 +60,15 @@ function keep(w: CareerWorld) {
   }
 }
 
+/** HORIZON pins the person's directors (short, medium, long), to measure what the draw does. */
+const HORIZON = process.env.HORIZON as Horizon | undefined;
+const pin = (w: CareerWorld, clubId: string) => {
+  if (HORIZON) clubsOf(w)[clubId]!.directors.horizon = HORIZON;
+};
+
 function play(pack: Pack, seed: number, clubId: string, policy: Policy, seasons: number): Run {
   const w = openCareer(pack, seed, clubId);
+  pin(w, clubId);
   const run: Run = {
     tier: tierOfClub(w, clubId),
     seasons: 0,
@@ -108,6 +118,7 @@ function play(pack: Pack, seed: number, clubId: string, policy: Policy, seasons:
     run.goalsJudged++;
     if (positionOf(w) <= boardOf(w).goal) run.goalsMet++;
     startNextSeason(w);
+    pin(w, clubId);
   }
   run.endStrength = w.strength.get(clubId) ?? 0;
   return run;
@@ -135,8 +146,16 @@ function world(pack: Pack, seed: number, seasons: number) {
     horizons: string;
   }[] = [];
   const home = { w: 0, d: 0, l: 0, goals: 0, n: 0 };
+  /** The Série A champion of each season. */
+  const champions: string[] = [];
   for (let s = 0; s < seasons; s++) {
-    for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) playDecision(w, d);
+    for (;;) {
+      const d = nextDecision(w);
+      // A dismissal does not stop the world: the board is set back (as development.test does).
+      if (d.kind === 'fired') w.board = { confidence: 60, goal: boardOf(w).goal };
+      else if (d.kind === 'match') playDecision(w, d);
+      else break;
+    }
     for (const o of w.season.outcomes.values()) {
       home.n++;
       home.goals += o.goals[0] + o.goals[1];
@@ -203,8 +222,9 @@ function world(pack: Pack, seed: number, seasons: number) {
           [...bill0.values()].reduce((a, b) => a + b, 0),
         ),
     });
-    if (boardOf(w).fired) break;
-    startNextSeason(w);
+    const top = divs.find((d) => d.tier === 1)!;
+    const t = startNextSeason(w);
+    champions.push(t.titles.find((x) => x.competitionId === top.id)?.clubId ?? '');
   }
   const drift = [1, 2, 3, 4].map((tier) => {
     const ids = divs.find((d) => d.tier === tier)?.clubIds ?? [];
@@ -213,11 +233,19 @@ function world(pack: Pack, seed: number, seasons: number) {
   const ages = w.pack.players
     .filter((p) => p.clubId)
     .map((p) => w.season.season - Number(p.birthDate.slice(0, 4)));
-  return { perSeason, home, drift, age: r1(mean(ages)), value: marketValue };
+  return { perSeason, home, drift, age: r1(mean(ages)), value: marketValue, champions };
+}
+
+/** PACK points at a real pack (`.json` or `.json.gz`, e.g. the FM import); the dev pack else. */
+function loadPack(): Pack {
+  const file = process.env.PACK;
+  if (!file) return generateDevPack();
+  const raw = readFileSync(file);
+  return JSON.parse((file.endsWith('.gz') ? gunzipSync(raw) : raw).toString('utf8')) as Pack;
 }
 
 function main() {
-  const pack = generateDevPack();
+  const pack = loadPack();
   const divs = nationalDivisions(pack);
   const SEEDS = Number(process.env.SEEDS ?? 6);
   const SEASONS = Number(process.env.SEASONS ?? 3);
@@ -298,6 +326,14 @@ function main() {
     );
   out.push(
     `  strength drift by tier after ${w.perSeason.length} seasons: ${w.drift.join(' ')} | mean age ${w.age}`,
+    // 04 §4.6: past year 15, no club should win the Série A more than 40% of the time.
+    (() => {
+      const late = w.champions.slice(15);
+      const counts = new Map<string, number>();
+      for (const c of w.champions) counts.set(c, (counts.get(c) ?? 0) + 1);
+      const lateTop = Math.max(0, ...late.map((c) => late.filter((x) => x === c).length));
+      return `  Série A champions: ${counts.size} different in ${w.champions.length} seasons; most ${Math.max(0, ...counts.values())}; after season 15 the top club won ${late.length ? Math.round((lateTop * 100) / late.length) : 0}%`;
+    })(),
   );
   out.push(`(${Math.round((performance.now() - t0) / 1000)} s)`);
   console.log(out.join('\n'));

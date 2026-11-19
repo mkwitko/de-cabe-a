@@ -99,7 +99,10 @@ describe("directors' judgement (06 §2.3, 04 §8.2)", () => {
   it('over a window, clubs with poor scouting misjudge what they buy by more', () => {
     const w = openCareer(pack, 97, jobOffers(pack, 5)[0]!.clubId);
     const day = dayOf('2026-04-16');
-    const deals = [0, 14, 28, 42].flatMap((k) => marketRound(w, day + k)).filter((d) => d.from);
+    const deals = [0, 14, 28, 42]
+      .flatMap((k) => marketRound(w, day + k))
+      // Between clubs of the pack: the foreign market is not in its readings.
+      .filter((d) => d.from && d.from !== 'abroad');
     const off = (poor: boolean) => {
       const of = deals.filter((d) => eyeOf(pack, d.to).scouting <= 2 === poor);
       const wrong = of.map((d) => Math.abs(d.seen - read.get(d.player)!.level));

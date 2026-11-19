@@ -24,7 +24,8 @@ describe('the market between clubs (07 §6, 04 §8)', () => {
 
   it('clubs buy for a need, inside their budget, and nobody is left short', () => {
     const w = openCareer(pack, 91, clubId);
-    const before = new Map(pack.players.map((p) => [p.id, p.clubId]));
+    // The opening pack as the career holds it: the season's foreign market included.
+    const before = new Map(w.pack.players.map((p) => [p.id, p.clubId]));
     const deals = [0, 14, 28, 42].flatMap((k) => marketRound(w, ROUND + k));
     expect(deals.length).toBeGreaterThan(20);
     const read = readingsOf(w.pack);
@@ -45,6 +46,8 @@ describe('the market between clubs (07 §6, 04 §8)', () => {
       expect(
         d.why.need + d.why.fit + d.why.growth + d.why.resale - d.why.cost - d.why.wages,
       ).toBeGreaterThanOrEqual(6);
+      // From abroad the price is fixed (abroad.ts); the rest is read against the pack.
+      if (d.from === 'abroad') continue;
       // The fee stays in reach of what he is worth: from a spare sold by a weak office to a
       // key man bought by one that overpays.
       const value = marketValue(

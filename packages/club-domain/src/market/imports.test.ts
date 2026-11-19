@@ -18,8 +18,8 @@ describe('the foreign market (04 §4.7)', () => {
   it('the person brings a player from abroad at the market price; the fee leaves the league', () => {
     const w = openCareer(structuredClone(pack), 3, clubId);
     w.day = dayOf('2026-02-16');
-    const offer = imports(w.pack, 3, w.season.season);
-    w.pack = { ...w.pack, players: [...w.pack.players, ...offer] };
+    // The season's foreign market is in the pack from the start.
+    const offer = w.pack.players.filter((x) => x.clubId === ABROAD);
     w.ledger.today = w.day;
     const p = offer
       .filter((x) => cannotTalk(w, x) === null && openingWage(w, x) <= myWageRoom(w))
