@@ -1047,6 +1047,58 @@ let attendanceResearched = 0;
     );
   }
 }
+/**
+ * Fan base (`fans.size`, supporters across the country): the Ipsos-Ipec survey of 2025 for the
+ * twenty clubs it lists (data/fans.json, 0.5% of Brazilians or more). Below that, a club with a
+ * researched 2025 public (data/attendance.json) gets it times the median ratio of the listed
+ * clubs, under the survey's floor; the rest, Série C and D mostly, by reputation, squared, under
+ * a fifth of it. Estimates, flagged.
+ */
+const FANS = JSON.parse(readFileSync(new URL('./data/fans.json', import.meta.url), 'utf8')) as {
+  population: number;
+  floor: number;
+  clubs: { club: string; state: string; aliases: string[]; share: number }[];
+};
+let fansResearched = 0;
+{
+  const base = FANS.population;
+  const floor = (base * FANS.floor) / 100;
+  const find = <T extends { club: string; state: string; aliases: string[] }>(
+    list: T[],
+    club: PackClub,
+  ) => {
+    const names = [fold(club.name), fold(club.shortName)];
+    const state = cities.get(club.cityId)?.state;
+    return list.find(
+      (x) => x.state === state && [x.club, ...x.aliases].some((n) => names.includes(fold(n))),
+    );
+  };
+  const ratios: number[] = [];
+  const rest: PackClub[] = [];
+  for (const club of clubs) {
+    const f = find(FANS.clubs, club);
+    if (!f) {
+      rest.push(club);
+      continue;
+    }
+    club.fans.size = Math.round((base * f.share) / 100);
+    fansResearched++;
+    const a = find(ATTENDANCE, club);
+    if (a) ratios.push(club.fans.size / a.avgAttendance);
+  }
+  const ratio = [...ratios].sort((x, y) => x - y)[ratios.length >> 1] ?? 0;
+  for (const club of rest) {
+    const a = find(ATTENDANCE, club);
+    if (a && ratio) {
+      club.fans.size = Math.round(Math.min(floor * 0.9, a.avgAttendance * ratio));
+      est('fans: size from the 2025 public, by the ratio of the surveyed clubs');
+      continue;
+    }
+    const r = Math.max(0, club.reputation - 30) / 60;
+    club.fans.size = Math.max(1000, Math.round((floor * Math.min(1, r * r)) / 5));
+    est('fans: size from reputation, under a fifth of the survey floor');
+  }
+}
 const competitions = realDivisions(SEASON, [a27, b27, c27, d27].map(ids));
 
 // Rivals (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID"): HEURISTIC,
@@ -1143,6 +1195,7 @@ report.notes.push(
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
   'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
   'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
+  `fans: ${fansResearched} clubs with their supporters from data/fans.json (Ipsos-Ipec 2025), the rest estimated from the public or reputation`,
   `attendance: ${attendanceResearched} clubs with their 2025 average public and ticket from data/attendance.json (ge, mktesportivo); fans.demand is the share of seats filled on an ordinary day, fans.priceSensitivity sets the ticket`,
   `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
   `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
