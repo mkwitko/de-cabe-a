@@ -48,6 +48,47 @@ const WEEKS_PER_MONTH = 52 / 12;
 const monthlyBrl = (weekly: number) => Math.round(weekly * WEEKS_PER_MONTH * GBP_TO_BRL);
 const brl = (gbp: number) => Math.round(gbp * GBP_TO_BRL);
 
+/**
+ * How a club is run (mapa de conhecimento §2.4): data/governance.json, researched with a source
+ * per club (2026-11-18), matched by name or alias and state. A SAF owned by a multi-club group
+ * (City Football Group, Red Bull, Eagle, 777) or a company is a groupSaf; another SAF an
+ * ownedSaf; else an association. Without research, a FM26 legal name with "SAF" in it.
+ */
+const fold = (s: string) =>
+  s
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+const GOVERNANCE = (
+  JSON.parse(readFileSync(new URL('./data/governance.json', import.meta.url), 'utf8')) as {
+    clubs: {
+      club: string;
+      state: string | null;
+      model: 'saf' | 'empresa' | 'associacao' | null;
+      owner: string | null;
+      source: string | null;
+      aliases?: string[];
+    }[];
+  }
+).clubs.filter((g) => g.model && g.source);
+const GROUPS = /city football|red bull|eagle|777/i;
+let governanceResearched = 0;
+function modelOf(name: string, short: string, state: string | undefined) {
+  const names = [fold(name), fold(short)];
+  const g = GOVERNANCE.find(
+    (x) => x.state === state && [x.club, ...(x.aliases ?? [])].some((n) => names.includes(fold(n))),
+  );
+  if (g) {
+    governanceResearched++;
+    if (g.model === 'associacao') return 'association' as const;
+    return g.model === 'empresa' || GROUPS.test(g.owner ?? '')
+      ? ('groupSaf' as const)
+      : ('ownedSaf' as const);
+  }
+  return /\bSAF\b/.test(name) ? ('ownedSaf' as const) : ('association' as const);
+}
+
 const [, , dirArg, outArg] = process.argv;
 if (!dirArg) {
   console.error('usage: import-fm.ts <csv-dir> [out.json.gz]');
@@ -905,7 +946,7 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     strength,
     goalOf.get(uid) ?? 10,
     clubs.length - 1,
-    /\bSAF\b/.test(c.name) ? 'ownedSaf' : 'association',
+    modelOf(c.name, c.short_name || c.name, cities.get(cityKey)?.state),
   );
   staff.push(own.coach);
   assignments.push(own.assignment);
@@ -1012,6 +1053,7 @@ report.notes.push(
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
   'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
   'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
+  `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
   'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
   'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
 );

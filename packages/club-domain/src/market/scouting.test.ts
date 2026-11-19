@@ -16,6 +16,7 @@ import {
   scoutingDay,
   scoutsOf,
   sendScout,
+  tripCost,
 } from './scouting';
 
 const pack = generateDevPack();
@@ -102,6 +103,17 @@ describe("the person's scouts", () => {
     expect(knowledgeOf(w, p)).toBeGreaterThanOrEqual(30);
     expect(personKnows(w, p)).toBe(true);
     expect(w.inbox!.at(-1)).toMatchObject({ kind: 'scouted', area: `player:${p.id}`, players: 1 });
+  });
+
+  it('a trip is paid from the cash, and refused without it', () => {
+    const w = openCareer(pack, 3, clubId);
+    const area = scoutAreas(w).find((a) => a.startsWith('tier:'))!;
+    const cash = w.ledger.cash;
+    expect(sendScout(w, area, 1)).toBeNull();
+    expect(w.ledger.cash).toBe(cash - tripCost(w, area));
+    const poor = openCareer(pack, 3, clubId);
+    poor.ledger = { ...poor.ledger, cash: 0 };
+    expect(sendScout(poor, area, 1)).toBe('cash');
   });
 
   it('no more scouts away than the department has', () => {

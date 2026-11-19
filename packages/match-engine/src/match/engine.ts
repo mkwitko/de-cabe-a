@@ -15,7 +15,7 @@ import {
   weighted,
 } from '../rules/duel';
 import { gaussian } from '../rules/math';
-import { DT, moveTowards, maxSpeed } from '../movement';
+import { DT, blockBody, moveTowards, maxSpeed } from '../movement';
 import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
 import { between, next } from '../random';
 import { lineOf } from '../team';
@@ -395,7 +395,7 @@ function dribble(s: MatchState, c: MatchPlayer) {
       next(s.rngs.referee) <
       beatenFoulChance(d) * (d.cards === 1 ? 0.6 : 1) * (inOwnBox(d.team, c.pos) ? 0.15 : 1)
     ) {
-      foul(s, d, c, true);
+      foul(s, d, c, true, false, false, false);
       return;
     }
     d.tackleAt = s.tick + 8; // beaten: out of the play for two seconds
@@ -528,7 +528,7 @@ function tackles(s: MatchState) {
     // Tactical foul (research 18 §1.2 C): a counter just started, running at our half with
     // few of us goal-side; a player who reads the game stops it, less so on a yellow.
     if (!box && tacticalFoul(s, d, c)) {
-      foul(s, d, c, false, true);
+      foul(s, d, c, false, true, false, false);
       return;
     }
     if (next(s.rngs.execution) > TACKLE_RATE * sync * (d.cards === 1 ? 0.4 : 1) * (box ? 0.7 : 1))
@@ -541,7 +541,7 @@ function tackles(s: MatchState) {
     const won = next(s.rngs.execution) < tackleChance(d.attrs, c.attrs, behind);
     const pf = foulChance(d, behind, won) * (d.cards === 1 ? 0.6 : 1) * (box ? 0.15 : 1);
     if (next(s.rngs.referee) < pf) {
-      foul(s, d, c, behind);
+      foul(s, d, c, behind, false, false, won);
       return;
     }
     if (won) tackleWins(s, d, c);
@@ -559,6 +559,7 @@ export function foul(
   behind: boolean,
   tactical = false,
   aerial = false,
+  playedBall = true,
 ) {
   s.teams[d.team].stats.fouls++;
   emit(s, 'foul', d.team, d.index, c.index, c.pos, {
@@ -576,9 +577,12 @@ export function foul(
     d,
     {
       behind,
-      promising: cg.x > 70,
+      // Promising: near our goal, or past our midfield with few of us goal-side (a
+      // numbers-up attack). PARAMETERS: 70 m; 40 m and 3 players, keeper included.
+      promising: cg.x > 70 || (cg.x > 40 && goalSide <= 3),
       lastMan: goalSide === 0 && cg.x > 75 && Math.abs(cg.y - CENTER.y) < 20,
       tactical,
+      playedBall,
     },
     next(s.rngs.referee),
     next(s.rngs.referee),
@@ -1026,7 +1030,9 @@ export function step(s: MatchState, opts: StepOptions = {}): void {
   s.ball.holder = intended;
   if (s.owner !== null) {
     const c = s.players[s.owner]!;
+    const from = { ...c.pos };
     moveTowards(c, c.target, maxSpeed(c) * (0.8 + 0.1 * norm(c.attrs.dribbling)));
+    blockBody(c, from, opponents(s, c.team), BODY);
     s.ball.pos = { ...c.pos };
     tackles(s);
   }
@@ -1171,6 +1177,8 @@ function chaseLooseBall(s: MatchState) {
   }
 }
 const CROSS_DEFENDERS = 3;
+/** Body contact with the carrier (02 §2): shoulders apart. PARAMETER. */
+const BODY = 0.7;
 const MARK_CONTEST = 6;
 /** meetPoint's look-ahead (s): a later time means nobody meets the ball in flight. */
 const MEET_HORIZON = 4;

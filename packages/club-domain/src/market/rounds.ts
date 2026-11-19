@@ -32,6 +32,7 @@ import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './
 import { lendListed } from './loans';
 import { ABROAD, importFee, signable, stanceFor } from './abroad';
 import { clubKnows } from './scouting';
+import { agentOf, aiCommission, commission } from './agents';
 import { answerBid } from './talks';
 import { boardOverpay } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
@@ -164,6 +165,36 @@ const byPosition = (pack: Pack) =>
     return by;
   });
 
+/** A rival choice within this many points of the refused one: the club turns to it instead. */
+const ALTERNATIVE = 10;
+
+/**
+ * What a club does after the person turns down its first bid. It looks again at the market for
+ * the same need: with someone else nearly as good, it goes after him instead. Without, it comes
+ * back once with more, more the more it needs him (a quarter to three quarters of the way to the
+ * most it pays), and sooner the more it needs him. Null: it leaves.
+ */
+export function comeBack(
+  w: CareerWorld,
+  bid: { from: string; player: string; fee: number; most: number; why: Why },
+): { fee: number; day: number } | null {
+  if (bid.most <= bid.fee) return null;
+  const p = w.pack.players.find((x) => x.id === bid.player);
+  if (!p) return null;
+  const read = readingsOf(w.pack).get(p.id)!;
+  const plan = squadPlanOf({ pack: w.pack, clubId: bid.from });
+  const need = [...plan.needs, ...(plan.upgrade ? [plan.upgrade] : [])].find(
+    (n) => n.keeper === read.keeper && p.positions.some((x) => n.positions.includes(x.position)),
+  );
+  if (!need) return null;
+  const other = choose(w, bid.from, need, new Set([p.id]));
+  if (other && total(other.why) >= total(bid.why) - ALTERNATIVE) return null;
+  const share = Math.max(25, Math.min(75, 25 + Math.round(bid.why.need / 2)));
+  const fee = thousands(bid.fee + ((bid.most - bid.fee) * share) / 100);
+  if (fee <= bid.fee) return null;
+  return { fee, day: w.day + 7 + Math.round((100 - Math.min(100, bid.why.need)) / 10) };
+}
+
 interface Choice {
   p: PackPlayer;
   need: Need;
@@ -280,6 +311,8 @@ function choose(
     if (price > money) continue;
     const wants = stanceFor(w, p, buyerId);
     if (wants.no || wants.wage > room) continue;
+    // The agent's commission comes on top of the fee.
+    if (price + commission(agentOf(w.pack, p), price, wants.wage) > money) continue;
     const why = utility(w, buyerId, p, need, price, wants.wage, { money, room });
     if (why.need < REAL_NEED) continue;
     // A player on the list is easier to get: clubs come for him sooner.
@@ -332,12 +365,14 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   };
   let signed: Terms | null = null;
   for (let round = 1; round <= MAX_ROUNDS && !signed; round++) {
-    const a = answerTerms(wants, terms, round);
+    const a = answerTerms(wants, terms, round, agentOf(w.pack, p));
     if (a.kind === 'accept') signed = a.terms;
     else if (a.kind === 'refuse' || a.terms.wage > room) return null;
     else terms = a.terms;
   }
   if (!signed) return null;
+  // The agent's commission on top of the fee must fit what the club can still pay.
+  if (fee + commission(agentOf(w.pack, p), fee, signed.wage) > available(w, buyerId)) return null;
   return {
     day: w.day,
     player: p.id,
@@ -364,6 +399,14 @@ const windowOf = (day: number) => {
 export function marketRound(w: CareerWorld, day: number): Deal[] {
   const season = w.season.season;
   if (w.bids?.length) w.bids = w.bids.filter((b) => day - b.day <= BID_DAYS);
+  // Clubs refused once come back with their better bid on its day.
+  if (w.bids?.some((b) => b.again && b.day <= day))
+    w.bids = w.bids.map((b) => {
+      if (!b.again || b.day > day) return b;
+      const p = w.pack.players.find((x) => x.id === b.player);
+      if (p) note(w, { day, kind: 'bid', player: p.knownAs ?? p.name, club: b.from, fee: b.fee });
+      return { ...b, again: false };
+    });
   // The players the person offered on loan go to the clubs that will play them.
   lendListed(w);
   const done: Deal[] = [];
@@ -454,7 +497,8 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         // The fee leaves the league: only the buyer's books see it.
         const b = booksOf(w, id);
         w.books = { ...w.books, [id]: { ...b, spent: b.spent + deal.fee } };
-      } else if (deal.from !== null) book(w, deal.from, id, deal.fee);
+      } else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
+      aiCommission(w, id, choice.p, deal.fee, deal.wage);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);
       break;

@@ -13,6 +13,7 @@
  */
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
+import { postEntry } from '../finance/ledger';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
 import { WHOLE, cached } from '../lib/pack-cache';
@@ -57,7 +58,7 @@ const REPORT_GAIN = [20, 25, 30, 35, 40] as const;
 /** Points a match against his club adds to each of its players. */
 export const MATCH_GAIN = 8;
 /** Days for knowledge to fade by one point. */
-export const FADE_DAYS = 10;
+export const FADE_DAYS = 20;
 
 /** The base: what the club knows of him without looking. */
 const baseOf = (w: CareerWorld, p: PackPlayer) => (clubKnows(w, w.clubId, p) ? BASE : 0);
@@ -82,6 +83,13 @@ function learn(
   known[p.id] = { k: Math.min(100, knowledgeOf(w, p, day) + gain), day };
 }
 
+/** What an agent told the club of his player: knowledge up to `floor` (his pitch). */
+export function hearOf(w: CareerWorld, p: PackPlayer, floor: number, day: number): void {
+  if (knowledgeOf(w, p, day) >= floor) return;
+  const s = w.scouting ?? { known: {}, missions: [] };
+  w.scouting = { ...s, known: { ...s.known, [p.id]: { k: floor, day } } };
+}
+
 /**
  * What the person's club reads of a player of another club: the level and ceiling its eye sees,
  * pulled toward the truth by what it knows, with a band that narrows as it knows more.
@@ -89,11 +97,18 @@ function learn(
 export function personReading(
   w: CareerWorld,
   p: PackPlayer,
-): { rating: number; range: [number, number]; potential: [number, number]; knowledge: number } {
+): {
+  rating: number;
+  range: [number, number];
+  potential: [number, number];
+  knowledge: number;
+  /** The last day the club learned of him (a report, a match); null when it never looked. */
+  seen: number | null;
+} {
   const k = knowledgeOf(w, p);
   const r = readingsOf(w.pack).get(p.id)!;
   const doubt = 100 - k;
-  const { level, ceiling } = eyeSpread(w.pack, w.clubId);
+  const { level, ceiling } = eyeSpread(w.pack, w.clubId, p);
   const rating = Math.max(
     1,
     Math.min(99, r.level + Math.round((levelError(w.pack, w.clubId, p) * doubt) / 100)),
@@ -112,6 +127,7 @@ export function personReading(
     range: [Math.max(1, rating - spread), Math.min(99, rating + spread)],
     potential: [Math.max(1, top - cspread), Math.min(99, top + cspread)],
     knowledge: k,
+    seen: typeof w.scouting?.known[p.id] === 'object' ? w.scouting.known[p.id]!.day : null,
   };
 }
 
@@ -187,7 +203,33 @@ const inArea = (w: CareerWorld, area: string, clubId: string) =>
     ? tierOfClub(w, clubId) === Number(area.slice(5))
     : stateOf(w.pack, clubId) === area;
 
-export type ScoutNo = 'busy' | 'area' | 'already';
+export type ScoutNo = 'busy' | 'area' | 'already' | 'cash';
+
+/**
+ * What a scout's trip costs (travel and daily allowance), by where he goes: his own state, a
+ * division (the country), another state, or one player (a week, near or far). PARÂMETRO.
+ */
+const TRIP_COST = {
+  home: 15_000,
+  division: 60_000,
+  away: 35_000,
+  playerHome: 5_000,
+  playerAway: 12_000,
+};
+
+/** The cost of a mission to `area` for the person's club. */
+export function tripCost(w: CareerWorld, area: string): number {
+  const home = stateOf(w.pack, w.clubId);
+  const watched = watchedIn(area);
+  if (watched !== null) {
+    const p = w.pack.players.find((x) => x.id === watched);
+    return p?.clubId && stateOf(w.pack, p.clubId) === home
+      ? TRIP_COST.playerHome
+      : TRIP_COST.playerAway;
+  }
+  if (area.startsWith('tier:')) return TRIP_COST.division;
+  return area === home ? TRIP_COST.home : TRIP_COST.away;
+}
 
 /** A scout watching one player: `player:<id>`. */
 export const PLAYER_AREA = 'player:';
@@ -213,6 +255,16 @@ export function sendScout(w: CareerWorld, area: string, day: number): ScoutNo | 
   const s = w.scouting ?? { known: {}, missions: [] };
   if (s.missions.some((m) => m.area === area)) return 'already';
   if (s.missions.length >= scoutsOf(w)) return 'busy';
+  const cost = tripCost(w, area);
+  if (w.ledger.cash < cost) return 'cash';
+  postEntry(w.ledger, {
+    key: `scouting:${area}:${day}`,
+    kind: 'scouting',
+    ref: `scout:${area}`,
+    amount: -cost,
+    day: w.ledger.today,
+    dueDay: w.ledger.today,
+  });
   const until = day + (watched !== null ? WATCH_DAYS : MISSION_DAYS);
   w.scouting = { ...s, missions: [...s.missions, { area, from: day, until }] };
   return null;

@@ -22,6 +22,12 @@ export type Note = { day: number } & (
   | { kind: 'crop'; players: number }
   /** A scout back from an area (a state or `tier:N`) with this many new players. */
   | { kind: 'scouted'; area: string; players: number }
+  /** An agent offers one of his players (agents.ts); `club` is where he plays, '' for none. */
+  | { kind: 'agentOffer'; player: string; agent: string; club: string }
+  /** A player abroad who wants to come home, offered by his agent; a talk is open. */
+  | { kind: 'homecoming'; player: string; agent: string; wage: number }
+  /** A boy the club formed was sold elsewhere: its solidarity share. */
+  | { kind: 'solidarity'; player: string; fee: number }
   | { kind: 'cameUp'; players: number }
   | {
       kind: 'injury';

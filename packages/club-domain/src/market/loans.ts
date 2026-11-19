@@ -13,7 +13,7 @@ import type { PackPlayer } from '../pack/schema';
 import { embargoed, wageRoom } from './books';
 import { fairRole } from './deals';
 import { squadPlanOf } from './plan';
-import { marketValue, readingsOf, thousands } from './value';
+import { ageOf, marketValue, readingsOf, thousands } from './value';
 
 /** A player on loan: who owns him and the contract he goes back to. */
 export interface Loan {
@@ -29,6 +29,33 @@ const FEE = 5;
 const MAX_SQUAD = 42;
 const MIN_SQUAD = 20;
 const MIN_KEEPERS = 2;
+/**
+ * FIFA's loan rules (from July 2024): a club has at most six players out and six in on loan at
+ * once, and at most three loans with the same club a season. Boys of 21 or under that the club
+ * formed do not count.
+ */
+const LOANS_MAX = 6;
+const PAIR_MAX = 3;
+const FREE_AGE = 21;
+
+/** Whether a loan counts toward FIFA's limits: not a boy the owner formed. */
+const counts = (w: CareerWorld, p: PackPlayer, owner: string) =>
+  !(ageOf(p, w.season.season) <= FREE_AGE && p.origin?.clubId === owner);
+
+/** Loans that count, out from `owner`, in at `to`, and between the two this season. */
+function loanCounts(w: CareerWorld, owner: string, to: string) {
+  let out = 0;
+  let inn = 0;
+  let pair = 0;
+  for (const [id, loan] of Object.entries(w.loans ?? {})) {
+    const p = w.pack.players.find((x) => x.id === id);
+    if (!p || !counts(w, p, loan.owner)) continue;
+    if (loan.owner === owner) out++;
+    if (p.clubId === to) inn++;
+    if (loan.owner === owner && p.clubId === to) pair++;
+  }
+  return { out, inn, pair };
+}
 
 export const loanFee = (w: CareerWorld, p: PackPlayer) =>
   thousands((marketValue(w.pack, p, w.season.season) * FEE) / 100);
@@ -42,7 +69,10 @@ export type LoanNo =
   | 'theirSquad'
   | 'noMinutes'
   | 'cash'
-  | 'wageCap';
+  | 'wageCap'
+  | 'loansOut'
+  | 'loansIn'
+  | 'pairLimit';
 
 const thin = (w: CareerWorld, p: PackPlayer) => {
   const squad = squadPlayers({ pack: w.pack, clubId: p.clubId! });
@@ -63,6 +93,12 @@ export function cannotBorrow(w: CareerWorld, p: PackPlayer, to: string): LoanNo 
   // A club lends who it does not start, and keeps enough to play.
   if (squadPlanOf({ pack: w.pack, clubId: p.clubId }).xi.includes(p.id)) return 'starter';
   if (thin(w, p)) return 'theirSquad';
+  if (counts(w, p, p.clubId)) {
+    const n = loanCounts(w, p.clubId, to);
+    if (n.out >= LOANS_MAX) return 'loansOut';
+    if (n.inn >= LOANS_MAX) return 'loansIn';
+    if (n.pair >= PAIR_MAX) return 'pairLimit';
+  }
   // He goes to play: a place in the eleven or the rotation there.
   const role = fairRole({ pack: w.pack, clubId: to }, p, w.season.season);
   if (role !== 'starter' && role !== 'rotation') return 'noMinutes';

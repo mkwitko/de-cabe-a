@@ -11,6 +11,9 @@ import { pricesOf } from '../career/prices';
 import type { Horizon } from '../career/clubs';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
+import { note } from '../career/inbox';
+import { postEntry } from '../finance/ledger';
+import type { PackPlayer } from '../pack/schema';
 import { thousands } from './value';
 
 /** Share of a sale a club puts back into signings. */
@@ -63,6 +66,15 @@ const PURSE: Record<Horizon, number> = { short: 4, medium: 0, long: -3 };
 /** Share of the directors' squad money a short-sighted board lets go to wages. */
 const KITTY_WAGES: Record<Horizon, number> = { short: 40, medium: 20, long: 10 };
 
+/**
+ * What the owners put into signings over the income's share, in percent (pack governance): a
+ * SAF's investor brings capital, a multi-club group more; an association spends what it earns.
+ * PARÂMETRO.
+ */
+const OWNER_MONEY = { association: 100, ownedSaf: 125, groupSaf: 135 } as const;
+const modelOf = (w: CareerWorld, clubId: string) =>
+  w.pack.governance.find((g) => g.clubId === clubId)?.model ?? 'association';
+
 function readBudget(w: CareerWorld, clubId: string): Budget {
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
   const income = incomeOf(w, clubId);
@@ -80,7 +92,10 @@ function readBudget(w: CareerWorld, clubId: string): Budget {
     // directors put in from the cash.
     transfer: Math.max(
       0,
-      thousands((income * (6 + purse + risk / 10)) / 100) + kitty - toWages - owed,
+      thousands((income * (6 + purse + risk / 10) * OWNER_MONEY[modelOf(w, clubId)]) / 10_000) +
+        kitty -
+        toWages -
+        owed,
     ),
     wageCap: Math.round(((income * (55 + risk / 5)) / 100 + toWages) / 12),
   };
@@ -176,7 +191,7 @@ export const strikesOf = (w: CareerWorld, clubId: string): number => w.fairplay?
 export const embargoed = (w: CareerWorld, clubId: string): boolean => strikesOf(w, clubId) >= 3;
 
 /** Counts a fee paid and a fee received in the two clubs' season. */
-export function book(w: CareerWorld, from: string, to: string, fee: number): void {
+export function book(w: CareerWorld, from: string, to: string, fee: number, p: PackPlayer): void {
   const paid = booksOf(w, to);
   const got = booksOf(w, from);
   w.books = {
@@ -184,4 +199,47 @@ export function book(w: CareerWorld, from: string, to: string, fee: number): voi
     [to]: { ...paid, spent: paid.spent + fee },
     [from]: { ...got, earned: got.earned + fee },
   };
+  solidarity(w, p, from, fee, false);
+}
+
+/**
+ * The solidarity contribution: a share of every fee goes from the selling club to the club that
+ * formed the player (`origin.clubId`), 5% of a sale abroad (FIFA's mechanism) and 6% of one
+ * between clubs here (CBF). PARÂMETROS. The person's club pays and receives through its ledger.
+ */
+const SOLIDARITY = { abroad: 5, here: 6 };
+
+export function solidarity(
+  w: CareerWorld,
+  p: PackPlayer,
+  seller: string,
+  fee: number,
+  abroad: boolean,
+): void {
+  const formed = p.origin?.clubId;
+  if (!formed || formed === seller || fee <= 0) return;
+  if (!w.pack.clubs.some((c) => c.id === formed)) return;
+  const share = thousands((fee * (abroad ? SOLIDARITY.abroad : SOLIDARITY.here)) / 100);
+  if (share <= 0) return;
+  const entry = (amount: number, side: string) =>
+    postEntry(w.ledger, {
+      key: `solidarity:${p.id}:${w.ledger.today}:${side}`,
+      kind: 'transfers',
+      ref: `player:${p.id}`,
+      amount,
+      day: w.ledger.today,
+      dueDay: w.ledger.today,
+    });
+  if (seller === w.clubId) entry(-share, 'paid');
+  else {
+    const b = booksOf(w, seller);
+    w.books = { ...w.books, [seller]: { ...b, earned: b.earned - share } };
+  }
+  if (formed === w.clubId) {
+    entry(share, 'got');
+    note(w, { day: w.day, kind: 'solidarity', player: p.knownAs ?? p.name, fee: share });
+  } else {
+    const b = booksOf(w, formed);
+    w.books = { ...w.books, [formed]: { ...b, earned: b.earned + share } };
+  }
 }

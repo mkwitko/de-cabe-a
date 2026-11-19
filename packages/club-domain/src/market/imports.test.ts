@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { agentOf, commission } from './agents';
 import { dayOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
 import { generateDevPack } from '../generate/pack';
@@ -16,7 +17,7 @@ const clubId = nationalDivisions(pack)[0]!.clubIds[5]!;
 describe('the foreign market (04 §4.7)', () => {
   it('the person brings a player from abroad at the market price; the fee leaves the league', () => {
     const w = openCareer(structuredClone(pack), 3, clubId);
-    w.day = dayOf('2026-04-16');
+    w.day = dayOf('2026-02-16');
     // The season's foreign market is in the pack from the start.
     const offer = w.pack.players.filter((x) => x.clubId === ABROAD);
     w.ledger.today = w.day;
@@ -44,7 +45,9 @@ describe('the foreign market (04 §4.7)', () => {
     const signed = bidTerms(w, p.id, wants);
     expect(signed.kind).toBe('accept');
     expect(w.pack.players.find((x) => x.id === p.id)!.clubId).toBe(clubId);
-    expect(w.ledger.cash).toBe(cash - talk.asking);
+    expect(w.ledger.cash).toBe(
+      cash - talk.asking - commission(agentOf(w.pack, p), talk.asking, wants.wage),
+    );
   });
 
   it('clubs with a scouting department hear of players abroad; the sold young do not come back', () => {

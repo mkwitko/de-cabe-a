@@ -14,17 +14,7 @@ describe('the inbox', () => {
   it('opens with a welcome, takes each result and a transfer, and rides in the snapshot', () => {
     const w = openCareer(pack, 81, clubId);
     expect(w.inbox).toEqual([{ day: 0, kind: 'welcome' }]);
-    const d = nextDecision(w);
-    if (d.kind !== 'match') throw new Error('no match');
-    const o = playDecision(w, d);
-    const atHome = d.home === clubId;
-    expect(w.inbox!.at(-1)).toEqual({
-      day: d.day,
-      kind: 'result',
-      opponent: atHome ? d.away : d.home,
-      goals: atHome ? o.goals : [o.goals[1], o.goals[0]],
-    });
-    // A signing closed at the two tables is told too.
+    // A signing closed at the two tables is told, inside the window that opens the year.
     const target = w.pack.players
       .filter(
         (x) =>
@@ -40,6 +30,16 @@ describe('the inbox', () => {
     bidFee(w, target.id, talk.asking);
     bidTerms(w, target.id, w.talks![target.id]!.wants!);
     expect(w.inbox!.at(-1)).toMatchObject({ kind: 'bought', club: target.clubId, day: w.day });
+    const d = nextDecision(w);
+    if (d.kind !== 'match') throw new Error('no match');
+    const o = playDecision(w, d);
+    const atHome = d.home === clubId;
+    expect(w.inbox!.at(-1)).toEqual({
+      day: d.day,
+      kind: 'result',
+      opponent: atHome ? d.away : d.home,
+      goals: atHome ? o.goals : [o.goals[1], o.goals[0]],
+    });
     expect(loadCareer(pack, 81, clubId, saveCareer(w)).inbox).toEqual(w.inbox);
   });
 

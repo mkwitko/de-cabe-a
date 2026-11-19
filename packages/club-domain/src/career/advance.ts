@@ -29,6 +29,8 @@ import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
+import { agentOffers, type AgentLedger } from '../market/agents';
+import { awayLoss, distanceKm, postAwayTrip, travelTire } from './travel';
 import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
@@ -40,7 +42,7 @@ import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
-import { isoOf } from '../competition/calendar';
+import { dayOf, isoOf } from '../competition/calendar';
 import { postPrize } from './finance';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
@@ -117,6 +119,10 @@ export interface CareerWorld {
   idle?: { span: string; clubs: string[] };
   /** The person's scouts away and the players in the club's files (market/scouting.ts). */
   scouting?: Scouting;
+  /** The person's club's standing with agents (market/agents.ts). */
+  agents?: AgentLedger;
+  /** The last window deadline the person was stopped at (nextDecision with deadlines). */
+  deadline?: number;
 }
 
 export type Decision =
@@ -129,6 +135,8 @@ export type Decision =
       away: string;
     }
   | { kind: 'seasonOver' }
+  /** The last day of a transfer window, before it is played: the person's last chance. */
+  | { kind: 'deadline'; day: number }
   /** The board ended the job: nothing else to decide in this career. */
   | { kind: 'fired' };
 
@@ -157,6 +165,8 @@ function playDay(
     // for the next round.
     foreignRound(w, round);
     homecoming(w, round);
+    // Agents who work with the person's club offer players of theirs.
+    agentOffers(w, round);
   }
   scoutingDay(w, day);
   postMonths(w, w.day, day);
@@ -165,16 +175,22 @@ function playDay(
     const o =
       given?.id === id
         ? given.outcome
-        : quickResult(seedOf(w.seed, id), strength(m.home), strength(m.away));
+        : // The away side loses a little on a long trip (travel.ts).
+          quickResult(
+            seedOf(w.seed, id),
+            strength(m.home),
+            (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
+          );
     record(w.season, id, o);
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       postHomeMatch(w, id, day);
+      const km = postAwayTrip(w, id, day);
       const eleven = fielded(w, day).xi;
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);
-      training = tire(training, eleven);
+      training = tire(training, eleven, travelTire(km));
       const names = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
       for (const [pid, i] of Object.entries(hurt))
         note(w, {
@@ -241,11 +257,25 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
 
 /**
  * Plays every day before the next decision and stops there, without playing that day.
- * Returns the decision; `w.day` is the last day played.
+ * Returns the decision; `w.day` is the last day played. With `deadlines`, the last day of each
+ * transfer window is a decision too (the screen's deadline day).
  */
-export function nextDecision(w: CareerWorld): Decision {
+export function nextDecision(w: CareerWorld, opts: { deadlines?: boolean } = {}): Decision {
   if (w.board?.fired) return { kind: 'fired' };
   for (let d = nextDay(w.season); d !== null; d = nextDay(w.season)) {
+    // The screen stops once before a window closes on the way to the next match day (deadline
+    // day): the window's last day, which may fall between match days.
+    if (opts.deadlines) {
+      const from = Math.max(w.day, w.deadline ?? 0, dayOf(`${w.season.season}-01-01`) - 1);
+      for (let x = from + 1; x <= d; x++)
+        if (windowOpen(x) && !windowOpen(x + 1)) {
+          w.deadline = x;
+          // The world runs to the eve of the deadline (no matches before `d`): the other
+          // clubs' rounds, bids and scouts all happen before the person decides.
+          if (x - 1 > w.day) playDay(w, x - 1);
+          return { kind: 'deadline', day: x };
+        }
+    }
     const id = clubPlays(w, d);
     if (id) {
       const m = w.season.meta.get(id)!;

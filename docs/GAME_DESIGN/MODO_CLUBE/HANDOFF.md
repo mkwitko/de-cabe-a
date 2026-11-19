@@ -150,6 +150,28 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   | Aérea | 0,47 | 0,07 | 0,03 |
 
   As duas faixas com fonte apontam para a mesma causa: faltas abaixo (12,8 contra 13,4 a 15,9) e amarelos acima (3,17 contra 2,15 a 2,59). Faltam faltas comuns, que quase nunca dão cartão, como as das disputas aéreas. O próximo passo, a disputa aérea, depende da referência de duelos aéreos por jogo com fonte e mesma definição.
+- **Rodada de 2026-11-18 à tarde, já no `main`** (PRs #114, #118, #125, #131, #132, #133, #135; detalhes em `02`).
+  - Cruzamento avaliado como o motor joga (#114, `02` §6.3): a estimativa conta a disputa aérea. Efeito pequeno; as disputas que faltavam vinham da bola longa.
+  - Marcador do alvo disputa a bola longa (#118): o defensor mais próximo do alvo, a até 6 m, vai junto até a bola. Disputas aéreas de 10 para 16 por jogo; faltas entram na faixa.
+  - Amarelo pela natureza da falta, regra 12 (#125, decisão do dono): a direção do lance não pesa. Fica mais alto para ataque promissor e falta tática (44%, não automático). Amarelos 2,22 por time, dentro da faixa.
+  - Grande chance marcada no evento de chute (#132): aproximação da Opta, impressa na bancada. Medido: 2,90 por time, 0,92 logo depois de passe, conversão de 25%.
+  - Bancada leve (#133): prioridade mínima (nice 19), `CAL_THREADS`, `DUMP=arquivo` e comparação pareada em `paired.ts`. Use 300 a 600 partidas pareadas em vez de 2000 médias, uma variante por vez.
+  - Contato de corpo com o condutor e chute que deixa para trás quem está atrás (#135, itens 1 e 2 juntos, decisão do dono). Conversão agora bate com a Série A 2026: de fora 3,6% (referência 3,7%), de dentro 14,1% (referência 15,4%).
+- **Estado da bancada ao fim de 2026-11-18** (2000 partidas, `main` depois de #135).
+  - Gols 2,85 (faixa 2,2 a 2,5).
+  - Chutes por time 10,2 e no alvo 3,6, abaixo das faixas.
+  - Faltas 14,0, dentro da faixa.
+  - Amarelos 2,13 e vermelhos 0,085, logo abaixo das faixas. Os vermelhos são quase todos segundo amarelo.
+  - Escanteios 5,5, no limite da faixa.
+  - Chute depois de perda alta 20%, dentro de Opta 13% a 21%.
+- **Próximo passo: volume de chutes, sobretudo de fora da área** (2,9 por time contra 5,4 na Série A).
+  - Causa provável: o valor de posse (`rules/value.ts`) vale 80% do `xG` de um chute livre daquele ponto, um PARÂMETRO sem fonte. Levar a bola 7 m até a entrada da área vale cerca de 0,09; chutar de 25 m vale cerca de 0,025. Então o condutor só chuta de longe quando é parado.
+  - Calibrar exige uma grade de valor de posse com fonte (por exemplo, a xT publicada).
+  - Mexe em toda decisão do motor: fazer em PR próprio, com comparação pareada.
+- **Disputas aéreas: origem medida** (60 partidas, 15,1 por jogo contra cerca de 25).
+  - Passe longo em jogo corrido 7,5; escanteio 3,6; passe por cima 1,3; afastamento 0,7; cruzamento em jogo corrido 0,6; falta 0,5; tiro de meta 0,5; bola longa do goleiro em jogo corrido 0,3.
+  - Tiro de meta e reposição do goleiro quase não geram disputa: há só 1,4 tiro de meta longo por time.
+  - Calibrar exige a parcela de tiros de meta longos e os afastamentos por time na Série A (pendente com o dono). Decisão do dono: separar a geração da bola longa da resolução da disputa.
 - **Marcação que persiste** (2026-11-17, não entrou). Das marcas perdidas, 32% somem porque o atacante chega a menos de 8 m da bola, 25% porque ele fica atrás da bola e 26% por ranking. Testado em 2000 partidas: manter a marca até 3 m da bola deu 3,43 gols. Somar 8 m de vantagem a quem já é marcado na lista de perigo, mantendo a marca até 5 m, deu 3,39. A base é 3,44. Nenhuma diferença, e as duas reprovam o vão da última linha em S3. Conclusão: a escolha de quem marcar pesa pouco nos gols.
 - **Transição depois da perda alta** (2026-11-17, só medição, 40 partidas).
   - Das recuperações a até 40 m do gol adversário que viram chute, metade chuta em menos de 3 s. A bola é recuperada a cerca de 25 m do gol, quase sempre interceptando passe da saída.

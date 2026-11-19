@@ -1,8 +1,11 @@
 /**
  * MC-044: the statistical bench against 02 §11. Run:
  *   pnpm --filter @decabeca/match-engine exec tsx src/calibration/calibrate.ts [matches]
- * Prints each line with its band and a verdict.
+ * Prints each line with its band and a verdict. CAL_THREADS caps the worker threads.
+ * DUMP=file keeps every match summary; compare two dumps (same seeds) with
+ *   npx tsx src/calibration/paired.ts a.json b.json
  */
+import { writeFileSync } from 'node:fs';
 import { matchInput } from '../match/fixture';
 import { runMany } from './runner';
 
@@ -26,6 +29,7 @@ async function main() {
   const n = Number(process.argv[2] ?? 60);
   const t0 = Date.now();
   const rs = await runMany(Array.from({ length: n }, (_, i) => matchInput(1000 + i)));
+  if (process.env.DUMP) writeFileSync(process.env.DUMP, JSON.stringify(rs));
   const sum = (f: (s: (typeof rs)[number]) => number) => rs.reduce((a, s) => a + f(s), 0) / n;
   const both = (k: keyof (typeof rs)[number]) =>
     sum((s) => (s[k] as [number, number])[0] + (s[k] as [number, number])[1]);
@@ -50,6 +54,11 @@ async function main() {
   // Transition metrics (no band in 02 §11; references in research 18 §1).
   console.log(
     `high turnovers per team ${(both('highTurnovers') / 2).toFixed(1)}, shot-ending (same sequence) ${((100 * both('highTurnoverShots')) / both('highTurnovers')).toFixed(0)}% (Opta 13-21%); losses won back within 5 s ${((100 * both('regained5s')) / both('losses')).toFixed(0)}%`,
+  );
+  // Big chances (02 §11: Série A 2026 about 2.2 created per team, Statz.ai; "created" counts
+  // those from a pass).
+  console.log(
+    `big chances per team ${(both('bigChances') / 2).toFixed(2)}, from a pass ${(both('bigFromPass') / 2).toFixed(2)} (Statz 2026 about 2.2), converted ${((100 * both('bigGoals')) / both('bigChances')).toFixed(0)}%`,
   );
   const home = rs.filter((s) => s.score[0] > s.score[1]).length / n;
   const draw = rs.filter((s) => s.score[0] === s.score[1]).length / n;

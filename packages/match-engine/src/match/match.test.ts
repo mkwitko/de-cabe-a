@@ -378,6 +378,44 @@ describe('MC-164 keeper', () => {
     expect(rate(90)).toBeLessThan(rate(35));
   });
 
+  it('a defender behind the shooter cannot block the shot (the ball leaves him behind)', () => {
+    const s = bare();
+    const c = place(s, 9, 94, 34);
+    place(s, 11, 103, 34);
+    const d = place(s, 13, 93.4, 34.2);
+    d.vel = { x: 6, y: 0 };
+    const f = shoot(
+      s,
+      c,
+      { kind: 'shot', target: { x: 105, y: 34 }, receiver: null, p: 0.3, est: 0.3, u: 0, ue: 0 },
+      [],
+      { chance: 0.3 },
+    );
+    expect(f.skip).toContain(d.index);
+    expect(f.origin).toEqual({ x: 94, y: 34 });
+  });
+
+  it('marks a big chance (Opta): very close, or one-on-one in the box; not a long shot', () => {
+    const big = (x: number, y: number, defenderAt?: [number, number]) => {
+      const s = bare();
+      const c = place(s, 9, x, y);
+      place(s, 11, 103, 34);
+      if (defenderAt) place(s, 13, defenderAt[0], defenderAt[1]);
+      const f = shoot(
+        s,
+        c,
+        { kind: 'shot', target: { x: 105, y: 34 }, receiver: null, p: 0.3, est: 0.3, u: 0, ue: 0 },
+        [],
+        { chance: 0.3 },
+      );
+      return s.events[f.shot!.event]!.data.big === 1;
+    };
+    expect(big(100, 34)).toBe(true);
+    expect(big(92, 34)).toBe(true);
+    expect(big(92, 34, [96, 34])).toBe(false);
+    expect(big(80, 34)).toBe(false);
+  });
+
   it('a shot past the keeper is not reachable by him', () => {
     const s = bare();
     const c = place(s, 9, 94, 34);
@@ -506,6 +544,25 @@ describe('MC-165 offside', () => {
     s.ball.possession = 0;
     for (let i = 0; i < 20 && s.flight; i++) step(s);
     expect(s.events.some((e) => e.kind === 'offside')).toBe(false);
+  });
+});
+
+describe('body contact with the carrier', () => {
+  it('a carrier cannot run through a defender standing in his path', () => {
+    const s = bare();
+    const c = place(s, 9, 70, 34);
+    c.vel = { x: 6, y: 0 };
+    c.target = { x: 90, y: 34 };
+    c.decideAt = s.tick + 20;
+    s.owner = 9;
+    s.ball.holder = 9;
+    s.ball.possession = 0;
+    s.ball.pos = { ...c.pos };
+    place(s, 11, 103, 34);
+    const d = place(s, 13, 71.2, 34);
+    d.tackleAt = s.tick + 100;
+    for (let i = 0; i < 2; i++) step(s);
+    expect(c.pos.x).toBeLessThan(d.pos.x);
   });
 });
 
