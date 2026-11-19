@@ -46,6 +46,20 @@ describe('club elections', () => {
     expect(a.inbox).toEqual(b.inbox);
   });
 
+  it("the supporters' mood sways the vote: a hot run helps the incumbents, a crisis sinks them", () => {
+    const keeps = (mood: number) => {
+      let n = 0;
+      for (let seed = 1; seed <= 40; seed++)
+        if (
+          planSeason(voting(seed, -3), new Set(), { ...ctx(10, 10), mood: () => mood }) ===
+          'reelected'
+        )
+          n++;
+      return n;
+    };
+    expect(keeps(100)).toBeGreaterThan(keeps(-100));
+  });
+
   it("the outgoing board's man is sacked more often than an inherited coach", () => {
     const sacked = (hired: number) => {
       let n = 0;
