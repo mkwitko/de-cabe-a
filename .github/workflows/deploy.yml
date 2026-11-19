@@ -1,0 +1,58 @@
+# Production deploy (ADR-010): once CI is green on main, ship origin/main to the VM with the same
+# script a person runs by hand (deploy/release.sh: git archive over SSH, then deploy/rollout.sh
+# swaps api and web one container at a time, no downtime). The build runs on the VM; this job
+# only waits for it. Public repository: standard runners cost no minutes.
+#
+# Secrets (repository settings): DEPLOY_SSH_KEY, a private key whose public half is in
+# ubuntu@VM:~/.ssh/authorized_keys; DEPLOY_KNOWN_HOSTS, the VM's host key line
+# (ssh-keyscan -t ed25519 136.248.86.54), so the connection is verified, never trusted blindly.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time, never cut short half-way through a rollout; a newer one waits its turn.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SSH key and the VM's host key
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          test -n "$KEY" && test -n "$KNOWN" || { echo "DEPLOY_SSH_KEY / DEPLOY_KNOWN_HOSTS missing"; exit 1; }
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          printf 'Host *\n  StrictHostKeyChecking yes\n  ServerAliveInterval 30\n' > ~/.ssh/config
+      - name: Ship origin/main
+        run: sh deploy/release.sh
+      - name: Health check
+        run: |
+          for i in $(seq 1 20); do
+            curl -fsS https://decabecafc.com.br/v1/health && exit 0
+            sleep 6
+          done
+          exit 1
