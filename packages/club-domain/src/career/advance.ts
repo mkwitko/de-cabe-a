@@ -28,6 +28,7 @@ import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
 import { monthTurned, moraleOf, strengthOwed } from './arrears';
+import { fillVacancies, judgeCoaches, newSeasonCoaches, type Bench } from './coaches';
 import {
   afterMatch,
   bookingsOf,
@@ -126,6 +127,12 @@ export interface CareerWorld {
   academy?: string[];
   /** Months of wages the person's club owes its squad (arrears.ts); absent when paid up. */
   arrears?: number;
+  /** The other clubs' coaches as their boards see them (coaches.ts). */
+  benches?: Record<string, Bench>;
+  /** Clubs without a coach, and the day the last one was sacked. */
+  vacancies?: Record<string, number>;
+  /** The clubs that sacked their coach this season, in order (one entry a sacking). */
+  sacked?: string[];
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
   /** Each club's cards and bans, by club (discipline.ts); absent before the first card. */
@@ -201,6 +208,7 @@ function playDay(
     agentOffers(w, round);
   }
   scoutingDay(w, day);
+  fillVacancies(w, day);
   postMonths(w, w.day, day);
   const names = () => new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
   const banned = (sentences: Sentence[]) => {
@@ -233,6 +241,7 @@ function playDay(
           );
     record(w.season, id, o);
     out.set(id, o);
+    judgeCoaches(w, m, o, day);
     // The other clubs' cards fall on their best men; the person's are dealt below.
     for (const [side, clubId] of [m.home, m.away].entries())
       if (clubId !== w.clubId)
@@ -630,6 +639,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   delete w.starts;
   delete w.played;
   newSeasonDiscipline(w);
+  newSeasonCoaches(w);
   // Each office has had another season with its players.
   setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.moves));
   // Rival squads cleared for the new season, read with the new clock: spares go, and

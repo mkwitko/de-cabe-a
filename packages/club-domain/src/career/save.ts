@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 45;
+export const CAREER_RULES_VERSION = 46;
 
 interface Saved {
   v: number;
@@ -58,6 +58,9 @@ interface Saved {
   injuries?: CareerWorld['injuries'];
   cards?: CareerWorld['cards'];
   arrears?: CareerWorld['arrears'];
+  benches?: CareerWorld['benches'];
+  vacancies?: CareerWorld['vacancies'];
+  sacked?: CareerWorld['sacked'];
   academy?: CareerWorld['academy'];
   image?: CareerWorld['image'];
   fairplay?: CareerWorld['fairplay'];
@@ -148,6 +151,9 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.injuries && { injuries: w.injuries }),
     ...(w.cards && { cards: w.cards }),
     ...(w.arrears && { arrears: w.arrears }),
+    ...(w.benches && { benches: w.benches }),
+    ...(w.vacancies && { vacancies: w.vacancies }),
+    ...(w.sacked && { sacked: w.sacked }),
     ...(w.academy && { academy: w.academy }),
     ...(w.image && { image: w.image }),
     ...(w.fairplay && { fairplay: w.fairplay }),
@@ -211,6 +217,9 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.injuries && { injuries: saved.injuries }),
     ...(saved.cards && { cards: saved.cards }),
     ...(saved.arrears && { arrears: saved.arrears }),
+    ...(saved.benches && { benches: saved.benches }),
+    ...(saved.vacancies && { vacancies: saved.vacancies }),
+    ...(saved.sacked && { sacked: saved.sacked }),
     ...(saved.academy && { academy: saved.academy }),
     ...(saved.image && { image: saved.image }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),

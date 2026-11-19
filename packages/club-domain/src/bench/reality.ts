@@ -214,6 +214,18 @@ const TARGETS: Target[] = [
       return (100 * squad.filter((p) => p.nationality !== 'BR').length) / Math.max(1, squad.length);
     },
   },
+  {
+    name: 'Técnicos demitidos na Série A por temporada',
+    // Band (Sep 2025): 19 changes by round 24, 0.79 a round, as in 2010 (30, the record of the
+    // 20-club era, Soccerway); 2015 had 32. Changes include resignations: a little above sackings.
+    range: [15, 30],
+    source: 'Band 2025: 0,79 troca por rodada; recorde de 30 em 2010 (Soccerway)',
+    confirmed: false,
+    measure: (w) => {
+      const clubs = new Set(w.season.members[serieA(w).id] ?? []);
+      return (w.sacked ?? []).filter((c) => clubs.has(c)).length;
+    },
+  },
 ];
 
 function playSeason(pack: Pack, seed: number): CareerWorld {

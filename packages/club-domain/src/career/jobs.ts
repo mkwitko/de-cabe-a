@@ -10,6 +10,7 @@ import { createLedger } from '../finance/ledger';
 import { divisionTable, type CareerWorld } from './advance';
 import { goalFor, positionOf } from './board';
 import { note } from './inbox';
+import { approaches } from './coaches';
 import { nationalDivisions } from './start';
 
 /** PARÂMETRO: how many clubs call after a dismissal. */
@@ -22,6 +23,13 @@ const OFFERS = 3;
  */
 export function jobsAfter(w: CareerWorld): string[] {
   if (!w.board?.fired) return [];
+  // First the clubs that sacked their coach and have not hired yet, a step down.
+  const below = w.strength.get(w.clubId) ?? 0;
+  const open = Object.keys(w.vacancies ?? {})
+    .filter((id) => id !== w.clubId && (w.strength.get(id) ?? 0) < below)
+    .sort((a, b) => (w.strength.get(b) ?? 0) - (w.strength.get(a) ?? 0) || (a < b ? -1 : 1))
+    .slice(0, OFFERS);
+  if (open.length >= OFFERS) return open;
   const divs = nationalDivisions(w.pack);
   const tier = divs.find((d) => w.season.members[d.id]?.includes(w.clubId))?.tier ?? 1;
   const mine = w.strength.get(w.clubId) ?? 0;
@@ -36,16 +44,25 @@ export function jobsAfter(w: CareerWorld): string[] {
     .sort((a, b) => (w.strength.get(b) ?? 0) - (w.strength.get(a) ?? 0) || (a < b ? -1 : 1))
     .slice(0, 12);
   const r = fork(rngFrom(w.seed), `jobs:${w.season.season}:${w.day}`);
-  const out: string[] = [];
-  while (out.length < OFFERS && near.length > 0)
-    out.push(near.splice(Math.floor(next(r) * near.length), 1)[0]!);
+  const out = [...open];
+  const rest = near.filter((id) => !open.includes(id));
+  while (out.length < OFFERS && rest.length > 0)
+    out.push(rest.splice(Math.floor(next(r) * rest.length), 1)[0]!);
   return out;
 }
 
-/** Takes one of the offers: the person is now that club's coach, with a board that starts over. */
+/**
+ * Takes one of the offers, after a dismissal or a club's approach while in a job: the person is
+ * now that club's coach, with a board that starts over; the club left behind looks for another.
+ */
 export function takeJob(w: CareerWorld, clubId: string): void {
-  if (!jobsAfter(w).includes(clubId)) throw new Error('job: not offered');
+  if (!jobsAfter(w).includes(clubId) && !approaches(w).includes(clubId))
+    throw new Error('job: not offered');
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const vacancies = { ...w.vacancies, [w.clubId]: w.day };
+  delete vacancies[clubId];
+  w.vacancies = vacancies;
+  delete w.benches?.[clubId];
   w.clubId = clubId;
   w.hired = w.season.season;
   // ponytail: the other clubs keep no ledger, so the new club's cash is the pack's opening

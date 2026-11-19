@@ -264,6 +264,12 @@ export const ptBR = {
     '{name} ganhou na Justiça do Trabalho: o direito de imagem era salário disfarçado. O clube pagou {value} em encargos atrasados e multa.',
   'inbox.walkout':
     '{name} entrou na Justiça pelos salários atrasados, rescindiu o contrato e saiu de graça.',
+  'inbox.coachSacked': 'O {club} demitiu o técnico. A vaga está aberta.',
+  'inbox.approach':
+    'O {club} demitiu o técnico e sondou você para o cargo. A proposta vale enquanto a vaga estiver aberta.',
+  'career.approach': 'Proposta do {club}',
+  'career.approachText': 'O {club} ({division}) quer você como técnico.',
+  'career.approachTake': 'Aceitar e assumir o {club}',
   'inbox.press':
     'A imprensa fala em crise: {n} jogos sem vencer. A cobrança chega à diretoria, e a paciência com o técnico encurta.',
   'inbox.protest':

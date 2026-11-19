@@ -58,6 +58,7 @@ export * from './career/health';
 export * from './career/discipline';
 export * from './market/currency';
 export * from './career/jobs';
+export * from './career/coaches';
 export { attendance, tierOf } from './career/finance';
 export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
 export * from './career/clubs';
