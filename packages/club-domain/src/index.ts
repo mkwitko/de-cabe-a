@@ -57,6 +57,7 @@ export * from './career/years';
 export * from './career/health';
 export * from './career/jobs';
 export { attendance, tierOf } from './career/finance';
+export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
 export * from './career/clubs';
 export * from './career/prices';
 export * from './match/moments';

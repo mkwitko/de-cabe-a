@@ -30,6 +30,7 @@ import { note, type Note } from './inbox';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
 import { agentOffers, type AgentLedger } from '../market/agents';
+import { awayLoss, distanceKm, postAwayTrip, travelTire } from './travel';
 import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
@@ -172,16 +173,22 @@ function playDay(
     const o =
       given?.id === id
         ? given.outcome
-        : quickResult(seedOf(w.seed, id), strength(m.home), strength(m.away));
+        : // The away side loses a little on a long trip (travel.ts).
+          quickResult(
+            seedOf(w.seed, id),
+            strength(m.home),
+            (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
+          );
     record(w.season, id, o);
     out.set(id, o);
     if (m.home === w.clubId || m.away === w.clubId) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       postHomeMatch(w, id, day);
+      const km = postAwayTrip(w, id, day);
       const eleven = fielded(w, day).xi;
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);
-      training = tire(training, eleven);
+      training = tire(training, eleven, travelTire(km));
       const names = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
       for (const [pid, i] of Object.entries(hurt))
         note(w, {
