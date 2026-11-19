@@ -46,8 +46,12 @@ const BY_ODDS: Record<Odds, Record<'W' | 'D' | 'L', number>> = {
   even: { W: 3, D: 0, L: -3 },
   underdog: { W: 4, D: 1, L: -2 },
 };
-/** A match played with the cash below zero. Light: the pack's money is not the person's doing. */
-const IN_THE_RED = -1;
+/**
+ * A match played with the wages in arrears (arrears.ts: past the credit line). Not merely below
+ * zero: most clubs outside the Série A start in debt, and a board does not blame the coach for
+ * what he inherited; it does when the players go unpaid on his watch.
+ */
+const IN_ARREARS = -1;
 /** Supporters' mood (stadium.ts `moodOf`) at or under which a defeat brings a protest. */
 export const PROTEST = -60;
 const GOAL_MET = 15;
@@ -99,7 +103,7 @@ export function boardAfterMatch(
   const odds: Odds = gap > CLEAR_GAP ? 'favourite' : gap < -CLEAR_GAP ? 'underdog' : 'even';
   const value = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w)] : 0);
   const last: BoardReason[] = [{ kind: 'result', result, odds, value }];
-  if (w.ledger.cash < 0) last.push({ kind: 'cash', value: IN_THE_RED });
+  if (w.arrears) last.push({ kind: 'cash', value: IN_ARREARS });
   // A defeat that tips the supporters over: they protest once a crisis, and the board hears them
   // (more when the supporters are impatient), not again at every defeat of the same run.
   const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
