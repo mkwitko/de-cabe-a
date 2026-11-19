@@ -17,7 +17,7 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, booksOf, budgetOf, wageRoom, inRed } from './books';
+import { available, book, budgetOf, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -30,7 +30,7 @@ import {
 import { fitFor, squadPlanOf, type Need } from './plan';
 import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
 import { lendListed } from './loans';
-import { ABROAD, importFee, signable, stanceFor } from './abroad';
+import { ABROAD, bookImport, importFee, signable, stanceFor } from './abroad';
 import { clubKnows } from './scouting';
 import { agentOf, aiCommission, commission } from './agents';
 import { answerBid } from './talks';
@@ -494,11 +494,8 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         until: `${season + deal.years}-12-31`,
         release: marketValue(w.pack, choice.p, season) * CLAUSE_TIMES,
       });
-      if (deal.from === ABROAD) {
-        // The fee leaves the league: only the buyer's books see it.
-        const b = booksOf(w, id);
-        w.books = { ...w.books, [id]: { ...b, spent: b.spent + deal.fee } };
-      } else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
+      if (deal.from === ABROAD) bookImport(w, id, deal.fee);
+      else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
       aiCommission(w, id, choice.p, deal.fee, deal.wage);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);

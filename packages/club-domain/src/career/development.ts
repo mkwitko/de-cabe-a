@@ -247,11 +247,15 @@ export function crop(
   return out;
 }
 
-/** Players the foreign market offers each season, and their levels and ages. PARÂMETRO. */
-const IMPORTS = 70;
+/**
+ * Players the foreign market offers each season, and their levels and ages. PARÂMETRO, set so the
+ * league pays abroad about what the Banco Central counts (US$ 180-235 mi in 2024-2025, reality
+ * bench).
+ */
+const IMPORTS = 200;
 /** Quality from 58 to 85, the better of two draws: the clubs here buy from the top of the
  * South American market and bring players home from Europe. */
-const IMPORT_QUALITY: [number, number] = [58, 85];
+const IMPORT_QUALITY: [number, number] = [55, 84];
 const IMPORT_AGES: [number, number] = [22, 32];
 
 /** True for a player of the foreign market who has not signed for a club of the league. */
