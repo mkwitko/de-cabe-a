@@ -79,3 +79,13 @@ describe('MC-247 arrival model', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('team frames (2026-11-19 home and away symmetry)', () => {
+  it('turns a velocity for the away side instead of moving it like a position', async () => {
+    const { flip, flipVec } = await import('./pitch');
+    expect(flipVec(1, { x: 3, y: -2 })).toEqual({ x: -3, y: 2 });
+    expect(flipVec(0, { x: 3, y: -2 })).toEqual({ x: 3, y: -2 });
+    // A position turns about the centre: the same rule on a velocity gave ~ (102, 70).
+    expect(flip(1, { x: 3, y: -2 }).x).toBeGreaterThan(100);
+  });
+});

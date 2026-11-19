@@ -7,7 +7,7 @@
  */
 import type { Attributes, RoleId, TacticalPlan } from './contract';
 import { arrivalTime, kinOf, type Kin } from './kinematics';
-import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from './pitch';
+import { CENTER, LENGTH, WIDTH, clamp, dist, flip, flipVec, type Vec2 } from './pitch';
 
 export type Line = 'gk' | 'def' | 'mid' | 'att';
 const DEF_ROLES = new Set<RoleId>([
@@ -476,7 +476,7 @@ export function assign(
 ): Assignment[] {
   const kins = new Map<number, Kin>();
   for (const p of players)
-    kins.set(p.index, kinOf(p.attrs, flip(team, p.pos), flip(team, p.vel), p.stamina));
+    kins.set(p.index, kinOf(p.attrs, flip(team, p.pos), flipVec(team, p.vel), p.stamina));
   const cost = (p: TeamPlayer, t: Task) =>
     // Without the ball the back line defends its zone as a unit (02 §5.2, §5.11): a defender
     // only steps out to press a ball near his zone; marks and covers are midfield jobs.

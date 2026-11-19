@@ -16,7 +16,7 @@ import {
 } from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { DT, blockBody, moveTowards, maxSpeed } from '../movement';
-import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
+import { CENTER, LENGTH, WIDTH, clamp, dist, flip, flipVec, type Vec2 } from '../pitch';
 import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
@@ -468,10 +468,10 @@ function pressTriggered(s: MatchState, team: 0 | 1): boolean {
   if (theirs && f!.kind === 'pass') {
     // A real back pass: most of the ball's pace goes towards their own goal.
     const v = Math.sqrt(f!.ball.vx * f!.ball.vx + f!.ball.vy * f!.ball.vy);
-    const back = flip(kicker!.team, { x: f!.ball.vx, y: f!.ball.vy }).x < -0.7 * v;
+    const back = flipVec(kicker!.team, { x: f!.ball.vx, y: f!.ball.vy }).x < -0.7 * v;
     if (on.includes('backPass') && back && v > 3) fire = true;
     const r = f!.to !== null ? s.players[f!.to] : undefined;
-    if (on.includes('receiverFacingOwnGoal') && r && flip(r.team, r.vel).x < -1) fire = true;
+    if (on.includes('receiverFacingOwnGoal') && r && flipVec(r.team, r.vel).x < -1) fire = true;
   }
   if (on.includes('poorTouch') && theirs && f!.kind === 'loose' && f!.from === s.lastTouch)
     fire = true;
@@ -492,7 +492,7 @@ const TACTICAL_FOUL = 0.25;
 function tacticalFoul(s: MatchState, d: MatchPlayer, c: MatchPlayer): boolean {
   if (s.tick - s.possessionSince > 32) return false;
   const cg = flip(c.team, c.pos);
-  if (cg.x < 45 || flip(c.team, c.vel).x < 2) return false;
+  if (cg.x < 45 || flipVec(c.team, c.vel).x < 2) return false;
   const goalSide = opponents(s, c.team).filter(
     (o) => lineOf(o.role) !== 'gk' && flip(c.team, o.pos).x > cg.x,
   ).length;
