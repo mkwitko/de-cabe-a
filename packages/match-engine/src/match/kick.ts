@@ -6,6 +6,7 @@
  */
 import { GRAVITY, groundPass, type Ball } from '../ball';
 import { norm, pressResistance, weighted } from '../rules/duel';
+import { homeEdge, passSigma, passSkill, shotOdds, weakFootError } from '../rules/shot';
 import { gaussian } from '../rules/math';
 import { CENTER, LENGTH, WIDTH, clamp, flip, type Vec2 } from '../pitch';
 import { next } from '../random';
@@ -17,13 +18,7 @@ import type { Flight, MatchPlayer, MatchState } from './state';
 
 const g = (s: MatchState) => gaussian(() => next(s.rngs.execution));
 
-/**
- * Home advantage (02 §11: about 47.6% home wins; without a crowd it shrinks by a
- * sixth to a third, never to zero): the home side executes a little better.
- * PARAMETERS: base and crowd share.
- */
-export const homeEdge = (s: MatchState, team: 0 | 1) =>
-  team === 0 ? 0.08 + 0.14 * s.input.conditions.crowd : 0;
+export const edgeOf = (s: MatchState, team: 0 | 1) => homeEdge(s.input.conditions.crowd, team);
 
 /** Rotates (vx, vy) by a small angle θ and renormalises (no trigonometry). */
 function turn(vx: number, vy: number, theta: number): [number, number] {
@@ -40,24 +35,20 @@ function turn(vx: number, vy: number, theta: number): [number, number] {
  */
 export function footFactor(s: MatchState, c: MatchPlayer): number {
   if (c.input.preferredFoot === 'both' || next(s.rngs.execution) > 0.25) return 1;
-  return 1 + 0.8 * (1 - c.attrs.weakFoot / 99);
+  return weakFootError(c.attrs);
 }
 
 export function passError(s: MatchState, c: MatchPlayer, d: number): number {
-  // The keeper's passing is his distribution (ADR-019).
-  const skill =
-    lineOf(c.role) === 'gk'
-      ? weighted(c.attrs, { distribution: 0.6, passing: 0.25, composure: 0.15 })
-      : weighted(c.attrs, { passing: 0.6, technique: 0.25, composure: 0.15 });
-  const sigma =
-    (0.012 +
-      0.05 * (1 - skill) +
-      0.04 * pressureOn(s, c) * (1.3 - pressResistance(c.attrs)) +
-      0.0006 * d +
-      0.03 * (1 - c.stamina)) *
-    (1 - homeEdge(s, c.team)) *
+  const sigma = passSigma(
+    passSkill(c.attrs, lineOf(c.role) === 'gk'),
+    pressResistance(c.attrs),
+    pressureOn(s, c),
+    d,
+    c.stamina,
+    edgeOf(s, c.team),
     // First time is harder; technique makes it clean (PARAMETER).
-    (c.firstTime ? 1.5 - 0.5 * norm(c.attrs.technique) : 1);
+    c.firstTime ? 1.5 - 0.5 * norm(c.attrs.technique) : 1,
+  );
   return g(s) * sigma * footFactor(s, c);
 }
 
@@ -187,24 +178,6 @@ export function kick(s: MatchState, c: MatchPlayer, a: Action, noOffside: boolea
   };
 }
 
-/** Finishing and composure shift conversion by −25%..+25% between 40 and 90 (02 §7). PARAMETER. */
-export const finisherFactor = (c: MatchPlayer, header: boolean, far = false) =>
-  1 +
-  (header
-    ? weighted(c.attrs, { heading: 0.6, jumping: 0.2, composure: 0.2 })
-    : far
-      ? weighted(c.attrs, { longShots: 0.6, technique: 0.25, composure: 0.15 })
-      : weighted(c.attrs, { finishing: 0.6, composure: 0.25, technique: 0.15 })) -
-  0.65;
-
-export const keeperFactor = (k: MatchPlayer | undefined) =>
-  k
-    ? 1 -
-      0.8 *
-        (weighted(k.attrs, { reflexes: 0.4, handling: 0.2, oneOnOne: 0.2, gkPositioning: 0.2 }) -
-          0.65)
-    : 1.6;
-
 export function shoot(
   s: MatchState,
   c: MatchPlayer,
@@ -220,35 +193,20 @@ export function shoot(
   // shots); the flight blocks them physically, so a shot that gets through scores at
   // chance / clear and goals match xG on average (02 §7). Not for a penalty or a header.
   const through = opts.penalty || header ? 1 : Math.max(0.3, shotClear(s, c));
-  const pGoal = clamp(
-    (chance / through) *
-      finisherFactor(c, header, flip(team, c.pos).x < LENGTH - 18) *
-      (header ? 1 : 1 / footFactor(s, c)) *
-      keeperFactor(keeper) *
-      // A tired finisher strikes it less cleanly (PARAMETER: −15% at zero stamina).
-      (1 - 0.15 * (1 - c.stamina)) *
-      (1 + homeEdge(s, team) - homeEdge(s, team === 0 ? 1 : 0)),
-    0.002,
-    0.97,
-  );
-  const skill = header
-    ? weighted(c.attrs, { heading: 0.7, jumping: 0.3 })
-    : weighted(c.attrs, { finishing: 0.6, technique: 0.4 });
-  // On target (PARAMETERS): a third of shots on average (02 §11).
-  const pOn = opts.penalty
-    ? 0.92
-    : clamp(
-        Math.max(
-          pGoal + 0.04,
-          0.28 +
-            0.3 * (skill - 0.6) -
-            0.08 * pressureOn(s, c) -
-            0.04 * (1 - c.stamina) +
-            0.6 * chance,
-        ),
-        0,
-        0.98,
-      );
+  const { pGoal, pOn } = shotOdds({
+    chance,
+    through,
+    header,
+    far: flip(team, c.pos).x < LENGTH - 18,
+    penalty: !!opts.penalty,
+    shooter: c.attrs,
+    keeper: keeper?.attrs,
+    stamina: c.stamina,
+    foot: header ? 1 : footFactor(s, c),
+    pressure: opts.penalty ? 0 : pressureOn(s, c),
+    edge: edgeOf(s, team),
+    edgeAgainst: edgeOf(s, team === 0 ? 1 : 0),
+  });
   const onTarget = next(s.rngs.execution) < pOn;
   const goal = onTarget && next(s.rngs.execution) < pGoal / pOn;
   const me = flip(team, c.pos);

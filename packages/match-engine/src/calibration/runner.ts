@@ -10,6 +10,8 @@ import type { Summary } from './summary';
 export async function runMany(
   inputs: MatchInput[],
   threads = Number(process.env.CAL_THREADS) || Math.max(1, cpus().length - 2),
+  /** Engine level: 1 (default) or 2; LEVEL=2 runs any batch script on the level 2 engine. */
+  level = Number(process.env.LEVEL) || 1,
 ): Promise<Summary[]> {
   // A batch run is background work: lowest CPU priority, so the machine stays usable.
   try {
@@ -31,7 +33,7 @@ export async function runMany(
             return;
           }
           const id = nextJob++;
-          w.postMessage({ id, input: inputs[id] });
+          w.postMessage({ id, input: inputs[id], level });
         };
         w.on('message', (m: { id: number; s: Summary }) => {
           out[m.id] = m.s;

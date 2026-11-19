@@ -5,6 +5,7 @@
  * with his own (noisy) estimate of P, and picks by softmax. The true P and the
  * best true utility are kept so the log can tell a bad choice from a bad kick.
  */
+import { settleSeconds } from '../rules/tempo';
 import { exp, gaussian, logistic } from '../rules/math';
 import { aerialScore, dribbleChance, norm, weighted } from '../rules/duel';
 import { valueAt } from '../rules/value';
@@ -113,15 +114,8 @@ export function chanceFrom(s: MatchState, c: MatchPlayer, header = false, afterC
 }
 
 /** Seconds a receiver takes to settle the ball before the next decision (tempo, first touch). */
-export function settleTime(s: MatchState, c: MatchPlayer): number {
-  const plan = s.plans[c.team].team;
-  const base = 1.3 + 0.3 * (5 - plan.tempo) + 0.5 * (1 - norm(c.attrs.firstTouch));
-  // Under pressure the ball is played first time; on a counter it goes forward at once (PARAMETERS).
-  const pressed = 1 - 0.65 * pressureOn(s, c);
-  // Receiving half-turned (body orientation) saves the extra touch (ADR-019).
-  const opened = 1.1 - 0.2 * norm(c.attrs.bodyOrientation);
-  return base * pressed * opened * (inCounter(s, c.team) ? 0.7 : 1);
-}
+export const settleTime = (s: MatchState, c: MatchPlayer): number =>
+  settleSeconds(s.plans[c.team].team.tempo, c.attrs, pressureOn(s, c), inCounter(s, c.team));
 
 /** Seconds after winning the ball during which a team set to counter attacks at once. PARAMETER. */
 const COUNTER_WINDOW = 6;

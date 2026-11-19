@@ -13,7 +13,8 @@ import { candidates, chooseAction } from './carrier';
 import { passSafety, shotClear } from './control';
 import { foul, stepUntilEnd, step } from './engine';
 import { matchInput, teamInput } from './fixture';
-import { finisherFactor, keeperFactor, kick, offsideNow, shoot } from './kick';
+import { kick, offsideNow, shoot } from './kick';
+import { finisherFactor, keeperFactor } from '../rules/shot';
 import { resultOf, simulateMatch } from './simulate';
 import { dist } from '../pitch';
 import { createMatch, deserialize, serialize, type MatchState } from './state';
@@ -323,8 +324,8 @@ describe('MC-038 chance quality', () => {
     c.attrs = { ...c.attrs, finishing: 64, composure: 64, technique: 64 };
     const k = place(s, 11, 103, 34);
     k.attrs = { ...k.attrs, reflexes: 64, handling: 64, oneOnOne: 64, gkPositioning: 64 };
-    expect(Math.abs(finisherFactor(c, false) - 1)).toBeLessThan(0.02);
-    expect(Math.abs(keeperFactor(k) - 1)).toBeLessThan(0.02);
+    expect(Math.abs(finisherFactor(c.attrs, false) - 1)).toBeLessThan(0.02);
+    expect(Math.abs(keeperFactor(k.attrs) - 1)).toBeLessThan(0.02);
     let goals = 0;
     const N = 4000;
     for (let i = 0; i < N; i++) {

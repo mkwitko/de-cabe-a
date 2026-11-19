@@ -41,6 +41,10 @@ export interface Summary {
   highTurnoverShots: [number, number];
   losses: [number, number];
   regained5s: [number, number];
+  /** Squad and body (TEST_STRATEGY §2.1 group e): injuries, substitutions, mean rating. */
+  injuries: [number, number];
+  subs: [number, number];
+  rating: number;
 }
 
 /** A sequence (Opta) ends when play stops: these events end it before any later shot. */
@@ -189,6 +193,12 @@ export function summary(r: MatchResult): Summary {
         losses: t.losses,
         regained5s: t.back,
       };
+    })(),
+    injuries: pair((t) => r.events.filter((e) => e.kind === 'injury' && e.team === t).length),
+    subs: pair((t) => r.events.filter((e) => e.kind === 'substitution' && e.team === t).length),
+    rating: (() => {
+      const on = r.players.filter((p) => p.minutes > 0);
+      return on.reduce((a, p) => a + p.rating, 0) / (on.length || 1);
     })(),
     highWins: pair(
       (t) =>

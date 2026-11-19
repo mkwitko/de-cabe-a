@@ -170,6 +170,23 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
 - **Rodada de 2026-11-19, itens 1.1 a 1.3.** (1.1) Defesa perto do gol: na recepção a até 22 m do gol o defensor mais próximo está a 3,9 m (critério de `02` §5.12: abaixo de 2,5 m) e o marcador a 9 m do próprio ponto. Causa da rotatividade: o marcado sai da lista de perigo (passa para trás da bola ou chega a menos de 8 m dela), não a histerese. Seguir o marcado nesses casos baixa a distância para 3,4 m, mas reprova a prova de coordenação (vão da última linha 24 m no S3, T1 4 no S2 e no S6), o mesmo conflito das tentativas anteriores. Revertido. (1.2) Grandes chances: passes em profundidade do terço final são só 1,6 por time, recebidos a 19 m do gol, e quase nunca viram grande chance (0,03 por time); o xG depois de passe em profundidade é 0,06 por chute. A causa provável é a corrida de ruptura (o atacante espera na linha), ainda sem mudança. (1.3) Escanteios: `02` §6.3 DECISÃO, 6,9 para 5,5.
 - **Desempenho medido limpo** (2026-11-19, `pnpm --filter @decabeca/match-engine bench`, um núcleo, Intel Core 7 250U): partida nível 1 com média de 1,56 s e p90 de 2,7 s, contra a meta de 1 s. Próximo item antes de mais calibragem.
 - **Simetria entre mandante e visitante** (2026-11-19, `02` §6.3 DECISÃO). Bug de referencial: velocidade espelhada como posição favorecia o time 1 em quatro pontos. Corrigido com `flipVec`; cartões recalibrados; linha alta recua correndo. Perfil de desempenho da mesma data: `coordinate` 47% do tempo (atribuição 17%, tarefas 6%, âncoras 5%, o resto alocação por passo), decisão do portador 15%, bola solta 10%; `arrivalTime` é chamado 3,1 milhões de vezes por partida. Memorizar trajetória da bola e custo da atribuição dá resultado idêntico mas ganho abaixo do ruído desta máquina (outro processo pesado rodando); a meta de 1 s pede reduzir a alocação por passo em `coordinate` e as chamadas de `arrivalTime`, com o hash de 12 partidas como guarda de igualdade.
+- **Nível 2, primeira versão** (2026-11-19, `02` §12 DECISÃO; MC-046, MC-046b, MC-167, MC-252).
+  - O que entrou:
+    - `possession/engine.ts` joga a partida inteira com o contrato do nível 1;
+    - o núcleo ganhou `rules/shot.ts`, `rules/tempo.ts`, `rules/subs.ts` e `rules/restart.ts`. O nível 1 dá resultado idêntico (hash de 12 partidas igual);
+    - `calibration/equivalence.ts` é o protocolo §2.1. `LEVEL=2` roda qualquer script de lote no nível 2.
+  - Relatório no conjunto de calibragem (400 partidas por célula): 101 métricas reprovadas.
+    - Equilibrado: resultado, passes, fôlego e substituições batem. Ficam abaixo os gols (1,98 contra 2,46) e o `xG` (1,11 contra 1,30).
+    - Favorito forte: saldo de 4,7 contra 2,2. A força decide demais no nível 2, e a causa ainda não foi isolada.
+    - Estilos: pressão contra saída curta e jogo direto contra linha alta exageram o vencedor. O fôlego e as substituições dependem do plano de um jeito que o nível 1 não mostra.
+  - Ainda não entrou na carreira. O patch da ligação está pronto: tabela e mata-matas da pessoa no nível 2, viagem nas pernas do visitante; todos os testes da carreira passavam.
+  - Custo: cerca de 10 ms por partida medido em máquina carregada, contra a meta de 2 ms.
+  - Próximos passos:
+    1. isolar o que dá peso demais à força (passe, desarme, duelo, chute), um fator por vez, contra o nível 1;
+    2. termo de espaço nas costas da defesa, que destrava contra-ataque e defesa de segurança;
+    3. novo ajuste com `mfit` em todas as células;
+    4. validação com 2.500 partidas por célula (cache do nível 1 em geração);
+    5. ligar na carreira.
 - **Disputas aéreas: origem medida** (60 partidas, 15,1 por jogo contra cerca de 25).
   - Passe longo em jogo corrido 7,5; escanteio 3,6; passe por cima 1,3; afastamento 0,7; cruzamento em jogo corrido 0,6; falta 0,5; tiro de meta 0,5; bola longa do goleiro em jogo corrido 0,3.
   - Tiro de meta e reposição do goleiro quase não geram disputa: há só 1,4 tiro de meta longo por time.

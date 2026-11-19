@@ -3,8 +3,11 @@ import type { EventKind, MatchEvent } from '../contract';
 import type { Vec2 } from '../pitch';
 import type { MatchState } from './state';
 
+/** What emit needs: level 1 and level 2 states both fit. */
+export type EventLog = Pick<MatchState, 'events' | 'clockMs'> & { players: { id: string }[] };
+
 export function emit(
-  s: MatchState,
+  s: EventLog,
   kind: EventKind,
   team: 0 | 1 | null,
   player: number | null,
