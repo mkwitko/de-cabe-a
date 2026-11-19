@@ -49,3 +49,9 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - REC Serie D (PDF) e demais artigos da Copa do Brasil (ida/volta, prorrogacao) nao lidos.
 - SSF/RSSF (fair play financeiro) citado no REC Serie A art. 1, nao extraido.
 - `rules.json` anterior (Wikipedia) nao foi alterado; `rules-official.json` o substitui onde ha dado.
+
+## Torcidas (`fans.size`, data/fans.json)
+
+- Ipsos-Ipec / O Globo, campo 5-9 jun 2025 (2.000 entrevistas, 132 municipios, margem 2,2 p.p.): 20 clubes de 0,5% para cima, aplicados a populacao IBGE 2025. https://tvtnews.com.br/maiores-torcidas-do-brasil-nova-pesquisa-2025/ e https://www.diariodepernambuco.com.br/esportes-dp/sport/2025/07/amp/7795455-pesquisa-aponta-o-sport-com-a-13-maior-torcida-do-pais-santa-cruz-tambem-ocupa-o-top-20.html
+- Conferencia: CBF/Nexus, nov 2025 (mesma ordem no top 10). https://www.netvasco.com.br/n/372844/pesquisa-de-torcidas-encomendada-pela-cbf-diz-que-o-vasco-tem-5-da-preferencia-no-brasil
+- Abaixo de 0,5%: estimado (publico 2025 x razao mediana dos clubes pesquisados, ou reputacao), marcado no relatorio.
