@@ -182,7 +182,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     season,
     ledger: createLedger(saved.ledger.today, saved.ledger.entries),
     day: saved.day,
-    ...clubLevels(pack),
+    ...clubLevels(pack, season.season),
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
     ...(saved.moves && { moves }),

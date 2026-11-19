@@ -299,7 +299,14 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
   // The foreign market is open from the first season (04 §4.7); a new pack object, read afresh.
   const pack = withImports(base, seed, start.season.season);
   recache(pack, 'goingWages', WHOLE, goingWages(base));
-  const w: CareerWorld = { pack, origin: base, seed, ...start, day: 0, ...clubLevels(pack) };
+  const w: CareerWorld = {
+    pack,
+    origin: base,
+    seed,
+    ...start,
+    day: 0,
+    ...clubLevels(pack, start.season.season),
+  };
   note(w, { day: 0, kind: 'welcome' });
   setJudgementClock(pack, seed, w.season.season);
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
@@ -587,7 +594,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   // Rival squads cleared for the new season, read with the new clock: spares go, and
   // sanctioned clubs cut (contracts.ts).
   trimSquads(w);
-  const levels = clubLevels(w.pack);
+  const levels = clubLevels(w.pack, w.season.season);
   w.strength = levels.strength;
   w.eleven = levels.eleven;
   // A picked eleven with someone who retired goes back to the coach.
