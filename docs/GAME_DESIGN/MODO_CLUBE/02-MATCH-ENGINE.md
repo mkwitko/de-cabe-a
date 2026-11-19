@@ -641,6 +641,27 @@ Decisão do dono (2026-11-13): partida de rival também é simulada, não sortea
 - **Custo-alvo**: até 2 ms por partida; rodada inteira (39 jogos) abaixo de 100 ms.
 - **Aceite** (ADR-013 item 4): equivalência **estatística** com o nível 1 (placar, finalizações, posse, `xG`, cartões pelo protocolo de `TEST_STRATEGY.md` §2.1) e **coerência tática**, verificada por testes próprios do nível 2: cada instrução move a métrica que declara no sentido declarado. Não se exige o mesmo tamanho de efeito nem a mesma cadeia causal do nível 1.
 
+DECISÃO (2026-11-19, implementação do nível 2, `possession/engine.ts`): o que o nível 2 tem de próprio e o que ele herda.
+
+- **Posições**: cada jogador fica na âncora do nível 1 (`team.ts`) para a zona da bola, com um desvio sorteado a cada lance. As âncoras dependem só dos dois planos e são guardadas entre partidas. Quem acabou de perder a bola ainda está na forma de ataque e recompõe em alguns segundos. A defesa de segurança do plano já está no lugar.
+- **Núcleo compartilhado**: ganhou `rules/shot.ts` (vantagem de mando, finalizador, goleiro, chute no alvo, erro de passe, pé fraco, segurar a bola), `rules/tempo.ts` (tempo para dominar), `rules/subs.ts` (substituições) e `rules/restart.ts` (tempo de bola parada e acréscimos). O treinador rival é a mesma função `readTheGame` do nível 1. As regras de falta seguem as do nível 1: por trás, quem tem amarelo entra com cuidado, falta tática no contra-ataque, cautela na própria área e a mesma leitura de ataque promissor e de último homem. O chute também segue o nível 1: alvo e gol se decidem na batida, e os corpos no caminho bloqueiam o resto.
+- **Executores próprios**:
+  - a pressão sobre o portador, pela distância do defensor mais próximo; quem está atrás da bola conta como o dobro da distância;
+  - a leitura do passe: defensores à frente na linha do passe e perto do recebedor, com o marcador fechando enquanto a bola viaja;
+  - a condução contra o defensor no caminho, o bloqueio de chute, o duelo aéreo no cruzamento e o impedimento na bola nas costas;
+  - o contra-ataque, que só existe contra uma defesa com menos de cinco jogadores à frente da bola.
+  - As constantes desses executores (`L2`) foram ajustadas contra o nível 1, no conjunto de sementes de calibragem.
+- **Ajuste**: o nível 2 imita o nível 1, então herda os desvios dele em relação à Série A. Cada mudança no nível 1 pede um novo ajuste do nível 2, e o protocolo (`calibration/equivalence.ts`) diz se ainda bate.
+- **Executores de decisão**:
+  - o jogador livre se afasta do marcador, pelo movimento sem bola contra a marcação;
+  - a paciência: quanto mais longa a posse sem achar caminho, mais risco o portador aceita;
+  - a progressão do plano inclina a escolha só um pouco. Um peso grande fazia o time de posse circular para sempre contra o bloco baixo: com o peso grande, 0,3 de `xG`; com o leve, 1,1.
+- **Estado em 2026-11-19 (não pronto para a carreira)**:
+  - no jogo equilibrado o nível 2 já fica perto do nível 1;
+  - a força ainda pesa demais: no confronto de favorito forte, o favorito marca cerca de 4,6 gols no nível 2, contra 2,7 no nível 1;
+  - o contra-ataque e a defesa de segurança ainda não movem a métrica que declaram. Falta um termo de espaço nas costas da defesa.
+  - Por isso a carreira continua com o nível 3. A ligação já escrita (tabela e mata-matas da pessoa no nível 2, o resto do mundo no nível 3, desgaste de viagem nas pernas do visitante) entra quando o protocolo aprovar.
+
 O usuário pode abrir o relatório de qualquer jogo do dia, de qualquer competição: placar, autores, estatísticas, notas e os três fatores por setor. Rever em campo só existe nos jogos do próprio clube.
 
 ## 13. Campo 2D (`match-view`)

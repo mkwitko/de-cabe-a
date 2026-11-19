@@ -47,3 +47,14 @@ import('./match/fixture').then(async ({ matchInput }) => {
       `${cpus()[0]?.model ?? 'cpu'}, Node ${process.versions.node}`,
   );
 });
+
+// ── Level 2 match (MC-046, 02 §12): target 2 ms a match, a round of 39 under 100 ms. ──
+import('./match/fixture').then(async ({ matchInput }) => {
+  const { simulateLevel2 } = await import('./possession/engine');
+  for (let i = 0; i < 20; i++) simulateLevel2(matchInput(i)); // warm-up
+  const n = 200;
+  const t0 = performance.now();
+  for (let seed = 1; seed <= n; seed++) simulateLevel2(matchInput(seed));
+  const ms = (performance.now() - t0) / n;
+  console.log(`level 2 match: mean ${ms.toFixed(2)} ms, a round of 39 ${(39 * ms).toFixed(0)} ms`);
+});

@@ -4,40 +4,29 @@
  * or injured players go off from the hour, in up to the windows the rules allow.
  * PARAMETERS: thresholds and timing.
  */
-import type { PlayerInput } from '../contract';
 import { lineOf } from '../team';
-import { emit } from './events';
+import { STOPPAGE_MS } from '../rules/restart';
+import { SUB_FROM_MINUTE, bestReplacement, tiredLimit } from '../rules/subs';
+import { emit, type EventLog } from './events';
 import type { MatchPlayer, MatchState } from './state';
-
-const fit = (b: PlayerInput, out: MatchPlayer) => {
-  let s = 0;
-  for (const [pos, lvl] of Object.entries(out.input.positions))
-    s += Math.min(lvl, b.positions[pos as keyof PlayerInput['positions']] ?? 0);
-  return s;
-};
 
 export function substitutions(s: MatchState, interval: boolean): void {
   const minute = s.clockMs / 60000;
   const anyInjured = s.players.some((p) => p.active && p.injured);
-  if (!interval && minute < 58 && !anyInjured) return;
+  if (!interval && minute < SUB_FROM_MINUTE && !anyInjured) return;
   for (const team of [0, 1] as const) {
     const t = s.teams[team];
     if (t.subsLeft === 0 || t.bench.length === 0) continue;
     const injured = s.players.filter((p) => p.team === team && p.active && p.injured);
     if (t.windowsLeft === 0 && !interval && injured.length === 0) continue;
-    const tired = (minute < 58 && !interval ? [] : s.players)
+    const tired = (minute < SUB_FROM_MINUTE && !interval ? [] : s.players)
       .filter((p) => p.team === team && p.active && lineOf(p.role) !== 'gk' && !p.injured)
-      .filter((p) => p.stamina < 0.42 - (0.04 * Math.max(0, 75 - minute)) / 15)
+      .filter((p) => p.stamina < tiredLimit(minute))
       .sort((a, b) => a.stamina - b.stamina || a.index - b.index);
     const going = [...injured, ...tired].slice(0, Math.min(3, t.subsLeft));
     if (going.length === 0) continue;
     for (const out of going) {
-      const pickIdx = t.bench
-        .map((b, i) => ({
-          i,
-          f: fit(b, out) + (b.positions.GK && lineOf(out.role) !== 'gk' ? -10 : 0),
-        }))
-        .sort((a, b) => b.f - a.f || a.i - b.i)[0]!.i;
+      const pickIdx = bestReplacement(t.bench, out.input, lineOf(out.role) === 'gk');
       substitute(s, team, out.index, pickIdx);
     }
     if (!interval) t.windowsLeft = Math.max(0, t.windowsLeft - 1);
@@ -72,7 +61,7 @@ export function substitute(s: MatchState, team: 0 | 1, outIndex: number, benchId
   s.players[out.index] = fresh;
   s.events.at(-1)!.otherId = inP.id;
   t.subsLeft--;
-  s.stoppage += 20000;
+  s.stoppage += STOPPAGE_MS.substitution;
 }
 
 const BLOCKS = ['low', 'mid', 'high'] as const;
@@ -85,7 +74,13 @@ const up = (v: number, d: number) => Math.max(1, Math.min(5, v + d));
  * below 30 (or the person's own team, which sends commands instead) keeps the plan.
  * Runs every 5 minutes of the clock. PARAMETERS: timing and steps.
  */
-export function readTheGame(s: MatchState): void {
+/** What the coach reads: level 1 and level 2 states both fit (02 §12, same rule). */
+export type CoachView = EventLog &
+  Pick<MatchState, 'coachSlot' | 'coaches' | 'plans' | 'basePlans'> & {
+    teams: [{ score: number }, { score: number }];
+  };
+
+export function readTheGame(s: CoachView): void {
   const minute = s.clockMs / 60000;
   const slot = Math.floor(minute / 5);
   if (minute < 15 || slot === s.coachSlot) return;
@@ -126,7 +121,7 @@ export function readTheGame(s: MatchState): void {
  * longer. How soon he sees it depends on his game reading. PARAMETERS: window,
  * threshold.
  */
-function beatThePress(s: MatchState, team: 0 | 1, minute: number): void {
+function beatThePress(s: CoachView, team: 0 | 1, minute: number): void {
   const t = s.plans[team].team;
   if (t.buildUp === 'long') return;
   const window = 10 + (99 - s.coaches[team].gameReading) / 10; // minutes he needs to notice

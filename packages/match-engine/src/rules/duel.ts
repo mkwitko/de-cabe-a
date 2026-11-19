@@ -15,8 +15,10 @@ export type Weights = Partial<Record<AttributeId, number>>;
 export function weighted(a: Attributes, w: Weights): number {
   let s = 0;
   let total = 0;
-  for (const [k, v] of Object.entries(w) as [AttributeId, number][]) {
-    s += norm(a[k]) * v;
+  // for…in visits keys in the same order as Object.entries, without allocating.
+  for (const k in w) {
+    const v = w[k as AttributeId]!;
+    s += norm(a[k as AttributeId]) * v;
     total += v;
   }
   return total > 0 ? s / total : 0;
@@ -26,17 +28,14 @@ export function weighted(a: Attributes, w: Weights): number {
 export const contest = (delta: number, d: number, k: number) => logistic((delta - d) / k);
 
 /** Tackle (02 §6 drible × desarme): defender `d` against carrier `c`; from behind is harder. PARAMETERS. */
-export function tackleChance(d: Attributes, c: Attributes, behind: boolean): number {
-  const att = weighted(d, { tackling: 0.5, anticipation: 0.2, strength: 0.15, aggression: 0.15 });
-  const def = weighted(c, {
-    dribbling: 0.25,
-    balance: 0.15,
-    shielding: 0.2,
-    technique: 0.15,
-    composure: 0.25,
-  });
-  return contest(att - def, behind ? 0.15 : 0, 0.12);
-}
+export const tackleAttack = (d: Attributes) =>
+  weighted(d, { tackling: 0.5, anticipation: 0.2, strength: 0.15, aggression: 0.15 });
+export const tackleDefence = (c: Attributes) =>
+  weighted(c, { dribbling: 0.25, balance: 0.15, shielding: 0.2, technique: 0.15, composure: 0.25 });
+export const tackleOdds = (att: number, def: number, behind: boolean) =>
+  contest(att - def, behind ? 0.15 : 0, 0.12);
+export const tackleChance = (d: Attributes, c: Attributes, behind: boolean): number =>
+  tackleOdds(tackleAttack(d), tackleDefence(c), behind);
 
 /** Aerial duel strength (02 §6.3): jumping, heading, strength, positioning and height. PARAMETERS. */
 export const aerialScore = (a: Attributes, heightCm: number) =>
@@ -44,11 +43,13 @@ export const aerialScore = (a: Attributes, heightCm: number) =>
   (heightCm - 180) / 200;
 
 /** Dribble (02 §6): carrier `c` beats defender `d` in a 1v1. PARAMETERS. */
-export function dribbleChance(c: Attributes, d: Attributes): number {
-  const att = weighted(c, { dribbling: 0.45, agility: 0.2, balance: 0.15, acceleration: 0.2 });
-  const def = weighted(d, { tackling: 0.4, anticipation: 0.25, positioning: 0.2, pace: 0.15 });
-  return contest(att - def, 0.12, 0.12);
-}
+export const dribbleAttack = (c: Attributes) =>
+  weighted(c, { dribbling: 0.45, agility: 0.2, balance: 0.15, acceleration: 0.2 });
+export const dribbleDefence = (d: Attributes) =>
+  weighted(d, { tackling: 0.4, anticipation: 0.25, positioning: 0.2, pace: 0.15 });
+export const dribbleOdds = (att: number, def: number) => contest(att - def, 0.12, 0.12);
+export const dribbleChance = (c: Attributes, d: Attributes): number =>
+  dribbleOdds(dribbleAttack(c), dribbleDefence(d));
 
 /**
  * How well a pressing side moves together (research 13 §1, §6 item 2): reading,

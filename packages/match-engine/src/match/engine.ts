@@ -34,6 +34,8 @@ import {
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
+import { holdChance } from '../rules/shot';
+import { DEAD_SECONDS, STOPPAGE_MS } from '../rules/restart';
 import { acuteLoad, drain, recover } from '../rules/stamina';
 import { ACUTE_LOSS, fatigue } from '../kinematics';
 import { aerialFoulChance, beatenFoulChance, foulChance, cardFor } from '../rules/discipline';
@@ -53,15 +55,7 @@ const inOwnBox = (team: 0 | 1, p: Vec2) => {
 };
 
 /** PARAMETERS: seconds the clock runs while the ball is dead, by restart (02 §2: ball in play 52 to 58 min). */
-const DEAD: Record<RestartKind | 'goal', [number, number]> = {
-  kickOff: [10, 15],
-  goal: [45, 70],
-  throwIn: [10, 18],
-  corner: [26, 40],
-  goalKick: [22, 34],
-  freeKick: [24, 40],
-  penalty: [55, 85],
-};
+const DEAD: Record<RestartKind | 'goal', readonly [number, number]> = DEAD_SECONDS;
 
 export interface StepOptions {
   /** Called with each 4 Hz frame (decimetres), only for matches someone watches. */
@@ -84,7 +78,7 @@ export function setRestart(
   const ms = Math.round(between(s.rngs.referee, lo, hi) * 1000);
   s.clockMs += ms;
   // Stoppage: goals, cards, injuries and substitutions are added back (02 §6.5 acréscimos). PARAMETER.
-  if (why === 'goal') s.stoppage += 30000;
+  if (why === 'goal') s.stoppage += STOPPAGE_MS.goal;
   // Players recover a little while the ball is dead.
   for (const p of s.players)
     if (p.active) {
@@ -616,7 +610,7 @@ export function foul(
       card: red ? 2 : 1,
       second: prev === 1 ? 1 : 0,
     });
-    s.stoppage += 15000;
+    s.stoppage += STOPPAGE_MS.card;
     if (red) {
       s.teams[d.team].stats.redCards++;
       if (prev === 1) s.teams[d.team].stats.yellowCards++;
@@ -637,7 +631,7 @@ function injure(s: MatchState, p: MatchPlayer, contact: boolean) {
   p.pace = Math.round(p.pace * 0.6);
   p.acceleration = Math.round(p.acceleration * 0.6);
   emit(s, 'injury', p.team, p.index, null, p.pos, { contact: contact ? 1 : 0 });
-  s.stoppage += 60000;
+  s.stoppage += STOPPAGE_MS.injury;
 }
 
 // ── Ball in flight ──────────────────────────────────────────────────────────
@@ -866,8 +860,7 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
   const shooter = s.players[f.from]!;
   emit(s, 'save', k.team, k.index, shooter.index, k.pos, { xg: f.shot?.xg ?? 0 });
   k.score += 0.35;
-  const hold =
-    next(s.rngs.execution) < 0.35 + 0.45 * weighted(k.attrs, { handling: 0.7, reflexes: 0.3 });
+  const hold = next(s.rngs.execution) < holdChance(k.attrs);
   if (hold) {
     gainBall(s, k);
     k.decideAt = s.tick + 16;
