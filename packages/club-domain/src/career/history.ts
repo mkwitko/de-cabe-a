@@ -7,6 +7,10 @@ import { regulationsFor } from '../competition/outcomes';
 import { boardAfterSeason, boardOf, positionOf, type BoardReason } from './board';
 import { topScorers } from './scoring';
 import { divisionTable, divisionTableOf, type CareerWorld } from './advance';
+import { dayOf } from '../competition/calendar';
+import { resultBetween } from '../finance/ledger';
+import { endCredits, type Line } from './revenue';
+import { priced, pricesOf } from './prices';
 
 /** What the career keeps of a season. */
 export interface HistoryEntry {
@@ -38,6 +42,8 @@ export interface Match {
 /** The review the season-end screen shows. */
 export interface SeasonReview extends HistoryEntry {
   places: number;
+  /** The season's four revenue lines (revenue.ts), the season-end credits still to come included. */
+  revenue: Record<Line, number>;
   /** Division champion's name. */
   championName: string;
   confidence: { from: number; to: number };
@@ -100,6 +106,20 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
     goals: x.goals,
     mine: mineIds.has(x.playerId),
   }));
+  const by = resultBetween(
+    w.ledger,
+    dayOf(`${w.season.season}-01-01`),
+    dayOf(`${w.season.season}-12-31`),
+  ).byKind;
+  const revenue: Record<Line, number> = {
+    quota: by.quota ?? 0,
+    advance: by.advance ?? 0,
+    prize: by.prize ?? 0,
+    tv: by.tv ?? 0,
+  };
+  // What the turn is about to credit (the same function posts it).
+  for (const c of endCredits(w, w.clubId, position, divisionTableOf(w, w.clubId).rows.length))
+    revenue[c.line] += priced(c.amount, pricesOf(w).prices);
   const won = t.titles.filter((x) => x.clubId === w.clubId).map((x) => x.competitionId);
   return {
     season: w.season.season,
@@ -107,6 +127,7 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
     division: table.name,
     position,
     places: divisionTableOf(w, w.clubId).rows.length,
+    revenue,
     goal: b.goal,
     met: !b.fired && position <= b.goal,
     ...(b.fired && { fired: true as const }),

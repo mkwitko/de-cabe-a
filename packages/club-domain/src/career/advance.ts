@@ -66,7 +66,8 @@ import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
-import { postOwners, postPrize } from './finance';
+import { postOwners } from './finance';
+import { postCups, postSeasonEnd } from './revenue';
 import { matchReport, type ReportFact } from './report';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
@@ -251,6 +252,7 @@ function playDay(
   scoutingDay(w, day);
   fillVacancies(w, day);
   postMonths(w, w.day, day);
+  postCups(w, w.day, day);
   const names = () => new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
   const banned = (sentences: Sentence[]) => {
     if (!sentences.length) return;
@@ -625,8 +627,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
       position,
       goal: judged.goal,
     });
-  const prize = postPrize(w, position, divisionTable(w).rows.length);
-  if (prize > 0) note(w, { day: w.day, kind: 'prize', position, amount: prize });
+  postSeasonEnd(w, position, divisionTable(w).rows.length);
   const owners = postOwners(w);
   if (owners > 0) note(w, { day: w.day, kind: 'owners', amount: owners });
   w.history = [...(w.history ?? []), entry];

@@ -24,6 +24,8 @@ import { isForeign } from '../career/squad';
 import { ageOf } from '../market/value';
 import { ticketOf, usualCrowd } from '../match/stadium';
 import { topScorers } from '../career/scoring';
+import { divisionTableOf } from '../career/advance';
+import { performanceTv, tvOf } from '../career/revenue';
 import { PackSchema, type Pack } from '../pack/schema';
 
 interface Target {
@@ -166,6 +168,29 @@ const TARGETS: Target[] = [
         const c = w.pack.clubs.find((x) => x.id === id)!;
         return s + usualCrowd(c) * ticketOf(c, 1) * 19;
       }, 0) / 1e6,
+  },
+  {
+    name: 'TV da Série A: maior clube / clube mediano (vezes)',
+    // Club TV revenue 2025 (press / Sports Value): Flamengo R$ 612 mi against Grêmio R$ 156 mi,
+    // about the middle of the table: 3.9x. The money is equal + audience + position (revenue.ts).
+    range: [2.8, 5.2],
+    source: 'Receita de TV 2025: Flamengo R$ 612 mi, Grêmio R$ 156 mi (imprensa / Sports Value)',
+    confirmed: true,
+    measure: (w) => {
+      const ids = serieAClubs(w);
+      const tv = ids
+        .map((id) => {
+          const rows = divisionTableOf(w, id).rows;
+          const parts = tvOf(w, id, 1);
+          return (
+            parts.equal +
+            parts.audience +
+            performanceTv(parts.perfMean, rows.findIndex((r) => r.clubId === id) + 1, rows.length)
+          );
+        })
+        .sort((a, b) => a - b);
+      return tv.at(-1)! / tv[Math.floor(tv.length / 2)]!;
+    },
   },
   {
     name: 'Vitórias do mandante na Série A (%)',
