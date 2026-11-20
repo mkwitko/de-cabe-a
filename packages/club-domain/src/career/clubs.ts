@@ -260,7 +260,6 @@ export function settleSeason(
   position: (clubId: string) => { position: number; places: number },
 ): void {
   const clubs = clubsOf(w);
-  const prices = pricesOf(w).prices;
   const staff = new Map<string, number>();
   for (const a of w.pack.assignments)
     staff.set(a.clubId, (staff.get(a.clubId) ?? 0) + a.contract.wage);

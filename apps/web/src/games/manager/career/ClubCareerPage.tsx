@@ -1050,7 +1050,6 @@ const FROM = {
   injury: 'staff',
   suspension: 'staff',
   calledUp: 'staff',
-  prize: 'finance',
   quota: 'finance',
   arrears: 'staff',
   arrearsPaid: 'staff',
