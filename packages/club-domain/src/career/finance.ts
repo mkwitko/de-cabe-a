@@ -12,6 +12,7 @@ import type { CareerWorld } from './advance';
 import { PRICE_BASE, priced, pricesOf } from './prices';
 import { upkeepOf } from './clubs';
 import { nationalDivisions } from './start';
+import { COTA_MONTHS, cotaFor } from './estadual';
 import { closedDoors, crowdAt, punishmentAt, ticketOf, usualCrowd } from '../match/stadium';
 import { note } from './inbox';
 import { CURRENCIES, rateOf } from '../market/currency';
@@ -92,11 +93,13 @@ export const seasonIncome = (
   tier: number,
   prices = PRICE_BASE,
   tv = tier === 1 ? TV_SERIE_A : tier === 2 ? TV_SERIE_B : 0,
+  /** The state championship's fixed share (estadual.ts); the flat estimate of the tier by default. */
+  cup = STATE[tier] ?? 0,
 ) =>
   priced(
     tv +
       (QUOTA[tier] ?? 0) +
-      (STATE[tier] ?? 0) +
+      cup +
       c.sponsors.reduce((s, x) => s + x.annual, 0) +
       seasonGate(c, tier) +
       membersOf(c, tier),
@@ -157,8 +160,10 @@ function monthlyBills(w: CareerWorld, day: number) {
   post('tv', Math.round(priced(tv.equal + tv.audience, prices) / 12));
   post('quota', Math.round(priced(QUOTA[tierNo] ?? 0, prices) / 12));
   post('members', Math.round(priced(membersOf(club, tierNo), prices) / 12));
-  // The state championship's quotas: an ESTIMATE (revenue.ts).
-  post('cups', Math.round(priced(STATE[tierNo] ?? 0, prices) / 12));
+  // The state championship's fixed share (federation and broadcaster), paid in its months in
+  // three parts; the prize by position comes when it ends (estadual.ts).
+  if (COTA_MONTHS.includes(month.slice(5)))
+    post('cups', Math.round(priced(cotaFor(w, w.clubId), prices) / COTA_MONTHS.length));
   post('sponsors', Math.round(priced(sponsors, prices) / 12));
 }
 

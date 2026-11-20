@@ -655,7 +655,10 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             onMarket={() => setRoom('mercado')}
           />
           <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
-            <Table sim={sim} clubId={sim.clubId} />
+            <div className="flex min-w-0 flex-col">
+              <Table rows={sim.table} title={t('career.table')} clubId={sim.clubId} />
+              {sim.estadual && <Estadual e={sim.estadual} clubId={sim.clubId} />}
+            </div>
             <div className="flex min-w-0 flex-col">
               <Form sim={sim} />
               <Fixtures sim={sim} />
@@ -1134,6 +1137,7 @@ const FROM = {
   copaDraw: 'board',
   copaOut: 'board',
   copaTitle: 'board',
+  estadual: 'press',
 } as const;
 const FROM_TONE = {
   board: 'bg-club-gold',
@@ -1332,6 +1336,14 @@ function noteText(n: InboxItem, sim: SimView): string {
       });
     case 'copaTitle':
       return t('inbox.copaTitle');
+    case 'estadual':
+      return t('inbox.estadual', {
+        name: n.name,
+        champion: n.clubName,
+        position: n.position,
+        prize: t('career.cash', { value: n.prize }),
+        paid: String(n.prize > 0),
+      });
     case 'season':
       return t('inbox.season', { season: n.season, champion: n.clubName, move: n.move });
   }
@@ -1495,10 +1507,10 @@ const competitionLabel = (m: {
     : m.competition;
 const MSG_RESULT = { W: 'career.msgWin', D: 'career.msgDraw', L: 'career.msgLoss' } as const;
 
-function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
+function Table({ rows, title, clubId }: { rows: SimView['table']; title: string; clubId: string }) {
   return (
     <section className={PANEL}>
-      <h3 className={LABEL}>{t('career.table')}</h3>
+      <h3 className={LABEL}>{title}</h3>
       <table className="w-full text-sm tabular-nums">
         <thead className="text-chalk-soft">
           <tr>
@@ -1514,7 +1526,7 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
           </tr>
         </thead>
         <tbody>
-          {sim.table.map((r, i) => (
+          {rows.map((r, i) => (
             <tr
               key={r.clubId}
               aria-current={r.clubId === clubId || undefined}
@@ -1539,6 +1551,39 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
         </tbody>
       </table>
     </section>
+  );
+}
+
+/** The state championship: the club's group table, then the knockout ties as they were played. */
+function Estadual({ e, clubId }: { e: NonNullable<SimView['estadual']>; clubId: string }) {
+  return (
+    <>
+      <Table rows={e.table} title={e.name} clubId={clubId} />
+      {e.ties.length > 0 && (
+        <section className={PANEL}>
+          <h3 className={LABEL}>{t('career.estadualKnockout')}</h3>
+          <ul className="flex flex-col gap-1 text-sm tabular-nums">
+            {e.ties.map((x, i) => (
+              <li key={i} className="flex items-center justify-between gap-2">
+                <span className="text-chalk-soft">{t('career.estadualStage', { s: x.stage })}</span>
+                <span>
+                  {t('career.estadualTie', {
+                    home: x.home.shortName,
+                    away: x.away.shortName,
+                    played: String(x.goals !== null),
+                    a: x.goals?.[0] ?? 0,
+                    b: x.goals?.[1] ?? 0,
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {e.champion && (
+            <p className="font-bold">{t('career.estadualChampion', { name: e.champion })}</p>
+          )}
+        </section>
+      )}
+    </>
   );
 }
 

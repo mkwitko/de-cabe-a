@@ -9,12 +9,15 @@
  * a vacancy at a bigger club, while the person's own board is pleased, is an approach they can
  * take; a dismissed person is offered the vacancies first (jobs.ts).
  */
+import { isEstadual } from '../competition/estaduais';
+import { isDerby } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import type { CareerWorld } from './advance';
 import {
   BENCH_START,
   divisionOf,
   pressureOf,
+  EARLY_EXIT,
   resultValue,
   thresholdFor,
   divisionTierOf,
@@ -74,6 +77,7 @@ export function judgeCoaches(
   o: Outcome,
   day: number,
 ): void {
+  const estadual = isEstadual({ id: match.competitionId });
   for (const [side, clubId] of [match.home, match.away].entries()) {
     if (clubId === w.clubId || !divisionOf(w, clubId)) continue;
     const t = (divisionTierOf(w, clubId) ?? 1) - 1;
@@ -81,7 +85,14 @@ export function judgeCoaches(
     const [mine, theirs] = side === 0 ? o.goals : [o.goals[1], o.goals[0]];
     if (w.vacancies?.[clubId] !== undefined) continue;
     const b = benchOf(w, clubId);
-    const { result, value } = resultValue(w, clubId, rival, mine, theirs);
+    const { result, value } = resultValue(
+      w,
+      clubId,
+      rival,
+      mine,
+      theirs,
+      estadual ? { derby: isDerby(w.pack, clubId, rival) } : undefined,
+    );
     b.winless = result === 'W' ? 0 : (b.winless ?? 0) + 1;
     const run =
       b.winless > 0 && b.winless % RUN === 0 ? RUN_COST + (pressureOf(w, clubId) >= 75 ? 1 : 0) : 0;
@@ -93,6 +104,19 @@ export function judgeCoaches(
     )
       sack(w, clubId, day);
   }
+}
+
+/** A club out of its state championship early: its board's patience takes the blow. */
+export function judgeExit(w: CareerWorld, clubId: string, day: number): void {
+  if (clubId === w.clubId || !divisionOf(w, clubId) || w.vacancies?.[clubId] !== undefined) return;
+  const t = (divisionTierOf(w, clubId) ?? 1) - 1;
+  const b = benchOf(w, clubId);
+  b.confidence = Math.max(0, Math.min(100, b.confidence + EARLY_EXIT));
+  if (
+    (b.matches ?? 0) >= (GRACE_TIER[t] ?? GRACE) &&
+    b.confidence < thresholdFor(w, clubId) + EDGE + (EDGE_TIER[t] ?? 0)
+  )
+    sack(w, clubId, day);
 }
 
 function sack(w: CareerWorld, clubId: string, day: number): void {

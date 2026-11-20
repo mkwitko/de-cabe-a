@@ -11,6 +11,7 @@ import { ruleOn } from '../rules/registry';
 import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
+import { cotaFor } from '../career/estadual';
 import { pricesOf } from '../career/prices';
 import { tvOf } from '../career/revenue';
 import type { Horizon } from '../career/clubs';
@@ -37,7 +38,7 @@ export interface Budget {
 /** Each club's national tier this season, read once per season (members do not change in it). */
 const tiers = new WeakMap<object, Map<string, number>>();
 
-export function tierOfClub(w: CareerWorld, clubId: string): number {
+function tiersOf(w: CareerWorld): Map<string, number> {
   let by = tiers.get(w.season);
   if (!by) {
     by = new Map();
@@ -45,8 +46,13 @@ export function tierOfClub(w: CareerWorld, clubId: string): number {
       for (const id of w.season.members[d.id] ?? []) by.set(id, d.tier);
     tiers.set(w.season, by);
   }
-  return by.get(clubId) ?? 4;
+  return by;
 }
+
+export const tierOfClub = (w: CareerWorld, clubId: string): number => tiersOf(w).get(clubId) ?? 4;
+
+/** Whether the club plays a national division (clubs of the state championships only do not). */
+export const inDivisions = (w: CareerWorld, clubId: string): boolean => tiersOf(w).has(clubId);
 
 /** A season's budgets, read once per club: the division and the income do not change in it. */
 const budgets = new WeakMap<object, Map<string, Budget>>();
@@ -68,6 +74,7 @@ export const incomeOf = (w: CareerWorld, clubId: string) => {
     tier,
     pricesOf(w).prices,
     tv.equal + tv.audience + tv.perfMean,
+    cotaFor(w, clubId),
   );
 };
 

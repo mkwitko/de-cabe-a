@@ -102,6 +102,8 @@ export type Note = { day: number } & (
     }
   /** The season being played ends in a vote of the person's club's board. */
   | { kind: 'electionYear' }
+  /** The person's state championship ended: its champion, the club's place (0 = out early) and prize. */
+  | { kind: 'estadual'; name: string; champion: string; position: number; prize: number }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }
 );
 

@@ -343,6 +343,25 @@ const TARGETS: Target[] = [
   },
 ];
 
+TARGETS.push(
+  {
+    name: 'Clubes com troca de técnico até o fim dos estaduais (4 divisões)',
+    // NSC Total (early Mar 2026): 59 of the 156 clubs had changed coach in two months (4 in Série
+    // A, 3 in B, 10 in C, 42 in D); changes include resignations, the model only sackings.
+    range: [35, 80],
+    source: 'NSC Total, mar/2026: 59 de 156 clubes já trocaram de técnico (A 4, B 3, C 10, D 42)',
+    confirmed: false,
+    measure: (w) => byMarch.get(w)?.all ?? 0,
+  },
+  {
+    name: 'Clubes da Série D com troca de técnico até o fim dos estaduais',
+    range: [25, 55],
+    source: 'NSC Total, mar/2026: 42 clubes da Série D trocaram de técnico em dois meses',
+    confirmed: false,
+    measure: (w) => byMarch.get(w)?.serieD ?? 0,
+  },
+);
+
 /** Clubs of the division of that tier in the season's world. */
 const tierClubs = (w: CareerWorld, tier: number) =>
   new Set(w.season.members[nationalDivisions(w.pack).find((d) => d.tier === tier)!.id] ?? []);
@@ -386,9 +405,24 @@ for (const [tier, letter, range, source, confirmed] of LINES) {
   add('contratados', 'hires');
 }
 
+/** Clubs of the four divisions that had changed coach when the state championships ended. */
+const byMarch = new WeakMap<CareerWorld, { all: number; serieD: number }>();
+
 function playSeason(pack: Pack, seed: number): CareerWorld {
   const w = openCareer(pack, seed, jobOffers(pack, seed)[0]!.clubId);
-  for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) playDecision(w, d);
+  const march = dayOf(`${w.season.season}-03-08`);
+  for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) {
+    if (!byMarch.has(w) && d.day > march) {
+      const clubs = new Set(
+        (w.sacked ?? []).filter((c) =>
+          nationalDivisions(w.pack).some((x) => x.clubIds.includes(c)),
+        ),
+      );
+      const d4 = tierClubs(w, 4);
+      byMarch.set(w, { all: clubs.size, serieD: [...clubs].filter((c) => d4.has(c)).length });
+    }
+    playDecision(w, d);
+  }
   return w;
 }
 

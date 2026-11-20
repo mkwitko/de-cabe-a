@@ -129,7 +129,7 @@ export function startCareer(pack: Pack, seed: number, clubId: string): CareerSta
       dueDay: 0,
     },
   ]);
-  return { clubId, season: startSeason(pack, { seed }), ledger };
+  return { clubId, season: startSeason(pack, { seed, estaduais: true }), ledger };
 }
 
 export interface Upcoming {

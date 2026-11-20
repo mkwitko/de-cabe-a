@@ -21,7 +21,7 @@ import { movePlayer, releasePlayer, windowOf } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import { seedOf } from '../competition/season';
 import type { PackPlayer } from '../pack/schema';
-import { booksOf, solidarity, tierOfClub, wageRoom } from './books';
+import { booksOf, inDivisions, solidarity, tierOfClub, wageRoom } from './books';
 import { CLAUSE_TIMES, playerStance, type PlayerStance } from './deals';
 import { fitFor, squadPlanOf } from './plan';
 import { ROUND_DAYS, type Deal } from './rounds';
@@ -237,7 +237,7 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
   const share = window === 'second' ? SECOND / ROUNDS_SECOND : (100 - SECOND) / ROUNDS_FIRST;
   const draw = rngFrom(seedOf(w.seed, `abroad:${day}`));
   const done: Deal[] = [];
-  const clubs = [...w.season.calendar.byClub.keys()].sort();
+  const clubs = [...w.season.calendar.byClub.keys()].filter((id) => inDivisions(w, id)).sort();
   for (const clubId of clubs) {
     // Europe watches the clubs whose names it knows: international fame (clubs.ts) moves the
     // division's visibility from 70% to 130% (04 §4.6: no club grows unbeatable).
@@ -317,7 +317,7 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
   const draw = rngFrom(seedOf(w.seed, `home:${day}`));
   const read = readingsOf(w.pack);
   const playing = w.pack.clubs
-    .filter((c) => w.season.calendar.byClub.has(c.id))
+    .filter((c) => inDivisions(w, c.id))
     .sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1));
   const done: Deal[] = [];
   // In the pack's order, one draw each, whatever happens.

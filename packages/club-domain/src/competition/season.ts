@@ -32,6 +32,7 @@ import {
 } from './knockout';
 import { roundRobin, standings, type Played, type Row, type TableRules } from './league';
 import { applyOutcomes, regulationsFor, type Results } from './outcomes';
+import { estadualCompetitions } from './estaduais';
 import type { Competition, Phase } from './schema';
 
 /** Clubs entering a phase, from the regulation alone (selector widths). */
@@ -119,6 +120,8 @@ export interface SeasonState {
   decisions: Decision[];
   /** Points each club starts its national division without (financial fair play). */
   deduct?: Record<string, number>;
+  /** Last day a match was played: a phase that opens late is not scheduled before it. */
+  today?: number;
 }
 
 export interface SeasonOptions {
@@ -132,6 +135,8 @@ export interface SeasonOptions {
   /** Last season's results, for `{ from: 'competition', season: 'previous' }`. */
   previous?: Results;
   deduct?: Record<string, number>;
+  /** Also play the state championships (the career does; the competition tests do not). */
+  estaduais?: boolean;
 }
 
 const POINTS = { win: 3, draw: 1, loss: 0 };
@@ -142,12 +147,24 @@ export const seedOf = (seed: number, label: string) =>
 export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
   const season = opts.season ?? pack.season;
   const competitions = regulationsFor(pack.competitions, season);
+  const members: Record<string, string[]> = {
+    ...(opts.members ?? Object.fromEntries(competitions.map((c) => [c.id, c.clubIds]))),
+  };
+  if (opts.estaduais) {
+    // National tier of each club this season: the state championships take those clubs first.
+    const tier = new Map<string, number>();
+    for (const c of competitions)
+      if (c.tier !== null) for (const k of members[c.id] ?? []) tier.set(k, c.tier);
+    const est = estadualCompetitions(pack, season, (k) => tier.get(k));
+    competitions.push(...est.competitions);
+    Object.assign(members, est.members);
+  }
   const cityState = new Map(pack.cities.map((c) => [c.id, c.state]));
   const s: SeasonState = {
     season,
     seed: opts.seed,
     competitions,
-    members: opts.members ?? Object.fromEntries(competitions.map((c) => [c.id, c.clubIds])),
+    members,
     ranking:
       opts.ranking ?? [...pack.clubs].sort((a, b) => b.reputation - a.reputation).map((c) => c.id),
     regionOf: Object.fromEntries(pack.clubs.map((c) => [c.id, cityState.get(c.cityId) ?? ''])),
@@ -248,7 +265,8 @@ function fixture(s: SeasonState, c: Competition, m: Meta, base: number, after?: 
     priority: c.priority,
     home: m.home,
     away: m.away,
-    base,
+    // A knockout whose clubs were decided late (matches moved) is not placed in the past.
+    base: Math.max(base, (s.today ?? -Infinity) + 1),
     rest: restDays(c.matchRules.minRestHours),
     ...(after === undefined ? {} : { after }),
   });
@@ -389,6 +407,7 @@ export function record(s: SeasonState, id: string, o: Outcome): void {
   if (!m || !scheduled) throw new Error(`unknown match ${id}`);
   if (scheduled.played) throw new Error(`match ${id} already played`);
   scheduled.played = true;
+  if (scheduled.day > (s.today ?? -Infinity)) s.today = scheduled.day;
   s.outcomes.set(id, o);
   const list = s.played.get(m.competitionId) ?? [];
   list.push({ home: m.home, away: m.away, goals: o.goals, cards: o.cards });

@@ -75,7 +75,8 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
   let biggestWin: Match | null = null;
   let worstDefeat: Match | null = null;
   const margin = (m: Match | null) => (m ? Math.abs(m.goals[0] - m.goals[1]) : 0);
-  for (const games of w.season.played.values())
+  // The division's matches only: the state championship has its own note and title.
+  for (const games of [w.season.played.get(div?.id ?? '') ?? []])
     for (const g of games) {
       const home = g.home === w.clubId;
       if (!home && g.away !== w.clubId) continue;
