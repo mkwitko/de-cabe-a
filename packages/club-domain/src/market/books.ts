@@ -5,6 +5,7 @@
  * finance: what they have spent and earned in the market this season is kept in the career
  * (`w.books`) and counted against the budget. Integers; every number is a PARÂMETRO.
  */
+import { resale } from './clauses';
 import { wageCost } from './image';
 import { ruleOn } from '../rules/registry';
 import { isoOf } from '../competition/calendar';
@@ -210,6 +211,7 @@ export function book(w: CareerWorld, from: string, to: string, fee: number, p: P
     [from]: { ...got, earned: got.earned + fee },
   };
   solidarity(w, p, from, fee, false);
+  resale(w, p, from, to, fee);
 }
 
 /**

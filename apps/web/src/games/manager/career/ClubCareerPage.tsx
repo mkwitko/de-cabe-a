@@ -1004,6 +1004,13 @@ const FROM = {
   agentOffer: 'market',
   homecoming: 'market',
   solidarity: 'finance',
+  sellOn: 'finance',
+  optionBought: 'market',
+  optionSold: 'market',
+  unhappy: 'staff',
+  leaveRequest: 'staff',
+  promiseKept: 'staff',
+  promiseBroken: 'staff',
   injury: 'staff',
   suspension: 'staff',
   prize: 'finance',
@@ -1134,6 +1141,20 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.hired', { club: n.clubName });
     case 'solidarity':
       return t('inbox.solidarity', { name: n.player, fee: t('career.cash', { value: n.fee }) });
+    case 'sellOn':
+      return t('inbox.sellOn', { name: n.player, fee: t('career.cash', { value: n.fee }) });
+    case 'optionBought':
+    case 'optionSold':
+      return t(`inbox.${n.kind}`, {
+        club: n.clubName,
+        name: n.player,
+        fee: t('career.cash', { value: n.fee }),
+      });
+    case 'unhappy':
+    case 'leaveRequest':
+    case 'promiseKept':
+    case 'promiseBroken':
+      return t(`inbox.${n.kind}`, { name: n.player });
     case 'agentOffer':
       return t('inbox.agentOffer', { agent: n.agent, name: n.player, club: n.clubName || 'none' });
     case 'homecoming':
@@ -1191,7 +1212,12 @@ function noteText(n: InboxItem, sim: SimView): string {
 }
 
 /** Where each kind of request is answered. */
-const TODO_ROOM = { bid: 'mercado', agentOffer: 'mercado', contractsEnding: 'mercado' } as const;
+const TODO_ROOM = {
+  bid: 'mercado',
+  agentOffer: 'mercado',
+  contractsEnding: 'mercado',
+  leaveRequest: 'mercado',
+} as const;
 
 /** What asks for an answer (with the way to it), then the news, newest first. */
 function Inbox({ sim, onRoom }: { sim: SimView; onRoom: (r: Room) => void }) {

@@ -40,6 +40,12 @@ export type Note = { day: number } & (
   | { kind: 'homecoming'; player: string; agent: string; wage: number }
   /** A boy the club formed was sold elsewhere: its solidarity share. */
   | { kind: 'solidarity'; player: string; fee: number }
+  /** The person's club got its share of a player's resale (market/clauses.ts). */
+  | { kind: 'sellOn'; player: string; fee: number }
+  /** A loan option or obligation turned into a purchase or a sale. */
+  | { kind: 'optionBought' | 'optionSold'; player: string; club: string; fee: number }
+  /** Unhappy players (market/unrest.ts). */
+  | { kind: 'unhappy' | 'leaveRequest' | 'promiseKept' | 'promiseBroken'; player: string }
   | { kind: 'cameUp'; players: number }
   | {
       kind: 'injury';

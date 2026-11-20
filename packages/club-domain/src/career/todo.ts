@@ -12,10 +12,19 @@ export type Todo =
   | { kind: 'bid'; id: string; player: string; from: string; fee: number }
   | { kind: 'approach'; club: string }
   | { kind: 'agentOffer'; player: string; agent: string; club: string; day: number }
-  | { kind: 'contractsEnding'; players: number };
+  | { kind: 'contractsEnding'; players: number }
+  /** A player asks to leave (market/unrest.ts): the person answers in the market. */
+  | { kind: 'leaveRequest'; player: string };
 
 /** Notes that are (or were) a request: they live in the to-do while open and vanish after. */
-const ASKING = new Set(['bid', 'approach', 'agentOffer', 'homecoming', 'contractsEnding']);
+const ASKING = new Set([
+  'bid',
+  'approach',
+  'agentOffer',
+  'homecoming',
+  'contractsEnding',
+  'leaveRequest',
+]);
 /** How long an agent's offer or a contract reminder counts as waiting for an answer. */
 const OPEN_DAYS = 30;
 
@@ -24,6 +33,8 @@ export function todoOf(w: CareerWorld): Todo[] {
   const out: Todo[] = [];
   for (const b of (w.bids ?? []).filter((x) => !x.again))
     out.push({ kind: 'bid', id: b.id, player: b.player, from: b.from, fee: b.fee });
+  for (const [id, u] of Object.entries(w.unhappy ?? {}))
+    if (u.asked) out.push({ kind: 'leaveRequest', player: id });
   for (const club of approaches(w)) out.push({ kind: 'approach', club });
   const mine = new Set(
     w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.knownAs ?? p.name),
