@@ -4,6 +4,7 @@
  * up to the next decision, plays the person's match, and hands back a gzip snapshot after every
  * step for the server to keep.
  */
+import type { Kit } from '../../../components/clubArt';
 import {
   dayOf,
   divisionTable,
@@ -196,7 +197,7 @@ export type SimRequest = { id: number } & (
 export interface SimView {
   season: number;
   clubId: string;
-  club: { name: string; shortName: string; colours: [string, string] };
+  club: { name: string; shortName: string; colours: [string, string]; kits?: ClubKits | undefined };
   /** This season's money by kind (wages, tv, sponsors, tickets, debt). */
   money: { kind: string; amount: number }[];
   /** Reais per dollar and per euro today, and the move since the season opened, in ‰. */
@@ -290,11 +291,15 @@ export type TodoItem = Todo & { playerName: string; clubName: string };
 export type InboxItem = Note & { iso: string; clubName: string };
 const INBOX_SHOWN = 12;
 
+/** Home and away kits of a club (real ones, when the pack has them). */
+export type ClubKits = { home: Kit; away?: Kit | undefined };
+
 /** What the screen draws for a club: names and the colour badge. */
 export interface ClubFace {
   name: string;
   shortName: string;
   colours: [string, string];
+  kits?: ClubKits | undefined;
 }
 /** Foreign buyers and the abroad bucket have no club in the pack: a plain badge with a name. */
 const ABROAD_FACES: [string, ClubFace][] = [ABROAD, ...FOREIGN_TIERS.map((t) => t.id)].map((id) => [
@@ -305,6 +310,7 @@ const face = (c: ClubFace): ClubFace => ({
   name: c.name,
   shortName: c.shortName,
   colours: c.colours,
+  kits: c.kits,
 });
 
 export interface MatchClub {
@@ -312,6 +318,7 @@ export interface MatchClub {
   name: string;
   shortName: string;
   colours: [string, string];
+  kits?: ClubKits | undefined;
 }
 
 /** The dressing room: the formation's slots on the pitch and everyone who can fill them. */
@@ -1353,7 +1360,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       liveCommands = [];
       const club = (id: string): MatchClub => {
         const c = world!.pack.clubs.find((x) => x.id === id)!;
-        return { id, name: c.name, shortName: c.shortName, colours: c.colours };
+        return { id, name: c.name, shortName: c.shortName, colours: c.colours, kits: c.kits };
       };
       self.postMessage({
         id: r.id,

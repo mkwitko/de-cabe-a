@@ -108,12 +108,23 @@ export const DEPARTMENTS = [
 ] as const;
 export const DepartmentSchema = z.enum(DEPARTMENTS);
 
+const hexColour = z.string().regex(/^#[0-9a-f]{6}$/i);
+export const KitSchema = z.strictObject({
+  body: hexColour,
+  sleeves: hexColour,
+  shorts: hexColour,
+  socks: hexColour,
+  pattern: z.enum(['stripes', 'hoops', 'sash', 'halves']).optional(),
+});
+
 export const PackClubSchema = z.strictObject({
   id,
   name: z.string().min(1).max(80),
   shortName: z.string().min(1).max(24),
   cityId: id,
-  colours: z.tuple([z.string().regex(/^#[0-9a-f]{6}$/i), z.string().regex(/^#[0-9a-f]{6}$/i)]),
+  colours: z.tuple([hexColour, hexColour]),
+  /** Real home/away kits (Wikipedia infoboxes), when known; absent for the rest. Added with the crest/kit art: deploy pack and code together (older builds reject the field). */
+  kits: z.strictObject({ home: KitSchema, away: KitSchema.optional() }).optional(),
   stadium: z.strictObject({
     name: z.string().min(1).max(80),
     capacity: z.number().int().min(0).max(120_000),

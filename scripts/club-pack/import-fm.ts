@@ -875,6 +875,19 @@ const colourOf = (uid: string, k: number) =>
     .map((i) => (48 + (hashByte(uid, k * 3 + i) % 176)).toString(16).padStart(2, '0'))
     .join('');
 
+// ── Kits: scripts/club-pack/fetch-kits.ts -> data/kits.json (Wikipedia infoboxes), keyed by FM uid
+type KitRow = {
+  body: string;
+  sleeves: string;
+  shorts: string;
+  socks: string;
+  pattern?: PackKit['pattern'];
+};
+type PackKit = NonNullable<PackClub['kits']>['home'];
+const kits = JSON.parse(readFileSync(new URL('./data/kits.json', import.meta.url), 'utf8')) as {
+  clubs: Record<string, { home: KitRow; away?: KitRow }>;
+};
+
 // ── Geography: scripts/club-pack/enrich-fm-clubs.ts -> data/br-club-geo.json (Wikidata + openfootball)
 type GeoCity = {
   name: string;
@@ -1304,11 +1317,21 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
   const sp = (sponsorsOf.get(uid) ?? []).filter((s) => num(s.annual_value) > 0 && s.end);
   if (!sp.length) est('sponsors: none in the save');
 
+  // Colours: the home kit (body + the dominant second colour) first, then Wikidata, then a hash.
+  const kit = kits.clubs[uid];
   const official = geo.clubs[uid]?.colours;
-  if (!official?.length) est('club colours: hash fallback, not the real colours');
-  const colours: PackClub['colours'] = official?.length
-    ? [official[0]!, official[1] ?? (official[0] === '#ffffff' ? '#000000' : '#ffffff')]
-    : [colourOf(uid, 0), colourOf(uid, 1)];
+  let colours: PackClub['colours'];
+  if (kit) {
+    const h = kit.home;
+    const second = [h.sleeves, h.shorts, h.socks].find((x) => x !== h.body);
+    colours = [h.body, second ?? (h.body === '#ffffff' ? '#000000' : '#ffffff')];
+    if (!second) est('club colours: kit is one colour, second colour assumed');
+  } else if (official?.length) {
+    colours = [official[0]!, official[1] ?? (official[0] === '#ffffff' ? '#000000' : '#ffffff')];
+  } else {
+    est('club colours: hash fallback, not the real colours');
+    colours = [colourOf(uid, 0), colourOf(uid, 1)];
+  }
   const body = estimatedBody(r, strength, 'inferred', 'low');
   {
     // Structure from real signals; what has none keeps the reputation estimate above.
@@ -1358,6 +1381,7 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     shortName: (c.short_name || c.name).slice(0, 24),
     cityId: cityKey,
     colours,
+    ...(kit ? { kits: { home: kit.home, ...(kit.away ? { away: kit.away } : {}) } } : {}),
     stadium,
     reputation: clamp(100 * Math.sqrt(Math.min(rep, 8000) / 8000), 0, 100),
     initialCash,
@@ -1630,8 +1654,24 @@ const inDivisions = clubs.filter((c) => tierOf.has(c.id));
 const geoQuality = {
   divisionClubs: inDivisions.length,
   withRealCity: inDivisions.filter((c) => !c.cityId.startsWith('fm-city-')).length,
+  withKitColours: inDivisions.filter((c) => kits.clubs[c.id.slice(4)]).length,
   withOfficialColours: inDivisions.filter((c) => geo.clubs[c.id.slice(4)]?.colours?.length).length,
+  withAnyRealColours: inDivisions.filter(
+    (c) => kits.clubs[c.id.slice(4)] || geo.clubs[c.id.slice(4)]?.colours?.length,
+  ).length,
 };
+
+/** Real colours by division: the home kit, Wikidata only, or the hash fallback. */
+const colourCoverage: Record<
+  string,
+  { clubs: number; kit: number; wikidata: number; hash: number }
+> = {};
+for (const c of inDivisions) {
+  const uid = c.id.slice(4);
+  const row = (colourCoverage[tierOf.get(c.id)!] ??= { clubs: 0, kit: 0, wikidata: 0, hash: 0 });
+  row.clubs++;
+  row[kits.clubs[uid] ? 'kit' : geo.clubs[uid]?.colours?.length ? 'wikidata' : 'hash']++;
+}
 
 const unmappedNations = players.filter((p) => p.nationality === 'XX').length;
 report.notes.push(
@@ -1647,7 +1687,7 @@ report.notes.push(
   `birthplace: ${bornKnown} players matched to Wikidata's place of birth (data/birthplaces.json, by birth date and name)`,
   `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
   `structure: ${structure.facilities}/${clubs.length} clubs with an FM facilities rating, ${structure.certified} CBF clube formador, ${structure.style} playing styles from season stats, ${structure.youth} youth policies from academy minutes; departments kept (staff.csv has no job or attributes)`,
-  'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
+  'colours: the home kit of the Wikipedia infobox (data/kits.json, also stored as club.kits with the away kit), else Wikidata P6364 + P465; the rest is a hash pair, NOT the real colours (see estimated)',
   `coaches: ${coachStats.real} head coaches are real FM26 people (best-paid staff outside the club lists, see headCoachOf), ${coachStats.generated} clubs keep a generated one; attributes come from current ability and personality (estimated, low): staff.csv has no job and no coaching attributes. Wage and clause stay the economy's (the assignments feed the club's wage bill); other backroom posts are not imported`,
   `releaseFee: ${clauseStats.found} contracts with a domestic/generic release clause from contracts.clauses (${clauseStats.capped} cut to the Lei Geral do Esporte cap of 2,000 monthly wages), ${clauseStats.noWage} dropped for a zero wage; foreign-only and conditional clauses stay null`,
   `injuryProneness: ${injuryStats.bumped} players raised by their injuries.csv history`,
@@ -1679,6 +1719,7 @@ const out = {
   estimated: report.estimated,
   droppedFmTraits: droppedTraits,
   geography: geoQuality,
+  colourCoverage,
   squads: squadCheck,
   rivals: rivalStats,
   notes: report.notes,

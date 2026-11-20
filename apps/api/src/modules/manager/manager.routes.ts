@@ -125,6 +125,7 @@ export const managerRoutes: FastifyPluginAsyncZod = async (app) => {
         name: c.name,
         shortName: c.shortName,
         colours: c.colours,
+        kits: c.kits,
         players: squad.map((p) => ({
           id: p.id,
           name: p.knownAs ?? p.name,

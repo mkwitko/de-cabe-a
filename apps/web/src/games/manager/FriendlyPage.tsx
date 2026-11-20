@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
+import { ClubBadge } from '../../components/ClubBadge';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
 import { drawPlayers, kitsFor, pitchLayer, view, type View } from './pitch';
@@ -166,15 +167,7 @@ export function FriendlyPage() {
 // ── Setup ───────────────────────────────────────────────────────────────────
 
 function Crest({ club }: { club: Club }) {
-  return (
-    <span
-      aria-hidden
-      className="inline-block size-9 shrink-0 rounded-md border-2 border-chalk/30"
-      style={{
-        background: `linear-gradient(135deg, ${club.colours[0]} 50%, ${club.colours[1]} 50%)`,
-      }}
-    />
-  );
+  return <ClubBadge name={club.shortName} size="sm" colours={club.colours} />;
 }
 
 function Range({
