@@ -66,6 +66,65 @@ const AGAINST = 35;
 const IDENTITY = 3;
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 
+type PackStaff = Pack['staff'][number];
+
+/** Tactical preference (1..20) the import stores in `specialties` as `pref:<key>=<n>`. */
+const prefOf = (s: PackStaff, key: string): number => {
+  const hit = s.specialties.find((x) => x.startsWith(`pref:${key}=`));
+  return hit ? Number(hit.slice(key.length + 6)) : 10;
+};
+
+/**
+ * A real coach of the pack as a game coach (06 §5.3): philosophy from the tactical preferences the
+ * save gives him (pressing, tempo, width, attacking, directness), quality from his ability
+ * (`tactics`, 1..20, scaled from the FM current ability), reputation from the pack's. The youth and
+ * age tastes have no source: drawn from the seed like a made coach's.
+ */
+export function coachOfPack(seed: number, s: PackStaff): Coach {
+  const r = fork(rngFrom(seed), `coach:${s.id}`);
+  const [press, tempo, width, attack, direct] = [
+    'press',
+    'tempo',
+    'width',
+    'attacking',
+    'directness',
+  ].map((k) => prefOf(s, k) * 5) as [number, number, number, number, number];
+  const ability = ((s.attributes.tactics ?? 10) - 1) * 10.5; // back to FM's 0..200 scale
+  return {
+    id: s.id,
+    name: s.name,
+    formation: attack >= 70 && width >= 55 ? '4-3-3' : attack <= 40 ? '4-4-2' : '4-2-3-1',
+    style: {
+      possession: clamp(105 - direct),
+      verticality: clamp(direct),
+      pressing: clamp(press),
+      block: clamp(Math.round((press + attack) / 2)),
+      width: clamp(width),
+      tempo: clamp(tempo),
+      risk: clamp(attack),
+    },
+    quality: clamp(Math.round((ability - 70) / 6), -15, 15),
+    development: pick(r, 101),
+    young: pick(r, 101),
+    reputation: clamp(s.reputation),
+    career: [],
+  };
+}
+
+/** The pack's real head coaches by club (those of clubs outside the game's world too). */
+function realCoaches(w: CareerWorld) {
+  const real = new Map(
+    w.pack.staff.filter((s) => s.field.identity?.origin === 'imported').map((s) => [s.id, s]),
+  );
+  const at = new Map<string, PackStaff>();
+  if (real.size)
+    for (const a of w.pack.assignments) {
+      const s = real.get(a.staffId);
+      if (s && a.posts.includes('headCoach')) at.set(a.clubId, s);
+    }
+  return { at };
+}
+
 export function makeCoach(seed: number, n: number): Coach {
   const r = fork(rngFrom(seed), `coach:${n}`);
   const quality = pick(r, 11) + pick(r, 11) + pick(r, 11) - 15;
@@ -121,8 +180,26 @@ export function coachesOf(w: CareerWorld): Coaches {
   const cs: Coaches = { all: {}, at: {}, free: [], made: 0 };
   w.coaches = cs;
   const pool = Math.ceil(clubs.length * 1.25);
+  // Real coaches (a real-data pack) keep their own club; those of clubs outside the game's world
+  // fill the free pool first; made coaches only fill the gaps. A pack without them: made only.
+  const real = realCoaches(w);
+  const inGame = new Set(clubs.map((c) => c.id));
+  const spare: PackStaff[] = [];
+  for (const [clubId, s] of real.at) {
+    if (!inGame.has(clubId)) {
+      if (clubId !== w.clubId) spare.push(s);
+      continue;
+    }
+    const c = coachOfPack(w.seed, s);
+    cs.all[c.id] = c;
+    cs.made++;
+    cs.at[clubId] = c.id;
+    c.career.push({ club: clubId, from: 0 });
+  }
+  spare.sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1));
+  for (const s of spare) if (cs.made < pool) free(cs, coachOfPack(w.seed, s));
   while (cs.made < pool) free(cs, makeCoach(w.seed, cs.made));
-  for (const c of clubs) take(w, c.id, 0);
+  for (const c of clubs) if (!cs.at[c.id]) take(w, c.id, 0);
   return cs;
 }
 

@@ -213,6 +213,9 @@ const fixtureRows = load(
   'fixtures.csv',
   'played results of competitions 124/136/137/2227: 2026 play-offs and knockouts',
 );
+const contractRows = load('contracts.csv', 'clauses (JSON): release fees, see clauseOf');
+const injuryRows = load('injuries.csv', 'history rows: injury proneness, see injuryBump');
+const staffRows = load('staff.csv', 'head coaches: see headCoachOf');
 console.log(`read CSVs in ${Date.now() - t0} ms`);
 
 const nations = (
@@ -592,7 +595,7 @@ function positionsOf(p: Record<string, string>) {
  * gives the first block, which is certain. The second block is INFERRED from what the players who
  * carry the code look like (mean z-score of attributes, positions, feet) and is marked as such in
  * the report: 3 (off_the_ball +1.3, forwards), 6 (marking, tackling, DM/MC), 17 (temperament
- * -1.1, sportsmanship -1.0), 57 and 58 (left and right wing positions; right foot 92 / left foot
+ * -1.1, sportsmanship -1.0), 9 (long shots, penalties, strength: shoots with power), 57 and 58 (left and right wing positions; right foot 92 / left foot
  * 94, so they cut inside). Everything else (killer balls, channels, weaker foot...) is dropped and
  * counted.
  */
@@ -609,6 +612,9 @@ const TRAIT_CODE: Record<number, { trait: (typeof TRAITS)[number]; certain: bool
   17: { trait: 'arguesWithReferee', certain: false },
   57: { trait: 'cutsInside', certain: false },
   58: { trait: 'cutsInside', certain: false },
+  // 9: long_shots +1.6, penalties +1.6, free kicks +1.2, strength +1.2 (mean z) and it co-occurs
+  // with shoots_from_distance: "shoots with power".
+  9: { trait: 'shootsFromDistance', certain: false },
 };
 const droppedTraits: Record<string, number> = {};
 
@@ -630,6 +636,53 @@ function formedAt(
     }
   return {};
 }
+
+// ── Release clauses and injury history (own block) ───────────────────────────────────────────────
+
+/**
+ * contracts.csv `clauses` is a JSON array of {kind, kind_code, parameter, value}. The release
+ * clauses are `minimum_fee_release_domestic` (18), `minimum_fee_release_foreign` (16), the generic
+ * `minimum_fee_release` (0) and the conditional `relegation_release` (1) / `non_promotion_release`
+ * (2); `value` is the fee in the save's money (GBP, like the wages). The pack has one field, and a
+ * Brazilian buyer is the case that matters: domestic, else the generic one; a foreign-only or
+ * conditional clause is not a clause the pack's world can trigger, so it stays null.
+ * Lei Geral do Esporte (Lei 14.597/2023, art. 28, par. 1) caps the cláusula indenizatória
+ * desportiva of a transfer inside Brazil at 2,000 times the average contract wage, and leaves the
+ * international transfer without a limit: a domestic fee above 2,000 monthly wages is cut to it.
+ * One contract per player: the row at the club that holds him, not a loan row.
+ */
+const LGE_DOMESTIC_CAP = 2000;
+const clauseOf = new Map<string, number>();
+{
+  const kept = new Map<string, Record<string, string>>();
+  for (const row of contractRows) {
+    if (!row.clauses) continue;
+    const have = kept.get(row.player_uid);
+    if (!have || (have.on_loan === 'true' && row.on_loan !== 'true')) kept.set(row.player_uid, row);
+  }
+  for (const [uid, row] of kept) {
+    const list = JSON.parse(row.clauses) as { kind: string; value: number | null }[];
+    const pick = (k: string) => list.find((c) => c.kind === k && c.value && c.value > 0)?.value;
+    const fee = pick('minimum_fee_release_domestic') ?? pick('minimum_fee_release');
+    if (fee) clauseOf.set(uid, brl(fee));
+  }
+}
+const clauseStats = { found: 0, capped: 0, noWage: 0 };
+
+/**
+ * Injury proneness from the history in injuries.csv: the save's own hidden value stays and each
+ * two points of severity in the history (minor 1, moderate 2, major 3) add one, at most three.
+ * PARÂMETRO: only a history that already shows pushes it up (the table has no exposure time).
+ */
+const injuryWeight = new Map<string, number>();
+for (const row of injuryRows)
+  if (row.kind === 'history')
+    injuryWeight.set(
+      row.player_uid,
+      (injuryWeight.get(row.player_uid) ?? 0) + Math.max(1, num(row.severity_code, 1)),
+    );
+const injuryBump = (uid: string) => Math.min(3, Math.floor((injuryWeight.get(uid) ?? 0) / 2));
+const injuryStats = { bumped: 0 };
 
 function playerOf(p: Record<string, string>, clubUid: string, id: string): PackPlayer | null {
   const positions = positionsOf(p);
@@ -720,6 +773,22 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
   const loan = p.on_loan === 'true' && p.loan_parent_club_uid && scope.has(p.loan_parent_club_uid);
   if (p.on_loan === 'true' && !loan) est('loan: parent club outside the pack, loan link dropped');
 
+  const wage = monthlyBrl(num(p.contract_wage));
+  let releaseFee: number | null = clauseOf.get(p.uid) ?? null;
+  if (releaseFee !== null) {
+    if (wage <= 0) {
+      releaseFee = null;
+      clauseStats.noWage++;
+    } else {
+      clauseStats.found++;
+      if (releaseFee > wage * LGE_DOMESTIC_CAP) {
+        releaseFee = wage * LGE_DOMESTIC_CAP;
+        clauseStats.capped++;
+      }
+    }
+  }
+  if (injuryBump(p.uid)) injuryStats.bumped++;
+
   const full = p.full_name || p.name;
   return {
     id,
@@ -750,14 +819,14 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
     hidden: {
       consistency: hid('consistency'),
       bigMatches: hid('important_matches'),
-      injuryProneness: hid('injury_proneness'),
+      injuryProneness: clamp20(hid('injury_proneness') + injuryBump(p.uid)),
       adaptability: pers('adaptability'),
       versatility: hid('versatility'),
     },
     traits,
     clubId: `fm-c${clubUid}`,
     ...formedAt(p),
-    contract: { wage: monthlyBrl(num(p.contract_wage)), until, releaseFee: null },
+    contract: { wage, until, releaseFee },
     ...(loan ? { loanFromClubId: `fm-c${p.loan_parent_club_uid}` } : {}),
     field,
   };
@@ -1070,6 +1139,69 @@ for (const p of players)
   if (p.clubId) (squadOfClub.get(p.clubId) ?? squadOfClub.set(p.clubId, []).get(p.clubId)!).push(p);
 const structure = { facilities: 0, certified: 0, style: 0, youth: 0 };
 
+// ── Real head coaches (own block) ────────────────────────────────────────────────────────────────
+
+/**
+ * staff.csv has 4,859 people with a club, but NO job (`job` and `job_code` are empty) and none of the
+ * coaching attributes (every `attributes_*` but adaptability is empty). What it does have: the
+ * wage, the current ability (1..200), the personality, the tactical preferences (1..20) and
+ * `in_club_lists`: it is false for the club's manager and true for everyone listed beside him
+ * (checked on the Série A clubs: Abel Ferreira, Leonardo Jardim, Tite, Dorival Júnior, Rogério
+ * Ceni, Luís Castro... are the false ones, the executives and assistants are true). So the head coach
+ * of a club is its best-paid person that is not in the club lists; a club with none keeps the
+ * generated one. The other posts (assistant, fitness, goalkeeping, scouts...) cannot be told apart
+ * without a job, and the pack's assignments feed the club's wage bill: they are not imported.
+ */
+const headCoachOf = new Map<string, Record<string, string>>();
+for (const row of staffRows) {
+  if (row.in_club_lists !== 'false' || row.has_contract !== 'true' || !row.club_uid) continue;
+  const have = headCoachOf.get(row.club_uid);
+  if (!have || num(row.wage) > num(have.wage)) headCoachOf.set(row.club_uid, row);
+}
+const coachStats = { real: 0, generated: 0 };
+const usedCoach = new Set<string>();
+
+function realCoach(row: Record<string, string>): Pack['staff'][number] {
+  const ca = num(row.ability_current); // 0..200
+  const to20 = (x: number) => clamp20(1 + (x / 200) * 19);
+  const pref = (k: string) => clamp20(num(row['preferences_' + k], 10));
+  const mark = { origin: 'estimated', confidence: 'low' } as const;
+  return {
+    id: `fm-s${row.uid}`,
+    name: (row.full_name || row.name).slice(0, 80),
+    birthDate: row.birth_date,
+    nationality: nations[row.nation_id] ?? 'BR',
+    roles: ['headCoach'],
+    // Tactical preferences, read back by the game's coach pool (career/coach-pool.ts, prefOf).
+    specialties: [
+      ['press', 'trigger_press'],
+      ['tempo', 'tempo'],
+      ['width', 'width'],
+      ['attacking', 'attacking'],
+      ['directness', 'directness'],
+      ['patience', 'patience'],
+      ['rotation', 'squad_rotation'],
+    ].map(([k, f]) => `pref:${k}=${pref(f!)}`),
+    attributes: {
+      tactics: to20(ca),
+      gameReading: to20(ca),
+      manManagement: clamp20(num(row.personality_adaptability, 10)),
+      motivation: clamp20(num(row.personality_ambition, 10)),
+    },
+    licence: ca >= 130 ? 'Pro' : ca >= 90 ? 'A' : 'B',
+    experienceYears: clamp(num(row.age) - 30, 0, 40),
+    reputation: clamp(ca / 2, 0, 100),
+    ties: [],
+    field: {
+      identity: { origin: 'imported', confidence: 'medium' },
+      attributes: mark,
+      licence: mark,
+      experienceYears: mark,
+      reputation: mark,
+    },
+  };
+}
+
 const root = rngFrom(20261117);
 const clubs: PackClub[] = [];
 const staff: Pack['staff'] = [];
@@ -1235,6 +1367,15 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     clubs.length - 1,
     modelOf(c.name, c.short_name || c.name, cities.get(cityKey)?.state),
   );
+  const hc = headCoachOf.get(uid);
+  if (hc && /^\d{4}-\d{2}-\d{2}$/.test(hc.birth_date) && !usedCoach.has(hc.uid)) {
+    usedCoach.add(hc.uid); // the save lists some people at two clubs: one job each
+    // The real man replaces the generated one; the draw above still happened, so the stream and
+    // the assignment's calibrated wage and clause do not move.
+    own.coach = realCoach(hc);
+    own.assignment.staffId = own.coach.id;
+    coachStats.real++;
+  } else coachStats.generated++;
   staff.push(own.coach);
   assignments.push(own.assignment);
   governance.push(own.governance);
@@ -1472,7 +1613,10 @@ report.notes.push(
   `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
   `structure: ${structure.facilities}/${clubs.length} clubs with an FM facilities rating, ${structure.certified} CBF clube formador, ${structure.style} playing styles from season stats, ${structure.youth} youth policies from academy minutes; departments kept (staff.csv has no job or attributes)`,
   'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
-  'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
+  `coaches: ${coachStats.real} head coaches are real FM26 people (best-paid staff outside the club lists, see headCoachOf), ${coachStats.generated} clubs keep a generated one; attributes come from current ability and personality (estimated, low): staff.csv has no job and no coaching attributes. Wage and clause stay the economy's (the assignments feed the club's wage bill); other backroom posts are not imported`,
+  `releaseFee: ${clauseStats.found} contracts with a domestic/generic release clause from contracts.clauses (${clauseStats.capped} cut to the Lei Geral do Esporte cap of 2,000 monthly wages), ${clauseStats.noWage} dropped for a zero wage; foreign-only and conditional clauses stay null`,
+  `injuryProneness: ${injuryStats.bumped} players raised by their injuries.csv history`,
+  'traits: codes 3, 6, 9, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
 );
 
 const out = {

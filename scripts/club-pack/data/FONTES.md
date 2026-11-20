@@ -83,3 +83,18 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - **Divida**: emprestimos/divida bruta auditados (Gremio, Vasco, Fortaleza, Palmeiras), senao divida total Anresf 2025 (`finances.json`, imprensa), limitada a 0,8x a receita: o jogo quita em 5 anos com 10% de juros e a Lei SAF limita o pagamento a 20% da receita mensal (0,2 x 5 / (1 + juros medios) ~ 0,77). PARAMETRO.
 - **33 balancos faltantes**: nenhum novo localizado nesta passada (Flamengo so 1T2026 nao auditado; ver acima).
 - **Valor de mercado**: nao ha base publica com licenca por jogador. CIES publica so listas curtas na imprensa (top 10 do Brasil, 24/09/2026: Flaco Lopez EUR 53,9 mi ... Gomez 24,5; soma EUR 354,6 mi, R$ 5,90/EUR). Transfermarkt nao usado (ToS). `market/value.ts` ficou como esta; o bench ganhou uma linha com a soma dos 10 mais valiosos (faixa R$ 1,4-2,6 bi; pack ~1,5 bi, baixo mas dentro). Comparacao por jogador (Kaio Jorge, Montoro, Arroyo...) foi inconclusiva: o pack e um retrato do FM com outros elencos.
+
+## Comissao tecnica (`staff.csv` do FM, em `import-fm.ts`)
+
+- `staff.csv` nao traz cargo (`job`/`job_code` vazios) nem atributos de treinador (so `attributes_adaptability`). Tem salario, habilidade atual (1-200), personalidade, preferencias taticas (1-20) e `in_club_lists`: falso para o tecnico do clube, verdadeiro para quem esta listado ao lado dele (conferido na Serie A: Abel Ferreira, Leonardo Jardim, Tite, Dorival Junior, Rogerio Ceni, Luis Castro). Tecnico = maior salario entre os `in_club_lists` falsos. 776 de 829 clubes; os demais ficam com o gerado.
+- Atributos (`tactics`, `gameReading`) da habilidade atual; `manManagement`/`motivation` da personalidade (estimado, baixa confianca). As preferencias vao em `specialties` como `pref:<chave>=<n>` e o `career/coach-pool.ts` as le (filosofia: pressao, ritmo, largura, ataque, jogo direto; qualidade: habilidade). Os tecnicos de clubes fora das divisoes formam a reserva livre. Auxiliares, preparadores, olheiros etc. nao sao importados: sem cargo nao ha como separar, e as atribuicoes entram na folha do clube.
+
+## Clausula de rescisao (`contract.releaseFee`, `contracts.csv`)
+
+- `clauses` e um JSON `[{kind, kind_code, parameter, value}]`. Usadas: `minimum_fee_release_domestic` (18), senao `minimum_fee_release` (0); `value` na moeda do save (GBP como os salarios, convertido a 7,0). `minimum_fee_release_foreign` (16), `relegation_release` (1) e `non_promotion_release` (2) ficam de fora (nao disparam dentro do mundo do pack). 15.049 de 15.689 jogadores (96%).
+- Sanidade: Lei Geral do Esporte (Lei 14.597/2023, art. 28, par. 1): clausula indenizatoria desportiva ate 2.000 vezes o salario contratual medio em transferencia nacional, sem limite na internacional. O valor domestico e cortado em 2.000 salarios mensais (1 caso).
+
+## Lesoes e tracos
+
+- `injuries.csv` (linhas `history`): cada 2 pontos de gravidade (leve 1, media 2, grave 3) somam 1 a `injuryProneness` do FM, ate +3 (PARAMETRO). 3.002 jogadores.
+- Traco FM codigo 9 (chutes de longe, penaltis, forca; coocorre com `shoots_from_distance`): inferido `shootsFromDistance`. Codigos 20, 44 (bola parada, visao), 33, 60 (marcacao) nao tem traco equivalente no motor e seguem descartados.

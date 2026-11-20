@@ -106,3 +106,23 @@ describe('coaches with an identity', () => {
     expect(coachesOf(w).free).toContain(old);
   });
 });
+
+describe('real coaches from the pack', () => {
+  it('a real head coach keeps his club, his tastes read from the preferences; saves keep him', () => {
+    const real = structuredClone(pack);
+    const target = real.assignments.find((a) => a.clubId !== clubId)!;
+    const s = real.staff.find((x) => x.id === target.staffId)!;
+    s.name = 'Abel Real';
+    s.field = { identity: { origin: 'imported', confidence: 'medium' } };
+    s.specialties = ['pref:press=20', 'pref:attacking=20', 'pref:width=16', 'pref:directness=4'];
+    s.attributes.tactics = 20;
+    const w = openCareer(real, 7, clubId);
+    const c = coachAt(w, target.clubId)!;
+    expect(c.name).toBe('Abel Real');
+    expect(c.formation).toBe('4-3-3');
+    expect(c.style.pressing).toBe(100);
+    expect(c.style.verticality).toBe(20);
+    expect(c.quality).toBeGreaterThan(5);
+    expect(coachesOf(loadCareer(real, 7, clubId, saveCareer(w)))).toEqual(coachesOf(w));
+  });
+});
