@@ -35,6 +35,7 @@ export * from './career/advance';
 export { signingEffect, type SigningEffect } from './career/preview';
 export { matchReport, type FactKind, type ReportFact } from './career/report';
 export { clubStrength, quickResult } from './match/quick';
+export type { Goal } from './match/scorers';
 export * from './career/save';
 export * from './career/squad';
 export * from './career/training';

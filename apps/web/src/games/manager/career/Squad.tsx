@@ -197,6 +197,11 @@ export function Squad(props: {
                           {t('health.out', { n: p.out })}
                         </span>
                       )}
+                      {(p.goals > 0 || p.assists > 0) && (
+                        <span className="ml-2">
+                          {t('squad.scored', { g: p.goals, a: p.assists })}
+                        </span>
+                      )}
                       {p.banned && (
                         <span className="ml-2 font-bold text-club-danger">{t('squad.banned')}</span>
                       )}

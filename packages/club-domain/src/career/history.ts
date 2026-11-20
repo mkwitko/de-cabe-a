@@ -5,6 +5,7 @@
 import { finishSeason, isOver } from '../competition/season';
 import { regulationsFor } from '../competition/outcomes';
 import { boardAfterSeason, boardOf, positionOf, type BoardReason } from './board';
+import { topScorers } from './scoring';
 import { divisionTable, divisionTableOf, type CareerWorld } from './advance';
 
 /** What the career keeps of a season. */
@@ -23,6 +24,9 @@ export interface HistoryEntry {
   cups: string[];
   /** The club's most-used player (matches started): goals per player are not recorded. */
   top: { name: string; starts: number } | null;
+  /** The club's top scorer and assister of the league season (scoring.ts); absent before. */
+  scorer?: { name: string; goals: number } | null;
+  assister?: { name: string; assists: number } | null;
 }
 
 export interface Match {
@@ -41,6 +45,8 @@ export interface SeasonReview extends HistoryEntry {
   record: { won: number; drawn: number; lost: number; for: number; against: number };
   /** Most-used players, by matches started. */
   used: { name: string; starts: number }[];
+  /** The division's top scorers (artilharia), best first. */
+  artilharia: { name: string; clubName: string; goals: number; mine: boolean }[];
   biggestWin: Match | null;
   worstDefeat: Match | null;
 }
@@ -81,6 +87,19 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
     .sort((a, c) => c[1] - a[1] || a[0].localeCompare(c[0]))
     .slice(0, 3)
     .map(([id, starts]) => ({ name: names.get(id)!, starts }));
+  const mineIds = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
+  const named = new Map(w.pack.players.map((p) => [p.id, p]));
+  const nameOf = (id: string) => named.get(id)?.knownAs ?? named.get(id)?.name ?? '';
+  const first = (by: 'goals' | 'assists') => topScorers(w, by, 1, new Set([w.clubId]))[0];
+  const sc = first('goals');
+  const as = first('assists');
+  const members = new Set(div ? (w.season.members[div.id] ?? []) : []);
+  const artilharia = topScorers(w, 'goals', 5, members).map((x) => ({
+    name: nameOf(x.playerId),
+    clubName: clubName(named.get(x.playerId)?.clubId ?? ''),
+    goals: x.goals,
+    mine: mineIds.has(x.playerId),
+  }));
   const won = t.titles.filter((x) => x.clubId === w.clubId).map((x) => x.competitionId);
   return {
     season: w.season.season,
@@ -103,6 +122,9 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
     reasons: b.fired ? [] : (after.last ?? []),
     record,
     used,
+    artilharia,
+    scorer: sc ? { name: nameOf(sc.playerId), goals: sc.goals } : null,
+    assister: as && as.assists > 0 ? { name: nameOf(as.playerId), assists: as.assists } : null,
     biggestWin,
     worstDefeat,
   };
@@ -121,4 +143,6 @@ export const entryOf = (r: SeasonReview): HistoryEntry => ({
   champion: r.champion,
   cups: r.cups,
   top: r.top,
+  ...(r.scorer !== undefined && { scorer: r.scorer }),
+  ...(r.assister !== undefined && { assister: r.assister }),
 });

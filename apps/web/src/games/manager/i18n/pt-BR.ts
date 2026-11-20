@@ -437,6 +437,8 @@ export const ptBR = {
   'squad.planHint':
     'O plano vale quando você assiste à partida ou vê os melhores momentos. Em "Só o resultado" conta apenas a escalação.',
   'squad.age': '{n} anos',
+  'squad.scored':
+    '{g, plural, one {# gol} other {# gols}}, {a, plural, one {# assistência} other {# assistências}}',
   'squad.role':
     '{r, select, goalkeeper {Goleiro} sweeperKeeper {Goleiro líbero} centreBack {Zagueiro} libero {Líbero} supportFullBack {Lateral} invertedFullBack {Lateral por dentro} wingBack {Ala} anchor {Volante} deepPlaymaker {Volante armador} boxToBox {Meia área a área} playmaker {Armador} wideWinger {Ponta aberto} insideForward {Ponta por dentro} targetMan {Pivô} falseNine {Falso nove} advancedForward {Centroavante} other {Jogador}}',
   'squad.position':
@@ -461,7 +463,7 @@ export const ptBR = {
     '{w, plural, one {# vitória} other {# vitórias}}, {d, plural, one {# empate} other {# empates}}, {l, plural, one {# derrota} other {# derrotas}}. Gols: {gf} pró, {ga} contra.',
   'review.bestWin': 'Maior vitória: {score} contra {opponent}',
   'review.worstLoss': 'Pior derrota: {score} contra {opponent}',
-  'review.used': 'Mais utilizados (gols por jogador não são registrados)',
+  'review.used': 'Mais utilizados',
   'review.usedRow': '{name}: {n, plural, one {# jogo como titular} other {# jogos como titular}}',
   'history.title': 'História',
   'history.none': 'Nenhuma temporada completa ainda.',
@@ -495,6 +497,13 @@ export const ptBR = {
     'Melhor temporada: {season}, {n}º na {division}{club, select, none {} other { com o {club}}}',
   'share.careerBestTitle':
     'Melhor temporada: {season}, campeão da {division}{club, select, none {} other { com o {club}}}',
+  'review.scorers': 'Gols e assistências na liga',
+  'review.topScorer': 'Artilheiro do clube: {name} ({n, plural, one {# gol} other {# gols}})',
+  'review.topAssister':
+    'Líder em assistências: {name} ({n, plural, one {# assistência} other {# assistências}})',
+  'review.artilharia':
+    'Artilheiro da divisão: {name} ({club}), {n, plural, one {# gol} other {# gols}}',
+  'history.scorer': 'Artilheiro: {name} ({n, plural, one {# gol} other {# gols}})',
   'history.top': 'Mais utilizado: {name} ({n, plural, one {# jogo} other {# jogos}})',
   'career.deadline': 'Último dia da janela',
   'career.deadlineText':

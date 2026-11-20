@@ -93,6 +93,28 @@ export function SeasonReview({
           </ul>
         </div>
       )}
+      {(r.scorer || r.assister || r.artilharia.length > 0) && (
+        <div>
+          <p className="font-semibold">{t('review.scorers')}</p>
+          <ul className="text-chalk-soft">
+            {r.scorer && (
+              <li>{t('review.topScorer', { name: r.scorer.name, n: r.scorer.goals })}</li>
+            )}
+            {r.assister && (
+              <li>{t('review.topAssister', { name: r.assister.name, n: r.assister.assists })}</li>
+            )}
+            {r.artilharia[0] && (
+              <li>
+                {t('review.artilharia', {
+                  name: r.artilharia[0].name,
+                  club: r.artilharia[0].clubName,
+                  n: r.artilharia[0].goals,
+                })}
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
       <ShareCardButtons
         text={seasonText(r, club)}
         draw={(f) => drawSeasonCard(r, club, f)}
@@ -147,6 +169,11 @@ export function History({ history, club }: { history: SimView['history']; club: 
                 )}
                 {h.move === 'relegation' && (
                   <span className="text-club-danger">{t('history.relegated')}</span>
+                )}
+                {h.scorer && (
+                  <span className="basis-full text-sm text-chalk-soft">
+                    {t('history.scorer', { name: h.scorer.name, n: h.scorer.goals })}
+                  </span>
                 )}
                 {h.top && (
                   <span className="basis-full text-sm text-chalk-soft">

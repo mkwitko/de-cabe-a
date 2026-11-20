@@ -74,6 +74,7 @@ interface Saved {
   /** Every club's cash, directors and structure (clubs.ts). */
   clubs?: Record<string, ClubState>;
   starts?: CareerWorld['starts'];
+  scored?: CareerWorld['scored'];
   played?: CareerWorld['played'];
   history?: CareerWorld['history'];
 }
@@ -174,6 +175,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.fairplay && { fairplay: w.fairplay }),
     ...(w.clubs && { clubs: w.clubs }),
     ...(w.starts && { starts: w.starts }),
+    ...(w.scored && { scored: w.scored }),
     ...(w.played !== undefined && { played: w.played }),
     ...(w.history && { history: w.history }),
   };
@@ -248,6 +250,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.fairplay && { fairplay: saved.fairplay }),
     ...(saved.clubs && { clubs: saved.clubs }),
     ...(saved.starts && { starts: saved.starts }),
+    ...(saved.scored && { scored: saved.scored }),
     ...(saved.played !== undefined && { played: saved.played }),
     ...(saved.history && { history: saved.history }),
   };
