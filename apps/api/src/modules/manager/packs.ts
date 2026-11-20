@@ -26,11 +26,17 @@ export const packVersion = pack.checksum;
 
 // Archive it on boot (idempotent; tmp + rename, since two API containers overlap in a rollout).
 const own = archiveFile(pack.id, packVersion);
+// Best effort: an archive the API cannot write must not keep it from starting (the current pack is
+// served from memory either way); the failure is logged so the deploy can fix the folder.
 if (raw && own && !existsSync(own)) {
-  mkdirSync(join(own, '..'), { recursive: true });
-  const tmp = `${own}.${process.pid}.tmp`;
-  writeFileSync(tmp, raw);
-  renameSync(tmp, own);
+  try {
+    mkdirSync(join(own, '..'), { recursive: true });
+    const tmp = `${own}.${process.pid}.tmp`;
+    writeFileSync(tmp, raw);
+    renameSync(tmp, own);
+  } catch (err) {
+    console.error(`pack archive: could not write ${own}`, err);
+  }
 }
 
 // ponytail: kept in memory after the first read; a few packs of a few MB. An LRU if they pile up.

@@ -23,6 +23,8 @@ set -eu
 cp -a $DIR/deploy/.env.prod $DIR.new/deploy/.env.prod
 [ -d $DIR/apps/api/club-packs ] && cp -a $DIR/apps/api/club-packs $DIR.new/apps/api/ || true
 mkdir -p $DIR.new/apps/api/club-packs/archive
+# The API runs as node (uid 1000) and writes the archive; the copy above belongs to the deploy user.
+sudo chown -R 1000:1000 $DIR.new/apps/api/club-packs/archive
 [ -d $DIR/backups ] && cp -a $DIR/backups $DIR.new/ || true
 [ -f $DIR/deploy/SETUP-PUSH.md ] && cp -a $DIR/deploy/SETUP-PUSH.md $DIR.new/deploy/ || true
 echo "$REV" > $DIR.new/REVISION
