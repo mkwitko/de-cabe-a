@@ -2,5 +2,8 @@ import { defineConfig } from 'vitest/config';
 
 // Unit tests only; integration tests (*.int.test.ts) need Postgres: vitest.int.config.ts.
 export default defineConfig({
-  test: { include: ['src/**/*.test.ts'], exclude: ['src/**/*.int.test.ts', '**/node_modules/**'] },
+  test: {
+    include: ['src/**/*.test.ts', '../../scripts/club-pack/**/*.test.ts'],
+    exclude: ['src/**/*.int.test.ts', '**/node_modules/**'],
+  },
 });
