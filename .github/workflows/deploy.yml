@@ -49,10 +49,11 @@ jobs:
           printf 'Host *\n  StrictHostKeyChecking yes\n  ServerAliveInterval 30\n' > ~/.ssh/config
       - name: Ship origin/main
         run: sh deploy/release.sh
+      # From the VM itself (the edge proxy on 127.0.0.1:8088): Cloudflare answers 403 to the
+      # runners' addresses, so the public URL cannot be checked from here.
       - name: Health check
         run: |
-          for i in $(seq 1 20); do
-            curl -fsS https://decabecafc.com.br/v1/health && exit 0
+          ssh ubuntu@136.248.86.54 'for i in $(seq 1 20); do
+            wget -qO- http://127.0.0.1:8088/v1/health && exit 0
             sleep 6
-          done
-          exit 1
+          done; exit 1'
