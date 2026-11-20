@@ -513,6 +513,26 @@ export const ptBR = {
   'career.deadlineMarket': 'Fazer contratações',
   'career.deadlineGo': 'Fechar a janela',
   'career.nextSeason': 'Começar a temporada {season}',
+  'bridge.title': 'O que vem aí',
+  'bridge.happened': 'O que aconteceu',
+  'bridge.carried': 'O que fica para a temporada',
+  'bridge.ahead': 'Problemas pela frente',
+  'bridge.close': 'Entendi',
+  'bridge.season':
+    '{move, select, promotion {Acesso conquistado.} relegation {Rebaixamento.} other {{fired, select, true {Demissão no meio do ano.} other {{champion, select, true {Título da divisão.} other {Temporada na mesma divisão.}}}}}}',
+  'bridge.sale': 'Venda: {player} por {fee, number, currency}.',
+  'bridge.idol': '{name} foi o mais utilizado, com {starts} jogos como titular.',
+  'bridge.crisis':
+    '{what, select, ultimatum {A diretoria deu um ultimato.} cashRed {O caixa ficou no vermelho.} other {Salários atrasaram.}}',
+  'bridge.cash': 'Caixa: {from, number, currency} para {to, number, currency}.',
+  'bridge.squad': 'Elenco: {lost} saíram, {won} chegaram.',
+  'bridge.confidence': 'Confiança da direção: {from} para {to}.',
+  'bridge.election': 'Há eleição no clube nesta temporada.',
+  'bridge.contracts':
+    '{players, plural, one {# contrato termina} other {# contratos terminam}} no fim da temporada.',
+  'bridge.ageing':
+    '{players, plural, one {# jogador tem} other {# jogadores têm}} 32 anos ou mais.',
+  'bridge.goal': 'Nova meta da direção: terminar até o {position}º lugar.',
   'career.turn':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',

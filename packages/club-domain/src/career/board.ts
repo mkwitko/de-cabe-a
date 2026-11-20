@@ -90,17 +90,25 @@ const horizonOf = (w: CareerWorld, clubId = w.clubId): Horizon =>
 /** Each club's national division this season, its members; and the pressures, once a season. */
 const seasonal = new WeakMap<
   SeasonState,
-  { members: Map<string, readonly string[]>; pressure: Map<string, number> }
+  {
+    members: Map<string, readonly string[]>;
+    tiers: Map<string, number>;
+    pressure: Map<string, number>;
+  }
 >();
 const seasonOf = (w: CareerWorld) => {
   let s = seasonal.get(w.season);
   if (!s) {
     const members = new Map<string, readonly string[]>();
+    const tiers = new Map<string, number>();
     for (const d of nationalDivisions(w.pack)) {
       const ids = w.season.members[d.id] ?? d.clubIds;
-      for (const id of ids) members.set(id, ids);
+      for (const id of ids) {
+        members.set(id, ids);
+        tiers.set(id, d.tier);
+      }
     }
-    s = { members, pressure: new Map() };
+    s = { members, tiers, pressure: new Map() };
     seasonal.set(w.season, s);
   }
   return s;
@@ -108,6 +116,10 @@ const seasonOf = (w: CareerWorld) => {
 /** The clubs of `clubId`'s national division this season; undefined outside them. */
 export const divisionOf = (w: CareerWorld, clubId: string): readonly string[] | undefined =>
   seasonOf(w).members.get(clubId);
+
+/** The tier (1 = Série A) of the club's national division this season. */
+export const divisionTierOf = (w: CareerWorld, clubId: string): number | undefined =>
+  seasonOf(w).tiers.get(clubId);
 
 /** A board that starts over under a new president: first confidence, this season's goal. */
 export const freshBoard = (w: CareerWorld): Board => ({ confidence: START, goal: goalFor(w) });

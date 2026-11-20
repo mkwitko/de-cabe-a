@@ -730,6 +730,13 @@ export const ClientEventName = z.enum([
   'search_no_result',
   /** Arrival by a shared link: kind = level | league | profile | daily; ref from `?ref=`. */
   'link_opened',
+  /** Modo Clube funnel, pseudonymous and aggregate (docs/modo-clube-metricas.md). */
+  'career_started',
+  'season_started',
+  'season_completed',
+  'career_fired',
+  'first_meaningful_decision',
+  'career_timing',
 ]);
 export const EventsRequest = z.strictObject({
   events: z

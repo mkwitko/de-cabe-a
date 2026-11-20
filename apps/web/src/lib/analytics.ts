@@ -5,7 +5,18 @@ import { apiFetch } from './api';
  */
 import { capture } from './posthog';
 
-type Name = 'game_viewed' | 'result_shared' | 'game_abandoned' | 'search_no_result' | 'link_opened';
+type Name =
+  | 'game_viewed'
+  | 'result_shared'
+  | 'game_abandoned'
+  | 'search_no_result'
+  | 'link_opened'
+  | 'career_started'
+  | 'season_started'
+  | 'season_completed'
+  | 'career_fired'
+  | 'first_meaningful_decision'
+  | 'career_timing';
 type Props = Record<string, string | number | boolean | null>;
 
 const isMobile = () => typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;

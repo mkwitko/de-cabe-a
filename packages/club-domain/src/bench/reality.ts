@@ -261,6 +261,49 @@ const TARGETS: Target[] = [
   },
 ];
 
+/** Clubs of the division of that tier in the season's world. */
+const tierClubs = (w: CareerWorld, tier: number) =>
+  new Set(w.season.members[nationalDivisions(w.pack).find((d) => d.tier === tier)!.id] ?? []);
+/** (a) clubs with at least one change; (b) sackings; (c) hires (the model has no interims). */
+const turnover = {
+  clubs: (w: CareerWorld, tier: number) => {
+    const c = tierClubs(w, tier);
+    return new Set((w.sacked ?? []).filter((x) => c.has(x))).size;
+  },
+  sackings: (w: CareerWorld, tier: number) => {
+    const c = tierClubs(w, tier);
+    return (w.sacked ?? []).filter((x) => c.has(x)).length;
+  },
+  // Every sacking is a hire once the vacancy is filled; the open ones are not hires yet.
+  hires: (w: CareerWorld, tier: number) => {
+    const c = tierClubs(w, tier);
+    return (
+      turnover.sackings(w, tier) - Object.keys(w.vacancies ?? {}).filter((x) => c.has(x)).length
+    );
+  },
+};
+const NO_TARGET: [number, number] = [0, 1000];
+const INFO = 'Contagem informativa (sem alvo)';
+const LINES: [number, string, [number, number], string, boolean][] = [
+  [1, 'A', NO_TARGET, INFO, false],
+  [2, 'B', [12, 18], 'Imprensa 2026: 16 dos 20 clubes da Série B trocaram de técnico', true],
+  [3, 'C', [11, 19], 'Imprensa 2026: 15 clubes e 20 trocas até setembro (Série C)', true],
+  [4, 'D', [20, 75], 'Provisório, sem fonte confirmada na Série D (só avisa)', false],
+];
+for (const [tier, letter, range, source, confirmed] of LINES) {
+  const add = (what: string, key: keyof typeof turnover, r = NO_TARGET, s = INFO, c = false) =>
+    TARGETS.push({
+      name: `Técnicos ${what} na Série ${letter}`,
+      range: r,
+      source: s,
+      confirmed: c,
+      measure: (w) => turnover[key](w, tier),
+    });
+  add('com troca', 'clubs', range, source, confirmed);
+  if (tier !== 1) add('demitidos', 'sackings');
+  add('contratados', 'hires');
+}
+
 function playSeason(pack: Pack, seed: number): CareerWorld {
   const w = openCareer(pack, seed, jobOffers(pack, seed)[0]!.clubId);
   for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) playDecision(w, d);

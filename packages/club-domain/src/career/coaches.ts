@@ -11,7 +11,14 @@
  */
 import type { Outcome } from '../competition/season';
 import type { CareerWorld } from './advance';
-import { BENCH_START, divisionOf, pressureOf, resultValue, thresholdFor } from './board';
+import {
+  BENCH_START,
+  divisionOf,
+  pressureOf,
+  resultValue,
+  thresholdFor,
+  divisionTierOf,
+} from './board';
 import { driftDna, dismiss, hire } from './coach-pool';
 import { note } from './inbox';
 
@@ -33,6 +40,14 @@ export interface Bench {
  * board's confidence is at `PLEASED` or more.
  */
 const GRACE = 4;
+/**
+ * Per tier (index 0 = Série A): matches a new coach gets, and points added to the board's edge.
+ * Série A is the original calibration; below it, boards sack less often but more clubs are hit
+ * (Série B: 16 of 20 clubs changed coach in 2026), so a fresh coach is kept longer (fewer repeat
+ * sackings) while the edge is higher. PARÂMETROS, set against bench/reality.ts.
+ */
+const GRACE_TIER = [GRACE, 8, 8, 8];
+const EDGE_TIER = [0, 6, 6, 6];
 /**
  * Another club's board sacks without the ultimatum the person gets first: it acts this many
  * points above the person's line. A winless run costs it `RUN_COST` every `RUN` matches, the
@@ -61,6 +76,7 @@ export function judgeCoaches(
 ): void {
   for (const [side, clubId] of [match.home, match.away].entries()) {
     if (clubId === w.clubId || !divisionOf(w, clubId)) continue;
+    const t = (divisionTierOf(w, clubId) ?? 1) - 1;
     const rival = side === 0 ? match.away : match.home;
     const [mine, theirs] = side === 0 ? o.goals : [o.goals[1], o.goals[0]];
     if (w.vacancies?.[clubId] !== undefined) continue;
@@ -71,7 +87,11 @@ export function judgeCoaches(
       b.winless > 0 && b.winless % RUN === 0 ? RUN_COST + (pressureOf(w, clubId) >= 75 ? 1 : 0) : 0;
     b.confidence = Math.max(0, Math.min(100, b.confidence + value - run));
     b.matches = (b.matches ?? 0) + 1;
-    if (b.matches >= GRACE && b.confidence < thresholdFor(w, clubId) + EDGE) sack(w, clubId, day);
+    if (
+      b.matches >= (GRACE_TIER[t] ?? GRACE) &&
+      b.confidence < thresholdFor(w, clubId) + EDGE + (EDGE_TIER[t] ?? 0)
+    )
+      sack(w, clubId, day);
   }
 }
 

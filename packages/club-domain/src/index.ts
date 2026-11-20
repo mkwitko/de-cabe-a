@@ -42,6 +42,7 @@ export * from './career/training';
 export * from './career/market';
 export * from './career/board';
 export * from './career/history';
+export * from './career/bridge';
 export * from './career/inbox';
 export * from './career/todo';
 export * from './market/value';
