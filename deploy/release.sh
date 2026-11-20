@@ -21,6 +21,8 @@ ssh "$VM" sh -s <<EOF
 set -eu
 cp -a $DIR/deploy/.env.prod $DIR.new/deploy/.env.prod
 [ -d $DIR/backups ] && cp -a $DIR/backups $DIR.new/ || true
+# The Modo Clube real pack lives only on the VM (never in git): it goes on with every release.
+[ -d $DIR/apps/api/club-packs ] && cp -a $DIR/apps/api/club-packs $DIR.new/apps/api/ || true
 [ -f $DIR/deploy/SETUP-PUSH.md ] && cp -a $DIR/deploy/SETUP-PUSH.md $DIR.new/deploy/ || true
 echo "$REV" > $DIR.new/REVISION
 sudo rm -rf $DIR.prev
