@@ -66,3 +66,12 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - Wikidata (CC0), SPARQL por ano de nascimento: futebolistas com cidadania brasileira (P27 Q155) e outra (P27 com ISO P297). Gerado por `fetch-citizenships.ts`; casado em `import-fm.ts` como a naturalidade. 18 jogadores no pacote (ex.: Rafael Toloi IT+BR, Jorginho IT+BR, Coutinho BR+ES).
 - `second_nation_ids` do FM nao e usado: marca Brasil para estrangeiros sem passaporte brasileiro (Mercado, Cuello, Ferraresi).
 - `birthCityId` (campo de naturalidade do esquema) passa a guardar a naturalidade, em vez de `origin.cityId`.
+
+## Estrutura do clube (`facilities`, `profile`, data/clubes-formadores.json)
+
+- Instalacoes: `facilities.csv` do FM so traz `corporate_facilities_code` (1-20; basic 1-2, fairly basic 3-5, adequate 6-9, average 10-12, good 13-14, excellent 15+), mapeado a 1-5 e **mediado com o nivel por reputacao** (treino e saude). Base = a mesma media, +1 se o clube esta na lista CBF de Clubes Formadores, +1 se >= 40% dos minutos do time titular vem de jogadores formados no clube (`home_grown_club_uids`). Sem nota do FM, vale a reputacao.
+- CBF, Certificado de Clube Formador: https://www.cbf.com.br/a-cbf/drt/clubes-formadores (pagina de 09/09/2026, lista de 20/10/2026, 78 clubes; sem categoria publicada). Casamento por nome sem formas juridicas. Conferencia: https://diariodopara.com.br/bola/para-fica-fora-da-lista-de-clubes-formadores-da-cbf-em-2026/ e Lance! (categoria A 2 anos, B 1 ano).
+- Departamentos: mantidos (derivados da reputacao). `staff.csv` do FM nao tem `job` nem atributos de comissao preenchidos, so preferencias taticas.
+- Estilo de jogo (`profile.playingStyle`): `player-season-stats.csv` (kind overall, time principal), taxas por 90 min do time, percentil entre os clubes do pacote, limitado a 10-90: posse = passes; verticalidade = passes progressivos por passe; pressao = pressoes; bloco = poucos cortes (clearances); largura = cruzamentos; ritmo = sprints; risco = bolas perdidas. So clubes com >= 5000 minutos (303); os demais mantem o sorteio por reputacao.
+- Politica de base (`youthPolicy`): parcela dos minutos de jogadores formados no clube, 50% = 95.
+- Mercado: `readyVsYoung` pela idade media do elenco (21 = 10, 31 = 90); `regionalVsNational` = 25 + 400 x parcela de estrangeiros + 50 x parcela nao formada no clube.

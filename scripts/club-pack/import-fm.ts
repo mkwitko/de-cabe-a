@@ -31,6 +31,15 @@ import {
   type PackPlayer,
 } from '../../packages/club-domain/src/index';
 import { realDivisions } from '../../packages/club-domain/src/generate/competitions';
+import {
+  clubKey,
+  facilitiesFrom,
+  isCertified,
+  marketFrom,
+  styleFrom,
+  youthPolicyFrom,
+  type StyleRates,
+} from '../../packages/club-domain/src/generate/structure';
 import { FIRST_NAMES, LAST_NAMES, NICKNAMES } from '../../packages/club-domain/src/generate/names';
 
 import { parseCsv } from './lib/csv';
@@ -951,6 +960,57 @@ let dualKnown = 0;
   }
 }
 
+// ── Club structure from real signals (facilities, style, youth policy, market) ─────────────────
+// Mappings in packages/club-domain/src/generate/structure.ts; sources in data/FONTES.md.
+const facilityCode = new Map(
+  load('facilities.csv', 'corporate_facilities_code is the only facility column').map((r) => [
+    r.club_uid,
+    num(r.corporate_facilities_code),
+  ]),
+);
+const CBF_FORMADORES = new Set(
+  (
+    JSON.parse(readFileSync(new URL('./data/clubes-formadores.json', import.meta.url), 'utf8')) as {
+      clubs: string[];
+    }
+  ).clubs.map(clubKey),
+);
+const seasonRows = load('player-season-stats.csv', 'kind overall, team slot 0: style and minutes');
+const styleSum = new Map<string, StyleRates & { minutes: number }>();
+const minutesAt = new Map<string, number>();
+for (const s of seasonRows) {
+  if (s.kind !== 'overall' || s.team_slot !== '0' || !s.club_uid) continue;
+  const m = num(s.minutes);
+  const t = styleSum.get(s.club_uid) ?? {
+    minutes: 0, passes: 0, progressive: 0, pressures: 0, clearances: 0, crosses: 0, sprints: 0, lost: 0,
+  }; // prettier-ignore
+  t.minutes += m;
+  t.passes += num(s.passes_attempted);
+  t.progressive += num(s.progressive_passes);
+  t.pressures += num(s.pressures_attempted);
+  t.clearances += num(s.clearances);
+  t.crosses += num(s.crosses_attempted);
+  t.sprints += num(s.high_intensity_sprints);
+  t.lost += num(s.possession_lost);
+  styleSum.set(s.club_uid, t);
+  minutesAt.set(`fm-p${s.player_uid}|fm-c${s.club_uid}`, m);
+}
+const MIN_STYLE_MINUTES = 5000; // about five matches of data
+const styleRates = new Map<string, StyleRates>();
+for (const [u, t] of styleSum)
+  if (scope.has(u) && t.minutes >= MIN_STYLE_MINUTES) {
+    const k = 990 / t.minutes; // per 90 minutes of a team of 11
+    styleRates.set(u, {
+      passes: t.passes * k, progressive: t.progressive * k, pressures: t.pressures * k,
+      clearances: t.clearances * k, crosses: t.crosses * k, sprints: t.sprints * k, lost: t.lost * k,
+    }); // prettier-ignore
+  }
+const styleCohort = [...styleRates.values()];
+const squadOfClub = new Map<string, PackPlayer[]>();
+for (const p of players)
+  if (p.clubId) (squadOfClub.get(p.clubId) ?? squadOfClub.set(p.clubId, []).get(p.clubId)!).push(p);
+const structure = { facilities: 0, certified: 0, style: 0, youth: 0 };
+
 const root = rngFrom(20261117);
 const clubs: PackClub[] = [];
 const staff: Pack['staff'] = [];
@@ -1027,6 +1087,48 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     ? [official[0]!, official[1] ?? (official[0] === '#ffffff' ? '#000000' : '#ffffff')]
     : [colourOf(uid, 0), colourOf(uid, 1)];
   const body = estimatedBody(r, strength, 'inferred', 'low');
+  {
+    // Structure from real signals; what has none keeps the reputation estimate above.
+    const id = `fm-c${uid}`;
+    const squad = squadOfClub.get(id) ?? [];
+    let total = 0;
+    let academy = 0;
+    for (const p of squad) {
+      const m = minutesAt.get(`${p.id}|${id}`) ?? 0;
+      total += m;
+      if (p.origin?.clubId === id) academy += m;
+    }
+    const academyShare = total >= 5000 ? academy / total : null;
+    const code = facilityCode.get(uid) ?? null;
+    const certified = isCertified([c.name, c.short_name], CBF_FORMADORES);
+    if (code) structure.facilities++;
+    if (certified) structure.certified++;
+    body.facilities = facilitiesFrom({
+      repLevel: lvl,
+      corporateCode: code,
+      certified,
+      academyShare,
+    });
+    const rates = styleRates.get(uid);
+    if (rates) {
+      structure.style++;
+      body.profile.playingStyle = styleFrom(rates, styleCohort);
+      body.profile.confidence = 'medium';
+    } else est('profile: playing style kept as the reputation draw (no season stats)');
+    if (academyShare !== null) {
+      structure.youth++;
+      body.profile.youthPolicy = youthPolicyFrom(academyShare);
+    }
+    if (squad.length >= 11) {
+      const yr = (p: PackPlayer) => Number(p.birthDate.slice(0, 4));
+      const age = squad.reduce((s, p) => s + (SEASON - yr(p)), 0) / squad.length;
+      body.profile.market = marketFrom(
+        age,
+        squad.filter((p) => p.nationality !== 'BR').length / squad.length,
+        squad.filter((p) => p.origin?.clubId !== id).length / squad.length,
+      );
+    }
+  }
   const club: PackClub = {
     id: `fm-c${uid}`,
     name: c.name.slice(0, 80),
@@ -1290,6 +1392,7 @@ report.notes.push(
   `secondNationality: ${dualKnown} players matched to Wikidata's dual citizenships (data/citizenships.json)`,
   `birthplace: ${bornKnown} players matched to Wikidata's place of birth (data/birthplaces.json, by birth date and name)`,
   `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
+  `structure: ${structure.facilities}/${clubs.length} clubs with an FM facilities rating, ${structure.certified} CBF clube formador, ${structure.style} playing styles from season stats, ${structure.youth} youth policies from academy minutes; departments kept (staff.csv has no job or attributes)`,
   'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
   'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
 );
