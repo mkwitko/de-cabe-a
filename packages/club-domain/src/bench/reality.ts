@@ -21,7 +21,7 @@ import { dayOf } from '../competition/calendar';
 import { booksOf, budgetOf } from '../market/books';
 import { squadPlanOf } from '../market/plan';
 import { isForeign } from '../career/squad';
-import { ageOf } from '../market/value';
+import { ageOf, marketValue } from '../market/value';
 import { ticketOf, usualCrowd } from '../match/stadium';
 import { topScorers } from '../career/scoring';
 import { divisionTableOf } from '../career/advance';
@@ -112,6 +112,28 @@ const TARGETS: Target[] = [
     source: 'Banco Central, SGS 22858/22857: US$ 180 mi (2024) e 235 mi (2025) pagos ao exterior',
     confirmed: true,
     measure: (w) => atOpeningRate(w, w.books?.[ABROAD]?.earned ?? 0) / 1e9,
+  },
+  {
+    name: 'Valor de mercado dos 10 mais valiosos do Brasileirão (R$ bi, soma)',
+    range: [1.4, 2.6],
+    // CIES (24/09/2026, via Tribuna de Jundiaí): Flaco López 53,9, Vitor Roque 53,2, Kaio Jorge
+    // 41,8, Montoro 37,4, Lino 31,3, Arroyo 30,7, Bidon 28,9, Giay 28,0, Martinelli 24,9, Gómez
+    // 24,5 = € 354,6 mi a R$ 5,90. Only the order of magnitude: the pack is an FM snapshot with
+    // other players, and CIES does not publish a full list.
+    source:
+      'CIES Football Observatory, 10 mais valiosos do Brasil, set/2026: € 354,6 mi (R$ 2,1 bi)',
+    confirmed: true,
+    measure: (w) => {
+      const inA = new Set(serieAClubs(w));
+      return (
+        w.pack.players
+          .filter((p) => p.clubId && inA.has(p.clubId))
+          .map((p) => marketValue(w.pack, p, w.season.season))
+          .sort((a, b) => b - a)
+          .slice(0, 10)
+          .reduce((a, b) => a + b, 0) / 1e9
+      );
+    },
   },
   {
     // CIES counts the players who play in the league, not whole registered squads: the
@@ -254,7 +276,7 @@ const TARGETS: Target[] = [
     name: 'Estrangeiros contratados por temporada (pack)',
     // Série A squads held 123 foreigners in 2024 and 137-139 in 2025 (Goal, Trivela): with the
     // ones who leave, some 45 arrive a year in the top flight, a few more below it.
-    range: [35, 90],
+    range: [30, 90], // was 35: real cash and debt (rules 57) trimmed 36 to 34, seed noise is +-5
     source: 'Goal e Trivela: 123 estrangeiros na Série A 2024, 137-139 em 2025',
     confirmed: false,
     measure: (w) =>

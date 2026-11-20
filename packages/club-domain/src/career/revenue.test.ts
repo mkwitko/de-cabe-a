@@ -5,6 +5,7 @@ import { openCareer } from './advance';
 import { priced, pricesOf } from './prices';
 import {
   BLOCS,
+  LIBRA_CLUB_IDS,
   COPA_B,
   COPA_CHAMPION,
   COPA_LOW,
@@ -39,6 +40,11 @@ describe('revenue lines (CBF 2026 tables)', () => {
     for (const id of divs[1]!.clubIds)
       expect(tvOf(w, id, 2)).toEqual({ equal: TV_SERIE_B, audience: 0, perfMean: 0 });
     expect(tvOf(w, divs[2]!.clubIds[0]!, 3)).toEqual({ equal: 0, audience: 0, perfMean: 0 });
+  });
+
+  it('Libra has ten real members, Palmeiras and Flamengo among them', () => {
+    expect(LIBRA_CLUB_IDS.size).toBe(10);
+    expect(LIBRA_CLUB_IDS.has('fm-c329') && LIBRA_CLUB_IDS.has('fm-c322')).toBe(true);
   });
 
   it('Série A TV: blocs split a club mean into equal, performance and audience', () => {
