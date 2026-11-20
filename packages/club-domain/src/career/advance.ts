@@ -53,7 +53,9 @@ import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
 import { settleImageClaims, type ImageDeal } from '../market/image';
-import { returnLoans, type Loan } from '../market/loans';
+import { returnLoans, type Loan, type LoanOption } from '../market/loans';
+import { pruneClauses, type Clauses } from '../market/clauses';
+import { unrestTurn, type Unrest } from '../market/unrest';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
 import { codeOf, withImports, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
@@ -159,6 +161,12 @@ export interface CareerWorld {
   loans?: Record<string, Loan>;
   /** The person's players offered on loan. */
   forLoan?: string[];
+  /** What the person asks of the club that borrows each player offered on loan. */
+  optionFor?: Record<string, LoanOption['kind']>;
+  /** Sell-on and buy-back clauses on players the person sold (market/clauses.ts). */
+  clauses?: Record<string, Clauses>;
+  /** Players of the person's club who are unhappy, by id (market/unrest.ts). */
+  unhappy?: Record<string, Unrest>;
   /** Seasons in a row each club ended over the fair play limit; absent when none (fairplay.ts). */
   fairplay?: Record<string, number>;
   /** Every club's cash, directors and structure; absent before the first season's turn. */
@@ -329,7 +337,10 @@ function playDay(
   w.training = training;
   w.day = day;
   advanceLedger(w.ledger, day);
-  if (turned) monthTurned(w, day);
+  if (turned) {
+    monthTurned(w, day);
+    unrestTurn(w, day);
+  }
   if (cashBefore >= 0 && w.ledger.cash < 0) note(w, { day, kind: 'cashRed' });
   return out;
 }
@@ -664,6 +675,9 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
   if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;
+  // Minutes start over: unrest and promises with them; buy-backs of seasons gone expire.
+  delete w.unhappy;
+  pruneClauses(w);
   delete w.played;
   newSeasonDiscipline(w);
   newSeasonCoaches(w);

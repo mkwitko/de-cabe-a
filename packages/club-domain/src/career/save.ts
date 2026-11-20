@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 52;
+export const CAREER_RULES_VERSION = 53;
 
 interface Saved {
   v: number;
@@ -55,6 +55,9 @@ interface Saved {
   idle?: CareerWorld['idle'];
   loans?: CareerWorld['loans'];
   forLoan?: CareerWorld['forLoan'];
+  optionFor?: CareerWorld['optionFor'];
+  clauses?: CareerWorld['clauses'];
+  unhappy?: CareerWorld['unhappy'];
   log?: CareerWorld['log'];
   injuries?: CareerWorld['injuries'];
   cards?: CareerWorld['cards'];
@@ -153,6 +156,9 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.idle && { idle: w.idle }),
     ...(w.loans && { loans: w.loans }),
     ...(w.forLoan && { forLoan: w.forLoan }),
+    ...(w.optionFor && { optionFor: w.optionFor }),
+    ...(w.clauses && { clauses: w.clauses }),
+    ...(w.unhappy && { unhappy: w.unhappy }),
     ...(w.log && { log: w.log }),
     ...(w.injuries && { injuries: w.injuries }),
     ...(w.cards && { cards: w.cards }),
@@ -224,6 +230,9 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),
+    ...(saved.optionFor && { optionFor: saved.optionFor }),
+    ...(saved.clauses && { clauses: saved.clauses }),
+    ...(saved.unhappy && { unhappy: saved.unhappy }),
     ...(saved.log && { log }),
     ...(saved.injuries && { injuries: saved.injuries }),
     ...(saved.cards && { cards: saved.cards }),

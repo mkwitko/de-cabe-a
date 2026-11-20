@@ -16,6 +16,7 @@ import { squadPlayers } from './squad';
 import { seedOf } from '../competition/season';
 import { marketValue } from '../market/value';
 import { incomeOf } from '../market/books';
+import { unrestCost } from '../market/unrest';
 import { flagGrudge } from '../market/image';
 
 /** The credit a club gets before it stops paying: months of its season's income. */
@@ -40,7 +41,7 @@ export const strengthOwed = (w: CareerWorld, strength: number) =>
   (strength * (1000 - STRENGTH_PER_MONTH * owed(w))) / 1000;
 
 /** The squad's morale in a watched match. */
-export const moraleOf = (w: CareerWorld) => MORALE - MORALE_PER_MONTH * owed(w);
+export const moraleOf = (w: CareerWorld) => MORALE - MORALE_PER_MONTH * owed(w) - unrestCost(w);
 
 /**
  * The month turned on `day`, its bills posted and the ledger brought to it: unpaid if the cash

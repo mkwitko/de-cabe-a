@@ -35,6 +35,8 @@ import {
   type TermsAnswer,
 } from './deals';
 import { comeBack, type Why } from './rounds';
+import { clausedFee, clausesOf, grant, validSale, type SaleClauses } from './clauses';
+import { upset } from './unrest';
 import { agentOf, aiCommission, commission, dealtWith, type Agent } from './agents';
 import { postEntry } from '../finance/ledger';
 import { renew, renewalTerms } from './contracts';
@@ -214,6 +216,77 @@ export function openRenewal(w: CareerWorld, playerId: string): Talk {
   return talk;
 }
 
+/** Why the person cannot take a player back on a clause now; null when they can. */
+export type ClauseNo = 'window' | 'squadFull' | 'embargo' | 'cash' | 'gone';
+
+/** The buy-back the person holds on a player, when it can be used now. */
+export function buyBackFor(
+  w: CareerWorld,
+  p: PackPlayer,
+): { price: number; no: ClauseNo | null } | null {
+  const bb = clausesOf(w, p.id)?.buyBack;
+  if (!bb || bb.holder !== w.clubId || !p.clubId || p.clubId === ABROAD || p.clubId === w.clubId)
+    return null;
+  const no: ClauseNo | null = !windowOpen(w.day)
+    ? 'window'
+    : embargoed(w, w.clubId)
+      ? 'embargo'
+      : squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD
+        ? 'squadFull'
+        : bb.price > w.ledger.cash
+          ? 'cash'
+          : null;
+  return { price: bb.price, no };
+}
+
+/**
+ * The person takes up a buy-back: the price is fixed, the selling club has no say; the player
+ * still has his: the talk opens at the contract.
+ */
+export function openBuyBack(w: CareerWorld, playerId: string): Talk {
+  const p = playerOf(w, playerId);
+  const bb = p && buyBackFor(w, p);
+  if (!p || !bb) throw new Error('talk: no buy-back');
+  if (bb.no) throw new Error(`talk: ${bb.no}`);
+  const wants = stanceFor(w, p, w.clubId);
+  const talk: Talk = {
+    player: p.id,
+    seller: p.clubId,
+    mood: 'surplus',
+    stage: 'terms',
+    round: 0,
+    asking: bb.price,
+    fee: bb.price,
+    wants: opening(wants, wants.fair),
+    day: w.day,
+  };
+  w.talks = { ...w.talks, [p.id]: talk };
+  return talk;
+}
+
+/** The person takes up the option of a player on loan at the club: the price is the clause's. */
+export function openOption(w: CareerWorld, playerId: string): Talk {
+  const p = playerOf(w, playerId);
+  const loan = w.loans?.[playerId];
+  if (p?.clubId !== w.clubId || loan?.option?.kind !== 'option' || loan.owner === w.clubId)
+    throw new Error('talk: no option');
+  if (loan.option.price > w.ledger.cash) throw new Error('talk: cash');
+  const wants = stanceFor(w, p, w.clubId);
+  const talk: Talk = {
+    player: p.id,
+    seller: loan.owner,
+    mood: 'surplus',
+    stage: 'terms',
+    round: 0,
+    asking: loan.option.price,
+    fee: loan.option.price,
+    wants: opening(wants, wants.fair),
+    day: w.day,
+  };
+  w.talks = { ...w.talks, [p.id]: talk };
+  return talk;
+}
+
 export function dropTalk(w: CareerWorld, playerId: string): void {
   const { [playerId]: _gone, ...rest } = w.talks ?? {};
   w.talks = rest;
@@ -278,7 +351,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
     throw new Error('talk: terms');
   if (talk.fee > w.ledger.cash) throw new Error('talk: cash');
   const renewal = talk.seller === w.clubId;
-  const added = terms.wage - (renewal ? (p.contract?.wage ?? 0) : 0);
+  const added = terms.wage - (p.clubId === w.clubId ? (p.contract?.wage ?? 0) : 0);
   if (added > myWageRoom(w)) throw new Error('talk: wageCap');
   const season = w.season.season;
   let wants: PlayerStance;
@@ -301,6 +374,8 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
   if (a.kind === 'refuse') {
     cool(w, playerId);
     dealtWith(w, agent, false);
+    // He asked to stay on better terms and the club did not meet them: he is unhappy.
+    if (renewal) upset(w, playerId);
   } else if (a.kind === 'counter')
     w.talks = { ...w.talks, [playerId]: { ...talk, round, wants: a.terms } };
   else {
@@ -308,7 +383,7 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
     else {
       if (talk.seller === ABROAD) {
         settle(w, p, ABROAD, talk.fee, 'buy');
-        bookImport(w, w.clubId, talk.fee);
+        bookImport(w, w.clubId, talk.fee, p);
       } else if (talk.seller !== null) {
         settle(w, p, talk.seller, talk.fee, 'buy');
         book(w, talk.seller, w.clubId, talk.fee, p);
@@ -318,6 +393,12 @@ export function bidTerms(w: CareerWorld, playerId: string, terms: Terms): TermsA
         until: `${season + a.terms.years}-12-31`,
         release: a.terms.release ?? null,
       });
+      // Bought on a loan's option: the loan is over, he is the club's.
+      if (w.loans?.[p.id]) {
+        const { [p.id]: _done, ...rest } = w.loans;
+        if (Object.keys(rest).length) w.loans = rest;
+        else delete w.loans;
+      }
     }
     setImage(w, p, terms.image, a.terms.wage);
     // The agent's commission, paid by the club that signs (renewals too).
@@ -374,7 +455,10 @@ export type BidAnswer =
 export function answerBid(
   w: CareerWorld,
   id: string,
-  answer: { kind: 'accept' } | { kind: 'refuse' } | { kind: 'counter'; fee: number },
+  answer:
+    | { kind: 'accept'; clauses?: SaleClauses }
+    | { kind: 'refuse' }
+    | { kind: 'counter'; fee: number; clauses?: SaleClauses },
 ): BidAnswer {
   const bid = (w.bids ?? []).find((b) => b.id === id);
   const p = bid && playerOf(w, bid.player);
@@ -412,6 +496,10 @@ export function answerBid(
     }
     fee = answer.fee;
   }
+  // A sell-on share or a buy-back lowers what the buyer pays: it values what it gives up.
+  const sale = 'clauses' in answer ? answer.clauses : undefined;
+  if (!validSale(sale)) throw new Error('bid: clauses');
+  fee = clausedFee(fee, sale);
   if (!canLose(w, p)) return leave('squadThin');
   const foreign = FOREIGN_TIERS.find((t) => t.id === bid.from);
   if (foreign) {
@@ -419,6 +507,7 @@ export function answerBid(
     if (!wantsToGo(p)) return leave('loyal');
     settle(w, p, bid.from, fee, 'sell');
     sellAbroad(w, p, fee);
+    grant(w, p, fee, sale);
     w.listed = (w.listed ?? []).filter((x) => x !== p.id);
     w.bids = (w.bids ?? []).filter((b) => b.player !== p.id);
     w.deals = [
@@ -453,6 +542,7 @@ export function answerBid(
     release: marketValue(w.pack, p, season) * CLAUSE_TIMES,
   });
   book(w, w.clubId, bid.from, fee, p);
+  grant(w, p, fee, sale);
   // The buying club pays the agent; the person's club keeps the standing of the deal.
   aiCommission(w, bid.from, p, fee, wants.wage);
   dealtWith(w, agentOf(w.pack, p), true);

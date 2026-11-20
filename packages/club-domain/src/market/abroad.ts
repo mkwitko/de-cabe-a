@@ -12,6 +12,7 @@
  * not work out, to a club here that needs them, at the opening of each window.
  * Every number here is a PARÂMETRO, to be calibrated against the real yearly exodus.
  */
+import { resale } from './clauses';
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
@@ -210,13 +211,15 @@ export function sellAbroad(w: CareerWorld, p: PackPlayer, fee: number): void {
     [ABROAD]: { ...world, spent: world.spent + fee },
   };
   solidarity(w, p, from, fee, true);
+  resale(w, p, from, ABROAD, fee);
 }
 
 /**
  * A player bought from abroad: the fee leaves the league. The buyer's books see it spent and the
  * foreign side's book (`ABROAD`) sees it earned, so the season's imports can be read back.
  */
-export function bookImport(w: CareerWorld, buyerId: string, fee: number): void {
+export function bookImport(w: CareerWorld, buyerId: string, fee: number, p?: PackPlayer): void {
+  if (p) resale(w, p, ABROAD, buyerId, fee);
   const b = booksOf(w, buyerId);
   const world = booksOf(w, ABROAD);
   w.books = {

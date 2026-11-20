@@ -54,6 +54,14 @@ import {
   openRenewal,
   openingWage,
   borrow,
+  buyBackFor,
+  clausesOf,
+  answerRequest,
+  openBuyBack,
+  openOption,
+  type LoanOption,
+  type Plea,
+  type SaleClauses,
   cannotBorrow,
   listForLoan,
   loanFee,
@@ -408,10 +416,16 @@ export type MarketAct =
   | { do: 'open' | 'drop' | 'renew'; playerId: string }
   | { do: 'fee'; playerId: string; fee: number }
   | { do: 'terms'; playerId: string; terms: Terms }
-  | { do: 'list' | 'lend'; playerId: string; on: boolean }
-  | { do: 'borrow'; playerId: string }
-  | { do: 'bid'; bidId: string; answer: 'accept' | 'refuse' }
-  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number }
+  | { do: 'list'; playerId: string; on: boolean }
+  | { do: 'lend'; playerId: string; on: boolean; kind?: LoanOption['kind'] }
+  | { do: 'borrow'; playerId: string; kind?: LoanOption['kind'] }
+  /** Take up a buy-back clause or the option of a player on loan: a talk opens at the contract. */
+  | { do: 'buyback' | 'option'; playerId: string }
+  /** Answer a player who asked to leave. */
+  | { do: 'plead'; playerId: string; plea: Plea }
+  | { do: 'bid'; bidId: string; answer: 'accept'; clauses?: SaleClauses }
+  | { do: 'bid'; bidId: string; answer: 'refuse' }
+  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number; clauses?: SaleClauses }
   | { do: 'scout'; area: string };
 
 /** A player as the market lists him. */
@@ -439,6 +453,14 @@ export interface MarketPlayer {
   knowledge: number | null;
   /** Whole months since the club last learned of him; null when it never looked. */
   seenMonths: number | null;
+  /** Clauses on him: what the person kept or holds, and where he stands with the dressing room. */
+  clauses: {
+    sellOn: { pct: number; mine: boolean } | null;
+    buyBack: { price: number; until: number; mine: boolean; no: string | null } | null;
+    /** A purchase clause of his loan: `mine` when the person's club is the one that may buy. */
+    loan: { kind: LoanOption['kind']; price: number; mine: boolean } | null;
+    unhappy: 'unhappy' | 'asked' | 'promised' | null;
+  };
   /** His agent, as the person's club knows him: traits seen so far, and its standing with him. */
   agent: {
     name: string;
@@ -490,6 +512,8 @@ export interface MarketView {
     /** What he does to the best eleven, while the terms are open for a man not yet here. */
     effect: SigningEffect | null;
   }[];
+  /** Players of the club who asked to leave and wait for the person's answer. */
+  requests: { player: MarketPlayer; canPromise: boolean }[];
   /** Bids waiting for an answer. */
   bids: { id: string; player: MarketPlayer; from: ClubFace; fee: number }[];
   /** The latest deals between clubs, newest first, with the buyer's reasons. */
@@ -595,6 +619,27 @@ function marketView(
         return { name: a.name, size: a.size, ...seenTraits(w, a), standing: affinity(w, a) };
       })(),
       release: p.contract?.releaseFee ?? null,
+      clauses: (() => {
+        const c = clausesOf(w, p.id);
+        const bb = c?.buyBack && buyBackFor(w, p);
+        const loan = w.loans?.[p.id]?.option;
+        const u = w.unhappy?.[p.id];
+        return {
+          sellOn: c?.sellOn ? { pct: c.sellOn.pct, mine: c.sellOn.holder === w.clubId } : null,
+          buyBack: c?.buyBack
+            ? {
+                price: c.buyBack.price,
+                until: c.buyBack.until,
+                mine: c.buyBack.holder === w.clubId,
+                no: bb?.no ?? null,
+              }
+            : null,
+          loan: loan
+            ? { kind: loan.kind, price: loan.price, mine: w.loans![p.id]!.owner === w.clubId }
+            : null,
+          unhappy: u ? (u.asked ? 'asked' : u.promise ? 'promised' : 'unhappy') : null,
+        } as const;
+      })(),
       wage: p.contract?.wage ?? 0,
       value: marketValue(w.pack, p, season),
       club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
@@ -669,6 +714,9 @@ function marketView(
       wants: t.wants ?? null,
       effect: t.stage === 'terms' && t.seller !== w.clubId ? signingEffect(w, t.player) : null,
     })),
+    requests: Object.entries(w.unhappy ?? {})
+      .filter(([, u]) => u.asked)
+      .map(([id, u]) => ({ player: row(byId.get(id)!), canPromise: u.grudge === 0 })),
     // A bid coming back after a refusal shows once the club announces it.
     bids: (w.bids ?? [])
       .filter((b) => !b.again)
@@ -777,10 +825,19 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       listPlayer(w, act.playerId, act.on);
       return undefined;
     case 'lend':
-      listForLoan(w, act.playerId, act.on);
+      listForLoan(w, act.playerId, act.on, act.kind);
       return undefined;
     case 'borrow':
-      borrow(w, act.playerId);
+      borrow(w, act.playerId, act.kind);
+      return undefined;
+    case 'buyback':
+      openBuyBack(w, act.playerId);
+      return undefined;
+    case 'option':
+      openOption(w, act.playerId);
+      return undefined;
+    case 'plead':
+      answerRequest(w, act.playerId, act.plea);
       return undefined;
     case 'fee':
       return { at: 'fee', answer: bidFee(w, act.playerId, act.fee) };
@@ -792,8 +849,17 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       const who = name((w.bids ?? []).find((b) => b.id === act.bidId)?.player ?? '');
       const answer =
         act.answer === 'counter'
-          ? answerBid(w, act.bidId, { kind: 'counter', fee: act.fee })
-          : answerBid(w, act.bidId, { kind: act.answer });
+          ? answerBid(w, act.bidId, {
+              kind: 'counter',
+              fee: act.fee,
+              ...(act.clauses && { clauses: act.clauses }),
+            })
+          : act.answer === 'accept'
+            ? answerBid(w, act.bidId, {
+                kind: 'accept',
+                ...(act.clauses && { clauses: act.clauses }),
+              })
+            : answerBid(w, act.bidId, { kind: 'refuse' });
       return { at: 'bid', answer, name: who };
     }
     case 'scout': {
@@ -948,9 +1014,14 @@ function view(w: CareerWorld, ms: number): SimView {
               const p = w.pack.players.find((x) => x.id === t.player);
               return p?.knownAs ?? p?.name ?? '';
             })()
-          : t.kind === 'agentOffer'
-            ? t.player
-            : '',
+          : t.kind === 'leaveRequest'
+            ? (() => {
+                const p = w.pack.players.find((x) => x.id === t.player);
+                return p?.knownAs ?? p?.name ?? '';
+              })()
+            : t.kind === 'agentOffer'
+              ? t.player
+              : '',
       clubName:
         t.kind === 'bid'
           ? (byId.get(t.from)?.name ?? foreignName(t.from))
@@ -978,6 +1049,8 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'loanIn' ||
                   n.kind === 'loanOut' ||
                   n.kind === 'loanBack' ||
+                  n.kind === 'optionBought' ||
+                  n.kind === 'optionSold' ||
                   n.kind === 'hired' ||
                   n.kind === 'agentOffer' ||
                   n.kind === 'fairplayRival' ||

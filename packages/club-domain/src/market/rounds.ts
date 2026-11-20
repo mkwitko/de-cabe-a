@@ -503,7 +503,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         until: `${season + deal.years}-12-31`,
         release: marketValue(w.pack, choice.p, season) * CLAUSE_TIMES,
       });
-      if (deal.from === ABROAD) bookImport(w, id, deal.fee);
+      if (deal.from === ABROAD) bookImport(w, id, deal.fee, choice.p);
       else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
       aiCommission(w, id, choice.p, deal.fee, deal.wage);
       done.push({ ...deal, day });

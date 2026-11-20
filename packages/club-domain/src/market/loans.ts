@@ -12,8 +12,8 @@ import { note } from '../career/inbox';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
-import { embargoed, wageRoom } from './books';
-import { fairRole } from './deals';
+import { available, book, embargoed, wageRoom } from './books';
+import { fairRole, playerStance } from './deals';
 import { squadPlanOf } from './plan';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 
@@ -24,7 +24,34 @@ export interface Loan {
   until: string;
   /** The season the loan ends with. */
   season: number;
+  /** A purchase right ("opção de compra") or duty ("obrigação de compra") agreed with the loan. */
+  option?: LoanOption;
 }
+
+/**
+ * Loans with a purchase clause, as clubs write them: an option the borrower may take up at the
+ * loan's end, or an obligation that becomes a purchase when a condition is met (here: twelve
+ * starts for the person's club as borrower; a starter's place at the AI borrower). The price
+ * is fixed when the loan is made. Sources: Legale on purchase clauses in loans
+ * (legale.com.br/?p=1699505); FIFA's loan limits are in rules/registry.ts.
+ */
+export interface LoanOption {
+  kind: 'option' | 'obligation';
+  price: number;
+  /** Starts that turn an obligation into a purchase. */
+  starts: number;
+}
+/** Price of the clause as a percentage of his value: an option costs more than a duty. */
+const OPTION_PCT = { option: 110, obligation: 100 } as const;
+const OBLIGATION_STARTS = 12;
+/** Contract years of a player bought through a clause. */
+const BOUGHT_YEARS = 3;
+
+export const optionOf = (w: CareerWorld, p: PackPlayer, kind: LoanOption['kind']): LoanOption => ({
+  kind,
+  price: thousands((marketValue(w.pack, p, w.season.season) * OPTION_PCT[kind]) / 100),
+  starts: OBLIGATION_STARTS,
+});
 
 /** The loan fee, as a share of his value. */
 const FEE = 5;
@@ -110,15 +137,18 @@ export function cannotBorrow(w: CareerWorld, p: PackPlayer, to: string): LoanNo 
   return null;
 }
 
-function lend(w: CareerWorld, p: PackPlayer, to: string): void {
+function lend(w: CareerWorld, p: PackPlayer, to: string, option?: LoanOption): void {
   const owner = p.clubId!;
   const contract = { wage: p.contract?.wage ?? 0, until: p.contract?.until ?? '' };
-  w.loans = { ...w.loans, [p.id]: { owner, ...contract, season: w.season.season } };
+  w.loans = {
+    ...w.loans,
+    [p.id]: { owner, ...contract, season: w.season.season, ...(option && { option }) },
+  };
   movePlayer(w, p, to, contract);
 }
 
 /** The person borrows a player for the season: the fee is paid and he joins the squad. */
-export function borrow(w: CareerWorld, playerId: string): void {
+export function borrow(w: CareerWorld, playerId: string, kind?: LoanOption['kind']): void {
   const p = w.pack.players.find((x) => x.id === playerId);
   if (!p) throw new Error('loan: unknown player');
   const no = cannotBorrow(w, p, w.clubId);
@@ -126,11 +156,16 @@ export function borrow(w: CareerWorld, playerId: string): void {
   const fee = loanFee(w, p);
   const owner = p.clubId!;
   settle(w, p, owner, fee, 'buy', 'loan');
-  lend(w, p, w.clubId);
+  lend(w, p, w.clubId, kind && optionOf(w, p, kind));
 }
 
 /** Puts one of the person's players up for loan, or takes him off. */
-export function listForLoan(w: CareerWorld, playerId: string, on: boolean): void {
+export function listForLoan(
+  w: CareerWorld,
+  playerId: string,
+  on: boolean,
+  kind?: LoanOption['kind'],
+): void {
   const p = w.pack.players.find((x) => x.id === playerId);
   if (p?.clubId !== w.clubId || w.loans?.[playerId]) throw new Error('loan: not yours to lend');
   const list = new Set(w.forLoan ?? []);
@@ -138,6 +173,9 @@ export function listForLoan(w: CareerWorld, playerId: string, on: boolean): void
   if (on) list.add(playerId);
   else list.delete(playerId);
   w.forLoan = [...list].sort();
+  const { [playerId]: _old, ...rest } = w.optionFor ?? {};
+  w.optionFor = on && kind ? { ...rest, [playerId]: kind } : rest;
+  if (Object.keys(w.optionFor).length === 0) delete w.optionFor;
 }
 
 /**
@@ -168,9 +206,14 @@ export function lendListed(w: CareerWorld): void {
     if (!to) continue;
     const fee = loanFee(w, p);
     settle(w, p, to, fee, 'sell', 'loan');
-    lend(w, p, to);
+    lend(w, p, to, w.optionFor?.[id] && optionOf(w, p, w.optionFor[id]!));
     w.forLoan = (w.forLoan ?? []).filter((x) => x !== id);
     w.listed = (w.listed ?? []).filter((x) => x !== id);
+    if (w.optionFor) {
+      const { [id]: _used, ...rest } = w.optionFor;
+      if (Object.keys(rest).length) w.optionFor = rest;
+      else delete w.optionFor;
+    }
   }
 }
 
@@ -179,6 +222,7 @@ export function returnLoans(w: CareerWorld): void {
   for (const [id, loan] of Object.entries(w.loans ?? {})) {
     const p = w.pack.players.find((x) => x.id === id);
     if (!p) continue;
+    if (loan.option && takeUp(w, p, loan)) continue;
     const mine = loan.owner === w.clubId || p.clubId === w.clubId;
     movePlayer(w, p, loan.owner, { wage: loan.wage, until: loan.until });
     if (mine)
@@ -191,4 +235,49 @@ export function returnLoans(w: CareerWorld): void {
   }
   delete w.loans;
   delete w.forLoan;
+  delete w.optionFor;
 }
+
+/**
+ * The loan's end with a purchase clause. The person as borrower: an obligation whose starts
+ * were reached is bought (the price is due whatever the cash); an option waits for the person
+ * (talks.ts openOption). The person as lender: the AI borrower takes up its option, or meets its
+ * obligation, when he started for it and it can pay. True when the player stays.
+ */
+function takeUp(w: CareerWorld, p: PackPlayer, loan: Loan): boolean {
+  const o = loan.option!;
+  const season = w.season.season;
+  const buyer = p.clubId!;
+  if (buyer === w.clubId) {
+    if (o.kind !== 'obligation' || (w.starts?.[p.id] ?? 0) < o.starts) return false;
+    const wants = playerStance(w.pack, p, clubIn(w, loan.owner), clubIn(w, buyer), season);
+    settle(w, p, loan.owner, o.price, 'buy');
+    book(w, loan.owner, buyer, o.price, p);
+    movePlayer(w, p, buyer, { wage: wants.wage, until: `${season + BOUGHT_YEARS}-12-31` });
+    note(w, {
+      day: w.day,
+      kind: 'optionBought',
+      player: p.knownAs ?? p.name,
+      club: loan.owner,
+      fee: o.price,
+    });
+  } else if (loan.owner === w.clubId) {
+    const played = fairRole({ pack: w.pack, clubId: buyer }, p, season) === 'starter';
+    if (!played || o.price > available(w, buyer)) return false;
+    const wants = playerStance(w.pack, p, clubIn(w, loan.owner), clubIn(w, buyer), season);
+    if (wants.wage > wageRoom(w, buyer)) return false;
+    settle(w, p, buyer, o.price, 'sell');
+    book(w, loan.owner, buyer, o.price, p);
+    movePlayer(w, p, buyer, { wage: wants.wage, until: `${season + BOUGHT_YEARS}-12-31` });
+    note(w, {
+      day: w.day,
+      kind: 'optionSold',
+      player: p.knownAs ?? p.name,
+      club: buyer,
+      fee: o.price,
+    });
+  } else return false;
+  return true;
+}
+
+const clubIn = (w: CareerWorld, id: string) => w.pack.clubs.find((c) => c.id === id)!;

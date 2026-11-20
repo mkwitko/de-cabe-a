@@ -61,9 +61,9 @@ export const ptBR = {
   'career.todoEmpty': 'Nada esperando por você.',
   'career.news': 'Notícias',
   'career.todoText':
-    '{k, select, bid {O {club} fez proposta de {fee} por {name}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} other {{n} jogadores terminam o contrato este ano.}}',
+    '{k, select, bid {O {club} fez proposta de {fee} por {name}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} leaveRequest {{name} pediu para sair.} other {{n} jogadores terminam o contrato este ano.}}',
   'career.todoGo':
-    '{k, select, bid {Responder no Mercado} approach {Ver convite} agentOffer {Ver no Mercado} other {Ver no Mercado}}',
+    '{k, select, bid {Responder no Mercado} approach {Ver convite} agentOffer {Ver no Mercado} leaveRequest {Responder no Mercado} other {Ver no Mercado}}',
   'guide.title': 'Primeiros passos',
   'guide.step': 'Primeiros passos: {n} de {total}',
   'guide.text':
@@ -115,6 +115,31 @@ export const ptBR = {
   'market.band': '{lo} a {hi}',
   'market.potential': 'Potencial {lo} a {hi}',
   'market.clause': 'Multa {fee}',
+  'market.clauseSellOn':
+    'Revenda {pct}%{mine, select, true { para o seu clube} other { para o clube que vendeu}}',
+  'market.clauseBuyBack':
+    'Recompra por {price} até {year}{mine, select, true { (seu clube)} other { (do clube que vendeu)}}',
+  'market.clauseLoan':
+    '{kind, select, option {Opção de compra} other {Obrigação de compra}}: {price}{mine, select, true { (a favor do seu clube)} other { (a favor de quem pegou)}}',
+  'market.unhappy':
+    '{s, select, unhappy {Insatisfeito com os minutos} asked {Pediu para sair} other {Aguarda a promessa de minutos}}',
+  'market.sellOnLabel': 'Percentual de revenda (0 a 30%)',
+  'market.buyBackLabel': 'Recompra (100 a 200% do valor; vazio = sem)',
+  'market.buyBackSeasons': 'Temporadas da recompra',
+  'market.netFee':
+    'O comprador desconta o que você pede: a proposta vira {fee}; no seu preço, {ask}.',
+  'market.buyBackGo': 'Recomprar por {price}',
+  'market.optionGo': 'Exercer a opção de compra por {price}',
+  'market.loanKind': 'Cláusula do empréstimo',
+  'market.loanKindName': '{k, select, option {Opção de compra} other {Obrigação de compra}}',
+  'market.borrowWith': 'Com cláusula',
+  'market.lendWith': 'Ceder com cláusula',
+  'market.requests': 'Jogadores que pediram para sair',
+  'market.requestText':
+    '{name} diz que joga menos do que merece e pediu para sair. Você pode pô-lo na lista, prometer minutos (será cobrado) ou recusar (ele guarda rancor e o vestiário sente).',
+  'market.pleaList': 'Pôr na lista',
+  'market.pleaPromise': 'Prometer minutos',
+  'market.pleaRefuse': 'Recusar',
   'market.payClause': 'Pagar a multa',
   'market.imageLabel': 'Direito de imagem (parte do salário)',
   'market.imageUsual': 'Padrão do clube',
@@ -262,6 +287,13 @@ export const ptBR = {
   'inbox.contractsEnding':
     '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
   'inbox.clausePaid': 'O {club} pagou a multa de {name}: {fee}. Ele foi embora.',
+  'inbox.sellOn': '{name} foi revendido: o percentual de revenda rendeu {fee} ao caixa.',
+  'inbox.optionBought': '{name} foi comprado do {club} pela cláusula do empréstimo: {fee}.',
+  'inbox.optionSold': 'O {club} exerceu a compra de {name}: {fee} no caixa.',
+  'inbox.unhappy': '{name} está insatisfeito: joga menos do que acha que merece.',
+  'inbox.leaveRequest': '{name} pediu para sair. Responda no Mercado.',
+  'inbox.promiseKept': '{name} viu a promessa de minutos cumprida e se acalmou.',
+  'inbox.promiseBroken': '{name} não teve os minutos prometidos e pediu para sair de novo.',
   'inbox.loanIn': '{name} chegou por empréstimo do {club}, por {fee}.',
   'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
   'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
