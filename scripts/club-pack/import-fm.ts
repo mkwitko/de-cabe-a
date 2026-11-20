@@ -927,23 +927,64 @@ const slug = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 const cities = new Map<string, Pack['cities'][number]>();
-// PARÂMETRO: neutral climate and a flat income for every city (no source in the save or in the
-// open data used here; IBGE income and INMET climate would be the next sources).
+// Municipal data (IBGE, Wikidata, NASA POWER) from scripts/club-pack/fetch-cities.ts ->
+// data/br-cities.json: population, income (GDP per capita a month), coordinates, altitude and monthly
+// climate by IBGE municipality, and the municipality of clubs the save and Wikidata left without one.
+type Muni = {
+  name: string;
+  uf: string;
+  qid?: string;
+  lat: number | null;
+  lon: number | null;
+  altitudeM: number | null;
+  altSource?: string;
+  population: number | null;
+  income: number | null;
+  climate: [number, number, number][] | null;
+};
+const CITIES = JSON.parse(
+  readFileSync(new URL('./data/br-cities.json', import.meta.url), 'utf8'),
+) as {
+  municipalities: Record<string, Muni>;
+  clubCity: Record<string, { ibge: string; by: 'wikidata' | 'ptwiki' | 'name' }>;
+};
+const muniByQid = new Map<string, Muni>();
+const muniByName = new Map<string, Muni>();
+for (const m of Object.values(CITIES.municipalities)) {
+  if (m.qid) muniByQid.set(m.qid, m);
+  muniByName.set(`${slug(m.name)}|${m.uf}`, m);
+}
+// PARÂMETRO: the neutral climate and the flat income only fill a city the municipal file does not
+// know (a foreign or unmatched birthplace); every one of them is flagged in the report.
 const NEUTRAL = Array.from({ length: 12 }, () => ({ rainMm: 100, tempC: 22, humidity: 70 }));
 function addCity(id: string, c: GeoCity): string {
   if (!cities.has(id)) {
-    if (c.lat === null || c.lon === null) est('city: no coordinates, centre of Brazil');
-    if (c.population === null) est('city: no population');
+    const m =
+      (id.startsWith('wd-') ? muniByQid.get(id.slice(3)) : undefined) ??
+      muniByName.get(`${slug(c.name)}|${c.state}`);
+    const lat = m?.lat ?? c.lat;
+    const lon = m?.lon ?? c.lon;
+    const population = m?.population ?? c.population;
+    const altitudeM = m?.altitudeM ?? c.altitudeM;
+    if (lat === null || lon === null) est('city: no coordinates, centre of Brazil');
+    if (population === null) est('city: no population');
+    if (m?.altSource === 'open-meteo')
+      est('city: altitude from the Open-Meteo 90 m elevation model');
+    else if (altitudeM === null) est('city: no altitude, sea level');
+    if (m?.income == null) est('city: no income, flat 2000');
+    if (!m?.climate) est('city: no climate, neutral 100 mm / 22 C / 70 %');
     cities.set(id, {
       id,
-      name: c.name.slice(0, 80),
-      state: c.state ?? 'XX',
-      population: Math.round(c.population ?? 0),
-      income: 2000,
-      altitudeM: clamp(c.altitudeM ?? 0, 0, 4500),
-      lat: c.lat ?? -15,
-      lon: c.lon ?? -50,
-      climate: NEUTRAL,
+      name: (m?.name ?? c.name).slice(0, 80),
+      state: m?.uf ?? c.state ?? 'XX',
+      population: Math.round(population ?? 0),
+      income: m?.income ?? 2000,
+      altitudeM: clamp(altitudeM ?? 0, 0, 4500),
+      lat: lat ?? -15,
+      lon: lon ?? -50,
+      climate: m?.climate
+        ? m.climate.map(([rainMm, tempC, humidity]) => ({ rainMm, tempC, humidity }))
+        : NEUTRAL,
     });
   }
   return id;
@@ -975,6 +1016,26 @@ for (const uid of scope) {
           }),
     );
     est('city: from openfootball (name and state only)');
+  } else if (CITIES.clubCity[uid]) {
+    // fetch-cities.ts: Wikidata P159/P115/P740, the pt.wikipedia article, or the club's own name.
+    const { ibge, by } = CITIES.clubCity[uid]!;
+    const m = CITIES.municipalities[ibge]!;
+    cityOfClub.set(
+      uid,
+      addCity(m.qid ? `wd-${m.qid}` : `ibge-${ibge}`, {
+        name: m.name,
+        state: m.uf,
+        lat: m.lat,
+        lon: m.lon,
+        population: m.population,
+        altitudeM: m.altitudeM,
+      }),
+    );
+    est(
+      by === 'name'
+        ? 'city: municipality read from the club name (fetch-cities.ts, conservative rule)'
+        : `city: municipality from ${by === 'wikidata' ? 'Wikidata' : 'the pt.wikipedia article'} (fetch-cities.ts)`,
+    );
   }
 }
 const fmCity = new Map<string, Set<string>>();
@@ -1678,7 +1739,7 @@ report.notes.push(
   `nations: ${unmappedNations} players with an unidentified nation (the ${Object.keys(nations).length} ids of fm-nations.json cover every player kept); the pack stores ISO codes only, names are not stored (Intl.DisplayNames('pt-BR') resolves all ${new Set(Object.values(nations)).size} codes when a name is needed)`,
   'regulations (05 §8): A, B, C (24 clubs in 2027, 28 in 2028) and D as realDivisions(); from 2028 C sends six down and D refills from the ranking: PARÂMETRO, not published',
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
-  'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
+  'cities: municipal data from data/br-cities.json (fetch-cities.ts): IBGE SIDRA 6579 population and 5938 GDP per capita a month as income, Wikidata P625/P2044 (Open-Meteo elevation where missing), NASA POWER monthly climate 2001-2025; a city the file does not know keeps the neutral climate and flat income (see estimated)',
   'rivals: curated derbies (data/rivals.json, sources inside) where the club has one, else HEURISTIC, the three best-reputed other clubs of the same FM city_id',
   `fans: ${fansResearched} clubs with their supporters from data/fans.json (Ipsos-Ipec 2025), the rest estimated from the public or reputation`,
   `attendance: ${attendanceResearched} clubs with their 2025 average public and ticket from data/attendance.json (ge, mktesportivo); fans.demand is the share of seats filled on an ordinary day, fans.priceSensitivity sets the ticket`,
