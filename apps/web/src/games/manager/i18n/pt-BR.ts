@@ -423,6 +423,28 @@ export const ptBR = {
   'history.title1': 'Campeão',
   'history.promoted': 'Acesso',
   'history.relegated': 'Rebaixado',
+  'share.season': 'Compartilhar temporada',
+  'share.career': 'Compartilhar carreira',
+  'share.story': 'Formato story',
+  'share.copy': 'Copiar texto',
+  'share.copied': 'Texto copiado!',
+  'share.busy': 'Gerando…',
+  'share.brand': 'DE CABEÇA F.C. · MODO CLUBE',
+  'share.url': 'decabecafc.com.br/clube',
+  'share.headline':
+    '{h, select, titleUp {Campeão e acesso!} title {Campeão da {division}!} cup {Campeão: {cup}!} up {Acesso histórico!} down {Rebaixado, a volta por cima vem aí} escaped {Escapou do rebaixamento} fired {Demitido no meio da temporada} met {Meta cumprida} other {Meta não cumprida}}',
+  'share.seasonLine': '{club} na temporada {season}',
+  'share.posLine': '{n}º de {places} na {division}',
+  'share.goalLine':
+    '{met, select, yes {Meta cumprida (até o {goal}º)} other {Meta não cumprida (até o {goal}º)}}',
+  'share.recordLine': '{w}V {d}E {l}D · gols {gf} × {ga}',
+  'share.topLine': 'Mais utilizado: {name}',
+  'share.careerTitle': 'Minha carreira como técnico',
+  'share.careerStats':
+    '{seasons, plural, one {# temporada} other {# temporadas}} · {titles, plural, one {# título} other {# títulos}} · {ups, plural, one {# acesso} other {# acessos}}',
+  'share.careerClubs': '{clubs}',
+  'share.careerBest': 'Melhor temporada: {season}, {n}º na {division} com o {club}',
+  'share.careerBestTitle': 'Melhor temporada: {season}, campeão da {division} com o {club}',
   'history.top': 'Mais utilizado: {name} ({n, plural, one {# jogo} other {# jogos}})',
   'career.deadline': 'Último dia da janela',
   'career.deadlineText':

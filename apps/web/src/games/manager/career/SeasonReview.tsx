@@ -3,6 +3,8 @@
  * (club-domain career/history.ts).
  */
 import { t } from '../i18n';
+import { ShareCardButtons } from './ShareCardButtons';
+import { careerText, drawCareerCard, drawSeasonCard, seasonText } from './shareCard';
 import type { SimView } from './sim.worker';
 
 const LABEL =
@@ -10,7 +12,13 @@ const LABEL =
 const score = (g: [number, number]) => `${g[0]} × ${g[1]}`;
 
 /** Shown in the season-end window, above the button that starts the next season. */
-export function SeasonReview({ review: r }: { review: NonNullable<SimView['review']> }) {
+export function SeasonReview({
+  review: r,
+  club,
+}: {
+  review: NonNullable<SimView['review']>;
+  club: SimView['club'];
+}) {
   const verdict = r.fired ? 'fired' : r.met ? 'met' : 'missed';
   return (
     <div className="flex w-full flex-col gap-3 text-left" data-testid="season-review">
@@ -85,12 +93,17 @@ export function SeasonReview({ review: r }: { review: NonNullable<SimView['revie
           </ul>
         </div>
       )}
+      <ShareCardButtons
+        text={seasonText(r, club)}
+        draw={(f) => drawSeasonCard(r, club, f)}
+        level={r.season}
+      />
     </div>
   );
 }
 
 /** The seasons so far, newest first; titles and promotions stand out. */
-export function History({ history }: { history: SimView['history'] }) {
+export function History({ history, club }: { history: SimView['history']; club: SimView['club'] }) {
   const rows = [...history].reverse();
   return (
     <div className="sala-slab flex flex-col gap-3 p-4 sm:p-5 lg:col-span-2">
@@ -144,6 +157,14 @@ export function History({ history }: { history: SimView['history'] }) {
             );
           })}
         </ul>
+      )}
+      {rows.length > 0 && (
+        <ShareCardButtons
+          career
+          text={careerText(history)}
+          draw={(f) => drawCareerCard(history, club, f)}
+          level={history.length}
+        />
       )}
     </div>
   );
