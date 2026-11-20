@@ -832,7 +832,7 @@ function NextMatch(props: {
           <p className="font-condensed text-3xl leading-none font-black uppercase sm:text-5xl">
             {t('career.seasonOver')}
           </p>
-          {sim.review && <SeasonReview review={sim.review} />}
+          {sim.review && <SeasonReview review={sim.review} club={sim.club} />}
           <button
             type="button"
             disabled={busy}

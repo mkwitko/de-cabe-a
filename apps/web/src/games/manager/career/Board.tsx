@@ -222,7 +222,7 @@ export function Board({
           ))}
         </ul>
       </div>
-      <History history={sim.history} />
+      <History history={sim.history} club={sim.club} />
     </section>
   );
 }
