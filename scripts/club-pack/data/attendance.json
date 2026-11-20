@@ -1,7 +1,7 @@
 {
   "generated": "2026-11-18",
   "season": 2025,
-  "note": "Paying public per home league match and average ticket (R$), Brasileirão 2025. Série A: ge table via netvasco; Série B: mktesportivo (gross gate per club; ticket derived). Série C and D: no published source found.",
+  "note": "Paying public per home league match and average ticket (R$), Brasileirão 2025. Série A: ge table via netvasco; Série B: mktesportivo (gross gate per club; ticket derived). Série C and D: no published source found. Série C 2025 (DGABC, five clubs) and Série D 2025 (Santa Cruz, ge) added 2026-11-20: paying public a home match; no ticket published. No per-club table for the other C/D clubs was found (CBF borderôs are per-match PDFs; ptwiki season articles carry the league total only).",
   "leagues": {
     "A": {
       "avgAttendance": 25531,
@@ -442,6 +442,60 @@
       "avgTicket": 29.22,
       "ticketFrom": "gate / (attendance × 19 home matches)",
       "source": "https://www.mktesportivo.com/2025/11/coritiba-tem-a-maior-presenca-nos-estadios-e-remo-registra-a-maior-receita-da-serie-b-2025/"
+    },
+    {
+      "club": "Náutico",
+      "state": "PE",
+      "aliases": [],
+      "division2025": "C",
+      "avgAttendance": 9040,
+      "avgTicket": null,
+      "source": "https://www.dgabc.com.br/Noticia/4267400/sao-bernardo-fc-registra-6-pior-media-de-publico-na-serie-c-de-2025"
+    },
+    {
+      "club": "Ponte Preta",
+      "state": "SP",
+      "aliases": [],
+      "division2025": "C",
+      "avgAttendance": 7214,
+      "avgTicket": null,
+      "source": "https://www.dgabc.com.br/Noticia/4267400/sao-bernardo-fc-registra-6-pior-media-de-publico-na-serie-c-de-2025"
+    },
+    {
+      "club": "Figueirense",
+      "state": "SC",
+      "aliases": [],
+      "division2025": "C",
+      "avgAttendance": 6712,
+      "avgTicket": null,
+      "source": "https://www.dgabc.com.br/Noticia/4267400/sao-bernardo-fc-registra-6-pior-media-de-publico-na-serie-c-de-2025"
+    },
+    {
+      "club": "São Bernardo",
+      "state": "SP",
+      "aliases": ["São Bernardo FC"],
+      "division2025": "C",
+      "avgAttendance": 970,
+      "avgTicket": null,
+      "source": "https://www.dgabc.com.br/Noticia/4267400/sao-bernardo-fc-registra-6-pior-media-de-publico-na-serie-c-de-2025"
+    },
+    {
+      "club": "Retrô",
+      "state": "PE",
+      "aliases": ["Retrô FC Brasil"],
+      "division2025": "C",
+      "avgAttendance": 92,
+      "avgTicket": null,
+      "source": "https://www.dgabc.com.br/Noticia/4267400/sao-bernardo-fc-registra-6-pior-media-de-publico-na-serie-c-de-2025"
+    },
+    {
+      "club": "Santa Cruz",
+      "state": "PE",
+      "aliases": [],
+      "division2025": "D",
+      "avgAttendance": 21003,
+      "avgTicket": null,
+      "source": "https://diariodonordeste.verdesmares.com.br/opiniao/colunistas/alexandre-mota/ranking-de-maiores-medias-de-publicos-do-brasil-em-2025-veja-posicoes-de-ceara-e-fortaleza-1.3673940 (ge data, 13 home games)"
     }
   ]
 }

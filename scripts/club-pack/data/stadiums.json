@@ -1,0 +1,2508 @@
+{
+  "313": { "name": "Mineirão", "capacity": 66658, "qid": "Q910370", "via": "P115" },
+  "315": { "name": "Arena Fonte Nova", "capacity": 47915, "qid": "Q6499360", "via": "P115" },
+  "316": { "name": "Estádio Nilton Santos", "capacity": 46931, "qid": "Q17489", "via": "P115" },
+  "317": { "name": "Estádio Nabi Abi Chedid", "capacity": 21209, "qid": "Q5402133", "via": "P115" },
+  "318": { "name": "Neo Química Arena", "capacity": 68034, "qid": "Q1362236", "via": "P115" },
+  "320": { "name": "Estádio Heriberto Hülse", "capacity": 19300, "qid": "Q219506", "via": "P115" },
+  "322": { "name": "Maracanã Stadium", "capacity": 78838, "qid": "Q155174", "via": "P115" },
+  "323": { "name": "Maracanã Stadium", "capacity": 78838, "qid": "Q155174", "via": "P115" },
+  "324": { "name": "Arena do Grêmio", "capacity": 60540, "qid": "Q655753", "via": "P115" },
+  "325": { "name": "Estádio Brinco de Ouro", "capacity": 29130, "qid": "Q2670268", "via": "P115" },
+  "326": { "name": "Estádio Beira-Rio", "capacity": 49055, "qid": "Q1050224", "via": "P115" },
+  "327": { "name": "Estádio Alfredo Jaconi", "capacity": 30519, "qid": "Q3311998", "via": "P115" },
+  "328": { "name": "Estádio dos Aflitos", "capacity": 19800, "qid": "Q640421", "via": "P115" },
+  "329": { "name": "Allianz Parque", "capacity": 43713, "qid": "Q4788902", "via": "P115" },
+  "330": { "name": "Estádio Vila Capanema", "capacity": 20000, "qid": "Q1370663", "via": "P115" },
+  "331": { "name": "Estádio da Curuzú", "capacity": 20000, "qid": "Q9255328", "via": "P115" },
+  "332": { "name": "Estádio Moisés Lucarelli", "capacity": 19728, "qid": "Q691270", "via": "P115" },
+  "333": { "name": "Estádio do Canindé", "capacity": 21004, "qid": "Q1343230", "via": "P115" },
+  "334": { "name": "Baenão", "capacity": 17518, "qid": "Q4841281", "via": "P115" },
+  "335": { "name": "Estádio Urbano Caldeira", "capacity": 16068, "qid": "Q741755", "via": "P115" },
+  "336": {
+    "name": "Estádio Doutor Hermínio Ometto",
+    "capacity": 22000,
+    "qid": "Q10276882",
+    "via": "P115"
+  },
+  "337": { "name": "Estádio do Morumbi", "capacity": 120000, "qid": "Q821761", "via": "P115" },
+  "338": { "name": "Estádio Ilha do Retiro", "capacity": 35020, "qid": "Q1370676", "via": "P115" },
+  "339": { "name": "Estádio São Januário", "capacity": 25000, "qid": "Q721419", "via": "P115" },
+  "340": { "name": "Barradão", "capacity": 35632, "qid": "Q176157", "via": "P115" },
+  "102496": { "name": "Estádio Serra Dourada", "capacity": 54084, "qid": "Q924172", "via": "P115" },
+  "104654": {
+    "name": "Estádio Presidente Vargas",
+    "capacity": 20600,
+    "qid": "Q10277413",
+    "via": "P115"
+  },
+  "104750": { "name": "Castelão", "capacity": 57876, "qid": "Q958185", "via": "P115" },
+  "104751": {
+    "name": "Estádio Proletário Guilherme da Silveira",
+    "capacity": 9564,
+    "qid": "Q5402090",
+    "via": "P115"
+  },
+  "104776": {
+    "name": "Estádio Couto Pereira",
+    "capacity": 34872,
+    "qid": "Q1327235",
+    "via": "P115"
+  },
+  "104777": { "name": "Arena da Floresta", "capacity": 20000, "qid": "Q4347035", "via": "P115" },
+  "104869": {
+    "name": "Estádio da Rua Bariri",
+    "capacity": 11000,
+    "qid": "Q4670318",
+    "via": "P115"
+  },
+  "104874": { "name": "Estádio José de Melo", "capacity": 8000, "qid": "Q5402069", "via": "P115" },
+  "104886": {
+    "name": "Estádio Godofredo Cruz",
+    "capacity": 12300,
+    "qid": "Q5402035",
+    "via": "P115"
+  },
+  "104888": {
+    "name": "Estádio Engenheiro Alencar Araripe",
+    "capacity": 15000,
+    "qid": "Q5402028",
+    "via": "P115"
+  },
+  "104979": {
+    "name": "Estádio Major José Levy Sobrinho",
+    "capacity": 23475,
+    "qid": "Q10277121",
+    "via": "P115"
+  },
+  "104980": { "name": "Estádio José de Melo", "capacity": 8000, "qid": "Q5402069", "via": "P115" },
+  "104983": {
+    "name": "Milton de Souza Corrêa Stadium",
+    "capacity": 3100,
+    "qid": "Q8069681",
+    "via": "P115"
+  },
+  "106882": { "name": "Estádio Independência", "capacity": 23018, "qid": "Q909851", "via": "P115" },
+  "107202": { "name": "Machadão", "capacity": 45000, "qid": "Q6723359", "via": "P115" },
+  "107204": { "name": "Frasqueirão", "capacity": 18000, "qid": "Q9296368", "via": "P115" },
+  "107206": { "name": "Arena da Baixada", "capacity": 42372, "qid": "Q606803", "via": "P115" },
+  "107207": { "name": "Estádio da Ressacada", "capacity": 17800, "qid": "Q1370775", "via": "P115" },
+  "107209": { "name": "Estádio Mutange", "capacity": 4000, "qid": "Q4347592", "via": "P115" },
+  "107211": {
+    "name": "Estádio Eduardo Guinle",
+    "capacity": 12000,
+    "qid": "Q4355357",
+    "via": "P115"
+  },
+  "107215": {
+    "name": "Estádio Novelli Júnior",
+    "capacity": 18000,
+    "qid": "Q5402138",
+    "via": "P115"
+  },
+  "107217": { "name": "Estádio Rua Javari", "capacity": 4000, "qid": "Q5402163", "via": "P115" },
+  "107219": {
+    "name": "Estádio Conselheiro Galvão",
+    "capacity": 3314,
+    "qid": "Q5402005",
+    "via": "P115"
+  },
+  "107221": {
+    "name": "Estádio Romildo Vitor Gomes Ferreira",
+    "capacity": 19900,
+    "qid": "Q3206405",
+    "via": "P115"
+  },
+  "107223": { "name": "Estádio Ulrico Mursa", "capacity": 10000, "qid": "Q3495895", "via": "P115" },
+  "107225": { "name": "Estádio Décio Vitta", "capacity": 16000, "qid": "Q5402023", "via": "P115" },
+  "107229": { "name": "Castelão", "capacity": 40000, "qid": "Q1309033", "via": "P115" },
+  "107233": {
+    "name": "Estádio Francisco Vasques",
+    "capacity": 5000,
+    "qid": "Q4347558",
+    "via": "P115"
+  },
+  "107235": { "name": "Estádio Serra Dourada", "capacity": 54084, "qid": "Q924172", "via": "P115" },
+  "107237": {
+    "name": "Estádio Castor Cifuentes",
+    "capacity": 15000,
+    "qid": "Q5402000",
+    "via": "P115"
+  },
+  "107239": {
+    "name": "Estádio Raulino de Oliveira",
+    "capacity": 21000,
+    "qid": "Q1370657",
+    "via": "P115"
+  },
+  "107241": { "name": "Morenão", "capacity": 45000, "qid": "Q3309154", "via": "P115" },
+  "121220": { "name": "Bezerrão", "capacity": 20000, "qid": "Q388816", "via": "P115" },
+  "121263": { "name": "Estádio Santa Cruz", "capacity": 31527, "qid": "Q5402167", "via": "P115" },
+  "250337": {
+    "name": "Estádio Municipal Coaracy da Mata Fonseca",
+    "capacity": 17000,
+    "qid": "Q9255376",
+    "via": "P115"
+  },
+  "301101": { "name": "Estádio Rei Pelé", "capacity": 20551, "qid": "Q5402169", "via": "P115" },
+  "301103": {
+    "name": "Estádio Municipal Manoel Ferreira",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "301106": {
+    "name": "Milton de Souza Corrêa Stadium",
+    "capacity": 3100,
+    "qid": "Q8069681",
+    "via": "P115"
+  },
+  "301108": { "name": "Vivaldão", "capacity": 46000, "qid": "Q379306", "via": "P115" },
+  "301109": { "name": "Vivaldão", "capacity": 46000, "qid": "Q379306", "via": "P115" },
+  "301111": {
+    "name": "Estádio Ismael Benigno",
+    "capacity": 16000,
+    "qid": "Q5402046",
+    "via": "P115"
+  },
+  "301112": {
+    "name": "Estádio Municipal Antônio de Figueiredo Carneiro",
+    "capacity": 18000,
+    "qid": "Q9255173",
+    "via": "P115"
+  },
+  "301114": {
+    "name": "Estádio Armando Oliveira",
+    "capacity": 10000,
+    "qid": "Q9255195",
+    "via": "P115"
+  },
+  "301116": { "name": "Estádio Mário Pessoa", "capacity": 10000, "qid": "Q9255494", "via": "P115" },
+  "301118": {
+    "name": "Estádio Lomanto Júnior",
+    "capacity": 15000,
+    "qid": "Q9255331",
+    "via": "P115"
+  },
+  "301122": {
+    "name": "Estádio Joia da Princesa",
+    "capacity": 16274,
+    "qid": "Q5402061",
+    "via": "P115"
+  },
+  "301124": {
+    "name": "Estádio Adauto Moraes",
+    "capacity": 12000,
+    "qid": "Q9255146",
+    "via": "P115"
+  },
+  "301128": {
+    "name": "Vila Olímpica Elzir Cabral",
+    "capacity": 8000,
+    "qid": "Q9255227",
+    "via": "P115"
+  },
+  "301130": {
+    "name": "Estádio Perilo Teixeira",
+    "capacity": 8000,
+    "qid": "Q9255523",
+    "via": "P115"
+  },
+  "301132": {
+    "name": "Estádio Mauro Sampaio",
+    "capacity": 16000,
+    "qid": "Q5402099",
+    "via": "P115"
+  },
+  "301134": {
+    "name": "Estádio Nacional de Brasília",
+    "capacity": 69910,
+    "qid": "Q336088",
+    "via": "P115"
+  },
+  "301136": { "name": "Estádio Chapadinha", "capacity": 2000, "qid": "Q9255194", "via": "P115" },
+  "301137": {
+    "name": "Estádio Vasco Viana de Andrade",
+    "capacity": 2000,
+    "qid": "Q9255557",
+    "via": "P115"
+  },
+  "301141": {
+    "name": "Estádio Kléber Andrade",
+    "capacity": 45000,
+    "qid": "Q5402068",
+    "via": "P115"
+  },
+  "301143": {
+    "name": "Estádio Municipal Roberto Siqueira Costa",
+    "capacity": 3000,
+    "qid": "Q9255534",
+    "via": "P115"
+  },
+  "301145": { "name": "Estádio Jonas Duarte", "capacity": 20000, "qid": "Q5402063", "via": "P115" },
+  "301147": { "name": "Estádio Jonas Duarte", "capacity": 20000, "qid": "Q5402063", "via": "P115" },
+  "301150": { "name": "Estádio Serra Dourada", "capacity": 54084, "qid": "Q924172", "via": "P115" },
+  "301152": {
+    "name": "Estádio Valdeir José de Oliveira",
+    "capacity": 8110,
+    "qid": "Q10277471",
+    "via": "P115"
+  },
+  "301156": {
+    "name": "Estádio Olímpico Pedro Ludovico",
+    "capacity": 10000,
+    "qid": "Q5402144",
+    "via": "P115"
+  },
+  "301158": { "name": "Estádio Divino Garcia Rosa", "capacity": null, "qid": "", "via": "ptwiki" },
+  "301162": { "name": "Estádio JK", "capacity": 33000, "qid": "Q9296890", "via": "P115" },
+  "301164": {
+    "name": "Estádio Mozart Veloso do Carmo",
+    "capacity": null,
+    "qid": "Q10277154",
+    "via": "P115"
+  },
+  "301168": {
+    "name": "Estádio Frei Epifânio D'Abadia",
+    "capacity": 10000,
+    "qid": "Q9255395",
+    "via": "P115"
+  },
+  "301170": { "name": "Castelão", "capacity": 40000, "qid": "Q1309033", "via": "P115" },
+  "301172": { "name": "Castelão", "capacity": 40000, "qid": "Q1309033", "via": "P115" },
+  "301178": {
+    "name": "Estádio Municipal Engenheiro Luthero Lopes",
+    "capacity": 18000,
+    "qid": "Q9255385",
+    "via": "P115"
+  },
+  "301180": { "name": "Morenão", "capacity": 45000, "qid": "Q3309154", "via": "P115" },
+  "301182": { "name": "Ronaldão", "capacity": 14000, "qid": "Q7365453", "via": "P115" },
+  "301183": {
+    "name": "Estádio José Mammoud Abbas",
+    "capacity": 15000,
+    "qid": "Q9255300",
+    "via": "P115"
+  },
+  "301185": {
+    "name": "Estádio Waldemar Teixeira de Faria",
+    "capacity": 4200,
+    "qid": "Q9255563",
+    "via": "P115"
+  },
+  "301189": { "name": "Arena do Jacaré", "capacity": 17000, "qid": "Q4788929", "via": "P115" },
+  "301193": {
+    "name": "Estádio Waldomiro Pereira",
+    "capacity": 5000,
+    "qid": "Q5402180",
+    "via": "P466"
+  },
+  "301199": {
+    "name": "Estádio Parque do Sabiá",
+    "capacity": 53350,
+    "qid": "Q1370705",
+    "via": "P115"
+  },
+  "301201": { "name": "Estádio Zama Maciel", "capacity": 5000, "qid": "Q10277501", "via": "P115" },
+  "301203": {
+    "name": "Estádio Israel Pinheiro",
+    "capacity": 12000,
+    "qid": "Q9255284",
+    "via": "P115"
+  },
+  "301205": {
+    "name": "Estádio Maximino Porpino Filho",
+    "capacity": 5000,
+    "qid": "Q9255344",
+    "via": "P115"
+  },
+  "301207": { "name": "Almeidão", "capacity": 40000, "qid": "Q4733759", "via": "P115" },
+  "301209": { "name": "Amigão", "capacity": 35000, "qid": "Q975748", "via": "P115" },
+  "301211": {
+    "name": "Estádio Presidente Vargas",
+    "capacity": 10000,
+    "qid": "Q4347312",
+    "via": "P115"
+  },
+  "301213": {
+    "name": "Estádio Waldomiro Gelinski",
+    "capacity": 3516,
+    "qid": "Q10277493",
+    "via": "P115"
+  },
+  "301219": { "name": "Estádio do Café", "capacity": 36000, "qid": "Q143064", "via": "P115" },
+  "301223": {
+    "name": "Nelson Medrado Dias Stadium",
+    "capacity": 10000,
+    "qid": "Q10277370",
+    "via": "P115"
+  },
+  "301229": { "name": "Lacerdão", "capacity": 30000, "qid": "Q9255334", "via": "P115" },
+  "301231": { "name": "Ademir Cunha Stadium", "capacity": 4000, "qid": "Q9255351", "via": "P115" },
+  "301235": {
+    "name": "Estádio Antônio Inácio de Souza",
+    "capacity": 0,
+    "qid": "Q48855163",
+    "via": "P115"
+  },
+  "301236": {
+    "name": "Estádio Municipal Helvídio Nunes de Barros (Piripiri)",
+    "capacity": null,
+    "qid": "Q10277221",
+    "via": "P115"
+  },
+  "301245": { "name": "Albertão", "capacity": 44200, "qid": "Q9255268", "via": "P115" },
+  "301246": { "name": "Correão", "capacity": null, "qid": "Q5172920", "via": "P115" },
+  "301248": {
+    "name": "Estádio Ítalo del Cima",
+    "capacity": null,
+    "qid": "Q10277560",
+    "via": "P115"
+  },
+  "301250": {
+    "name": "Estádio Luso-Brasileiro",
+    "capacity": 4400,
+    "qid": "Q3495715",
+    "via": "P115"
+  },
+  "301252": {
+    "name": "Estádio Figueira de Melo",
+    "capacity": 8000,
+    "qid": "Q5402030",
+    "via": "P115"
+  },
+  "301254": {
+    "name": "Estádio Atílio Marotti",
+    "capacity": 8500,
+    "qid": "Q10276813",
+    "via": "P115"
+  },
+  "301256": { "name": "Machadão", "capacity": 45000, "qid": "Q6723359", "via": "P115" },
+  "301258": { "name": "Nogueirão", "capacity": 25000, "qid": "Q9255325", "via": "P115" },
+  "301261": {
+    "name": "Estádio dos Eucaliptos",
+    "capacity": null,
+    "qid": "Q10277545",
+    "via": "P115"
+  },
+  "301263": {
+    "name": "Estádio Bento Freitas",
+    "capacity": 18000,
+    "qid": "Q5401982",
+    "via": "P115"
+  },
+  "301265": {
+    "name": "Francisco Stédile Stadium",
+    "capacity": 30802,
+    "qid": "Q5402002",
+    "via": "P115"
+  },
+  "301267": {
+    "name": "Estádio Parque Esportivo Montanha dos Vinhedos",
+    "capacity": 15269,
+    "qid": "Q5402152",
+    "via": "P115"
+  },
+  "301269": { "name": "Estádio Edmundo Feix", "capacity": null, "qid": "Q10276910", "via": "P115" },
+  "301273": {
+    "name": "Estádio Vermelhão da Serra",
+    "capacity": 20000,
+    "qid": "Q10277480",
+    "via": "P115"
+  },
+  "301277": { "name": "Estádio Arthur Lawson", "capacity": 3500, "qid": "Q9255180", "via": "P115" },
+  "301279": { "name": "Estádio dos Plátanos", "capacity": 7000, "qid": "Q9255583", "via": "P115" },
+  "301281": { "name": "Estádio da Zona Sul", "capacity": 8000, "qid": "Q7408578", "via": "P115" },
+  "301283": { "name": "Estádio Passo D'Areia", "capacity": 8000, "qid": "Q9255514", "via": "P115" },
+  "301285": { "name": "Estádio 19 de Outubro", "capacity": 4500, "qid": "Q9255144", "via": "P115" },
+  "301287": {
+    "name": "Estádio Antônio David Farina",
+    "capacity": 4000,
+    "qid": "Q9255163",
+    "via": "P115"
+  },
+  "301291": {
+    "name": "Estádio Municipal José de Abreu Bianco",
+    "capacity": 5000,
+    "qid": "Q9255413",
+    "via": "P115"
+  },
+  "301295": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 10000,
+    "qid": "Q955522",
+    "via": "P115"
+  },
+  "301299": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 10000,
+    "qid": "Q955522",
+    "via": "P115"
+  },
+  "301300": { "name": "Estádio Augusto Bauer", "capacity": 5000, "qid": "Q9255182", "via": "P115" },
+  "301303": { "name": "Arena Condá", "capacity": 22600, "qid": "Q14928349", "via": "P115" },
+  "301305": {
+    "name": "Estádio Orlando Scarpelli",
+    "capacity": 19584,
+    "qid": "Q1370730",
+    "via": "P115"
+  },
+  "301307": { "name": "Arena Joinville", "capacity": 22400, "qid": "Q4788896", "via": "P115" },
+  "301315": {
+    "name": "Estádio Hercílio Luz",
+    "capacity": 12000,
+    "qid": "Q10276881",
+    "via": "P115"
+  },
+  "301319": {
+    "name": "Estádio João Hora de Oliveira",
+    "capacity": 10000,
+    "qid": "Q3321545",
+    "via": "P115"
+  },
+  "301322": { "name": "Batistão", "capacity": 14000, "qid": "Q4405503", "via": "P115" },
+  "301324": {
+    "name": "Estádio Etelvino Mendonça",
+    "capacity": 12000,
+    "qid": "Q9255525",
+    "via": "P115"
+  },
+  "301326": {
+    "name": "General Sampaio Stadium",
+    "capacity": 4000,
+    "qid": "Q10276967",
+    "via": "P115"
+  },
+  "301328": {
+    "name": "Estádio Nilton Santos",
+    "capacity": null,
+    "qid": "Q10277365",
+    "via": "P115"
+  },
+  "301330": { "name": "Estádio João Ribeiro", "capacity": 6000, "qid": "Q9255315", "via": "P115" },
+  "301332": { "name": "Teixeirão", "capacity": 36426, "qid": "Q7695148", "via": "P115" },
+  "301337": { "name": "Estádio Jayme Cintra", "capacity": 15000, "qid": "Q5402054", "via": "P115" },
+  "301339": {
+    "name": "Estádio Municipal Doutor José Lancha Filho",
+    "capacity": 14686,
+    "qid": "Q10277196",
+    "via": "P115"
+  },
+  "301341": {
+    "name": "Estádio Hudson Buck Ferreira",
+    "capacity": 12010,
+    "qid": "Q10276992",
+    "via": "P115"
+  },
+  "301343": {
+    "name": "Estádio Municipal José Maria de Campos Maia",
+    "capacity": 15000,
+    "qid": "Q10277233",
+    "via": "P115"
+  },
+  "301345": {
+    "name": "Estádio Municipal Maria Tereza Breda",
+    "capacity": 15022,
+    "qid": "Q5402110",
+    "via": "P115"
+  },
+  "301349": {
+    "name": "Estádio Anísio Haddad",
+    "capacity": 33000,
+    "qid": "Q5401958",
+    "via": "P115"
+  },
+  "301351": {
+    "name": "Estádio Bruno José Daniel",
+    "capacity": 18000,
+    "qid": "Q3030847",
+    "via": "P115"
+  },
+  "301357": {
+    "name": "Estádio Luís Augusto de Oliveira",
+    "capacity": 10000,
+    "qid": "Q1370684",
+    "via": "P115"
+  },
+  "301358": {
+    "name": "Estádio Antônio R. Guimarães",
+    "capacity": null,
+    "qid": "Q4409730",
+    "via": "P115"
+  },
+  "301360": {
+    "name": "Estádio Parque Santiago",
+    "capacity": 8000,
+    "qid": "Q9255539",
+    "via": "P115"
+  },
+  "301364": {
+    "name": "Estádio Gilmar Alves Oliveira",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "301378": {
+    "name": "Estádio Mário Monteiro",
+    "capacity": 6600,
+    "qid": "Q9255492",
+    "via": "P115"
+  },
+  "302142": {
+    "name": "Estádio Municipal Walter Ribeiro",
+    "capacity": 13722,
+    "qid": "Q5402120",
+    "via": "P115"
+  },
+  "302143": { "name": "Arizão", "capacity": null, "qid": "Q4791511", "via": "P115" },
+  "302149": {
+    "name": "Milton de Souza Corrêa Stadium",
+    "capacity": 3100,
+    "qid": "Q8069681",
+    "via": "P115"
+  },
+  "303013": { "name": "Ademir Cunha Stadium", "capacity": 4000, "qid": "Q9255351", "via": "P115" },
+  "303014": {
+    "name": "Estádio Gileno de Carli",
+    "capacity": 5000,
+    "qid": "Q10276978",
+    "via": "P115"
+  },
+  "303015": {
+    "name": "Estádio Pedro Romualdo Cabral",
+    "capacity": null,
+    "qid": "Q10277403",
+    "via": "P115"
+  },
+  "303017": {
+    "name": "Estádio Genervino da Fonseca",
+    "capacity": 10000,
+    "qid": "Q9255254",
+    "via": "P115"
+  },
+  "303019": {
+    "name": "Estádio Willie Davids",
+    "capacity": 21600,
+    "qid": "Q5402185",
+    "via": "P115"
+  },
+  "303021": {
+    "name": "Estádio Coronel Emílio Gomes",
+    "capacity": null,
+    "qid": "Q4355506",
+    "via": "P115"
+  },
+  "303023": {
+    "name": "Estádio Alfredo de Castilho",
+    "capacity": 15324,
+    "qid": "Q10276739",
+    "via": "P115"
+  },
+  "303903": {
+    "name": "Estádio Nicolau Alayon",
+    "capacity": 9660,
+    "qid": "Q5402134",
+    "via": "P115"
+  },
+  "308108": { "name": "Albertão", "capacity": 44200, "qid": "Q9255268", "via": "P115" },
+  "308184": {
+    "name": "Estádio das Castanheiras",
+    "capacity": 3500,
+    "qid": "Q9255199",
+    "via": "P115"
+  },
+  "308517": { "name": "Estádio do Vale", "capacity": 15000, "qid": "Q10277543", "via": "P115" },
+  "308629": {
+    "name": "Estádio Municipal Adhemar de Barros",
+    "capacity": 11284,
+    "qid": "Q14318514",
+    "via": "P115"
+  },
+  "308939": {
+    "name": "Estádio Municipal Zinho de Oliveira",
+    "capacity": 4500,
+    "qid": "Q9255477",
+    "via": "P115"
+  },
+  "308942": {
+    "name": "Estádio Jader Barbalho",
+    "capacity": 19524,
+    "qid": "Q5402052",
+    "via": "P115"
+  },
+  "308943": {
+    "name": "Estádio Jader Barbalho",
+    "capacity": 19524,
+    "qid": "Q5402052",
+    "via": "P115"
+  },
+  "308944": {
+    "name": "Estádio Aldo Dapuzzo",
+    "capacity": 10000,
+    "qid": "Q10276735",
+    "via": "P115"
+  },
+  "308945": {
+    "name": "Estádio Estadual Jornalista Edgar Augusto Proença",
+    "capacity": 35000,
+    "qid": "Q1370732",
+    "via": "P115"
+  },
+  "308946": {
+    "name": "Estádio Lourival Campos Cunha",
+    "capacity": null,
+    "qid": "Q10277102",
+    "via": "P115"
+  },
+  "308947": {
+    "name": "Estádio Humberto Parente",
+    "capacity": 8000,
+    "qid": "Q9255280",
+    "via": "P115"
+  },
+  "308948": {
+    "name": "Estádio Elcyr Resende de Mendonça",
+    "capacity": null,
+    "qid": "Q18476094",
+    "via": "P115"
+  },
+  "309138": {
+    "name": "Estádio Leônidas da Silva",
+    "capacity": 2390,
+    "qid": "Q18476126",
+    "via": "P115"
+  },
+  "309139": { "name": "Estádio Jonas Duarte", "capacity": 20000, "qid": "Q5402063", "via": "P115" },
+  "309141": {
+    "name": "Estádio Presidente Vargas",
+    "capacity": 12000,
+    "qid": "Q9164294",
+    "via": "P115"
+  },
+  "309144": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 10000,
+    "qid": "Q955522",
+    "via": "P115"
+  },
+  "309145": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 10000,
+    "qid": "Q955522",
+    "via": "P115"
+  },
+  "309146": {
+    "name": "Estádio Raimundo Ribeiro de Souza",
+    "capacity": 3300,
+    "qid": "Q10277418",
+    "via": "P115"
+  },
+  "309356": {
+    "name": "Estádio José Gomes da Costa",
+    "capacity": 5000,
+    "qid": "Q596212",
+    "via": "P115"
+  },
+  "309359": { "name": "Estádio Alfredo Leahy", "capacity": 5500, "qid": "Q9255152", "via": "P115" },
+  "309362": { "name": "Estádio José Vareda", "capacity": null, "qid": "", "via": "ptwiki" },
+  "309619": {
+    "name": "Estádio Municipal Aglair Tonelli Nogueira",
+    "capacity": 8000,
+    "qid": "Q9255353",
+    "via": "P115"
+  },
+  "309623": {
+    "name": "Estádio Gilberto Resende Rocha",
+    "capacity": 6000,
+    "qid": "Q9255262",
+    "via": "P115"
+  },
+  "309627": { "name": "Nogueirão", "capacity": 25000, "qid": "Q9255325", "via": "P115" },
+  "309636": { "name": "Estádio José de Melo", "capacity": 8000, "qid": "Q5402069", "via": "P115" },
+  "309638": { "name": "Estádio José de Melo", "capacity": 8000, "qid": "Q5402069", "via": "P115" },
+  "309640": {
+    "name": "Estádio Lindolfo Monteiro",
+    "capacity": 12760,
+    "qid": "Q6552590",
+    "via": "P115"
+  },
+  "309641": {
+    "name": "Estádio Antônio Mariz",
+    "capacity": 14000,
+    "qid": "Q10276778",
+    "via": "P115"
+  },
+  "309642": { "name": "Almeidão", "capacity": 40000, "qid": "Q4733759", "via": "P115" },
+  "309644": { "name": "Estádio José Fragelli", "capacity": 40000, "qid": "Q510575", "via": "P115" },
+  "309645": {
+    "name": "Estádio Benedito Soares Mota",
+    "capacity": 10000,
+    "qid": "Q9255184",
+    "via": "P115"
+  },
+  "309649": {
+    "name": "Estádio Municipal Carlos Zamith",
+    "capacity": 6500,
+    "qid": "Q18476159",
+    "via": "P115"
+  },
+  "309651": {
+    "name": "Estádio Ismael Benigno",
+    "capacity": 16000,
+    "qid": "Q5402046",
+    "via": "P115"
+  },
+  "309654": {
+    "name": "Estádio José Luís Corrêa",
+    "capacity": null,
+    "qid": "Q10277045",
+    "via": "P115"
+  },
+  "309655": {
+    "name": "Estádio José Luís Corrêa",
+    "capacity": null,
+    "qid": "Q10277045",
+    "via": "P115"
+  },
+  "309657": { "name": "Serejão", "capacity": 35000, "qid": "Q8144188", "via": "P115" },
+  "309671": {
+    "name": "Estádio Municipal Pedro Marin Berbel",
+    "capacity": 12149,
+    "qid": "Q9255453",
+    "via": "P115"
+  },
+  "309674": { "name": "Estádio Pedra Moura", "capacity": 10000, "qid": "Q9255518", "via": "P115" },
+  "309736": { "name": "Arena Cruzeiro", "capacity": 16500, "qid": "Q18484873", "via": "P115" },
+  "309742": {
+    "name": "Estádio Aníbal Torres Costa",
+    "capacity": 15000,
+    "qid": "Q10276788",
+    "via": "P115"
+  },
+  "309750": {
+    "name": "Estádio Deputado Galdino Leite",
+    "capacity": 5000,
+    "qid": "Q9255205",
+    "via": "P115"
+  },
+  "309751": { "name": "Estádio de Pituaçu", "capacity": 32157, "qid": "Q1272188", "via": "P115" },
+  "309759": { "name": "Estádio Edgard Santos", "capacity": 5000, "qid": "Q9255217", "via": "P115" },
+  "309771": {
+    "name": "Estádio Municipal Áureo Howard Bradley",
+    "capacity": null,
+    "qid": "Q28680554",
+    "via": "P115"
+  },
+  "310300": {
+    "name": "Estádio Zezinho Magalhães",
+    "capacity": 12978,
+    "qid": "Q10277506",
+    "via": "P115"
+  },
+  "310358": { "name": "Estádio do Sernamby", "capacity": null, "qid": "Q10277125", "via": "P115" },
+  "310390": { "name": "Estádio Antônio Cruz", "capacity": 4000, "qid": "Q9255174", "via": "P115" },
+  "310393": { "name": "Castelão", "capacity": 57876, "qid": "Q958185", "via": "P115" },
+  "310643": {
+    "name": "Estádio Presidente Vargas",
+    "capacity": 20600,
+    "qid": "Q10277413",
+    "via": "P115"
+  },
+  "310646": { "name": "Melão", "capacity": 15471, "qid": "Q6814167", "via": "P115" },
+  "310701": { "name": "Uberabão", "capacity": 25000, "qid": "Q7876481", "via": "P115" },
+  "310899": { "name": "Uberabão", "capacity": 25000, "qid": "Q7876481", "via": "P115" },
+  "310900": { "name": "Louis Ensch Stadium", "capacity": 1900, "qid": "Q4347326", "via": "P115" },
+  "310901": { "name": "Estádio Elias Arbex", "capacity": 5000, "qid": "Q9255224", "via": "P115" },
+  "310909": {
+    "name": "Estádio Maria de Lourdes Abadia",
+    "capacity": 5000,
+    "qid": "Q9255342",
+    "via": "P115"
+  },
+  "311003": {
+    "name": "Estádio Augustinho Pires de Lima",
+    "capacity": null,
+    "qid": "Q10276812",
+    "via": "P115"
+  },
+  "311005": {
+    "name": "Antônio Soares de Oliveira Municipal Stadium",
+    "capacity": null,
+    "qid": "Q10277169",
+    "via": "P115"
+  },
+  "311021": {
+    "name": "Estádio Comendador Agostinho Prada",
+    "capacity": 9483,
+    "qid": "Q10276849",
+    "via": "P115"
+  },
+  "311025": {
+    "name": "Estádio Bento de Abreu",
+    "capacity": 18000,
+    "qid": "Q5401978",
+    "via": "P115"
+  },
+  "311031": {
+    "name": "Estádio Municipal Francisco Ribeiro Nogueira",
+    "capacity": 14384,
+    "qid": "Q10277213",
+    "via": "P115"
+  },
+  "311033": { "name": "Taquarão", "capacity": 18805, "qid": "Q7684964", "via": "P115" },
+  "311035": { "name": "Joaquinzão", "capacity": null, "qid": "Q6206409", "via": "P115" },
+  "311037": {
+    "name": "Estádio Municipal Sócrates Stamato",
+    "capacity": 10657,
+    "qid": "Q9255466",
+    "via": "P115"
+  },
+  "311043": {
+    "name": "Estádio Germano Krüger",
+    "capacity": 13000,
+    "qid": "Q9255258",
+    "via": "P115"
+  },
+  "311104": {
+    "name": "Niélsen Louzada Stadium",
+    "capacity": null,
+    "qid": "Q10277366",
+    "via": "P115"
+  },
+  "311106": { "name": "Estádio Jânio Moraes", "capacity": 1810, "qid": "Q10277090", "via": "P115" },
+  "311114": {
+    "name": "Estádio Joaquim de Almeida Flores",
+    "capacity": 5000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "311843": {
+    "name": "Estádio General Nicolau Fico",
+    "capacity": 5411,
+    "qid": "Q9255252",
+    "via": "P115"
+  },
+  "311869": { "name": "Arena do Jacaré", "capacity": 17000, "qid": "Q4788929", "via": "P115" },
+  "311950": {
+    "name": "Estádio Perpétuo Corrêa Lima",
+    "capacity": 12000,
+    "qid": "Q957258",
+    "via": "P115"
+  },
+  "311952": {
+    "name": "Estádio Municipal Sílvio Porto",
+    "capacity": 6000,
+    "qid": "Q10277295",
+    "via": "P115"
+  },
+  "311958": {
+    "name": "Estádio Joia da Princesa",
+    "capacity": 16274,
+    "qid": "Q5402061",
+    "via": "P115"
+  },
+  "311965": {
+    "name": "Estádio Marco Antônio Maciel",
+    "capacity": 10000,
+    "qid": "Q10277135",
+    "via": "P115"
+  },
+  "311971": { "name": "Moacyrzão", "capacity": 16000, "qid": "Q10276846", "via": "P115" },
+  "312307": {
+    "name": "Estádio Luiz Viana Filho, Itabuna",
+    "capacity": 20000,
+    "qid": "Q570404",
+    "via": "P115"
+  },
+  "312325": { "name": "Estádio João Marcatto", "capacity": 8000, "qid": "Q9255313", "via": "P115" },
+  "313191": { "name": "Estádio José Fragelli", "capacity": 40000, "qid": "Q510575", "via": "P115" },
+  "313225": {
+    "name": "Estádio Municipal Engenheiro Luthero Lopes",
+    "capacity": 18000,
+    "qid": "Q9255385",
+    "via": "P115"
+  },
+  "313228": {
+    "name": "Estádio Municipal Raimundão",
+    "capacity": 5000,
+    "qid": "Q9255489",
+    "via": "P115"
+  },
+  "313235": { "name": "Eccg", "capacity": null, "qid": "Q10276919", "via": "P115" },
+  "313237": {
+    "name": "Estádio Fredis Saldívar",
+    "capacity": 30000,
+    "qid": "Q5302299",
+    "via": "P115"
+  },
+  "313245": {
+    "name": "Estádio Luiz Gonzaga Prata Braga",
+    "capacity": 6000,
+    "qid": "Q10277109",
+    "via": "P115"
+  },
+  "313246": {
+    "name": "Estádio Luiz Saraiva Vieira",
+    "capacity": null,
+    "qid": "Q10277110",
+    "via": "P115"
+  },
+  "313249": {
+    "name": "Estádio Jacques da Luz",
+    "capacity": 4500,
+    "qid": "Q9255230",
+    "via": "P115"
+  },
+  "313251": { "name": "Estádio Juca Sampaio", "capacity": 8000, "qid": "Q9255421", "via": "P115" },
+  "313254": {
+    "name": "Estádio Municipal Glicério Marques",
+    "capacity": 5630,
+    "qid": "Q9255264",
+    "via": "P115"
+  },
+  "313255": {
+    "name": "Milton de Souza Corrêa Stadium",
+    "capacity": 3100,
+    "qid": "Q8069681",
+    "via": "P466"
+  },
+  "313258": {
+    "name": "Milton de Souza Corrêa Stadium",
+    "capacity": 3100,
+    "qid": "Q8069681",
+    "via": "P115"
+  },
+  "313259": {
+    "name": "Estádio Olímpico Municipal Gilberto Mestrinho",
+    "capacity": 15000,
+    "qid": "Q9255398",
+    "via": "P115"
+  },
+  "313260": {
+    "name": "Estádio José Antônio Abilio de Lima",
+    "capacity": 5000,
+    "qid": "Q9255295",
+    "via": "P115"
+  },
+  "313265": {
+    "name": "Estádio Joaquim Domingos Roriz",
+    "capacity": 10000,
+    "qid": "Q9255289",
+    "via": "P115"
+  },
+  "313266": {
+    "name": "Estádio Zequinha Roriz",
+    "capacity": 22000,
+    "qid": "Q5402187",
+    "via": "P115"
+  },
+  "313268": {
+    "name": "Estádio Salvador Costa",
+    "capacity": 10000,
+    "qid": "Q9255536",
+    "via": "P115"
+  },
+  "313278": { "name": "Estádio São Benedito", "capacity": 10000, "qid": "Q9255547", "via": "P115" },
+  "313282": {
+    "name": "Estádio Nhozinho Santos",
+    "capacity": 16500,
+    "qid": "Q9297300",
+    "via": "P115"
+  },
+  "313287": { "name": "Estádio Daniel Filho", "capacity": null, "qid": "Q10276864", "via": "P115" },
+  "313292": {
+    "name": "Estádio José Cavalcanti",
+    "capacity": 8000,
+    "qid": "Q9255298",
+    "via": "P115"
+  },
+  "313294": { "name": "Amigão", "capacity": 35000, "qid": "Q975748", "via": "P115" },
+  "313296": {
+    "name": "Estádio Deusdeth Melo",
+    "capacity": null,
+    "qid": "Q10276872",
+    "via": "P115"
+  },
+  "313304": { "name": "Estádio Mão Santa", "capacity": null, "qid": "Q10277353", "via": "P115" },
+  "313313": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 10000,
+    "qid": "Q955522",
+    "via": "P115"
+  },
+  "313315": {
+    "name": "Estádio Antônio Brejeiro",
+    "capacity": 7000,
+    "qid": "Q9255171",
+    "via": "P115"
+  },
+  "313316": {
+    "name": "Estádio Municipal Ariston Azevedo",
+    "capacity": 3000,
+    "qid": "Q25437831",
+    "via": "P115"
+  },
+  "313318": {
+    "name": "Estádio Governador Antônio Carlos Valadares",
+    "capacity": 15000,
+    "qid": "Q10276980",
+    "via": "P115"
+  },
+  "313324": { "name": "Batistão", "capacity": 14000, "qid": "Q4405503", "via": "P115" },
+  "313326": {
+    "name": "Estádio Governador Augusto Franco",
+    "capacity": 7000,
+    "qid": "Q10276982",
+    "via": "P115"
+  },
+  "313328": {
+    "name": "Estádio Constantino Tavares",
+    "capacity": 5000,
+    "qid": "Q10276853",
+    "via": "P115"
+  },
+  "313332": { "name": "Estádio Elias Natan Coelho", "capacity": null, "qid": "", "via": "ptwiki" },
+  "313338": { "name": "Estádio Castanheirão", "capacity": 2000, "qid": "Q9255190", "via": "P115" },
+  "313340": {
+    "name": "Estádio Leôncio de Souza Miranda",
+    "capacity": 10000,
+    "qid": "Q10277100",
+    "via": "P115"
+  },
+  "313342": {
+    "name": "Estádio Leôncio de Souza Miranda",
+    "capacity": 10000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "313349": {
+    "name": "Milton de Souza Corrêa Stadium",
+    "capacity": 3100,
+    "qid": "Q8069681",
+    "via": "P115"
+  },
+  "313356": {
+    "name": "Estádio Gil Bernardes da Silveira",
+    "capacity": 1000,
+    "qid": "Q10276975",
+    "via": "P115"
+  },
+  "313362": { "name": "Amigão", "capacity": 35000, "qid": "Q975748", "via": "P115" },
+  "313366": {
+    "name": "Estádio Deusdeth Melo",
+    "capacity": null,
+    "qid": "Q10276872",
+    "via": "P115"
+  },
+  "313368": { "name": "Nogueirão", "capacity": 25000, "qid": "Q9255325", "via": "P115" },
+  "313373": {
+    "name": "Estádio Arnaldo Lopes Martins",
+    "capacity": null,
+    "qid": "Q10276800",
+    "via": "P115"
+  },
+  "313582": {
+    "name": "Estádio José Cordeiro",
+    "capacity": null,
+    "qid": "Q10277035",
+    "via": "P115"
+  },
+  "313670": {
+    "name": "Estádio Orlando Gomes de Barros",
+    "capacity": null,
+    "qid": "Q10277380",
+    "via": "P115"
+  },
+  "313676": {
+    "name": "Estádio Mauro Sampaio",
+    "capacity": 16000,
+    "qid": "Q5402099",
+    "via": "P115"
+  },
+  "313788": { "name": "Serejão", "capacity": 35000, "qid": "Q8144188", "via": "P115" },
+  "313790": {
+    "name": "Estádio Ijair Tomquelsqui",
+    "capacity": 5000,
+    "qid": "Q10276999",
+    "via": "P115"
+  },
+  "313901": {
+    "name": "Estádio Arthur Marinho",
+    "capacity": 15000,
+    "qid": "Q5401965",
+    "via": "P115"
+  },
+  "313903": { "name": "Estádio José Fragelli", "capacity": 40000, "qid": "Q510575", "via": "P115" },
+  "314199": { "name": "Estádio Edilson Abreu", "capacity": 2000, "qid": "Q9255218", "via": "P115" },
+  "314200": {
+    "name": "Estádio Estadual Jornalista Edgar Augusto Proença",
+    "capacity": 35000,
+    "qid": "Q1370732",
+    "via": "P115"
+  },
+  "314203": {
+    "name": "Estádio Luiz Viana Filho, Itabuna",
+    "capacity": 20000,
+    "qid": "Q570404",
+    "via": "P115"
+  },
+  "314205": { "name": "Estádio Waldomiro Borges", "capacity": 4000, "qid": "", "via": "ptwiki" },
+  "314305": {
+    "name": "Estádio Denison Fontes Souza",
+    "capacity": 5000,
+    "qid": "Q685936",
+    "via": "P115"
+  },
+  "314331": {
+    "name": "Estádio Olímpio Perim",
+    "capacity": 2100,
+    "qid": "Q10277378",
+    "via": "P115"
+  },
+  "314337": {
+    "name": "Estádio Paulo de Souza Coelho",
+    "capacity": 5000,
+    "qid": "Q9255517",
+    "via": "P115"
+  },
+  "314593": {
+    "name": "Estádio Paulo de Souza Coelho",
+    "capacity": 5000,
+    "qid": "Q9255517",
+    "via": "P115"
+  },
+  "314599": {
+    "name": "Estádio Municipal Olímpico Albino Turbay",
+    "capacity": 8000,
+    "qid": "Q9255442",
+    "via": "P115"
+  },
+  "314603": {
+    "name": "Estádio Waldemiro Wagner",
+    "capacity": 25000,
+    "qid": "Q13582285",
+    "via": "P115"
+  },
+  "314605": {
+    "name": "Estádio Mauro Sampaio",
+    "capacity": 16000,
+    "qid": "Q5402099",
+    "via": "P115"
+  },
+  "314696": {
+    "name": "Estádio José Cândido dos Santos Virote",
+    "capacity": 3000,
+    "qid": "Q10277034",
+    "via": "P115"
+  },
+  "314745": {
+    "name": "Estádio Municipal Coronel José Bezerra",
+    "capacity": 3000,
+    "qid": "Q5402103",
+    "via": "P115"
+  },
+  "314772": {
+    "name": "Estádio Municipal Gilberto Siqueira Lopes",
+    "capacity": 15770,
+    "qid": "Q10277217",
+    "via": "P115"
+  },
+  "314900": { "name": "Arena Alviazul", "capacity": 4266, "qid": "Q10276745", "via": "P115" },
+  "314912": {
+    "name": "Estádio Altos da Glória",
+    "capacity": null,
+    "qid": "Q10276744",
+    "via": "P115"
+  },
+  "314939": {
+    "name": "Estádio do Centro Esportivo João Vilela",
+    "capacity": null,
+    "qid": "Q10277536",
+    "via": "P115"
+  },
+  "314943": {
+    "name": "Estádio Municipal José Luís Chiapin",
+    "capacity": null,
+    "qid": "Q10277232",
+    "via": "P115"
+  },
+  "314947": {
+    "name": "Estádio Francisco Cardoso de Moraes",
+    "capacity": 5000,
+    "qid": "Q10276954",
+    "via": "P115"
+  },
+  "314957": {
+    "name": "Estádio José Cavalcanti",
+    "capacity": 8000,
+    "qid": "Q9255298",
+    "via": "P115"
+  },
+  "314963": { "name": "Estádio Iliê Vidal", "capacity": 8000, "qid": "Q10277001", "via": "P115" },
+  "314964": { "name": "Estádio da Graça", "capacity": 6000, "qid": "Q5402197", "via": "P115" },
+  "314966": { "name": "Estádio Caio Feitosa", "capacity": 4000, "qid": "Q9255186", "via": "P115" },
+  "314972": {
+    "name": "Estádio Municipal André Borges",
+    "capacity": 3500,
+    "qid": "Q9255157",
+    "via": "P115"
+  },
+  "314977": {
+    "name": "Estádio Otávio Limeira Alves",
+    "capacity": 7000,
+    "qid": "Q9255509",
+    "via": "P115"
+  },
+  "316776": {
+    "name": "Estádio Municipal Frederico Dalmaso",
+    "capacity": 7860,
+    "qid": "Q10277215",
+    "via": "P115"
+  },
+  "316782": {
+    "name": "Estádio Antônio Gomes Martins",
+    "capacity": 13996,
+    "qid": "Q9255167",
+    "via": "P115"
+  },
+  "317944": { "name": "Almeidão", "capacity": null, "qid": "Q18476053", "via": "P115" },
+  "318861": {
+    "name": "Estádio Municipal Governador Virgílio Távora",
+    "capacity": 20000,
+    "qid": "Q9255273",
+    "via": "P115"
+  },
+  "318876": {
+    "name": "Estádio Municipal Doutor Augusto Schmidt Filho",
+    "capacity": null,
+    "qid": "Q10277194",
+    "via": "P115"
+  },
+  "318886": {
+    "name": "Estádio Doutor Oswaldo Scatena",
+    "capacity": 13000,
+    "qid": "Q10276888",
+    "via": "P115"
+  },
+  "318890": { "name": "Arena Capivari", "capacity": null, "qid": "Q10277181", "via": "P115" },
+  "318892": {
+    "name": "Francisco Marques Figueira municipal stadium",
+    "capacity": null,
+    "qid": "Q10277214",
+    "via": "P115"
+  },
+  "318894": {
+    "name": "Estádio Municipal Cláudio Rodante",
+    "capacity": 5000,
+    "qid": "Q10277185",
+    "via": "P115"
+  },
+  "318896": {
+    "name": "Estádio Municipal Pedro Benedetti",
+    "capacity": 11986,
+    "qid": "Q10277270",
+    "via": "P115"
+  },
+  "318902": {
+    "name": "Estádio Otacília Patrício Arroyo",
+    "capacity": 13100,
+    "qid": "Q10277386",
+    "via": "P115"
+  },
+  "318904": {
+    "name": "Estádio Ítalo Mário Limongi",
+    "capacity": 8020,
+    "qid": "Q10277559",
+    "via": "P115"
+  },
+  "318908": {
+    "name": "Alonso de Carvalho Braga Stadium",
+    "capacity": null,
+    "qid": "Q10276740",
+    "via": "P115"
+  },
+  "318912": {
+    "name": "Estádio Benito Agnelo Castellano",
+    "capacity": 8136,
+    "qid": "Q10276821",
+    "via": "P115"
+  },
+  "318914": { "name": "Arena Pantaloneta", "capacity": 42968, "qid": "Q641448", "via": "P115" },
+  "318916": {
+    "name": "Estádio Municipal Lucídio Frazão",
+    "capacity": 6000,
+    "qid": "Q9255423",
+    "via": "P115"
+  },
+  "318923": {
+    "name": "Estádio Abelardo Conduru",
+    "capacity": 5000,
+    "qid": "Q10276717",
+    "via": "P466"
+  },
+  "318924": { "name": "Estádio Eliel Martins", "capacity": 4000, "qid": "Q959705", "via": "P115" },
+  "319118": {
+    "name": "Estádio Manoel Moreira",
+    "capacity": 8000,
+    "qid": "Q10277126",
+    "via": "P115"
+  },
+  "319122": { "name": "Estádio Lírio Callou", "capacity": null, "qid": "Q10277118", "via": "P115" },
+  "319133": {
+    "name": "Centro Esportivo Conilon",
+    "capacity": null,
+    "qid": "Q18483822",
+    "via": "P115"
+  },
+  "319136": {
+    "name": "Estádio Annibal Batista de Toledo",
+    "capacity": null,
+    "qid": "Q10276754",
+    "via": "P115"
+  },
+  "319142": {
+    "name": "Estádio Gileno de Carli",
+    "capacity": 5000,
+    "qid": "Q10276978",
+    "via": "P115"
+  },
+  "319155": {
+    "name": "Estádio Lindolfo Monteiro",
+    "capacity": 12760,
+    "qid": "Q6552590",
+    "via": "P115"
+  },
+  "319159": {
+    "name": "Estádio Olímpico Colosso da Lagoa",
+    "capacity": 30000,
+    "qid": "Q5402140",
+    "via": "P115"
+  },
+  "319161": {
+    "name": "Estádio Monumental do Sesi",
+    "capacity": null,
+    "qid": "Q10277149",
+    "via": "P115"
+  },
+  "319166": { "name": "Spain Stadium", "capacity": null, "qid": "Q10276929", "via": "P115" },
+  "319171": {
+    "name": "Jair Carneiro Toscano de Brito Stadium",
+    "capacity": null,
+    "qid": "Q10277010",
+    "via": "P115"
+  },
+  "319621": { "name": "Estádio ADC Parahyba", "capacity": 2500, "qid": "Q4355486", "via": "P466" },
+  "319624": {
+    "name": "Estádio Professor Jodilton Souza",
+    "capacity": 7000,
+    "qid": "Q56350603",
+    "via": "P115"
+  },
+  "320263": {
+    "name": "Estádio Zequinha Barbosa",
+    "capacity": 3000,
+    "qid": "Q10277504",
+    "via": "P115"
+  },
+  "320372": { "name": "Estádio Floro de Mendonça", "capacity": 5000, "qid": "", "via": "ptwiki" },
+  "900205": { "name": "Estádio do Café", "capacity": 36000, "qid": "Q143064", "via": "P115" },
+  "900679": {
+    "name": "Estádio Giulite Coutinho",
+    "capacity": 16000,
+    "qid": "Q5402039",
+    "via": "P115"
+  },
+  "1902654": {
+    "name": "Estádio Nivaldo Pereira",
+    "capacity": null,
+    "qid": "Q18476196",
+    "via": "P115"
+  },
+  "2105690": {
+    "name": "Estádio Primeiro de Maio",
+    "capacity": null,
+    "qid": "Q10277414",
+    "via": "P115"
+  },
+  "2106556": { "name": "Estádio Juvenal Melo", "capacity": null, "qid": "Q9255321", "via": "P115" },
+  "2108163": {
+    "name": "Estádio Luís Augusto de Oliveira",
+    "capacity": 10000,
+    "qid": "Q1370684",
+    "via": "P115"
+  },
+  "2108857": {
+    "name": "Estádio Alberto Víctolo",
+    "capacity": null,
+    "qid": "Q5401948",
+    "via": "P115"
+  },
+  "2110430": {
+    "name": "Estádio Odilon Flores",
+    "capacity": 8000,
+    "qid": "Q9255505",
+    "via": "P115"
+  },
+  "2112285": {
+    "name": "Estádio de Los Larios",
+    "capacity": 11000,
+    "qid": "Q2756516",
+    "via": "P115"
+  },
+  "2113021": {
+    "name": "Francisco Marques Figueira municipal stadium",
+    "capacity": null,
+    "qid": "Q10277214",
+    "via": "P115"
+  },
+  "8825226": {
+    "name": "Estádio Gil Bernardes da Silveira",
+    "capacity": 1000,
+    "qid": "Q10276975",
+    "via": "P115"
+  },
+  "8830833": {
+    "name": "Estádio Municipal Passo das Emas",
+    "capacity": 10000,
+    "qid": "Q10277269",
+    "via": "P115"
+  },
+  "8832318": {
+    "name": "Estádio Luiz Alves de Ataíde",
+    "capacity": null,
+    "qid": "Q10277106",
+    "via": "P115"
+  },
+  "8832330": { "name": "Paranoá JK Stadium", "capacity": 6000, "qid": "Q9255286", "via": "P115" },
+  "8832335": {
+    "name": "Estádio Ewerson Simões Barbosa",
+    "capacity": 3400,
+    "qid": "Q10276938",
+    "via": "P115"
+  },
+  "8832347": {
+    "name": "Estádio Municipal Nildo Pereira de Menezes",
+    "capacity": 7000,
+    "qid": "Q9255440",
+    "via": "P115"
+  },
+  "8832364": {
+    "name": "Estádio Domingos Machado de Lima",
+    "capacity": 5000,
+    "qid": "Q10276877",
+    "via": "P115"
+  },
+  "8832366": {
+    "name": "Estádio Roberto Santos Garcia",
+    "capacity": 3300,
+    "qid": "Q10277433",
+    "via": "P115"
+  },
+  "19005117": {
+    "name": "Estádio Cornélio de Barros",
+    "capacity": 11000,
+    "qid": "Q5402013",
+    "via": "P115"
+  },
+  "19005120": {
+    "name": "Estádio Municipal Fausto Alvim",
+    "capacity": 8000,
+    "qid": "Q9255392",
+    "via": "P115"
+  },
+  "19005436": {
+    "name": "Estádio Nacional de Brasília",
+    "capacity": 69910,
+    "qid": "Q336088",
+    "via": "P115"
+  },
+  "19005470": {
+    "name": "Estádio Joaquim Calmon",
+    "capacity": 2000,
+    "qid": "Q5402057",
+    "via": "P115"
+  },
+  "19006291": {
+    "name": "Estádio Municipal Marcos Pinheiro Neto",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19006292": {
+    "name": "Estádio Municipal Leônidas Camarinha",
+    "capacity": 6000,
+    "qid": "Q10277249",
+    "via": "P115"
+  },
+  "19006628": {
+    "name": "Estádio Fredis Saldívar",
+    "capacity": 30000,
+    "qid": "Q5302299",
+    "via": "P115"
+  },
+  "19006930": { "name": "Melão", "capacity": 15471, "qid": "Q6814167", "via": "P115" },
+  "19007114": {
+    "name": "Estádio Arthur Mesquita Dias",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19007280": {
+    "name": "Estádio Romário de Souza Faria",
+    "capacity": 10000,
+    "qid": "Q5402161",
+    "via": "P115"
+  },
+  "19008148": {
+    "name": "Estádio Domingos Silveira Gonzales",
+    "capacity": null,
+    "qid": "Q10276878",
+    "via": "P115"
+  },
+  "19009038": {
+    "name": "Estádio Municipal Radialista Mário Helênio",
+    "capacity": 31863,
+    "qid": "Q5402116",
+    "via": "P115"
+  },
+  "19009496": {
+    "name": "Estádio Municipal Antônio Viana da Silva",
+    "capacity": 9090,
+    "qid": "Q10277171",
+    "via": "P115"
+  },
+  "19009825": { "name": "Almeidão", "capacity": 40000, "qid": "Q4733759", "via": "P115" },
+  "19009946": {
+    "name": "Estádio Municipal Domenico Paolo Metidieri",
+    "capacity": 1034,
+    "qid": "Q10277192",
+    "via": "P115"
+  },
+  "19009949": {
+    "name": "Estádio João Corrêa da Silveira",
+    "capacity": 12000,
+    "qid": "Q10277070",
+    "via": "P115"
+  },
+  "19009977": {
+    "name": "Estádio Municipal Tenente Carriço",
+    "capacity": 8769,
+    "qid": "Q10277296",
+    "via": "P115"
+  },
+  "19013099": {
+    "name": "Estádio Francisco José Ferreira",
+    "capacity": null,
+    "qid": "Q10276956",
+    "via": "P115"
+  },
+  "19015031": {
+    "name": "Estádio Municipal Roberto Siqueira Costa",
+    "capacity": 2000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19015573": {
+    "name": "Estádio Monumental do Sesi",
+    "capacity": null,
+    "qid": "Q10277149",
+    "via": "P115"
+  },
+  "19018707": {
+    "name": "Estádio Municipal Gigante do Norte",
+    "capacity": null,
+    "qid": "Q5402102",
+    "via": "P115"
+  },
+  "19019861": {
+    "name": "Estádio Municipal Raimundo de Oliveira",
+    "capacity": null,
+    "qid": "Q9255460",
+    "via": "P115"
+  },
+  "19019869": {
+    "name": "Estádio Tancredo Nunes",
+    "capacity": 2000,
+    "qid": "Q18476215",
+    "via": "P115"
+  },
+  "19019882": {
+    "name": "Estádio Edson Matias",
+    "capacity": 6000,
+    "qid": "Q9255221",
+    "via": "P115"
+  },
+  "19019937": {
+    "name": "Estádio Luiz Geraldo da Silva",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19019956": {
+    "name": "Estádio Lomanto Júnior",
+    "capacity": 15000,
+    "qid": "Q9255331",
+    "via": "P115"
+  },
+  "19023456": { "name": "Estádio Francisco Pires", "capacity": null, "qid": "", "via": "ptwiki" },
+  "19023491": {
+    "name": "Estádio Coronel Erasmo Cabral",
+    "capacity": null,
+    "qid": "Q10276854",
+    "via": "P115"
+  },
+  "19023592": {
+    "name": "Estádio Abrão Manoel da Costa",
+    "capacity": null,
+    "qid": "Q10276718",
+    "via": "P115"
+  },
+  "19023735": {
+    "name": "Estádio Municipal Severino Cândido Carneiro",
+    "capacity": 8000,
+    "qid": "Q10277290",
+    "via": "P115"
+  },
+  "19023753": { "name": "Estádio Rua Javari", "capacity": 4000, "qid": "Q5402163", "via": "P115" },
+  "19023760": {
+    "name": "Estádio José Bezerra de Mendonça",
+    "capacity": null,
+    "qid": "Q10277030",
+    "via": "P115"
+  },
+  "19023851": {
+    "name": "Estádio Joaquim José de Brito",
+    "capacity": 1800,
+    "qid": "Q10277020",
+    "via": "P115"
+  },
+  "19023902": {
+    "name": "Estádio dos Eucaliptos (Santa Maria)",
+    "capacity": null,
+    "qid": "Q10277546",
+    "via": "P115"
+  },
+  "19023909": {
+    "name": "Estádio André Avelino",
+    "capacity": null,
+    "qid": "Q10276751",
+    "via": "P115"
+  },
+  "19023910": {
+    "name": "Estádio Nacional de Brasília",
+    "capacity": 69910,
+    "qid": "Q336088",
+    "via": "P115"
+  },
+  "19025015": {
+    "name": "Estádio Leão do Sul",
+    "capacity": null,
+    "qid": "Q10277098",
+    "via": "P115"
+  },
+  "19026810": {
+    "name": "Antônio Soares de Oliveira Municipal Stadium",
+    "capacity": null,
+    "qid": "Q10277169",
+    "via": "P115"
+  },
+  "19026905": {
+    "name": "Estádio Municipal Ubirajara Medeiros",
+    "capacity": null,
+    "qid": "Q10277297",
+    "via": "P115"
+  },
+  "19026930": {
+    "name": "Estádio Joaquim Domingos Roriz",
+    "capacity": 10000,
+    "qid": "Q9255289",
+    "via": "P115"
+  },
+  "19027013": {
+    "name": "Estádio José Araújo Cintra",
+    "capacity": null,
+    "qid": "Q10277029",
+    "via": "P115"
+  },
+  "19027340": {
+    "name": "Estádio Municipal Coronel Francisco Vieira",
+    "capacity": 7000,
+    "qid": "Q10277188",
+    "via": "P115"
+  },
+  "19027435": {
+    "name": "Estádio Cruzeiro do Sul",
+    "capacity": null,
+    "qid": "Q10276860",
+    "via": "P115"
+  },
+  "19032733": {
+    "name": "Estádio Egídio José Preima",
+    "capacity": null,
+    "qid": "Q10276918",
+    "via": "P115"
+  },
+  "19032890": {
+    "name": "Estádio João Marimon Júnior",
+    "capacity": null,
+    "qid": "Q10277077",
+    "via": "P115"
+  },
+  "19034053": {
+    "name": "Estádio Geraldo Rodrigues",
+    "capacity": null,
+    "qid": "Q10276972",
+    "via": "P115"
+  },
+  "19035624": {
+    "name": "Estádio Municipal Laerte Paes Coelho",
+    "capacity": null,
+    "qid": "Q10277247",
+    "via": "P115"
+  },
+  "19039688": {
+    "name": "Estádio Municipal Leonardo Barbieri",
+    "capacity": 7300,
+    "qid": "Q10277248",
+    "via": "P115"
+  },
+  "19040478": {
+    "name": "Estádio Miguel Lima",
+    "capacity": null,
+    "qid": "Q10277146",
+    "via": "P115"
+  },
+  "19041054": {
+    "name": "Estádio José Sobrinho Barros",
+    "capacity": 3000,
+    "qid": "Q9255308",
+    "via": "P115"
+  },
+  "19041085": {
+    "name": "Estádio Emília Mendes Rodrigues",
+    "capacity": null,
+    "qid": "Q10276920",
+    "via": "P115"
+  },
+  "19041880": {
+    "name": "Estadio Paulo Constantino",
+    "capacity": 44414,
+    "qid": "Q1370694",
+    "via": "P115"
+  },
+  "19042910": {
+    "name": "Estádio Municipal Francisco Ribeiro Nogueira",
+    "capacity": 14384,
+    "qid": "Q10277213",
+    "via": "P115"
+  },
+  "19046181": {
+    "name": "Estádio Marcelo de Moura e Souza",
+    "capacity": 2200,
+    "qid": "Q10277134",
+    "via": "P115"
+  },
+  "19046206": {
+    "name": "Estádio Municipal Alfredo Chiavegato",
+    "capacity": 15000,
+    "qid": "Q5402098",
+    "via": "P115"
+  },
+  "19046985": {
+    "name": "Estádio Edson Monteiro de Godoy",
+    "capacity": null,
+    "qid": "Q10276914",
+    "via": "P115"
+  },
+  "19047392": {
+    "name": "Estádio Municipal Bruno Lazzarini",
+    "capacity": 6701,
+    "qid": "Q10277180",
+    "via": "P115"
+  },
+  "19048266": {
+    "name": "Estádio Flávia de Oliveira",
+    "capacity": null,
+    "qid": "Q10276950",
+    "via": "P115"
+  },
+  "19048284": { "name": "Ronaldão", "capacity": 14000, "qid": "Q7365453", "via": "P115" },
+  "19048342": {
+    "name": "Estádio Nhozinho Santos",
+    "capacity": 16500,
+    "qid": "Q9297300",
+    "via": "P115"
+  },
+  "19048345": {
+    "name": "Estádio José Ângelo Cassol",
+    "capacity": null,
+    "qid": "Q10277063",
+    "via": "P115"
+  },
+  "19048921": {
+    "name": "Estádio Lourival Gomes de Almeida",
+    "capacity": 4284,
+    "qid": "Q18476130",
+    "via": "P115"
+  },
+  "19051304": {
+    "name": "Estádio Nilton Santos",
+    "capacity": null,
+    "qid": "Q10277365",
+    "via": "P115"
+  },
+  "19052035": {
+    "name": "Estádio do Centro Esportivo João Vilela",
+    "capacity": null,
+    "qid": "Q10277536",
+    "via": "P115"
+  },
+  "19055048": {
+    "name": "Estádio Municipal Engenheiro Luthero Lopes",
+    "capacity": 18000,
+    "qid": "Q9255385",
+    "via": "P115"
+  },
+  "19057188": {
+    "name": "Estádio Municipal José Ferreira Lima",
+    "capacity": null,
+    "qid": "Q10277229",
+    "via": "P115"
+  },
+  "19058116": {
+    "name": "Estádio Arena do Juruá",
+    "capacity": null,
+    "qid": "Q56349552",
+    "via": "P115"
+  },
+  "19066403": {
+    "name": "Estádio Municipal Roberto Brzezinski",
+    "capacity": 5000,
+    "qid": "Q9255462",
+    "via": "P115"
+  },
+  "19066532": { "name": "Estádio do ABC", "capacity": 15000, "qid": "Q10277534", "via": "P115" },
+  "19069556": {
+    "name": "Estádio Municipal Valdir Cândido de Queiroz",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19072299": {
+    "name": "Estádio Olímpico Regional Arnaldo Busatto",
+    "capacity": 28125,
+    "qid": "Q5402146",
+    "via": "P115"
+  },
+  "19075750": {
+    "name": "Estádio Arthur Sendas",
+    "capacity": null,
+    "qid": "Q10276807",
+    "via": "P115"
+  },
+  "19076258": {
+    "name": "Estádio Adauto Moraes",
+    "capacity": 12000,
+    "qid": "Q9255146",
+    "via": "P115"
+  },
+  "19088043": {
+    "name": "Estádio Kléber Andrade",
+    "capacity": 45000,
+    "qid": "Q5402068",
+    "via": "P115"
+  },
+  "19100645": {
+    "name": "Estádio Adonir José Guimarães",
+    "capacity": 12000,
+    "qid": "Q9255145",
+    "via": "P115"
+  },
+  "19100647": {
+    "name": "Estádio Newton Agibert",
+    "capacity": null,
+    "qid": "Q10277362",
+    "via": "P115"
+  },
+  "19105741": {
+    "name": "Estádio Municipal Zinho de Oliveira",
+    "capacity": 4500,
+    "qid": "Q9255477",
+    "via": "P115"
+  },
+  "19105957": {
+    "name": "Estádio Antônio Pereira Braga",
+    "capacity": 4660,
+    "qid": "Q10276782",
+    "via": "P115"
+  },
+  "19108450": {
+    "name": "Estádio Olímpico Horácio Domingos de Sousa",
+    "capacity": 10500,
+    "qid": "Q10277376",
+    "via": "P115"
+  },
+  "19108525": {
+    "name": "Estádio Francisco Muraro",
+    "capacity": null,
+    "qid": "Q18476101",
+    "via": "P115"
+  },
+  "19108554": {
+    "name": "Estádio Municipal Orfelino Martins Valente",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19112045": {
+    "name": "Estádio Paulo Barreto de Menezes",
+    "capacity": 6000,
+    "qid": "Q9255515",
+    "via": "P115"
+  },
+  "19112335": {
+    "name": "Estádio Paulo Coutinho",
+    "capacity": null,
+    "qid": "Q10277394",
+    "via": "P115"
+  },
+  "19112463": { "name": "Rosenão", "capacity": null, "qid": "Q10277052", "via": "P115" },
+  "19113195": {
+    "name": "Estádio Olímpico Municipal Gilberto Mestrinho",
+    "capacity": 15000,
+    "qid": "Q9255398",
+    "via": "P115"
+  },
+  "19118678": {
+    "name": "Victor Andrade de Brito Municipal Stadium",
+    "capacity": null,
+    "qid": "Q9255471",
+    "via": "P115"
+  },
+  "19120806": {
+    "name": "Estádio Antônio Brejeiro",
+    "capacity": 7000,
+    "qid": "Q9255171",
+    "via": "P115"
+  },
+  "19129974": {
+    "name": "Estádio Amintas de Freitas",
+    "capacity": null,
+    "qid": "Q10276749",
+    "via": "P115"
+  },
+  "19138870": {
+    "name": "Estádio Municipal de Aquidauana",
+    "capacity": null,
+    "qid": "Q10277309",
+    "via": "P115"
+  },
+  "19139755": {
+    "name": "Estádio Ismael Benigno",
+    "capacity": 16000,
+    "qid": "Q5402046",
+    "via": "P115"
+  },
+  "19140599": {
+    "name": "Estádio José Olímpio da Rocha",
+    "capacity": null,
+    "qid": "Q10277051",
+    "via": "P115"
+  },
+  "19140789": {
+    "name": "Estádio Delfino Pereira Lopes",
+    "capacity": null,
+    "qid": "Q10276868",
+    "via": "P115"
+  },
+  "19143264": {
+    "name": "Estádio Zenor Pedrosa Rocha",
+    "capacity": 2000,
+    "qid": "Q10277503",
+    "via": "P115"
+  },
+  "19144620": {
+    "name": "Estádio Wellington Elias",
+    "capacity": null,
+    "qid": "Q10277498",
+    "via": "P115"
+  },
+  "19144923": {
+    "name": "Estádio Jorge Ismael de Biasi",
+    "capacity": null,
+    "qid": "Q10277026",
+    "via": "P115"
+  },
+  "19144991": {
+    "name": "Estádio José Nazareno do Nascimento",
+    "capacity": 7000,
+    "qid": "Q10277047",
+    "via": "P115"
+  },
+  "19145263": {
+    "name": "Estádio Willie Davids",
+    "capacity": 21600,
+    "qid": "Q5402185",
+    "via": "P115"
+  },
+  "19145269": { "name": "Estádio Jacques da Luz", "capacity": 4500, "qid": "", "via": "ptwiki" },
+  "19147285": {
+    "name": "Estádio Mozart Veloso do Carmo",
+    "capacity": null,
+    "qid": "Q10277154",
+    "via": "P115"
+  },
+  "19147298": {
+    "name": "Estádio Vermelhão da Colina",
+    "capacity": null,
+    "qid": "Q10277479",
+    "via": "P115"
+  },
+  "19154372": {
+    "name": "Estádio Municipal de São Luiz do Anauá",
+    "capacity": 1500,
+    "qid": "Q10277339",
+    "via": "P115"
+  },
+  "19154387": {
+    "name": "Estádio José Olívio Soares",
+    "capacity": 2000,
+    "qid": "Q19710336",
+    "via": "P115"
+  },
+  "19156148": {
+    "name": "Estádio Eustáquio Marques",
+    "capacity": 1000,
+    "qid": "Q10276936",
+    "via": "P115"
+  },
+  "19157136": {
+    "name": "Estádio Municipal Professor Dario Rodrigues Leite",
+    "capacity": 15769,
+    "qid": "Q5402111",
+    "via": "P115"
+  },
+  "19157250": {
+    "name": "Estádio Alberto Oliveira Sobrinho",
+    "capacity": 3000,
+    "qid": "Q10276727",
+    "via": "P115"
+  },
+  "19157321": { "name": "Eccg", "capacity": null, "qid": "Q10276919", "via": "P115" },
+  "19164275": {
+    "name": "Estádio Antônio Aquino Lopes",
+    "capacity": null,
+    "qid": "Q74118097",
+    "via": "P115"
+  },
+  "19169997": {
+    "name": "Estádio Eduardo Guinle",
+    "capacity": 12000,
+    "qid": "Q4355357",
+    "via": "P115"
+  },
+  "19170019": {
+    "name": "Estádio Jurandir Elias",
+    "capacity": null,
+    "qid": "Q10277085",
+    "via": "P115"
+  },
+  "19170071": {
+    "name": "Estádio Justiniano de Mello e Silva",
+    "capacity": 12000,
+    "qid": "Q9255419",
+    "via": "P115"
+  },
+  "19174916": { "name": "Estádio Baetão", "capacity": null, "qid": "", "via": "ptwiki" },
+  "19179980": {
+    "name": "Estádio Arena do Município Verde",
+    "capacity": null,
+    "qid": "Q10276794",
+    "via": "P115"
+  },
+  "19184584": { "name": "Morenão", "capacity": 45000, "qid": "Q3309154", "via": "P115" },
+  "19186109": {
+    "name": "Estádio Municipal Plínio Marin",
+    "capacity": null,
+    "qid": "Q10277276",
+    "via": "P115"
+  },
+  "19191717": { "name": "Amigão", "capacity": 35000, "qid": "Q975748", "via": "P115" },
+  "19192558": {
+    "name": "Estádio Distrital do Inamar",
+    "capacity": 10000,
+    "qid": "Q24232745",
+    "via": "P115"
+  },
+  "19200888": {
+    "name": "Estádio Municipal Benedito Therézio de Carvalho Júnior",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19205120": {
+    "name": "Estádio Camilo Mussi",
+    "capacity": null,
+    "qid": "Q28680134",
+    "via": "P115"
+  },
+  "19221349": { "name": "Barrettão", "capacity": null, "qid": "Q18476135", "via": "P115" },
+  "19222408": {
+    "name": "Estádio Leôncio de Souza Miranda",
+    "capacity": 10000,
+    "qid": "Q10277100",
+    "via": "P115"
+  },
+  "19222878": {
+    "name": "Estádio Soares de Azevedo",
+    "capacity": 5000,
+    "qid": "Q9255543",
+    "via": "P115"
+  },
+  "19223320": {
+    "name": "Estádio Zico Brandão",
+    "capacity": null,
+    "qid": "Q10277505",
+    "via": "P115"
+  },
+  "19223668": {
+    "name": "Estádio Sílvio de Faria Corrêa",
+    "capacity": null,
+    "qid": "Q10277456",
+    "via": "P115"
+  },
+  "19224753": {
+    "name": "Estádio Municipal Prefeito José Liberatti",
+    "capacity": 11780,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19239453": { "name": "Arena de Pernambuco", "capacity": 45500, "qid": "", "via": "ptwiki" },
+  "19244655": {
+    "name": "Estádio Antônio Viana Silva",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19249037": {
+    "name": "Estádio Senador Zezé Perrella",
+    "capacity": 10000,
+    "qid": "Q10277448",
+    "via": "P115"
+  },
+  "19253216": {
+    "name": "Estádio Valdemar Viana de Araújo",
+    "capacity": null,
+    "qid": "Q10277473",
+    "via": "P115"
+  },
+  "19265487": {
+    "name": "Estádio Presidente Vargas",
+    "capacity": 20268,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19272764": {
+    "name": "Estádio Municipal Felipe Raulino",
+    "capacity": null,
+    "qid": "Q56349392",
+    "via": "P115"
+  },
+  "19273690": { "name": "Arena das Dunas", "capacity": 45000, "qid": "Q1343986", "via": "P115" },
+  "19275451": { "name": "Almeidão", "capacity": 40000, "qid": "Q4733759", "via": "P115" },
+  "19276481": { "name": "Arena das Dunas", "capacity": 45000, "qid": "Q1343986", "via": "P115" },
+  "19287077": {
+    "name": "Estádio José Valeriano Costa",
+    "capacity": 3000,
+    "qid": "Q9255307",
+    "via": "P115"
+  },
+  "19289426": {
+    "name": "Estádio Aluízio Ferreira",
+    "capacity": 7000,
+    "qid": "Q5401951",
+    "via": "P115"
+  },
+  "19294427": { "name": "Machadão", "capacity": 45000, "qid": "Q6723359", "via": "P115" },
+  "19294428": {
+    "name": "Estádio Pedro Alves do Nascimento",
+    "capacity": 10250,
+    "qid": "Q48878731",
+    "via": "P115"
+  },
+  "19295793": {
+    "name": "Estádio Alberto Carlos Schwingel",
+    "capacity": null,
+    "qid": "Q116878000",
+    "via": "P127"
+  },
+  "19296882": {
+    "name": "Estádio Municipal Doutor Tancredo Neves",
+    "capacity": null,
+    "qid": "Q10277200",
+    "via": "P115"
+  },
+  "19300026": { "name": "Arena da Floresta", "capacity": 20000, "qid": "Q4347035", "via": "P115" },
+  "19300083": { "name": "Estádio Anilado", "capacity": 7000, "qid": "Q9255160", "via": "P115" },
+  "19300813": { "name": "Estádio Mão Santa", "capacity": null, "qid": "Q10277353", "via": "P115" },
+  "19309400": {
+    "name": "Estádio Geraldo Oliveira",
+    "capacity": 2000,
+    "qid": "Q9255256",
+    "via": "P115"
+  },
+  "19317913": {
+    "name": "Estádio Arnaldo Lopes Martins",
+    "capacity": null,
+    "qid": "Q10276800",
+    "via": "P115"
+  },
+  "19318745": { "name": "Arizão", "capacity": null, "qid": "Q4791511", "via": "P115" },
+  "19325791": { "name": "Estádio da Zona Sul", "capacity": 8000, "qid": "Q7408578", "via": "P115" },
+  "19337750": {
+    "name": "Estádio Antônio Inácio de Souza",
+    "capacity": 0,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19339796": {
+    "name": "Estádio do Trabalhador",
+    "capacity": 7400,
+    "qid": "Q5402244",
+    "via": "P115"
+  },
+  "19339800": {
+    "name": "Estádio José de Oliveira Bandeira",
+    "capacity": 5000,
+    "qid": "Q9255311",
+    "via": "P115"
+  },
+  "19341237": {
+    "name": "Estádio Augusto Bauer",
+    "capacity": 5000,
+    "qid": "Q9255182",
+    "via": "P115"
+  },
+  "19341663": {
+    "name": "Estádio Municipal Engenheiro Luthero Lopes",
+    "capacity": 18000,
+    "qid": "Q9255385",
+    "via": "P115"
+  },
+  "19342413": { "name": "Palmas", "capacity": null, "qid": "", "via": "ptwiki" },
+  "19342670": {
+    "name": "Joaquim Portugal Stadium",
+    "capacity": null,
+    "qid": "Q11697182",
+    "via": "P115"
+  },
+  "19344659": {
+    "name": "Estádio Municipal Silvio Salles",
+    "capacity": 16474,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19354438": {
+    "name": "Campo da Concha Acústica",
+    "capacity": 432,
+    "qid": "Q141539625",
+    "via": "P115"
+  },
+  "19354606": {
+    "name": "Estádio Municipal Pedro Benedetti",
+    "capacity": 11986,
+    "qid": "Q10277270",
+    "via": "P115"
+  },
+  "19354765": {
+    "name": "Estádio do Morro dos Ventos Uivantes",
+    "capacity": null,
+    "qid": "Q10277541",
+    "via": "P115"
+  },
+  "19354773": {
+    "name": "Estádio Vicente Goulart",
+    "capacity": null,
+    "qid": "Q10277482",
+    "via": "P115"
+  },
+  "19360388": {
+    "name": "Estádio Municipal Irmão Gino Maria Rossi",
+    "capacity": 25000,
+    "qid": "Q9255402",
+    "via": "P115"
+  },
+  "19363421": {
+    "name": "Estádio Municipal Starling Soares",
+    "capacity": 12000,
+    "qid": "Q10277294",
+    "via": "P115"
+  },
+  "19365960": { "name": "Estádio do Arruda", "capacity": 60044, "qid": "Q741064", "via": "P115" },
+  "19366429": { "name": "Estádio Aluízio Ferreira", "capacity": 7000, "qid": "", "via": "ptwiki" },
+  "19367846": { "name": "Palmas", "capacity": null, "qid": "", "via": "ptwiki" },
+  "19372316": { "name": "Tocantinópolis", "capacity": null, "qid": "", "via": "ptwiki" },
+  "19381253": { "name": "Estádio José Rocha", "capacity": null, "qid": "Q10277053", "via": "P115" },
+  "19382027": {
+    "name": "Estádio Municipal Antônio de Figueiredo Carneiro",
+    "capacity": 18000,
+    "qid": "Q9255173",
+    "via": "P115"
+  },
+  "19382031": { "name": "Arena de Pernambuco", "capacity": 45500, "qid": "", "via": "ptwiki" },
+  "19382041": {
+    "name": "Estádio Municipal Antiocho Pereira",
+    "capacity": 12000,
+    "qid": "Q9255355",
+    "via": "P115"
+  },
+  "19384177": {
+    "name": "Estádio Antônio Dourado",
+    "capacity": null,
+    "qid": "Q10276771",
+    "via": "P115"
+  },
+  "19388278": { "name": "Estádio Otaviano Alckmin", "capacity": null, "qid": "", "via": "ptwiki" },
+  "19388287": {
+    "name": "Estádio Valdir Doilho Wons",
+    "capacity": 1000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "19392513": {
+    "name": "Estádio Frei Epifânio D'Abadia",
+    "capacity": 10000,
+    "qid": "Q9255395",
+    "via": "P115"
+  },
+  "19393439": {
+    "name": "Estádio Wellington Elias",
+    "capacity": null,
+    "qid": "Q10277498",
+    "via": "P115"
+  },
+  "19397709": {
+    "name": "Estádio Municipal Carlos Zamith",
+    "capacity": 6500,
+    "qid": "Q18476159",
+    "via": "P115"
+  },
+  "19398656": {
+    "name": "Estádio Jaime Sena Pimentel",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000012027": { "name": "Diogão", "capacity": 11000, "qid": "Q111914206", "via": "P466" },
+  "2000056100": { "name": "Castelão", "capacity": 40000, "qid": "Q1309033", "via": "P115" },
+  "2000099881": {
+    "name": "Estádio Arthur Tavares Melo",
+    "capacity": null,
+    "qid": "Q10276808",
+    "via": "P115"
+  },
+  "2000106859": {
+    "name": "Estádio Adolfo Rollemberg",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000106889": {
+    "name": "Estádio Zenor Pedrosa Rocha",
+    "capacity": 2000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000124774": {
+    "name": "Estádio José Nazareno do Nascimento",
+    "capacity": 7000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000138606": {
+    "name": "Estádio Olímpico Pedro Ludovico Teixeira",
+    "capacity": 13500,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000138940": {
+    "name": "Estádio José Gomes da Costa",
+    "capacity": 4000,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000152067": {
+    "name": "Lista de estádios de futebol do Pará",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000153954": { "name": "Estádio Jaime Guerra", "capacity": 4000, "qid": "", "via": "ptwiki" },
+  "2000170898": {
+    "name": "Ademir Cunha Stadium",
+    "capacity": 4000,
+    "qid": "Q9255351",
+    "via": "P115"
+  },
+  "2000172712": { "name": "Estádio Passo D'Areia", "capacity": null, "qid": "", "via": "ptwiki" },
+  "2000173968": {
+    "name": "Estádio Antônio Santo Renosto",
+    "capacity": null,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000193941": { "name": "Estádio João Botelho", "capacity": null, "qid": "", "via": "ptwiki" },
+  "2000199588": {
+    "name": "Estádio Perpétuo Corrêa Lima",
+    "capacity": 12000,
+    "qid": "Q957258",
+    "via": "P115"
+  },
+  "2000199921": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 10000,
+    "qid": "Q955522",
+    "via": "P115"
+  },
+  "2000209950": {
+    "name": "Estádio Maria Lamas Farache",
+    "capacity": 15082,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000255425": { "name": "Estádio Luso-Brasileiro", "capacity": 1083, "qid": "", "via": "ptwiki" },
+  "2000281023": {
+    "name": "Estádio Estadual Jornalista Edgar Augusto Proença",
+    "capacity": 35000,
+    "qid": "Q1370732",
+    "via": "P115"
+  },
+  "2000288456": { "name": "Estádio Fernando França", "capacity": 5000, "qid": "", "via": "ptwiki" },
+  "2000317508": { "name": "Estádio Nilton Santos", "capacity": null, "qid": "", "via": "ptwiki" },
+  "2000326381": {
+    "name": "Estádio Flamarion Vasconcelos",
+    "capacity": 4556,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000339175": {
+    "name": "Estádio Luiz Geraldo da Silva",
+    "capacity": null,
+    "qid": "Q10277108",
+    "via": "P115"
+  },
+  "2000365734": {
+    "name": "Estádio Municipal Glicério Marques",
+    "capacity": 5630,
+    "qid": "Q9255264",
+    "via": "P115"
+  },
+  "2000366261": { "name": "Mineirão", "capacity": 66658, "qid": "Q910370", "via": "P115" },
+  "2000368000": {
+    "name": "Estádio Milton de Souza Corrêa",
+    "capacity": 4984,
+    "qid": "",
+    "via": "ptwiki"
+  },
+  "2000521594": { "name": "Nelsão", "capacity": 10000, "qid": "Q4347065", "via": "P115" }
+}

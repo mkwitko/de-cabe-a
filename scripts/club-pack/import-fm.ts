@@ -43,6 +43,7 @@ import {
 import { FIRST_NAMES, LAST_NAMES, NICKNAMES } from '../../packages/club-domain/src/generate/names';
 
 import { parseCsv } from './lib/csv';
+import { parseDerbies, resolveRivals } from './lib/rivals';
 
 const BRAZIL = '189';
 /** The save was exported in December 2026 (last played fixture 2026-12-17); the pack opens 2027. */
@@ -901,6 +902,10 @@ const geo = JSON.parse(
     { city: string; state: string | null; stadium?: { name: string; capacity: number } }
   >;
 };
+// Gap-filler venues (enrich-stadiums.ts): the stadium side of Wikidata (occupant/owner) and dated P1083.
+const venueGap = JSON.parse(
+  readFileSync(new URL('./data/stadiums.json', import.meta.url), 'utf8'),
+) as Record<string, { name: string | null; capacity: number | null }>;
 const slug = (s: string) =>
   s
     .normalize('NFD')
@@ -1234,16 +1239,24 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     (a, b) => num(b.total_capacity) - num(a.total_capacity),
   )[0];
   const capacity = st ? clamp(num(st.total_capacity), 0, 120_000) : 0;
-  if (!capacity && !(geo.clubs[uid]?.stadium?.capacity || geo.openfootball[uid]?.stadium?.capacity))
+  const gapSt = venueGap[uid];
+  if (
+    !capacity &&
+    !(
+      geo.clubs[uid]?.stadium?.capacity ||
+      gapSt?.capacity ||
+      geo.openfootball[uid]?.stadium?.capacity
+    )
+  )
     est('stadium: capacity estimated from reputation');
   const shared = st && st.home_club_uids.includes(';');
   // Name: Wikidata home venue, then openfootball, then the save, then a placeholder. Capacity: the
   // save when it has one (the game's own number), else Wikidata (P1083), else openfootball.
   const wdSt = geo.clubs[uid]?.stadium;
   const ofSt = geo.openfootball[uid]?.stadium;
-  const named = wdSt?.name || ofSt?.name || st?.name;
+  const named = wdSt?.name || gapSt?.name || ofSt?.name || st?.name;
   if (!named) est('stadium: name is a placeholder');
-  const openCap = wdSt?.capacity || ofSt?.capacity || 0;
+  const openCap = wdSt?.capacity || gapSt?.capacity || ofSt?.capacity || 0;
   if (!capacity && openCap) est('stadium: capacity from Wikidata/openfootball');
   const stadium: PackClub['stadium'] = {
     name: (named || `Estádio ${c.short_name || c.name}`).slice(0, 80),
@@ -1401,12 +1414,14 @@ const ATTENDANCE = (
       club: string;
       state: string;
       aliases: string[];
-      division2025: 'A' | 'B';
+      division2025: 'A' | 'B' | 'C' | 'D';
       avgAttendance: number;
       avgTicket: number | null;
     }[];
   }
 ).clubs;
+// The survey ratio (fans per paying head) only holds for the A and B averages.
+const ATTENDANCE_AB = ATTENDANCE.filter((x) => x.division2025 === 'A' || x.division2025 === 'B');
 const TIER_TICKET: Record<number, number> = { 1: 51, 2: 26 };
 /** Série C 2025, paying public a match (DGABC). */
 const SERIE_C_AVERAGE = 3466;
@@ -1493,12 +1508,12 @@ let fansResearched = 0;
     }
     club.fans.size = Math.round((base * f.share) / 100);
     fansResearched++;
-    const a = find(ATTENDANCE, club);
+    const a = find(ATTENDANCE_AB, club);
     if (a) ratios.push(club.fans.size / a.avgAttendance);
   }
   const ratio = [...ratios].sort((x, y) => x - y)[ratios.length >> 1] ?? 0;
   for (const club of rest) {
-    const a = find(ATTENDANCE, club);
+    const a = find(ATTENDANCE_AB, club);
     if (a && ratio) {
       club.fans.size = Math.round(Math.min(floor * 0.9, a.avgAttendance * ratio));
       est('fans: size from the 2025 public, by the ratio of the surveyed clubs');
@@ -1511,21 +1526,41 @@ let fansResearched = 0;
 }
 const competitions = realDivisions(SEASON, [a27, b27, c27, d27].map(ids));
 
-// Rivals (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID"): HEURISTIC,
-// the up to three best-reputed other clubs of the same FM city_id that are in the pack.
+// Rivals: the curated derbies of data/rivals.json (name + UF, intensity 1-3, strongest first) where
+// a club has one; else HEURISTIC, the up to three best-reputed other clubs of the same FM city_id
+// (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID").
 const byFmCity = new Map<string, string[]>();
 for (const c of clubs) {
   const k = clubById.get(c.id.slice(4))!.city_id!;
   (byFmCity.get(k) ?? byFmCity.set(k, []).get(k)!).push(c.id);
 }
 const repOf = new Map(clubs.map((c) => [c.id, c.reputation]));
+const byNameState = new Map<string, string>();
 for (const c of clubs) {
+  const st = cities.get(c.cityId)?.state;
+  for (const n of [c.shortName, c.name]) byNameState.set(`${fold(n)}|${st}`, c.id);
+}
+const curated = resolveRivals(
+  parseDerbies(JSON.parse(readFileSync(new URL('./data/rivals.json', import.meta.url), 'utf8'))),
+  (n, st) => byNameState.get(`${fold(n)}|${st}`),
+);
+let curatedClubs = 0;
+for (const c of clubs) {
+  const known = curated.rivals.get(c.id);
+  if (known?.length) {
+    c.rivals = known.slice(0, 5);
+    curatedClubs++;
+    continue;
+  }
   c.rivals = (byFmCity.get(clubById.get(c.id.slice(4))!.city_id!) ?? [])
     .filter((k) => k !== c.id)
     .sort((a, b) => repOf.get(b)! - repOf.get(a)! || a.localeCompare(b))
     .slice(0, 3);
 }
 const rivalStats = {
+  curatedClubs,
+  curatedDerbies: curated.matched,
+  curatedDerbiesNotInPack: curated.unmatched.map(([a, sa, b, sb]) => `${a} (${sa}) x ${b} (${sb})`),
   clubsWithRivals: clubs.filter((c) => c.rivals.length).length,
   largestSameCityGroup: Math.max(...[...byFmCity.values()].map((g) => g.length)),
 };
@@ -1604,7 +1639,7 @@ report.notes.push(
   'regulations (05 §8): A, B, C (24 clubs in 2027, 28 in 2028) and D as realDivisions(); from 2028 C sends six down and D refills from the ranking: PARÂMETRO, not published',
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
   'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
-  'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
+  'rivals: curated derbies (data/rivals.json, sources inside) where the club has one, else HEURISTIC, the three best-reputed other clubs of the same FM city_id',
   `fans: ${fansResearched} clubs with their supporters from data/fans.json (Ipsos-Ipec 2025), the rest estimated from the public or reputation`,
   `attendance: ${attendanceResearched} clubs with their 2025 average public and ticket from data/attendance.json (ge, mktesportivo); fans.demand is the share of seats filled on an ordinary day, fans.priceSensitivity sets the ticket`,
   `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
