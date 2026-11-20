@@ -376,12 +376,12 @@ function Talk({
 function LoanWith({ label, onGo }: { label: string; onGo: (k: (typeof KINDS)[number]) => void }) {
   const [kind, setKind] = useState<(typeof KINDS)[number]>('option');
   return (
-    <span className="flex shrink-0 gap-1">
+    <span className="flex min-w-0 basis-full gap-1">
       <select
         aria-label={t('market.loanKind')}
         value={kind}
         onChange={(e) => setKind(e.target.value as (typeof KINDS)[number])}
-        className="min-h-11 rounded-lg border border-chalk/25 bg-club-night px-2 text-xs font-bold"
+        className="min-h-11 min-w-0 flex-1 rounded-lg border border-chalk/25 bg-club-night px-2 text-xs font-bold"
       >
         {KINDS.map((k) => (
           <option key={k} value={k}>
@@ -391,7 +391,7 @@ function LoanWith({ label, onGo }: { label: string; onGo: (k: (typeof KINDS)[num
       </select>
       <button
         type="button"
-        className="min-h-11 rounded-lg bg-chalk/10 px-2 font-condensed text-base leading-tight font-extrabold uppercase hover:bg-chalk/20"
+        className="min-h-11 flex-1 rounded-lg bg-chalk/10 px-2 font-condensed text-base leading-tight font-extrabold uppercase hover:bg-chalk/20"
         onClick={() => onGo(kind)}
       >
         {label}
@@ -949,7 +949,7 @@ export function Market(props: {
                       </button>
                     )}
                   {p.owner === null && (
-                    <span className="flex basis-full gap-2">
+                    <span className="flex basis-full flex-wrap gap-2">
                       <button
                         type="button"
                         aria-label={t('market.renewFor', { name: p.name })}
