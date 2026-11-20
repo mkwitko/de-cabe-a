@@ -18,6 +18,7 @@ import {
   type Calendar,
   type Scheduled,
 } from './calendar';
+import { COPA_ID, copaDoBrasil, copaField, copaMembers } from './copa';
 import { drawGroups, groupFixtures, select } from './groups';
 import {
   advance,
@@ -161,8 +162,24 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     decisions: [],
     ...(opts.deduct && Object.keys(opts.deduct).length > 0 && { deduct: opts.deduct }),
   };
+  addCopa(s);
   openReady(s);
   return s;
+}
+
+/**
+ * The Copa do Brasil joins the season when the divisions' members make the real field (copa.ts);
+ * its clubs follow the divisions every season, so they are read here, never carried.
+ */
+function addCopa(s: SeasonState): void {
+  const tiers = s.competitions
+    .filter((c) => c.scope === 'nacional' && c.tier !== null && c.category === 'profissional')
+    .map((c) => ({ tier: c.tier!, clubIds: s.members[c.id] ?? [] }));
+  const field = copaField(tiers, s.ranking);
+  if (!field) return;
+  const cup = copaDoBrasil(s.season, field);
+  s.competitions.push(cup);
+  s.members[COPA_ID] = copaMembers(field);
 }
 
 const tableRules = (s: SeasonState, c: Competition, p: Phase): TableRules =>
@@ -452,14 +469,18 @@ export const isOver = (s: SeasonState) =>
   s.competitions.every((c) => c.phases.every((p) => s.results[c.id]?.[p.id]));
 
 /** Next season's members, titles and places (MC-172). */
-export const finishSeason = (s: SeasonState, next: Competition[]) =>
-  applyOutcomes({
+export const finishSeason = (s: SeasonState, next: Competition[]) => {
+  // The Copa is not in the pack's regulations: next season's has the same size (startSeason
+  // draws its clubs again from the new divisions).
+  const cup = s.competitions.find((c) => c.id === COPA_ID);
+  return applyOutcomes({
     competitions: s.competitions,
     members: s.members,
     results: s.results,
-    next,
+    next: cup ? [...next, { ...cup, season: s.season + 1 }] : next,
     ranking: s.ranking,
   });
+};
 
 /**
  * Season checks of TEST_STRATEGY §6: every phase over and every match played;

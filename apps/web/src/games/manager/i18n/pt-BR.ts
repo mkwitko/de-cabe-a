@@ -367,6 +367,25 @@ export const ptBR = {
     '{source, select, copa {Copa do Brasil: {line, select, prize {premiação da final} other {cota da {phase}ª fase}} creditada, {amount}.} serieC {Série C: {line, select, advance {cota da fase final (quadrangular)} other {cota}} creditada, {amount}.} serieD {Série D: {line, select, prize {cota da final} other {cota da {phase}ª fase}} creditada, {amount}.} other {Direitos de TV da Série A: parte por colocação creditada, {amount}.}}',
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
+  'inbox.copaDraw':
+    'Sorteio da Copa do Brasil ({phase}): {legs, select, 2 {ida e volta contra {opp}, com a ida {home, select, true {em casa} other {fora}}.} other {jogo único contra {opp}, {home, select, true {em casa} other {fora}}.}}',
+  'inbox.copaOut':
+    'Eliminados da Copa do Brasil {phase}{by, select, penalties {, nos pênaltis} penaltyDraw {, nos pênaltis} other {}}. O foco volta ao campeonato.',
+  'inbox.copaTitle': 'Campeões da Copa do Brasil! A taça é nossa.',
+  'copa.phase':
+    '{p, select, fase-1 {1ª fase} fase-2 {2ª fase} fase-3 {3ª fase} fase-4 {4ª fase} fase-5 {5ª fase} oitavas {Oitavas de final} quartas {Quartas de final} semifinal {Semifinal} other {Final}}',
+  'copa.phaseIn':
+    '{p, select, fase-1 {na 1ª fase} fase-2 {na 2ª fase} fase-3 {na 3ª fase} fase-4 {na 4ª fase} fase-5 {na 5ª fase} oitavas {nas oitavas de final} quartas {nas quartas de final} semifinal {na semifinal} other {na final}}',
+  'copa.leg': '{legs, select, 2 {{leg, select, 1 {ida} other {volta}}} other {jogo único}}',
+  'copa.label': '{name}, {phase}, {leg}',
+  'copa.congested':
+    'Semana cheia: {n, plural, one {# dia} other {# dias}} desde o último jogo. Vale rodar o elenco.',
+  'copa.rest': '{n}d',
+  'cup.title': 'Copa do Brasil',
+  'cup.mine': 'Seu caminho',
+  'cup.pens': 'pên.',
+  'cup.empty': 'Sem partidas desta fase ainda.',
+  'review.copa': 'Copa do Brasil: até {phase}.',
   'board.goal': 'Meta da temporada',
   'board.structure': 'Estrutura do clube',
   'market.officeCash': 'Caixa',

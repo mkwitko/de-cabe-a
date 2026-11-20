@@ -54,6 +54,11 @@ export function SeasonReview({
         {r.move !== 'stay' && ` ${t('review.move', { m: r.move })}`}
         {r.cups.map((c) => ` ${t('review.cup', { name: c })}`)}
       </p>
+      {r.copa && r.cups.length === 0 && (
+        <p className="text-chalk-soft">
+          {t('review.copa', { phase: t('copa.phase', { p: r.copa }) })}
+        </p>
+      )}
       <div>
         <p className="font-semibold">{t('review.revenue')}</p>
         <ul className="text-chalk-soft tabular-nums">
@@ -176,6 +181,11 @@ export function History({ history, club }: { history: SimView['history']; club: 
                     ]
                       .filter(Boolean)
                       .join(' · ')}
+                  </span>
+                )}
+                {h.copa && h.cups.length === 0 && (
+                  <span className="basis-full text-sm text-chalk-soft">
+                    {t('review.copa', { phase: t('copa.phase', { p: h.copa }) })}
                   </span>
                 )}
                 {h.move === 'relegation' && (

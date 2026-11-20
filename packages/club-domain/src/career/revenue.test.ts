@@ -25,7 +25,6 @@ import { nationalDivisions } from './start';
 
 const pack = generateDevPack();
 const divs = nationalDivisions(pack);
-const tierOf = (id: string) => divs.find((d) => d.clubIds.includes(id))!.tier;
 
 describe('revenue lines (CBF 2026 tables)', () => {
   it('quotas: Série D R$ 500 mil, Série C R$ 1.55 mi, none above', () => {
@@ -69,33 +68,14 @@ describe('revenue lines (CBF 2026 tables)', () => {
     expect(performanceTv(1000, 0, 20)).toBe(0);
   });
 
-  it('Copa do Brasil: entry by group, amounts by phase, one champion, one runner-up', () => {
+  it('Copa do Brasil: money follows the clubs the draws put in each phase (cup.test.ts)', () => {
     const w = openCareer(pack, 9, divs[0]!.clubIds[0]!);
-    const all = [...nationalDivisions(pack)].flatMap((d) => d.clubIds);
-    const credits = all.map((id) => ({ id, tier: tierOf(id), list: copaCredits(w, id) }));
-    const finals = credits.flatMap((c) => c.list.filter((x) => x.phase === 9));
-    expect(finals.map((x) => x.amount).sort((a, b) => a - b)).toEqual([
-      COPA_RUNNER_UP,
-      COPA_CHAMPION,
-    ]);
-    expect(finals.every((x) => x.line === 'prize')).toBe(true);
-    for (const { tier, list } of credits) {
-      const table = tier === 2 ? COPA_B : COPA_LOW;
-      for (const c of list) {
-        expect(c.source).toBe('copa');
-        if (c.phase < 9) {
-          expect(c.line).toBe('advance');
-          expect(c.amount).toBe(table[c.phase - 1]);
-        }
-      }
-      // A Série A club comes in at the 5th phase; the lower ones before it.
-      if (tier === 1 && list.length) expect(list[0]!.phase).toBe(5);
-      if (tier === 4 && list.length) expect(list[0]!.phase).toBe(1);
-      // Never twice in a phase, in order of play.
-      expect(list.map((x) => x.phase)).toEqual(
-        [...new Set(list.map((x) => x.phase))].sort((a, b) => a - b),
-      );
-    }
+    // Before any match only the 1st phase is drawn: its 28 clubs are owed R$ 400 mil each.
+    const owed = [...w.season.members['copa-do-brasil']!].flatMap((id) => copaCredits(w, id));
+    expect(owed).toHaveLength(28);
+    expect(owed.every((c) => c.amount === COPA_LOW[0] && c.phase === 1)).toBe(true);
+    expect(COPA_B[1]).toBe(1_380_000);
+    expect([COPA_RUNNER_UP, COPA_CHAMPION]).toEqual([34_000_000, 78_000_000]);
   });
 
   it('the person and the other clubs read the same tables', () => {

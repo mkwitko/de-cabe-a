@@ -12,6 +12,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
+import { COPA_ID } from '../competition/copa';
 import { nextDecision, openCareer, playDecision, type CareerWorld } from '../career/advance';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { ABROAD, isAbroad } from '../market/abroad';
@@ -229,6 +230,40 @@ const TARGETS: Target[] = [
         games++;
       }
       return (100 * home) / Math.max(1, games);
+    },
+  },
+  {
+    name: 'Vitórias do mandante na Copa do Brasil (%)',
+    // 155 matches a season: three seasons' mean, wide because of the sample. The final is a
+    // neutral venue and the second legs are decided by the better campaign hosting.
+    range: [40, 62],
+    source: 'Copa do Brasil 2023-2025: mandante vence cerca de metade dos jogos (a confirmar)',
+    confirmed: false,
+    measure: (w) => {
+      let home = 0;
+      let games = 0;
+      for (const [match, o] of w.season.outcomes) {
+        if (w.season.meta.get(match)?.competitionId !== COPA_ID) continue;
+        if (o.goals[0] > o.goals[1]) home++;
+        games++;
+      }
+      return (100 * home) / Math.max(1, games);
+    },
+  },
+  {
+    name: 'Gols por jogo na Copa do Brasil',
+    range: [2.0, 2.9],
+    source: 'Copa do Brasil recente, cerca de 2,3 a 2,6 gols por jogo (a confirmar)',
+    confirmed: false,
+    measure: (w) => {
+      let goals = 0;
+      let games = 0;
+      for (const [match, o] of w.season.outcomes) {
+        if (w.season.meta.get(match)?.competitionId !== COPA_ID) continue;
+        goals += o.goals[0] + o.goals[1];
+        games++;
+      }
+      return goals / Math.max(1, games);
     },
   },
   {

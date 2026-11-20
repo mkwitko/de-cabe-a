@@ -24,6 +24,7 @@ import type {
 } from './sim.worker';
 import { Squad } from './Squad';
 import { Training } from './Training';
+import { Cup } from './Cup';
 import { Market } from './Market';
 import { Board, type WorkSaid, Fired } from './Board';
 import { Backup } from './Backup';
@@ -694,6 +695,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
               </dl>
             </section>
           </section>
+          <Cup sim={sim} />
         </>
       )}
       <p className="text-xs text-chalk-soft/80">{t('career.builtHere', { ms: sim.ms })}</p>
@@ -802,7 +804,7 @@ function NextMatch(props: {
                 <span className="mx-2 text-club-gold">/</span>
                 {t('career.dateLong', { d: new Date(`${next.iso}T12:00:00Z`) })}
                 <span className="mx-2 text-club-gold">/</span>
-                {next.competition}
+                {competitionLabel(next)}
               </p>
             </div>
           )}
@@ -865,8 +867,13 @@ function NextMatch(props: {
             <span className="mx-2 text-club-gold">/</span>
             {t('career.venue', { v: VENUE[Number(next.atHome)]! })}
             <span className="mx-2 text-club-gold">/</span>
-            {next.competition}
+            {competitionLabel(next)}
           </p>
+          {next.rest !== null && next.rest <= CONGESTED && (
+            <p className="text-center text-sm text-balance text-club-gold">
+              {t('copa.congested', { n: next.rest })}
+            </p>
+          )}
           {next.coach && (
             <p className="text-center text-sm text-balance text-chalk-soft">
               {t('career.rivalCoach', { coach: next.coach.name, style: next.coach.style })}
@@ -1045,7 +1052,17 @@ function Fixtures({ sim }: { sim: SimView }) {
               {t('career.date', { d: new Date(`${f.iso}T12:00:00Z`) })}
             </span>
             <Crest club={f.opponent} size="sm" />
-            <span className="min-w-0 flex-1 truncate font-semibold">{f.opponent.name}</span>
+            <span className="min-w-0 flex-1 truncate font-semibold">
+              {f.opponent.name}
+              <span className="ml-2 text-xs font-normal text-chalk-soft">
+                {competitionLabel(f)}
+              </span>
+            </span>
+            {f.rest !== null && f.rest <= CONGESTED && (
+              <span className="text-xs font-bold text-club-gold tabular-nums">
+                {t('copa.rest', { n: f.rest })}
+              </span>
+            )}
             <span className="text-xs font-bold text-chalk-soft uppercase">
               {t('career.venueShort', { v: VENUE[Number(f.atHome)]! })}
             </span>
@@ -1114,6 +1131,9 @@ const FROM = {
   election: 'board',
   electionYear: 'board',
   season: 'press',
+  copaDraw: 'board',
+  copaOut: 'board',
+  copaTitle: 'board',
 } as const;
 const FROM_TONE = {
   board: 'bg-club-gold',
@@ -1298,6 +1318,20 @@ function noteText(n: InboxItem, sim: SimView): string {
         phase: n.phase,
         amount: t('career.cash', { value: n.amount }),
       });
+    case 'copaDraw':
+      return t('inbox.copaDraw', {
+        phase: t('copa.phase', { p: n.phase }),
+        legs: n.legs,
+        opp: n.clubName,
+        home: BOOL[Number(n.atHome)]!,
+      });
+    case 'copaOut':
+      return t('inbox.copaOut', {
+        phase: t('copa.phaseIn', { p: n.phase }),
+        by: n.by,
+      });
+    case 'copaTitle':
+      return t('inbox.copaTitle');
     case 'season':
       return t('inbox.season', { season: n.season, champion: n.clubName, move: n.move });
   }
@@ -1445,6 +1479,20 @@ function Guide({ careerId, onRoom }: { careerId: string; onRoom: (r: Room) => vo
     </section>
   );
 }
+/** Three days or less between two matches: a congested week, the squad needs rotating. */
+const CONGESTED = 3;
+/** A match's competition, with the phase and the leg in the cup. */
+const competitionLabel = (m: {
+  competition: string;
+  stage: SimView['fixtures'][number]['stage'];
+}) =>
+  m.stage
+    ? t('copa.label', {
+        name: m.competition,
+        phase: t('copa.phase', { p: m.stage.phase }),
+        leg: t('copa.leg', { legs: m.stage.legs, leg: m.stage.leg }),
+      })
+    : m.competition;
 const MSG_RESULT = { W: 'career.msgWin', D: 'career.msgDraw', L: 'career.msgLoss' } as const;
 
 function Table({ sim, clubId }: { sim: SimView; clubId: string }) {

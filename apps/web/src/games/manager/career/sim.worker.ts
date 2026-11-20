@@ -38,6 +38,9 @@ import {
   type Moment,
   type MomentMode,
   upcomingFor,
+  cupStage,
+  cupView,
+  restBefore,
   lineupOf,
   academyPlayers,
   promote,
@@ -222,6 +225,10 @@ export interface SimView {
     away: ClubFace;
     atHome: boolean;
     competition: string;
+    /** In the Copa do Brasil: the phase and the leg; null in the leagues. */
+    stage: CupStage | null;
+    /** Days since the club's match before this one; three or less is a congested week. */
+    rest: number | null;
     /** Names of the opponent's players banned from this match, and the person's own. */
     banned: { theirs: string[]; ours: string[] };
     /** The rival's coach and his style's word (coach-pool.ts); null while it has none. */
@@ -230,7 +237,28 @@ export interface SimView {
   /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
   deadline: string | null;
   /** The club's next matches after this one, by date. */
-  fixtures: { iso: string; opponent: ClubFace; atHome: boolean; competition: string }[];
+  fixtures: {
+    iso: string;
+    opponent: ClubFace;
+    atHome: boolean;
+    competition: string;
+    stage: CupStage | null;
+    rest: number | null;
+  }[];
+  /** The Copa do Brasil as drawn so far: every tie by phase, with the clubs' faces by id. */
+  cup: {
+    phases: {
+      id: string;
+      ties: {
+        a: string;
+        b: string;
+        legs: { iso: string; home: string; goals: [number, number] | null }[];
+        winner: string | null;
+        by: string | null;
+      }[];
+    }[];
+    clubs: Record<string, ClubFace>;
+  } | null;
   /** The club's last five results, oldest first, from the club's side. */
   form: { result: 'W' | 'D' | 'L'; goals: [number, number]; opponent: ClubFace; atHome: boolean }[];
   last: {
@@ -293,6 +321,13 @@ const INBOX_SHOWN = 12;
 
 /** Home and away kits of a club (real ones, when the pack has them). */
 export type ClubKits = { home: Kit; away?: Kit | undefined };
+
+/** A cup match's place: the phase's id, the leg (1-based) and how many legs the tie has. */
+export interface CupStage {
+  phase: string;
+  leg: number;
+  legs: 1 | 2;
+}
 
 /** What the screen draws for a club: names and the colour badge. */
 export interface ClubFace {
@@ -966,6 +1001,31 @@ async function gunzip(bytes: ArrayBuffer): Promise<string> {
   return new Response(stream).text();
 }
 
+/** The cup's ties with the faces of the clubs in them. */
+function cupFaces(w: CareerWorld, byId: Map<string, Pack['clubs'][number]>): SimView['cup'] {
+  const v = cupView(w.season);
+  if (!v) return null;
+  const clubs: Record<string, ClubFace> = {};
+  const add = (id: string) => (clubs[id] ??= face(byId.get(id)!));
+  return {
+    clubs,
+    phases: v.phases.map((p) => ({
+      id: p.id,
+      ties: p.ties.map((t) => {
+        add(t.a);
+        add(t.b);
+        return {
+          a: t.a,
+          b: t.b,
+          winner: t.winner,
+          by: t.by,
+          legs: t.legs.map((l) => ({ iso: isoOf(l.day), home: l.home, goals: l.goals })),
+        };
+      }),
+    })),
+  };
+}
+
 function view(w: CareerWorld, ms: number): SimView {
   const byId = new Map(w.pack.clubs.map((c) => [c.id, c]));
   const club = byId.get(w.clubId)!;
@@ -1004,6 +1064,8 @@ function view(w: CareerWorld, ms: number): SimView {
     opponent: face(byId.get(u.home === w.clubId ? u.away : u.home)!),
     atHome: u.home === w.clubId,
     competition: competition(u.competitionId),
+    stage: cupStage(s, u.id),
+    rest: restBefore(s, w.clubId, u.day),
   }));
   // On deadline day the next match is still the next match: shown beside the window decision.
   const match =
@@ -1069,7 +1131,7 @@ function view(w: CareerWorld, ms: number): SimView {
         iso: isoOf(n.day || w.day),
         clubName:
           byId.get(
-            n.kind === 'result'
+            n.kind === 'result' || n.kind === 'copaDraw'
               ? n.opponent
               : n.kind === 'bought' ||
                   n.kind === 'sold' ||
@@ -1152,6 +1214,8 @@ function view(w: CareerWorld, ms: number): SimView {
           away: face(byId.get(match.away)!),
           atHome: match.home === w.clubId,
           competition: competition(match.competitionId),
+          stage: cupStage(s, 'matchId' in match ? match.matchId : match.id),
+          rest: restBefore(s, w.clubId, match.day),
           coach: rival ? { name: rival.name, style: styleKind(playedStyle(w, rivalId!)) } : null,
           banned: {
             theirs: namesOf(
@@ -1167,6 +1231,7 @@ function view(w: CareerWorld, ms: number): SimView {
         }
       : null,
     last,
+    cup: cupFaces(w, byId),
     table: table.rows.map((r) => ({
       clubId: r.clubId,
       ...face(byId.get(r.clubId)!),
