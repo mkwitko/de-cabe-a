@@ -5,6 +5,8 @@
  * confidence brings an ultimatum (points in a number of matches); failing it ends the job.
  * Integers only; every number is a PARÂMETRO, not calibrated.
  */
+import { isEstadual } from '../competition/estaduais';
+import { isDerby } from '../match/stadium';
 import { moodOf } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import { divisionTable, type CareerWorld } from './advance';
@@ -28,6 +30,8 @@ export type BoardReason =
         | 'homegrown'
         | 'locals'
         | 'press'
+        | 'derby'
+        | 'exit'
         | 'identity';
       value: number;
     };
@@ -167,13 +171,36 @@ export function resultValue(
   rival: string,
   mine: number,
   theirs: number,
+  /** A state championship match: half a league match's weight, a lost clássico on top. */
+  estadual?: { derby: boolean },
 ): { result: 'W' | 'D' | 'L'; odds: Odds; value: number } {
   const result = mine > theirs ? 'W' : mine < theirs ? 'L' : 'D';
   const gap = (w.strength.get(clubId) ?? 0) - (w.strength.get(rival) ?? 0);
   const odds: Odds = gap > CLEAR_GAP ? 'favourite' : gap < -CLEAR_GAP ? 'underdog' : 'even';
   const base = BY_ODDS[odds][result] + (result === 'L' ? LOSS_WEIGHT[horizonOf(w, clubId)] : 0);
   const p = pressureOf(w, clubId);
-  return { result, odds, value: base < 0 ? Math.trunc((base * (200 + p)) / 200) : base };
+  const value = base < 0 ? Math.trunc((base * (200 + p)) / 200) : base;
+  if (!estadual) return { result, odds, value };
+  // Half a match, a defeat rounded against the club; the clássico lost costs more.
+  const half = value < 0 ? -Math.floor((1 - value) / 2) : Math.floor(value / 2);
+  return { result, odds, value: half + (estadual.derby && result === 'L' ? DERBY_LOST : 0) };
+}
+
+/** A clássico lost in the state championship, over the half weight of the defeat. PARÂMETRO. */
+const DERBY_LOST = -1;
+/** Leaving the state championship early (group stage or the quarter-finals). PARÂMETRO. */
+export const EARLY_EXIT = -1;
+
+/** The person's board after their club went out of the state championship early. */
+export function boardAfterExit(w: CareerWorld): Board {
+  const b = boardOf(w);
+  if (b.fired) return b;
+  // Only the confidence: an ultimatum, if one is due, is set at the next match's verdict.
+  return {
+    ...b,
+    confidence: clamp(b.confidence + EARLY_EXIT),
+    last: [{ kind: 'exit', value: EARLY_EXIT }],
+  };
 }
 
 /**
@@ -217,7 +244,7 @@ export const boardOf = (w: CareerWorld): Board =>
 /** After one of the person's matches: the result, the cash, and the ultimatum if one runs. */
 export function boardAfterMatch(
   w: CareerWorld,
-  match: { home: string; away: string },
+  match: { home: string; away: string; competitionId?: string },
   o: Outcome,
   /** The match's day: the supporters' mood is read with this result in. */
   day?: number,
@@ -233,8 +260,19 @@ export function boardAfterMatch(
     atHome ? match.away : match.home,
     mine,
     theirs,
+    match.competitionId !== undefined && isEstadual({ id: match.competitionId })
+      ? { derby: false }
+      : undefined,
   );
   const last: BoardReason[] = [{ kind: 'result', result, odds, value }];
+  // A lost clássico of the state championship weighs on the board on top of the half result.
+  if (
+    result === 'L' &&
+    match.competitionId !== undefined &&
+    isEstadual({ id: match.competitionId }) &&
+    isDerby(w.pack, match.home, match.away)
+  )
+    last.push({ kind: 'derby', value: DERBY_LOST });
   const winless = result === 'W' ? 0 : (b.winless ?? 0) + 1;
   // A winless run in the papers: a story at its third match, and again every three more.
   if (winless >= PRESS_RUN && winless % PRESS_RUN === 0 && p >= PRESS)

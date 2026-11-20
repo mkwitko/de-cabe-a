@@ -9,6 +9,8 @@ import type { Competition } from '../competition/schema';
 import type { SeasonState } from '../competition/season';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
+import { boardAfterExit } from './board';
+import { judgeExit } from './coaches';
 import { priced, pricesOf } from './prices';
 import { nationalDivisions } from './start';
 import { standings, type Row } from '../competition/league';
@@ -126,4 +128,30 @@ export function estadualView(w: CareerWorld): EstadualView | null {
       });
   const final = w.season.results[id]?.final;
   return { name: e.comp.name, rows, ties, champion: final?.tables[0]?.[0]?.clubId ?? null };
+}
+
+/**
+ * Clubs that just left a state championship early (out of the group phase, or beaten in the
+ * quarter-finals) put pressure on their board: the person's directly, the others' through
+ * their coach (coaches.ts). `before` is how many ties were decided before this match.
+ */
+export function estadualExits(
+  w: CareerWorld,
+  m: { competitionId: string; phaseId: string },
+  before: number,
+  day: number,
+): void {
+  const out = (id: string) => {
+    if (id === w.clubId) w.board = boardAfterExit(w);
+    else judgeExit(w, id, day);
+  };
+  for (const d of w.season.decisions.slice(before))
+    if (d.competitionId === m.competitionId && d.phaseId === 'quartas')
+      out(d.winner === d.a ? d.b : d.a);
+  if (m.phaseId !== 'fase1' || !w.season.results[m.competitionId]?.fase1) return;
+  const comp = w.season.competitions.find((c) => c.id === m.competitionId)!;
+  const run = w.season.running.get(`${comp.id}/${comp.phases[1]!.id}`);
+  if (run?.kind !== 'bracket') return;
+  const through = new Set(run.bracket.seeds);
+  for (const id of w.season.members[comp.id] ?? []) if (!through.has(id)) out(id);
 }

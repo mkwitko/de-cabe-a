@@ -4,6 +4,7 @@ import { nextDecision, openCareer, playDecision } from './advance';
 import { cotaFor, estadualOf, estadualView } from './estadual';
 import { nationalDivisions } from './start';
 import { budgetOf } from '../market/books';
+import { EARLY_EXIT, boardAfterExit, resultValue } from './board';
 
 const pack = generateDevPack();
 const clubId = nationalDivisions(pack)[0]!.clubIds[0]!;
@@ -42,5 +43,22 @@ describe('the person state championship', () => {
     const a = openCareer(pack, 5, clubId, 60);
     const b = openCareer(pack, 5, clubId, 60);
     expect(JSON.stringify(estadualView(a))).toBe(JSON.stringify(estadualView(b)));
+  });
+});
+
+describe('state championship pressure', () => {
+  it('weighs a result about half a league match; a lost clássico and an early exit weigh more', () => {
+    const w = openCareer(pack, 5, clubId);
+    const rival = nationalDivisions(pack)[0]!.clubIds[1]!;
+    const league = resultValue(w, clubId, rival, 0, 2);
+    const half = resultValue(w, clubId, rival, 0, 2, { derby: false });
+    expect(league.value).toBeLessThan(0);
+    expect(half.value).toBeGreaterThanOrEqual(league.value);
+    expect(Math.abs(half.value)).toBeLessThanOrEqual(Math.ceil(Math.abs(league.value) / 2) + 1);
+    const win = resultValue(w, clubId, rival, 2, 0, { derby: false });
+    expect(win.value).toBeLessThanOrEqual(resultValue(w, clubId, rival, 2, 0).value);
+    // An early exit takes confidence from the person's board.
+    const before = w.board?.confidence ?? 60;
+    expect(boardAfterExit(w).confidence).toBe(before + EARLY_EXIT);
   });
 });

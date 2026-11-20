@@ -70,7 +70,7 @@ import { postOwners } from './finance';
 import { postCups, postSeasonEnd } from './revenue';
 import { cupNotes, cupStages } from './cup';
 import { isEstadual } from '../competition/estaduais';
-import { settleEstadual } from './estadual';
+import { estadualExits, settleEstadual } from './estadual';
 import { matchReport, type ReportFact } from './report';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
@@ -289,10 +289,13 @@ function playDay(
             crowdShare(w.pack, w.season, id),
             whistleOf(w.season, id, isDerby(w.pack, m.home, m.away)),
           );
+    const decided = w.season.decisions.length;
     record(w.season, id, o);
     out.set(id, o);
-    if (m.phaseId === 'final' && isEstadual({ id: m.competitionId }))
-      settleEstadual(w, m.competitionId, day);
+    if (isEstadual({ id: m.competitionId })) {
+      estadualExits(w, m, decided, day);
+      if (m.phaseId === 'final') settleEstadual(w, m.competitionId, day);
+    }
     judgeCoaches(w, m, o, day);
     // The other clubs' cards and goals fall on their best men; the person's are dealt below.
     const league = leagues.has(m.competitionId);

@@ -253,10 +253,10 @@ export function crop(
 /**
  * Players the foreign market offers each season, and their levels and ages. PARÂMETRO, set so the
  * league pays abroad about what the Banco Central counts (US$ 180-235 mi in 2024-2025, reality
- * bench). 320 -> 330 with the state championships: their extra matches tire and hurt squads,
- * which moved the foreign signings under the bench's floor.
+ * bench). 320 -> 334 with the state championships: their extra matches tire and hurt squads,
+ * which moved the bench's marginal figures (foreign signings, top values); re-measured.
  */
-const IMPORTS = 330;
+const IMPORTS = 334;
 /**
  * Quality from 52 to 82, one draw: most who come are the middle of the South American market,
  * cheap next to a Brazilian of the same level, a few are stars back from Europe.

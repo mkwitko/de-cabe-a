@@ -170,7 +170,7 @@ function build(
   );
   return {
     ...base,
-    matchRules: { ...base.matchRules, videoReferee: fmt.videoReferee, minRestHours: 48 },
+    matchRules: { ...base.matchRules, videoReferee: fmt.videoReferee },
     money: { ...base.money, prizes: paid },
   };
 }

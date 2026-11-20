@@ -58,7 +58,7 @@ export const DOCUMENTED: StateFormat[] = [
     koLegs: { quarter: 1, semi: 1, final: 2 },
     // Corinthians, Palmeiras, Sao Paulo, Santos R$ 35 mi each; Mirassol and Bragantino R$ 10 mi;
     // the others R$ 7-8 mi (ranks by reputation stand in for the names).
-    cotas: [35 * M, 35 * M, 35 * M, 35 * M, 10 * M, 10 * M, 8 * M],
+    cotas: [35 * M, 35 * M, 35 * M, 35 * M, 10 * M, 10 * M, 7_500 * K],
     prizes: { champion: 5 * M, runnerUp: 1_500 * K, semi: 0 },
     estimated: false,
     videoReferee: true,
