@@ -16,6 +16,12 @@ const ALLOWED: Record<string, readonly string[]> = {
   game_abandoned: ['mode', 'level', 'attemptsUsed', 'isMobile'],
   search_no_result: ['qLength', 'mode', 'isMobile'],
   link_opened: ['kind', 'ref', 'isMobile'],
+  career_started: ['tier', 'isMobile'],
+  season_started: ['n', 'isMobile'],
+  season_completed: ['n', 'verdict', 'isMobile'],
+  career_fired: ['n', 'isMobile'],
+  first_meaningful_decision: ['seconds', 'what', 'isMobile'],
+  career_timing: ['step', 'ms', 'isMobile'],
 };
 
 const pick = (name: string, props: Props) =>

@@ -9,6 +9,10 @@ import {
   divisionTable,
   resultBetween,
   startNextSeason,
+  bridgeBefore,
+  divisionTierOf,
+  bridgeAfter,
+  type Bridge,
   isoOf,
   loadCareer,
   nextDecision,
@@ -199,6 +203,10 @@ export interface SimView {
   fx: { currency: Currency; rate: number; change: number }[];
   /** After a season turn: titles of the person's division and the club's move. */
   turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
+  /** After a season turn: what happened, what carries over, what is ahead (club-domain bridge.ts). */
+  bridge: Bridge | null;
+  /** The club's division tier (1 = Série A). */
+  tier: number;
   division: string;
   /** At the season's end, before the turn: the season read back (club-domain history.ts). */
   review: SeasonReview | null;
@@ -932,6 +940,7 @@ let world: CareerWorld | null = null;
 let pending: Decision | null = null;
 let last: SimView['last'] = null;
 let turn: SimView['turn'] = null;
+let bridge: Bridge | null = null;
 /** The person's match being watched, and the plan changes sent so far. */
 let live: LiveMatch | null = null;
 let liveCommands: TimedCommand[] = [];
@@ -1012,6 +1021,8 @@ function view(w: CareerWorld, ms: number): SimView {
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
     turn,
+    bridge,
+    tier: divisionTierOf(w, w.clubId) ?? 1,
     todo: todoOf(w).map((t) => ({
       ...t,
       playerName:
@@ -1208,7 +1219,9 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const before = divisionTable(world).name;
       const divId = world.season.competitions.find((c) => c.name === before)?.id;
       const from = world.day;
+      const bridged = bridgeBefore(world);
       const t: SeasonTurn = startNextSeason(world);
+      bridge = bridgeAfter(world, bridged);
       const names = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
       const champion = t.titles.find((x) => x.competitionId === divId)?.clubId ?? '';
       turn = {

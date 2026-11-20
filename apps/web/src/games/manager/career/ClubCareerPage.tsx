@@ -4,6 +4,8 @@
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
 import { SeasonReview } from './SeasonReview';
+import { SeasonBridge } from './SeasonBridge';
+import { trackDecision, trackSeen, trackTiming } from './telemetry';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
@@ -331,6 +333,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
         w.postMessage({ ...req, id }, req.type === 'open' ? [req.snapshot] : []);
       });
     setAsk(() => call);
+    const opened = performance.now();
     apiFetch('/v1/manager/career/world')
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((snapshot) =>
@@ -343,7 +346,10 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           snapshot,
         }),
       )
-      .then(apply)
+      .then((r) => {
+        trackTiming('open', performance.now() - opened);
+        return apply(r);
+      })
       .catch((err: Error) => setError(err.message));
     return () => w.terminate();
   }, [career]);
@@ -353,23 +359,48 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const keep = useCallback((reply: SimReply) => {
     if (reply.save) put(reply.save, true).catch(() => undefined);
   }, []);
+  const pickedLineup = useCallback(
+    (reply: SimReply) => {
+      keep(reply);
+      trackDecision(career.id, 'lineup');
+    },
+    [keep, career.id],
+  );
 
   // A transfer: the snapshot is kept and the hub shows the new cash and squad.
   const deal = useCallback(
     (reply: SimReply) => {
       keep(reply);
+      trackDecision(career.id, 'signing');
       if (reply.view) setSim(reply.view);
     },
-    [keep],
+    [keep, career.id],
   );
 
   const step = (type: 'play' | 'nextSeason') => {
     if (!ask) return;
     setBusy(true);
+    const t0 = performance.now();
     ask({ type })
-      .then(apply)
+      .then((r) => {
+        if (type === 'nextSeason') trackTiming('seasonTurn', performance.now() - t0);
+        return apply(r);
+      })
       .catch((err: Error) => setError(err.message));
   };
+
+  // The funnel milestones the view shows (telemetry.ts); each goes out once per career.
+  useEffect(() => {
+    if (!sim) return;
+    trackSeen(career.id, {
+      fresh: sim.fresh,
+      tier: sim.tier,
+      n: sim.history.length + 1,
+      fired: sim.board.fired,
+      over: sim.review ? (sim.review.fired ? 'fired' : sim.review.met ? 'met' : 'missed') : null,
+    });
+  }, [sim, career.id]);
+  const [bridgeSeen, setBridgeSeen] = useState<number | null>(null);
 
   const [tunnel, setTunnel] = useState(false);
   const [workSaid, setWorkSaid] = useState<WorkSaid>(null);
@@ -551,7 +582,9 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       )}
       {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
       {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
-      {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
+      {room === 'vestiario' && ask && (
+        <Squad ask={ask} onError={setError} onPicked={pickedLineup} />
+      )}
       {room === 'sala' && (
         <>
           {sim.turn && (
@@ -565,6 +598,9 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                 move: sim.turn.move,
               })}
             </p>
+          )}
+          {sim.bridge && sim.turn && bridgeSeen !== sim.turn.season && (
+            <SeasonBridge bridge={sim.bridge} onClose={() => setBridgeSeen(sim.turn!.season)} />
           )}
           <NextMatch
             sim={sim}
