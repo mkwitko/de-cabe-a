@@ -38,6 +38,7 @@ export const RULES = {
     {
       jurisdiction: 'CBF',
       from: '2026-01-01',
+      until: '2026-12-31',
       source:
         'CBF, calendário 2026: 1ª janela 5/1 a 3/3, doméstica 4/3 a 27/3, 2ª janela 20/7 a 11/9 (Itatiaia; Descomplica). O jogo abre a 1ª com o ano.',
       value: {
@@ -46,7 +47,49 @@ export const RULES = {
         second: ['07-20', '09-11'],
       },
     },
+    {
+      jurisdiction: 'CBF',
+      from: '2027-01-01',
+      source:
+        'CBF, calendário 2027: janelas 4/1 a 2/3 e 19/7 a 10/9 (ge). A doméstica (3/3 a 26/3) é PARÂMETRO: a CBF não a publicou, repete a duração de 2026. O jogo abre a 1ª com o ano; vale de 2027 em diante.',
+      value: {
+        first: ['01-01', '03-02'],
+        domestic: ['03-03', '03-26'],
+        second: ['07-19', '09-10'],
+      },
+    },
   ] as Rule<Windows>[],
+  /**
+   * FIFA international windows (month-day spans) in which national teams call players up, and
+   * the 2026 World Cup, which keeps its finalists away from 1/6 to 19/7.
+   */
+  fifaWindows: [
+    {
+      jurisdiction: 'FIFA',
+      from: '2026-01-01',
+      until: '2026-12-31',
+      source:
+        'FIFA, calendário internacional 2026: 23 a 31/3, 1 a 9/6, 21/9 a 6/10, 9 a 17/11; Copa do Mundo de 11/6 a 19/7.',
+      value: [
+        ['03-23', '03-31'],
+        ['06-01', '07-19'],
+        ['09-21', '10-06'],
+        ['11-09', '11-17'],
+      ],
+    },
+    {
+      jurisdiction: 'FIFA',
+      from: '2027-01-01',
+      source:
+        'FIFA: o calendário de 2027 não foi lido; PARÂMETRO, repete as quatro janelas de 2026 (sem Copa do Mundo).',
+      value: [
+        ['03-23', '03-31'],
+        ['06-01', '06-09'],
+        ['09-21', '10-06'],
+        ['11-09', '11-17'],
+      ],
+    },
+  ] as Rule<readonly (readonly [string, string])[]>[],
   loans: [
     {
       jurisdiction: 'FIFA',

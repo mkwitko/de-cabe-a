@@ -47,6 +47,7 @@ export type Note = { day: number } & (
   /** Unhappy players (market/unrest.ts). */
   | { kind: 'unhappy' | 'leaveRequest' | 'promiseKept' | 'promiseBroken'; player: string }
   | { kind: 'cameUp'; players: number }
+  | { kind: 'calledUp'; player: string }
   | {
       kind: 'injury';
       player: string;

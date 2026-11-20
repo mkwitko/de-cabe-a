@@ -1013,6 +1013,7 @@ const FROM = {
   promiseBroken: 'staff',
   injury: 'staff',
   suspension: 'staff',
+  calledUp: 'staff',
   prize: 'finance',
   arrears: 'staff',
   arrearsPaid: 'staff',
@@ -1175,6 +1176,8 @@ function noteText(n: InboxItem, sim: SimView): string {
         kind: t('health.kind', { k: n.injury }),
         days: n.days,
       });
+    case 'calledUp':
+      return t('inbox.calledUp', { name: n.player });
     case 'suspension':
       return t('inbox.suspension', { name: n.player, n: n.matches, why: n.why });
     case 'contractsEnding':

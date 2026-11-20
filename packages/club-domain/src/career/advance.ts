@@ -42,6 +42,7 @@ import {
   type Sentence,
 } from './discipline';
 import { windowOpen, type Moves } from './market';
+import { calledOf, fifaWindowOn } from './callups';
 import { note, type Note } from './inbox';
 import { entryOf, seasonReview, type HistoryEntry } from './history';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
@@ -219,6 +220,13 @@ function playDay(
     const ending = endingSoon(w).length;
     if (windowOpen(day) && isoOf(day).slice(5, 7) === '07' && ending > 0)
       note(w, { day, kind: 'contractsEnding', players: ending });
+  }
+  // A FIFA window opens: the national teams take the person's players for it (callups.ts).
+  const fifa = fifaWindowOn(day);
+  if (fifa !== null && fifa !== fifaWindowOn(w.day)) {
+    const n = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+    for (const id of calledOf(w, w.clubId, day))
+      note(w, { day, kind: 'calledUp', player: n.get(id) ?? '' });
   }
   // The clubs trade among themselves before the day's matches: the rounds due since the last day.
   for (const round of roundsBetween(w.day, day)) {
