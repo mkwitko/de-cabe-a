@@ -67,6 +67,11 @@ export type Note = { day: number } & (
       phase: number;
       amount: number;
     }
+  /** The person's club was drawn in a Copa do Brasil phase (its id, copa.ts): the opponent, the first leg's venue. */
+  | { kind: 'copaDraw'; phase: string; opponent: string; atHome: boolean; legs: 1 | 2 }
+  /** Out of the Copa do Brasil in a phase, and how the tie was decided; or the title. */
+  | { kind: 'copaOut'; phase: string; by: string }
+  | { kind: 'copaTitle' }
   /** Wages unpaid for `months`; paid up again; a player who ended his contract over them. */
   | { kind: 'arrears'; months: number }
   | { kind: 'arrearsPaid' }

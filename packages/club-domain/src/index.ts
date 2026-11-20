@@ -73,3 +73,5 @@ export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
 export * from './career/clubs';
 export * from './career/prices';
 export * from './match/moments';
+export { COPA_ID, COPA_PHASES } from './competition/copa';
+export { cupReached, cupStage, cupView, restBefore, type CupTie, type CupView } from './career/cup';

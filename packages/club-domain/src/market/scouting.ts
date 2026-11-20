@@ -11,6 +11,7 @@
  * their band: at 100 it reads him exactly. Only what grew past the base is kept in the save
  * (`w.scouting.known`). Every number is a PARÂMETRO.
  */
+import { COPA_ID } from '../competition/copa';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
 import { postEntry } from '../finance/ledger';
@@ -162,8 +163,9 @@ function rivalsOf(w: CareerWorld, clubId: string): Set<string> {
   let by = rivals.get(w.season);
   if (!by) {
     by = new Map();
-    for (const ids of Object.values(w.season.members))
-      for (const id of ids) {
+    // The Copa's 126 clubs are not all each other's opponents: only the drawn ones meet.
+    for (const [cid, ids] of Object.entries(w.season.members))
+      for (const id of cid === COPA_ID ? [] : ids) {
         let set = by.get(id);
         if (!set) by.set(id, (set = new Set()));
         for (const other of ids) set.add(other);

@@ -5,8 +5,7 @@
  * final position and a part by audience). The person's club and every other club read the same
  * tables here; only the ledger differs. Integers, results from seed and day.
  */
-import { dayOf } from '../competition/calendar';
-import { seedOf } from '../competition/season';
+import { COPA_ID, COPA_PHASES } from '../competition/copa';
 import { postEntry } from '../finance/ledger';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
@@ -164,29 +163,7 @@ export const COPA_LOW = [
 /** Runner-up and champion, in place of the final phase's quota. */
 export const COPA_RUNNER_UP = 34_000_000;
 export const COPA_CHAMPION = 78_000_000;
-/** Phase where each tier enters: Série A at the 5th, the others by group (0 = 1st phase). */
-const COPA_ENTRY: Record<number, number> = { 1: 4, 2: 1, 3: 1, 4: 0 };
-/** Month-day each of the nine stages is played (5 phases, round of 16, quarters, semis, final). */
-const COPA_DATES = [
-  '02-05',
-  '02-26',
-  '03-26',
-  '04-23',
-  '05-14',
-  '07-30',
-  '08-27',
-  '09-24',
-  '11-08',
-];
-const FINAL_STAGE = COPA_DATES.length - 1;
-
-/** Stages each club played, by club, plus the champion. Read once per season. */
-interface Cup {
-  stages: Map<string, number[]>;
-  champion: string;
-}
-const cups = new WeakMap<object, Cup>();
-
+const FINAL_STAGE = COPA_PHASES.length - 1;
 function tierMap(w: CareerWorld): Map<string, number> {
   const by = new Map<string, number>();
   for (const d of nationalDivisions(w.pack))
@@ -194,73 +171,72 @@ function tierMap(w: CareerWorld): Map<string, number> {
   return by;
 }
 
-/**
- * The season's Copa do Brasil, drawn from the career seed: clubs enter at their group's phase,
- * the pairs come out of a seeded sort, the stronger side (national ranking) wins more often, and
- * a club left without an opponent goes through. Not played on the pitch: only the phase each
- * club reaches matters, for the money.
- */
-function copaOf(w: CareerWorld): Cup {
-  let cup = cups.get(w.season);
-  if (cup) return cup;
-  const tiers = tierMap(w);
-  const order = new Map(w.season.ranking.map((id, i) => [id, i]));
-  const rank = (id: string) => order.get(id) ?? order.size;
-  const rating = (id: string) => order.size + 40 - rank(id);
-  const rounds: string[][] = [];
-  let alive: string[] = [];
-  const season = w.season.season;
-  for (let i = 0; i <= FINAL_STAGE && (i <= 4 || alive.length > 1); i++) {
-    const entering = [...tiers].filter(([, t]) => (COPA_ENTRY[t] ?? 0) === i).map(([id]) => id);
-    const pool = [...alive, ...entering];
-    rounds.push(pool);
-    const sorted = pool
-      .map((id) => ({ id, k: seedOf(w.seed, `copa:${season}:${i}:${id}`) }))
-      .sort((a, b) => a.k - b.k || a.id.localeCompare(b.id))
-      .map((x) => x.id);
-    const next: string[] = [];
-    if (sorted.length % 2) {
-      const bye = sorted.reduce((a, b) => (rank(b) < rank(a) ? b : a));
-      sorted.splice(sorted.indexOf(bye), 1);
-      next.push(bye);
+/** The cup's stages a club played, by club: stage index and the day of its first match there. */
+interface CupRuns {
+  /** `s.meta.size` when read: the draws add matches, so a bigger meta means a new read. */
+  size: number;
+  stages: Map<string, Map<number, number>>;
+}
+const runs = new WeakMap<object, CupRuns>();
+
+function cupRuns(w: CareerWorld): CupRuns {
+  const s = w.season;
+  const known = runs.get(s);
+  if (known && known.size === s.meta.size) return known;
+  const stages = new Map<string, Map<number, number>>();
+  for (const [id, m] of s.meta) {
+    if (m.competitionId !== COPA_ID) continue;
+    const stage = COPA_PHASES.indexOf(m.phaseId as (typeof COPA_PHASES)[number]);
+    const day = s.calendar.matches.get(id)!.day;
+    for (const club of [m.home, m.away]) {
+      const by = stages.get(club) ?? new Map<number, number>();
+      by.set(stage, Math.min(by.get(stage) ?? day, day));
+      stages.set(club, by);
     }
-    for (let j = 0; j < sorted.length; j += 2) {
-      const a = sorted[j]!;
-      const b = sorted[j + 1]!;
-      const roll = seedOf(w.seed, `copa:${season}:${i}:${a}:${b}`) % (rating(a) + rating(b));
-      next.push(roll < rating(a) ? a : b);
-    }
-    alive = next;
   }
-  const last = rounds.length;
-  // Rounds after the 5th phase count from the final backwards, whatever the pack's size.
-  const stageOf = (i: number) => (i <= 4 ? i : FINAL_STAGE - (last - 1 - i));
-  const stages = new Map<string, number[]>();
-  rounds.forEach((pool, i) => {
-    for (const id of pool) stages.set(id, [...(stages.get(id) ?? []), stageOf(i)]);
-  });
-  cup = { stages, champion: alive.length === 1 ? alive[0]! : '' };
-  cups.set(w.season, cup);
-  return cup;
+  const out = { size: s.meta.size, stages };
+  runs.set(s, out);
+  return out;
 }
 
-/** Copa do Brasil money of a club: one credit per phase played, each due the day it is played. */
+/**
+ * Copa do Brasil money of a club, from the matches it was drawn into: one credit per phase it
+ * entered (due the day of its first match there), and the final's prize once the final is
+ * played (due the day after it: champion R$ 78 mi, runner-up R$ 34 mi).
+ */
 export function copaCredits(w: CareerWorld, clubId: string): (Credit & { day: number })[] {
-  const cup = copaOf(w);
   const tier = tierMap(w).get(clubId) ?? 4;
   const table = tier === 2 ? COPA_B : COPA_LOW;
   const season = w.season.season;
-  return (cup.stages.get(clubId) ?? []).map((stage) => {
-    const final = stage === FINAL_STAGE;
-    return {
-      line: final ? 'prize' : 'advance',
-      source: 'copa',
-      phase: stage + 1,
-      amount: final ? (cup.champion === clubId ? COPA_CHAMPION : COPA_RUNNER_UP) : table[stage]!,
-      key: `copa:${season}:${stage}`,
-      day: dayOf(`${season}-${COPA_DATES[stage]}`),
-    };
-  });
+  const out: (Credit & { day: number })[] = [];
+  const final = w.season.results[COPA_ID]?.final;
+  const finalDay = final
+    ? Math.max(...[...cupRuns(w).stages.values()].map((m) => m.get(FINAL_STAGE) ?? 0))
+    : 0;
+  const mine = [...(cupRuns(w).stages.get(clubId) ?? [])].sort((a, b) => a[0] - b[0]);
+  for (const [stage, day] of mine) {
+    if (stage === FINAL_STAGE) {
+      if (!final) continue;
+      const champion = final.tables[0]![0]!.clubId === clubId;
+      out.push({
+        line: 'prize',
+        source: 'copa',
+        phase: stage + 1,
+        amount: champion ? COPA_CHAMPION : COPA_RUNNER_UP,
+        key: `copa:${season}:${stage}`,
+        day: finalDay + 1,
+      });
+    } else
+      out.push({
+        line: 'advance',
+        source: 'copa',
+        phase: stage + 1,
+        amount: table[stage]!,
+        key: `copa:${season}:${stage}`,
+        day,
+      });
+  }
+  return out;
 }
 
 // ── Série C and D phases, TV by position: paid at the season's end ──────────
@@ -359,10 +335,14 @@ export function postCups(w: CareerWorld, from: number, to: number): void {
 
 /** Posts the season-end credits of the person's club. */
 export function postSeasonEnd(w: CareerWorld, position: number, places: number): void {
+  // The final is played on the season's last day: its prize is posted here at the latest.
+  for (const c of copaCredits(w, w.clubId)) postCredit(w, c, Math.min(c.day, w.ledger.today));
   for (const c of endCredits(w, w.clubId, position, places)) postCredit(w, c, w.ledger.today);
 }
 
 function postCredit(w: CareerWorld, c: Credit, day: number): void {
+  // Posted on the day it fell due; a later look (the season's end) finds the key and stops.
+  if (w.ledger.keys.has(c.key)) return;
   const amount = priced(c.amount, pricesOf(w).prices);
   const posted = postEntry(w.ledger, {
     key: c.key,

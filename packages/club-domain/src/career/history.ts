@@ -11,6 +11,8 @@ import { dayOf } from '../competition/calendar';
 import { resultBetween } from '../finance/ledger';
 import { endCredits, type Line } from './revenue';
 import { priced, pricesOf } from './prices';
+import { COPA_PHASES } from '../competition/copa';
+import { cupReached } from './cup';
 
 /** What the career keeps of a season. */
 export interface HistoryEntry {
@@ -26,6 +28,8 @@ export interface HistoryEntry {
   champion: boolean;
   /** Other competitions the club won (cups), by name. */
   cups: string[];
+  /** The furthest Copa do Brasil phase the club played (its id, copa.ts); absent when not in it. */
+  copa?: string;
   /** The club's most-used player (matches started): goals per player are not recorded. */
   top: { name: string; starts: number } | null;
   /** The club's top scorer and assister of the league season (scoring.ts); absent before. */
@@ -120,6 +124,7 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
   // What the turn is about to credit (the same function posts it).
   for (const c of endCredits(w, w.clubId, position, divisionTableOf(w, w.clubId).rows.length))
     revenue[c.line] += priced(c.amount, pricesOf(w).prices);
+  const copa = cupReached(w.season, w.clubId);
   const won = t.titles.filter((x) => x.clubId === w.clubId).map((x) => x.competitionId);
   return {
     season: w.season.season,
@@ -138,6 +143,7 @@ export function seasonReview(w: CareerWorld): SeasonReview | null {
       .filter((id) => id !== div?.id)
       .map((id) => w.season.competitions.find((c) => c.id === id)?.name ?? '')
       .filter(Boolean),
+    ...(copa > 0 && { copa: COPA_PHASES[copa - 1]! }),
     top: used[0] ?? null,
     confidence: { from: b.confidence, to: after.confidence },
     reasons: b.fired ? [] : (after.last ?? []),
@@ -163,6 +169,7 @@ export const entryOf = (r: SeasonReview): HistoryEntry => ({
   move: r.move,
   champion: r.champion,
   cups: r.cups,
+  ...(r.copa !== undefined && { copa: r.copa }),
   top: r.top,
   ...(r.scorer !== undefined && { scorer: r.scorer }),
   ...(r.assister !== undefined && { assister: r.assister }),

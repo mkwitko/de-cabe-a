@@ -68,6 +68,7 @@ import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
 import { postOwners } from './finance';
 import { postCups, postSeasonEnd } from './revenue';
+import { cupNotes, cupStages } from './cup';
 import { matchReport, type ReportFact } from './report';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
@@ -269,6 +270,9 @@ function playDay(
   // The sports court sits before the day's matches: what it adds is served from today.
   banned(sitCourt(w, day));
   const leagues = leagueIds(w);
+  // The Copa's draws are made as its phases end: what the person's club was in before the day.
+  const cupBefore = cupStages(w.season, w.clubId);
+  const decided = w.season.decisions.length;
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     const o =
@@ -378,6 +382,7 @@ function playDay(
         note(w, { day, kind: 'ultimatumMet' });
     }
   }
+  cupNotes(w, day, cupBefore, decided);
   // A month turned on the way: were the wages paid?
   let turned = false;
   for (let d = Math.max(w.day + 1, dayOf(`${w.season.season}-01-01`)); d <= day; d++)
@@ -419,6 +424,7 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
     ...clubLevels(pack, start.season.season),
   };
   note(w, { day: 0, kind: 'welcome' });
+  cupNotes(w, 0, new Set(), 0);
   setJudgementClock(pack, seed, w.season.season);
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
   w.day = day;
@@ -652,6 +658,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     deduct: verdict.deduct,
   });
   noteFairPlay(w, verdict);
+  cupNotes(w, w.day, new Set(), w.season.decisions.length);
   note(w, {
     day: w.day,
     kind: 'season',
