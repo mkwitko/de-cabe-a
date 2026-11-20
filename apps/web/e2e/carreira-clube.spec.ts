@@ -50,13 +50,15 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await toMatch(page);
   await play.click();
   await toMatch(page);
-  const mine = page.locator('tbody tr.text-club-gold');
-  await expect(mine.locator('td').nth(2)).toHaveText('2');
+  // A lower-division club can open in the Copa do Brasil, so either match may be a cup tie.
+  const played = page.locator('tbody tr.text-club-gold').locator('td').nth(2);
+  await expect(played).toHaveText(/^[0-2]$/);
+  const before = await played.innerText();
   await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
-  // Reloading opens the saved snapshot: the two matches are still there.
+  // Reloading opens the saved snapshot: the matches are still there.
   await page.reload();
   await toMatch(page);
-  await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText('2');
+  await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText(before);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
