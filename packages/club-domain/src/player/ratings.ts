@@ -260,6 +260,17 @@ function rankedRoles(a: Attributes): readonly { role: RoleId; rating: number }[]
 export const bestRoles = (a: Attributes, n = 3): { role: RoleId; rating: number }[] =>
   rankedRoles(a).slice(0, n);
 
+/**
+ * `roleRating` kept per attributes object, like `rankedRoles` (same contract: attributes only
+ * change by a new object). For the hot paths that rate one squad in every role of a formation.
+ */
+const byRole = new WeakMap<Attributes, Map<RoleId, number>>();
+export function roleRatingOf(a: Attributes, role: RoleId): number {
+  let m = byRole.get(a);
+  if (!m) byRole.set(a, (m = new Map(rankedRoles(a).map((x) => [x.role, x.rating]))));
+  return m.get(role)!;
+}
+
 const mean = (a: Attributes, keys: readonly AttributeId[]) =>
   Math.round(keys.reduce((s, k) => s + a[k], 0) / keys.length);
 

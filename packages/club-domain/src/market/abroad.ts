@@ -12,6 +12,7 @@
  * not work out, to a club here that needs them, at the opening of each window.
  * Every number here is a PARÂMETRO, to be calibrated against the real yearly exodus.
  */
+import { clubById } from '../lib/pack-cache';
 import { resale } from './clauses';
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
@@ -173,7 +174,7 @@ export const importFee = (w: CareerWorld, p: PackPlayer) =>
 
 /** What he wants to sign for `buyerId`, coming from his club, from nowhere or from abroad. */
 export function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string): PlayerStance {
-  const club = (id: string) => w.pack.clubs.find((x) => x.id === id)!;
+  const club = (id: string) => clubById(w.pack, id)!;
   const from = p.clubId === null || p.clubId === ABROAD ? null : club(p.clubId);
   const s = playerStance(w.pack, p, from, club(buyerId), w.season.season);
   return p.clubId === ABROAD ? { ...s, wage: Math.round((s.wage * (100 + IMPORT_WAGE)) / 100) } : s;

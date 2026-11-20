@@ -20,7 +20,16 @@ import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { ABROAD, signable } from './abroad';
 import { tierOfClub } from './books';
-import { eyeOf, eyeSpread, knows, levelError, seenCeiling, seenLevel } from './judgement';
+import {
+  drawsOf,
+  eyeOf,
+  eyeSpread,
+  knows,
+  levelError,
+  reach,
+  seenCeiling,
+  seenLevel,
+} from './judgement';
 import { readingsOf } from './value';
 
 /** A scout away: where to, and the day he reports. */
@@ -185,6 +194,33 @@ export function clubKnows(w: CareerWorld, clubId: string, p: PackPlayer): boolea
     tierOfClub(w, p.clubId),
     stateOf(w.pack, p.clubId) === stateOf(w.pack, clubId),
   );
+}
+
+/**
+ * `clubKnows` for one club over many players: a club's reach of the players of another club is
+ * the same for all of them, so it is read once per club, not per player.
+ */
+export function knowerOf(w: CareerWorld, clubId: string): (p: PackPlayer) => boolean {
+  const draw = drawsOf(w.pack, clubId);
+  const reachOf = new Map<string, number>();
+  return (p) => {
+    const at = p.clubId;
+    if (at === clubId) return true;
+    if (at === null || at === ABROAD) return clubKnows(w, clubId, p);
+    let r = reachOf.get(at);
+    if (r === undefined) {
+      // 101: past any draw, as an opponent's players are always known.
+      r = rivalsOf(w, clubId).has(at)
+        ? 101
+        : reach(
+            eyeOf(w.pack, clubId).scouting,
+            tierOfClub(w, at),
+            stateOf(w.pack, at) === stateOf(w.pack, clubId),
+          );
+      reachOf.set(at, r);
+    }
+    return draw(p.id) < r;
+  };
 }
 
 /** The areas a scout can be sent to: the national divisions, then every state with a club. */

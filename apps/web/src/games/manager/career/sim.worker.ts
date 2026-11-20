@@ -919,8 +919,13 @@ function squadView(w: CareerWorld): SquadView {
   };
 }
 
+/** The long steps of opening a career and turning a season, for the screen to name. */
+export type Stage = 'pack' | 'open' | 'market' | 'turn' | 'save';
+
 export interface SimReply {
   id: number;
+  /** A step started: sent before the answer, which comes later with the same id. */
+  stage?: Stage;
   /** The board's answer to a proposed work: null when it signed. */
   work?: { front: Front; no: WorkNo | null };
   squad?: SquadView;
@@ -1167,31 +1172,39 @@ function view(w: CareerWorld, ms: number): SimView {
 }
 
 /** Moves to the next decision; a snapshot to save when days were played on the way. */
-async function toNextDecision(w: CareerWorld, hired = false): Promise<SimReply['save']> {
+async function toNextDecision(
+  w: CareerWorld,
+  hired = false,
+  say?: (s: Stage) => void,
+): Promise<SimReply['save']> {
   const from = w.day;
+  say?.('market');
   pending = nextDecision(w, { deadlines: true });
   if (hired) w.hiredDay = w.day;
-  return w.day !== from
-    ? { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) }
-    : undefined;
+  if (w.day === from) return undefined;
+  say?.('save');
+  return { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) };
 }
 
 self.onmessage = async (e: MessageEvent<SimRequest>) => {
   try {
     const t = performance.now();
     const r = e.data;
+    const say = (stage: Stage) => self.postMessage({ id: r.id, stage } satisfies SimReply);
     let save: SimReply['save'];
     if (r.type === 'open') {
+      say('pack');
       const res = await fetch(`/packs/${r.packId}.${r.packVersion}.json`);
       if (!res.ok) throw new Error(`pack ${res.status}`);
       const pack = (await res.json()) as Pack;
+      say('open');
       world =
         r.snapshot.byteLength > 0
           ? loadCareer(pack, r.seed, r.clubId, await gunzip(r.snapshot))
           : openCareer(pack, r.seed, r.clubId);
       // A new career: the person arrives on the day of their first decision, not on day 0.
       const hired = r.snapshot.byteLength === 0;
-      save = await toNextDecision(world, hired);
+      save = await toNextDecision(world, hired, say);
     } else if (world && r.type === 'play' && pending?.kind === 'deadline') {
       // Deadline day passed on: the window closes and the days run to the next decision.
       save = await toNextDecision(world);
@@ -1219,6 +1232,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const before = divisionTable(world).name;
       const divId = world.season.competitions.find((c) => c.name === before)?.id;
       const from = world.day;
+      say('turn');
       const bridged = bridgeBefore(world);
       const t: SeasonTurn = startNextSeason(world);
       bridge = bridgeAfter(world, bridged);
@@ -1230,7 +1244,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: t.season - 1,
       };
       last = null;
-      const after = await toNextDecision(world);
+      const after = await toNextDecision(world, false, say);
       // The season changed even if no day was played yet: always saved.
       save = after ?? {
         from,

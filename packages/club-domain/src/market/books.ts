@@ -20,6 +20,7 @@ import { note } from '../career/inbox';
 import { postEntry } from '../finance/ledger';
 import type { PackPlayer } from '../pack/schema';
 import { thousands } from './value';
+import { clubById } from '../lib/pack-cache';
 
 /** Share of a sale a club puts back into signings. */
 const REINVEST = 80;
@@ -63,7 +64,7 @@ export const incomeOf = (w: CareerWorld, clubId: string) => {
   const tier = tierOfClub(w, clubId);
   const tv = tvOf(w, clubId, tier);
   return seasonIncome(
-    w.pack.clubs.find((c) => c.id === clubId)!,
+    clubById(w.pack, clubId)!,
     tier,
     pricesOf(w).prices,
     tv.equal + tv.audience + tv.perfMean,
@@ -85,7 +86,7 @@ const modelOf = (w: CareerWorld, clubId: string) =>
   w.pack.governance.find((g) => g.clubId === clubId)?.model ?? 'association';
 
 function readBudget(w: CareerWorld, clubId: string): Budget {
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const club = clubById(w.pack, clubId)!;
   const income = incomeOf(w, clubId);
   const risk = club.profile.financialRisk;
   const s = clubId === w.clubId ? undefined : w.clubs?.[clubId];
@@ -148,7 +149,7 @@ export function available(w: CareerWorld, clubId: string): number {
  * with plus a margin by the owners' appetite for risk (5% to 15%).
  */
 export function wageRoom(w: CareerWorld, clubId: string): number {
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const club = clubById(w.pack, clubId)!;
   const lived = Math.round(
     (booksOf(w, clubId).bill * (105 + club.profile.financialRisk / 10)) / 100,
   );

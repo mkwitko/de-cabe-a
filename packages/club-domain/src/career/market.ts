@@ -8,7 +8,7 @@
 import { ruleOn } from '../rules/registry';
 import { isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
-import { carryCache } from '../lib/pack-cache';
+import { carryCache, peek, recache } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
@@ -99,6 +99,8 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
   if (ids.length === 0) return;
   const season = w.season.season;
   const touched = new Set<string>();
+  const leaving = new Map<string, Set<string>>();
+  const joining = new Map<string, string[]>();
   const left = new Set<string>();
   const stamped: Moves = {};
   const before = w.pack;
@@ -115,14 +117,36 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     players[i] = moved(players[i]!, stamped[id]!);
     // A renewal changes neither squad.
     if (from === to) continue;
-    if (from && from !== ABROAD) touched.add(from);
-    if (to && to !== ABROAD) touched.add(to);
+    if (from && from !== ABROAD) {
+      touched.add(from);
+      (leaving.get(from) ?? leaving.set(from, new Set()).get(from)!).add(id);
+    }
+    if (to && to !== ABROAD) {
+      touched.add(to);
+      (joining.get(to) ?? joining.set(to, []).get(to)!).push(id);
+    }
     left.add(id);
   }
-  w.moves = { ...w.moves, ...stamped };
+  // Updated in place: a copy of every move so far per transfer cost more than all the rest.
+  w.moves = Object.assign(w.moves ?? {}, stamped);
   w.pack = { ...before, players };
   places.set(w.pack, at);
   carryCache(before, w.pack, [...touched]);
+  // The squads of the clubs that changed, from their old lists and not from a pass over every
+  // player of the pack (what a missing squad costs): the same players, as the new objects.
+  for (const clubId of touched) {
+    const old = peek<PackPlayer[]>(before, 'squad', clubId);
+    if (!old) continue;
+    const gone = leaving.get(clubId);
+    const ids = old.filter((p) => !gone?.has(p.id)).map((p) => p.id);
+    ids.push(...(joining.get(clubId) ?? []));
+    recache(
+      w.pack,
+      'squad',
+      clubId,
+      ids.map((id) => players[at.get(id)!]!).sort((x, y) => (x.id < y.id ? -1 : 1)),
+    );
+  }
   for (const id of left)
     // A new club starts to know him now.
     if (stamped[id]!.clubId) markArrival(w.pack, id, season);
