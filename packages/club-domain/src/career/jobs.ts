@@ -63,6 +63,7 @@ export function takeJob(w: CareerWorld, clubId: string): void {
   delete vacancies[clubId];
   w.vacancies = vacancies;
   delete w.benches?.[clubId];
+  delete w.styled;
   w.clubId = clubId;
   w.hired = w.season.season;
   // ponytail: the other clubs keep no ledger, so the new club's cash is the pack's opening

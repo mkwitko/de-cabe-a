@@ -28,6 +28,7 @@ import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
 import { monthTurned, moraleOf, strengthOwed } from './arrears';
+import { coachEdge, rivalPlan, styled, type Coaches, type Style } from './coach-pool';
 import { fillVacancies, judgeCoaches, newSeasonCoaches, type Bench } from './coaches';
 import {
   afterMatch,
@@ -73,7 +74,7 @@ import {
   positionOf,
   type Board,
 } from './board';
-import { bestLineup, foreignLimit, teamWith, type Lineup } from './squad';
+import { bestLineup, foreignLimit, planOf, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
   clubLevels,
@@ -137,6 +138,12 @@ export interface CareerWorld {
   vacancies?: Record<string, number>;
   /** The clubs that sacked their coach this season, in order (one entry a sacking). */
   sacked?: string[];
+  /** The named coaches of the other clubs and the free pool (coach-pool.ts). */
+  coaches?: Coaches;
+  /** Clubs' DNA after the seasons, by club; the pack's playing style where absent. */
+  dna?: Record<string, Style>;
+  /** The person's style this season: matches and the sum of each axis (coach-pool.ts). */
+  styled?: { n: number; sum: number[] };
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
   /** Each club's cards and bans, by club (discipline.ts); absent before the first card. */
@@ -196,7 +203,7 @@ function playDay(
   const strength = (clubId: string) =>
     clubId === w.clubId
       ? strengthOwed(w, myStrength(w, training, fielded(w, day)))
-      : rivalStrength(w, clubId, day);
+      : rivalStrength(w, clubId, day) + coachEdge(w, clubId);
   const cashBefore = w.ledger.cash;
   if (windowOpen(w.day) !== windowOpen(day)) {
     note(w, { day, kind: 'window', open: windowOpen(day) });
@@ -262,6 +269,7 @@ function playDay(
         );
     if (m.home === w.clubId || m.away === w.clubId) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
+      styled(w, planOf(w));
       postHomeMatch(w, id, day);
       const km = postAwayTrip(w, id, day);
       w.report = matchReport(w, id, day, training);
@@ -420,7 +428,9 @@ function rivalEleven(
   day: number,
   competitionId: string,
 ): Lineup {
-  const formation = formationOf(c.clubId);
+  // His coach's formation and instructions over the club's DNA (coach-pool.ts).
+  const style = rivalPlan(w, c.clubId);
+  const formation = style?.formation ?? formationOf(c.clubId);
   // The banned do not travel; of those who do, some starters are short (health.ts); past the
   // season's limit of foreigners, Brazilians start (squad.ts).
   const banned = suspendedIn(w, competitionId, c.clubId);
@@ -432,12 +442,13 @@ function rivalEleven(
     best = bestLineup(c, formation, undefined, limit);
   }
   const out = rivalOutIds(w, c.clubId, best.xi, day);
-  if (out.size === 0) return best;
+  const withPlan = (l: Lineup): Lineup => (style ? { ...l, plan: style.plan } : l);
+  if (out.size === 0) return withPlan(best);
   try {
-    return bestLineup(c, formation, new Set([...out, ...banned]), limit);
+    return withPlan(bestLineup(c, formation, new Set([...out, ...banned]), limit));
   } catch {
     // No one left for a slot without them: they play.
-    return best;
+    return withPlan(best);
   }
 }
 

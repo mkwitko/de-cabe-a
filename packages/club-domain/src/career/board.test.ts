@@ -158,7 +158,7 @@ describe('the board (06, corte 1)', () => {
     const before = boardOf(w);
     const met = positionOf(w) <= before.goal;
     startNextSeason(w);
-    expect(w.board!.last).toEqual([
+    expect(w.board!.last!.filter((r) => r.kind !== 'identity')).toEqual([
       { kind: met ? 'goalMet' : 'goalMissed', value: met ? 15 : -10 },
     ]);
     expect(w.board!.goal).toBe(goalFor(w));

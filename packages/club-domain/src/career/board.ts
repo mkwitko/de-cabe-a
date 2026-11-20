@@ -8,6 +8,7 @@
 import { moodOf } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import { divisionTable, type CareerWorld } from './advance';
+import { identityOf } from './coach-pool';
 import { clubsOf, electionYear, type Horizon } from './clubs';
 import { nationalDivisions } from './start';
 import type { SeasonState } from '../competition/season';
@@ -26,7 +27,8 @@ export type BoardReason =
         | 'protest'
         | 'homegrown'
         | 'locals'
-        | 'press';
+        | 'press'
+        | 'identity';
       value: number;
     };
 
@@ -293,9 +295,11 @@ export function boardAfterSeason(w: CareerWorld): Board {
   if (homegrown > 0) last.push({ kind: 'homegrown', value: homegrown });
   const locals = localsOf(w);
   if (locals > 0) last.push({ kind: 'locals', value: locals });
+  const identity = identityOf(w);
+  if (identity !== 0) last.push({ kind: 'identity', value: identity });
   return {
     ...b,
-    confidence: clamp(b.confidence + value + homegrown + locals),
+    confidence: clamp(b.confidence + value + homegrown + locals + identity),
     last,
   };
 }

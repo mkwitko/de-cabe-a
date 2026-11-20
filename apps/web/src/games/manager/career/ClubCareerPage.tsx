@@ -781,6 +781,11 @@ function NextMatch(props: {
             <span className="mx-2 text-club-gold">/</span>
             {next.competition}
           </p>
+          {next.coach && (
+            <p className="text-center text-sm text-balance text-chalk-soft">
+              {t('career.rivalCoach', { coach: next.coach.name, style: next.coach.style })}
+            </p>
+          )}
           {(next.banned.theirs.length > 0 || next.banned.ours.length > 0) && (
             <p className="text-center text-sm text-balance text-chalk-soft">
               {next.banned.ours.length > 0 && (
@@ -974,6 +979,7 @@ const FROM = {
   protest: 'press',
   press: 'press',
   coachSacked: 'press',
+  coachHired: 'press',
   approach: 'board',
   courtBan: 'press',
   tired: 'staff',
@@ -1057,6 +1063,8 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.press', { n: n.matches });
     case 'coachSacked':
       return t('inbox.coachSacked', { club: n.clubName });
+    case 'coachHired':
+      return t('inbox.coachHired', { club: n.clubName, coach: n.coach, style: n.style });
     case 'approach':
       return t('inbox.approach', { club: n.clubName });
     case 'courtBan':

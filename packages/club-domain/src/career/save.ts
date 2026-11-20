@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 51;
+export const CAREER_RULES_VERSION = 52;
 
 interface Saved {
   v: number;
@@ -62,6 +62,9 @@ interface Saved {
   benches?: CareerWorld['benches'];
   vacancies?: CareerWorld['vacancies'];
   sacked?: CareerWorld['sacked'];
+  coaches?: CareerWorld['coaches'];
+  dna?: CareerWorld['dna'];
+  styled?: CareerWorld['styled'];
   academy?: CareerWorld['academy'];
   image?: CareerWorld['image'];
   fairplay?: CareerWorld['fairplay'];
@@ -157,6 +160,9 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.benches && { benches: w.benches }),
     ...(w.vacancies && { vacancies: w.vacancies }),
     ...(w.sacked && { sacked: w.sacked }),
+    ...(w.coaches && { coaches: w.coaches }),
+    ...(w.dna && { dna: w.dna }),
+    ...(w.styled && { styled: w.styled }),
     ...(w.academy && { academy: w.academy }),
     ...(w.image && { image: w.image }),
     ...(w.fairplay && { fairplay: w.fairplay }),
@@ -225,6 +231,9 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.benches && { benches: saved.benches }),
     ...(saved.vacancies && { vacancies: saved.vacancies }),
     ...(saved.sacked && { sacked: saved.sacked }),
+    ...(saved.coaches && { coaches: saved.coaches }),
+    ...(saved.dna && { dna: saved.dna }),
+    ...(saved.styled && { styled: saved.styled }),
     ...(saved.academy && { academy: saved.academy }),
     ...(saved.image && { image: saved.image }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),
