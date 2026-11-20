@@ -1,5 +1,6 @@
 #!/bin/sh
-# Ship origin/main to production. Run on YOUR computer, from the repository:
+# Ship origin/main to production. Runs by itself after CI is green on main
+# (.github/workflows/deploy.yml); by hand from your computer, from the repository:
 #   sh deploy/release.sh
 # The VM has no GitHub credentials, so the code travels as a `git archive` of
 # origin/main into a fresh folder; deploy/.env.prod and backups/ are carried
