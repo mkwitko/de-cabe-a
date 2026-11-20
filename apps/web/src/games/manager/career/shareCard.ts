@@ -80,7 +80,9 @@ export function careerLines(history: Entry[]): string[] {
   const s = careerSummary(history);
   const b = s.best;
   return [
-    t('share.careerStats', { seasons: s.seasons, titles: s.titles, ups: s.ups }),
+    // The big line is the seasons alone: it never breaks in the middle of a stat.
+    t('share.careerSeasons', { seasons: s.seasons }),
+    t('share.careerStats', { titles: s.titles, ups: s.ups }),
     s.clubs.join(' → '),
     ...(b
       ? [
@@ -88,7 +90,8 @@ export function careerLines(history: Entry[]): string[] {
             season: b.season,
             n: b.position,
             division: b.division,
-            club: b.club,
+            // One club all career: it is already the line above.
+            club: s.clubs.length > 1 ? b.club : 'none',
           }),
         ]
       : []),
