@@ -25,7 +25,6 @@ import { nationalDivisions } from './start';
 
 const pack = generateDevPack();
 const divs = nationalDivisions(pack);
-const tierOf = (id: string) => divs.find((d) => d.clubIds.includes(id))!.tier;
 
 describe('revenue lines (CBF 2026 tables)', () => {
   it('quotas: Série D R$ 500 mil, Série C R$ 1.55 mi, none above', () => {
