@@ -41,14 +41,30 @@ export const TV_SERIE_B = 14_900_000;
 export const TV_SERIE_A = 130_000_000;
 /**
  * The two blocs that sell Série A rights, in percent of a club's TV money by part: Libra 40 equal
- * / 30 performance / 30 audience; FFU/LFU 45 / 30 / 25. The pack does not say which club sold
- * where, so the bloc is an ASSUMPTION: the national ranking's even places are Libra, the odd ones
- * the other bloc (about half and half).
+ * / 30 performance / 30 audience; FFU/LFU 45 / 30 / 25. Membership is real (below); a club in
+ * neither list (promoted from a lower division) is FFU, the bloc with most members.
  */
 export const BLOCS = {
   libra: { equal: 40, perf: 30, audience: 30 },
   ffu: { equal: 45, perf: 30, audience: 25 },
 } as const;
+/**
+ * Libra's Série A members 2026, pack ids (data/tv-blocs.json: Lance! 2026-01-27, Wikipedia, Band
+ * 2026-05-05). Palmeiras left in May 2026 but keeps the Libra contract to 2029. Everyone else: FFU.
+ * A pack with none of these ids (the generated dev pack) keeps the old ranking-parity split.
+ */
+export const LIBRA_CLUB_IDS: ReadonlySet<string> = new Set([
+  'fm-c313', // Atlético Mineiro
+  'fm-c315', // Bahia
+  'fm-c322', // Flamengo
+  'fm-c324', // Grêmio
+  'fm-c329', // Palmeiras
+  'fm-c317', // Red Bull Bragantino
+  'fm-c334', // Remo
+  'fm-c335', // Santos
+  'fm-c337', // São Paulo
+  'fm-c340', // Vitória
+]);
 /**
  * A club's audience weight stops at this many percent of the mean fan base: the broadcasters pay
  * for audience, but not in proportion to a 40-million fan base. PARÂMETRO.
@@ -84,7 +100,9 @@ function tvPlan(w: CareerWorld): Map<string, TvShare> {
     return Math.round((f * f) / mean) + 1;
   };
   const ranked = new Map(w.season.ranking.map((id, i) => [id, i]));
-  const blocOf = (id: string) => ((ranked.get(id) ?? 0) % 2 === 0 ? BLOCS.libra : BLOCS.ffu);
+  const real = w.pack.clubs.some((c) => LIBRA_CLUB_IDS.has(c.id));
+  const blocOf = (id: string) =>
+    (real ? LIBRA_CLUB_IDS.has(id) : (ranked.get(id) ?? 0) % 2 === 0) ? BLOCS.libra : BLOCS.ffu;
   const total = new Map<object, { sum: number; n: number }>();
   for (const id of ids) {
     const t = total.get(blocOf(id)) ?? { sum: 0, n: 0 };

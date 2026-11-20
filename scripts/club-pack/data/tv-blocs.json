@@ -1,0 +1,39 @@
+{
+  "generated": "2026-11-20",
+  "note": "Which bloc sells each Serie A club's TV rights, 2026 (contracts run to 2029). Libra = 40/30/30, FFU (ex-LFU) = 45/30/25. Clubs not listed (promoted later from lower divisions) follow the default: FFU, the bloc with ~35 members across Series A-D. Mirrored by LIBRA_CLUB_IDS in packages/club-domain/src/career/revenue.ts (pack ids fm-c<uid>).",
+  "libra": [
+    "Atlético Mineiro",
+    "Bahia",
+    "Flamengo",
+    "Grêmio",
+    "Palmeiras",
+    "Red Bull Bragantino",
+    "Remo",
+    "Santos",
+    "São Paulo",
+    "Vitória"
+  ],
+  "ffu": [
+    "Athletico Paranaense",
+    "Botafogo",
+    "Chapecoense",
+    "Corinthians",
+    "Coritiba",
+    "Cruzeiro",
+    "Fluminense",
+    "Internacional",
+    "Mirassol",
+    "Vasco da Gama"
+  ],
+  "default": "ffu",
+  "caveats": [
+    "Palmeiras announced leaving Libra on 2026-05-05 but keeps its Libra TV contract until 2029 and did not join FFU: kept in Libra.",
+    "Atlético-MG and Vitória announced a move to FFU only from 2030: Libra until then.",
+    "Athletico Paranaense: FFU per Wikipedia (LFU members, 2026-02) and the Lance count of 10 per bloc."
+  ],
+  "sources": [
+    "https://www.lance.com.br/lance-negocios/libra-e-ffu-quais-sao-os-clubes-de-cada-liga-do-brasileirao-2026-veja-divisao.html (Lance!, 2026-01-27)",
+    "https://pt.wikipedia.org/wiki/Liga_Forte_União (members table, 2026-02-16)",
+    "https://www.band.com.br/esportes/palmeiras-oficializa-saida-libra-entenda-motivo-202605051651 (Band, 2026-05-05)"
+  ]
+}

@@ -98,6 +98,65 @@ function modelOf(name: string, short: string, state: string | undefined) {
   return /\bSAF\b/.test(name) ? ('ownedSaf' as const) : ('association' as const);
 }
 
+// ── Money: real cash and debt (data/finances-audited.json, data/finances.json) ──────────────────
+// Cash: the audited 2025 balance sheet (7 clubs), else CASH_SHARE of revenue (median of those 7:
+// 2.1 %, flagged estimate). Debt: the audited gross loans, else the press total debt (Anresf 2025,
+// finances.json), held to DEBT_CAP x revenue: the game repays the pack's debt in five years, and
+// real clubs service the rest over decades (Lei SAF: 20 % of monthly revenue). Revenue: audited or
+// press 2025, else the economy's payroll over PAYROLL_SHARE (the dev pack's 55-76 % of income).
+const PAYROLL_SHARE = 0.65;
+const CASH_SHARE = 0.021;
+const DEBT_CAP = 0.8;
+interface RealMoney {
+  revenue: number | null;
+  cash: number | null;
+  debt: number | null;
+}
+const MONEY = new Map<string, RealMoney>();
+{
+  type Num = { value: number } | null;
+  const dir = new URL('./data/', import.meta.url);
+  const press = JSON.parse(readFileSync(new URL('finances.json', dir), 'utf8')) as {
+    clubs: {
+      club: string;
+      division: string;
+      revenueTotal: number | null;
+      totalDebt: number | null;
+    }[];
+  };
+  const audited = JSON.parse(readFileSync(new URL('finances-audited.json', dir), 'utf8')) as {
+    clubs: {
+      club: string;
+      values: Record<string, Num | undefined>;
+      extra?: Record<string, Num | undefined>;
+    }[];
+  };
+  for (const p of press.clubs)
+    if (p.division.startsWith('br-'))
+      MONEY.set(fold(p.club), { revenue: p.revenueTotal, cash: null, debt: p.totalDebt });
+  for (const a of audited.clubs) {
+    const m = MONEY.get(fold(a.club));
+    if (!m) continue;
+    m.revenue = a.values.revenueTotal?.value ?? m.revenue;
+    m.cash = a.values.cash?.value ?? null;
+    m.debt = a.values.grossDebt?.value ?? a.extra?.loansAndFinancing?.value ?? m.debt;
+  }
+}
+// Pack short names that differ from the research's.
+const MONEY_ALIAS: Record<string, string> = {
+  vasco: 'vasco da gama',
+  'rb bragantino': 'red bull bragantino',
+  'operario (pr)': 'operario-pr',
+  'vila nova (go)': 'vila nova',
+  'botafogo (sp)': 'botafogo-sp',
+  'athletic (mg)': 'athletic-mg',
+  sport: 'sport recife',
+};
+function realMoney(name: string, short: string): RealMoney | undefined {
+  const k = fold(short || name);
+  return MONEY.get(MONEY_ALIAS[k] ?? k) ?? MONEY.get(fold(name));
+}
+
 const [, , dirArg, outArg] = process.argv;
 if (!dirArg) {
   console.error('usage: import-fm.ts <csv-dir> [out.json.gz]');
@@ -1069,14 +1128,33 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
   };
 
   const fin = latestFinance.get(uid);
-  let initialCash = money.payroll * 3;
+  let initialCash: number;
   let initialDebt = 0;
   if (fin) {
     const balance = brl(num(fin.balance));
-    // A negative balance is debt (the pack repays it in instalments); a positive one is cash.
-    initialCash = Math.max(0, balance);
+    // A negative balance is debt (the pack repays it in instalments); cash comes below.
     initialDebt = Math.max(0, -balance);
-  } else est('finance: no finances row, cash = three months of the economy payroll');
+  } else est('finance: no finances row in the save');
+  // ── Real cash and debt (data/finances-audited.json, data/finances.json) ──
+  // The save's balance is a game number (negative for every club of A to C, so cash was 0).
+  {
+    const real = realMoney(c.name, c.short_name);
+    const revenue = real?.revenue ?? Math.round((money.payroll * 12) / PAYROLL_SHARE);
+    if (real?.cash != null) {
+      initialCash = real.cash;
+      est('finance: cash from the audited 2025 balance sheet (data/finances-audited.json)');
+    } else {
+      initialCash = Math.round(revenue * CASH_SHARE);
+      est('finance: cash ESTIMATED as 2.1% of revenue (median of the audited clubs)');
+    }
+    if (real?.debt != null) {
+      initialDebt = Math.min(real.debt, Math.round(revenue * DEBT_CAP));
+      est('finance: debt from audited loans or press total debt 2025, capped at 0.8x revenue');
+    } else if (initialDebt > revenue * DEBT_CAP) {
+      initialDebt = Math.round(revenue * DEBT_CAP);
+      est('finance: save-derived debt capped at 0.8x revenue');
+    }
+  }
 
   const sp = (sponsorsOf.get(uid) ?? []).filter((s) => num(s.annual_value) > 0 && s.end);
   if (!sp.length) est('sponsors: none in the save');
