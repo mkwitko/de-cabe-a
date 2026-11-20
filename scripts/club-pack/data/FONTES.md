@@ -112,3 +112,14 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - `club.colours` = corpo do uniforme 1 + a segunda cor dominante (mangas, calcao ou meias); cai para Wikidata P6364/P465 e, por ultimo, para um par por hash (marcado como estimado). O padrao (listras, faixas, diagonal, metades) sai do nome do arquivo de padrao da en.wikipedia, quando existe.
 - `club.kits` e um campo novo e opcional no esquema (estrito): implantar pacote e codigo juntos, builds antigos rejeitam o campo.
 - Escudos e camisas do jogo sao desenho proprio (SVG a partir das cores), sem logos reais.
+
+## Municípios (`cities`, data/br-cities.json)
+
+Gerado por `fetch-cities.ts` (respostas em cache local, requisições espaçadas). Um registro por município usado no pacote, chave = código IBGE.
+
+- Nomes e UF: API de localidades do IBGE, https://servicodados.ibge.gov.br/api/v1/localidades/municipios (5.570 municípios).
+- População: SIDRA tabela 6579 (estimativas da população residente), variável 9324, último ano publicado. https://apisidra.ibge.gov.br/values/t/6579/n6/all/v/9324/p/last
+- Renda (`income`): PIB per capita mensal em R$ = PIB a preços correntes (SIDRA tabela 5938, variável 37, 2023, mil R$) / população estimada 2024 (tabela 6579; o ano de 2023 não tem estimativa) / 12. Não é renda domiciliar: o Censo 2022 não publica renda média por município numa tabela única completa; o PIB per capita cobre todos e distingue municípios industriais, petroleiros e do agro dos pobres (extremos como refinarias não são aparados, o jogo não usa a renda da cidade). https://apisidra.ibge.gov.br/values/t/5938/n6/all/v/37/p/2023
+- Coordenadas (P625) e altitude (P2044): Wikidata (CC0) via QLever, casadas pelo código IBGE (P1585). Sem P2044: modelo de elevação de 90 m do Open-Meteo (Copernicus DEM, CC BY 4.0), https://open-meteo.com/en/docs/elevation-api, marcado `altSource: open-meteo` e como estimado no relatório.
+- Clima (chuva mm/mês, temperatura média °C, umidade relativa %): NASA POWER, climatologia mensal 2001-2025 (T2M, PRECTOTCORR, RH2M; MERRA-2), uma chamada por célula de 0,5 grau, https://power.larc.nasa.gov/api/temporal/climatology/point. Escolhida no lugar das normais INMET 1991-2020 (só ~250 estações, a maioria dos municípios ficaria longe de uma) e do Open-Meteo (histórico diário de 30 anos por município estoura o limite gratuito). A chuva mm/dia vira mm/mês pelo número de dias.
+- Município dos clubes sem cidade ("Cidade N"), campo `clubCity`: Wikidata P159 (sede), P115 (estádio) ou P740 (local de fundação) subindo por P131 até um município com código IBGE (`by: wikidata`); senão o artigo da pt.wikipedia com o mesmo nome do clube, ligado ao item Wikidata de clube de futebol (`by: ptwiki`); senão o município citado no próprio nome ("... de Porto Velho", ou o nome sem as palavras genéricas igual ao município; `by: name`, estimado). Uma marca "(UF)" no nome do clube que contradiz o município descarta o resultado.
