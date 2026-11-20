@@ -21,6 +21,7 @@ import {
 import type { Training } from './training';
 import { suspendedIn } from './discipline';
 import { matchesOn } from '../competition/season';
+import { calledOf } from './callups';
 
 export const INJURIES = ['knock', 'muscle', 'sprain', 'serious'] as const;
 export type InjuryKind = (typeof INJURIES)[number];
@@ -72,6 +73,8 @@ export function injuredOn(w: CareerWorld, day: number): Set<string> {
 /** The person's players who cannot play on `day`: injured, or banned from that day's match. */
 export function outOn(w: CareerWorld, day: number): Set<string> {
   const out = injuredOn(w, day);
+  // National team call-ups (callups.ts): the match goes on without them.
+  for (const id of calledOf(w, w.clubId, day)) out.add(id);
   if (!w.cards?.[w.clubId]) return out;
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;

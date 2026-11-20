@@ -317,6 +317,8 @@ export const ptBR = {
     '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
   'inbox.sponsor':
     'Contrato renovado com {name}: {value} por ano, {years, plural, one {por # temporada} other {por # temporadas}}.',
+  'inbox.calledUp':
+    '{name} foi convocado pela seleção e desfalca o clube na data FIFA: os jogos seguem sem ele.',
   'inbox.suspension':
     '{why, select, yellows {{name} recebeu o terceiro amarelo e cumpre suspensão automática no próximo jogo da competição.} red {{name} foi expulso e cumpre suspensão automática no próximo jogo da competição.} other {O STJD julgou a expulsão de {name}: mais {n, plural, one {# jogo} other {# jogos}} de suspensão.}}',
   'career.fx': '{c, select, USD {Dólar} other {Euro}}',

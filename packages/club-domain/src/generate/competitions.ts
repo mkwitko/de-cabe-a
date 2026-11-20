@@ -280,7 +280,7 @@ export function realDivisions(season: number, [a, b, c, d]: string[][]): Competi
         entrants: [{ from: 'phase', phaseId: 'liga', positions: [1, 8] }],
         outcomes: [{ kind: 'promotion', target: 'div-2', positions: [1, 2] }],
       }),
-      knockoutPhase('final', 'final', k('10-18', '10-25', [6, 0]), {
+      knockoutPhase('final', 'final', k('10-23', '10-31', [6, 0]), {
         entrants: [{ from: 'phase', phaseId: 'quadrangular', positions: [1, 1] }],
         outcomes: [{ kind: 'title', positions: [1, 1] }],
       }),
@@ -301,7 +301,7 @@ export function realDivisions(season: number, [a, b, c, d]: string[][]): Competi
     ]),
     withTravel(
       regulation(div(2, b!, 'Série B'), [
-        ligaPhase('liga', w('03-21', '11-15', [6, 2]), {
+        ligaPhase('liga', w('03-20', '11-14', [6, 2]), {
           outcomes: [
             { kind: 'title', positions: [1, 1] },
             { kind: 'promotion', target: 'div-1', positions: [1, 2] },
@@ -309,7 +309,7 @@ export function realDivisions(season: number, [a, b, c, d]: string[][]): Competi
           ],
         }),
         // 3rd v 6th and 4th v 5th over two legs; the better campaign goes through on a level aggregate.
-        knockoutPhase('acesso', 'mata-mata', w('11-21', '11-28', [6, 0]), {
+        knockoutPhase('acesso', 'mata-mata', w('11-20', '11-27', [6, 0]), {
           entrants: [{ from: 'phase', phaseId: 'liga', positions: [3, 6] }],
           survivors: 2,
           tieBreakers: ['betterCampaign'],
@@ -336,7 +336,7 @@ export function realDivisions(season: number, [a, b, c, d]: string[][]): Competi
           survivors: 2,
           outcomes: [{ kind: 'promotion', target: 'div-3', positions: [1, 2] }],
         }),
-        knockoutPhase('final', 'final', w('08-22', '09-13', [6, 0]), {
+        knockoutPhase('final', 'final', w('08-22', '09-12', [6, 0]), {
           entrants: [{ from: 'phase', phaseId: 'mata-mata', positions: [1, 4] }],
           outcomes: [{ kind: 'title', positions: [1, 1] }],
         }),
