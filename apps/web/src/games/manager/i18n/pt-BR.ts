@@ -365,6 +365,8 @@ export const ptBR = {
     '{open, select, true {A janela de transferências abriu.} other {A janela de transferências fechou.}}',
   'inbox.quota':
     '{source, select, copa {Copa do Brasil: {line, select, prize {premiação da final} other {cota da {phase}ª fase}} creditada, {amount}.} serieC {Série C: {line, select, advance {cota da fase final (quadrangular)} other {cota}} creditada, {amount}.} serieD {Série D: {line, select, prize {cota da final} other {cota da {phase}ª fase}} creditada, {amount}.} other {Direitos de TV da Série A: parte por colocação creditada, {amount}.}}',
+  'inbox.estadual':
+    '{position, select, 1 {Campeões do {name}!} other {{name}: {champion} é o campeão.}}{paid, select, true { Premiação creditada, {prize}.} other {}}',
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'inbox.copaDraw':
@@ -565,6 +567,11 @@ export const ptBR = {
   'career.moneyKind':
     '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {Direitos de TV} quota {Cota de participação} advance {Cota por fase} prize {Premiação de final} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Campeonato estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} lawsuit {Condenação trabalhista} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
+  'career.estadualKnockout': 'Mata-mata do estadual',
+  'career.estadualStage':
+    '{s, select, quartas {Quartas} semi {Semifinal} final {Final} other {Fase}}',
+  'career.estadualTie': '{played, select, true {{home} {a} x {b} {away}} other {{home} x {away}}}',
+  'career.estadualChampion': 'Campeão: {name}',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',
   'friendly.title': 'Amistoso',

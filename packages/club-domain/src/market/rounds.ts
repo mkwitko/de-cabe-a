@@ -17,7 +17,7 @@ import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
 import { WHOLE, cached, clubById } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, budgetOf, wageRoom, inRed } from './books';
+import { available, book, budgetOf, inDivisions, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -477,7 +477,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     // foreign club holding a few of its players) still sells, but never looks for anyone.
     // ponytail: the exodus abroad (foreign clubs buying the league's best) is a later, cheap
     // model of its own, not a full market reading for hundreds of idle clubs.
-    .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
+    .filter((c) => c.id !== w.clubId && inDivisions(w, c.id))
     .sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1));
   // A club that found nobody worth the table sits out a few rounds: the market it read does not
   // change enough in a fortnight to look again.

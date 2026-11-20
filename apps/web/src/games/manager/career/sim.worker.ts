@@ -8,6 +8,7 @@ import type { Kit } from '../../../components/clubArt';
 import {
   dayOf,
   divisionTable,
+  estadualView,
   resultBetween,
   startNextSeason,
   bridgeBefore,
@@ -271,6 +272,13 @@ export interface SimView {
     mine: 0 | 1;
   } | null;
   table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
+  /** The person's state championship: their group's table and the knockout ties so far. */
+  estadual: {
+    name: string;
+    table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
+    ties: { stage: string; home: ClubFace; away: ClubFace; goals: [number, number] | null }[];
+    champion: string;
+  } | null;
   /** The board: the season's goal, its confidence, and what last moved it. */
   board: {
     confidence: number;
@@ -1030,9 +1038,11 @@ function view(w: CareerWorld, ms: number): SimView {
   const byId = new Map(w.pack.clubs.map((c) => [c.id, c]));
   const club = byId.get(w.clubId)!;
   const table = divisionTable(w);
+  // In the first season a deal made before any day was played (the first match is in January,
+  // in the state championship) sits at day 0: it still belongs to the season.
   const money = resultBetween(
     w.ledger,
-    dayOf(`${w.season.season}-01-01`),
+    w.hired === w.season.season ? 0 : dayOf(`${w.season.season}-01-01`),
     dayOf(`${w.season.season}-12-31`),
   );
   const s = w.season;
@@ -1151,7 +1161,7 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'coachHired' ||
                   n.kind === 'approach'
                 ? n.club
-                : n.kind === 'season'
+                : n.kind === 'season' || n.kind === 'estadual'
                   ? n.champion
                   : '',
           )?.name ??
@@ -1239,6 +1249,24 @@ function view(w: CareerWorld, ms: number): SimView {
       points: r.points,
       gd: r.goalsFor - r.goalsAgainst,
     })),
+    estadual: ((e) =>
+      e && {
+        name: e.name,
+        table: e.rows.map((r) => ({
+          clubId: r.clubId,
+          ...face(byId.get(r.clubId)!),
+          played: r.played,
+          points: r.points,
+          gd: r.goalsFor - r.goalsAgainst,
+        })),
+        ties: e.ties.map((t) => ({
+          stage: t.stage,
+          home: face(byId.get(t.home)!),
+          away: face(byId.get(t.away)!),
+          goals: t.goals,
+        })),
+        champion: byId.get(e.champion ?? '')?.shortName ?? '',
+      })(estadualView(w)),
     ms,
   };
 }

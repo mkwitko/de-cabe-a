@@ -69,6 +69,7 @@ export * from './career/jobs';
 export * from './career/coaches';
 export * from './career/coach-pool';
 export { attendance, tierOf } from './career/finance';
+export { estadualView, type EstadualView } from './career/estadual';
 export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
 export * from './career/clubs';
 export * from './career/prices';

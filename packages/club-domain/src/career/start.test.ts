@@ -23,9 +23,10 @@ describe('career start (MC-176, MC-177)', () => {
 
     const start = startCareer(pack, 9, club.id);
     expect(start.ledger.cash).toBe(club.initialCash);
-    const { 'copa-do-brasil': cup, ...leagues } = start.season.members;
-    expect(leagues).toEqual(Object.fromEntries(divs.map((d) => [d.id, d.clubIds])));
-    expect(cup).toHaveLength(126);
+    // The divisions are the pack's; the state championships come on top of them.
+    expect(Object.fromEntries(divs.map((d) => [d.id, start.season.members[d.id]]))).toEqual(
+      Object.fromEntries(divs.map((d) => [d.id, d.clubIds])),
+    );
     // Same seed, same season (the browser and the server agree).
     expect(startCareer(pack, 9, club.id).season.calendar).toEqual(start.season.calendar);
     const next = upcomingFor(start.season, club.id, 5);

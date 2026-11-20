@@ -21,6 +21,13 @@ test.beforeEach(({ context }) =>
   context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
 );
 
+/** Matches the club has played, summed over its rows in the tables (division and state championship). */
+const playedBy = async (page: Page) =>
+  (await page.locator('tbody tr.text-club-gold td:nth-child(3)').allInnerTexts()).reduce(
+    (sum, x) => sum + Number(x),
+    0,
+  );
+
 test('career: accept an offer, play two matches, reload and find them saved', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
@@ -50,15 +57,15 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await toMatch(page);
   await play.click();
   await toMatch(page);
-  // A lower-division club can open in the Copa do Brasil, so either match may be a cup tie.
-  const played = page.locator('tbody tr.text-club-gold').locator('td').nth(2);
-  await expect(played).toHaveText(/^[0-2]$/);
-  const before = await played.innerText();
+  // Either match may be a Copa do Brasil tie, which no table counts.
+  await expect.poll(() => playedBy(page)).toBeGreaterThanOrEqual(0);
+  const before = await playedBy(page);
+  expect(before).toBeLessThanOrEqual(2);
   await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
   // Reloading opens the saved snapshot: the matches are still there.
   await page.reload();
   await toMatch(page);
-  await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText(before);
+  await expect.poll(() => playedBy(page)).toBe(before);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
@@ -74,7 +81,8 @@ test('career: free choice of a first-division club at 1280 px', async ({ page })
   await page.screenshot({ path: 'test-results/carreira-escolha-1280.png', fullPage: true });
   await page.getByRole('listitem').getByRole('button').first().click();
   await expect(page.getByText(/Primeira Divisão, temporada/)).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator('tbody tr')).toHaveCount(20);
+  // The division table first; the state championship's table follows it.
+  await expect(page.locator('table').first().locator('tbody tr')).toHaveCount(20);
   await page.screenshot({ path: 'test-results/carreira-casa-1280.png', fullPage: true });
 });
 
@@ -183,9 +191,7 @@ test('career: watch the club’s own match, change the plan, and its result coun
   await expect(page.getByText(new RegExp(`^\\S+ ${a} × ${b} \\S+$`))).toBeVisible({
     timeout: 30_000,
   });
-  // A club of the lower divisions opens in the Copa do Brasil (1st phase, 18 Feb): then the
-  // league table has not moved yet, and the match shows in the cup panel instead.
-  await expect(page.locator('tbody tr.text-club-gold').locator('td').nth(2)).toHaveText(/^[01]$/);
+  await expect.poll(() => playedBy(page)).toBe(1);
   expect(errors).toEqual([]);
 });
 
@@ -338,6 +344,11 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
+    // The first match is in January: play it, so the other clubs have traded when the market opens.
+    await toMatch(page);
+    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
+    await toMatch(page);
     await page.getByRole('button', { name: 'Mercado', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Jogadores no mercado' })).toBeVisible({
       timeout: 30_000,
