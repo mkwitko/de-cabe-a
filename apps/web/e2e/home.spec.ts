@@ -21,8 +21,14 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
 }) => {
   // 1. Home without sign-up: the brand and Career Path (the other modes are closed to the public)
   await page.goto('/');
-  await expect(page).toHaveTitle('De Cabeça F.C. · Minijogos de futebol');
-  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
+  await expect(page).toHaveTitle('De Cabeça F.C. · Modo Clube, o manager do futebol brasileiro');
+  await expect(page.getByRole('heading', { level: 1, name: 'Modo Clube' })).toBeVisible();
+  // The hero is the way into Modo Clube (a fresh guest has no career yet).
+  await expect(page.getByRole('link', { name: 'Começar minha carreira' })).toHaveAttribute(
+    'href',
+    '/tecnico/carreira',
+  );
+  await expect(page.getByRole('heading', { name: 'Outros jogos' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2

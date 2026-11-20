@@ -3,11 +3,11 @@
   "pages": [
     {
       "path": "/",
-      "title": "De Cabeça F.C. · Minijogos de futebol: adivinhe o jogador, grid e impostor",
-      "description": "Jogos de futebol em português: adivinhe o jogador pela carreira, complete a grade 3×3 e ache o impostor que nunca jogou no clube. Grátis, fase por fase, com ranking.",
-      "h1": "De Cabeça F.C.: minijogos de futebol",
+      "title": "De Cabeça F.C. · Modo Clube, o manager do futebol brasileiro",
+      "description": "Seja técnico e dirigente de um clube brasileiro de verdade, da Série D à Série A. Elenco, treino, mercado e diretoria. E ainda minijogos de futebol: Career Path e mais.",
+      "h1": "Modo Clube: o manager do futebol brasileiro",
       "text": [
-        "Teste quanto você sabe de futebol de cabeça. Três jogos, centenas de fases, estrelas, títulos e ranking da comunidade.",
+        "Assuma um clube brasileiro de verdade, da Série D à Série A: monte o elenco, treine, negocie no mercado e responda à diretoria. Além do Modo Clube, teste quanto você sabe de futebol com minijogos.",
         "Career Path: adivinhe o jogador pela sequência de clubes. Quem fez mais? Compare gols ou jogos pelo clube. Football Grid: ache um jogador para cada cruzamento de clube, país e posição. Impostor: três jogaram no clube, um nunca vestiu a camisa."
       ],
       "links": [

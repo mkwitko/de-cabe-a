@@ -3,7 +3,15 @@ import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
-import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
+import { ModoClubeHero } from './components/ModoClubeHero';
+import {
+  AlbumIcon,
+  ClubIcon,
+  DailyIcon,
+  GamesIcon,
+  ProfileIcon,
+  RankingIcon,
+} from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
@@ -261,9 +269,8 @@ function AccountLink() {
   );
 }
 
-/** Crest, name and tagline; the page heading on the home, a link home everywhere else. */
+/** Crest, name and tagline: a link home everywhere (the home's h1 is the Modo Clube hero). */
 function Brand({ home }: { home: boolean }) {
-  const H = home ? 'h1' : 'span';
   return (
     <Link
       to="/"
@@ -272,11 +279,11 @@ function Brand({ home }: { home: boolean }) {
     >
       <Crest className="h-9 w-8 shrink-0 drop-shadow-[0_2px_3px_rgb(0_0_0/0.5)]" />
       <div className="min-w-0">
-        <H className="font-condensed block text-lg leading-[0.95] font-black whitespace-nowrap uppercase min-[400px]:text-xl lg:text-2xl">
+        <span className="font-condensed block text-lg leading-[0.95] font-black whitespace-nowrap uppercase min-[400px]:text-xl lg:text-2xl">
           De Cabeça F.C.
-        </H>
+        </span>
         <span className="mt-0.5 hidden text-xs leading-tight font-semibold whitespace-nowrap text-chalk-soft min-[400px]:block">
-          Minijogos de futebol
+          Manager do futebol brasileiro
         </span>
       </div>
     </Link>
@@ -355,7 +362,15 @@ export function Home() {
     pitch: PITCH[x.page],
     howTo: x.howTo,
   }));
-  return <LockerRoom lockers={[...modes, ...extra]} />;
+  return (
+    <>
+      <ModoClubeHero />
+      <h2 className="font-condensed mx-auto mt-10 mb-2 w-full max-w-6xl text-2xl font-black uppercase">
+        Outros jogos
+      </h2>
+      <LockerRoom lockers={[...modes, ...extra]} />
+    </>
+  );
 }
 
 function HomeRoute() {
@@ -392,7 +407,7 @@ function HomeRoute() {
 /**
  * Four places when everything is open, each the home of a few pages: Jogos (home, tracks, levels,
  * Modo Carreira), Desafio, Ranking (ranking, seasons, leagues), Perfil (stats, history, account,
- * public profiles). At launch only three: Jogar, Álbum, Perfil.
+ * public profiles). At launch four: Clube, Minijogos, Álbum, Perfil.
  */
 const NAV_ALL = [
   {
@@ -419,10 +434,17 @@ const NAV_ALL = [
 
 const NAV_LAUNCH = [
   {
+    to: '/tecnico/carreira',
+    label: 'Clube',
+    Icon: ClubIcon,
+    match: (p: string) => /^\/tecnico(\/|$)/.test(p),
+  },
+  {
     to: '/',
-    label: 'Jogar',
+    label: 'Minijogos',
     Icon: GamesIcon,
-    match: (p: string) => !/^\/(album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
+    match: (p: string) =>
+      !/^\/(tecnico|album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
   { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },
   {
@@ -458,7 +480,7 @@ function Shell({ children }: { children: ReactNode }) {
           className="app-bar scoreboard floodlit fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:static sm:mx-auto sm:self-stretch sm:bg-none sm:pb-0 sm:shadow-none sm:before:hidden"
         >
           <ul
-            className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}
+            className={`mx-auto grid h-16 max-w-xl ${'grid-cols-4'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}
           >
             {NAV.map(({ to, label, Icon, match }) => {
               const active = match(pathname);
