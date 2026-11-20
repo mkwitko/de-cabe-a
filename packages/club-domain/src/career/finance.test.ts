@@ -1,18 +1,17 @@
 import { expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
-import { BY_TIER, CUPS, MEMBERS_PER_GATE, membersOf, ownersCover, seasonIncome } from './finance';
+import { MEMBERS_PER_GATE, membersOf, ownersCover, seasonIncome } from './finance';
+import { QUOTA, STATE } from './revenue';
 import { ticketOf, usualCrowd } from '../match/stadium';
 
 const pack = generateDevPack();
 const club = pack.clubs[0]!;
 
-it('members pay in proportion to the gate, and the cups add by tier', () => {
+it('members pay in proportion to the gate, and the quota and state championship add by tier', () => {
   const gate = usualCrowd(club) * ticketOf(club, 3) * 19;
   expect(membersOf(club, 3)).toBe(Math.round((gate * MEMBERS_PER_GATE) / 100));
   const bare = { ...club, sponsors: [] };
-  expect(seasonIncome(bare, 3)).toBe(
-    Math.round(BY_TIER[3]!.tv + CUPS[3]! + gate + membersOf(club, 3)),
-  );
+  expect(seasonIncome(bare, 3)).toBe(Math.round(QUOTA[3]! + STATE[3]! + gate + membersOf(club, 3)));
 });
 
 it('owners cover part of a loss, an SAF more than an association, nothing on a profit', () => {

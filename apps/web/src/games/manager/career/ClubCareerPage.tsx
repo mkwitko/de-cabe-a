@@ -1051,6 +1051,7 @@ const FROM = {
   suspension: 'staff',
   calledUp: 'staff',
   prize: 'finance',
+  quota: 'finance',
   arrears: 'staff',
   arrearsPaid: 'staff',
   walkout: 'press',
@@ -1240,9 +1241,11 @@ function noteText(n: InboxItem, sim: SimView): string {
       });
     case 'walkout':
       return t('inbox.walkout', { name: n.player });
-    case 'prize':
-      return t('inbox.prize', {
-        position: n.position,
+    case 'quota':
+      return t('inbox.quota', {
+        line: n.line,
+        source: n.source,
+        phase: n.phase,
         amount: t('career.cash', { value: n.amount }),
       });
     case 'season':

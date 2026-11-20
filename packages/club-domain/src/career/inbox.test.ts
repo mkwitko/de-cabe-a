@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { nextDecision, openCareer, playDecision, startNextSeason } from './advance';
-import { positionOf } from './board';
 import { sellerStance } from '../market/deals';
 import { bidFee, bidTerms, cannotTalk, openTalk } from '../market/talks';
 import { loadCareer, saveCareer } from './save';
@@ -43,21 +42,23 @@ describe('the inbox', () => {
     expect(loadCareer(pack, 81, clubId, saveCareer(w)).inbox).toEqual(w.inbox);
   });
 
-  it('the season ends with the goal judged, a prize in the ledger and the turn told', () => {
+  it('the season ends with the goal judged, TV money in the ledger and the turn told', () => {
     const w = openCareer(pack, 81, clubId);
     for (let d = nextDecision(w); d.kind === 'match'; d = nextDecision(w)) playDecision(w, d);
     if (w.board?.fired) return;
-    const position = positionOf(w);
     const cash = w.ledger.cash;
     startNextSeason(w);
     // Elections and club sales elsewhere in the division may come too (clubs.ts).
     const kinds = w.inbox!.map((n) => n.kind).filter((k) => k !== 'directors');
-    // The turn tells, in order: the goal, the prize, the season, and the academy's boys.
-    expect(kinds.slice(-4)).toEqual(['goal', 'prize', 'season', 'crop']);
-    const prize = w.inbox!.find((n) => n.kind === 'prize')!;
-    expect(prize).toMatchObject({ position });
-    expect(w.ledger.cash).toBe(cash + (prize.kind === 'prize' ? prize.amount : 0));
-    expect(w.ledger.entries.filter((e) => e.kind === 'prize')).toHaveLength(1);
+    // The turn tells, in order: the goal, what the season's end credits, the season, the boys.
+    const turn = kinds.slice(kinds.lastIndexOf('goal'));
+    expect(turn.at(0)).toBe('goal');
+    expect(turn.slice(-2)).toEqual(['season', 'crop']);
+    expect(turn.slice(1, -2).every((k) => k === 'quota')).toBe(true);
+    const credited = w
+      .inbox!.slice(w.inbox!.findLastIndex((n) => n.kind === 'goal'))
+      .reduce((s, n) => s + (n.kind === 'quota' ? n.amount : 0), 0);
+    expect(w.ledger.cash).toBe(cash + credited);
     expect(w.inbox!.some((n) => n.kind === 'window')).toBe(true);
     expect(w.inbox!.length).toBeLessThanOrEqual(40);
   });

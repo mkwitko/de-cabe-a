@@ -12,6 +12,7 @@ import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
 import { pricesOf } from '../career/prices';
+import { tvOf } from '../career/revenue';
 import type { Horizon } from '../career/clubs';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
@@ -58,12 +59,16 @@ export function budgetOf(w: CareerWorld, clubId: string): Budget {
 }
 
 /** A club's income for the season in the division it plays, at the season's prices. */
-export const incomeOf = (w: CareerWorld, clubId: string) =>
-  seasonIncome(
+export const incomeOf = (w: CareerWorld, clubId: string) => {
+  const tier = tierOfClub(w, clubId);
+  const tv = tvOf(w, clubId, tier);
+  return seasonIncome(
     w.pack.clubs.find((c) => c.id === clubId)!,
-    tierOfClub(w, clubId),
+    tier,
     pricesOf(w).prices,
+    tv.equal + tv.audience + tv.perfMean,
   );
+};
 
 /** Points of income added to the person's fees by their directors' horizon. */
 const PURSE: Record<Horizon, number> = { short: 4, medium: 0, long: -3 };

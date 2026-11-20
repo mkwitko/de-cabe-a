@@ -14,7 +14,8 @@ import { WHOLE, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/books';
 import type { CareerWorld } from './advance';
-import { BY_TIER, DEBT_RATE, gateOf, ownersCover } from './finance';
+import { DEBT_RATE, gateOf, ownersCover } from './finance';
+import { resultsIncome } from './revenue';
 
 /** A stadium is worth enlarging when an ordinary day already fills this share of it, per cent. */
 const FULL_HOUSE = 85;
@@ -249,12 +250,6 @@ export function workCost(w: CareerWorld, club: PackClub, front: Front): number |
   return level >= 5 ? null : priced(WORK_COST[level - 1]!, prices);
 }
 
-/** The prize a club takes for where it finished, as in the person's ledger. */
-function prizeOf(position: number, places: number, tier: number, prices: number): number {
-  if (position < 1 || places < 1) return 0;
-  return Math.round((priced(BY_TIER[tier]!.tv, prices) / 4) * (places - position + 1)) / places;
-}
-
 /**
  * The season's accounts of every other club, run at the turn before squads change: income and
  * prize in, fees as booked, a year of wages and staff, the upkeep and the old debt out.
@@ -283,7 +278,7 @@ export function settleSeason(
         : 0;
     s.cash +=
       budgetOf(w, club.id).income +
-      Math.round(prizeOf(at.position, at.places, tierOfClub(w, club.id), prices)) +
+      resultsIncome(w, club.id, at.position, at.places) +
       books.earned -
       books.spent -
       12 * (wageBill(w, club.id) + (staff.get(club.id) ?? 0)) -

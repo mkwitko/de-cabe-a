@@ -15,24 +15,10 @@ import { nationalDivisions } from './start';
 import { closedDoors, crowdAt, punishmentAt, ticketOf, usualCrowd } from '../match/stadium';
 import { note } from './inbox';
 import { CURRENCIES, rateOf } from '../market/currency';
+import { QUOTA, STATE, TV_SERIE_A, TV_SERIE_B, tvOf } from './revenue';
 
 /** A month's move of the rate, in tenths of a percent, that makes news. PARÂMETRO. */
 const FX_NEWS = 70;
-
-/**
- * PARÂMETRO by national tier (04 §4, table "Milhões de reais por temporada", middle of each
- * range): TV and quotas per season, and the average ticket price.
- */
-/** Share of a season's TV money paid as prize to the champion; the last place gets 1/n of it. */
-const PRIZE_SHARE = 4;
-
-export const BY_TIER: Record<number, { tv: number }> = {
-  1: { tv: 120_000_000 },
-  2: { tv: 14_500_000 },
-  // Série C 2025: R$ 32 mi in quotas and prizes plus R$ 3 mi extra over 20 clubs (Soccerway, A União).
-  3: { tv: 1_750_000 },
-  4: { tv: 500_000 },
-};
 
 /**
  * Members' dues (sócio-torcedor) for each 100 of gate money: Série A 2023, R$ 705 mi from
@@ -41,22 +27,6 @@ export const BY_TIER: Record<number, { tv: number }> = {
  * to tune. PARÂMETRO.
  */
 export const MEMBERS_PER_GATE = 87;
-/**
- * The year's cups, expected money by national tier: the Copa do Brasil (2025 first phase:
- * R$ 1.54 mi for Série A, R$ 1.38 mi for B, R$ 830 mil for C, D and the rest; more each round
- * won) and the state championship (TV quotas from R$ 35 mi for São Paulo's big four and
- * R$ 9-10 mi for Minas and Rio Grande do Sul's to R$ 333-700 mil in Pernambuco, Paraná and
- * Goiás; Sport Insider via Lance!, 2025-2026). Not every Série D club gets into the Copa do
- * Brasil. Only the Copa do Brasil quotas are official; the state share and the rounds won are
- * ESTIMATES, not targets to tune. PARÂMETRO.
- */
-export const CUPS: Record<number, number> = {
-  1: 14_000_000,
-  2: 3_500_000,
-  3: 1_800_000,
-  4: 400_000,
-};
-
 /**
  * Share of a season's loss the owners cover at the turn, in percent. Below the top flight the
  * accounts do not close on football money: Náutico ran fifteen years in the red on R$ 25-31 mi
@@ -112,17 +82,21 @@ export const membersOf = (c: Pick<PackClub, 'stadium' | 'fans'>, tier: number) =
   Math.round((seasonGate(c, tier) * MEMBERS_PER_GATE) / 100);
 
 /**
- * What a club takes in a season in a tier: TV, sponsors, the gate of its home matches, its
- * members' dues and the cups.
+ * What a club takes in a season in a tier: TV (equal, audience and the mean performance part),
+ * the participation quota, the state championship, sponsors, the gate of its home matches and
+ * its members' dues. Phases reached and prizes are results (revenue.ts), not budget. `tv` defaults
+ * to the tier's mean.
  */
 export const seasonIncome = (
   c: Pick<PackClub, 'stadium' | 'fans' | 'sponsors'>,
   tier: number,
   prices = PRICE_BASE,
+  tv = tier === 1 ? TV_SERIE_A : tier === 2 ? TV_SERIE_B : 0,
 ) =>
   priced(
-    BY_TIER[tier]!.tv +
-      CUPS[tier]! +
+    tv +
+      (QUOTA[tier] ?? 0) +
+      (STATE[tier] ?? 0) +
       c.sponsors.reduce((s, x) => s + x.annual, 0) +
       seasonGate(c, tier) +
       membersOf(c, tier),
@@ -142,7 +116,6 @@ export function attendance(w: CareerWorld): number {
 function monthlyBills(w: CareerWorld, day: number) {
   const month = isoOf(day).slice(0, 7);
   const tierNo = tierOf(w);
-  const tier = BY_TIER[tierNo]!;
   const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
   const wages =
     w.pack.players.reduce((s, p) => s + (p.clubId === w.clubId ? wageCost(w, p) : 0), 0) +
@@ -179,9 +152,13 @@ function monthlyBills(w: CareerWorld, day: number) {
     if (Math.abs(change) >= FX_NEWS) note(w, { day, kind: 'fx', currency, rate: now, change });
   }
   const { prices } = pricesOf(w);
-  post('tv', Math.round(priced(tier.tv, prices) / 12));
+  const tv = tvOf(w, w.clubId, tierNo);
+  // The performance part of the TV money comes at the season's end, by final position.
+  post('tv', Math.round(priced(tv.equal + tv.audience, prices) / 12));
+  post('quota', Math.round(priced(QUOTA[tierNo] ?? 0, prices) / 12));
   post('members', Math.round(priced(membersOf(club, tierNo), prices) / 12));
-  post('cups', Math.round(priced(CUPS[tierNo]!, prices) / 12));
+  // The state championship's quotas: an ESTIMATE (revenue.ts).
+  post('cups', Math.round(priced(STATE[tierNo] ?? 0, prices) / 12));
   post('sponsors', Math.round(priced(sponsors, prices) / 12));
 }
 
@@ -213,24 +190,4 @@ export function postHomeMatch(w: CareerWorld, matchId: string, day: number) {
     day,
     dueDay: day,
   });
-}
-
-/**
- * Prize for the final position in the division (or the group), paid at the season's end: the
- * champion takes a quarter of the tier's TV money, each place below a step less. Returns it.
- */
-export function postPrize(w: CareerWorld, position: number, places: number): number {
-  if (position < 1 || places < 1) return 0;
-  const top = priced(BY_TIER[tierOf(w)]!.tv, pricesOf(w).prices) / PRIZE_SHARE;
-  const amount = Math.round((top * (places - position + 1)) / places / 1000) * 1000;
-  if (amount > 0)
-    postEntry(w.ledger, {
-      key: `prize:${w.season.season}`,
-      kind: 'prize',
-      ref: `season:${w.season.season}`,
-      amount,
-      day: w.ledger.today,
-      dueDay: w.ledger.today,
-    });
-  return amount;
 }

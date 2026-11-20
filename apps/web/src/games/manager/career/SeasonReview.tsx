@@ -54,6 +54,17 @@ export function SeasonReview({
         {r.move !== 'stay' && ` ${t('review.move', { m: r.move })}`}
         {r.cups.map((c) => ` ${t('review.cup', { name: c })}`)}
       </p>
+      <div>
+        <p className="font-semibold">{t('review.revenue')}</p>
+        <ul className="text-chalk-soft tabular-nums">
+          {(['quota', 'advance', 'prize', 'tv'] as const).map((line) => (
+            <li key={line} className="flex justify-between gap-4">
+              <span>{t('career.moneyKind', { k: line })}</span>
+              <span>{t('career.cash', { value: r.revenue[line] })}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       <p>
         {t('review.record', {
           w: r.record.won,

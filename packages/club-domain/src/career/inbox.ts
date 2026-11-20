@@ -59,7 +59,14 @@ export type Note = { day: number } & (
   | { kind: 'bid' | 'clausePaid'; player: string; club: string; fee: number }
   /** The real moved hard against a currency this month: the rate (×10 000), change in ‰. */
   | { kind: 'fx'; currency: 'USD' | 'EUR'; rate: number; change: number }
-  | { kind: 'prize'; position: number; amount: number }
+  /** Money credited: a quota, a phase reached, a final's prize or TV rights (revenue.ts). */
+  | {
+      kind: 'quota';
+      line: 'quota' | 'advance' | 'prize' | 'tv';
+      source: 'copa' | 'serieC' | 'serieD' | 'tv';
+      phase: number;
+      amount: number;
+    }
   /** Wages unpaid for `months`; paid up again; a player who ended his contract over them. */
   | { kind: 'arrears'; months: number }
   | { kind: 'arrearsPaid' }

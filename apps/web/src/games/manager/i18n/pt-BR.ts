@@ -358,7 +358,8 @@ export const ptBR = {
     '{n, plural, one {# titular saiu} other {# titulares saíram}} do jogo com menos de metade do fôlego. Vale rodar o elenco.',
   'inbox.window':
     '{open, select, true {A janela de transferências abriu.} other {A janela de transferências fechou.}}',
-  'inbox.prize': 'Premiação pelo {position}º lugar: {amount}.',
+  'inbox.quota':
+    '{source, select, copa {Copa do Brasil: {line, select, prize {premiação da final} other {cota da {phase}ª fase}} creditada, {amount}.} serieC {Série C: {line, select, advance {cota da fase final (quadrangular)} other {cota}} creditada, {amount}.} serieD {Série D: {line, select, prize {cota da final} other {cota da {phase}ª fase}} creditada, {amount}.} other {Direitos de TV da Série A: parte por colocação creditada, {amount}.}}',
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'board.goal': 'Meta da temporada',
@@ -458,6 +459,7 @@ export const ptBR = {
   'review.champion': 'Campeão da {division}!',
   'review.championOther': 'Campeão da divisão: {name}.',
   'review.move': '{m, select, promotion {Acesso conquistado!} other {Rebaixado.}}',
+  'review.revenue': 'Receitas de competições e TV',
   'review.cup': 'Campeão: {name}!',
   'review.record':
     '{w, plural, one {# vitória} other {# vitórias}}, {d, plural, one {# empate} other {# empates}}, {l, plural, one {# derrota} other {# derrotas}}. Gols: {gf} pró, {ga} contra.',
@@ -537,7 +539,7 @@ export const ptBR = {
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Copa do Brasil e estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} lawsuit {Condenação trabalhista} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {Direitos de TV} quota {Cota de participação} advance {Cota por fase} prize {Premiação de final} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Campeonato estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} lawsuit {Condenação trabalhista} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',
