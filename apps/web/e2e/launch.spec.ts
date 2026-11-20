@@ -20,7 +20,7 @@ test('first visit: the welcome, a guest with a nickname, then the home', async (
   await nick.fill(`Visitante ${Date.now() % 100000}`);
   await welcome.getByRole('button', { name: 'Jogar', exact: true }).click();
   await expect(welcome).toBeHidden();
-  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Modo Clube' })).toBeVisible();
 
   // Once per device: a reload goes straight to the home.
   await page.reload();
@@ -38,15 +38,19 @@ test('launch site: home, Em breve, a won Career Path level, album, how to play, 
     .getByRole('button', { name: 'Recusar não essenciais' })
     .click();
 
-  // Home: the brand, the two open games, the Em breve strip; the bar is Jogar · Álbum · Perfil.
-  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
+  // Home: the brand, the two open games, the Em breve strip; the bar is Clube · Minijogos · Álbum · Perfil.
+  await expect(page.getByRole('heading', { level: 1, name: 'Modo Clube' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Quem fez mais?' })).toBeVisible();
   await expect(page.getByText('Em breve').first()).toBeVisible();
   const nav = page
     .getByRole('navigation')
     .filter({ has: page.getByRole('link', { name: 'Álbum' }) });
-  await expect(nav.getByRole('link', { name: 'Jogar' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Clube' })).toHaveAttribute(
+    'href',
+    '/tecnico/carreira',
+  );
+  await expect(nav.getByRole('link', { name: 'Minijogos' })).toBeVisible();
   await expect(nav.getByRole('link', { name: 'Perfil' })).toBeVisible();
   await expect(nav.getByRole('link', { name: /Ranking|Desafio/ })).toHaveCount(0);
 

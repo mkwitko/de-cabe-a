@@ -31,6 +31,13 @@ export const GamesIcon = (p: { className?: string }) => (
   </Icon>
 );
 
+/** Clube: a club shield with a stripe. */
+export const ClubIcon = (p: { className?: string }) => (
+  <Icon {...p}>
+    <path d="M12 3.5 5 6v5.5c0 4.2 2.8 7.4 7 9 4.2-1.6 7-4.8 7-9V6l-7-2.5zM12 3.5v17" />
+  </Icon>
+);
+
 /** Álbum: an open album with a sticker on the right page. */
 export const AlbumIcon = (p: { className?: string }) => (
   <Icon {...p}>

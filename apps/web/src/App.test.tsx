@@ -13,9 +13,10 @@ const html = renderToString(
 );
 
 describe('Home at launch', () => {
-  it('shows the brand as the page heading', () => {
-    expect(html).toMatch(/<h1[^>]*>.*De Cabeça F\.C\..*<\/h1>/s);
-    expect(html).toContain('Minijogos de futebol');
+  it('leads with Modo Clube as the page heading and links to the career', () => {
+    expect(html).toMatch(/<h1[^>]*>Modo Clube<\/h1>/);
+    expect(html).toContain('href="/tecnico/carreira"');
+    expect(html).toContain('Outros jogos');
   });
 
   it('puts Career Path first and opens its track', () => {
