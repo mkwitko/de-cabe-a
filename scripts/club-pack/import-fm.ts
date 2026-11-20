@@ -776,11 +776,15 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
   const wage = monthlyBrl(num(p.contract_wage));
   let releaseFee: number | null = clauseOf.get(p.uid) ?? null;
   if (releaseFee !== null) {
-    if (wage <= 0) ((releaseFee = null), clauseStats.noWage++);
-    else {
+    if (wage <= 0) {
+      releaseFee = null;
+      clauseStats.noWage++;
+    } else {
       clauseStats.found++;
-      if (releaseFee > wage * LGE_DOMESTIC_CAP)
-        ((releaseFee = wage * LGE_DOMESTIC_CAP), clauseStats.capped++);
+      if (releaseFee > wage * LGE_DOMESTIC_CAP) {
+        releaseFee = wage * LGE_DOMESTIC_CAP;
+        clauseStats.capped++;
+      }
     }
   }
   if (injuryBump(p.uid)) injuryStats.bumped++;
