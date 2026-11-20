@@ -294,6 +294,12 @@ export const ptBR = {
   'inbox.walkout':
     '{name} entrou na Justiça pelos salários atrasados, rescindiu o contrato e saiu de graça.',
   'inbox.coachSacked': 'O {club} demitiu o técnico. A vaga está aberta.',
+  'inbox.coachHired':
+    'O {club} contratou {coach}, de estilo {style, select, attacking {ofensivo} defensive {defensivo} pressing {de pressão} possession {de posse de bola} direct {direto} other {equilibrado}}.',
+  'career.rivalCoach':
+    'Técnico rival: {coach}, de estilo {style, select, attacking {ofensivo} defensive {defensivo} pressing {de pressão} possession {de posse de bola} direct {direto} other {equilibrado}}.',
+  'board.dna':
+    'Identidade do clube: jogo {s, select, attacking {ofensivo} defensive {defensivo} pressing {de pressão} possession {de posse de bola} direct {direto} other {equilibrado}}. Mudar o estilo custa tempo: a torcida e a diretoria se acostumam devagar.',
   'inbox.approach':
     'O {club} demitiu o técnico e sondou você para o cargo. A proposta vale enquanto a vaga estiver aberta.',
   'career.approach': 'Proposta do {club}',
@@ -350,7 +356,7 @@ export const ptBR = {
   'board.result':
     '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
   'board.reason':
-    '{k, select, cash {Salários atrasados} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} protest {Protesto da torcida} homegrown {A torcida aplaude os crias da casa} locals {A torcida se vê nos jogadores da terra} press {Crise na imprensa} other {Ultimato cumprido}}',
+    '{k, select, cash {Salários atrasados} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} protest {Protesto da torcida} homegrown {A torcida aplaude os crias da casa} locals {A torcida se vê nos jogadores da terra} press {Crise na imprensa} identity {Estilo de jogo e identidade do clube} other {Ultimato cumprido}}',
   'board.up': '+{n}',
   'board.down': '−{n}',
   'board.ultimatum': 'Ultimato',

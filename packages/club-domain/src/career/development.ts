@@ -215,7 +215,9 @@ export function crop(
     const r = fork(root, `boy:${k}`);
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = 15 + pick(r, 3);
-    const quality = Math.max(20, level - 13 + youth + former.quality + pick(r, 7));
+    // An academy of a club that bets on boys (youthPolicy) brings in a little better: -2..+2.
+    const lean = Math.round((club.profile.youthPolicy - 50) / 25);
+    const quality = Math.max(20, level - 13 + youth + former.quality + lean + pick(r, 7));
     const made = generatePlayer(r, {
       id: `y${season}-${clubId}-${k}`,
       position,

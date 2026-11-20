@@ -55,6 +55,7 @@ export function Board({
               {t('board.electionYear')}
             </p>
           )}
+          <p className="text-chalk-soft">{t('board.dna', { s: b.dna })}</p>
           <p className="text-chalk-soft">
             {t('board.directors', {
               h: b.directors.horizon,

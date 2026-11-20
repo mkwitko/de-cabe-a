@@ -12,6 +12,7 @@
 import type { Outcome } from '../competition/season';
 import type { CareerWorld } from './advance';
 import { BENCH_START, divisionOf, pressureOf, resultValue, thresholdFor } from './board';
+import { driftDna, dismiss, hire } from './coach-pool';
 import { note } from './inbox';
 
 export interface Bench {
@@ -78,6 +79,7 @@ function sack(w: CareerWorld, clubId: string, day: number): void {
   (w.vacancies ??= {})[clubId] = day;
   w.sacked = [...(w.sacked ?? []), clubId];
   delete w.benches![clubId];
+  dismiss(w, clubId);
   const near = divisionOf(w, clubId) === divisionOf(w, w.clubId);
   if (near) note(w, { day, kind: 'coachSacked', club: clubId });
   // A bigger club calls the person while their own board is pleased with them.
@@ -98,6 +100,7 @@ export function fillVacancies(w: CareerWorld, day: number): void {
     if (day - opened > VACANCY_DAYS) {
       delete w.vacancies![clubId];
       w.benches![clubId] = { confidence: BENCH_START, since: day };
+      hire(w, clubId, day);
     }
   if (w.vacancies && !Object.keys(w.vacancies).length) delete w.vacancies;
 }
@@ -115,4 +118,5 @@ export function approaches(w: CareerWorld): string[] {
 /** The season's turn: a fresh count of sackings; benches carry over. */
 export function newSeasonCoaches(w: CareerWorld): void {
   delete w.sacked;
+  driftDna(w);
 }

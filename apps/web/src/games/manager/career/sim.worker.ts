@@ -129,6 +129,10 @@ import {
   newsOf,
   todoOf,
   type Todo,
+  coachAt,
+  dnaOf,
+  playedStyle,
+  styleKind,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -202,6 +206,8 @@ export interface SimView {
     competition: string;
     /** Names of the opponent's players banned from this match, and the person's own. */
     banned: { theirs: string[]; ours: string[] };
+    /** The rival's coach and his style's word (coach-pool.ts); null while it has none. */
+    coach: { name: string; style: string } | null;
   } | null;
   /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
   deadline: string | null;
@@ -238,6 +244,8 @@ export interface SimView {
     fame: Fame;
     /** Who runs the club: how far they look and how well they read it (clubs.ts). */
     directors: { horizon: 'short' | 'medium' | 'long'; competence: number };
+    /** The club's DNA in a word (coach-pool.ts `styleKind`). */
+    dna: string;
     /** The season being played ends in a vote of the club's board. */
     election: boolean;
     position: number;
@@ -911,6 +919,8 @@ function view(w: CareerWorld, ms: number): SimView {
       : pending?.kind === 'deadline'
         ? upcomingFor(s, w.clubId, 1)[0]
         : undefined;
+  const rivalId = match && (match.home === w.clubId ? match.away : match.home);
+  const rival = rivalId ? coachAt(w, rivalId) : undefined;
   return {
     season: w.season.season,
     today: isoOf(w.day),
@@ -974,6 +984,7 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'directors' ||
                   n.kind === 'election' ||
                   n.kind === 'coachSacked' ||
+                  n.kind === 'coachHired' ||
                   n.kind === 'approach'
                 ? n.club
                 : n.kind === 'season'
@@ -1005,6 +1016,7 @@ function view(w: CareerWorld, ms: number): SimView {
       directors: (({ horizon, competence }) => ({ horizon, competence }))(
         clubState(w, w.clubId).directors,
       ),
+      dna: styleKind(dnaOf(w, w.clubId)),
       election: electionYear(w, w.clubId),
       position: positionOf(w),
       ultimatum: boardOf(w).ultimatum ?? null,
@@ -1038,6 +1050,7 @@ function view(w: CareerWorld, ms: number): SimView {
           away: face(byId.get(match.away)!),
           atHome: match.home === w.clubId,
           competition: competition(match.competitionId),
+          coach: rival ? { name: rival.name, style: styleKind(playedStyle(w, rivalId!)) } : null,
           banned: {
             theirs: namesOf(
               w,
