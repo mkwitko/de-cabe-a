@@ -29,8 +29,9 @@
 		-Server
 	}
 
-	# Game API and the server-rendered search pages.
-	@api path /v1/* /jogador/* /jogadores /sitemap.xml /llms.txt /creditos
+	# Game API and the server-rendered search pages. /packs/* are the career packs, current and
+	# archived (apps/api packs.ts, ADR-023): a career always finds the pack it started on.
+	@api path /v1/* /packs/* /jogador/* /jogadores /sitemap.xml /llms.txt /creditos
 	handle @api {
 		reverse_proxy {
 			dynamic a api 3000 {

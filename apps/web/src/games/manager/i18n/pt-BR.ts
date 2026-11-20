@@ -33,6 +33,13 @@ export const ptBR = {
   'career.reputation': 'Reputação {n}',
   'career.accept': 'Assumir o {club}',
   'career.divisions': 'Divisões',
+  'backup.title': 'Cópia de segurança',
+  'backup.text':
+    'Baixe um arquivo com a sua carreira e guarde. Se um dia precisar, restaure por aqui, mesmo em outro aparelho. Restaurar troca a carreira em andamento.',
+  'backup.export': 'Baixar a carreira',
+  'backup.import': 'Restaurar de um arquivo',
+  'backup.confirm': 'Restaurar vai substituir a carreira em andamento. Continuar?',
+  'backup.error': 'Não deu para concluir',
   'career.computing': 'Montando a temporada no seu aparelho…',
   'career.where': '{division}, temporada {season}',
   'career.cashLabel': 'Caixa',

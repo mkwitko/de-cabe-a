@@ -3,7 +3,7 @@
 # (.github/workflows/deploy.yml); by hand from your computer, from the repository:
 #   sh deploy/release.sh
 # The VM has no GitHub credentials, so the code travels as a `git archive` of
-# origin/main into a fresh folder; deploy/.env.prod and backups/ are carried
+# origin/main into a fresh folder; deploy/.env.prod, backups/ and apps/api/club-packs/ (the real pack and its archive) are carried
 # over, the old folder is kept as /opt/de-cabeca.prev (/opt needs sudo). Then deploy/rollout.sh
 # builds, migrates and swaps api and web one container at a time behind the edge proxy, with no
 # downtime. Migrations must be backward compatible (expand, then contract): see deploy/rollout.sh.
@@ -21,9 +21,9 @@ git archive --format=tar origin/main | ssh "$VM" "sudo rm -rf $DIR.new && sudo i
 ssh "$VM" sh -s <<EOF
 set -eu
 cp -a $DIR/deploy/.env.prod $DIR.new/deploy/.env.prod
-[ -d $DIR/backups ] && cp -a $DIR/backups $DIR.new/ || true
-# The Modo Clube real pack lives only on the VM (never in git): it goes on with every release.
 [ -d $DIR/apps/api/club-packs ] && cp -a $DIR/apps/api/club-packs $DIR.new/apps/api/ || true
+mkdir -p $DIR.new/apps/api/club-packs/archive
+[ -d $DIR/backups ] && cp -a $DIR/backups $DIR.new/ || true
 [ -f $DIR/deploy/SETUP-PUSH.md ] && cp -a $DIR/deploy/SETUP-PUSH.md $DIR.new/deploy/ || true
 echo "$REV" > $DIR.new/REVISION
 sudo rm -rf $DIR.prev

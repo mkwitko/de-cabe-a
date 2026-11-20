@@ -13,6 +13,7 @@ import { Squad } from './Squad';
 import { Training } from './Training';
 import { Market } from './Market';
 import { Board, type WorkSaid, Fired } from './Board';
+import { Backup } from './Backup';
 import {
   Match,
   PLAN,
@@ -525,25 +526,28 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       </nav>
       {sim.fresh && <Guide careerId={career.id} onRoom={setRoom} />}
       {room === 'diretoria' && (
-        <Board
-          sim={sim}
-          busy={busy}
-          said={workSaid}
-          onWork={
-            ask
-              ? (front) => {
-                  setBusy(true);
-                  ask({ type: 'work', front })
-                    .then((reply) => {
-                      deal(reply);
-                      if (reply.work) setWorkSaid(reply.work);
-                    })
-                    .catch((err: Error) => setError(err.message))
-                    .finally(() => setBusy(false));
-                }
-              : undefined
-          }
-        />
+        <>
+          <Board
+            sim={sim}
+            busy={busy}
+            said={workSaid}
+            onWork={
+              ask
+                ? (front) => {
+                    setBusy(true);
+                    ask({ type: 'work', front })
+                      .then((reply) => {
+                        deal(reply);
+                        if (reply.work) setWorkSaid(reply.work);
+                      })
+                      .catch((err: Error) => setError(err.message))
+                      .finally(() => setBusy(false));
+                  }
+                : undefined
+            }
+          />
+          <Backup onError={setError} />
+        </>
       )}
       {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
       {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
