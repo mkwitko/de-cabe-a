@@ -110,3 +110,23 @@ describe('MC-173 placing matches', () => {
     expect([...new Set(cal.postponements.map((p) => p.matchId))].sort()).toEqual(moved);
   });
 });
+
+describe('a club too busy for a rested slot', () => {
+  it('still gets a date (one match a day) instead of failing: the SP final behind cup and league', () => {
+    const cal = emptyCalendar();
+    const start = dayOf('2027-04-01');
+    // Two clubs with a match every 4 days for 150 days: no gap of six days for the 3-day rest.
+    for (let i = 0; i < 38; i++) {
+      place(cal, { ...fx(`a${i}`, 'A', 'X', '2027-04-01', { priority: 2 }), base: start + i * 4 });
+      place(cal, {
+        ...fx(`b${i}`, 'B', 'Y', '2027-04-01', { priority: 2 }),
+        base: start + 2 + i * 4,
+      });
+    }
+    const final = fx('est-SP/final/l0', 'A', 'B', '2027-04-04', { priority: 0 });
+    const day = place(cal, final);
+    expect(day).toBeGreaterThanOrEqual(final.base);
+    const clubs = [...cal.matches.values()].filter((m) => m.home === 'A' || m.away === 'A');
+    expect(new Set(clubs.map((m) => m.day)).size).toBe(clubs.length);
+  });
+});
