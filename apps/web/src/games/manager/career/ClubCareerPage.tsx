@@ -1131,9 +1131,9 @@ const FROM = {
   election: 'board',
   electionYear: 'board',
   season: 'press',
-  copaDraw: 'press',
-  copaOut: 'press',
-  copaTitle: 'press',
+  copaDraw: 'board',
+  copaOut: 'board',
+  copaTitle: 'board',
 } as const;
 const FROM_TONE = {
   board: 'bg-club-gold',
