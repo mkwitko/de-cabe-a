@@ -23,6 +23,7 @@ import { squadPlanOf } from '../market/plan';
 import { isForeign } from '../career/squad';
 import { ageOf } from '../market/value';
 import { ticketOf, usualCrowd } from '../match/stadium';
+import { topScorers } from '../career/scoring';
 import { PackSchema, type Pack } from '../pack/schema';
 
 interface Target {
@@ -61,6 +62,37 @@ const atOpeningRate = (w: CareerWorld, reais: number) =>
   (reais * OPENING.USD) / rateOf(w, 'USD', dayOf(`${w.season.season}-07-01`));
 
 const TARGETS: Target[] = [
+  {
+    name: 'Artilheiro da Série A (gols)',
+    // CBF: Brasileirão top scorers 2019-2025 ran from 15 (2025) to 26 (Cano, 2022; Gabigol, 25 in
+    // 2019); the band is the task's 15-29 to allow a 38-round season's spread.
+    range: [15, 29],
+    source: 'CBF, artilheiros do Brasileirão 2019-2025 (15 a 26 gols)',
+    confirmed: true,
+    measure: (w) => topScorers(w, 'goals', 1, new Set(serieAClubs(w)))[0]?.goals ?? 0,
+  },
+  {
+    name: 'Gols de atacantes na Série A (%)',
+    // a confirmar: a typical football-analytics split (strikers and wingers about half of all
+    // goals, midfield a third, defenders the rest); no source tied to the Brasileirão yet.
+    range: [45, 65],
+    source: 'a confirmar (divisão típica de gols por posição, análises de futebol)',
+    confirmed: false,
+    measure: (w) => {
+      const clubs = new Set(serieAClubs(w));
+      const byId = new Map(w.pack.players.map((p) => [p.id, p]));
+      const pos = (id: string) => byId.get(id)?.positions[0]!.position;
+      let all = 0;
+      let fwd = 0;
+      for (const [id, [g]] of Object.entries(w.scored ?? {})) {
+        const p = byId.get(id);
+        if (!p || !clubs.has(p.clubId ?? '')) continue;
+        all += g;
+        if (['ST', 'SS', 'LW', 'RW'].includes(pos(id)!)) fwd += g;
+      }
+      return (fwd * 100) / Math.max(1, all);
+    },
+  },
   {
     name: 'Vendas ao exterior na temporada (R$ bi)',
     // BCB 2025: US$ 553.7M received; FIFA Global Transfer Report 2025: US$ 689M received.

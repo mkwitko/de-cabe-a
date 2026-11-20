@@ -23,6 +23,7 @@ import {
   nextMoment,
   outcomeOf,
   type Booking,
+  type Goal,
   CURRENCIES,
   type Currency,
   rateOf,
@@ -323,6 +324,9 @@ export interface SquadView {
     out: number | null;
     /** Barred from the next match by a suspension. */
     banned: boolean;
+    /** League goals and assists this season. */
+    goals: number;
+    assists: number;
   })[];
   strength: number;
   /** Foreigners in the eleven and how many the rules allow this season. */
@@ -892,6 +896,8 @@ function squadView(w: CareerWorld): SquadView {
       fresh: percent(then.fresh[p.id] ?? 1),
       out: outOf(w, p.id)?.days ?? null,
       banned: banned.has(p.id),
+      goals: w.scored?.[p.id]?.[0] ?? 0,
+      assists: w.scored?.[p.id]?.[1] ?? 0,
     })),
     strength: Math.round(myStrength(w, then)),
     foreigners: {
@@ -1361,7 +1367,12 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
             playerId: ev.playerId,
             card: ev.data.card === 2 ? (ev.data.second ? 'second' : 'red') : 'yellow',
           });
-      const o = playDecision(world, d, outcomeOf(result), [...booked.values()]);
+      // Who scored and set it up on screen, by side; own goals credit nobody.
+      const scored: [Goal[], Goal[]] = [[], []];
+      for (const ev of result.events)
+        if (ev.kind === 'goal' && ev.playerId && !ev.data.own && ev.team !== null)
+          scored[ev.team].push({ scorer: ev.playerId, assist: ev.otherId });
+      const o = playDecision(world, d, outcomeOf(result), [...booked.values()], scored);
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
       last = {
         home: face(byId.get(d.home)!),

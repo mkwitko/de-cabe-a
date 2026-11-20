@@ -44,6 +44,8 @@ import {
 import { windowOpen, type Moves } from './market';
 import { note, type Note } from './inbox';
 import { entryOf, seasonReview, type HistoryEntry } from './history';
+import { credit, leagueIds, sideGoals, type Scored } from './scoring';
+import type { Goal } from '../match/scorers';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
 import { agentOffers, type AgentLedger } from '../market/agents';
@@ -155,6 +157,8 @@ export interface CareerWorld {
   /** Matches each of the person's players started this season, and how many the club played. */
   starts?: Record<string, number>;
   played?: number;
+  /** League goals and assists this season, `[goals, assists]` by player (scoring.ts). */
+  scored?: Scored;
   /** One entry per season played, whichever club the person coached (history.ts). */
   history?: HistoryEntry[];
   /** Players on loan this season, by id: who owns each and the contract he returns to. */
@@ -203,7 +207,13 @@ export type Decision =
 function playDay(
   w: CareerWorld,
   day: number,
-  given?: { id: string; outcome: Outcome; bookings?: readonly Booking[] | undefined },
+  given?: {
+    id: string;
+    outcome: Outcome;
+    bookings?: readonly Booking[] | undefined;
+    /** Who scored on screen, by side (home, away). */
+    goals?: readonly [readonly Goal[], readonly Goal[]] | undefined;
+  },
 ): Map<string, Outcome> {
   const out = new Map<string, Outcome>();
   // The person's club as it stands that day (rest and training since the last one applied).
@@ -248,6 +258,7 @@ function playDay(
   };
   // The sports court sits before the day's matches: what it adds is served from today.
   banned(sitCourt(w, day));
+  const leagues = leagueIds(w);
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     const o =
@@ -265,16 +276,31 @@ function playDay(
     record(w.season, id, o);
     out.set(id, o);
     judgeCoaches(w, m, o, day);
-    // The other clubs' cards fall on their best men; the person's are dealt below.
-    for (const [side, clubId] of [m.home, m.away].entries())
-      if (clubId !== w.clubId)
-        afterMatch(
+    // The other clubs' cards and goals fall on their best men; the person's are dealt below.
+    const league = leagues.has(m.competitionId);
+    for (const [side, clubId] of [m.home, m.away].entries()) {
+      if (clubId === w.clubId) continue;
+      const pitch = rivalPitch(w, clubId, m.competitionId);
+      afterMatch(
+        w,
+        m.competitionId,
+        day,
+        bookingsOf(w, pitch, o.cards[side]!, day, clubId),
+        clubId,
+      );
+      if (league)
+        credit(
           w,
-          m.competitionId,
-          day,
-          bookingsOf(w, rivalPitch(w, clubId, m.competitionId), o.cards[side]!, day, clubId),
-          clubId,
+          sideGoals(
+            w,
+            seedOf(w.seed, `${id}:${side}`),
+            clubId,
+            o.goals[side]!,
+            pitch,
+            given?.id === id ? given.goals?.[side] : undefined,
+          ),
         );
+    }
     if (m.home === w.clubId || m.away === w.clubId) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       styled(w, planOf(w));
@@ -293,6 +319,18 @@ function playDay(
           ? given.bookings.filter((b) => squad.has(b.playerId))
           : bookingsOf(w, eleven, o.cards[mine], day);
       banned(afterMatch(w, m.competitionId, day, bookings));
+      if (league)
+        credit(
+          w,
+          sideGoals(
+            w,
+            seedOf(w.seed, `${id}:${mine}`),
+            w.clubId,
+            o.goals[mine]!,
+            eleven,
+            given?.id === id ? given.goals?.[mine] : undefined,
+          ),
+        );
       const n = names();
       for (const [pid, i] of Object.entries(hurt))
         note(w, {
@@ -425,9 +463,11 @@ export function playDecision(
   watched?: Outcome,
   /** Who was booked on screen; the person's players only count. */
   bookings?: readonly Booking[],
+  /** Who scored on screen, by side (home, away); own goals left out. */
+  goals?: readonly [readonly Goal[], readonly Goal[]],
 ): Outcome {
   if (nextDay(w.season) !== d.day) throw new Error('career: that match is not next');
-  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched, bookings }).get(
+  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched, bookings, goals }).get(
     d.matchId,
   )!;
 }
@@ -675,6 +715,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
   if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;
+  delete w.scored;
   // Minutes start over: unrest and promises with them; buy-backs of seasons gone expire.
   delete w.unhappy;
   pruneClauses(w);
