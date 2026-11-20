@@ -4,6 +4,7 @@
  * `Fired` is the end of the job.
  */
 import { btnPrimary } from '../../../components/ui';
+import { ClubBadge } from '../../../components/ClubBadge';
 import { t } from '../i18n';
 import type { Front, WorkNo } from '@decabeca/club-domain';
 import type { SimView } from './sim.worker';
@@ -267,11 +268,7 @@ export function Fired({
                   key={o.clubId}
                   className="flex min-w-0 items-center gap-3 rounded-lg bg-club-night/60 p-3 text-left"
                 >
-                  <span
-                    aria-hidden
-                    className="size-8 shrink-0 rounded-full border-2"
-                    style={{ background: o.colours[0], borderColor: o.colours[1] }}
-                  />
+                  <ClubBadge name={o.name} size="sm" colours={o.colours} />
                   <span className="min-w-0 flex-1">
                     <span className="block font-condensed text-lg leading-tight font-extrabold text-balance uppercase">
                       {o.name}

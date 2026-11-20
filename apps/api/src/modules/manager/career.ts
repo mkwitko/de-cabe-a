@@ -122,6 +122,7 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
         name: c.name,
         shortName: c.shortName,
         colours: c.colours,
+        kits: c.kits,
         reputation: c.reputation,
       };
     };

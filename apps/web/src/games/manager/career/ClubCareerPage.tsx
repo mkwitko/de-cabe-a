@@ -9,9 +9,12 @@ import { trackDecision, trackSeen, trackTiming } from './telemetry';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
+import { ClubBadge } from '../../../components/ClubBadge';
+import { kitUri } from '../../../components/clubArt';
 import { t } from '../i18n';
 import type {
   ClubFace,
+  ClubKits,
   InboxItem,
   MatchClub,
   SimReply,
@@ -39,6 +42,7 @@ interface ClubOption {
   name: string;
   shortName: string;
   colours: [string, string];
+  kits?: ClubKits | undefined;
   reputation: number;
 }
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
@@ -102,29 +106,45 @@ export function ClubCareerPage() {
   );
 }
 
-/** Text that reads on a club colour: ink on light colours, chalk on dark ones. */
-function inkOn(hex: string) {
-  const n = Number.parseInt(hex.slice(1), 16);
-  const y = 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
-  return y > 150 ? 'text-ink' : 'text-chalk';
-}
+const CREST = { sm: 'xs', md: 'md', lg: 'lg', xl: 'xl' } as const;
 
-const CREST = {
-  sm: 'size-6 border-2 text-[0.55rem]',
-  md: 'size-10 border-[3px] text-xs',
-  lg: 'size-14 border-4 text-base',
-  xl: 'size-16 border-4 text-lg sm:size-24 sm:border-[5px] sm:text-2xl',
-} as const;
-
-/** A club is a round colour badge with its initials, never a logo (DESIGN.md). */
+/** A club's crest: our own drawing from its colours and kit pattern, never a logo (DESIGN.md). */
 function Crest({ club, size = 'md' }: { club: ClubFace; size?: keyof typeof CREST }) {
   return (
-    <span
-      aria-hidden
-      className={`inline-grid shrink-0 place-items-center rounded-full font-condensed leading-none font-black tracking-tight shadow-[0_4px_10px_-4px_rgb(0_0_0/0.7)] ${CREST[size]} ${inkOn(club.colours[0])}`}
-      style={{ background: club.colours[0], borderColor: club.colours[1] }}
-    >
-      {club.shortName}
+    <ClubBadge
+      name={club.shortName}
+      size={CREST[size]}
+      colours={club.colours}
+      pattern={club.kits?.home.pattern}
+    />
+  );
+}
+
+/** A club's home kit, and its away kit when it has one; nothing without kit data. */
+function Kits({
+  club,
+  away = false,
+  both = false,
+}: {
+  club: ClubFace;
+  away?: boolean;
+  both?: boolean;
+}) {
+  if (!club.kits) return null;
+  const list = both
+    ? [club.kits.home, club.kits.away].filter((k) => k !== undefined)
+    : [(away && club.kits.away) || club.kits.home];
+  return (
+    <span aria-hidden className="flex items-end gap-1">
+      {list.map((k) => (
+        <img
+          key={kitUri(k)}
+          alt=""
+          draggable={false}
+          src={kitUri(k)}
+          className="h-14 w-auto sm:h-20"
+        />
+      ))}
     </span>
   );
 }
@@ -718,6 +738,7 @@ function ClubBar({ sim }: { sim: SimView }) {
           {t('career.where', { division: sim.division, season: sim.season })}
         </p>
       </div>
+      <Kits club={sim.club} both />
       <dl className="flex basis-full justify-between gap-5 sm:basis-auto sm:text-right">
         <div>
           <dt className="text-xs font-semibold text-chalk/75">{t('career.today')}</dt>
@@ -825,6 +846,7 @@ function NextMatch(props: {
                 className={`sala-side flex min-w-0 items-center gap-3 sm:gap-4 ${k === 0 ? 'order-1 flex-col sm:flex-row-reverse sm:text-right' : 'order-3 flex-col [animation-delay:140ms] sm:flex-row'}`}
               >
                 <Crest club={c} size="xl" />
+                <Kits club={c} away={k === 1} />
                 <span className="font-condensed text-3xl leading-[0.9] font-black text-balance uppercase sm:text-5xl">
                   <span className="sm:hidden">{c.shortName}</span>
                   <span className="hidden sm:inline">{c.name}</span>

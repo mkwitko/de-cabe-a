@@ -105,3 +105,10 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - `rivals.json`: 115 classicos/derbies reais com nome e intensidade 1-3 (listas de classicos da pt.wikipedia, fontes no arquivo). Onde o clube tem classico curado ele substitui a heuristica de mesma cidade; os demais seguem na heuristica. A intensidade ordena os rivais (o schema nao tem campo para ela; `isDerby` segue booleano).
 - `attendance.json`: acrescentados Serie C 2025 (Nautico 9.040, Ponte Preta 7.214, Figueirense 6.712, Sao Bernardo 970, Retro 92; DGABC) e Serie D 2025 (Santa Cruz 21.003, ge via Diario do Nordeste). Nao ha tabela por clube de C/D publica e legivel por maquina (borderos da CBF sao PDF por jogo; os artigos da ptwiki so trazem o total da liga); os demais seguem estimados e sinalizados.
 - Outros tracos da torcida (lealdade, paciencia, identidade local, orgulho da base, ambicao): nenhum proxy publico defensavel por clube (contagem de socios so existe para uns 20 clubes, sem serie comparavel); mantidos derivados da reputacao, documentados em `estimated`.
+
+## Cores e uniformes (`club.colours`, `club.kits`, data/kits.json)
+
+- Wikipedia (CC BY-SA 4.0), caixas de informacao: pt "Info/Clube de futebol" (corpo1, bracoesquerdo1, calcoes1, meias1; 2 = reserva) e en "Infobox football club" (body1, leftarm1, shorts1, socks1, pattern_b1); so os codigos de cor, nenhum escudo. Titulos pelos sitelinks do Wikidata (CC0); clubes sem QID sao buscados pelo nome na pt.wikipedia (`match: "name"` no JSON). Gerado por `fetch-kits.ts`.
+- `club.colours` = corpo do uniforme 1 + a segunda cor dominante (mangas, calcao ou meias); cai para Wikidata P6364/P465 e, por ultimo, para um par por hash (marcado como estimado). O padrao (listras, faixas, diagonal, metades) sai do nome do arquivo de padrao da en.wikipedia, quando existe.
+- `club.kits` e um campo novo e opcional no esquema (estrito): implantar pacote e codigo juntos, builds antigos rejeitam o campo.
+- Escudos e camisas do jogo sao desenho proprio (SVG a partir das cores), sem logos reais.
