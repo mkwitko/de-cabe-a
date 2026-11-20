@@ -98,3 +98,10 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 
 - `injuries.csv` (linhas `history`): cada 2 pontos de gravidade (leve 1, media 2, grave 3) somam 1 a `injuryProneness` do FM, ate +3 (PARAMETRO). 3.002 jogadores.
 - Traco FM codigo 9 (chutes de longe, penaltis, forca; coocorre com `shoots_from_distance`): inferido `shootsFromDistance`. Codigos 20, 44 (bola parada, visao), 33, 60 (marcacao) nao tem traco equivalente no motor e seguem descartados.
+
+## Estadios, rivalidades, publico C/D e torcida (2026-11-20)
+
+- `stadiums.json` (enrich-stadiums.ts): estadio de cada clube ligado ao Wikidata (CC0, QLever) lido pelo lado do estadio (P466 ocupante, P127 dono), P115 vigente (sem data fim) e capacidade P1083 mais recente (qualificador P585); depois infobox da pt.wikipedia (CC BY-SA, campo estadio do clube, capacidade do estadio) so para quem ainda nao tinha nome ou capacidade. Ordem no pacote: capacidade do save do FM, depois Wikidata/ptwiki; nome: Wikidata, `stadiums.json`, openfootball, save. O que nenhuma fonte tem segue marcado `estimated`. Cadastro Nacional de Estadios da CBF: nao encontrado em formato aberto.
+- `rivals.json`: 115 classicos/derbies reais com nome e intensidade 1-3 (listas de classicos da pt.wikipedia, fontes no arquivo). Onde o clube tem classico curado ele substitui a heuristica de mesma cidade; os demais seguem na heuristica. A intensidade ordena os rivais (o schema nao tem campo para ela; `isDerby` segue booleano).
+- `attendance.json`: acrescentados Serie C 2025 (Nautico 9.040, Ponte Preta 7.214, Figueirense 6.712, Sao Bernardo 970, Retro 92; DGABC) e Serie D 2025 (Santa Cruz 21.003, ge via Diario do Nordeste). Nao ha tabela por clube de C/D publica e legivel por maquina (borderos da CBF sao PDF por jogo; os artigos da ptwiki so trazem o total da liga); os demais seguem estimados e sinalizados.
+- Outros tracos da torcida (lealdade, paciencia, identidade local, orgulho da base, ambicao): nenhum proxy publico defensavel por clube (contagem de socios so existe para uns 20 clubes, sem serie comparavel); mantidos derivados da reputacao, documentados em `estimated`.
