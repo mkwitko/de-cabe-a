@@ -109,14 +109,23 @@ export const MAX_LEVEL_ERROR = OFF.level[0];
 
 /** A fixed number in -100..100 for a pair of ids and a purpose: the club's bias on that player. */
 function bias(seed: number, clubId: string, playerId: string, salt: number): number {
-  let h = Math.imul(2166136261 ^ salt, 16777619) ^ seed;
-  for (const s of [clubId, '|', playerId])
-    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-  // Final mix, then down to -100..100.
-  h ^= h >>> 15;
-  h = Math.imul(h, 2246822519);
-  h ^= h >>> 13;
-  return ((h >>> 0) % 201) - 100;
+  return biasFrom(seed, clubId, salt)(playerId);
+}
+
+/** `bias` for one club over many players: the club's part of the hash is read once. */
+function biasFrom(seed: number, clubId: string, salt: number): (playerId: string) => number {
+  let h0 = Math.imul(2166136261 ^ salt, 16777619) ^ seed;
+  for (let i = 0; i < clubId.length; i++) h0 = Math.imul(h0 ^ clubId.charCodeAt(i), 16777619);
+  h0 = Math.imul(h0 ^ 124, 16777619); // '|'
+  return (playerId) => {
+    let h = h0;
+    for (let i = 0; i < playerId.length; i++) h = Math.imul(h ^ playerId.charCodeAt(i), 16777619);
+    // Final mix, then down to -100..100.
+    h ^= h >>> 15;
+    h = Math.imul(h, 2246822519);
+    h ^= h >>> 13;
+    return ((h >>> 0) % 201) - 100;
+  };
 }
 
 const off = (pack: Pack, spread: number, clubId: string, playerId: string, salt: number) =>
@@ -165,8 +174,23 @@ export function knows(
   local: boolean,
 ): boolean {
   if (p.clubId === clubId) return true;
-  const draw = (bias(clockOf(pack).seed, clubId, p.id, 3) + 100) >> 1;
-  return draw < reach(eyeOf(pack, clubId).scouting, tier, local);
+  return drawsOf(pack, clubId)(p.id) < reach(eyeOf(pack, clubId).scouting, tier, local);
+}
+
+/** The fixed draw 0..100 of this club for a player, which `knows` sets against `reach`. */
+export const drawsOf = (pack: Pack, clubId: string): ((playerId: string) => number) => {
+  const of = biasFrom(clockOf(pack).seed, clubId, 3);
+  return (playerId) => (of(playerId) + 100) >> 1;
+};
+
+/**
+ * `levelError` for a club reading many players of other clubs (never its own): the same numbers
+ * with the club's department and hash prefix read once.
+ */
+export function levelErrorOfOthers(pack: Pack, clubId: string): (p: PackPlayer) => number {
+  const of = biasFrom(clockOf(pack).seed, clubId, 1);
+  const spread = OFF.level[eyeOf(pack, clubId).scouting - 1]!;
+  return (p) => Math.round((of(p.id) * spread) / 100);
 }
 
 /** The level this club believes he has. */

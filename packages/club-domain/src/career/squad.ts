@@ -11,7 +11,7 @@ import { FORMATIONS, defaultPlan, type RoleId, type TeamInput } from '@decabeca/
 import { formationOf } from '../match/fixture-input';
 import { teamForMatch } from '../match/lineup';
 import type { PackPlayer } from '../pack/schema';
-import { bestRoles, roleRating } from '../player/ratings';
+import { bestRoles, roleRating, roleRatingOf } from '../player/ratings';
 import type { CareerWorld } from './advance';
 import { cached } from '../lib/pack-cache';
 
@@ -221,16 +221,44 @@ export function slotLevels(w: ClubIn, formation: string): Map<string, number[]> 
  * attributes give the role, less when the position is not his.
  */
 export function slotRatings(w: ClubIn, formation: string): Map<string, number[]> {
-  const roles = FORMATIONS[formation]!.roles;
-  const slots = slotPositions(formation);
-  return new Map(
-    squad(w).map((p) => [
-      p.id,
-      roles.map((r, i) =>
-        Math.round(roleRating(p.attributes, r) * POSITION_FACTOR[levelIn(p, slots[i]!)]!),
-      ),
-    ]),
-  );
+  const read = () => new Map(squad(w).map((p) => [p.id, ratingsOfPlayer(p, formation)]));
+  // Kept per club and formation, rebuilt only when the club's squad changes (lib/pack-cache.ts):
+  // shared, never mutate. Not for a squad cut by the academy, which a pack does not carry.
+  return w.academy?.length ? read() : cached(w.pack, ratingsName(formation), w.clubId, read);
+}
+
+const ratingsNames = new Map<string, string>();
+const ratingsName = (formation: string) => {
+  let n = ratingsNames.get(formation);
+  if (!n) ratingsNames.set(formation, (n = `slotRatings:${formation}`));
+  return n;
+};
+
+/**
+ * One player's ratings in every slot of a formation, kept per attributes object: a transfer
+ * makes a new player object over the same attributes and positions, so the rest of the squad
+ * is not rated again. Shared, never mutate.
+ */
+const playerRows = new WeakMap<
+  PackPlayer['attributes'],
+  { positions: PackPlayer['positions']; by: Map<string, number[]> }
+>();
+function ratingsOfPlayer(p: PackPlayer, formation: string): number[] {
+  let kept = playerRows.get(p.attributes);
+  if (!kept || kept.positions !== p.positions)
+    playerRows.set(p.attributes, (kept = { positions: p.positions, by: new Map() }));
+  let row = kept.by.get(formation);
+  if (!row) {
+    const roles = FORMATIONS[formation]!.roles;
+    const slots = slotPositions(formation);
+    kept.by.set(
+      formation,
+      (row = roles.map((r, i) =>
+        Math.round(roleRatingOf(p.attributes, r) * POSITION_FACTOR[levelIn(p, slots[i]!)]!),
+      )),
+    );
+  }
+  return row;
 }
 
 /** Each starter's familiarity for the engine match: lower out of position. */
@@ -266,23 +294,28 @@ export function bestLineup(
   if (!f) throw new Error(`lineup: unknown formation ${formation}`);
   const fit = slotRatings(w, formation);
   const left = out ? squad(w).filter((p) => !out.has(p.id)) : [...squad(w)];
+  // Each player's slot ratings, read once, kept in step with `left`.
+  const rows = left.map((p) => fit.get(p.id)!);
   let abroad = 0;
   const xi = f.roles.map((role, i) => {
     // A short squad fields whoever is left: a keeper plays out of goal, or an outfield player
     // in it, rather than the club not turning up; past the limit of foreigners, a Brazilian.
     let at = -1;
     for (const strict of [true, false]) {
-      for (const [k, p] of left.entries())
+      for (let k = 0; k < left.length; k++) {
+        const p = left[k]!;
         if (
           (!strict ||
             (isKeeper(p) === isKeeperRole(role) && (abroad < foreigners || !isForeign(p)))) &&
-          (at < 0 || fit.get(p.id)![i]! > fit.get(left[at]!.id)![i]!)
+          (at < 0 || rows[k]![i]! > rows[at]![i]!)
         )
           at = k;
+      }
       if (at >= 0) break;
     }
     if (at < 0) throw new Error(`lineup: no player for ${role}`);
     const p = left.splice(at, 1)[0]!;
+    rows.splice(at, 1);
     if (isForeign(p)) abroad++;
     return p.id;
   });

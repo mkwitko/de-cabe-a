@@ -10,7 +10,15 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { api, apiFetch } from '../../../lib/api';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { t } from '../i18n';
-import type { ClubFace, InboxItem, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
+import type {
+  ClubFace,
+  InboxItem,
+  MatchClub,
+  SimReply,
+  SimRequest,
+  SimView,
+  Stage,
+} from './sim.worker';
 import { Squad } from './Squad';
 import { Training } from './Training';
 import { Market } from './Market';
@@ -43,6 +51,13 @@ const PLATE: Partial<Record<string, Plate>> = { mercado: 'olheiro' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
 const NO_PORTRAIT: readonly string[] = [];
 const STILL = '&still=1';
+const STAGE_TEXT = {
+  pack: 'career.stage.pack',
+  open: 'career.stage.open',
+  market: 'career.stage.market',
+  turn: 'career.stage.turn',
+  save: 'career.stage.save',
+} as const satisfies Record<Stage, string>;
 const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
 const COLS = ['pos', 'club', 'played', 'gd', 'points'] as const;
@@ -282,6 +297,8 @@ type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const [sim, setSim] = useState<SimView | null>(null);
   const [busy, setBusy] = useState(true);
+  // The long step the worker is on (opening, the turn of the season), when it said so.
+  const [stage, setStage] = useState<Stage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ask, setAsk] = useState<Ask | null>(null);
   const [watching, setWatching] = useState<{
@@ -315,6 +332,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const apply = async (reply: SimReply) => {
     if (reply.save) await put(reply.save, reply.save.still === true);
     if (reply.view) setSim(reply.view);
+    setStage(null);
     setBusy(false);
   };
 
@@ -323,6 +341,10 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     const waiting = new Map<number, (r: SimReply) => void>();
     let seq = 0;
     w.onmessage = (e: MessageEvent<SimReply>) => {
+      if (e.data.stage) {
+        setStage(e.data.stage);
+        return;
+      }
       waiting.get(e.data.id)?.(e.data);
       waiting.delete(e.data.id);
     };
@@ -477,7 +499,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   if (!sim)
     return (
       <p role="status" className="text-chalk-soft">
-        {t('career.computing')}
+        {t(stage ? STAGE_TEXT[stage] : 'career.computing')}
       </p>
     );
   if (sim.board.fired)
@@ -605,6 +627,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           <NextMatch
             sim={sim}
             busy={busy}
+            stage={stage}
             onWatch={watch}
             onPlay={() => step('play')}
             onNextSeason={() => step('nextSeason')}
@@ -722,12 +745,13 @@ function ClubBar({ sim }: { sim: SimView }) {
 function NextMatch(props: {
   sim: SimView;
   busy: boolean;
+  stage: Stage | null;
   onWatch: (w: Watch) => void;
   onPlay: () => void;
   onNextSeason: () => void;
   onMarket: () => void;
 }) {
-  const { sim, busy } = props;
+  const { sim, busy, stage } = props;
   const next = sim.next;
   if (sim.deadline)
     return (
@@ -881,6 +905,11 @@ function NextMatch(props: {
           >
             {t('career.nextSeason', { season: sim.season + 1 })}
           </button>
+          {busy && stage && (
+            <p role="status" className="text-chalk-soft">
+              {t(STAGE_TEXT[stage])}
+            </p>
+          )}
         </div>
       )}
     </section>
