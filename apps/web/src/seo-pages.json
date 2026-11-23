@@ -20,6 +20,23 @@
       ]
     },
     {
+      "path": "/modo-clube",
+      "title": "Modo Clube: o clube é seu, a glória também · De Cabeça F.C.",
+      "description": "Assuma um clube brasileiro de verdade e leve ele da Série D à Série A. Você escala, treina, contrata e responde à diretoria. Grátis, direto no navegador.",
+      "image": "/og-modo-clube.jpg",
+      "imageAlt": "Uma taça no gramado de um estádio à noite, com a frase: O clube é seu. A glória também.",
+      "h1": "Modo Clube: o manager do futebol brasileiro",
+      "text": [
+        "Assuma um clube brasileiro de verdade e leve ele da Série D à Série A. Você escala, treina, contrata e responde à diretoria.",
+        "Cinco salas, um clube inteiro: a Sala do técnico, o Vestiário, o Campo de treino, o Mercado e a Diretoria. Assista à partida inteira, veja só os melhores momentos ou vá direto ao resultado.",
+        "É grátis, roda no navegador, no computador e no celular, sem instalar e sem cadastro."
+      ],
+      "links": [
+        ["/tecnico/carreira", "Começar minha carreira"],
+        ["/", "De Cabeça F.C."]
+      ]
+    },
+    {
       "path": "/career-path",
       "title": "Career Path: adivinhe o jogador pela carreira | De Cabeça F.C.",
       "description": "Veja os clubes de um jogador, um por vez, com jogos e gols, e adivinhe quem é em até 6 tentativas. Centenas de fases de futebol brasileiro e mundial.",
