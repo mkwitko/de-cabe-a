@@ -5,7 +5,9 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
+import { Link } from 'react-router';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
+import { Icon } from '../../../components/Icon';
 import { t } from '../i18n';
 import type { ClubFace, InboxItem, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
 import { Squad } from './Squad';
@@ -41,7 +43,6 @@ const NO_PORTRAIT: readonly string[] = [];
 const STILL = '&still=1';
 const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
-const COLS = ['pos', 'club', 'played', 'gd', 'points'] as const;
 interface Options {
   packId: string;
   packVersion: string;
@@ -73,12 +74,13 @@ export function ClubCareerPage() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
+  // A running career owns the whole viewport (rail, bar, room); the rest is a plain page.
+  if (career && !error) return <Home career={career} onEnded={() => setCareer(null)} />;
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+    <div className={PAGE}>
       <GameHeader title={t('career.title')} />
       {error && <Notice title={t('career.loadError')}>{error}</Notice>}
       {career === null && <Start onStarted={setCareer} onError={setError} />}
-      {career && <Home career={career} onEnded={() => setCareer(null)} />}
     </div>
   );
 }
@@ -413,171 +415,279 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     [ask],
   );
 
-  if (error) return <Notice title={t('career.loadError')}>{error}</Notice>;
+  if (error)
+    return (
+      <div className={PAGE}>
+        <GameHeader title={t('career.title')} />
+        <Notice title={t('career.loadError')}>{error}</Notice>
+      </div>
+    );
   if (watching && source && ask)
     return (
-      <Match
-        key={watching.key}
-        seed={0}
-        watch={watching.watch}
-        clubs={[watching.home, watching.away]}
-        home={{
-          clubId: watching.home.id,
-          formation: watching.mine === 0 ? watching.formation : DEFAULT_FORMATION,
-          instructions: watching.mine === 0 ? watching.plan : PLAN,
-        }}
-        away={{
-          clubId: watching.away.id,
-          formation: watching.mine === 1 ? watching.formation : DEFAULT_FORMATION,
-          instructions: watching.mine === 1 ? watching.plan : PLAN,
-        }}
-        mine={watching.mine}
-        source={source}
-        onFinished={() => {
-          ask({ type: 'matchFinish' })
-            .then(apply)
-            .catch((err: Error) => setError(err.message));
-        }}
-        onDone={() => setWatching(null)}
-      />
+      <div className={PAGE}>
+        <Match
+          key={watching.key}
+          seed={0}
+          watch={watching.watch}
+          clubs={[watching.home, watching.away]}
+          home={{
+            clubId: watching.home.id,
+            formation: watching.mine === 0 ? watching.formation : DEFAULT_FORMATION,
+            instructions: watching.mine === 0 ? watching.plan : PLAN,
+          }}
+          away={{
+            clubId: watching.away.id,
+            formation: watching.mine === 1 ? watching.formation : DEFAULT_FORMATION,
+            instructions: watching.mine === 1 ? watching.plan : PLAN,
+          }}
+          mine={watching.mine}
+          source={source}
+          onFinished={() => {
+            ask({ type: 'matchFinish' })
+              .then(apply)
+              .catch((err: Error) => setError(err.message));
+          }}
+          onDone={() => setWatching(null)}
+        />
+      </div>
     );
   if (!sim)
     return (
-      <p role="status" className="text-chalk-soft">
+      <p role="status" className={`${PAGE} text-chalk-soft`}>
         {t('career.computing')}
       </p>
     );
   if (sim.board.fired)
     return (
-      <Fired
-        club={sim.club.name}
-        offers={sim.board.offers}
-        busy={busy}
-        onTake={(clubId) => {
-          if (!ask) return;
-          setBusy(true);
-          ask({ type: 'takeJob', clubId })
-            .then(apply)
-            .catch((err: Error) => {
-              setBusy(false);
-              setError(err.message);
-            });
-        }}
-        onRestart={() =>
-          api('/v1/manager/career/end', { method: 'POST' })
-            .then(onEnded)
-            .catch((err: Error) => setError(err.message))
-        }
-      />
+      <div className={PAGE}>
+        <Fired
+          club={sim.club.name}
+          offers={sim.board.offers}
+          busy={busy}
+          onTake={(clubId) => {
+            if (!ask) return;
+            setBusy(true);
+            ask({ type: 'takeJob', clubId })
+              .then(apply)
+              .catch((err: Error) => {
+                setBusy(false);
+                setError(err.message);
+              });
+          }}
+          onRestart={() =>
+            api('/v1/manager/career/end', { method: 'POST' })
+              .then(onEnded)
+              .catch((err: Error) => setError(err.message))
+          }
+        />
+      </div>
     );
   const net = sim.money.reduce((sum, m) => sum + m.amount, 0);
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
+  const go = (r: Room) => {
+    setRoom(r);
+    scrollTo({ top: 0 });
+  };
   return (
-    <div className="flex flex-col gap-5">
+    <div className="club-shell">
       <Scene plate={PLATE[room] ?? room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
-      <ClubBar sim={sim} />
-      <nav
-        aria-label={t('career.rooms')}
-        className="sala-rooms flex max-w-full gap-1 self-start overflow-x-auto p-1"
-      >
-        {ROOMS.map((r) => (
-          <button
-            key={r}
-            type="button"
-            aria-current={room === r ? 'page' : undefined}
-            className={`min-h-11 shrink-0 rounded-lg px-4 font-condensed text-lg font-extrabold whitespace-nowrap uppercase ${room === r ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
-            onClick={() => setRoom(r)}
-          >
-            {t('career.room', { r })}
-          </button>
-        ))}
-      </nav>
-      {room === 'diretoria' && (
-        <Board
-          sim={sim}
-          busy={busy}
-          said={workSaid}
-          onWork={
-            ask
-              ? (front) => {
-                  setBusy(true);
-                  ask({ type: 'work', front })
-                    .then((reply) => {
-                      deal(reply);
-                      if (reply.work) setWorkSaid(reply.work);
-                    })
-                    .catch((err: Error) => setError(err.message))
-                    .finally(() => setBusy(false));
-                }
-              : undefined
-          }
-        />
-      )}
-      {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
-      {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
-      {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
-      {room === 'sala' && (
-        <>
-          {sim.turn && (
-            <p
-              aria-live="polite"
-              className="mx-auto w-fit max-w-full rounded-lg bg-club-night/90 px-4 py-2 text-center text-lg"
-            >
-              {t('career.turn', {
-                season: sim.turn.season,
-                champion: sim.turn.champion,
-                move: sim.turn.move,
-              })}
+      <aside className="club-rail">
+        <div className="hidden items-center gap-3 px-4 pt-5 pb-4 lg:flex">
+          <Crest club={sim.club} size="lg" />
+          <div className="min-w-0">
+            <p className="font-condensed text-xl leading-[0.95] font-black text-balance uppercase">
+              {sim.club.name}
             </p>
-          )}
-          <NextMatch
-            sim={sim}
-            busy={busy}
-            onWatch={watch}
-            onPlay={() => step('play')}
-            onNextSeason={() => step('nextSeason')}
-            onMarket={() => setRoom('mercado')}
-          />
-          <section className="sala-desk grid min-w-0 lg:grid-cols-[1.15fr_1fr_1fr]">
-            <Table sim={sim} clubId={sim.clubId} />
-            <div className="flex min-w-0 flex-col">
-              <Form sim={sim} />
-              <Fixtures sim={sim} />
-              <Inbox sim={sim} />
+            <p className="mt-1 text-xs font-semibold text-chalk-soft">
+              {t('career.where', { division: sim.division, season: sim.season })}
+            </p>
+          </div>
+        </div>
+        <nav aria-label={t('career.rooms')} className="sala-rooms">
+          {ROOMS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              aria-label={t('career.room', { r })}
+              aria-current={room === r ? 'page' : undefined}
+              className="club-room"
+              onClick={() => go(r)}
+            >
+              <Icon name={ROOM_ICON[r]} className="size-[22px] shrink-0" />
+              <span className="lg:hidden">{t('career.roomShort', { r })}</span>
+              <span className="hidden lg:inline">{t('career.room', { r })}</span>
+            </button>
+          ))}
+        </nav>
+        <Link to="/" className="club-leave hidden lg:flex">
+          <Icon name="exit" className="size-5" />
+          {t('career.leave')}
+        </Link>
+      </aside>
+      <div className="club-main">
+        <header className="club-top">
+          <Link
+            to="/"
+            aria-label={t('career.leave')}
+            className="-ml-2 grid size-11 shrink-0 place-items-center rounded-lg hover:bg-chalk/10 lg:hidden"
+          >
+            <Icon name="back" />
+          </Link>
+          <span className="lg:hidden">
+            <Crest club={sim.club} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-condensed text-xl leading-none font-black uppercase lg:text-3xl">
+              <span className="lg:hidden">{sim.club.name}</span>
+              <span className="hidden lg:inline">{t('career.room', { r: room })}</span>
+            </h1>
+            <p className="mt-1 truncate text-xs font-semibold text-chalk-soft lg:hidden">
+              {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
+            </p>
+          </div>
+          <dl className="flex shrink-0 items-center gap-6 text-right">
+            <div className="hidden lg:block">
+              <dt className="text-xs font-semibold text-chalk-soft">{t('career.today')}</dt>
+              <dd className="font-condensed text-xl leading-tight font-extrabold uppercase">
+                {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
+              </dd>
             </div>
-            <section className={PANEL}>
-              <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
-              <dl className="flex flex-col gap-2.5 tabular-nums">
-                {sim.money.map((m) => (
-                  <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
-                    <dt className="text-chalk-soft">{t('career.moneyKind', { k: m.kind })}</dt>
-                    <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
-                      {t('career.cash', { value: m.amount })}
-                    </dd>
-                    <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
-                      <span
-                        className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
-                        style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
-                      />
-                    </dd>
-                  </div>
-                ))}
-                <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-3 font-condensed text-xl font-extrabold uppercase">
-                  <dt>{t('career.net')}</dt>
-                  <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
-                    {t('career.cash', { value: net })}
-                  </dd>
+            <div>
+              <dt className="text-xs font-semibold text-chalk-soft">{t('career.cashLabel')}</dt>
+              <dd
+                className={`font-condensed text-lg leading-tight font-extrabold tabular-nums lg:text-xl ${sim.cash < 0 ? 'text-club-danger' : 'text-club-gold'}`}
+              >
+                {t('career.cash', { value: sim.cash })}
+              </dd>
+            </div>
+          </dl>
+          {room !== 'sala' && (
+            <button type="button" className="club-go" onClick={() => go('sala')}>
+              <span className="min-w-0">
+                <span className="block font-condensed text-lg leading-none font-extrabold uppercase">
+                  {sim.deadline
+                    ? t('career.goDeadline')
+                    : sim.next
+                      ? t('career.goMatch')
+                      : t('career.goSeason')}
+                </span>
+                {sim.next && !sim.deadline && (
+                  <span className="mt-0.5 block truncate text-xs font-bold">
+                    {t('career.fixtureShort', {
+                      home: sim.next.home.shortName,
+                      away: sim.next.away.shortName,
+                    })}
+                    {' · '}
+                    {t('career.date', { d: new Date(`${sim.next.iso}T12:00:00Z`) })}
+                  </span>
+                )}
+              </span>
+              <Icon name="forward" className="size-5 shrink-0" />
+            </button>
+          )}
+        </header>
+        <div className="club-room-body">
+          {room === 'diretoria' && (
+            <Board
+              sim={sim}
+              busy={busy}
+              said={workSaid}
+              onWork={
+                ask
+                  ? (front) => {
+                      setBusy(true);
+                      ask({ type: 'work', front })
+                        .then((reply) => {
+                          deal(reply);
+                          if (reply.work) setWorkSaid(reply.work);
+                        })
+                        .catch((err: Error) => setError(err.message))
+                        .finally(() => setBusy(false));
+                    }
+                  : undefined
+              }
+            />
+          )}
+          {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
+          {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
+          {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
+          {room === 'sala' && (
+            <>
+              {sim.turn && (
+                <p
+                  aria-live="polite"
+                  className="mx-auto w-fit max-w-full rounded-lg bg-club-night/90 px-4 py-2 text-center text-lg"
+                >
+                  {t('career.turn', {
+                    season: sim.turn.season,
+                    champion: sim.turn.champion,
+                    move: sim.turn.move,
+                  })}
+                </p>
+              )}
+              <NextMatch
+                sim={sim}
+                busy={busy}
+                onWatch={watch}
+                onPlay={() => step('play')}
+                onNextSeason={() => step('nextSeason')}
+                onMarket={() => setRoom('mercado')}
+              />
+              <section className="sala-desk grid min-w-0 lg:grid-cols-[1.4fr_1fr]">
+                <Inbox sim={sim} onGo={go} />
+                <div className="flex min-w-0 flex-col">
+                  <Table sim={sim} clubId={sim.clubId} />
+                  <Form sim={sim} />
+                  <Fixtures sim={sim} />
+                  <section className={PANEL}>
+                    <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
+                    <dl className="flex flex-col gap-2.5 tabular-nums">
+                      {sim.money.map((m) => (
+                        <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
+                          <dt className="text-chalk-soft">
+                            {t('career.moneyKind', { k: m.kind })}
+                          </dt>
+                          <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
+                            {t('career.cash', { value: m.amount })}
+                          </dd>
+                          <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
+                            <span
+                              className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
+                              style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
+                            />
+                          </dd>
+                        </div>
+                      ))}
+                      <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-3 font-condensed text-xl font-extrabold uppercase">
+                        <dt>{t('career.net')}</dt>
+                        <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
+                          {t('career.cash', { value: net })}
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
                 </div>
-              </dl>
-            </section>
-          </section>
-        </>
-      )}
-      <p className="text-xs text-chalk-soft/80">{t('career.builtHere', { ms: sim.ms })}</p>
+              </section>
+            </>
+          )}
+          {import.meta.env.DEV && (
+            <p className="text-xs text-chalk-soft/80">{t('career.builtHere', { ms: sim.ms })}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+
+const PAGE = 'mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-8';
+const ROOM_ICON = {
+  sala: 'desk',
+  vestiario: 'shirt',
+  treino: 'cone',
+  mercado: 'transfer',
+  diretoria: 'trophy',
+} as const;
 
 const PANEL = 'sala-pane flex min-w-0 flex-col gap-3 p-4 sm:p-5';
 const LABEL =
@@ -600,39 +710,6 @@ function Scene({ plate }: { plate: Plate }) {
         <img src={`/img/clube/${plate}-h.webp`} alt="" decoding="async" fetchPriority="high" />
       </picture>
     </div>
-  );
-}
-
-/** Who and when, set on the office wall above the window: the club, the day, the cash. */
-function ClubBar({ sim }: { sim: SimView }) {
-  return (
-    <header className="sala-bar flex flex-wrap items-center gap-x-4 gap-y-2">
-      <Crest club={sim.club} size="lg" />
-      <div className="min-w-0 flex-1">
-        <h2 className="font-condensed text-3xl leading-[0.9] font-black text-balance uppercase sm:text-4xl">
-          {sim.club.name}
-        </h2>
-        <p className="mt-1 text-sm font-semibold text-chalk/85">
-          {t('career.where', { division: sim.division, season: sim.season })}
-        </p>
-      </div>
-      <dl className="flex basis-full justify-between gap-5 sm:basis-auto sm:text-right">
-        <div>
-          <dt className="text-xs font-semibold text-chalk/75">{t('career.today')}</dt>
-          <dd className="font-condensed text-xl leading-tight font-extrabold uppercase">
-            {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold text-chalk/75">{t('career.cashLabel')}</dt>
-          <dd
-            className={`font-condensed text-xl leading-tight font-extrabold tabular-nums ${sim.cash < 0 ? 'text-club-danger' : 'text-club-gold'}`}
-          >
-            {t('career.cash', { value: sim.cash })}
-          </dd>
-        </div>
-      </dl>
-    </header>
   );
 }
 
@@ -734,7 +811,7 @@ function NextMatch(props: {
             <button
               type="button"
               disabled={busy}
-              className={`${btnSecondary} bg-club-night/80 px-2 text-base sm:px-4 sm:text-lg`}
+              className={`${btnSecondary} bg-club-night/80 px-1 text-sm whitespace-nowrap min-[25rem]:text-base sm:px-4 sm:text-lg`}
               onClick={() => props.onWatch('highlights')}
             >
               {t('career.watchHighlights')}
@@ -742,7 +819,7 @@ function NextMatch(props: {
             <button
               type="button"
               disabled={busy}
-              className={`${btnSecondary} bg-club-night/80 px-2 text-base sm:px-4 sm:text-lg`}
+              className={`${btnSecondary} bg-club-night/80 px-1 text-sm whitespace-nowrap min-[25rem]:text-base sm:px-4 sm:text-lg`}
               onClick={props.onPlay}
             >
               {t('career.play')}
@@ -843,13 +920,17 @@ function Form({ sim }: { sim: SimView }) {
   );
 }
 
+const FIXTURES_SHORT = 4;
+
+/** The next four matches; the whole calendar of the season opens in place. */
 function Fixtures({ sim }: { sim: SimView }) {
+  const [all, setAll] = useState(false);
   if (sim.fixtures.length === 0) return null;
   return (
     <section className={PANEL}>
       <h3 className={LABEL}>{t('career.fixtures')}</h3>
       <ol className="flex flex-col">
-        {sim.fixtures.slice(0, 4).map((f) => (
+        {(all ? sim.fixtures : sim.fixtures.slice(0, FIXTURES_SHORT)).map((f) => (
           <li
             key={f.iso + f.opponent.shortName}
             className="flex items-center gap-3 border-t border-chalk/10 py-1.5 first:border-0"
@@ -865,6 +946,16 @@ function Fixtures({ sim }: { sim: SimView }) {
           </li>
         ))}
       </ol>
+      {sim.fixtures.length > FIXTURES_SHORT && (
+        <button
+          type="button"
+          aria-expanded={all}
+          className="-ml-2 flex min-h-9 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
+          onClick={() => setAll(!all)}
+        >
+          {all ? t('career.fixturesLess') : t('career.fixturesAll', { n: sim.fixtures.length })}
+        </button>
+      )}
     </section>
   );
 }
@@ -1021,56 +1112,133 @@ function noteText(n: InboxItem, sim: SimView): string {
   }
 }
 
-/** What the club was told, newest first: kept in the career, so it is there after a reload. */
-function Inbox({ sim }: { sim: SimView }) {
+/** Where a note is acted on, when it asks for anything. */
+const NOTE_ROOM: Partial<Record<InboxItem['kind'], Room>> = {
+  agentOffer: 'mercado',
+  homecoming: 'mercado',
+  bid: 'mercado',
+  contractsEnding: 'mercado',
+  scouted: 'mercado',
+  tired: 'treino',
+  injury: 'vestiario',
+  cameUp: 'treino',
+  crop: 'treino',
+  ultimatum: 'diretoria',
+  goal: 'diretoria',
+  fairplay: 'diretoria',
+  cashRed: 'diretoria',
+};
+const INBOX_SHORT = 6;
+
+/**
+ * What the club was told, newest first: kept in the career, so it is there after a reload.
+ * The agents' offers of one day read as one note, and a note that asks for something says where.
+ */
+function Inbox({ sim, onGo }: { sim: SimView; onGo: (r: Room) => void }) {
+  const [all, setAll] = useState(false);
+  const notes = useMemo(() => {
+    const out: { n: InboxItem; text: string }[] = [];
+    let run: { day: InboxItem['day']; names: string[]; at: number } | null = null;
+    for (const n of sim.inbox) {
+      if (n.kind === 'agentOffer') {
+        if (run && run.day === n.day) {
+          run.names.push(n.player);
+          out[run.at]!.text = t('inbox.agentOffers', {
+            n: run.names.length,
+            names: run.names.join(', '),
+          });
+          continue;
+        }
+        run = { day: n.day, names: [n.player], at: out.length };
+      } else run = null;
+      out.push({ n, text: noteText(n, sim) });
+    }
+    return out;
+  }, [sim]);
+  const shown = all ? notes : notes.slice(0, INBOX_SHORT);
   return (
     <section className={PANEL}>
       <h3 className={LABEL}>{t('career.inbox')}</h3>
-      {sim.inbox.length === 0 ? (
+      {notes.length === 0 ? (
         <p className="text-chalk-soft">{t('inbox.empty')}</p>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {sim.inbox.map((n, i) => (
-            <li
-              key={`${n.day}-${n.kind}-${i}`}
-              className="flex gap-3 border-t border-chalk/10 pt-2 first:border-0 first:pt-0"
-            >
-              <span
-                aria-hidden
-                className={`mt-1.5 size-2.5 shrink-0 rounded-full ${FROM_TONE[FROM[n.kind]]}`}
-              />
-              <p className="min-w-0">
-                <span className="mr-2 font-condensed font-extrabold uppercase">
+        <ul className="flex flex-col">
+          {shown.map(({ n, text }, i) => {
+            const room = NOTE_ROOM[n.kind];
+            return (
+              <li
+                key={`${n.day}-${n.kind}-${i}`}
+                className="grid grid-cols-[auto_1fr_auto] items-baseline gap-x-3 gap-y-1 border-t border-chalk/10 py-3 first:border-0 first:pt-0"
+              >
+                <span
+                  aria-hidden
+                  className={`size-2.5 translate-y-[1px] rounded-full ${FROM_TONE[FROM[n.kind]]}`}
+                />
+                <span className="font-condensed text-lg leading-none font-extrabold uppercase">
                   {t('career.from', { f: FROM[n.kind] })}
                 </span>
-                <span className="mr-2 text-xs text-chalk-soft tabular-nums">
+                <span className="text-xs text-chalk-soft tabular-nums">
                   {t('career.date', { d: new Date(`${n.iso}T12:00:00Z`) })}
                 </span>
-                {noteText(n, sim)}
-              </p>
-            </li>
-          ))}
+                <p className="col-span-2 col-start-2 max-w-[70ch] text-pretty text-chalk/90">
+                  {text}
+                </p>
+                {room && (
+                  <button
+                    type="button"
+                    className="col-span-2 col-start-2 -ml-2 flex min-h-9 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
+                    onClick={() => onGo(room)}
+                  >
+                    {t('inbox.open', { r: room })}
+                    <Icon name="forward" className="size-4" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
+      )}
+      {notes.length > INBOX_SHORT && (
+        <button
+          type="button"
+          className={`${btnSecondary} min-h-11 self-start px-4 text-base`}
+          onClick={() => setAll(!all)}
+        >
+          {all ? t('inbox.less') : t('inbox.more', { n: notes.length })}
+        </button>
       )}
     </section>
   );
 }
 const MSG_RESULT = { W: 'career.msgWin', D: 'career.msgDraw', L: 'career.msgLoss' } as const;
 
+const HEAD = ['pos', 'club', 'played', 'won', 'drawn', 'lost', 'gd', 'points'] as const;
+
 function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
+  const { up, down } = sim.zones;
+  const size = sim.table.length;
+  // A hairline closes each zone: after the last place that goes up, before the first that falls.
+  const edge = (i: number) =>
+    up > 0 && i === up
+      ? 'border-t border-chalk/50'
+      : down > 0 && i === size - down
+        ? 'border-t border-chalk/50'
+        : 'border-t border-chalk/10';
   return (
     <section className={PANEL}>
       <h3 className={LABEL}>{t('career.table')}</h3>
-      <table className="w-full text-sm tabular-nums">
+      <table className="w-full table-fixed text-sm tabular-nums">
         <thead className="text-chalk-soft">
           <tr>
-            {COLS.map((c, k) => (
+            {HEAD.map((c) => (
               <th
                 key={c}
                 scope="col"
-                className={`pb-1 font-normal ${k < 2 ? 'text-left' : 'text-right'} ${k === 0 ? 'w-7' : ''}`}
+                className={`pb-1 font-normal ${c === 'pos' || c === 'club' ? 'text-left' : 'text-right'} ${c === 'pos' ? 'w-7' : c === 'club' ? '' : c === 'won' || c === 'drawn' || c === 'lost' ? 'w-7 max-sm:hidden' : c === 'played' ? 'w-7' : 'w-9'}`}
               >
-                {t('career.col', { c })}
+                {c === 'won' || c === 'drawn' || c === 'lost'
+                  ? t('career.colRecord', { c })
+                  : t('career.col', { c })}
               </th>
             ))}
           </tr>
@@ -1082,24 +1250,33 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
               aria-current={r.clubId === clubId || undefined}
               className={
                 r.clubId === clubId
-                  ? 'bg-club-gold/15 font-bold text-club-gold'
-                  : 'border-t border-chalk/10'
+                  ? `bg-club-gold/15 font-bold text-club-gold ${edge(i)}`
+                  : edge(i)
               }
             >
               <td className="py-1.5 pl-1">{i + 1}</td>
               <td>
-                <span className="flex items-center gap-2">
+                <span className="flex min-w-0 items-center gap-2">
                   <Crest club={r} size="sm" />
-                  {r.shortName}
+                  <span className="truncate">{r.name}</span>
                 </span>
               </td>
               <td className="text-right">{r.played}</td>
+              <td className="text-right max-sm:hidden">{r.won}</td>
+              <td className="text-right max-sm:hidden">{r.drawn}</td>
+              <td className="text-right max-sm:hidden">{r.lost}</td>
               <td className="text-right">{r.gd}</td>
               <td className="pr-1 text-right font-bold">{r.points}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      {(up > 0 || down > 0) && (
+        <p className="flex gap-x-4 text-xs text-chalk-soft">
+          {up > 0 && <span>{t('career.zoneUp', { n: up })}</span>}
+          {down > 0 && <span>{t('career.zoneDown', { n: down })}</span>}
+        </p>
+      )}
     </section>
   );
 }

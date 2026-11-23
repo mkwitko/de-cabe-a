@@ -17,6 +17,10 @@ async function toMatch(page: Page) {
   return play;
 }
 
+/** A room of the club, from the rail (the bottom bar on a phone): the inbox links name rooms too. */
+const room = (page: Page, name: string) =>
+  page.getByRole('navigation', { name: 'Salas do clube' }).getByRole('button', { name });
+
 test.beforeEach(({ context }) =>
   context.addInitScript(() => localStorage.setItem('dc_welcomed', '1')),
 );
@@ -94,7 +98,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await page.reload();
   await expect(page.getByText(/, temporada 2027/)).toBeVisible({ timeout: 30_000 });
   // The year's boys are in the academy, out of the first team until brought up.
-  await page.getByRole('button', { name: 'Campo de treino' }).click();
+  await room(page, 'Campo de treino').click();
   await expect(page.getByRole('heading', { name: 'Base' })).toBeVisible({ timeout: 30_000 });
   const up = page.getByRole('button', { name: /^Subir .+ para o elenco$/ });
   const boys = await up.count();
@@ -103,7 +107,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   await up.first().click();
   await expect(up).toHaveCount(boys - 1);
   await page.reload();
-  await page.getByRole('button', { name: 'Campo de treino' }).click();
+  await room(page, 'Campo de treino').click();
   await expect(page.getByRole('heading', { name: 'Base' })).toBeVisible({ timeout: 30_000 });
   await expect(up).toHaveCount(boys - 1);
   await page.setViewportSize({ width: 360, height: 800 });
@@ -153,7 +157,7 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await room(page, 'Vestiário').click();
     await expect(page.getByRole('heading', { name: 'Escalação' })).toBeVisible({ timeout: 30_000 });
     const board = page.locator('.sala-board button');
     await expect(board).toHaveCount(11);
@@ -200,7 +204,7 @@ for (const width of [360, 1280]) {
 
     // The pick is kept on the server at once: a reload brings it back.
     await page.reload();
-    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await room(page, 'Vestiário').click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `), {
       timeout: 30_000,
     });
@@ -210,10 +214,10 @@ for (const width of [360, 1280]) {
     );
 
     // The eleven holds across rooms and the next match still plays.
-    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await room(page, 'Sala do técnico').click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Vestiário' }).click();
+    await room(page, 'Vestiário').click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -233,7 +237,7 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Campo de treino' }).click();
+    await room(page, 'Campo de treino').click();
     await expect(page.getByRole('heading', { name: 'Semana de treino' })).toBeVisible({
       timeout: 30_000,
     });
@@ -255,11 +259,11 @@ for (const width of [360, 1280]) {
     );
     await page.getByRole('button', { name: /^Forte/ }).click();
     expect((await kept).status()).toBe(200);
-    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await room(page, 'Sala do técnico').click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await page.reload();
-    await page.getByRole('button', { name: 'Campo de treino' }).click();
+    await room(page, 'Campo de treino').click();
     await expect(page.getByRole('button', { name: /^Forte/ })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -290,15 +294,21 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Mercado' }).click();
+    await room(page, 'Mercado').click();
     await expect(page.getByRole('heading', { name: 'Jogadores no mercado' })).toBeVisible({
       timeout: 30_000,
     });
     await expect(page.getByText('Janela aberta')).toBeVisible();
     const slab = (title: string) =>
       page.locator('div.sala-slab').filter({ has: page.getByRole('heading', { name: title }) });
+    // The market is in four parts: who to sign, the person's squad, the scouts, the clubs' deals.
+    const part = (name: string) =>
+      page.getByRole('group', { name: 'Partes do mercado' }).getByRole('button', { name });
     const squad = slab('Seu elenco');
+    await part('Seu elenco').click();
+    await expect(squad.getByRole('listitem')).not.toHaveCount(0);
     const size = await squad.getByRole('listitem').count();
+    await part('Contratar').click();
 
     // Keepers only, then the first one willing to talk: the club names its price.
     await slab('Jogadores no mercado').getByRole('button', { name: 'GOL', exact: true }).click();
@@ -314,7 +324,7 @@ for (const width of [360, 1280]) {
     const asked = async () =>
       Number(
         (await talk.getByText(/ pede R\$/).innerText())
-          .match(/R\$\s?([\d.]+),/)![1]!
+          .match(/R\$\s?([\d.]+)/)![1]!
           .replace(/\./g, ''),
       );
     const first = await asked();
@@ -334,6 +344,7 @@ for (const width of [360, 1280]) {
     ).toBeVisible();
     await talk.getByRole('button', { name: 'Aceitar o pedido' }).click();
     await expect(page.getByText(`${name} assinou. Negócio fechado.`)).toBeVisible();
+    await part('Seu elenco').click();
     await expect(squad.getByRole('listitem')).toHaveCount(size + 1);
     // The snapshots are sent in order; give the last one time to land before the reload.
     await page.waitForTimeout(1500);
@@ -341,12 +352,14 @@ for (const width of [360, 1280]) {
 
     // The signing is in the snapshot and in the accounts.
     await page.reload();
-    await page.getByRole('button', { name: 'Mercado' }).click();
+    await room(page, 'Mercado').click();
+    await part('Seu elenco').click();
     await expect(squad.getByRole('listitem')).toHaveCount(size + 1, { timeout: 30_000 });
     await expect(squad.getByRole('listitem').filter({ hasText: name })).not.toHaveCount(0);
-    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await room(page, 'Sala do técnico').click();
     await expect(page.getByText('Transferências', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Mercado' }).click();
+    await room(page, 'Mercado').click();
+    await part('Seu elenco').click();
 
     // A renewal opens the player's table alone: he says what he wants to stay.
     const own = squad.getByRole('listitem').nth(1);
@@ -358,6 +371,7 @@ for (const width of [360, 1280]) {
     const spare = squad.getByRole('listitem').last();
     await spare.getByRole('button', { name: /^Oferecer .+ por empréstimo$/ }).click();
     await expect(spare.getByText('Para empréstimo')).toBeVisible();
+    await part('Contratar').click();
     await expect(
       slab('Jogadores no mercado')
         .getByText(/^\d+ a \d+$/)
@@ -370,16 +384,18 @@ for (const width of [360, 1280]) {
     ).toBeVisible();
 
     // Putting a player up for sale marks him; the other clubs' deals are told with their reasons.
+    await part('Seu elenco').click();
     const mine = squad.getByRole('listitem').first();
     await mine.getByRole('button', { name: /^Pôr .+ à venda$/ }).click();
     await expect(mine.getByText('À venda')).toBeVisible();
+    await part('Negócios').click();
     await expect(
       slab('Negócios entre clubes')
         .getByText(/Por quê: necessidade \d+/)
         .first(),
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await room(page, 'Sala do técnico').click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     const overflow = await page.evaluate(
@@ -400,7 +416,7 @@ for (const width of [360, 1280]) {
       .getByRole('button', { name: /^Assumir o / })
       .first()
       .click();
-    await page.getByRole('button', { name: 'Diretoria' }).click();
+    await room(page, 'Diretoria').click();
     await expect(page.getByText(/^Terminar a .+ até o \d+º lugar\.$/)).toBeVisible({
       timeout: 30_000,
     });
@@ -416,10 +432,10 @@ for (const width of [360, 1280]) {
     await expect(page.getByRole('status')).toHaveText(/^(A diretoria (aprovou|negou)|Já há)/);
 
     // A match moves it, and the room says by how much and why.
-    await page.getByRole('button', { name: 'Sala do técnico' }).click();
+    await room(page, 'Sala do técnico').click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Diretoria' }).click();
+    await room(page, 'Diretoria').click();
     await expect(page.getByText(/^(Vitória|Empate|Derrota) (como|em) /)).toBeVisible();
     await expect(page.getByText(/^[+−]\d+$/).first()).toBeVisible();
     const overflow = await page.evaluate(
@@ -439,7 +455,11 @@ test('career: send a scout from the market at 360 px', async ({ page }) => {
     .getByRole('button', { name: /^Assumir o / })
     .first()
     .click();
-  await page.getByRole('button', { name: 'Mercado' }).click();
+  await room(page, 'Mercado').click();
+  await page
+    .getByRole('group', { name: 'Partes do mercado' })
+    .getByRole('button', { name: 'Olheiros' })
+    .click();
   const scouts = page
     .locator('div.sala-slab')
     .filter({ has: page.getByRole('heading', { name: 'Olheiros' }) });
@@ -464,7 +484,11 @@ test("career: look at another club's squad and ask a scout about one player at 3
     .getByRole('button', { name: /^Assumir o / })
     .first()
     .click();
-  await page.getByRole('button', { name: 'Mercado' }).click();
+  await room(page, 'Mercado').click();
+  await page
+    .getByRole('group', { name: 'Partes do mercado' })
+    .getByRole('button', { name: 'Olheiros' })
+    .click();
   const squads = page
     .locator('div.sala-slab')
     .filter({ has: page.getByRole('heading', { name: 'Elencos' }) });
@@ -502,7 +526,7 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
   // The innermost section with that heading: the desk slab around it has it too.
   const inbox = page
     .locator('section')
-    .filter({ has: page.getByRole('heading', { name: 'Mensagens' }) })
+    .filter({ has: page.getByRole('heading', { name: 'Caixa de entrada' }) })
     .last();
   // Messages from the start: the board's welcome, though agents' offers and bids may push it
   // past the list's end.

@@ -4,9 +4,11 @@
  * goes to the worker at once and counts from the next match (club-domain career/squad.ts).
  */
 import { useEffect, useState } from 'react';
+import { Icon } from '../../../components/Icon';
 import { btnSecondary } from '../../../components/ui';
 import { PlanFields } from '../FriendlyPage';
 import { t } from '../i18n';
+import { usePlayerSheet } from './PlayerSheet';
 import type { SimReply, SimRequest, SquadView } from './sim.worker';
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
@@ -21,6 +23,13 @@ const place = (s: { x: number; y: number }) => ({
 });
 const surname = (name: string) => name.split(' ').at(-1)!;
 
+const COLS = ['pos', 'name', 'age', 'fresh', 'rating'] as const;
+const ROW =
+  'grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem_2.5rem] items-center gap-x-3 sm:grid-cols-[2.75rem_minmax(0,1fr)_3rem_8rem_3rem] sm:gap-x-4';
+const toneOf = (out: boolean, fresh: number) =>
+  out || fresh < 65 ? 'spent' : fresh < 85 ? 'tired' : 'ready';
+const FRESH = { ready: 'bg-club-turf', tired: 'bg-club-gold', spent: 'bg-club-danger' } as const;
+
 export function Squad(props: {
   ask: Ask;
   onError: (m: string) => void;
@@ -29,6 +38,7 @@ export function Squad(props: {
   const { ask, onError, onPicked } = props;
   const [squad, setSquad] = useState<SquadView | null>(null);
   const [slot, setSlot] = useState<number | null>(null);
+  const card = usePlayerSheet(ask, onError);
 
   useEffect(() => {
     ask({ type: 'squad' })
@@ -68,7 +78,7 @@ export function Squad(props: {
   return (
     <section
       aria-labelledby="squad-title"
-      className="grid items-start gap-5 lg:grid-cols-[minmax(0,27rem)_1fr]"
+      className="grid items-start gap-5 lg:grid-cols-[minmax(0,27rem)_1fr] 2xl:grid-cols-[minmax(0,32rem)_1fr]"
     >
       <div className="sala-slab flex flex-col gap-4 p-4 sm:p-5">
         <div className="flex items-end justify-between gap-3">
@@ -150,13 +160,32 @@ export function Squad(props: {
             : t('squad.pick', { role: t('squad.role', { r: squad.slots[slot]!.role }) })}
         </h3>
         {slot === null && <p className="text-chalk-soft">{t('squad.hint')}</p>}
-        <ul className="grid gap-x-6 sm:grid-cols-2">
-          {rows.map((p) => {
+        <div
+          aria-hidden
+          className={`${ROW} border-b border-chalk/15 pr-11 pb-2 text-xs font-semibold text-chalk-soft`}
+        >
+          {COLS.map((c, k) => (
+            <span
+              key={c}
+              className={`${k > 1 ? 'text-right' : ''} ${c === 'age' ? 'max-sm:hidden' : ''}`}
+            >
+              {t('squad.col', { c })}
+            </span>
+          ))}
+        </div>
+        <ul className="-mt-3 flex flex-col">
+          {rows.map((p, k) => {
             const at = squad.xi.indexOf(p.id);
             const n = slot === null ? p.best.rating : p.fit[slot]!;
             const able = slot !== null && p.keeper === keeperSlot && at !== slot && p.out === null;
+            const tone = toneOf(p.out !== null, p.fresh);
+            // The bench starts where the eleven ends (the list is sorted starters first).
+            const bench = slot === null && at < 0 && k > 0 && squad.xi.includes(rows[k - 1]!.id);
             return (
-              <li key={p.id} className="border-t border-chalk/10">
+              <li
+                key={p.id}
+                className={`flex items-center border-t ${bench ? 'mt-3 border-chalk/35' : 'border-chalk/10'} first:border-0`}
+              >
                 <button
                   type="button"
                   disabled={!able}
@@ -166,49 +195,70 @@ export function Squad(props: {
                     n,
                     known: t('squad.known', { l: slot === null ? 3 : p.known[slot]! }),
                   })}
-                  className="flex min-h-12 w-full items-center gap-3 py-1.5 text-left enabled:hover:bg-chalk/6 disabled:cursor-default"
+                  className={`${ROW} min-h-12 min-w-0 flex-1 py-1.5 text-left enabled:hover:bg-chalk/6 disabled:cursor-default`}
                   onClick={() => take(p.id)}
                 >
-                  <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
+                  <span
+                    className={`grid h-6 place-items-center rounded font-condensed text-sm font-extrabold ${at >= 0 ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk'}`}
+                  >
                     {t('squad.position', { p: p.positions[0]! })}
+                    {at >= 0 && <span className="sr-only">{t('squad.starter')}</span>}
                   </span>
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0">
                     <span className="block truncate font-semibold">{p.name}</span>
-                    <span className="block text-xs text-chalk-soft">
-                      {t('squad.age', { n: p.age })}
-                      {at >= 0 && (
-                        <span className="ml-2 font-bold text-club-gold">{t('squad.starter')}</span>
-                      )}
-                      {p.out !== null && (
-                        <span className="ml-2 font-bold text-club-danger">
-                          {t('health.out', { n: p.out })}
-                        </span>
-                      )}
-                      {p.fresh < 85 && (
-                        <span className="ml-2 font-bold text-club-danger">
-                          {t('squad.fresh', { n: p.fresh })}
-                        </span>
-                      )}
-                      {slot !== null && (
-                        <span
-                          className={`ml-2 font-bold ${p.known[slot]! < 2 ? 'text-club-danger' : 'text-chalk'}`}
-                        >
-                          {t('squad.known', { l: p.known[slot]! })}
-                        </span>
-                      )}
+                    {(p.out !== null || slot !== null) && (
+                      <span className="block text-xs">
+                        {p.out !== null && (
+                          <span className="mr-2 font-bold text-club-danger">
+                            {t('health.out', { n: p.out })}
+                          </span>
+                        )}
+                        {slot !== null && (
+                          <span
+                            className={`font-bold ${p.known[slot]! < 2 ? 'text-club-danger' : 'text-chalk-soft'}`}
+                          >
+                            {t('squad.known', { l: p.known[slot]! })}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-right text-sm text-chalk-soft tabular-nums max-sm:hidden">
+                    {p.age}
+                  </span>
+                  <span className="flex items-center justify-end gap-2">
+                    <span className="hidden h-1.5 flex-1 overflow-hidden rounded-full bg-chalk/12 sm:block">
+                      <span
+                        className={`block h-full rounded-full ${FRESH[tone]}`}
+                        style={{ width: `${p.fresh}%` }}
+                      />
+                    </span>
+                    <span
+                      className={`w-8 text-right text-sm font-bold tabular-nums ${tone === 'ready' ? 'text-chalk' : tone === 'tired' ? 'text-club-gold' : 'text-club-danger'}`}
+                    >
+                      {p.fresh}
                     </span>
                   </span>
                   <span
-                    className={`font-condensed text-2xl leading-none font-black tabular-nums ${slot !== null && !able ? 'text-chalk-soft/50' : ''}`}
+                    className={`text-right font-condensed text-2xl leading-none font-black tabular-nums ${slot !== null && !able ? 'text-chalk-soft/50' : ''}`}
                   >
                     {n}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={t('player.open', { name: p.name })}
+                  className="grid size-11 shrink-0 place-items-center rounded-lg text-chalk-soft hover:bg-chalk/10 hover:text-chalk"
+                  onClick={(e) => card.open(p.id, e.currentTarget)}
+                >
+                  <Icon name="info" />
                 </button>
               </li>
             );
           })}
         </ul>
       </div>
+      {card.sheet}
     </section>
   );
 }

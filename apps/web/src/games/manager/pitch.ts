@@ -401,6 +401,12 @@ function pattern(c: CanvasRenderingContext2D, k: Kit, x: number, y: number, r: n
 const SKIN = ['#f1c9a5', '#d9a47a', '#b97d52', '#8a5a3b', '#5e3b26'];
 const BOOT = '#111814';
 const GLOVE = '#f4f7ef';
+const luma = (hex: string) => {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+};
+const lighter = (a: string, b: string) => (luma(a) >= luma(b) ? a : b);
+const HAIR = ['#1a1410', '#2b1d14', '#3a2a1c', '#0f0d0c', '#5a4632'];
 /** Stride phase per player, carried between draws. */
 const phase = new Float64Array(22);
 let lastNow = 0;
@@ -423,118 +429,167 @@ interface Pose {
   kick: [number, number] | null;
   dive: boolean;
   handsUp: boolean;
+  /** A number that stays with the player (his index): picks the hair. */
+  phase0: number;
 }
 
 /**
- * One athlete standing on (x, y), drawn in a frame where up is -y and the unit
- * is r: boots, socks, shorts, shirt (disc at home, rounded square away), arms,
- * head. Leans into the run; a keeper dives sideways with the arms stretched.
+ * One athlete standing on (x, y), drawn in a frame where up is -y and the unit is r (about a
+ * third of his height): boots, socks, bare thighs, shorts, a shirt with shoulders wider than the
+ * waist, sleeves, forearms, neck and head. The legs and arms bend at the knee and the elbow and
+ * swing with the stride; he leans into the run; a keeper dives sideways with the arms stretched.
+ * The ring under his feet tells the side without colour: whole at home, broken away.
  */
 function athlete(c: CanvasRenderingContext2D, q: Pose) {
   const { r, kit } = q;
   const shirt = q.keeper ? (kit.keeper ?? kit.fill) : kit.fill;
   const side = q.hx >= 0 ? 1 : -1;
-  // Shadow on the grass, longer when diving.
-  c.fillStyle = 'rgba(0,0,0,0.38)';
+  // Running up the screen he shows his back: no face, the hair covers the head.
+  const away = q.hy < -0.35;
+
+  // The ring on the grass, then the shadow (longer when diving).
+  c.lineWidth = Math.max(1, r * 0.16);
+  // The lighter of the kit's two colours, so a dark shirt still shows on the grass.
+  c.strokeStyle = q.keeper ? shirt : lighter(kit.fill, kit.edge);
+  c.setLineDash(q.team === 0 ? [] : [r * 0.5, r * 0.32]);
   c.beginPath();
-  c.ellipse(q.x + r * 0.3, q.y, r * (q.dive ? 1.9 : 1), r * 0.38, 0, 0, Math.PI * 2);
+  c.ellipse(q.x, q.y, r * 1.05, r * 0.42, 0, 0, Math.PI * 2);
+  c.stroke();
+  c.setLineDash([]);
+  c.fillStyle = 'rgba(0,0,0,0.4)';
+  c.beginPath();
+  c.ellipse(q.x + r * 0.28, q.y, r * (q.dive ? 1.8 : 0.82), r * 0.3, 0, 0, Math.PI * 2);
   c.fill();
 
   c.save();
   c.translate(q.x, q.y);
-  c.rotate(q.dive ? side * 1.15 : q.hx * q.amp * 0.16);
-  const bob = Math.abs(Math.sin(q.phase)) * r * 0.12 * q.amp;
-  const swing = Math.sin(q.phase) * r * 0.75 * q.amp;
-  const hipY = -r * 1.25 - bob;
-  const lw = Math.max(1.2, r * 0.3);
+  c.rotate(q.dive ? side * 1.15 : q.hx * q.amp * 0.14);
+  const bob = Math.abs(Math.sin(q.phase)) * r * 0.1 * q.amp;
+  const swing = Math.sin(q.phase) * r * 0.62 * q.amp;
+  const hipY = -r * 1.32 - bob;
+  const shoulderY = hipY - r * 0.98;
   c.lineCap = 'round';
-
-  // Legs: sock to boot, the swinging foot lifted off the grass.
-  const leg = (dx: number, s: number, kicking: boolean) => {
-    let fx = dx + s * q.hx;
-    let fy = -Math.max(0, Math.cos(q.phase) * s) * 0.35;
-    if (kicking && q.kick) [fx, fy] = [q.kick[0] * r * 1.1, -r * 0.45];
-    if (q.dive) [fx, fy] = [dx * 0.6 - side * r * 0.5, 0];
-    c.strokeStyle = kit.fill;
-    c.lineWidth = lw;
+  c.lineJoin = 'round';
+  const limb = (colour: string, w: number, x0: number, y0: number, x1: number, y1: number) => {
+    c.strokeStyle = colour;
+    c.lineWidth = w;
     c.beginPath();
-    c.moveTo(dx * 0.7, hipY);
-    c.lineTo(fx, fy - bob * 0.2);
+    c.moveTo(x0, y0);
+    c.lineTo(x1, y1);
     c.stroke();
+  };
+
+  // Legs: bare thigh to the knee, sock to the boot; the swinging foot leaves the grass and
+  // its knee comes forward.
+  const leg = (dx: number, s: number, kicking: boolean) => {
+    let fx = dx * 0.8 + s * q.hx;
+    let fy = -Math.max(0, Math.cos(q.phase) * s) * 0.42;
+    if (kicking && q.kick) [fx, fy] = [q.kick[0] * r * 1.05, -r * 0.42];
+    if (q.dive) [fx, fy] = [dx * 0.6 - side * r * 0.5, 0];
+    const hx0 = dx * 0.62;
+    const kx = (hx0 + fx) / 2 + side * r * 0.16 * q.amp + (fx - hx0) * 0.12;
+    const ky = (hipY + fy) / 2 - r * 0.04;
+    limb(q.skin, r * 0.3, hx0, hipY, kx, ky);
+    limb(kit.fill, r * 0.26, kx, ky, fx, fy - r * 0.08);
     c.fillStyle = BOOT;
     c.beginPath();
-    c.ellipse(fx + side * r * 0.12, fy - r * 0.05, r * 0.24, r * 0.13, 0, 0, Math.PI * 2);
+    c.ellipse(fx + side * r * 0.1, fy - r * 0.06, r * 0.25, r * 0.13, 0, 0, Math.PI * 2);
     c.fill();
   };
-  leg(-r * 0.28, swing, false);
-  leg(r * 0.28, -swing, true);
+  leg(-r * 0.3, swing, false);
+  leg(r * 0.3, -swing, true);
 
-  // Shorts.
+  // Shorts over the top of both thighs.
   c.fillStyle = kit.edge;
   c.beginPath();
-  c.roundRect(-r * 0.52, hipY - r * 0.3, r * 1.04, r * 0.45, r * 0.12);
+  c.moveTo(-r * 0.46, hipY - r * 0.16);
+  c.lineTo(r * 0.46, hipY - r * 0.16);
+  c.lineTo(r * 0.54, hipY + r * 0.34);
+  c.lineTo(r * 0.06, hipY + r * 0.3);
+  c.lineTo(0, hipY + r * 0.16);
+  c.lineTo(-r * 0.06, hipY + r * 0.3);
+  c.lineTo(-r * 0.54, hipY + r * 0.34);
+  c.closePath();
   c.fill();
 
-  // Arms behind the shirt swing against the legs; a keeper's go up.
-  const ty = hipY - r * 0.92;
+  // Arms swing against the legs: sleeve to the elbow, forearm to the hand. A keeper's go up.
   const arm = (dx: number, s: number) => {
-    let hx2 = dx * 1.25 - s * q.hx * 0.7;
-    let hy2 = ty + r * 0.85;
-    if (q.handsUp) [hx2, hy2] = [dx * 1.3, ty - r * 1.3];
-    if (q.dive) [hx2, hy2] = [dx * 0.4 + side * r * 0.2, ty - r * 1.8];
-    c.strokeStyle = shirt;
-    c.lineWidth = lw * 0.85;
-    c.beginPath();
-    c.moveTo(dx, ty - r * 0.45);
-    c.lineTo(hx2, hy2);
-    c.stroke();
+    let ex = dx * 1.12 - s * q.hx * 0.3;
+    let ey = shoulderY + r * 0.5;
+    let hx2 = dx * 1.05 - s * q.hx * 0.8 + side * r * 0.14 * q.amp;
+    let hy2 = shoulderY + r * 0.98;
+    if (q.handsUp)
+      [ex, ey, hx2, hy2] = [dx * 1.35, shoulderY - r * 0.35, dx * 1.2, shoulderY - r * 1.05];
+    if (q.dive)
+      [ex, ey, hx2, hy2] = [
+        dx * 0.6 + side * r * 0.1,
+        shoulderY - r * 0.6,
+        dx * 0.4 + side * r * 0.2,
+        shoulderY - r * 1.3,
+      ];
+    limb(shirt, r * 0.27, dx, shoulderY + r * 0.1, ex, ey);
+    limb(q.keeper ? shirt : q.skin, r * 0.2, ex, ey, hx2, hy2);
     c.fillStyle = q.keeper ? GLOVE : q.skin;
     c.beginPath();
-    c.arc(hx2, hy2, r * (q.keeper ? 0.2 : 0.14), 0, Math.PI * 2);
+    c.arc(hx2, hy2, r * (q.keeper ? 0.2 : 0.13), 0, Math.PI * 2);
     c.fill();
   };
   arm(-r * 0.56, -swing);
   arm(r * 0.56, swing);
 
-  // Shirt: the shape tells the side (disc at home, rounded square away).
-  const tr = r * 0.6;
+  // Shirt: shoulders wider than the waist, soft corners; the design sits inside it.
   const body = () => {
     c.beginPath();
-    if (q.team === 0) c.ellipse(0, ty, tr, tr * 1.2, 0, 0, Math.PI * 2);
-    else c.roundRect(-tr, ty - tr * 1.2, tr * 2, tr * 2.4, tr * 0.4);
+    c.moveTo(-r * 0.6, shoulderY + r * 0.16);
+    c.quadraticCurveTo(-r * 0.6, shoulderY, -r * 0.36, shoulderY - r * 0.04);
+    c.lineTo(r * 0.36, shoulderY - r * 0.04);
+    c.quadraticCurveTo(r * 0.6, shoulderY, r * 0.6, shoulderY + r * 0.16);
+    c.lineTo(r * 0.45, hipY - r * 0.08);
+    c.lineTo(-r * 0.45, hipY - r * 0.08);
+    c.closePath();
   };
-  c.lineWidth = Math.max(1.2, r * 0.2);
-  c.strokeStyle = q.keeper ? BOOT : kit.edge;
   c.fillStyle = shirt;
   body();
   c.fill();
   if (!q.keeper) {
     body();
-    pattern(c, kit, 0, ty, tr);
+    pattern(c, kit, 0, (shoulderY + hipY) / 2, r * 0.6);
   }
+  // The far side of the chest falls into shade: volume without an outline.
+  body();
+  c.save();
+  c.clip();
+  c.fillStyle = 'rgba(0,0,0,0.18)';
+  c.fillRect(side > 0 ? -r : r * 0.12, shoulderY - r, r * 0.88, r * 3);
+  c.restore();
+  c.lineWidth = Math.max(0.75, r * 0.07);
+  c.strokeStyle = 'rgba(4,10,8,0.55)';
   body();
   c.stroke();
 
-  // Head, turned a little towards the run, with hair.
-  const hr = r * 0.4;
-  const hx3 = q.hx * hr * 0.25;
-  const hy3 = ty - tr * 1.2 - hr * 0.85;
+  // Neck and head, turned a little towards the run; hair on top, all over from behind.
+  const hr = r * 0.36;
+  const hx3 = q.hx * hr * 0.3;
+  const hy3 = shoulderY - hr * 1.12;
+  limb(q.skin, r * 0.22, 0, shoulderY, hx3 * 0.5, hy3 + hr * 0.6);
   c.fillStyle = q.skin;
   c.beginPath();
   c.arc(hx3, hy3, hr, 0, Math.PI * 2);
   c.fill();
-  c.fillStyle = '#1a1410';
+  c.fillStyle = HAIR[q.phase0 % HAIR.length]!;
   c.beginPath();
-  c.arc(hx3 - q.hx * hr * 0.2, hy3, hr, Math.PI * 1.05, Math.PI * 1.95);
+  if (away) c.arc(hx3, hy3, hr, 0, Math.PI * 2);
+  else c.arc(hx3 - q.hx * hr * 0.25, hy3 - hr * 0.08, hr, Math.PI * 1.02, Math.PI * 1.98);
   c.fill();
   c.restore();
   c.lineCap = 'butt';
+  c.lineJoin = 'miter';
 }
 
 /**
  * Players and ball between frames `a` and `b` at fraction `f`, back to front.
- * Athletes with legs, arms and head; the shirt is a disc at home and a rounded
- * square away (shape, not only colour, tells the sides).
+ * Athletes with legs, arms and head; the ring under the feet is whole at home and
+ * broken away (shape, not only colour, tells the sides).
  * `now` drives the running bob and the ball spin; both stop with reduced motion
  * because the caller then holds `f` and passes a fixed `now`.
  */
@@ -630,7 +685,7 @@ export function drawPlayers(
   for (const p of order) {
     const o = v.at(lerp(4 + p * 2), lerp(5 + p * 2));
     if (!ballDrawn && ball.y < o.y) drawBall();
-    const r = Math.max(4, 11 * v.k * o.s * v.size);
+    const r = Math.max(4.5, 12.5 * v.k * o.s * v.size);
     const team = p < 11 ? 0 : 1;
     // Screen heading: where the player runs, else towards the ball.
     const pa = v.at(a[4 + p * 2]!, a[5 + p * 2]!);
@@ -663,6 +718,7 @@ export function drawPlayers(
       // A keeper moving fast with the ball close is diving; close enough, his hands go up.
       dive: p % 11 === 0 && run > 16 && near < 50,
       handsUp: p % 11 === 0 && near < 90 && z > 3,
+      phase0: p * 3,
     });
   }
   if (!ballDrawn) drawBall();

@@ -26,7 +26,9 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2
-  await page.getByRole('link', { name: 'Jogar fase 1', exact: true }).click();
+  // With everything open the home is the Modo Clube pitch; the minigames are an index under it.
+  await page.getByRole('link', { name: /^Career Path/ }).click();
+  await page.getByRole('link', { name: /Fase 1, .*jogar/ }).click();
   await expect(page.getByRole('heading', { name: 'Career Path · Fase 1' })).toBeVisible();
   // Mode chosen once, before the level starts (ADR-009).
   await page.getByRole('button', { name: /No seu tempo/ }).click();
@@ -64,7 +66,10 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
   ).toHaveCount(7);
-  await expect(page.getByRole('link', { name: 'Próxima fase · 2' })).toBeVisible();
+  // When level 1 is also today's Desafio do Dia, the way on is back to it (LevelParts `daily`).
+  await expect(
+    page.getByRole('link', { name: /Próxima fase · 2|Voltar ao Desafio do Dia/ }),
+  ).toBeVisible();
 
   // Reações (2.5): react, then tap again to undo
   const craque = page.getByRole('button', { name: /^Craque!/ });
