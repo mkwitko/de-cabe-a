@@ -29,6 +29,8 @@ export function quickResult(
   crowd = 0.6,
   /** The referee's cards and sendings-off a match on average (referee.ts). */
   whistle = { cards: 5.2, reds: 0.31 },
+  /** On neutral ground (match/stadium.ts): no home side, the two means meet halfway. */
+  neutral = false,
 ): Outcome {
   const r = rngFrom(seed);
   const goals = (mean: number) => {
@@ -39,10 +41,12 @@ export function quickResult(
   };
   const d = (home - away) / 10;
   return {
-    goals: [
-      goals(Math.max(0.2, 1.3 + 0.35 * crowd + 0.35 * d)),
-      goals(Math.max(0.2, 1.15 - 0.25 * crowd - 0.3 * d)),
-    ],
+    goals: neutral
+      ? [goals(Math.max(0.2, 1.225 + 0.325 * d)), goals(Math.max(0.2, 1.225 - 0.325 * d))]
+      : [
+          goals(Math.max(0.2, 1.3 + 0.35 * crowd + 0.35 * d)),
+          goals(Math.max(0.2, 1.15 - 0.25 * crowd - 0.3 * d)),
+        ],
     shootout: null,
     // Each side gets half the referee's yellows and half his sendings-off, Poisson.
     cards: [

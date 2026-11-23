@@ -8,7 +8,7 @@
  * money: `estaduais-data.ts`.
  */
 import type { Pack } from '../pack/schema';
-import { dayOf, isoOf, weekday } from './calendar';
+import { estadualWindow, isoOf } from './calendar';
 import { gruposPhase, knockoutPhase, ligaPhase, regulation } from '../generate/competitions';
 import type { Competition, Phase } from './schema';
 import { DOCUMENTED, ESTIMATE, GENERIC, type StateFormat } from './estaduais-data';
@@ -20,14 +20,21 @@ export const isEstadual = (c: { id: string }) => c.id.startsWith(ESTADUAL_PREFIX
 /** Fewer clubs than this and the state plays no championship. */
 const MIN_CLUBS = 4;
 const WEEKDAYS = [0, 3];
+/** The CBF's cap on a state championship's dates from 2026 (16 before). */
+export const ESTADUAL_DATES = 11;
 
-/** Match dates of the CBF window for state championships: Sundays and Wednesdays. */
-export function estadualSlots(season: number): number[] {
-  const jan9 = dayOf(`${season}-01-09`);
-  const start = jan9 + ((7 - weekday(jan9)) % 7);
+/**
+ * Match dates of the CBF window for a state championship of `needed` dates: its nine Sundays,
+ * and the Wednesdays from the first one for the rest (two before the Série A starts; a format
+ * that needs more takes a Série A midweek, as the Paranaense's twelfth date did).
+ */
+export function estadualSlots(season: number, needed = ESTADUAL_DATES): number[] {
+  const { first, last } = estadualWindow(season);
   const out: number[] = [];
-  for (let d = start; d <= start + 56; d++) if (WEEKDAYS.includes(weekday(d))) out.push(d);
-  return out;
+  for (let d = first; d <= last; d += 7) out.push(d);
+  const extra = Math.max(0, needed - out.length);
+  for (let k = 0; k < extra && first + 3 + 7 * k < last; k++) out.push(first + 3 + 7 * k);
+  return out.sort((a, b) => a - b);
 }
 
 const documented = new Map(DOCUMENTED.map((f) => [f.uf, f]));
@@ -35,6 +42,17 @@ const documented = new Map(DOCUMENTED.map((f) => [f.uf, f]));
 /** The generic format for `n` clubs: one table, or two groups from 11 clubs, then a knockout. */
 export function genericFormat(uf: string, name: string, n: number): StateFormat {
   const big = n >= 11;
+  const f = genericRow(uf, name, n, big);
+  // Within the CBF's cap: one leg, then single semi-finals, then a single final, as needed.
+  const dates = () =>
+    roundsOf(f, n) + (f.ko === 8 ? f.koLegs.quarter : 0) + f.koLegs.semi + f.koLegs.final;
+  if (dates() > ESTADUAL_DATES) f.legs = 1;
+  if (dates() > ESTADUAL_DATES) f.koLegs.semi = 1;
+  if (dates() > ESTADUAL_DATES) f.koLegs.final = 1;
+  return f;
+}
+
+function genericRow(uf: string, name: string, n: number, big: boolean): StateFormat {
   return {
     uf,
     name,
@@ -104,23 +122,27 @@ function build(
   clubIds: string[],
   prizes: { champion: number; runnerUp: number; semi: number },
 ): Competition {
-  const slots = estadualSlots(season);
-  const win = (from: number, to: number) => ({
-    start: isoOf(slots[from]!),
-    end: isoOf(slots[to]!),
-    weekdays: WEEKDAYS,
-  });
   const koRounds: { id: string; legs: 1 | 2 }[] = [];
   if (fmt.ko === 8) koRounds.push({ id: 'quartas', legs: fmt.koLegs.quarter });
   if (fmt.ko >= 4) koRounds.push({ id: 'semi', legs: fmt.koLegs.semi });
   koRounds.push({ id: 'final', legs: fmt.koLegs.final });
   const tail = koRounds.reduce((s, r) => s + r.legs, 0);
+  const slots = estadualSlots(season, roundsOf(fmt, clubIds.length) + tail);
+  // The Wednesdays past the ones this championship takes are the national series'.
+  const wednesdays = slots.filter((d) => (d - slots[0]!) % 7 !== 0);
+  const exclude = {
+    start: isoOf(wednesdays.length ? wednesdays.at(-1)! + 1 : slots[0]!),
+    end: isoOf(slots.at(-1)!),
+    weekdays: [3],
+  };
+  const win = (from: number, to: number) => ({
+    start: isoOf(slots[from]!),
+    end: isoOf(slots[to]!),
+    weekdays: WEEKDAYS,
+    exclude,
+  });
   const firstEnd = slots.length - tail - 1;
-  // A weekly rhythm (Sundays) when the rounds fit: a club then keeps a free midweek for the
-  // national series, which this championship overlaps in the first weeks.
-  const sundays = slots.slice(0, firstEnd + 1).filter((d) => weekday(d) === 0).length;
-  const rhythm = sundays >= roundsOf(fmt, clubIds.length) ? [0] : WEEKDAYS;
-  const first = { ...win(0, firstEnd), weekdays: rhythm };
+  const first = win(0, firstEnd);
   const phases: Phase[] = [
     fmt.groups === 1
       ? ligaPhase('fase1', first, { legs: fmt.legs })

@@ -16,6 +16,18 @@ export const dayOf = (iso: string): number => {
 export const isoOf = (day: number): string => new Date(day * MS_PER_DAY).toISOString().slice(0, 10);
 /** 0 = Sunday. 1970-01-01 was a Thursday. */
 export const weekday = (day: number): number => (((day + 4) % 7) + 7) % 7;
+
+/**
+ * The CBF's window for the state championships: nine Sundays from the second one of January
+ * (11 January to 8 March in 2026). The Série A starts on the Wednesday after the third, so
+ * from then on its midweeks are not the estaduais' (CBF 2026 calendar: estaduais 11/1 to 8/3
+ * in at most 11 dates, Série A from Wednesday 28/1; Itatiaia, NetVasco, Oct 2025).
+ */
+export function estadualWindow(season: number): { first: number; last: number; serieA: number } {
+  const jan9 = dayOf(`${season}-01-09`);
+  const first = jan9 + ((7 - weekday(jan9)) % 7);
+  return { first, last: first + 56, serieA: first + 17 };
+}
 /** Minimum rest in whole days: 66 h is three days (Sunday to Wednesday). */
 export const restDays = (hours: number): number => Math.max(1, Math.ceil(hours / 24));
 
@@ -28,8 +40,13 @@ export const POSTPONE_LIMIT_DAYS = 60;
 /** `rounds` base dates on the window's weekdays, spread evenly from the first one. */
 export function baseDates(w: DateWindow, rounds: number): number[] {
   const free: number[] = [];
+  const x = w.exclude && { from: dayOf(w.exclude.start), to: dayOf(w.exclude.end) };
   for (let d = dayOf(w.start); d <= dayOf(w.end); d++)
-    if (w.weekdays.includes(weekday(d))) free.push(d);
+    if (
+      w.weekdays.includes(weekday(d)) &&
+      !(x && d >= x.from && d <= x.to && w.exclude!.weekdays.includes(weekday(d)))
+    )
+      free.push(d);
   if (free.length < rounds)
     throw new Error(`window ${w.start}..${w.end} has ${free.length} dates for ${rounds} rounds`);
   return Array.from({ length: rounds }, (_, i) => free[Math.floor((i * free.length) / rounds)]!);
@@ -76,7 +93,9 @@ function blockers(cal: Calendar, f: Fixture, day: number): Scheduled[] {
   const out: Scheduled[] = [];
   for (const club of [f.home, f.away])
     for (const m of cal.byClub.get(club) ?? [])
-      if (m.id !== f.id && Math.abs(m.day - day) < Math.max(f.rest, m.rest)) out.push(m);
+      // A match between the same two clubs is in both their lists: it is one blocker.
+      if (m.id !== f.id && Math.abs(m.day - day) < Math.max(f.rest, m.rest) && !out.includes(m))
+        out.push(m);
   return out;
 }
 

@@ -54,7 +54,21 @@ export function regulationsFor(all: readonly Competition[], season: number): Com
       const shift = (iso: string) => `${Number(iso.slice(0, 4)) + years}${iso.slice(4)}`;
       const phases = last.phases.map((p) =>
         p.dates
-          ? { ...p, dates: { ...p.dates, start: shift(p.dates.start), end: shift(p.dates.end) } }
+          ? {
+              ...p,
+              dates: {
+                ...p.dates,
+                start: shift(p.dates.start),
+                end: shift(p.dates.end),
+                ...(p.dates.exclude && {
+                  exclude: {
+                    ...p.dates.exclude,
+                    start: shift(p.dates.exclude.start),
+                    end: shift(p.dates.exclude.end),
+                  },
+                }),
+              },
+            }
           : p,
       );
       out.push({ ...last, season, clubIds: [], phases } as Competition);

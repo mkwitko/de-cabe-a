@@ -66,6 +66,32 @@ describe('MC-173 placing matches', () => {
     expect(cal.postponements[0]!.reason).toBe('rest');
   });
 
+  it('a match moved for one between the same two clubs is moved once, and kept once', () => {
+    const cal = emptyCalendar();
+    place(cal, fx('liga1', 'a', 'b', '2026-03-01'));
+    place(cal, fx('copa1', 'b', 'a', '2026-03-01', { competitionId: 'copa', priority: 5 }));
+    for (const club of ['a', 'b']) {
+      const ids = [...cal.byClub.get(club)!].map((m) => m.id).sort();
+      expect(ids).toEqual(['copa1', 'liga1']);
+    }
+    expect(cal.byClub.get('a')!.has(cal.matches.get('liga1')!)).toBe(true);
+    expect(cal.postponements.filter((p) => p.matchId === 'liga1')).toHaveLength(1);
+  });
+
+  it('a window can leave weekdays out between two dates', () => {
+    const days = baseDates(
+      {
+        start: '2026-01-25',
+        end: '2026-03-15',
+        weekdays: [0, 3],
+        exclude: { start: '2026-01-01', end: '2026-03-08', weekdays: [0] },
+      },
+      8,
+    );
+    expect(days.filter((d) => isoOf(d) <= '2026-03-08').every((d) => weekday(d) === 3)).toBe(true);
+    expect(days.map(isoOf)).toContain('2026-03-15');
+  });
+
   it('priority: the higher competition keeps the date, the lower one is moved', () => {
     const cal = emptyCalendar();
     place(cal, fx('liga1', 'a', 'b', '2026-03-01'));

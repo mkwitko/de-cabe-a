@@ -19,6 +19,7 @@
 import type { SeasonState } from '../competition/season';
 import { seedOf } from '../competition/season';
 import { cached, WHOLE } from '../lib/pack-cache';
+import { SUPERCOPA_ID } from '../competition/regionais-data';
 import type { Pack, PackClub } from '../pack/schema';
 
 const clubOf = (pack: Pack, id: string): PackClub | undefined =>
@@ -159,8 +160,16 @@ export function crowdAt(pack: Pack, s: SeasonState, id: string): number {
   return Math.min(home.stadium.capacity, Math.round((usualCrowd(home) * extra) / 100));
 }
 
-/** Share of the seats taken, 0..1, as the match engine reads the crowd. */
+/**
+ * A match on neutral ground: the Supercopa, which the CBF stages in a third city (Belém 2025,
+ * Brasília 2026). Neither side has a home crowd or a trip the other does not; the gate is the
+ * CBF's, the clubs are paid their shares (regionais-data.ts).
+ */
+export const neutralVenue = (id: string): boolean => id.startsWith(`${SUPERCOPA_ID}/`);
+
+/** Share of the seats taken, 0..1, as the match engine reads the crowd; none on neutral ground. */
 export function crowdShare(pack: Pack, s: SeasonState, id: string): number {
+  if (neutralVenue(id)) return 0;
   const m = s.calendar.matches.get(id);
   const cap = (m ? clubOf(pack, m.home) : undefined)?.stadium.capacity ?? 0;
   return cap > 0 ? Math.min(1, crowdAt(pack, s, id) / cap) : 0;

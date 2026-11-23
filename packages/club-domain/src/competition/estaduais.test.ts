@@ -45,6 +45,26 @@ describe('state championship windows', () => {
       expect(isoOf(slots.at(-1)!)).toBe(to);
     }
   });
+
+  it('holds a championship to the CBF cap of 11 dates: nine Sundays and two Wednesdays', () => {
+    const slots = estadualSlots(2026);
+    expect(slots).toHaveLength(11);
+    expect(slots.map(isoOf).filter((d) => ['2026-01-14', '2026-01-21'].includes(d))).toHaveLength(
+      2,
+    );
+    // A format of 12 dates (the Paranaense) takes the first Série A Wednesday.
+    expect(estadualSlots(2026, 12).map(isoOf)).toContain('2026-01-28');
+    for (const uf of Object.keys(GENERIC))
+      for (let n = 4; n <= 16; n++) {
+        const f = formatFor(uf, n);
+        if (!f) continue;
+        const robin = (k: number) => (k % 2 === 0 ? k - 1 : k);
+        const rounds =
+          f.groups === 1 ? robin(f.size) * f.legs : robin(Math.ceil(f.size / f.groups)) * f.legs;
+        const ko = (f.ko === 8 ? f.koLegs.quarter : 0) + (f.ko >= 4 ? f.koLegs.semi : 0);
+        expect(rounds + ko + f.koLegs.final, `${uf} ${n}`).toBeLessThanOrEqual(11);
+      }
+  });
 });
 
 describe('state championship formats', () => {
@@ -104,8 +124,14 @@ describe('state championship season', () => {
       const final = state.results[c.id]?.final;
       expect(final?.tables[0]?.[0]?.clubId, c.id).toBeTruthy();
     }
+    const dates = new Map<string, Set<number>>();
     for (const m of state.calendar.matches.values())
-      if (m.competitionId.startsWith('est-')) expect(m.day).toBeLessThanOrEqual(end);
+      if (m.competitionId.startsWith('est-')) {
+        expect(m.day).toBeLessThanOrEqual(end);
+        dates.set(m.competitionId, (dates.get(m.competitionId) ?? new Set()).add(m.day));
+      }
+    // At most the CBF's 11 dates; only the Paranaense's documented format needs a twelfth.
+    for (const [id, d] of dates) expect(d.size, id).toBeLessThanOrEqual(id === 'est-PR' ? 12 : 11);
   });
 });
 

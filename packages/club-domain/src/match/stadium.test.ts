@@ -64,3 +64,24 @@ describe('stadium operation (mapa §2.11)', () => {
     if (low && high) expect(high).toBeGreaterThan(low);
   });
 });
+
+describe('neutral ground', () => {
+  it('the Supercopa has no home side: equal clubs win as often as each other', async () => {
+    const { quickResult } = await import('./quick');
+    const { neutralVenue } = await import('./stadium');
+    expect(neutralVenue('supercopa/final/r0/t0/l0')).toBe(true);
+    expect(neutralVenue('copa-do-brasil/final/r0/t0/l0')).toBe(false);
+    const tally = (neutral: boolean) => {
+      let home = 0;
+      let away = 0;
+      for (let k = 0; k < 4000; k++) {
+        const [h, a] = quickResult(k, 70, 70, 0.6, undefined, neutral).goals;
+        if (h > a) home++;
+        else if (a > h) away++;
+      }
+      return home / Math.max(1, away);
+    };
+    expect(tally(false)).toBeGreaterThan(1.3);
+    expect(Math.abs(tally(true) - 1)).toBeLessThan(0.1);
+  });
+});

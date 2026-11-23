@@ -14,7 +14,14 @@ import { upkeepOf } from './clubs';
 import { nationalDivisions } from './start';
 import { COTA_MONTHS, cotaFor } from './estadual';
 import { REGIONAL_MONTHS, regionalCotaFor } from './regional';
-import { closedDoors, crowdAt, punishmentAt, ticketOf, usualCrowd } from '../match/stadium';
+import {
+  closedDoors,
+  crowdAt,
+  neutralVenue,
+  punishmentAt,
+  ticketOf,
+  usualCrowd,
+} from '../match/stadium';
 import { note } from './inbox';
 import { CURRENCIES, rateOf } from '../market/currency';
 import { QUOTA, STATE, TV_SERIE_A, TV_SERIE_B, tvOf } from './revenue';
@@ -181,7 +188,8 @@ export function postMonths(w: CareerWorld, from: number, to: number) {
 /** Gate money of the person's home match. */
 export function postHomeMatch(w: CareerWorld, matchId: string, day: number) {
   const m = w.season.meta.get(matchId)!;
-  if (m.home !== w.clubId) return;
+  // On neutral ground the gate is the organiser's (match/stadium.ts).
+  if (m.home !== w.clubId || neutralVenue(matchId)) return;
   const club = w.pack.clubs.find((x) => x.id === w.clubId)!;
   const amount = priced(
     crowdAt(w.pack, w.season, matchId) * ticketOf(club, tierOf(w)),

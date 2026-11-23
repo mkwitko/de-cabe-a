@@ -20,7 +20,7 @@ import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
 import { formationOf, matchInputFor } from '../match/fixture-input';
-import { crowdShare, isDerby, moodOf } from '../match/stadium';
+import { crowdShare, isDerby, moodOf, neutralVenue } from '../match/stadium';
 import { whistleOf } from '../match/referee';
 import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
@@ -301,10 +301,13 @@ function playDay(
           quickResult(
             seedOf(w.seed, id),
             strength(m.home),
-            (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
+            neutralVenue(id)
+              ? strength(m.away)
+              : (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
             // The crowd carries the home side; behind closed doors it is gone (match/stadium.ts).
             crowdShare(w.pack, w.season, id),
             whistleOf(w.season, id, isDerby(w.pack, m.home, m.away)),
+            neutralVenue(id),
           );
     const decided = w.season.decisions.length;
     record(w.season, id, o);

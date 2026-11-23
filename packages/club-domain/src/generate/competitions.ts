@@ -5,6 +5,7 @@
  * three yellows suspend. Prizes are empty until the finance tasks.
  */
 import type { Competition, Phase, TableBreaker } from '../competition/schema';
+import { estadualWindow, isoOf } from '../competition/calendar';
 
 const CBF_BREAKERS: TableBreaker[] = [
   'wins',
@@ -74,6 +75,15 @@ export const dateWindow = (
   start: `${season}-${from}`,
   end: `${season}-${to}`,
   weekdays,
+});
+
+/**
+ * The Série A's league window: Sundays and Wednesdays from late January to December, only
+ * midweeks while the state championships hold the Sundays.
+ */
+export const serieAWindow = (season: number): Window => ({
+  ...dateWindow(season, '01-27', '12-01'),
+  exclude: { start: `${season}-01-01`, end: isoOf(estadualWindow(season).last), weekdays: [0] },
 });
 
 export const ligaPhase = (
@@ -175,7 +185,7 @@ export function devDivisions(season: number, [a, b, c, d]: string[][]): Competit
   });
   return [
     regulation(div(1, a!, 'Primeira Divisão'), [
-      ligaPhase('liga', w('01-27', '12-01'), {
+      ligaPhase('liga', serieAWindow(season), {
         outcomes: [
           { kind: 'title', positions: [1, 1] },
           { kind: 'relegation', target: 'div-2', positions: [17, 20] },
@@ -292,7 +302,7 @@ export function realDivisions(season: number, [a, b, c, d]: string[][]): Competi
   });
   return [
     regulation(div(1, a!, 'Série A'), [
-      ligaPhase('liga', w('01-27', '12-01'), {
+      ligaPhase('liga', serieAWindow(season), {
         outcomes: [
           { kind: 'title', positions: [1, 1] },
           { kind: 'relegation', target: 'div-2', positions: [17, 20] },
