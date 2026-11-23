@@ -94,6 +94,7 @@ import {
   prepPoints,
   rivalFresh,
   rivalStrength,
+  reweigh,
   tire,
   trainingOn,
   type Training,
@@ -346,7 +347,8 @@ function playDay(
       const eleven = fielded(w, day).xi;
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);
-      training = tire(training, eleven, travelTire(km));
+      // Tired, and the plan's week ahead weighed again with its matches out.
+      training = reweigh(w, tire(training, eleven, travelTire(km)));
       const mine = m.home === w.clubId ? 0 : 1;
       // The cards: who got them on screen, or drawn among the eleven for a match not watched.
       const squad = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
@@ -730,6 +732,10 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     season: played,
     ...nextPrices(w.seed, year, pricesOf(w)),
     youth: youthOf(w.origin, w.pack),
+    // The season's work leaned to a group of attributes for the club's players.
+    ...(w.training?.focus && {
+      focus: { group: w.training.focus, ids: squad.map((p) => p.id) },
+    }),
     growth: codeOf(
       w.pack,
       {

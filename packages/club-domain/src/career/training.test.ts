@@ -139,4 +139,40 @@ describe('the week planned session by session', () => {
     expect(prepPoints(t, sunday - 2)).toBe(0);
     expect(weekdayOf(0)).toBe(3);
   });
+
+  it('the sessions of a match day weigh nothing: the squad plays instead', async () => {
+    const { PLANS, planLoad, intensityOf } = await import('./training');
+    const all = PLANS.hard;
+    // Midweek and Sunday matches: Wednesday and Sunday's sessions are not trained.
+    const days = new Set([2, 6]);
+    const off = all[2]!.reduce((s, x) => s + (x === 'rest' || x === 'recovery' ? 0 : 1), 0);
+    expect(off).toBeGreaterThan(0);
+    expect(planLoad(all, days)).toBeLessThan(planLoad(all));
+    expect(planLoad(all, new Set([0, 1, 2, 3, 4, 5, 6]))).toBe(0);
+    expect(intensityOf(all, new Set([0, 1, 2, 3, 4, 5, 6]))).toBe('light');
+  });
+
+  it('a focus leans the season’s growth to its group and survives a save', async () => {
+    const { setFocus } = await import('./training');
+    const { develop } = await import('./development');
+    const w = openCareer(pack, 5, clubId);
+    setFocus(w, 'physical');
+    expect(w.training!.focus).toBe('physical');
+    expect(loadCareer(pack, 5, clubId, saveCareer(w)).training!.focus).toBe('physical');
+    setFocus(w, null);
+    expect(w.training!.focus).toBeUndefined();
+    expect(() => setFocus(w, 'x' as never)).toThrow();
+    // A young player grows more in the group his club leans to, less in the rest.
+    const young = w.pack.players
+      .filter((p) => w.pack.season - Number(p.birthDate.slice(0, 4)) <= 20)
+      .sort((a, b) => (a.id < b.id ? -1 : 1));
+    const sum = (focus: 'technical' | 'physical' | undefined, keys: string[]) =>
+      young.reduce((s, p) => {
+        const a = develop(p, 5, w.pack.season + 1, 100, focus).attributes as Record<string, number>;
+        return s + keys.reduce((t, k) => t + a[k]!, 0);
+      }, 0);
+    const legs = ['pace', 'acceleration', 'stamina', 'strength'];
+    expect(sum('physical', legs)).toBeGreaterThan(sum(undefined, legs));
+    expect(sum('technical', legs)).toBeLessThan(sum(undefined, legs));
+  });
 });
