@@ -160,6 +160,11 @@ import {
   type MatchChunk,
   type MatchResult,
   type TimedCommand,
+  TECHNICAL,
+  MENTAL,
+  TACTICAL,
+  PHYSICAL,
+  GOALKEEPING,
 } from '@decabeca/match-engine';
 
 /** Every request carries an id; its reply carries the same id. */
@@ -182,6 +187,8 @@ export type SimRequest = { id: number } & (
   | { type: 'lineup'; formation: string; xi: string[] | null; plan: PlanChoice }
   /** The training ground: the week's intensity and everyone's freshness. */
   | { type: 'training' }
+  /** The sheet of one of the person's players (own squad and academy only). */
+  | { type: 'player'; playerId: string }
   | { type: 'train'; intensity: Intensity }
   | { type: 'promote'; playerId: string }
   /** The market: the person's players to sell and the best of the others, by position. */
@@ -199,6 +206,17 @@ export type SimRequest = { id: number } & (
   /** The person proposes a work on the club's structure; the board answers (clubs.ts). */
   | { type: 'work'; front: Front }
 );
+
+/** A league table's rows as the screens draw them. */
+type TableRows = (ClubFace & {
+  clubId: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  gd: number;
+})[];
 
 export interface SimView {
   season: number;
@@ -275,11 +293,13 @@ export interface SimView {
     /** Which side the person's club was: 0 home, 1 away. */
     mine: 0 | 1;
   } | null;
-  table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
+  table: TableRows;
+  /** Places that go up and places that go down at the season's end, from the division's rules. */
+  zones: { up: number; down: number };
   /** The person's state championship: their group's table and the knockout ties so far. */
   estadual: {
     name: string;
-    table: (ClubFace & { clubId: string; played: number; points: number; gd: number })[];
+    table: TableRows;
     ties: { stage: string; home: ClubFace; away: ClubFace; goals: [number, number] | null }[];
     champion: string;
   } | null;
@@ -937,6 +957,84 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
   }
 }
 
+/** One of the person's players as the sheet shows him: what the pack and the career hold. */
+export interface PlayerSheet {
+  id: string;
+  name: string;
+  age: number;
+  /** Natural positions first. */
+  positions: string[];
+  /** What he is best at, and how well (1..99). */
+  best: { role: string; rating: number };
+  /** The attributes as the domain groups them, each 1..99; goalkeeping only for keepers. */
+  attributes: {
+    group: 'technical' | 'mental' | 'tactical' | 'physical' | 'goalkeeping';
+    id: string;
+    value: number;
+  }[];
+  /** Freshness on the day of the next match, 0..100. */
+  fresh: number;
+  out: { kind: InjuryKind; days: number } | null;
+  /** In the eleven in force today. */
+  starter: boolean;
+  /** What he is to the plan: starter, first cover or surplus. */
+  part: 'starter' | 'cover' | 'surplus';
+  /** Null for a boy of the academy, who has no contract yet. */
+  contract: { wage: number; until: number; release: number | null } | null;
+  value: number;
+  agent: string;
+}
+
+const ATTRIBUTE_GROUPS = {
+  technical: TECHNICAL,
+  mental: MENTAL,
+  tactical: TACTICAL,
+  physical: PHYSICAL,
+  goalkeeping: GOALKEEPING,
+} as const;
+
+function playerSheet(w: CareerWorld, id: string): PlayerSheet | null {
+  const p = w.pack.players.find((x) => x.id === id && x.clubId === w.clubId);
+  if (!p) return null;
+  const sq = squadOf(w).find((x) => x.id === id);
+  const plan = squadPlanOf({ pack: w.pack, clubId: w.clubId });
+  const keeper = p.positions.some((x) => x.position === 'GK');
+  return {
+    id,
+    name: p.knownAs ?? p.name,
+    age: w.season.season - Number(p.birthDate.slice(0, 4)),
+    positions: [...p.positions].sort((a, b) => b.level - a.level).map((x) => x.position),
+    best: sq?.best ?? { role: '', rating: seenLevel(w.pack, w.clubId, p) },
+    attributes: (
+      Object.entries(ATTRIBUTE_GROUPS) as [
+        PlayerSheet['attributes'][number]['group'],
+        readonly string[],
+      ][]
+    )
+      .filter(([g]) => g !== 'goalkeeping' || keeper)
+      .flatMap(([group, ids]) =>
+        ids.map((a) => ({
+          group,
+          id: a,
+          value: p.attributes[a as keyof typeof p.attributes],
+        })),
+      ),
+    fresh: percent(trainingOn(w, matchDay(w)).fresh[id] ?? 1),
+    out: outOf(w, id),
+    starter: lineupOf(w).xi.includes(id),
+    part: plan.xi.includes(id) ? 'starter' : plan.cover.includes(id) ? 'cover' : 'surplus',
+    contract: p.contract
+      ? {
+          wage: p.contract.wage,
+          until: Number(p.contract.until.slice(0, 4)),
+          release: p.contract.releaseFee,
+        }
+      : null,
+    value: marketValue(w.pack, p, w.season.season),
+    agent: agentOf(w.pack, p).name,
+  };
+}
+
 function squadView(w: CareerWorld): SquadView {
   const l = lineupOf(w);
   const then = trainingOn(w, matchDay(w));
@@ -983,6 +1081,7 @@ export interface SimReply {
   /** The board's answer to a proposed work: null when it signed. */
   work?: { front: Front; no: WorkNo | null };
   squad?: SquadView;
+  player?: PlayerSheet | null;
   training?: TrainingView;
   market?: MarketView;
   /** matchStart: the two sides and which one is the person's. */
@@ -1011,6 +1110,15 @@ async function gzip(text: string): Promise<ArrayBuffer> {
 async function gunzip(bytes: ArrayBuffer): Promise<string> {
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   return new Response(stream).text();
+}
+
+/** Promotion and relegation places of the club's division, from the first phase's outcomes. */
+function zonesOf(w: CareerWorld, division: string): SimView['zones'] {
+  const outcomes =
+    w.season.competitions.find((c) => c.name === division)?.phases[0]?.outcomes ?? [];
+  const places = (kind: 'promotion' | 'relegation') =>
+    outcomes.reduce((n, o) => (o.kind === kind ? n + o.positions[1] - o.positions[0] + 1 : n), 0);
+  return { up: places('promotion'), down: places('relegation') };
 }
 
 /** The cup's ties with the faces of the clubs in them. */
@@ -1258,9 +1366,13 @@ function view(w: CareerWorld, ms: number): SimView {
       clubId: r.clubId,
       ...face(byId.get(r.clubId)!),
       played: r.played,
+      won: r.won,
+      drawn: r.drawn,
+      lost: r.lost,
       points: r.points,
       gd: r.goalsFor - r.goalsAgainst,
     })),
+    zones: zonesOf(w, table.name),
     estadual: ((e) =>
       e && {
         name: e.name,
@@ -1268,6 +1380,9 @@ function view(w: CareerWorld, ms: number): SimView {
           clubId: r.clubId,
           ...face(byId.get(r.clubId)!),
           played: r.played,
+          won: r.won,
+          drawn: r.drawn,
+          lost: r.lost,
           points: r.points,
           gd: r.goalsFor - r.goalsAgainst,
         })),
@@ -1444,6 +1559,10 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
           still: true,
         };
       self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
+      return;
+    }
+    if (world && r.type === 'player') {
+      self.postMessage({ id: r.id, player: playerSheet(world, r.playerId) } satisfies SimReply);
       return;
     }
     if (world && (r.type === 'squad' || r.type === 'lineup')) {

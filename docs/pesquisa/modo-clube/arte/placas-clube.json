@@ -130,6 +130,46 @@
     "prompt": "Small scouting office of a football club at night. On the wall a large blank outline map with coloured pins joined by thin strings and no labels; grey metal filing cabinets; a desk with a green enamel lamp casting warm amber light, a stack of plain folders, a pair of binoculars and a notebook; a small window with cold floodlight glow. Vertical framing: the map in the upper half; the lamp and the desk below the middle; the lower third dark. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
     "seed": 114
    }
+  },
+  "gloria_h": {
+   "path": "~/de-cabeca-arte/clube/gloria-h.png",
+   "width": 1344,
+   "height": 768,
+   "density": 1,
+   "generate": {
+    "prompt": "Centre of an old football stadium pitch at night, after the final whistle. A plain unengraved silver trophy cup with two handles stands on the grass in the right third of the frame, lit from above by cold white floodlights on four towers. Gold paper confetti and paper streamers lie scattered on the mown stripes around it, and a few pieces still fall through the beams of light. Dark empty stands behind, one warm amber lamp glowing in a small office window high in the stand. The left half of the frame is open dark grass and night sky, uncluttered. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 201
+   }
+  },
+  "gloria_v": {
+   "path": "~/de-cabeca-arte/clube/gloria-v.png",
+   "width": 768,
+   "height": 1344,
+   "density": 1,
+   "generate": {
+    "prompt": "Centre of an old football stadium pitch at night, after the final whistle. A plain unengraved silver trophy cup with two handles stands on the grass, centred in the upper half of the frame, lit from above by cold white floodlights on towers. Gold paper confetti and paper streamers lie scattered on the mown stripes around it, and a few pieces still fall through the beams of light. Dark empty stands behind. Vertical framing: the lower third is dark mown grass with scattered confetti, uncluttered. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 202
+   }
+  },
+  "estadio_h": {
+   "path": "~/de-cabeca-arte/clube/estadio-h.png",
+   "width": 1344,
+   "height": 768,
+   "density": 1,
+   "generate": {
+    "prompt": "An old football stadium seen from outside at night, across an empty wet cobbled street. A tall concrete stand painted dark green with closed iron gates, four floodlight towers above it glowing cold white into the haze, one small office window high in the stand lit warm amber. Reflections of the lights on the wet street in the foreground. The stadium fills the right two thirds; the left third is dark sky and street, uncluttered. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 203
+   }
+  },
+  "estadio_v": {
+   "path": "~/de-cabeca-arte/clube/estadio-v.png",
+   "width": 768,
+   "height": 1344,
+   "density": 1,
+   "generate": {
+    "prompt": "An old football stadium seen from outside at night, from an empty wet cobbled street. A tall concrete stand painted dark green with closed iron gates, two floodlight towers above it glowing cold white into the haze, one small office window high in the stand lit warm amber. Vertical framing: the towers and the stand in the upper half; the lower third is the dark wet street with reflections, uncluttered. Cinematic photograph, low-key lighting, 35 mm lens, rich blacks, deep green-black shadows, worn dark green enamel paint and old wood, a little haze in the light. Sharp and detailed. No people, no figures, no text, no letters, no numbers, no logos, no badges, no flags with symbols.",
+    "seed": 204
+   }
   }
  }
 }

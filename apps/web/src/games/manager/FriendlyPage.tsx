@@ -166,8 +166,10 @@ export function FriendlyPage() {
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 
-function Crest({ club }: { club: Club }) {
-  return <ClubBadge name={club.shortName} size="sm" colours={club.colours} />;
+const CREST = { md: 'sm', lg: 'lg' } as const;
+
+function Crest({ club, size = 'md' }: { club: Club; size?: keyof typeof CREST }) {
+  return <ClubBadge name={club.shortName} size={CREST[size]} colours={club.colours} />;
 }
 
 function Range({
@@ -368,6 +370,9 @@ function Setup(props: {
   );
 }
 
+const LABEL =
+  'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
+
 // ── Match ───────────────────────────────────────────────────────────────────
 
 export function Match(props: {
@@ -551,7 +556,7 @@ export function Match(props: {
       const minute = minuteOf(clock, s.events);
       const feed = past
         .filter((e) => ['goal', 'card', 'substitution', 'injury', 'command'].includes(e.kind))
-        .slice(-4)
+        .slice(-8)
         .reverse()
         .map((e) => {
           const m = minuteOf(e.atMs, s.events);
@@ -614,95 +619,110 @@ export function Match(props: {
     );
 
   return (
-    <div className="flex flex-col gap-3">
-      {error && <Notice title={t('friendly.loadError')}>{error}</Notice>}
-      <div className="relative overflow-hidden rounded-2xl bg-club-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-chalk/10">
-        <canvas
-          ref={canvasRef}
-          className="block aspect-[4/3] w-full sm:aspect-[100/56]"
-          role="img"
-          aria-label={t('friendly.pitchLabel', { home: hc.shortName, away: ac.shortName })}
-        />
-        <Scoreboard clubs={[hc, ac]} score={board.score} minute={board.minute} />
-        {moment && (
-          <span className="pointer-events-none absolute top-2 right-2 rounded-lg bg-club-night/90 px-2 py-1 font-condensed text-base font-extrabold text-club-gold uppercase tabular-nums sm:top-4 sm:right-4 sm:text-xl">
-            {t('friendly.moment', { n: moment })}
-          </span>
-        )}
-        {waiting && (
-          <span
-            role="status"
-            className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-lg bg-club-night/90 px-3 py-1 text-sm text-chalk"
-          >
-            {t(moments ? 'friendly.preparingMoment' : 'friendly.preparing')}
-          </span>
-        )}
-      </div>
-      <ol
-        aria-live="polite"
-        aria-label={t('friendly.feed')}
-        className="flex min-h-6 flex-wrap gap-x-4 gap-y-1 text-sm text-chalk-soft"
-      >
-        {board.feed.map((f, i) => (
-          <li key={f + i} className={i === 0 ? 'font-bold text-chalk' : ''}>
-            {f}
-          </li>
-        ))}
-      </ol>
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          className={btnSecondary}
-          onClick={() => {
-            sim.current.paused = !paused;
-            setPaused(!paused);
-          }}
-        >
-          {t(paused ? 'friendly.resume' : 'friendly.pause')}
-        </button>
-        <div role="group" aria-label={t('friendly.speed')} className="flex gap-2">
-          {SPEEDS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={speed === v}
-              className={`${btnSecondary} tabular-nums ${speed === v ? 'border-club-gold text-club-gold' : ''}`}
-              onClick={() => {
-                sim.current.speed = v;
-                setSpeed(v);
-              }}
-            >
-              {t('friendly.speedValue', { speed: v })}
-            </button>
-          ))}
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      {error && (
+        <div className="lg:col-span-2">
+          <Notice title={t('friendly.loadError')}>{error}</Notice>
         </div>
-        <button
-          type="button"
-          className={`${btnSecondary} ml-auto`}
-          onClick={() => {
-            const s = sim.current;
-            s.skip = true;
-            s.generation++;
-            s.loading = false;
-            s.finished = false;
-          }}
-        >
-          {t('friendly.skip')}
-        </button>
-      </div>
-      {props.watch !== 'result' && (
-        <details className="rounded-2xl border border-chalk/10 bg-club-panel/70 p-4" open>
-          <summary className="min-h-11 cursor-pointer font-condensed text-xl font-extrabold uppercase">
-            {t('friendly.tactics')}{' '}
-            <span className="font-sans text-sm font-normal normal-case text-chalk-soft">
-              · {t('friendly.tacticsHint')}
-            </span>
-          </summary>
-          <div className="pt-3">
-            <PlanFields value={plan} onChange={change} />
-          </div>
-        </details>
       )}
+      <div className="flex min-w-0 flex-col gap-3">
+        <Scoreboard clubs={[hc, ac]} score={board.score} minute={board.minute} />
+        <div className="relative overflow-hidden rounded-2xl bg-club-panel shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-chalk/10">
+          <canvas
+            ref={canvasRef}
+            className="block aspect-[4/3] w-full sm:aspect-[100/56]"
+            role="img"
+            aria-label={t('friendly.pitchLabel', { home: hc.shortName, away: ac.shortName })}
+          />
+          {moment && (
+            <span className="pointer-events-none absolute top-2 right-2 rounded-lg bg-club-night/90 px-2 py-1 font-condensed text-base font-extrabold text-club-gold uppercase tabular-nums sm:top-4 sm:right-4 sm:text-xl">
+              {t('friendly.moment', { n: moment })}
+            </span>
+          )}
+          {waiting && (
+            <span
+              role="status"
+              className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-lg bg-club-night/90 px-3 py-1 text-sm text-chalk"
+            >
+              {t(moments ? 'friendly.preparingMoment' : 'friendly.preparing')}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => {
+              sim.current.paused = !paused;
+              setPaused(!paused);
+            }}
+          >
+            {t(paused ? 'friendly.resume' : 'friendly.pause')}
+          </button>
+          <div role="group" aria-label={t('friendly.speed')} className="flex gap-2">
+            {SPEEDS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={speed === v}
+                className={`${btnSecondary} px-3 tabular-nums sm:px-4 ${speed === v ? 'border-club-gold text-club-gold' : ''}`}
+                onClick={() => {
+                  sim.current.speed = v;
+                  setSpeed(v);
+                }}
+              >
+                {t('friendly.speedValue', { speed: v })}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={`${btnSecondary} ml-auto`}
+            onClick={() => {
+              const s = sim.current;
+              s.skip = true;
+              s.generation++;
+              s.loading = false;
+              s.finished = false;
+            }}
+          >
+            {t('friendly.skip')}
+          </button>
+        </div>
+      </div>
+      <aside className="sala-slab flex min-w-0 flex-col">
+        <section className="sala-pane flex flex-col gap-3 p-4 sm:p-5">
+          <h2 className={LABEL}>{t('friendly.feed')}</h2>
+          <ol
+            aria-live="polite"
+            aria-label={t('friendly.feed')}
+            className="flex min-h-24 flex-col text-sm text-chalk-soft"
+          >
+            {board.feed.length === 0 && <li>{t('friendly.feedEmpty')}</li>}
+            {board.feed.map((f, i) => (
+              <li
+                key={f + i}
+                className={`border-t border-chalk/10 py-2 first:border-0 first:pt-0 ${i === 0 ? 'font-bold text-chalk' : ''}`}
+              >
+                {f}
+              </li>
+            ))}
+          </ol>
+        </section>
+        {props.watch !== 'result' && (
+          <details className="sala-pane p-4 sm:p-5" open>
+            <summary className={`${LABEL} min-h-11 cursor-pointer`}>
+              {t('friendly.tactics')}
+              <span className="mt-1 block font-sans text-sm leading-snug font-normal tracking-normal text-chalk-soft normal-case [font-stretch:100%]">
+                {t('friendly.tacticsHint')}
+              </span>
+            </summary>
+            <div className="pt-3 [&>div]:sm:grid-cols-1">
+              <PlanFields value={plan} onChange={change} />
+            </div>
+          </details>
+        )}
+      </aside>
     </div>
   );
 }
@@ -717,21 +737,24 @@ function Scoreboard({
   minute: number;
 }) {
   return (
-    <div className="pointer-events-none absolute top-2 left-2 flex items-stretch overflow-hidden rounded-lg bg-club-night/90 font-condensed text-base font-extrabold uppercase shadow-lg sm:top-4 sm:left-4 sm:text-xl">
+    <div className="sala-slab grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:gap-5 sm:px-5 sm:py-3">
       {clubs.map((c, i) => (
         <span
           key={c.id}
-          className={`flex items-center gap-2 px-2 sm:px-3 ${i === 1 ? 'order-3' : ''}`}
+          className={`flex min-w-0 items-center gap-2 font-condensed text-xl leading-[0.95] font-black text-balance uppercase sm:gap-3 sm:text-2xl xl:text-3xl ${i === 0 ? 'flex-row-reverse text-right' : 'order-3'}`}
         >
-          <span aria-hidden className="h-5 w-1.5 rounded-sm" style={{ background: c.colours[0] }} />
-          {c.shortName}
+          <Crest club={c} />
+          <span className="truncate sm:hidden">{c.shortName}</span>
+          <span className="hidden sm:inline">{c.name}</span>
         </span>
       ))}
-      <span className="order-2 flex items-center bg-club-gold px-2 text-ink tabular-nums sm:px-3">
-        {score[0]}–{score[1]}
-      </span>
-      <span className="order-4 flex items-center bg-chalk/10 px-2 tabular-nums sm:px-3">
-        {t('friendly.clock', { minute })}
+      <span className="order-2 flex flex-col items-center gap-1">
+        <span className="rounded-lg bg-club-gold px-3 font-condensed text-3xl leading-tight font-black text-ink tabular-nums sm:px-4 sm:text-5xl">
+          {score[0]}–{score[1]}
+        </span>
+        <span className="font-condensed text-base leading-none font-extrabold text-chalk-soft tabular-nums">
+          {t('friendly.clock', { minute })}
+        </span>
       </span>
     </div>
   );
@@ -775,7 +798,14 @@ function Report(props: {
       v: [`${a.shotsOnTarget}`, `${b.shotsOnTarget}`],
       n: [a.shotsOnTarget, b.shotsOnTarget],
     },
-    { key: 'friendly.stat.xg', v: [a.xg.toFixed(2), b.xg.toFixed(2)], n: [a.xg, b.xg] },
+    {
+      key: 'friendly.stat.xg',
+      v: [
+        t('friendly.decimal', { v: Math.round(a.xg * 100) / 100 }),
+        t('friendly.decimal', { v: Math.round(b.xg * 100) / 100 }),
+      ],
+      n: [a.xg, b.xg],
+    },
     { key: 'friendly.stat.passes', v: [`${a.passes}`, `${b.passes}`], n: [a.passes, b.passes] },
     {
       key: 'friendly.stat.passAccuracy',
@@ -795,24 +825,30 @@ function Report(props: {
     },
   ];
   return (
-    <div className="flex flex-col gap-5">
-      <section className="flex flex-col items-center gap-2 rounded-2xl bg-club-panel/80 p-6 ring-1 ring-chalk/10">
-        <p className="font-condensed text-sm font-extrabold tracking-widest text-club-gold uppercase">
-          {t('friendly.fullTime')}
-        </p>
-        <p className="flex items-center gap-2 font-condensed text-2xl font-extrabold whitespace-nowrap uppercase sm:gap-4 sm:text-5xl">
-          <Crest club={clubs[0]} /> {clubs[0].shortName}
-          <span className="rounded-lg bg-club-gold px-3 text-ink tabular-nums">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
+      <section className="sala-slab flex flex-col items-center gap-5 px-4 py-7 text-center sm:py-10">
+        <h2 className={LABEL}>{t('friendly.fullTime')}</h2>
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-8">
+          <span className="order-2 rounded-xl bg-club-gold px-4 font-condensed text-5xl leading-tight font-black whitespace-nowrap text-ink tabular-nums sm:px-6 sm:text-7xl">
             {result.score[0]}–{result.score[1]}
           </span>
-          {clubs[1].shortName} <Crest club={clubs[1]} />
-        </p>
+          {clubs.map((c, i) => (
+            <span
+              key={c.id}
+              className={`flex min-w-0 flex-col items-center gap-3 ${i === 0 ? 'order-1' : 'order-3'}`}
+            >
+              <Crest club={c} size="lg" />
+              <span className="font-condensed text-xl leading-[0.95] font-black text-balance uppercase sm:text-3xl">
+                <span className="sm:hidden">{c.shortName}</span>
+                <span className="hidden sm:inline">{c.name}</span>
+              </span>
+            </span>
+          ))}
+        </div>
       </section>
-      <div className="grid gap-5 md:grid-cols-2">
-        <section className="flex flex-col gap-2 rounded-2xl bg-club-panel/70 p-4 ring-1 ring-chalk/10">
-          <h2 className="font-condensed text-xl font-extrabold uppercase">
-            {t('friendly.report')}
-          </h2>
+      <div className="sala-desk grid md:grid-cols-2">
+        <section className="flex flex-col gap-3 p-4 sm:p-5">
+          <h3 className={LABEL}>{t('friendly.report')}</h3>
           <dl className="flex flex-col gap-2">
             {rows.map((r) => {
               const total = r.n[0] + r.n[1] || 1;
@@ -849,8 +885,8 @@ function Report(props: {
             })}
           </dl>
         </section>
-        <section className="flex flex-col gap-3 rounded-2xl bg-club-panel/70 p-4 ring-1 ring-chalk/10">
-          <h2 className="font-condensed text-xl font-extrabold uppercase">{t('friendly.why')}</h2>
+        <section className="flex flex-col gap-3 p-4 sm:p-5">
+          <h3 className={LABEL}>{t('friendly.why')}</h3>
           {result.explanation.factors.length === 0 ? (
             <p className="text-chalk-soft">{t('friendly.noFactor')}</p>
           ) : (
@@ -870,7 +906,11 @@ function Report(props: {
       </div>
       <div className="flex flex-wrap justify-center gap-3">
         {props.onDone && (
-          <button type="button" className={btnPrimary} onClick={props.onDone}>
+          <button
+            type="button"
+            className={`${btnPrimary} min-h-13 bg-club-gold px-10`}
+            onClick={props.onDone}
+          >
             {t('friendly.continue')}
           </button>
         )}

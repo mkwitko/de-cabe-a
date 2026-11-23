@@ -3,7 +3,6 @@ import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
-import { ModoClubeHero } from './components/ModoClubeHero';
 import {
   AlbumIcon,
   ClubIcon,
@@ -17,6 +16,7 @@ import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
+import { ClubLanding, GamesIndex, WRAP } from './components/ClubLanding';
 import { SignInButton } from './components/SignInButton';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/launch';
@@ -363,13 +363,12 @@ export function Home() {
     howTo: x.howTo,
   }));
   return (
-    <>
-      <ModoClubeHero />
-      <h2 className="font-condensed mx-auto mt-10 mb-2 w-full max-w-6xl text-2xl font-black uppercase">
+    <div className={`${WRAP} pt-14 sm:pt-24`}>
+      <h2 className="font-condensed mb-2 text-4xl leading-[0.9] font-black uppercase sm:text-6xl lg:text-7xl">
         Outros jogos
       </h2>
       <LockerRoom lockers={[...modes, ...extra]} />
-    </>
+    </div>
   );
 }
 
@@ -381,7 +380,8 @@ function HomeRoute() {
   }, []);
   return (
     <>
-      <Home />
+      <ClubLanding />
+      {LAUNCH_ALL ? <GamesIndex games={GAMES} /> : <Home />}
       <AdSlot slot={AD_SLOTS.home} />
       <p className="mt-10 text-center text-sm text-chalk-soft">
         {isPageLaunched('daily') && (
@@ -462,15 +462,27 @@ function Shell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const home = pathname === '/';
   const level = sceneFor(pathname) === 'level';
+  // The Modo Clube career is its own stage: its rail and bar replace the site's strip.
+  const stage = pathname === '/tecnico/carreira';
+  // The home that sells Modo Clube runs edge to edge; its sections keep their own gutter.
+  const wide = home;
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   useApplyCosmetics();
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(3rem+var(--nav-room,4rem)+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12">
+    <div
+      className={
+        stage
+          ? 'flex min-h-dvh w-full flex-col pt-[var(--consent-room,0px)]'
+          : wide
+            ? 'flex min-h-dvh w-full flex-col pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(3rem+var(--nav-room,4rem)+env(safe-area-inset-bottom))] sm:pb-12'
+            : 'mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-[calc(1rem+var(--consent-room,0px))] pb-[calc(3rem+var(--nav-room,4rem)+env(safe-area-inset-bottom))] sm:px-8 sm:pb-12'
+      }
+    >
       {/* The scoreboard strip, the same 56px on every route: crest, places, Ajustes, Entrar.
           On the phone the places are the bottom bar; inside a level the game owns the phone
           screen (its height is measured without this strip), so only the bottom bar stays. */}
       <header
-        className={`scoreboard floodlit mb-3 h-14 items-center gap-3 rounded-2xl border border-chalk/10 pr-1.5 pl-3 shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)] sm:flex sm:gap-4 sm:pl-4 lg:gap-6 ${level ? 'max-sm:contents' : 'flex'}`}
+        className={`scoreboard floodlit mb-3 h-14 items-center gap-3 rounded-2xl border border-chalk/10 pr-1.5 pl-3 shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)] sm:gap-4 sm:pl-4 lg:gap-6 ${stage ? 'hidden' : level ? 'max-sm:contents sm:flex' : 'flex'} ${wide ? 'mx-4 sm:mx-8 lg:mx-14' : ''}`}
       >
         <div className={`min-w-0 ${level ? 'max-sm:hidden' : ''}`}>
           <Brand home={home} />
@@ -513,7 +525,10 @@ function Shell({ children }: { children: ReactNode }) {
       </header>
       <SettingsHost />
       {!online && (
-        <p role="status" className="mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink">
+        <p
+          role="status"
+          className={`mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink ${stage ? 'relative z-40 mx-4 mt-2 lg:ml-64' : ''}`}
+        >
           Sem conexão. As jogadas voltam quando a internet voltar.
         </p>
       )}

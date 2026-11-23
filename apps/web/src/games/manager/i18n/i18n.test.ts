@@ -21,8 +21,8 @@ describe('MC-146 t()', () => {
   });
 
   it('money in reais, formatted per language', () => {
-    expect(nbsp(t('common.money', { value: 1234567.5 }))).toBe('R$ 1.234.567,50');
-    expect(createT('en', en).t('common.money', { value: 1234567.5 })).toBe('R$1,234,567.50');
+    expect(nbsp(t('common.money', { value: 1234567.5 }))).toBe('R$ 1.234.568');
+    expect(createT('en', en).t('common.money', { value: 1234567.5 })).toBe('R$1,234,568');
   });
 
   it('select and plain arguments', () => {

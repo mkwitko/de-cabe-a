@@ -24,6 +24,8 @@ const BAR = {
 /** A work the person proposed and the board's answer: null when it signed. */
 export type WorkSaid = { front: Front; no: WorkNo | null } | null;
 
+const LEVELS = [1, 2, 3, 4, 5] as const;
+
 export function Board({
   sim,
   busy = false,
@@ -190,35 +192,53 @@ export function Board({
               : t('board.workYes', { f: t('board.front', { f: said.front }) })}
           </p>
         )}
-        <ul aria-labelledby="structure-title" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <p className="text-sm text-chalk-soft">{t('board.workWhen')}</p>
+        <ul aria-labelledby="structure-title" className="grid gap-x-10 lg:grid-cols-2">
           {b.structure.map((x) => (
-            <li key={x.front} className="flex flex-col gap-2 rounded-lg border border-chalk/10 p-3">
+            <li
+              key={x.front}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-t border-chalk/10 py-3"
+            >
               <span className="font-condensed text-lg leading-tight font-extrabold uppercase">
                 {t('board.front', { f: x.front })}
               </span>
-              <span className="tabular-nums">
-                {x.front === 'stadium'
-                  ? t('board.seats', { n: x.level })
-                  : t('board.level', { n: x.level })}
+              <span className="row-span-2 justify-self-end">
+                {onWork && !x.building && x.cost !== null && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-label={t('board.proposeName', { f: t('board.front', { f: x.front }) })}
+                    className="min-h-11 rounded-lg border border-chalk/25 px-4 font-condensed font-extrabold whitespace-nowrap uppercase hover:bg-chalk/10 disabled:opacity-50"
+                    onClick={() => onWork(x.front)}
+                  >
+                    {t('board.propose')}
+                  </button>
+                )}
               </span>
-              <span className="text-sm text-chalk-soft">
-                {x.building
-                  ? t('board.building')
-                  : x.cost === null
-                    ? t('board.top')
-                    : t('board.workCost', { cost: t('career.cash', { value: x.cost }) })}
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tabular-nums">
+                {x.front !== 'stadium' && (
+                  <span aria-hidden className="flex gap-1">
+                    {LEVELS.map((n) => (
+                      <span
+                        key={n}
+                        className={`h-2 w-5 rounded-sm ${n <= x.level ? 'bg-club-gold' : 'bg-chalk/15'}`}
+                      />
+                    ))}
+                  </span>
+                )}
+                <span className="font-semibold">
+                  {x.front === 'stadium'
+                    ? t('board.seats', { n: x.level })
+                    : t('board.level', { n: x.level })}
+                </span>
+                <span className="text-chalk-soft">
+                  {x.building
+                    ? t('board.building')
+                    : x.cost === null
+                      ? t('board.top')
+                      : t('board.cost', { cost: t('career.cash', { value: x.cost }) })}
+                </span>
               </span>
-              {onWork && !x.building && x.cost !== null && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  aria-label={t('board.proposeName', { f: t('board.front', { f: x.front }) })}
-                  className="min-h-11 rounded-lg border border-chalk/20 px-3 font-condensed font-extrabold uppercase hover:bg-chalk/10 disabled:opacity-50"
-                  onClick={() => onWork(x.front)}
-                >
-                  {t('board.propose')}
-                </button>
-              )}
             </li>
           ))}
         </ul>

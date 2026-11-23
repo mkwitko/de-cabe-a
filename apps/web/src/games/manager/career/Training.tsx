@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
+import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
 import type { SimReply, SimRequest, TrainingView } from './sim.worker';
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
@@ -23,6 +24,14 @@ const TONE = {
 } as const;
 const BAR = { ready: 'bg-club-turf', tired: 'bg-club-gold', spent: 'bg-club-danger' } as const;
 
+const STATES = ['spent', 'tired', 'ready'] as const;
+const COUNT_TONE = {
+  ready: 'text-chalk',
+  tired: 'text-club-gold',
+  spent: 'text-club-danger',
+} as const;
+const rank = (p: TrainingView['players'][number]) => STATES.indexOf(p.out ? OUT : stateOf(p.fresh));
+
 export function Training(props: {
   ask: Ask;
   onError: (m: string) => void;
@@ -30,6 +39,7 @@ export function Training(props: {
 }) {
   const { ask, onError, onPicked } = props;
   const [view, setView] = useState<TrainingView | null>(null);
+  const card = usePlayerSheet(ask, onError);
 
   useEffect(() => {
     ask({ type: 'training' })
@@ -38,6 +48,12 @@ export function Training(props: {
   }, [ask, onError]);
 
   if (!view) return null;
+  // Who needs the coach first: the spent and the injured, then the tired, then the rest.
+  const players = [...view.players].sort(
+    (a, b) => rank(a) - rank(b) || Number(b.starter) - Number(a.starter),
+  );
+  const count = { ready: 0, tired: 0, spent: 0 };
+  for (const p of view.players) count[p.out ? OUT : stateOf(p.fresh)]++;
   return (
     <section
       aria-labelledby="training-title"
@@ -108,8 +124,15 @@ export function Training(props: {
       <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
         <h3 className={LABEL}>{t('training.fresh')}</h3>
         <p className="text-chalk-soft">{t('training.freshHint')}</p>
+        <p className="flex flex-wrap gap-x-6 gap-y-1 font-condensed text-xl leading-none font-extrabold uppercase tabular-nums">
+          {STATES.map((k) => (
+            <span key={k} className={count[k] === 0 ? 'text-chalk-soft/60' : COUNT_TONE[k]}>
+              {t('training.count', { n: count[k], s: k })}
+            </span>
+          ))}
+        </p>
         <ul className="grid gap-x-6 sm:grid-cols-2">
-          {view.players.map((p) => {
+          {players.map((p) => {
             const state = p.out ? OUT : stateOf(p.fresh);
             return (
               <li
@@ -121,20 +144,24 @@ export function Training(props: {
                 })}
                 className="flex min-h-12 min-w-0 items-center gap-3 border-t border-chalk/10 py-1.5"
               >
-                <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
+                <span
+                  className={`grid h-6 w-11 shrink-0 place-items-center rounded font-condensed text-sm font-extrabold ${p.starter ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk'}`}
+                >
                   {t('squad.position', { p: p.position })}
+                  {p.starter && <span className="sr-only">{t('squad.starter')}</span>}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">
-                    {p.name}
+                  <span className="flex items-baseline gap-2">
+                    <button
+                      type="button"
+                      className={SHEET_NAME}
+                      onClick={(e) => card.open(p.id, e.currentTarget)}
+                    >
+                      {p.name}
+                    </button>
                     {p.out && (
-                      <span className="ml-2 text-xs font-bold text-club-danger">
+                      <span className="shrink-0 text-xs font-bold text-club-danger">
                         {t('health.out', { n: p.out.days })}
-                      </span>
-                    )}
-                    {p.starter && (
-                      <span className="ml-2 text-xs font-bold text-club-gold">
-                        {t('squad.starter')}
                       </span>
                     )}
                   </span>
@@ -205,6 +232,7 @@ export function Training(props: {
           ))}
         </ul>
       </div>
+      {card.sheet}
     </section>
   );
 }

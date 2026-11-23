@@ -5,10 +5,11 @@
  * and the deals between the other clubs with each
  * buyer's reasons (club-domain market/). A deal closes only when both tables agree.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { btnPrimary, btnSecondary } from '../../../components/ui';
 import { clausedFee } from '@decabeca/club-domain';
 import { t } from '../i18n';
+import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
 import type { MarketAct, MarketPlayer, MarketView, SimReply, SimRequest } from './sim.worker';
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
@@ -30,25 +31,24 @@ const FIELD =
 const SMALL = `${btnSecondary} px-3 text-base`;
 const GO = `${btnPrimary} bg-club-gold px-3 text-base`;
 
-/** Who he is, in one line under his name. */
-function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
+const LG = '(min-width: 64rem)';
+/** From `lg` the facts behind "Mais sobre ele" are laid open. */
+const useWide = () =>
+  useSyncExternalStore(
+    (on) => {
+      const m = window.matchMedia(LG);
+      m.addEventListener('change', on);
+      return () => m.removeEventListener('change', on);
+    },
+    () => window.matchMedia(LG).matches,
+    () => false,
+  );
+
+/** The facts that do not decide at a glance: pay, contract, ceiling, clause, agent, scouting. */
+function Who({ p }: { p: MarketPlayer }) {
   return (
-    <span className="flex flex-wrap items-center gap-x-2 text-xs text-chalk-soft">
-      {club && (
-        <>
-          <span
-            aria-hidden
-            className="size-3 shrink-0 rounded-full border"
-            style={{ background: p.club.colours[0], borderColor: p.club.colours[1] }}
-          />
-          <span className="font-bold text-chalk">
-            {p.free ? t('market.noClub') : p.club.shortName}
-          </span>
-        </>
-      )}
-      <span>{t('squad.age', { n: p.age })}</span>
+    <span className="flex flex-wrap items-center gap-x-2 pb-2 text-xs text-chalk-soft">
       <span>{t('market.wage', { wage: money(p.wage) })}</span>
-      <span>{t('market.value', { value: money(p.value) })}</span>
       {p.until !== null && <span>{t('market.until', { year: p.until })}</span>}
       <span>{t('market.potential', { lo: p.potential[0], hi: p.potential[1] })}</span>
       {p.release !== null && <span>{t('market.clause', { fee: money(p.release) })}</span>}
@@ -102,21 +102,74 @@ function Who({ p, club = true }: { p: MarketPlayer; club?: boolean }) {
   );
 }
 
-function Head({ p, club }: { p: MarketPlayer; club?: boolean }) {
+/**
+ * One player on two lines: position, name and level; then club, age and value, which is also
+ * the handle of "Mais sobre ele" (the rest). `first` keeps that open on a phone; from `lg` all are.
+ */
+function Head(props: {
+  p: MarketPlayer;
+  club?: boolean;
+  first?: boolean;
+  card?: (id: string, from: HTMLElement) => void;
+}) {
+  const { p, club = true, first = false, card } = props;
+  const wide = useWide();
   return (
-    <div className="flex items-center gap-3">
-      <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
-        {t('squad.position', { p: p.position })}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-semibold">{p.name}</span>
-        <Who p={p} club={club ?? true} />
-      </span>
-      <span className="font-condensed text-2xl leading-none font-black whitespace-nowrap tabular-nums">
-        {p.range[0] === p.range[1]
-          ? p.rating
-          : t('market.band', { lo: p.range[0], hi: p.range[1] })}
-      </span>
+    <div>
+      <div className="flex items-center gap-3">
+        <span className="w-9 shrink-0 font-condensed text-sm font-extrabold text-club-gold">
+          {t('squad.position', { p: p.position })}
+        </span>
+        <span className="min-w-0 flex-1">
+          {card ? (
+            <button
+              type="button"
+              className={SHEET_NAME}
+              onClick={(e) => card(p.id, e.currentTarget)}
+            >
+              {p.name}
+            </button>
+          ) : (
+            <span className="block truncate font-semibold">{p.name}</span>
+          )}
+        </span>
+        <span className="font-condensed text-2xl leading-none font-black whitespace-nowrap tabular-nums">
+          {p.range[0] === p.range[1]
+            ? p.rating
+            : t('market.band', { lo: p.range[0], hi: p.range[1] })}
+        </span>
+      </div>
+      <details open={wide || first} className="group ml-12">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-x-3 text-xs text-chalk-soft [&::-webkit-details-marker]:hidden">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2">
+            {club && (
+              <>
+                <span
+                  aria-hidden
+                  className="size-3 shrink-0 rounded-full border"
+                  style={{ background: p.club.colours[0], borderColor: p.club.colours[1] }}
+                />
+                <span className="font-bold text-chalk">
+                  {p.free ? t('market.noClub') : p.club.shortName}
+                </span>
+              </>
+            )}
+            <span>{t('squad.age', { n: p.age })}</span>
+            <span>{t('market.value', { value: money(p.value) })}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-1 font-bold text-club-gold">
+            {t('market.details')}
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden
+              className="size-4 fill-none stroke-current stroke-2 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+            >
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </summary>
+        <Who p={p} />
+      </details>
     </div>
   );
 }
@@ -190,7 +243,7 @@ function Talk({
   const playerId = p.id;
   return (
     <li className="flex flex-col gap-3 border-t border-chalk/10 py-4 first:border-0 first:pt-0">
-      <Head p={p} />
+      <Head p={p} first />
       {talk.stage === 'fee' ? (
         <>
           <p>
@@ -417,7 +470,7 @@ function BidRow({ bid, act }: { bid: MarketView['bids'][number]; act: Do }) {
   const asked = Math.round(Number(fee)) || 0;
   return (
     <li className="flex flex-col gap-3 border-t border-chalk/10 py-4 first:border-0 first:pt-0">
-      <Head p={bid.player} club={false} />
+      <Head p={bid.player} club={false} first />
       <p className="font-semibold">
         {t('market.bidText', {
           club: bid.from.shortName,
@@ -714,6 +767,11 @@ function saidText(said: NonNullable<MarketView['said']>): string {
   });
 }
 
+const TABS = ['buy', 'mine', 'scout', 'news'] as const;
+type Tab = (typeof TABS)[number];
+/** Targets shown before "show all": a phone should not scroll fifty rows to reach the end. */
+const PAGE = 15;
+
 export function Market(props: {
   ask: Ask;
   onError: (m: string) => void;
@@ -723,6 +781,9 @@ export function Market(props: {
   const [view, setView] = useState<MarketView | null>(null);
   const [position, setPosition] = useState<string | null>(null);
   const [club, setClub] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('buy');
+  const [more, setMore] = useState(false);
+  const card = usePlayerSheet(ask, onError);
 
   useEffect(() => {
     ask({ type: 'market', position, club })
@@ -740,18 +801,53 @@ export function Market(props: {
       .catch((e: Error) => onError(e.message));
   };
 
+  // The shut window: the state as the headline, the calendar as the sentence under it.
+  const shut = t('market.closed');
+  const cut = shut.indexOf('. ');
+  const closed = cut < 0 ? [shut, ''] : [shut.slice(0, cut), shut.slice(cut + 2)];
+
+  const offered = (
+    <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+      <h3 className={LABEL}>{t('market.offered')}</h3>
+      <p className="text-sm text-chalk-soft">{t('market.offeredInfo')}</p>
+      <ul>
+        {view.offered.map((p, i) => (
+          <li
+            key={p.id}
+            className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+          >
+            <span className="min-w-0 flex-1 basis-56">
+              <Head p={p} first={i === 0} />
+            </span>
+            <button
+              type="button"
+              disabled={p.no !== null}
+              className={SMALL}
+              onClick={() => act({ do: 'open', playerId: p.id })}
+            >
+              {p.no === null ? t('market.talk') : t('market.no', { r: p.no })}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
   return (
     <section aria-labelledby="market-title" className="flex flex-col gap-5">
       <div className="sala-slab flex flex-wrap items-baseline gap-x-5 gap-y-2 px-4 py-3 sm:px-5">
         <p
           className={`font-condensed text-xl leading-none font-black uppercase ${view.open ? 'text-club-gold' : 'text-club-danger'}`}
         >
-          {view.open ? t('market.open') : t('market.closed')}
+          {view.open ? t('market.open') : closed[0]}
         </p>
         <p className="font-semibold tabular-nums">{t('market.cash', { cash: money(view.cash) })}</p>
         <p className="font-semibold tabular-nums">
           {t('market.wageRoom', { room: money(Math.max(0, view.wageRoom)) })}
         </p>
+        {!view.open && closed[1] && (
+          <p className="basis-full text-sm text-chalk-soft">{closed[1]}</p>
+        )}
         <p aria-live="polite" className="basis-full font-semibold empty:hidden">
           {view.said && saidText(view.said)}
         </p>
@@ -825,7 +921,26 @@ export function Market(props: {
         </div>
       )}
 
-      <div className="grid items-start gap-5 lg:grid-cols-2">
+      <div
+        role="group"
+        aria-label={t('market.sections')}
+        className="sala-slab grid grid-cols-4 gap-1 p-1 sm:flex sm:w-fit"
+      >
+        {TABS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={tab === k}
+            className={`min-h-11 rounded-lg px-1 font-condensed text-[0.9375rem] leading-tight font-extrabold whitespace-nowrap uppercase sm:px-5 sm:text-lg ${tab === k ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
+            onClick={() => setTab(k)}
+          >
+            {t('market.section', { s: k })}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'buy' && view.offered.length > 0 && offered}
+      {tab === 'buy' && (
         <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
           <h3 id="market-title" className={LABEL}>
             {t('market.targets')}
@@ -856,13 +971,13 @@ export function Market(props: {
             ))}
           </div>
           <ul>
-            {view.targets.map((p) => (
+            {(more ? view.targets : view.targets.slice(0, PAGE)).map((p, i) => (
               <li
                 key={p.id}
                 className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
               >
                 <span className="min-w-0 flex-1 basis-56">
-                  <Head p={p} />
+                  <Head p={p} first={i === 0} />
                 </span>
                 <button
                   type="button"
@@ -909,154 +1024,135 @@ export function Market(props: {
               </li>
             ))}
           </ul>
+          {view.targets.length > PAGE && (
+            <button type="button" className={`${SMALL} self-start`} onClick={() => setMore(!more)}>
+              {more ? t('market.fewer') : t('market.more', { n: view.targets.length })}
+            </button>
+          )}
         </div>
+      )}
 
-        <div className="flex min-w-0 flex-col gap-5">
-          <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
-            <h3 className={LABEL}>{t('market.mine')}</h3>
-            <ul>
-              {view.mine.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
-                >
-                  <span className="min-w-0 flex-1">
-                    <Head p={p} club={false} />
-                    <span className="ml-12 block text-xs font-bold text-chalk">
-                      {t('market.part', { p: p.part })}
-                      {p.listed && (
-                        <span className="ml-2 text-club-gold">{t('market.listed')}</span>
-                      )}
-                      {p.forLoan && (
-                        <span className="ml-2 text-club-gold">{t('market.forLoan')}</span>
-                      )}
-                      {p.owner !== null && (
-                        <span className="ml-2 text-chalk-soft">
-                          {t('market.onLoan', { club: p.owner })}
-                        </span>
-                      )}
-                    </span>
-                  </span>
-                  {p.owner !== null &&
-                    p.clauses.loan?.kind === 'option' &&
-                    !p.clauses.loan.mine && (
-                      <button
-                        type="button"
-                        className="min-h-11 basis-full rounded-lg bg-club-gold px-3 font-condensed text-base font-extrabold text-ink uppercase"
-                        onClick={() => act({ do: 'option', playerId: p.id })}
-                      >
-                        {t('market.optionGo', { price: money(p.clauses.loan.price) })}
-                      </button>
+      {tab === 'mine' && (
+        <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+          <h3 className={LABEL}>{t('market.mine')}</h3>
+          <ul>
+            {view.mine.map((p, i) => (
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+              >
+                <span className="min-w-0 flex-1">
+                  <Head p={p} club={false} first={i === 0} card={card.open} />
+                  <span className="ml-12 block text-xs font-bold text-chalk">
+                    {t('market.part', { p: p.part })}
+                    {p.listed && <span className="ml-2 text-club-gold">{t('market.listed')}</span>}
+                    {p.forLoan && (
+                      <span className="ml-2 text-club-gold">{t('market.forLoan')}</span>
                     )}
-                  {p.owner === null && (
-                    <span className="flex basis-full flex-wrap gap-2">
-                      <button
-                        type="button"
-                        aria-label={t('market.renewFor', { name: p.name })}
-                        className="min-h-11 flex-1 rounded-lg bg-chalk/10 px-3 font-condensed text-base leading-tight font-extrabold text-chalk uppercase hover:bg-chalk/20"
-                        onClick={() => act({ do: 'renew', playerId: p.id })}
-                      >
-                        {t('market.renew')}
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={p.listed}
-                        aria-label={t('market.listFor', {
-                          on: BOOL[Number(p.listed)]!,
-                          name: p.name,
-                        })}
-                        className={`min-h-11 flex-1 rounded-lg px-3 font-condensed whitespace-nowrap text-base leading-tight font-extrabold uppercase ${p.listed ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk hover:bg-chalk/20'}`}
-                        onClick={() => act({ do: 'list', playerId: p.id, on: !p.listed })}
-                      >
-                        {p.listed ? t('market.unlist') : t('market.list')}
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={p.forLoan}
-                        aria-label={t('market.lendFor', {
-                          on: BOOL[Number(p.forLoan)]!,
-                          name: p.name,
-                        })}
-                        className={`min-h-11 flex-1 rounded-lg px-3 font-condensed text-base leading-tight font-extrabold whitespace-nowrap uppercase ${p.forLoan ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk hover:bg-chalk/20'}`}
-                        onClick={() => act({ do: 'lend', playerId: p.id, on: !p.forLoan })}
-                      >
-                        {p.forLoan ? t('market.unlend') : t('market.lend')}
-                      </button>
-                      {!p.forLoan && (
-                        <LoanWith
-                          label={t('market.lendWith')}
-                          onGo={(kind) => act({ do: 'lend', playerId: p.id, on: true, kind })}
-                        />
-                      )}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {view.offered.length > 0 && (
-            <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
-              <h3 className={LABEL}>{t('market.offered')}</h3>
-              <p className="text-sm text-chalk-soft">{t('market.offeredInfo')}</p>
-              <ul>
-                {view.offered.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+                    {p.owner !== null && (
+                      <span className="ml-2 text-chalk-soft">
+                        {t('market.onLoan', { club: p.owner })}
+                      </span>
+                    )}
+                  </span>
+                </span>
+                {p.owner !== null && p.clauses.loan?.kind === 'option' && !p.clauses.loan.mine && (
+                  <button
+                    type="button"
+                    className="min-h-11 basis-full rounded-lg bg-club-gold px-3 font-condensed text-base font-extrabold text-ink uppercase"
+                    onClick={() => act({ do: 'option', playerId: p.id })}
                   >
-                    <span className="min-w-0 flex-1 basis-56">
-                      <Head p={p} />
-                    </span>
+                    {t('market.optionGo', { price: money(p.clauses.loan.price) })}
+                  </button>
+                )}
+                {p.owner === null && (
+                  <span className="flex basis-full flex-wrap gap-2">
                     <button
                       type="button"
-                      disabled={p.no !== null}
-                      className={SMALL}
-                      onClick={() => act({ do: 'open', playerId: p.id })}
+                      aria-label={t('market.renewFor', { name: p.name })}
+                      className="min-h-11 flex-1 rounded-lg bg-chalk/10 px-3 font-condensed text-base leading-tight font-extrabold text-chalk uppercase hover:bg-chalk/20"
+                      onClick={() => act({ do: 'renew', playerId: p.id })}
                     >
-                      {p.no === null ? t('market.talk') : t('market.no', { r: p.no })}
+                      {t('market.renew')}
                     </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                    <button
+                      type="button"
+                      aria-pressed={p.listed}
+                      aria-label={t('market.listFor', {
+                        on: BOOL[Number(p.listed)]!,
+                        name: p.name,
+                      })}
+                      className={`min-h-11 flex-1 rounded-lg px-3 font-condensed whitespace-nowrap text-base leading-tight font-extrabold uppercase ${p.listed ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk hover:bg-chalk/20'}`}
+                      onClick={() => act({ do: 'list', playerId: p.id, on: !p.listed })}
+                    >
+                      {p.listed ? t('market.unlist') : t('market.list')}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={p.forLoan}
+                      aria-label={t('market.lendFor', {
+                        on: BOOL[Number(p.forLoan)]!,
+                        name: p.name,
+                      })}
+                      className={`min-h-11 flex-1 rounded-lg px-3 font-condensed text-base leading-tight font-extrabold whitespace-nowrap uppercase ${p.forLoan ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk hover:bg-chalk/20'}`}
+                      onClick={() => act({ do: 'lend', playerId: p.id, on: !p.forLoan })}
+                    >
+                      {p.forLoan ? t('market.unlend') : t('market.lend')}
+                    </button>
+                    {!p.forLoan && (
+                      <LoanWith
+                        label={t('market.lendWith')}
+                        onGo={(kind) => act({ do: 'lend', playerId: p.id, on: true, kind })}
+                      />
+                    )}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
+      {tab === 'scout' && (
+        <div className="grid items-start gap-5 lg:grid-cols-2">
           <Scouts key={view.scouting.away.map((m) => m.area).join()} s={view.scouting} act={act} />
 
           <Squads view={view} club={club} pick={setClub} act={act} />
-
-          <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
-            <h3 className={LABEL}>{t('market.news')}</h3>
-            {view.news.length === 0 ? (
-              <p className="text-chalk-soft">{t('market.noNews')}</p>
-            ) : (
-              <ul>
-                {view.news.map((d) => (
-                  <li
-                    key={`${d.iso}-${d.name}-${d.to}`}
-                    className="border-t border-chalk/10 py-2 first:border-0"
-                  >
-                    <p className="font-semibold">
-                      {t('market.deal', {
-                        to: d.to,
-                        name: d.name,
-                        from: d.from,
-                        fee: money(d.fee),
-                        for: d.for,
-                      })}
-                    </p>
-                    <p className="text-sm text-chalk-soft tabular-nums">
-                      {t('market.judged', { seen: d.seen, office: d.office })}{' '}
-                      {t('market.why', { ...d.why })}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
-      </div>
+      )}
+
+      {tab === 'news' && (
+        <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+          <h3 className={LABEL}>{t('market.news')}</h3>
+          {view.news.length === 0 ? (
+            <p className="text-chalk-soft">{t('market.noNews')}</p>
+          ) : (
+            <ul>
+              {view.news.map((d) => (
+                <li
+                  key={`${d.iso}-${d.name}-${d.to}`}
+                  className="border-t border-chalk/10 py-2 first:border-0"
+                >
+                  <p className="font-semibold">
+                    {t('market.deal', {
+                      to: d.to,
+                      name: d.name,
+                      from: d.from,
+                      fee: money(d.fee),
+                      for: d.for,
+                    })}
+                  </p>
+                  <p className="text-sm text-chalk-soft tabular-nums">
+                    {t('market.judged', { seen: d.seen, office: d.office })}{' '}
+                    {t('market.why', { ...d.why })}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {card.sheet}
     </section>
   );
 }

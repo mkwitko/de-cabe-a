@@ -20,7 +20,7 @@ export const ptBR = {
   'sandbox.lineHeight': 'Altura da linha de defesa: {value} de 5',
   'sandbox.inverted': 'Lateral direito por dentro com a bola',
 
-  'career.title': 'Carreira',
+  'career.title': 'Modo Clube',
   'career.loadError': 'Não deu para carregar a carreira',
   'career.startTitle': 'Como você quer começar?',
   'career.mode': '{m, select, job_offers {Começar por baixo} other {Escolher o clube}}',
@@ -59,9 +59,11 @@ export const ptBR = {
   'career.formResult': '{r, select, W {V} D {E} other {D}}',
   'career.formLabel':
     '{r, select, W {Vitória} D {Empate} other {Derrota}}, {a} a {b}, contra o {opp}',
-  'career.fixtures': 'Depois',
+  'career.fixtures': 'Próximos jogos',
+  'career.fixturesAll': 'Ver o calendário ({n} jogos)',
+  'career.fixturesLess': 'Ver só os próximos',
   'career.venueShort': '{v, select, home {Casa} other {Fora}}',
-  'career.inbox': 'Mensagens',
+  'career.inbox': 'Caixa de entrada',
   'career.todo': 'Pede resposta',
   'career.todoEmpty': 'Nada esperando por você.',
   'career.news': 'Notícias',
@@ -94,9 +96,17 @@ export const ptBR = {
   'career.cash': '{value, number, currency}',
   'career.next': 'Próximo jogo',
   'career.rooms': 'Salas do clube',
+  'career.roomShort':
+    '{r, select, sala {Sala} vestiario {Vestiário} treino {Treino} mercado {Mercado} other {Diretoria}}',
+  'career.leave': 'Sair para os jogos',
+  'career.goMatch': 'Ir para o jogo',
+  'career.goDeadline': 'Janela fecha hoje',
+  'career.goSeason': 'Virar a temporada',
+  'career.fixtureShort': '{home} × {away}',
   'career.room':
     '{r, select, sala {Sala do técnico} vestiario {Vestiário} treino {Campo de treino} mercado {Mercado} other {Diretoria}}',
   'squad.title': 'Escalação',
+  'squad.col': '{c, select, pos {Pos.} name {Jogador} age {Idade} fresh {Fôlego} other {Nota}}',
   'squad.formation': 'Formação',
   'squad.auto': 'Escalação do treinador',
   'squad.strength': 'Força do time',
@@ -166,6 +176,11 @@ export const ptBR = {
   'market.freeTalk': 'Sem clube: não há taxa de transferência.',
   'market.renewTalk': 'Renovação: ele diz quanto quer para ficar.',
   'market.mine': 'Seu elenco',
+  'market.sections': 'Partes do mercado',
+  'market.section':
+    '{s, select, buy {Contratar} mine {Seu elenco} scout {Olheiros} other {Negócios}}',
+  'market.more': 'Ver os {n} jogadores',
+  'market.fewer': 'Ver só os primeiros',
   'market.targets': 'Jogadores no mercado',
   'market.position': 'Posição',
   'market.all': 'Todas',
@@ -316,6 +331,11 @@ export const ptBR = {
     'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
   'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
   'inbox.empty': 'Nenhuma mensagem ainda.',
+  'inbox.agentOffers': 'Empresários ofereceram {n} jogadores: {names}.',
+  'inbox.open':
+    '{r, select, mercado {Abrir o mercado} treino {Ver o treino} vestiario {Ver o elenco} other {Falar com a diretoria}}',
+  'inbox.more': 'Ver as {n} mensagens',
+  'inbox.less': 'Ver só as últimas',
   'inbox.ultimatum':
     'Ultimato: {points, plural, one {# ponto} other {# pontos}} {matches, plural, one {no próximo jogo} other {nos próximos # jogos}}, ou o contrato acaba.',
   'inbox.ultimatumMet': 'Ultimato cumprido. A direção recua.',
@@ -404,8 +424,9 @@ export const ptBR = {
     '{f, select, training {Centro de treinamento} youth {Categorias de base} medical {Departamento médico} scouting {Olheiros} football {Diretoria de futebol} stadium {Estádio} other {Estrutura}}',
   'board.level': 'Nível {n} de 5',
   'board.seats': '{n, number} lugares',
-  'board.workCost': 'Próxima obra: {cost}. Fica pronta na virada da temporada.',
-  'board.building': 'Em obra: fica pronta na virada da temporada.',
+  'board.cost': 'Próxima obra: {cost}',
+  'board.workWhen': 'Toda obra aprovada fica pronta na virada da temporada.',
+  'board.building': 'Em obra',
   'board.top': 'No nível máximo.',
   'board.propose': 'Propor obra',
   'board.proposeName': 'Propor obra: {f}',
@@ -459,6 +480,8 @@ export const ptBR = {
   'training.freshHint': 'Quem está cansado rende menos. Troque no Vestiário ou alivie a semana.',
   'training.state': '{s, select, ready {Pronto} tired {Cansado} other {Esgotado}}',
   'training.player': '{name}: fôlego {n}%, {state}',
+  'training.count':
+    '{n} {s, select, ready {{n, plural, one {pronto} other {prontos}}} tired {{n, plural, one {cansado} other {cansados}}} other {{n, plural, one {esgotado} other {esgotados}}}}',
   'squad.known':
     '{l, select, 3 {Da posição} 2 {Sabe jogar ali} 1 {Improvisado} other {Fora de posição}}',
   'squad.plan': 'Plano de jogo',
@@ -573,10 +596,17 @@ export const ptBR = {
   'bridge.goal': 'Nova meta da direção: terminar até o {position}º lugar.',
   'career.turn':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
+  'career.momentTitle': '{m, select, champion {Campeão!} promotion {Subimos!} other {Rebaixado}}',
+  'career.momentText':
+    '{m, select, champion {O {club} ganhou a divisão em {season} e sobe com a taça.} promotion {O {club} está na divisão de cima. {champion} fechou {season} com o título.} other {O {club} caiu de divisão em {season}. {champion} ficou com o título.}}',
+  'career.momentGo': 'Seguir para {season}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
     '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {Direitos de TV} quota {Cota de participação} advance {Cota por fase} prize {Premiação de final} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Campeonato estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} lawsuit {Condenação trabalhista} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
+  'career.colRecord': '{c, select, won {V} drawn {E} other {D}}',
+  'career.zoneUp': 'Sobem {n}',
+  'career.zoneDown': 'Caem {n}',
   'career.estadualKnockout': 'Mata-mata do estadual',
   'career.estadualStage':
     '{s, select, quartas {Quartas} semi {Semifinal} final {Final} other {Fase}}',
@@ -618,6 +648,7 @@ export const ptBR = {
   'friendly.tactics': 'Ajustar o time',
   'friendly.tacticsHint': 'Vale a partir do minuto na tela.',
   'friendly.feed': 'Lances',
+  'friendly.feedEmpty': 'Bola rolando. Gols, cartões e trocas aparecem aqui.',
   'friendly.event.goal': "{minute}' Gol de {team}",
   'friendly.event.yellow': "{minute}' Amarelo para {team}",
   'friendly.event.red': "{minute}' Vermelho para {team}",
@@ -641,6 +672,7 @@ export const ptBR = {
   'friendly.stat.corners': 'Escanteios',
   'friendly.stat.cards': 'Cartões',
   'friendly.percent': '{v, number, percent}',
+  'friendly.decimal': '{v, number}',
   'friendly.again': 'Jogar de novo',
   'friendly.change': 'Trocar os times',
 
@@ -659,6 +691,29 @@ export const ptBR = {
 
   'common.money': '{value, number, currency}',
   'common.percent': '{n}%',
+  'market.details': 'Mais sobre ele',
+  'player.open': 'Ficha de {name}',
+  'player.close': 'Fechar a ficha',
+  'player.age': '{n} anos',
+  'player.group':
+    '{g, select, technical {Técnica} mental {Mental} tactical {Tática} physical {Físico} other {Goleiro}}',
+  'player.attr':
+    '{a, select, firstTouch {Domínio} passing {Passe curto} technique {Técnica} dribbling {Drible} crossing {Cruzamento} finishing {Finalização} heading {Cabeceio} tackling {Desarme} marking {Marcação} setPieces {Bola parada} longPassing {Passe longo} longShots {Chute de longe} weakFoot {Perna fraca} shielding {Proteção de bola} decisions {Decisão} vision {Visão de jogo} anticipation {Antecipação} positioning {Posicionamento} offTheBall {Sem a bola} composure {Frieza} concentration {Concentração} teamwork {Espírito de equipe} workRate {Disposição} leadership {Liderança} aggression {Agressividade} bravery {Coragem} determination {Determinação} flair {Improviso} scanning {Olhar o jogo} spatialAwareness {Noção de espaço} tacticalReading {Leitura tática} bodyOrientation {Corpo orientado} discipline {Disciplina} timing {Tempo de bola} pressing {Pressão} covering {Cobertura} lossReaction {Reação à perda} communication {Comunicação} acceleration {Aceleração} pace {Velocidade} agility {Agilidade} balance {Equilíbrio} strength {Força} stamina {Resistência} jumping {Impulsão} recovery {Recuperação} deceleration {Freada} reflexes {Reflexos} handling {Segurança} oneOnOne {Mano a mano} commandOfArea {Comando da área} distribution {Reposição} gkPositioning {Posição do goleiro} other {Saída de bola}}',
+  'player.best': 'Rende mais de {role}: nota {n}',
+  'player.part':
+    '{p, select, starter {Está no plano do time titular} cover {Primeiro reserva} other {Sobra no elenco}}',
+  'player.inXi': 'Joga no time de hoje',
+  'player.positions': 'Posições',
+  'player.fresh': 'Fôlego',
+  'player.injury': 'Lesão',
+  'player.wage': 'Salário',
+  'player.until': 'Contrato até',
+  'player.value': 'Valor',
+  'player.release': 'Multa',
+  'player.agent': 'Empresário',
+  'player.noContract': 'Sem contrato profissional',
+  'player.none': 'Nenhuma',
+  'player.facts': 'Contrato e saúde',
   'common.minutes': '{n, plural, =0 {nenhum minuto} one {# minuto} other {# minutos}}',
 } as const satisfies Record<string, string>;
 

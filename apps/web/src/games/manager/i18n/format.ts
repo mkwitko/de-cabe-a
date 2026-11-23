@@ -13,7 +13,12 @@ function number(locale: string, v: unknown, style?: string): string {
   const n = Number(v);
   if (style === 'percent') return new Intl.NumberFormat(locale, { style: 'percent' }).format(n);
   if (style === 'currency')
-    return new Intl.NumberFormat(locale, { style: 'currency', currency: CURRENCY }).format(n);
+    // Whole reais: no amount in the game has cents, and ",00" on every figure is noise.
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: CURRENCY,
+      maximumFractionDigits: 0,
+    }).format(n);
   return new Intl.NumberFormat(
     locale,
     style === 'integer' ? { maximumFractionDigits: 0 } : {},
