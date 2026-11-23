@@ -11,7 +11,8 @@
  * Prints per cell and metric the two means, the difference with its 90% interval, the frozen
  * margin and the verdict; exits 1 if any metric of any cell fails.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { MatchInput, TacticalPlan } from '../contract';
 import { matchInput, teamInput } from '../match/fixture';
@@ -237,10 +238,23 @@ const tv = (p: number[], q: number[]) => p.reduce((acc, x, i) => acc + Math.abs(
 
 // ── Run ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Level 1's source (everything but level 2 and the calibration scripts): a change to it makes
+ * every cached level 1 summary stale, so the cache file names carry its hash.
+ */
+function level1Version(): string {
+  const src = new URL('..', import.meta.url).pathname;
+  const h = createHash('sha1');
+  for (const f of (readdirSync(src, { recursive: true }) as string[]).sort())
+    if (f.endsWith('.ts') && !f.endsWith('.test.ts') && !/^(possession|calibration)\//.test(f))
+      h.update(f).update(readFileSync(join(src, f)));
+  return h.digest('hex').slice(0, 8);
+}
+
 async function level1(cell: string, set: keyof typeof SEED_SETS, inputs: MatchInput[]) {
   const dir = process.env.L1_CACHE ?? new URL('../../.cache/equivalence', import.meta.url).pathname;
   mkdirSync(dir, { recursive: true });
-  const file = join(dir, `${cell}-${set}-${inputs.length}.json`);
+  const file = join(dir, `${cell}-${set}-${inputs.length}-${level1Version()}.json`);
   if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8')) as Summary[];
   const rs = await runMany(inputs, undefined, 1);
   writeFileSync(file, JSON.stringify(rs));
