@@ -12,6 +12,7 @@
  * only (ADR-020); every number is a PARÂMETRO, not calibrated.
  */
 import { ABROAD } from '../market/abroad';
+import { homeOf, isBase } from './bases';
 import {
   GOALKEEPING,
   MENTAL,
@@ -432,6 +433,12 @@ export function growthOf(pack: Pack, mine: Mine): Map<string, number> {
     if (clubId === ABROAD) {
       // Abroad: a good training ground and a squad player's minutes, whoever he is.
       for (const p of squad) out.set(p.id, 100 + BY_GROUND[3]! + BY_MINUTES[1]);
+      continue;
+    }
+    if (isBase(clubId)) {
+      // In a club's academy: its training ground, and the youth teams' games every week.
+      const ground = grounds.get(homeOf(clubId)!) ?? BY_GROUND[0];
+      for (const p of squad) out.set(p.id, 100 + ground + BY_MINUTES[1]);
       continue;
     }
     squad.sort((a, b) => b.level - a.level || (a.id < b.id ? -1 : 1));

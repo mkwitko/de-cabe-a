@@ -10,6 +10,7 @@
  * clubs pay players of that level, so values follow the pack's own economy. Exact arithmetic
  * only (ADR-020). Every number is a PARÂMETRO, not calibrated.
  */
+import { isBase } from '../career/bases';
 import type { Pack, PackPlayer } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
 import { WHOLE, cached } from '../lib/pack-cache';
@@ -53,7 +54,9 @@ export function goingWages(pack: Pack): number[] {
     const by: number[][] = Array.from({ length: 100 }, () => []);
     const read = readingsOf(pack);
     for (const p of pack.players)
-      if (p.clubId && p.contract) by[read.get(p.id)!.level]!.push(p.contract.wage);
+      // Boys in other clubs' academies (bases.ts) are not the market's yardstick.
+      if (p.clubId && p.contract && !isBase(p.clubId))
+        by[read.get(p.id)!.level]!.push(p.contract.wage);
     const table = by.map((ws) => (ws.length ? ws.sort((a, b) => a - b)[ws.length >> 1]! : 0));
     // Fill the gaps from below, then keep it from ever going down as the level rises.
     for (let l = 1; l < 100; l++) table[l] = Math.max(table[l]!, table[l - 1]!);

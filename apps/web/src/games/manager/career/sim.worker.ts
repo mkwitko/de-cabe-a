@@ -150,6 +150,8 @@ import {
   type Intensity,
   type SquadPlayer,
   ABROAD,
+  homeOf,
+  isBase,
   signable,
   FOREIGN_TIERS,
   foreignName,
@@ -575,6 +577,8 @@ export interface MarketPlayer {
   club: ClubFace;
   /** Without a club: no fee to pay. */
   free: boolean;
+  /** In the club's academy, not yet in its first team. */
+  youth: boolean;
   /** The year his contract ends; null without one. */
   until: number | null;
   /** The band the club's eye puts his level in; `rating` is its centre. One number when sure. */
@@ -797,7 +801,9 @@ function marketView(
       })(),
       wage: p.contract?.wage ?? 0,
       value: marketValue(w.pack, p, season),
-      club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
+      // A boy of another club's academy is shown under that club (club-domain bases.ts).
+      club: p.clubId ? face(clubs.get(homeOf(p.clubId)!)!) : NO_CLUB,
+      youth: isBase(p.clubId),
       free: p.clubId === null,
       until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
     };
@@ -843,7 +849,10 @@ function marketView(
         ...row(p),
         no: cannotTalk(w, p),
         asks: openingWage(w, p),
-        loan: p.clubId && cannotBorrow(w, p, w.clubId) === null ? loanFee(w, p) : null,
+        loan:
+          p.clubId && !isBase(p.clubId) && cannotBorrow(w, p, w.clubId) === null
+            ? loanFee(w, p)
+            : null,
       }))
       // Within reach first: willing to talk, a value the cash covers and a wage near what the
       // club pays. A list of stars nobody here can sign is no market.

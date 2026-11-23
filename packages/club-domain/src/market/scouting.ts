@@ -11,6 +11,7 @@
  * their band: at 100 it reads him exactly. Only what grew past the base is kept in the save
  * (`w.scouting.known`). Every number is a PARÂMETRO.
  */
+import { homeOf, isBase } from '../career/bases';
 import { COPA_ID } from '../competition/copa';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
@@ -198,7 +199,9 @@ function rivalsOf(w: CareerWorld, clubId: string): Set<string> {
  * Whether a club knows a player without a report: its own; every player of a club it meets in a
  * competition this season (it studies its opponents); the rest by judgement.ts `knows`.
  */
-export function clubKnows(w: CareerWorld, clubId: string, p: PackPlayer): boolean {
+export function clubKnows(w: CareerWorld, clubId: string, player: PackPlayer): boolean {
+  // A boy of a club's academy is known as its players are (bases.ts).
+  const p = isBase(player.clubId) ? { ...player, clubId: homeOf(player.clubId) } : player;
   if (p.clubId === clubId) return true;
   // Abroad, agents bring the year's foreign market to clubs with a scouting department past
   // the first level; the rest come home by themselves (abroad.ts `homecoming`).
@@ -225,7 +228,7 @@ export function knowerOf(w: CareerWorld, clubId: string): (p: PackPlayer) => boo
   const draw = drawsOf(w.pack, clubId);
   const reachOf = new Map<string, number>();
   return (p) => {
-    const at = p.clubId;
+    const at = homeOf(p.clubId);
     if (at === clubId) return true;
     if (at === null || at === ABROAD) return clubKnows(w, clubId, p);
     let r = reachOf.get(at);
@@ -403,7 +406,7 @@ export function scoutingDay(w: CareerWorld, day: number): void {
           p.clubId !== w.clubId &&
           (m.area === 'abroad'
             ? p.clubId === ABROAD && signable(p, w.season.season)
-            : p.clubId !== null && p.clubId !== ABROAD && inArea(w, m.area, p.clubId)) &&
+            : p.clubId !== null && p.clubId !== ABROAD && inArea(w, m.area, homeOf(p.clubId)!)) &&
           fitsFocus(p, m.focus, w.season.season) &&
           knowledgeOf(w, p, m.until) < 50,
       )

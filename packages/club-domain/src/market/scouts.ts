@@ -7,6 +7,7 @@
  *
  * Every number is a PARÂMETRO.
  */
+import { homeOf } from '../career/bases';
 import { fork, pick, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import type { PackPlayer } from '../pack/schema';
@@ -145,14 +146,17 @@ export function searchPlayers(
   const out: PackPlayer[] = [];
   for (const p of w.pack.players) {
     if (p.clubId === w.clubId || p.clubId === ABROAD) continue;
-    if (q.clubId && p.clubId !== q.clubId) continue;
-    if (q.tier !== undefined && (p.clubId === null || tierOf(p.clubId) !== q.tier)) continue;
-    if (q.state && (p.clubId === null || stateOf(w.pack, p.clubId) !== q.state)) continue;
+    // A boy of another club's academy is found under that club (bases.ts).
+    const at = homeOf(p.clubId);
+    if (at === w.clubId) continue;
+    if (q.clubId && at !== q.clubId) continue;
+    if (q.tier !== undefined && (at === null || tierOf(at) !== q.tier)) continue;
+    if (q.state && (at === null || stateOf(w.pack, at) !== q.state)) continue;
     if (!fitsFocus(p, q, w.season.season)) continue;
     if (
       text &&
       !fold(`${p.name} ${p.knownAs ?? ''}`).includes(text) &&
-      !(p.clubId && clubNames.get(p.clubId)?.includes(text))
+      !(at && clubNames.get(at)?.includes(text))
     )
       continue;
     out.push(p);

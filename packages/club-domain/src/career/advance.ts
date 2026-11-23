@@ -64,7 +64,8 @@ import { codeOf, withImports, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
-import { withAcademy } from './academy';
+import { bringUp, withAcademy } from './academy';
+import { isBase } from './bases';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
 import { postOwners } from './finance';
@@ -143,6 +144,8 @@ export interface CareerWorld {
   academy?: string[];
   /** The club whose youth teams joined the world on day one (academy.ts); kept to rebuild it. */
   boysOf?: string;
+  /** The other clubs' youth teams joined the world too (bases.ts); kept to rebuild it. */
+  bases?: true;
   /** Months of wages the person's club owes its squad (arrears.ts); absent when paid up. */
   arrears?: number;
   /** The other clubs' coaches as their boards see them (coaches.ts). */
@@ -433,8 +436,9 @@ function debutOf(w: CareerWorld): number | null {
 
 /** The world as it stands after `day`: the start, then every match day up to it. */
 export function openCareer(given: Pack, seed: number, clubId: string, day = 0): CareerWorld {
-  // The club's boys join the world on day one, in its academy (academy.ts).
-  const { pack: base, academy } = withAcademy(given, seed, clubId);
+  // The club's boys join the world on day one, in its academy, and every other club's in its
+  // own (academy.ts, bases.ts).
+  const { pack: base, academy } = withAcademy(given, seed, clubId, true);
   // The career's own pack object: what is read and kept beside it (the clubs' opinions, their
   // plans) belongs to this career alone, while the readings already made of `base` carry over.
   const opening = { ...base };
@@ -451,7 +455,8 @@ export function openCareer(given: Pack, seed: number, clubId: string, day = 0): 
     day: 0,
     hired: start.season.season,
     ...clubLevels(pack, start.season.season),
-    ...(academy.length > 0 && { academy, boysOf: clubId }),
+    ...(academy.length > 0 && { academy }),
+    ...(base !== given && { boysOf: clubId, bases: true as const }),
   };
   note(w, { day: 0, kind: 'welcome' });
   cupNotes(w, 0, new Set(), 0);
@@ -774,6 +779,11 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   }
   if (academy.length) w.academy = academy;
   else delete w.academy;
+  // The other clubs bring their boys up at the same age (bases.ts).
+  bringUp(
+    w,
+    w.pack.players.filter((p) => isBase(p.clubId) && ageNow(p) >= FIRST_TEAM_AGE),
+  );
   if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
   if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;

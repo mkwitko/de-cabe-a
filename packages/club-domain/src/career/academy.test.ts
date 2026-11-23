@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
-import { academyOf } from './academy';
+import { academyOf, bringUp } from './academy';
+import { searchPlayers } from '../market/scouts';
 import { nextDecision, openCareer } from './advance';
 import { loadCareer, saveCareer } from './save';
-import { academyPlayers, squadOf } from './squad';
+import { academyPlayers, squadOf, squadPlayers } from './squad';
 import { jobOffers } from './start';
 
 const pack = generateDevPack();
 const clubId = jobOffers(pack, 9)[0]!.clubId;
+const other = pack.players.find((p) => p.clubId === clubId)!;
+const boy = { ...other, id: 'fm-youth-1', name: 'Garoto da Base', birthDate: '2009-03-01' };
+const withYouth = { ...pack, youth: [{ team: 'u17' as const, player: boy }] };
 
 describe('the academy on day one', () => {
   it('opens with the club’s boys, out of the first team, and keeps them through a save', () => {
@@ -25,17 +29,32 @@ describe('the academy on day one', () => {
   });
 
   it('takes the club’s real youth teams when the pack has them', () => {
-    const other = pack.players.find((p) => p.clubId === clubId)!;
-    const boy = { ...other, id: 'fm-youth-1', birthDate: '2009-03-01' };
-    const withYouth = { ...pack, youth: [{ team: 'u17' as const, player: boy }] };
     // The real boy first, then up to three crops of the academy toward a dozen.
     const boys = academyOf(withYouth, 9, clubId).map((p) => p.id);
     expect(boys[0]).toBe('fm-youth-1');
     expect(boys.length).toBeGreaterThanOrEqual(9);
     const w = openCareer(withYouth, 9, clubId);
     expect(w.academy).toEqual(boys);
-    // Another club's boys stay out of the world.
-    const elsewhere = openCareer(withYouth, 9, pack.clubs.find((c) => c.id !== clubId)!.id);
-    expect(elsewhere.pack.players.some((p) => p.id === 'fm-youth-1')).toBe(false);
+  });
+
+  it('keeps the other clubs’ boys in their academies: out of the squads, there to be bought', () => {
+    const elsewhere = pack.clubs.find((c) => c.id !== clubId)!.id;
+    const w = openCareer(withYouth, 9, elsewhere);
+    const kid = w.pack.players.find((p) => p.id === 'fm-youth-1')!;
+    expect(kid.clubId).toBe(`base:${clubId}`);
+    expect(squadPlayers({ pack: w.pack, clubId }).some((p) => p.id === kid.id)).toBe(false);
+    // Found by name, under his club.
+    expect(searchPlayers(w, { text: 'garoto da base' }, () => 1).map((p) => p.id)).toEqual([
+      kid.id,
+    ]);
+    expect(searchPlayers(w, { clubId }, () => 1, 999).some((p) => p.id === kid.id)).toBe(true);
+    const again = loadCareer(withYouth, 9, elsewhere, saveCareer(w));
+    expect(again.pack.players).toEqual(w.pack.players);
+    // Brought up, he is the club's player, and no transfer of the season.
+    bringUp(w, [kid]);
+    expect(w.pack.players.find((p) => p.id === kid.id)!.clubId).toBe(clubId);
+    expect(w.moves![kid.id]!.season).toBeUndefined();
+    const later = loadCareer(withYouth, 9, elsewhere, saveCareer(w));
+    expect(later.pack.players).toEqual(w.pack.players);
   });
 });

@@ -156,7 +156,11 @@ function Head(props: {
                   style={{ background: p.club.colours[0], borderColor: p.club.colours[1] }}
                 />
                 <span className="font-bold text-chalk">
-                  {p.free ? t('market.noClub') : p.club.shortName}
+                  {p.free
+                    ? t('market.noClub')
+                    : p.youth
+                      ? t('market.clubYouth', { club: p.club.shortName })
+                      : p.club.shortName}
                 </span>
               </>
             )}

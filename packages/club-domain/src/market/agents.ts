@@ -5,6 +5,7 @@
  * The person's club's standing with each agent moves with what happens between them and is the
  * only part kept in the save (`w.agents`). Every number is a PARÂMETRO.
  */
+import { isBase } from '../career/bases';
 import type { CareerWorld } from '../career/advance';
 import { FIRST_NAMES, LAST_NAMES } from '../generate/names';
 import { WHOLE, cached } from '../lib/pack-cache';
@@ -210,6 +211,7 @@ export function agentOffers(w: CareerWorld, day: number): PackPlayer[] {
   const pool = w.pack.players
     .filter((p) => {
       if (p.clubId === w.clubId || p.clubId === ABROAD || offered[p.id] === season) return false;
+      if (isBase(p.clubId)) return false;
       if (p.clubId !== null && !surplus(p.clubId).has(p.id)) return false;
       if (affinity(w, agentOf(w.pack, p)) <= 0) return false;
       if (!needs.some((n) => fitFor(me, p, n) >= n.wanted - 1)) return false;
