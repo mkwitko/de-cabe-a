@@ -5,7 +5,15 @@ import { withMoves } from '../career/market';
 import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { dayOf } from '../competition/calendar';
-import { CLAUSE_TIMES, answerFee, clauseOf, counterAsk, answerTerms, playerStance, sellerStance } from './deals';
+import {
+  CLAUSE_TIMES,
+  answerFee,
+  clauseOf,
+  counterAsk,
+  answerTerms,
+  playerStance,
+  sellerStance,
+} from './deals';
 import { ceilingRange, eyeOf, levelRange } from './judgement';
 import { marketRound } from './rounds';
 import { bidFee, bidTerms, cannotTalk, myWageRoom, openTalk } from './talks';
