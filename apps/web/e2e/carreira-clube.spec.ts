@@ -257,20 +257,20 @@ for (const width of [360, 1280]) {
     expect((await picked).status()).toBe(200);
     await expect(page.getByRole('heading', { name: 'Elenco' })).toBeVisible();
     await expect(board.last()).not.toHaveAttribute('aria-label', before!);
-    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nível `));
 
     // Two board slots tapped in turn swap their players.
     const saved = () =>
       page.waitForResponse((r) => r.url().includes('still=1') && r.request().method() === 'PUT');
     const nameOn = async (i: number) =>
-      (await board.nth(i).getAttribute('aria-label'))!.split(': ')[1]!.split(', nota')[0]!;
+      (await board.nth(i).getAttribute('aria-label'))!.split(': ')[1]!.split(', nível')[0]!;
     const [na, nb] = [await nameOn(9), await nameOn(10)];
     let put = saved();
     await board.nth(9).click();
     await board.nth(10).click();
     expect((await put).status()).toBe(200);
-    await expect(board.nth(9)).toHaveAttribute('aria-label', new RegExp(`: ${nb}, nota `));
-    await expect(board.nth(10)).toHaveAttribute('aria-label', new RegExp(`: ${na}, nota `));
+    await expect(board.nth(9)).toHaveAttribute('aria-label', new RegExp(`: ${nb}, nível `));
+    await expect(board.nth(10)).toHaveAttribute('aria-label', new RegExp(`: ${na}, nível `));
 
     // A bench player (not a goalkeeper) tapped first, then his slot.
     const first = page
@@ -285,7 +285,7 @@ for (const width of [360, 1280]) {
     put = saved();
     await board.nth(10).click();
     expect((await put).status()).toBe(200);
-    await expect(board.nth(10)).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nota `));
+    await expect(board.nth(10)).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nível `));
 
     // The game plan: a high block.
     const kept = page.waitForResponse(
@@ -301,7 +301,7 @@ for (const width of [360, 1280]) {
     // The pick is kept on the server at once: a reload brings it back.
     await page.reload();
     await room(page, 'Vestiário').click();
-    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nota `), {
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nível `), {
       timeout: 30_000,
     });
     await expect(page.getByRole('button', { name: 'Alto' })).toHaveAttribute(
@@ -314,7 +314,7 @@ for (const width of [360, 1280]) {
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await room(page, 'Vestiário').click();
-    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nota `));
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nível `));
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );

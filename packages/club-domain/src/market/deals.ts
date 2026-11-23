@@ -15,6 +15,17 @@ import { squadPlanOf } from './plan';
 import { bargaining, seenValue } from './judgement';
 import { ageOf, goingWage, marketValue, readingsOf, thousands, yearsLeft } from './value';
 
+/** The most a clause can be: 20 times his value, 5 times from 31 on (real packs hold absurd ones). */
+export function clauseOf(pack: Pack, p: PackPlayer, season: number): number | null {
+  const fee = p.contract?.releaseFee ?? null;
+  if (fee === null) return null;
+  return Math.min(fee, Math.round(marketValue(pack, p, season) * (ageOf(p, season) > 30 ? 5 : 20)));
+}
+
+/** What the talk asks back by default: 20% over the bid, never under his value. */
+export const counterAsk = (bid: number, value: number): number =>
+  thousands(Math.max(bid * 1.2, value));
+
 /** Rounds of offer and counter-offer before a side walks away. */
 export const MAX_ROUNDS = 4;
 
@@ -75,7 +86,7 @@ export function sellerStance(
     floor,
     asking: thousands((floor * 125) / 100),
     why,
-    release: p.contract?.releaseFee ?? null,
+    release: clauseOf(seller.pack, p, season),
   };
 }
 

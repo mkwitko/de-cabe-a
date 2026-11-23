@@ -5,7 +5,7 @@
  * the player's sheet: Esc and the backdrop close it, focus goes back to what opened it.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { clausedFee } from '@decabeca/club-domain';
+import { clausedFee, counterAsk } from '@decabeca/club-domain';
 import { ClubBadge } from '../../../components/ClubBadge';
 import { btnPrimary, btnSecondary } from '../../../components/ui';
 import { t } from '../i18n';
@@ -113,7 +113,7 @@ type Act =
 type Clauses = { sellOn?: number; buyBack?: { price: number; seasons: number } };
 
 function Body({ bid, onAnswer }: { bid: BidView; onAnswer: (a: Act) => void }) {
-  const [fee, setFee] = useState(String(Math.round((bid.player.value * 12) / 10)));
+  const [fee, setFee] = useState(String(counterAsk(bid.fee, bid.player.value)));
   const [sellOn, setSellOn] = useState('0');
   const [back, setBack] = useState('');
   const [seasons, setSeasons] = useState('2');
@@ -126,6 +126,8 @@ function Body({ bid, onAnswer }: { bid: BidView; onAnswer: (a: Act) => void }) {
     }),
   };
   const asked = Math.round(Number(fee)) || 0;
+  // An ask at or under the bid is no counter: only accepting is left.
+  const under = asked <= bid.fee;
   const share = bid.player.value > 0 ? Math.round((bid.fee * 100) / bid.player.value) : 0;
   const p = bid.player;
   return (
@@ -226,6 +228,11 @@ function Body({ bid, onAnswer }: { bid: BidView; onAnswer: (a: Act) => void }) {
             onChange={(e) => setFee(e.target.value)}
             className={FIELD}
           />
+          {under && asked > 0 && (
+            <span role="alert" className="text-club-danger">
+              {t('bidTalk.under')}
+            </span>
+          )}
         </label>
         <div className="grid grid-cols-3 gap-2">
           <label className="flex flex-col gap-1 text-xs font-bold text-chalk-soft">
@@ -283,7 +290,7 @@ function Body({ bid, onAnswer }: { bid: BidView; onAnswer: (a: Act) => void }) {
           </button>
           <button
             type="button"
-            disabled={asked <= 0}
+            disabled={under}
             className={`${btnSecondary} min-h-12 px-3 text-base`}
             onClick={() => onAnswer({ answer: 'counter', fee: asked, clauses })}
           >

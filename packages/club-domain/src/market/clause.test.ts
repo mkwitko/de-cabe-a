@@ -5,7 +5,15 @@ import { withMoves } from '../career/market';
 import { loadCareer, saveCareer } from '../career/save';
 import { jobOffers, nationalDivisions } from '../career/start';
 import { dayOf } from '../competition/calendar';
-import { CLAUSE_TIMES, answerFee, answerTerms, playerStance, sellerStance } from './deals';
+import {
+  CLAUSE_TIMES,
+  answerFee,
+  clauseOf,
+  counterAsk,
+  answerTerms,
+  playerStance,
+  sellerStance,
+} from './deals';
 import { ceilingRange, eyeOf, levelRange } from './judgement';
 import { marketRound } from './rounds';
 import { bidFee, bidTerms, cannotTalk, myWageRoom, openTalk } from './talks';
@@ -28,6 +36,22 @@ describe('release clauses (07 §2)', () => {
     expect(stance.floor).toBeGreaterThan(clause);
     expect(answerFee(stance, clause, 1)).toEqual({ kind: 'accept', fee: clause });
     expect(answerFee(stance, clause - 1000, 1).kind).not.toBe('accept');
+  });
+
+  it('an absurd clause is capped by his value, tighter past 30', () => {
+    const p = pack.players.find((x) => x.contract && x.clubId)!;
+    const huge = { ...p, contract: { ...p.contract!, releaseFee: 99_000_000_000 } };
+    const young = { ...huge, birthDate: '2000-01-01' };
+    const old = { ...huge, birthDate: '1990-01-01' };
+    const v = (x: typeof p) => marketValue(pack, x, 2026);
+    expect(clauseOf(pack, young, 2026)).toBe(Math.round(v(young) * 20));
+    expect(clauseOf(pack, old, 2026)).toBe(Math.round(v(old) * 5));
+    expect(clauseOf(pack, { ...p, contract: { ...p.contract!, releaseFee: 1 } }, 2026)).toBe(1);
+  });
+
+  it('the default counter ask is 20% over the bid, never under his value', () => {
+    expect(counterAsk(69_000, 55_000)).toBe(83_000);
+    expect(counterAsk(30_000, 55_000)).toBe(55_000);
   });
 
   it('a clause he could leave by is worth wage to the player; a far one is not', () => {
