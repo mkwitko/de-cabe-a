@@ -50,6 +50,7 @@ export * from './market/plan';
 export * from './market/deals';
 export * from './market/books';
 export * from './market/rounds';
+export * from './market/scouts';
 export * from './market/talks';
 export * from './market/judgement';
 export * from './market/contracts';

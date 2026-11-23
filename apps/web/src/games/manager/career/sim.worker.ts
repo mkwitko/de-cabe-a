@@ -54,6 +54,8 @@ import {
   slotLevels,
   windowOpen,
   answerBid,
+  playerStance,
+  BID_DAYS,
   bidFee,
   bidTerms,
   cannotTalk,
@@ -189,6 +191,8 @@ export type SimRequest = { id: number } & (
   | { type: 'training' }
   /** The sheet of one of the person's players (own squad and academy only). */
   | { type: 'player'; playerId: string }
+  /** One bid for a player of the person's, as its talk stands (BidTalk.tsx). */
+  | { type: 'bid'; bidId: string }
   | { type: 'train'; intensity: Intensity }
   | { type: 'promote'; playerId: string }
   /** The market: the person's players to sell and the best of the others, by position. */
@@ -958,6 +962,32 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
 }
 
 /** One of the person's players as the sheet shows him: what the pack and the career hold. */
+/** A bid for one of the person's players, with all its talk needs (BidTalk.tsx). */
+export interface BidView {
+  id: string;
+  player: {
+    id: string;
+    name: string;
+    position: string;
+    age: number;
+    rating: number;
+    value: number;
+    wage: number;
+    until: number | null;
+    starter: boolean;
+  };
+  from: ClubFace & { division: string | null; reputation: number | null };
+  fee: number;
+  round: number;
+  maxRounds: number;
+  /** Days before the club drops the bid, unanswered. */
+  daysLeft: number;
+  /** The talk so far, oldest first; the opening bid alone while untouched. */
+  log: { iso: string; by: 'club' | 'you'; kind: 'bid' | 'counter' | 'refuse'; fee: number }[];
+  /** What the player makes of the move; null for a club abroad (only his will counts there). */
+  stance: { no: string | null; wage: number; years: number } | null;
+}
+
 export interface PlayerSheet {
   id: string;
   name: string;
@@ -992,6 +1022,46 @@ const ATTRIBUTE_GROUPS = {
   physical: PHYSICAL,
   goalkeeping: GOALKEEPING,
 } as const;
+
+function bidView(w: CareerWorld, id: string): BidView | null {
+  const b = (w.bids ?? []).find((x) => x.id === id && !x.again);
+  const p = b && w.pack.players.find((x) => x.id === b.player && x.clubId === w.clubId);
+  if (!b || !p) return null;
+  const season = w.season.season;
+  const buyer = w.pack.clubs.find((c) => c.id === b.from) ?? null;
+  const mine = w.pack.clubs.find((c) => c.id === w.clubId)!;
+  const division = buyer
+    ? (nationalDivisions(w.pack).find((d) => d.clubIds.includes(buyer.id))?.name ?? null)
+    : null;
+  const stance = buyer ? playerStance(w.pack, p, mine, buyer, season) : null;
+  return {
+    id,
+    player: {
+      id: p.id,
+      name: p.knownAs ?? p.name,
+      position: [...p.positions].sort((a, z) => z.level - a.level)[0]!.position,
+      age: season - Number(p.birthDate.slice(0, 4)),
+      rating: seenLevel(w.pack, w.clubId, p),
+      value: marketValue(w.pack, p, season),
+      wage: p.contract?.wage ?? 0,
+      until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
+      starter: lineupOf(w).xi.includes(p.id),
+    },
+    from: {
+      ...(buyer ? face(buyer) : ABROAD_FACES.find(([k]) => k === b.from)![1]),
+      division,
+      reputation: buyer?.reputation ?? null,
+    },
+    fee: b.fee,
+    round: b.round,
+    maxRounds: 3,
+    daysLeft: Math.max(0, BID_DAYS - (w.day - b.day)),
+    log: (b.log ?? [{ day: b.day, by: 'club' as const, kind: 'bid' as const, fee: b.fee }]).map(
+      (x) => ({ iso: isoOf(x.day), by: x.by, kind: x.kind, fee: x.fee }),
+    ),
+    stance: stance && { no: stance.no, wage: stance.wage, years: stance.years },
+  };
+}
 
 function playerSheet(w: CareerWorld, id: string): PlayerSheet | null {
   const p = w.pack.players.find((x) => x.id === id && x.clubId === w.clubId);
@@ -1082,6 +1152,7 @@ export interface SimReply {
   work?: { front: Front; no: WorkNo | null };
   squad?: SquadView;
   player?: PlayerSheet | null;
+  bid?: BidView | null;
   training?: TrainingView;
   market?: MarketView;
   /** matchStart: the two sides and which one is the person's. */
@@ -1559,6 +1630,10 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
           still: true,
         };
       self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
+      return;
+    }
+    if (world && r.type === 'bid') {
+      self.postMessage({ id: r.id, bid: bidView(world, r.bidId) } satisfies SimReply);
       return;
     }
     if (world && r.type === 'player') {

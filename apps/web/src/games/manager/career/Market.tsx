@@ -7,9 +7,9 @@
  */
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { btnPrimary, btnSecondary } from '../../../components/ui';
-import { clausedFee } from '@decabeca/club-domain';
 import { t } from '../i18n';
 import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
+import { useBidTalk } from './BidTalk';
 import type { MarketAct, MarketPlayer, MarketView, SimReply, SimRequest } from './sim.worker';
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
@@ -453,112 +453,28 @@ function LoanWith({ label, onGo }: { label: string; onGo: (k: (typeof KINDS)[num
   );
 }
 
-function BidRow({ bid, act }: { bid: MarketView['bids'][number]; act: Do }) {
-  const [fee, setFee] = useState(String(bid.fee));
-  const [sellOn, setSellOn] = useState('0');
-  const [back, setBack] = useState('');
-  const [seasons, setSeasons] = useState('2');
-  const bidId = bid.id;
-  const pct = Math.min(30, Math.max(0, Math.round(Number(sellOn)) || 0));
-  const price = back.trim() ? Math.min(200, Math.max(100, Math.round(Number(back)) || 100)) : 0;
-  const clauses = {
-    ...(pct > 0 && { sellOn: pct }),
-    ...(price > 0 && {
-      buyBack: { price, seasons: Math.min(3, Math.max(1, Math.round(Number(seasons)) || 1)) },
-    }),
-  };
-  const asked = Math.round(Number(fee)) || 0;
+function BidRow({
+  bid,
+  onOpen,
+}: {
+  bid: MarketView['bids'][number];
+  onOpen: (bidId: string, from: HTMLElement) => void;
+}) {
   return (
-    <li className="flex flex-col gap-3 border-t border-chalk/10 py-4 first:border-0 first:pt-0">
-      <Head p={bid.player} club={false} first />
-      <p className="font-semibold">
-        {t('market.bidText', {
-          club: bid.from.shortName,
-          fee: money(bid.fee),
-          name: bid.player.name,
-        })}
-      </p>
-      <div className="grid grid-cols-3 gap-2">
-        <label className="flex flex-col gap-1 text-xs font-bold text-chalk-soft">
-          {t('market.sellOnLabel')}
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={30}
-            value={sellOn}
-            onChange={(e) => setSellOn(e.target.value)}
-            className={FIELD}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-bold text-chalk-soft">
-          {t('market.buyBackLabel')}
-          <input
-            type="number"
-            inputMode="numeric"
-            min={100}
-            max={200}
-            value={back}
-            onChange={(e) => setBack(e.target.value)}
-            className={FIELD}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-bold text-chalk-soft">
-          {t('market.buyBackSeasons')}
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={3}
-            value={seasons}
-            onChange={(e) => setSeasons(e.target.value)}
-            className={FIELD}
-          />
-        </label>
-      </div>
-      {(pct > 0 || price > 0) && (
-        <p className="text-xs font-bold text-club-gold">
-          {t('market.netFee', {
-            fee: money(clausedFee(bid.fee, clauses)),
-            ask: money(clausedFee(asked, clauses)),
+    <li className="flex flex-wrap items-center gap-3 border-t border-chalk/10 py-3 first:border-0 first:pt-0">
+      <div className="min-w-0 flex-1">
+        <Head p={bid.player} club={false} first />
+        <p className="mt-1 font-semibold">
+          {t('market.bidText', {
+            club: bid.from.shortName,
+            fee: money(bid.fee),
+            name: bid.player.name,
           })}
         </p>
-      )}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[auto_auto_1fr_auto]">
-        <button
-          type="button"
-          className={GO}
-          onClick={() => act({ do: 'bid', bidId, answer: 'accept', clauses })}
-        >
-          {t('market.accept')}
-        </button>
-        <button
-          type="button"
-          className={SMALL}
-          onClick={() => act({ do: 'bid', bidId, answer: 'refuse' })}
-        >
-          {t('market.refuse')}
-        </button>
-        <label>
-          <span className="sr-only">{t('market.yourPrice')}</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1000}
-            value={fee}
-            onChange={(e) => setFee(e.target.value)}
-            className={FIELD}
-          />
-        </label>
-        <button
-          type="button"
-          className={SMALL}
-          onClick={() => act({ do: 'bid', bidId, answer: 'counter', fee: asked, clauses })}
-        >
-          {t('market.counter')}
-        </button>
       </div>
+      <button type="button" className={GO} onClick={(e) => onOpen(bid.id, e.currentTarget)}>
+        {t('bidTalk.open')}
+      </button>
     </li>
   );
 }
@@ -784,6 +700,11 @@ export function Market(props: {
   const [tab, setTab] = useState<Tab>('buy');
   const [more, setMore] = useState(false);
   const card = usePlayerSheet(ask, onError);
+  // A bid's talk; its answer brings the market back as it now stands.
+  const talk = useBidTalk(ask, onError, (r) => {
+    if (r.market) setView(r.market);
+    onDeal(r);
+  });
 
   useEffect(() => {
     ask({ type: 'market', position, club })
@@ -899,7 +820,7 @@ export function Market(props: {
           <h3 className={LABEL}>{t('market.bids')}</h3>
           <ul>
             {view.bids.map((b) => (
-              <BidRow key={`${b.id}-${b.fee}`} bid={b} act={act} />
+              <BidRow key={`${b.id}-${b.fee}`} bid={b} onOpen={talk.open} />
             ))}
           </ul>
         </div>
@@ -1153,6 +1074,7 @@ export function Market(props: {
         </div>
       )}
       {card.sheet}
+      {talk.talk}
     </section>
   );
 }

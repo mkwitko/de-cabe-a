@@ -70,7 +70,7 @@ export const ptBR = {
   'career.todoText':
     '{k, select, bid {O {club} fez proposta de {fee} por {name}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} leaveRequest {{name} pediu para sair.} other {{n} jogadores terminam o contrato este ano.}}',
   'career.todoGo':
-    '{k, select, bid {Responder no Mercado} approach {Ver convite} agentOffer {Ver no Mercado} leaveRequest {Responder no Mercado} other {Ver no Mercado}}',
+    '{k, select, bid {Negociar} approach {Ver convite} agentOffer {Ver no Mercado} leaveRequest {Responder no Mercado} other {Ver no Mercado}}',
   'guide.title': 'Primeiros passos',
   'guide.step': 'Primeiros passos: {n} de {total}',
   'guide.text':
@@ -225,6 +225,31 @@ export const ptBR = {
   'market.takeAsk': 'Aceitar o pedido',
   'market.bids': 'Propostas recebidas',
   'market.bidText': 'O {club} oferece {fee} por {name}.',
+  'bidTalk.title': 'Proposta recebida',
+  'bidTalk.close': 'Fechar',
+  'bidTalk.gone': 'Essa proposta já não está na mesa: foi respondida, retirada ou o prazo acabou.',
+  'bidTalk.club': '{known, select, true {{division}, reputação {rep}} other {Clube do exterior}}',
+  'bidTalk.player': '{name}, {pos}, {age} anos',
+  'bidTalk.rating': 'Nível',
+  'bidTalk.value': 'Valor de mercado',
+  'bidTalk.wage': 'Salário',
+  'bidTalk.until': 'Contrato até',
+  'bidTalk.noContract': 'Sem contrato',
+  'bidTalk.role':
+    '{starter, select, true {Titular no seu time hoje.} other {Não é titular no seu time hoje.}}',
+  'bidTalk.offer': 'A oferta',
+  'bidTalk.offerText':
+    '{share}% do valor de mercado. Rodada {round} de {rounds}. {days, plural, =0 {O prazo acaba hoje.} one {Falta # dia para o clube desistir.} other {Faltam # dias para o clube desistir.}}',
+  'bidTalk.him': 'O que ele pensa',
+  'bidTalk.stance':
+    '{no, select, loyal {Ele é fiel ao clube e prefere ficar.} stepDown {Ele não quer descer de nível.} role {Ele não aceita o papel que teria lá.} other {Ele aceita ir. Pediria {wage} por mês por {years, plural, one {# ano} other {# anos}}.}}',
+  'bidTalk.history': 'A conversa',
+  'bidTalk.step':
+    '{by, select, club {{kind, select, refuse {{club} recusou.} other {{club} ofereceu.}}} other {{kind, select, counter {Você pediu.} refuse {Você recusou.} other {Você respondeu.}}}}',
+  'bidTalk.answer': 'Sua resposta',
+  'bidTalk.accept': 'Aceitar {fee}',
+  'bidTalk.counter': 'Pedir {fee}',
+  'bidTalk.open': 'Negociar',
   'market.accept': 'Aceitar',
   'market.refuse': 'Recusar',
   'market.yourPrice': 'Seu preço em reais',
