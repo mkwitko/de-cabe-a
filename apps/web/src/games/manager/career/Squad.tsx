@@ -1,9 +1,11 @@
 /**
- * The dressing room: the formation on a tactics board and the squad on the bench slab. Tap a
- * slot, then the player who takes it; a player already on the board swaps places. Every change
- * goes to the worker at once and counts from the next match (club-domain career/squad.ts).
+ * The dressing room: the formation on a tactics board and the squad on the bench slab. Either
+ * tap a slot then the player who takes it, or a player then his slot; two slots tapped in turn
+ * swap their players, and on a desktop a player can be dragged onto a slot. A player already on
+ * the board swaps places. Every change goes to the worker at once and counts from the next match
+ * (club-domain career/squad.ts).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../../../components/Icon';
 import { btnSecondary } from '../../../components/ui';
 import { PlanFields } from '../FriendlyPage';
@@ -39,6 +41,10 @@ export function Squad(props: {
   const [squad, setSquad] = useState<SquadView | null>(null);
   const [slot, setSlot] = useState<number | null>(null);
   const card = usePlayerSheet(ask, onError);
+  /** A player picked first, waiting for his slot. */
+  const [picked, setPicked] = useState<string | null>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const board = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ask({ type: 'squad' })
@@ -52,18 +58,42 @@ export function Squad(props: {
       .then((r) => {
         setSquad(r.squad ?? null);
         setSlot(null);
+        setPicked(null);
         onPicked(r);
       })
       .catch((e: Error) => onError(e.message));
   const byId = new Map(squad.players.map((p) => [p.id, p]));
-  const keeperSlot = slot !== null && squad.slots[slot]!.role.toLowerCase().includes('keeper');
-  const take = (id: string) => {
-    if (slot === null) return;
+  const isKeeperSlot = (i: number) => squad.slots[i]!.role.toLowerCase().includes('keeper');
+  const keeperSlot = slot !== null && isKeeperSlot(slot);
+  /** Whether this player may take that slot: goalkeepers in goal only, and nobody out. */
+  const fits = (id: string, i: number) => {
+    const p = byId.get(id)!;
+    return p.keeper === isKeeperSlot(i) && p.out === null && !p.banned;
+  };
+  const put = (id: string, at: number) => {
     const xi = [...squad.xi];
     const from = xi.indexOf(id);
-    if (from >= 0) xi[from] = xi[slot]!;
-    xi[slot] = id;
+    if (from === at) return;
+    if (from >= 0) xi[from] = xi[at]!;
+    xi[at] = id;
     void send(squad.formation, xi);
+  };
+  const take = (id: string) => {
+    if (slot !== null) return put(id, slot);
+    // No slot yet: the player waits for one, on the board.
+    setPicked(picked === id ? null : id);
+    if (picked !== id) board.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  const tapSlot = (i: number) => {
+    if (picked !== null) return fits(picked, i) ? put(picked, i) : undefined;
+    // A second slot: the two players swap places.
+    if (slot !== null && slot !== i) {
+      const other = squad.xi[i]!;
+      if (fits(other, slot) && fits(squad.xi[slot]!, i)) return put(other, slot);
+    }
+    const next = slot === i ? null : i;
+    setSlot(next);
+    if (next !== null) list.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
   const rows = [...squad.players].sort((a, b) =>
     slot === null
@@ -113,7 +143,12 @@ export function Squad(props: {
             </button>
           ))}
         </div>
-        <div className="sala-board relative aspect-[68/80] w-full">
+        {picked !== null && (
+          <p className="text-sm font-bold text-club-gold" aria-live="polite">
+            {t('squad.placing', { name: byId.get(picked)!.name })}
+          </p>
+        )}
+        <div ref={board} className="sala-board relative aspect-[68/80] w-full">
           {squad.slots.map((s, i) => {
             const p = byId.get(squad.xi[i]!)!;
             const role = t('squad.role', { r: s.role });
@@ -130,10 +165,16 @@ export function Squad(props: {
                 })}
                 className="sala-magnet absolute flex w-[4.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
                 style={place(s)}
-                onClick={() => setSlot(slot === i ? null : i)}
+                onClick={() => tapSlot(i)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const id = e.dataTransfer.getData('text/plain');
+                  if (byId.has(id) && fits(id, i)) put(id, i);
+                }}
               >
                 <span
-                  className={`grid size-10 place-items-center rounded-full border-2 font-condensed text-lg leading-none font-black tabular-nums shadow-[0_6px_10px_-4px_rgb(0_0_0/0.8)] ${slot === i ? 'border-ink bg-club-gold text-ink' : p.known[i]! < 2 ? 'border-dashed border-club-danger bg-club-night text-chalk' : 'border-chalk bg-[var(--club-a,#1c3a2a)] text-chalk'}`}
+                  className={`grid size-10 place-items-center rounded-full border-2 font-condensed text-lg leading-none font-black tabular-nums shadow-[0_6px_10px_-4px_rgb(0_0_0/0.8)] ${slot === i ? 'border-ink bg-club-gold text-ink' : picked !== null && fits(picked, i) ? 'animate-pulse border-club-gold bg-club-night text-chalk' : p.known[i]! < 2 ? 'border-dashed border-club-danger bg-club-night text-chalk' : 'border-chalk bg-[var(--club-a,#1c3a2a)] text-chalk'}`}
                 >
                   {p.fit[i]}
                 </span>
@@ -161,7 +202,7 @@ export function Squad(props: {
         </div>
       </div>
 
-      <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
+      <div ref={list} className="sala-slab flex min-w-0 scroll-mt-4 flex-col gap-3 p-4 sm:p-5">
         <h3 className={LABEL}>
           {slot === null
             ? t('squad.list')
@@ -186,11 +227,9 @@ export function Squad(props: {
             const at = squad.xi.indexOf(p.id);
             const n = slot === null ? p.best.rating : p.fit[slot]!;
             const able =
-              slot !== null &&
-              p.keeper === keeperSlot &&
-              at !== slot &&
-              p.out === null &&
-              !p.banned;
+              slot === null
+                ? p.out === null && !p.banned
+                : p.keeper === keeperSlot && at !== slot && p.out === null && !p.banned;
             const tone = toneOf(p.out !== null, p.fresh);
             // The bench starts where the eleven ends (the list is sorted starters first).
             const bench = slot === null && at < 0 && k > 0 && squad.xi.includes(rows[k - 1]!.id);
@@ -202,13 +241,16 @@ export function Squad(props: {
                 <button
                   type="button"
                   disabled={!able}
+                  draggable={able}
+                  onDragStart={(e) => e.dataTransfer.setData('text/plain', p.id)}
+                  aria-pressed={picked === p.id}
                   aria-label={t('squad.choose', {
                     name: p.name,
                     age: p.age,
                     n,
                     known: t('squad.known', { l: slot === null ? 3 : p.known[slot]! }),
                   })}
-                  className={`${ROW} min-h-12 min-w-0 flex-1 py-1.5 text-left enabled:hover:bg-chalk/6 disabled:cursor-default`}
+                  className={`${ROW} min-h-12 min-w-0 flex-1 py-1.5 text-left enabled:hover:bg-chalk/6 disabled:cursor-default ${picked === p.id ? 'bg-club-gold/15' : ''}`}
                   onClick={() => take(p.id)}
                 >
                   <span

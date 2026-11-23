@@ -422,7 +422,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     [keep, career.id],
   );
 
-  const step = (type: 'play' | 'nextSeason') => {
+  const step = (type: 'play' | 'nextSeason' | 'skipPreseason') => {
     if (!ask) return;
     setBusy(true);
     const t0 = performance.now();
@@ -623,14 +623,18 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
               <span className="hidden lg:inline">{t('career.room', { r: room })}</span>
             </h1>
             <p className="mt-1 truncate text-xs font-semibold text-chalk-soft lg:hidden">
-              {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
+              {t('career.dateLong', {
+                d: new Date(`${sim.preseason?.iso ?? sim.deadline ?? sim.today}T12:00:00Z`),
+              })}
             </p>
           </div>
           <dl className="flex shrink-0 items-center gap-6 text-right">
             <div className="hidden lg:block">
               <dt className="text-xs font-semibold text-chalk-soft">{t('career.today')}</dt>
               <dd className="font-condensed text-xl leading-tight font-extrabold uppercase">
-                {t('career.dateLong', { d: new Date(`${sim.today}T12:00:00Z`) })}
+                {t('career.dateLong', {
+                  d: new Date(`${sim.preseason?.iso ?? sim.deadline ?? sim.today}T12:00:00Z`),
+                })}
               </dd>
             </div>
             <div>
@@ -751,7 +755,9 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                 onWatch={watch}
                 onPlay={() => step('play')}
                 onNextSeason={() => step('nextSeason')}
-                onMarket={() => setRoom('mercado')}
+                onSkip={() => step('skipPreseason')}
+                onMarket={() => go('mercado')}
+                onTraining={() => go('treino')}
               />
               <section className="sala-desk grid min-w-0 lg:grid-cols-[1.4fr_1fr]">
                 <Inbox sim={sim} onGo={go} />
@@ -936,10 +942,86 @@ function NextMatch(props: {
   onWatch: (w: Watch) => void;
   onPlay: () => void;
   onNextSeason: () => void;
+  onSkip: () => void;
   onMarket: () => void;
+  onTraining: () => void;
 }) {
   const { sim, busy, stage } = props;
   const next = sim.next;
+  if (sim.preseason)
+    return (
+      <section aria-labelledby="career-next" className="sala-window flex flex-col justify-end">
+        <div className="sala-glass mx-auto flex w-full max-w-2xl flex-col items-center gap-4 text-center">
+          <p className="font-condensed text-sm font-extrabold tracking-wide text-chalk-soft uppercase">
+            {t('career.dateLong', { d: new Date(`${sim.preseason.iso}T12:00:00Z`) })}
+          </p>
+          <h3
+            id="career-next"
+            className="font-condensed text-3xl leading-none font-black text-club-gold uppercase sm:text-5xl"
+          >
+            {t('career.preseason')}
+          </h3>
+          <p className="text-balance">
+            {t('career.preseasonText', {
+              n: sim.preseason.days,
+              d: new Date(`${sim.preseason.debut}T12:00:00Z`),
+            })}
+          </p>
+          {next && (
+            <div className="flex w-full flex-col items-center gap-2 border-t border-chalk/15 pt-3">
+              <p className="font-condensed text-lg font-extrabold text-club-gold uppercase">
+                {t('career.preseasonDebut')}
+              </p>
+              <div className="flex items-center gap-3">
+                <Crest club={next.home} size="lg" />
+                <span className="font-condensed text-2xl font-black text-club-gold">×</span>
+                <Crest club={next.away} size="lg" />
+              </div>
+              <p className="text-sm font-semibold text-balance">
+                {next.home.shortName} × {next.away.shortName}
+                <span className="mx-2 text-club-gold">/</span>
+                {competitionLabel(next)}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-balance text-chalk-soft">{t('career.preseasonWhy')}</p>
+          <div className="grid w-full max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80`}
+              onClick={props.onTraining}
+            >
+              {t('career.preseasonTraining')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80`}
+              onClick={props.onMarket}
+            >
+              {t('career.deadlineMarket')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnPrimary} min-h-13 bg-club-gold`}
+              onClick={props.onPlay}
+            >
+              {t('career.preseasonDay')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80`}
+              onClick={props.onSkip}
+            >
+              {t('career.preseasonSkip')}
+            </button>
+          </div>
+        </div>
+      </section>
+    );
   if (sim.deadline)
     return (
       <section aria-labelledby="career-next" className="sala-window flex flex-col justify-end">

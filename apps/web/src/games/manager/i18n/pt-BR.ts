@@ -115,7 +115,8 @@ export const ptBR = {
   'squad.list': 'Elenco',
   'squad.pick': 'Quem joga de {role}?',
   'squad.hint':
-    'Toque numa posição do campo para trocar o jogador. A escolha vale no próximo jogo.',
+    'Toque numa posição do campo e depois no jogador, ou no jogador e depois na posição. Duas posições seguidas trocam os jogadores de lugar. No computador, dá para arrastar. A escolha vale no próximo jogo.',
+  'squad.placing': 'Toque na posição de {name} no campo.',
   'squad.slot': '{role}: {name}, nota {n}, {known}',
   'squad.choose': '{name}, {age} anos, nota {n}, {known}',
   'squad.starter': 'Titular',
@@ -556,6 +557,15 @@ export const ptBR = {
     'Artilheiro da divisão: {name} ({club}), {n, plural, one {# gol} other {# gols}}',
   'history.scorer': 'Artilheiro: {name} ({n, plural, one {# gol} other {# gols}})',
   'history.top': 'Mais utilizado: {name} ({n, plural, one {# jogo} other {# jogos}})',
+  'career.preseason': 'Pré-temporada',
+  'career.preseasonText':
+    '{n, plural, one {Falta # dia} other {Faltam # dias}} para a estreia, em {d, date, long}.',
+  'career.preseasonDebut': 'Estreia',
+  'career.preseasonWhy':
+    'O elenco se reapresentou. A janela está aberta: monte o grupo, ajuste o treino e avance um dia de cada vez.',
+  'career.preseasonTraining': 'Treino',
+  'career.preseasonDay': 'Avançar um dia',
+  'career.preseasonSkip': 'Ir para a estreia',
   'career.deadline': 'Último dia da janela',
   'career.deadlineText':
     'A janela de transferências fecha em {d, date, long}. Depois dela, só dá para contratar jogadores sem clube.',
