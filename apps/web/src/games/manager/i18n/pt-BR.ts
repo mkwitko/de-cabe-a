@@ -145,7 +145,8 @@ export const ptBR = {
   'scouts.position': 'Posição',
   'scouts.anyPosition': 'Qualquer posição',
   'scouts.reports': 'Relatórios',
-  'scouts.noReports': 'Nenhum relatório ainda. Mande um olheiro em missão: ele volta em quatro semanas.',
+  'scouts.noReports':
+    'Nenhum relatório ainda. Mande um olheiro em missão: ele volta em quatro semanas.',
   'scouts.report':
     '{date} · {scout} · {area}: {n, plural, one {# jogador} other {# jogadores}}, {good, plural, =0 {nenhum recomendado} one {# recomendado} other {# recomendados}}',
   'scouts.gradeWhy':
