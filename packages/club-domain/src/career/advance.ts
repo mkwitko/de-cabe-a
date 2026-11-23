@@ -64,6 +64,7 @@ import { codeOf, withImports, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
+import { withAcademy } from './academy';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
 import { postOwners } from './finance';
@@ -139,6 +140,8 @@ export interface CareerWorld {
   cold?: Record<string, number>;
   /** The boys of the person's academy, by id: under contract, out of the first team. */
   academy?: string[];
+  /** The club whose youth teams joined the world on day one (academy.ts); kept to rebuild it. */
+  boysOf?: string;
   /** Months of wages the person's club owes its squad (arrears.ts); absent when paid up. */
   arrears?: number;
   /** The other clubs' coaches as their boards see them (coaches.ts). */
@@ -428,7 +431,9 @@ function debutOf(w: CareerWorld): number | null {
 }
 
 /** The world as it stands after `day`: the start, then every match day up to it. */
-export function openCareer(base: Pack, seed: number, clubId: string, day = 0): CareerWorld {
+export function openCareer(given: Pack, seed: number, clubId: string, day = 0): CareerWorld {
+  // The club's boys join the world on day one, in its academy (academy.ts).
+  const { pack: base, academy } = withAcademy(given, seed, clubId);
   // The career's own pack object: what is read and kept beside it (the clubs' opinions, their
   // plans) belongs to this career alone, while the readings already made of `base` carry over.
   const opening = { ...base };
@@ -445,6 +450,7 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
     day: 0,
     hired: start.season.season,
     ...clubLevels(pack, start.season.season),
+    ...(academy.length > 0 && { academy, boysOf: clubId }),
   };
   note(w, { day: 0, kind: 'welcome' });
   cupNotes(w, 0, new Set(), 0);

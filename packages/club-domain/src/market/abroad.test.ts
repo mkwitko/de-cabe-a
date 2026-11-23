@@ -32,7 +32,7 @@ describe('the exodus abroad', () => {
     }
     // The person's club gets bids to answer, never a sale behind its back.
     expect(w.pack.players.filter((p) => p.clubId === clubId).length).toBe(
-      pack.players.filter((p) => p.clubId === clubId).length,
+      pack.players.filter((p) => p.clubId === clubId).length + (w.academy?.length ?? 0),
     );
     for (const b of w.bids ?? []) expect(isAbroad(b.from)).toBe(true);
   });
