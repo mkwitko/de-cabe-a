@@ -1,3 +1,4 @@
+/* global process, Buffer, console, Image, document, localStorage -- Node script driving a browser page */
 // PNG to WebP through the browser's own encoder (no image library in this repo).
 // Usage: node scripts/png-to-webp.mjs in.png out.webp [quality 0..1]
 import { chromium } from '@playwright/test';

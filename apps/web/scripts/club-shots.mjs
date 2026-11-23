@@ -1,3 +1,4 @@
+/* global process, Buffer, console, Image, document, localStorage -- Node script driving a browser page */
 // Product shots for the home's pitch: the real career screens, saved as WebP through the browser.
 import { chromium } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
