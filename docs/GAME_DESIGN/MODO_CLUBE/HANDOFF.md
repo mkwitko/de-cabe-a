@@ -208,6 +208,21 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
     - bloco baixo contra posse: o time de posse cria cerca de metade do `xG` do nível 1;
     - jogo direto contra linha alta: o jogo direto cria cerca de metade.
   - Defesa de segurança continua em aberto.
+- **Nível 2, terceira rodada** (2026-11-23).
+  - Diagnóstico: perfil de jogada por lado comparado ao nível 1 (onde a bola é recebida e roubada, de onde nasce cada chute). Mesmo no confronto equilibrado o nível 2 acertava o total por compensação: perdia a bola no meio-campo 65% mais, recebia metade das bolas no último terço e chutava o dobro depois de passe em profundidade.
+  - A calibragem passou a usar esse perfil como alvo, junto com o resultado (ferramenta fora do repositório).
+  - Mecanismos novos ou corrigidos:
+    - o bloco que senta não sai para quem recebe na frente dele; o que pressiona sai (`closeEngage`, também no risco do passe para frente);
+    - grama atrás da linha para a bola em profundidade (`throughSpace`);
+    - a pressão do plano some perto do próprio gol (`pressFade`) e só parte dela vira desarme (`pressChallenge`);
+    - quem dá o bote é quem está à frente da bola, como na pressão;
+    - a defesa segue a bola com atraso depois de um lançamento (`shapeSpeed`, `shapeLag`);
+    - bola longa: teto de acerto (`longLand`), parte das perdidas vai para lateral (`longOut`) e parte cai dividida (`longLoose`);
+    - escala de faltas do nível 2 (`foulRate`);
+    - goleiro sem ninguém ao alcance dá chutão para o mais adiantado (antes a partida quebrava).
+  - Tempo de bola rolando: laterais e faltas em excesso deixavam só uns 40 minutos de jogo, por isso faltavam passes e chutes.
+  - Relatório no conjunto de calibragem: 65 reprovações, contra 94 antes. Placar, vitórias e saldo batem em quase todos os confrontos. O empate só pode passar com 2.500 partidas; ele é julgado na validação. Bloco baixo contra posse: saldo -0,96 contra -0,91 (antes perto de zero).
+  - Pendente: chutes cerca de 10 a 15% abaixo; escanteios acima; impedimentos e cartões acima nos confrontos de linha alta e pressão; jogo direto contra linha alta ainda cria menos.
 - **Disputas aéreas: origem medida** (60 partidas, 15,1 por jogo contra cerca de 25).
   - Passe longo em jogo corrido 7,5; escanteio 3,6; passe por cima 1,3; afastamento 0,7; cruzamento em jogo corrido 0,6; falta 0,5; tiro de meta 0,5; bola longa do goleiro em jogo corrido 0,3.
   - Tiro de meta e reposição do goleiro quase não geram disputa: há só 1,4 tiro de meta longo por time.
