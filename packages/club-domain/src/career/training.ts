@@ -26,7 +26,7 @@ import {
   type Lineup,
 } from './squad';
 import { formationOf } from '../match/fixture-input';
-import { MISSING, rivalOut } from './health';
+import { MISSING, rested, rivalOut } from './health';
 import { bannedStarters } from './discipline';
 import { calledOf } from './callups';
 import { clubStrengthOf } from '../match/quick';
@@ -335,7 +335,7 @@ export const rivalStrength = (w: CareerWorld, clubId: string, day: number): numb
   (w.eleven.get(clubId) ?? 0) *
     (1 -
       freshFactor(rivalFresh(w, clubId, day)) +
-      ((rivalOut(w, clubId, day) +
+      ((Math.min(10, rivalOut(w, clubId, day) + rested(w, clubId, day)) +
         bannedStarters(w, clubId, day) +
         calledOf(w, clubId, day).length) *
         MISSING) /
