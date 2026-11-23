@@ -63,6 +63,11 @@ roll() {
   echo "==> $svc: trocado"
 }
 
+# Every release leaves about 1.5 GB of build cache (the dependency layers come after `COPY . .`,
+# so no release reuses them), and a plain `builder prune` only drops dangling records: the disk
+# filled in a day of releases. Drop all of it, before the build too, so a failed release cannot
+# leave the next one without room.
+docker builder prune -af >/dev/null 2>&1 || true
 echo "==> Construindo (o site antigo segue no ar)"
 $COMPOSE build api web
 $COMPOSE up -d --no-build postgres --wait
@@ -84,4 +89,4 @@ fi
 $COMPOSE up -d --no-deps --no-build edge
 
 docker image prune -f >/dev/null 2>&1 || true
-docker builder prune -f >/dev/null 2>&1 || true
+docker builder prune -af >/dev/null 2>&1 || true
