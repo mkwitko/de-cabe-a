@@ -26,8 +26,8 @@ export const BANDS = {
   T1mean: 1.5,
   T1max: 3,
   T1maxInBox: 4,
-  /** Last-line gap, by block: a low block's line marks the box runners (ADR-018 item 7, 2026-11-19). */
-  T2backGapP95: { low: 23, mid: 22, high: 22 },
+  /** Last-line gap, by block: a low block's line marks the box runners (ADR-018 item 7, 2026-11-19; low 24 m since 2026-11-23). */
+  T2backGapP95: { low: 24, mid: 22, high: 22 },
   /** Between back and midfield lines, by block: a high press stretches it (context cell). */
   T2betweenLinesP95: { low: 22, mid: 22, high: 30 },
   T3per10min: 1,

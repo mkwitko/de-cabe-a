@@ -111,7 +111,17 @@ const COUNTER_OUTLET = 60;
 /** A low block holds its line at the edge of the box, not on the penalty spot (research 13 §3). PARAMETERS. */
 const LOW_FLOOR_EXTRA: Record<Line, number> = { gk: 0, def: 4, mid: 3, att: 0 };
 const STEP_UP: Record<Line, number> = { gk: 1.5, def: 4, mid: 3, att: 2 };
-const BLOCK_SHIFT = { high: 9, mid: 0, low: -9 } as const;
+/**
+ * Out of possession a high block pushes the whole shape up. A low block drops only its midfield
+ * and forwards, onto the back line: its back line height comes from BLOCK_TOP and LOW_FLOOR_EXTRA.
+ * Dropping the back line 9 m as well packed the team on its own goal line and gave equal opponents
+ * +0.7 goals a match (low vs default 0.72-2.13, now 0.96-1.44; holdout cells, 2026-11-23). PARAMETERS.
+ */
+const BLOCK_SHIFT: Record<'high' | 'mid' | 'low', Record<Line, number>> = {
+  high: { gk: 0, def: 9, mid: 9, att: 9 },
+  mid: { gk: 0, def: 0, mid: 0, att: 0 },
+  low: { gk: 0, def: 0, mid: -4, att: -4 },
+};
 /**
  * Box defence (research 18 §1, Forcher et al. 2024): with the ball near our goal the lines
  * stay goal-side of it, the back line at least GOAL_SIDE metres deeper than the ball, never
@@ -150,7 +160,7 @@ export function anchors(
     const fx =
       line === 'def' && !inPossession && t.block === 'high' ? FOLLOW_X_HIGH_DEF : FOLLOW_X[line];
     let x = b.x + (focal.x - CENTER.x) * fx + (t.lineHeight - 3) * STEP_UP[line];
-    if (!inPossession && line !== 'gk') x += BLOCK_SHIFT[t.block];
+    if (!inPossession) x += BLOCK_SHIFT[t.block][line];
     let y = inPossession
       ? CENTER.y + (b.y - CENTER.y) * widthScale + (focal.y - CENTER.y) * FOLLOW_Y[line]
       : CENTER.y +

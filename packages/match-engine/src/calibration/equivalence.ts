@@ -3,6 +3,8 @@
  *
  *   pnpm --filter @decabeca/match-engine exec tsx src/calibration/equivalence.ts [n] [set]
  *
+ * `holdout` runs the held-out cells (HOLDOUT), never used to fit.
+ *
  * `set` is `calibration` (where the level 2 constants are fitted) or `validation` (where the
  * verdict is read; never fit on it). Level 1 summaries are cached in L1_CACHE (default
  * .cache/equivalence under the package): they take minutes, level 2 takes seconds.
@@ -56,8 +58,45 @@ export const CELLS: Record<string, Cell> = {
   directVsHighLine: pair(65, 65, PLANS.direct, PLANS.highLine),
 };
 
-/** Seed sets that never mix (§2.1 item 1). */
-export const SEED_SETS = { calibration: 100_000, validation: 200_000 } as const;
+/**
+ * Held-out cells: style pairings the fit never sees. They check that level 2 generalises to the
+ * career's other tactical mixes instead of memorising the six cells above.
+ */
+export const HOLDOUT: Record<string, Cell> = {
+  highLineVsLow: pair(65, 65, PLANS.highLine, PLANS.low),
+  pressVsDirect: pair(65, 65, PLANS.press, PLANS.direct),
+  possessionVsPress: pair(65, 65, PLANS.possession, PLANS.press),
+  directVsLow: pair(65, 65, PLANS.direct, PLANS.low),
+  favouritePressVsLow: pair(70, 60, PLANS.press, PLANS.low),
+  /** The career's spread: every match draws both plans and strengths at random (seeded). */
+  randomMix: (seed) => {
+    const r = rngFrom(seed * 7 + 3);
+    const pick = <T>(xs: readonly T[]) => xs[Math.floor(next(r) * xs.length)]!;
+    const lv = () => 1 + Math.floor(next(r) * 5);
+    const plan = () =>
+      style(pick(['4-3-3', '4-4-2', '4-2-3-1', '4-1-4-1', '3-5-2']), {
+        buildUp: pick(['short', 'mixed', 'long'] as const),
+        progression: pick(['circulate', 'vertical', 'wide', 'central'] as const),
+        block: pick(['high', 'mid', 'low'] as const),
+        tempo: lv(),
+        risk: lv(),
+        lineHeight: lv(),
+        pressIntensity: lv(),
+        onWin: pick(['counter', 'keep'] as const),
+        onLoss: pick(['counterPress', 'regroup'] as const),
+        offsideTrap: next(r) < 0.3,
+      });
+    const sa = 58 + Math.floor(next(r) * 15);
+    const sb = 58 + Math.floor(next(r) * 15);
+    const A = teamInput(seed * 2 + 1, sa, plan(), `a${seed}`);
+    const B = teamInput(seed * 2 + 2, sb, plan(), `b${seed}`);
+    return { input: matchInput(seed, A, B), a: 0 };
+  },
+};
+const ALL: Record<string, Cell> = { ...CELLS, ...HOLDOUT };
+
+/** Seed sets that never mix (§2.1 item 1); `holdout` runs the held-out cells only. */
+export const SEED_SETS = { calibration: 100_000, validation: 200_000, holdout: 300_000 } as const;
 
 // ── Metrics and frozen margins (§2.1 items 2 and 5) ─────────────────────────
 
@@ -209,8 +248,8 @@ async function level1(cell: string, set: keyof typeof SEED_SETS, inputs: MatchIn
 }
 
 export function inputsFor(cell: string, set: keyof typeof SEED_SETS, n: number) {
-  const base = SEED_SETS[set] + Object.keys(CELLS).indexOf(cell) * 10_000;
-  return Array.from({ length: n }, (_, i) => CELLS[cell]!(base + i, i));
+  const base = SEED_SETS[set] + Object.keys(ALL).indexOf(cell) * 10_000;
+  return Array.from({ length: n }, (_, i) => ALL[cell]!(base + i, i));
 }
 
 async function main() {
@@ -218,7 +257,7 @@ async function main() {
   const set = (process.argv[3] ?? 'calibration') as keyof typeof SEED_SETS;
   const only = process.argv[4]?.split(',');
   let failed = 0;
-  for (const cell of Object.keys(CELLS)) {
+  for (const cell of Object.keys(set === 'holdout' ? HOLDOUT : CELLS)) {
     if (only && !only.includes(cell)) continue;
     const built = inputsFor(cell, set, n);
     const s1 = await level1(

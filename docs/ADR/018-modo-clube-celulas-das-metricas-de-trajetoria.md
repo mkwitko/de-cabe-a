@@ -39,3 +39,7 @@ Não há medição separada de quanto cada linha mudou sozinha; a ordem foi comp
 - Os seis cenários passam em todas as oito sementes.
 - As definições 2, 3 e 5 tiram quadros da medida. O que sai não fica sem teste: a recuperação depois da perda e o contra-ataque são medidos em MC-257 (transição), e a defesa de área em MC-203 (T1 na área já existe).
 - Risco: célula bem escolhida também esconde defeito. Por isso a prova continua valendo só como portão de arquitetura; o efeito das instruções em campo é medido pelos testes causais (MC-060) e pela avaliação do dono (MC-048).
+
+## Item 7, revisão (2026-11-23, com aceite do dono)
+
+O limite T2 do vão da última linha no bloco baixo passa de 23 m para 24 m, ainda abaixo dos 25 m da proposta original. Motivo: os confrontos de controle (holdout) mostraram que a retranca da partida assistida cedia 2,13 gols por jogo a um adversário de mesma força, com 3,48 contra linha alta. A causa era o recuo de 9 m de todo o time sem a bola (`BLOCK_SHIFT` em `team.ts`), que colava a zaga no próprio gol. Agora a zaga do bloco baixo não recua além do piso, e meio e ataque recuam 4 m. Contra o plano padrão, a retranca vai de 0,72×2,13 para 0,96×1,44, com 2,40 gols por jogo contra 2,53 do bloco médio. Com a zaga um pouco mais alta, o cenário S3 abre 23,7 m entre zagueiros em 1 semente.
