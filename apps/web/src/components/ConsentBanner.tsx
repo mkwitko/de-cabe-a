@@ -76,7 +76,7 @@ export function ConsentBanner() {
         if (reopened) closeConsentPanel();
         setConfiguring(false);
       }}
-      className={`fixed inset-x-3 z-40 mx-auto flex max-w-2xl flex-col overflow-y-auto rounded-xl bg-paper text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.55)] outline-none ${
+      className={`fixed inset-x-3 z-40 mx-auto flex max-w-2xl ${onLevel && !settings ? 'flex-row items-center' : 'flex-col'} overflow-y-auto rounded-xl bg-paper text-ink shadow-[0_18px_40px_-12px_rgb(0_0_0/0.55)] outline-none ${
         onLevel
           ? 'top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(100dvh-16rem)] gap-2 p-2.5'
           : 'bottom-20 max-h-[calc(100dvh-6rem)] gap-3 p-4 sm:bottom-6'
@@ -113,7 +113,13 @@ export function ConsentBanner() {
         </>
       ) : (
         <>
-          <p className={onLevel ? 'text-sm leading-tight' : 'text-sm'}>
+          <p
+            className={
+              onLevel
+                ? 'flex min-w-0 flex-1 items-center gap-x-2 text-sm leading-tight whitespace-nowrap'
+                : 'text-sm'
+            }
+          >
             {onLevel ? null : (
               <>
                 Usamos um cookie necessário para o jogo funcionar. Com sua permissão, também usamos
@@ -123,10 +129,13 @@ export function ConsentBanner() {
             )}
             {onLevel ? (
               <>
-                <Link to="/cookies" className="font-semibold underline underline-offset-4">
+                <Link
+                  to="/cookies"
+                  className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+                >
                   Cookies
                 </Link>{' '}
-                extras só com permissão
+                <span className="max-sm:sr-only">extras só com permissão</span>
               </>
             ) : (
               <Link to="/cookies" className="font-semibold underline underline-offset-4">
@@ -135,10 +144,9 @@ export function ConsentBanner() {
             )}
             {onLevel && (
               <>
-                {' · '}
                 <button
                   type="button"
-                  className="font-semibold underline underline-offset-4"
+                  className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
                   onClick={() => setConfiguring(true)}
                 >
                   Configurar
@@ -146,14 +154,21 @@ export function ConsentBanner() {
               </>
             )}
           </p>
-          <div className={onLevel ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
+          <div
+            className={
+              onLevel ? 'grid shrink-0 grid-cols-2 gap-1.5 sm:gap-2' : 'flex flex-wrap gap-2'
+            }
+          >
             <button
-              className={`${btn} bg-ink text-paper`}
+              className={`${btn} bg-ink text-paper max-sm:px-2 max-sm:text-sm`}
               onClick={() => save({ analytics: true })}
             >
               Aceitar
             </button>
-            <button className={btn} onClick={() => save({ analytics: false })}>
+            <button
+              className={`${btn} max-sm:px-2 max-sm:text-sm`}
+              onClick={() => save({ analytics: false })}
+            >
               Recusar<span className={onLevel ? 'sr-only' : undefined}> não essenciais</span>
             </button>
             {!onLevel && (

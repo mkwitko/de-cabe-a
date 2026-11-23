@@ -763,7 +763,7 @@ function Scouts({ s, act }: { s: MarketView['scouting']; act: Do }) {
         ) : (
           s.reports.map((r, i) => (
             <details key={`${r.iso}-${i}`} open={i === 0} className="border-t border-chalk/10 pt-2">
-              <summary className="cursor-pointer text-sm font-semibold">
+              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
                 {t('scouts.report', {
                   date: `${r.iso.slice(8, 10)}/${r.iso.slice(5, 7)}`,
                   scout: r.scout,

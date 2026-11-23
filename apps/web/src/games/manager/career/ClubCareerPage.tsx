@@ -42,6 +42,9 @@ import {
   type Watch,
 } from '../FriendlyPage';
 
+/** A 0-100 attribute in a word, for the offer cards. */
+const bandOf = (n: number) => (n < 34 ? 'low' : n < 67 ? 'mid' : 'high');
+
 interface ClubOption {
   id: string;
   name: string;
@@ -234,28 +237,32 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
                     {t('career.reputation', { n: o.reputation })}
                   </p>
                 </div>
-                <dl className="grid grid-cols-[auto_1fr_3ch] items-center gap-x-3 gap-y-2 text-sm">
-                  {AXES.map((a) => (
-                    <div key={a} className="contents">
-                      <dt className="text-chalk-soft">{t('career.axis', { a })}</dt>
-                      <dd
-                        role="meter"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={o.profile[a]}
-                        aria-label={t('career.axisValue', { a, n: o.profile[a] })}
-                        className="h-1.5 overflow-hidden rounded-full bg-chalk/12"
-                      >
-                        <span
-                          className="block h-full rounded-full bg-club-gold"
-                          style={{ width: `${o.profile[a]}%` }}
-                        />
-                      </dd>
-                      <dd aria-hidden className="text-right font-bold tabular-nums">
-                        {o.profile[a]}
-                      </dd>
-                    </div>
-                  ))}
+                <dl className="grid grid-cols-[auto_1fr_8ch] items-center gap-x-3 gap-y-2 text-sm">
+                  {AXES.map((a) => {
+                    const n = o.profile[a];
+                    const band = t('career.band', { b: bandOf(n) });
+                    return (
+                      <div key={a} className="contents">
+                        <dt className="text-chalk-soft">{t('career.axis', { a })}</dt>
+                        <dd
+                          role="meter"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={o.profile[a]}
+                          aria-label={t('career.axisValue', { a, n, b: band })}
+                          className="h-1.5 overflow-hidden rounded-full bg-chalk/12"
+                        >
+                          <span
+                            className="block h-full rounded-full bg-club-gold"
+                            style={{ width: `${o.profile[a]}%` }}
+                          />
+                        </dd>
+                        <dd aria-hidden className="text-right font-bold tabular-nums">
+                          {n} <span className="font-normal text-chalk-soft">{band}</span>
+                        </dd>
+                      </div>
+                    );
+                  })}
                 </dl>
                 <button
                   type="button"
@@ -601,6 +608,8 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       </div>
     );
   const net = sim.money.reduce((sum, m) => sum + m.amount, 0);
+  // Before any income is booked a negative balance is just the season's opening state, not an alarm.
+  const earned = sim.money.some((m) => m.amount > 0);
   const biggest = Math.max(1, ...sim.money.map((m) => Math.abs(m.amount)));
   const go = (r: Room) => {
     setRoom(r);
@@ -824,10 +833,13 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                     <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
                     <dl className="flex items-baseline justify-between gap-4 font-condensed text-xl font-extrabold uppercase tabular-nums">
                       <dt>{t('career.net')}</dt>
-                      <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
+                      <dd className={net < 0 && earned ? 'text-club-danger' : 'text-club-gold'}>
                         {t('career.cash', { value: net })}
                       </dd>
                     </dl>
+                    {net < 0 && !earned && (
+                      <p className="text-sm text-chalk-soft">{t('career.netOpening')}</p>
+                    )}
                     <details className="group">
                       <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-chalk-soft">
                         {t('career.ledger')}
@@ -1364,7 +1376,8 @@ function Fixtures({ sim }: { sim: SimView }) {
             </span>
             <Crest club={f.opponent} size="sm" />
             <span className="min-w-0 flex-1 truncate font-semibold">
-              {f.opponent.name}
+              <span className="sm:hidden">{f.opponent.shortName}</span>
+              <span className="max-sm:hidden">{f.opponent.name}</span>
               <span className="ml-2 text-xs font-normal text-chalk-soft">
                 {competitionLabel(f)}
               </span>
@@ -1384,7 +1397,7 @@ function Fixtures({ sim }: { sim: SimView }) {
         <button
           type="button"
           aria-expanded={all}
-          className="-ml-2 flex min-h-9 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
+          className="-ml-2 flex min-h-11 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
           onClick={() => setAll(!all)}
         >
           {all ? t('career.fixturesLess') : t('career.fixturesAll', { n: sim.fixtures.length })}
@@ -1984,7 +1997,10 @@ function Table(props: {
                 <td>
                   <span className="flex min-w-0 items-center gap-2">
                     <Crest club={r} size="sm" />
-                    <span className="leading-tight text-pretty">{r.name}</span>
+                    <span className="leading-tight text-pretty" title={r.name}>
+                      <span className="sm:hidden">{r.shortName}</span>
+                      <span className="max-sm:hidden">{r.name}</span>
+                    </span>
                   </span>
                 </td>
                 <td className="text-right">{r.played}</td>

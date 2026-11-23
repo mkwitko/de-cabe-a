@@ -202,7 +202,7 @@ function ScoreboardCard() {
           className="font-condensed text-[2.6rem] leading-[0.85] font-black uppercase sm:text-[3.6rem]"
         >
           <Link to="/quem-fez-mais" className="rounded-sm">
-            <span className="hl-led">Quem fez mais?</span>
+            <span className="text-[var(--hl-led)]">Quem fez mais?</span>
           </Link>
         </h2>
         <p className="max-w-[40ch] font-semibold text-chalk">

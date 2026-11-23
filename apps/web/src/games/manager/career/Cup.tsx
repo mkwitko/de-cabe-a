@@ -71,7 +71,7 @@ export function Cup({ sim }: { sim: SimView }) {
         </summary>
         {[...cup.phases].reverse().map((p, i) => (
           <details key={p.id} open={i === 0}>
-            <summary className="cursor-pointer font-semibold">
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold">
               {t('copa.phase', { p: p.id })}
               <span className="ml-2 text-xs text-chalk-soft">{p.ties.length}</span>
             </summary>

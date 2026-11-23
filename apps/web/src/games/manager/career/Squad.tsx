@@ -59,7 +59,7 @@ function layout(slots: { x: number; y: number }[]) {
 }
 /** The name a magnet can hold whole: the surname, else the first name with the surname's initial. */
 const WHOLE = 9;
-function surname(name: string) {
+export function surname(name: string) {
   const [first = '', ...rest] = name.split(' ');
   const last = rest.at(-1) ?? first;
   if (last.length <= WHOLE) return last;

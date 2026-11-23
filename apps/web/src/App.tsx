@@ -363,7 +363,7 @@ export function Home() {
     howTo: x.howTo,
   }));
   return (
-    <div className={`${WRAP} pt-14 sm:pt-24`}>
+    <div className={`${WRAP} pt-8 sm:pt-12`}>
       <h2 className="font-condensed mb-2 text-4xl leading-[0.9] font-black uppercase sm:text-6xl lg:text-7xl">
         Outros jogos
       </h2>
@@ -386,17 +386,26 @@ function HomeRoute() {
       <p className="mt-10 text-center text-sm text-chalk-soft">
         {isPageLaunched('daily') && (
           <>
-            <Link to="/d/hoje" className="underline underline-offset-4 hover:text-chalk">
+            <Link
+              to="/d/hoje"
+              className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-chalk"
+            >
               Desafio do Dia
             </Link>
             {' · '}
           </>
         )}
-        <Link to="/como-jogar" className="underline underline-offset-4 hover:text-chalk">
+        <Link
+          to="/como-jogar"
+          className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-chalk"
+        >
           Como jogar
         </Link>
         {' · '}
-        <a href="/jogadores" className="underline underline-offset-4 hover:text-chalk">
+        <a
+          href="/jogadores"
+          className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-chalk"
+        >
           Carreiras de jogadores
         </a>
       </p>
@@ -443,7 +452,9 @@ const NAV_LAUNCH = [
     to: '/',
     label: 'Minijogos',
     Icon: GamesIcon,
+    // the home leads with Modo Clube, so no tab is lit on "/"
     match: (p: string) =>
+      p !== '/' &&
       !/^\/(tecnico|modo-clube|album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
   { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },

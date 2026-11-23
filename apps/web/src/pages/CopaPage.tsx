@@ -271,7 +271,7 @@ function Report({ match }: { match: Match }) {
   return (
     <section
       aria-labelledby="partida"
-      className="flex flex-col gap-3 rounded-lg border-l-8 border-gold bg-chalk/10 p-4 text-chalk"
+      className="flex flex-col gap-3 rounded-lg border-2 border-gold/50 bg-chalk/10 p-4 text-chalk"
     >
       <h2 id="partida" className="text-sm font-semibold text-chalk/80">
         {match.stage} · {match.tactic}

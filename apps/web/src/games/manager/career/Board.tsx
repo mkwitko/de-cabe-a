@@ -50,9 +50,12 @@ export function Board({
           <p className="font-condensed text-3xl leading-[0.95] font-black text-balance uppercase sm:text-4xl">
             {t('board.goalText', { division: sim.division, n: b.goal })}
           </p>
-          <p className={b.position <= b.goal ? 'text-chalk' : 'font-semibold text-club-danger'}>
-            {t('board.position', { n: b.position })}
-          </p>
+          {/* "Hoje o clube é o 1º" means nothing before a league game is played */}
+          {(sim.table.find((r) => r.clubId === sim.clubId)?.played ?? 0) > 0 && (
+            <p className={b.position <= b.goal ? 'text-chalk' : 'font-semibold text-club-danger'}>
+              {t('board.position', { n: b.position })}
+            </p>
+          )}
           {b.election && (
             <p className="font-condensed text-xl font-extrabold text-club-gold uppercase">
               {t('board.electionYear')}
