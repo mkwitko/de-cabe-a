@@ -522,6 +522,19 @@ export const ptBR = {
   'board.take': 'Assumir',
   'board.takeName': 'Assumir o {club}',
   'training.week': 'Semana de treino',
+  'training.ready': 'Planos prontos',
+  'training.planSum':
+    '{custom, select, true {Seu plano} other {Plano pronto}}: carga {load}, semana {i, select, light {leve} normal {normal} other {forte}}, entrosamento vai a {settles}%',
+  'training.day':
+    '{d, select, 0 {Segunda} 1 {Terça} 2 {Quarta} 3 {Quinta} 4 {Sexta} 5 {Sábado} other {Domingo}}',
+  'training.half': '{h, select, 0 {Manhã} other {Tarde}}',
+  'training.session':
+    '{s, select, rest {Descanso} recovery {Recuperação} physical {Físico} technical {Técnico} tactical {Tático} setPieces {Bola parada} matchPrep {Preparação de jogo} other {Descanso}}',
+  'training.matchOn': 'Jogo contra {club}',
+  'training.prepHint':
+    'Ponha uma preparação de jogo na véspera da partida: o time entra mais bem preparado para o adversário.',
+  'training.planHint':
+    'Físico e técnico pesam mais nas pernas que tático e bola parada. A carga da semana decide o cansaço e a evolução (até 12 leve, até 20 normal). Mais tático sobe o entrosamento; recuperação devolve o fôlego mais rápido.',
   'training.intensity': '{i, select, light {Leve} normal {Normal} other {Forte}}',
   'training.recovery': 'Fôlego volta {n, number}% por dia',
   'training.target': 'Entrosamento vai a {n}%',

@@ -9,6 +9,100 @@ import { t } from '../i18n';
 import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
 import type { SimReply, SimRequest, TrainingView } from './sim.worker';
 
+type Session = TrainingView['plan'][number][number];
+const SESSIONS: readonly Session[] = [
+  'rest',
+  'recovery',
+  'physical',
+  'technical',
+  'tactical',
+  'setPieces',
+  'matchPrep',
+];
+/** A colour per kind of session, as on a club's training board. */
+const SESSION_TONE: Record<Session, string> = {
+  rest: '#5b6660',
+  recovery: '#2f9e8f',
+  physical: '#2d6cc4',
+  technical: '#3f9a4b',
+  tactical: '#7b55c7',
+  setPieces: '#d08a2a',
+  matchPrep: '#c9a43a',
+};
+const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const HALVES = [0, 1] as const;
+
+/**
+ * The week on the training board (FM's training calendar): seven days of two sessions, the
+ * club's matches of the coming week on their days, the week's load and where the drill settles.
+ * Every change goes to the worker at once.
+ */
+function WeekPlan({ view, onPlan }: { view: TrainingView; onPlan: (p: Session[][]) => void }) {
+  const set = (day: number, half: number, x: Session) =>
+    onPlan(view.plan.map((d, i) => (i === day ? d.map((y, j) => (j === half ? x : y)) : d)));
+  return (
+    <div className="sala-slab flex min-w-0 flex-col gap-4 p-4 sm:p-5 lg:col-span-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h3 id="plan-title" className={LABEL}>
+          {t('training.week')}
+        </h3>
+        <p className="text-sm font-semibold tabular-nums">
+          {t('training.planSum', {
+            load: view.load,
+            i: view.intensity,
+            settles: view.settles,
+            custom: String(view.custom),
+          })}
+        </p>
+      </div>
+      <ol aria-labelledby="plan-title" className="grid grid-cols-1 gap-2 sm:grid-cols-7">
+        {DAYS.map((d) => {
+          const match = view.week.find((m) => m.weekday === d);
+          return (
+            <li key={d} className="flex flex-col gap-1.5 rounded-lg bg-chalk/5 p-2">
+              <span className="font-condensed text-base font-extrabold uppercase">
+                {t('training.day', { d })}
+              </span>
+              {match && (
+                <span className="rounded bg-club-gold/20 px-1.5 py-0.5 text-xs font-bold text-club-gold">
+                  {t('training.matchOn', { club: match.opponent })}
+                </span>
+              )}
+              {HALVES.map((h) => {
+                const x = view.plan[d]![h]!;
+                return (
+                  <label
+                    key={h}
+                    className="flex flex-col gap-0.5 text-[0.7rem] font-bold text-chalk-soft"
+                  >
+                    {t('training.half', { h })}
+                    <select
+                      value={x}
+                      onChange={(e) => set(d, h, e.target.value as Session)}
+                      className="min-h-10 w-full rounded-md border-l-4 bg-club-night px-1.5 text-sm font-semibold text-chalk"
+                      style={{ borderLeftColor: SESSION_TONE[x] }}
+                    >
+                      {SESSIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {t('training.session', { s })}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              })}
+            </li>
+          );
+        })}
+      </ol>
+      {view.week.some((m) => !m.prepared) && (
+        <p className="text-sm font-semibold text-club-gold">{t('training.prepHint')}</p>
+      )}
+      <p className="text-sm text-chalk-soft">{t('training.planHint')}</p>
+    </div>
+  );
+}
+
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
 type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 
@@ -59,9 +153,20 @@ export function Training(props: {
       aria-labelledby="training-title"
       className="grid items-start gap-5 lg:grid-cols-[minmax(0,27rem)_1fr]"
     >
+      <WeekPlan
+        view={view}
+        onPlan={(plan) =>
+          ask({ type: 'plan', plan })
+            .then((r) => {
+              setView(r.training ?? null);
+              onPicked(r);
+            })
+            .catch((e: Error) => onError(e.message))
+        }
+      />
       <div className="sala-slab flex flex-col gap-4 p-4 sm:p-5">
         <h3 id="training-title" className={LABEL}>
-          {t('training.week')}
+          {t('training.ready')}
         </h3>
         <div role="group" aria-labelledby="training-title" className="flex flex-col gap-2">
           {view.options.map((o) => (
