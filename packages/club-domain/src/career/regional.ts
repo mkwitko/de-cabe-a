@@ -1,5 +1,5 @@
 /**
- * The person's regional cup (Copa do Nordeste, Copa Verde) and the Supercopa (competition/
+ * The person's regional cup (Copa do Nordeste, Copa Verde, Copa Sul-Sudeste) and the Supercopa (competition/
  * regionais.ts): the fixed share of the first phase and the prizes by phase reached, as the state
  * championship does (estadual.ts). Every club reads the same tables; only the person's ledger is
  * posted. The share is paid in April to June, in three parts.
@@ -10,6 +10,7 @@ import {
   NORTE_ID,
   CENTRO_OESTE_ID,
   REGIONAL_IDS,
+  SUL_SUDESTE_ID,
   SUPERCOPA_ID,
 } from '../competition/regionais-data';
 import { postEntry } from '../finance/ledger';
@@ -35,6 +36,7 @@ export function regionalCotaFor(w: CareerWorld, clubId: string): number {
     for (const [ids, table] of [
       [[NORDESTE_ID], COTAS.nordeste],
       [[NORTE_ID, CENTRO_OESTE_ID], COTAS.verde],
+      [[SUL_SUDESTE_ID], COTAS.sulSudeste],
     ] as const) {
       const clubs = ids
         .flatMap((id) => w.season.members[id] ?? [])

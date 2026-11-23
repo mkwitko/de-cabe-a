@@ -13,6 +13,8 @@ import {
   NORDESTE_ID,
   NORTE_BERTHS,
   NORTE_ID,
+  SUL_SUDESTE_BERTHS,
+  SUL_SUDESTE_ID,
   SUPERCOPA_ID,
   VERDE_ID,
 } from './regionais-data';
@@ -229,11 +231,20 @@ describe('the next season reads this one', () => {
     });
     const cityState = new Map(pack.cities.map((c) => [c.id, c.state]));
     const stateOf = new Map(pack.clubs.map((c) => [c.id, cityState.get(c.cityId)!]));
-    // each Nordeste state keeps its champion and runner-up of the state championship
+    // each Nordeste state keeps its champion and runner-up of the state championship, unless
+    // in a Conmebol cup (the 12 best of the Série A and the Copa champion stand in)
     const ne = new Set(two.members[NORDESTE_ID]);
+    const serieOne = pack.competitions.find((c) => c.tier === 1)!;
+    const continental = new Set([
+      ...one.results[serieOne.id]![serieOne.phases.at(-1)!.id]!.tables[0]!.slice(0, 12).map(
+        (r) => r.clubId,
+      ),
+      one.results[COPA_ID]!.final!.tables[0]![0]!.clubId,
+    ]);
     for (const uf of Object.keys(NORDESTE_BERTHS)) {
       const top = one.results[`est-${uf}`]!.final!.tables[0]!.map((r) => r.clubId);
-      for (const id of top) expect(ne.has(id), `${uf} ${id}`).toBe(true);
+      for (const id of top) expect(ne.has(id), `${uf} ${id}`).toBe(!continental.has(id));
+      for (const id of continental) expect(ne.has(id)).toBe(false);
       expect([...ne].filter((id) => stateOf.get(id) === uf)).toHaveLength(NORDESTE_BERTHS[uf]!);
     }
     // Copa do Brasil 3rd phase: the Copa do Nordeste and Copa Verde champions (or their runners-up
@@ -255,5 +266,81 @@ describe('the next season reads this one', () => {
     const champ = one.results[serie.id]![serie.phases.at(-1)!.id]!.tables[0]![0]!.clubId;
     expect(two.members[SUPERCOPA_ID]).toContain(champ);
     expect(two.members[SUPERCOPA_ID]).toHaveLength(2);
+  });
+});
+
+describe('Copa Sul-Sudeste (REC 2026)', () => {
+  const SS = Object.keys(SUL_SUDESTE_BERTHS);
+  const pack = {
+    season: 2027,
+    competitions: [],
+    cities: SS.map((uf) => ({ id: `city-${uf}`, state: uf })),
+    clubs: SS.flatMap((uf) =>
+      Array.from({ length: 4 }, (_, i) => ({
+        id: `${uf}-${i}`,
+        cityId: `city-${uf}`,
+        reputation: 100 - i,
+      })),
+    ),
+  } as unknown as Pack;
+
+  it('takes two clubs a state, none in a Conmebol cup, in two groups of six', () => {
+    const { competitions, members } = regionalCompetitions(pack, 2027, {}, new Set(['SP-0']));
+    const ss = competitions.find((c) => c.id === SUL_SUDESTE_ID)!;
+    expect(() => CompetitionSchema.parse(ss)).not.toThrow();
+    const ids = members[SUL_SUDESTE_ID]!;
+    expect(ids).toHaveLength(12);
+    for (const uf of SS) expect(ids.filter((id) => id.startsWith(`${uf}-`))).toHaveLength(2);
+    expect(ids).not.toContain('SP-0');
+    expect(ids).toContain('SP-2');
+    expect(ss.phases.map((p) => [p.id, p.kind === 'grupos' ? p.groups : p.legs])).toEqual([
+      ['grupos', 2],
+      ['semi', 2],
+      ['final', 2],
+    ]);
+  });
+
+  it('plays 42 matches from 25 March to 7 June; the semi-finals inside each group', async () => {
+    const state = startSeason(pack, { seed: 5, estaduais: true, season: 2026 });
+    await runSeason(state, async (ids) => ids.map(scripted));
+    expect(checkSeason(state)).toEqual([]);
+    const ms = [...state.calendar.matches.values()].filter(
+      (m) => m.competitionId === SUL_SUDESTE_ID,
+    );
+    expect(ms).toHaveLength(42);
+    const days = ms.map((m) => isoOf(m.day)).sort();
+    expect(days[0]).toBe('2026-03-25');
+    expect(days.at(-1)! <= '2026-06-07').toBe(true);
+    // Each club meets the six of the other group once, three at home.
+    const r = state.results[SUL_SUDESTE_ID]!;
+    const [a, b] = r.grupos!.tables.map((t) => t.map((x) => x.clubId));
+    for (const id of a!) {
+      const own = ms.filter(
+        (m) => m.id.startsWith(`${SUL_SUDESTE_ID}/grupos/`) && (m.home === id || m.away === id),
+      );
+      expect(own).toHaveLength(6);
+      expect(own.filter((m) => m.home === id)).toHaveLength(3);
+      expect(own.every((m) => b!.includes(m.home === id ? m.away : m.home))).toBe(true);
+    }
+    const semi = ms.filter((m) => m.id.startsWith(`${SUL_SUDESTE_ID}/semi/`));
+    for (const m of semi) {
+      const same = [a, b].some((g) => g!.includes(m.home) && g!.includes(m.away));
+      expect(same).toBe(true);
+    }
+    expect(r.final?.tables[0]?.[0]?.clubId).toBeTruthy();
+  });
+
+  it('its champion is sure of a Copa do Brasil place', () => {
+    const tiers = [
+      { tier: 1, clubIds: Array.from({ length: 20 }, (_, i) => `a${i}`) },
+      { tier: 2, clubIds: Array.from({ length: 20 }, (_, i) => `b${i}`) },
+      { tier: 3, clubIds: Array.from({ length: 20 }, (_, i) => `c${i}`) },
+      { tier: 4, clubIds: Array.from({ length: 66 }, (_, i) => `d${i}`) },
+      { tier: 5, clubIds: ['x0'] },
+    ];
+    const ranking = tiers.flatMap((t) => t.clubIds);
+    const f = copaField(tiers, ranking, { nordeste: [], verde: [], sulSudeste: ['x0'] })!;
+    expect(f.group3[0]).toBe('x0');
+    expect(f.group3).toHaveLength(102);
   });
 });

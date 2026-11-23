@@ -34,7 +34,13 @@ import { roundRobin, standings, type Played, type Row, type TableRules } from '.
 import { applyOutcomes, regulationsFor, type Results } from './outcomes';
 import { estadualCompetitions } from './estaduais';
 import { finalists, regionalCompetitions, supercopa, supercopaPair } from './regionais';
-import { NORDESTE_ID, SUPERCOPA_ID, VERDE_ID } from './regionais-data';
+import {
+  CONMEBOL_PLACES,
+  NORDESTE_ID,
+  SUL_SUDESTE_ID,
+  SUPERCOPA_ID,
+  VERDE_ID,
+} from './regionais-data';
 import type { Competition, Phase } from './schema';
 
 /** Clubs entering a phase, from the regulation alone (selector widths). */
@@ -46,7 +52,7 @@ function entrantCount(c: Competition, p: Phase, sizes: Map<string, { tables: num
     else if (e.from === 'ranking') n += e.count;
     else if (e.from === 'slots') throw new Error('slot entrants are not known in advance');
     else {
-      const tables = e.from === 'phase' ? sizes.get(e.phaseId)!.tables : 1;
+      const tables = e.from === 'phase' && e.table === undefined ? sizes.get(e.phaseId)!.tables : 1;
       const width = (e.positions[1] - e.positions[0] + 1) * tables;
       n += e.best ?? width;
     }
@@ -160,7 +166,12 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     const est = estadualCompetitions(pack, season, (k) => tier.get(k));
     competitions.push(...est.competitions);
     Object.assign(members, est.members);
-    const reg = regionalCompetitions(pack, season, opts.previous ?? {});
+    const reg = regionalCompetitions(
+      pack,
+      season,
+      opts.previous ?? {},
+      continentalOf(pack, competitions, members, opts.previous ?? {}),
+    );
     competitions.push(...reg.competitions);
     Object.assign(members, reg.members);
   }
@@ -191,6 +202,33 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
 }
 
 /**
+ * The clubs that stand in for this season's Conmebol cups (regionais-data.ts `CONMEBOL_PLACES`):
+ * the best of last season's Série A and the Copa do Brasil champion; in a first season, the best
+ * Série A clubs by reputation.
+ */
+function continentalOf(
+  pack: Pack,
+  competitions: readonly Competition[],
+  members: Record<string, string[]>,
+  previous: Results,
+): Set<string> {
+  const serie = competitions.find((c) => c.tier === 1 && c.scope === 'nacional');
+  if (!serie) return new Set();
+  const table = previous[serie.id]?.[serie.phases.at(-1)!.id]?.tables[0]?.map((r) => r.clubId);
+  if (table?.length)
+    return new Set([
+      ...table.slice(0, CONMEBOL_PLACES),
+      ...finalists(previous, COPA_ID).slice(0, 1),
+    ]);
+  const rep = new Map(pack.clubs.map((c) => [c.id, c.reputation]));
+  return new Set(
+    [...(members[serie.id] ?? [])]
+      .sort((a, b) => (rep.get(b) ?? 0) - (rep.get(a) ?? 0) || (a < b ? -1 : 1))
+      .slice(0, CONMEBOL_PLACES),
+  );
+}
+
+/**
  * The Copa do Brasil joins the season when the divisions' members make the real field (copa.ts);
  * its clubs follow the divisions every season, so they are read here, never carried.
  */
@@ -202,6 +240,7 @@ function addCopa(s: SeasonState): void {
   const field = copaField(tiers, s.ranking, {
     nordeste: finalists(s.previous, NORDESTE_ID),
     verde: finalists(s.previous, VERDE_ID),
+    sulSudeste: finalists(s.previous, SUL_SUDESTE_ID),
   });
   if (!field) return;
   const cup = copaDoBrasil(s.season, field);

@@ -35,14 +35,33 @@
  * (regulamento, citado pelo Lance e DCI). CBF paga R$ 6,35 mi a cada finalista; o campeão leva
  * ainda US$ 1 mi da Conmebol (R$ 5,23 mi segundo o Lance).
  *
+ * Copa Sul-Sudeste 2026 (REC da CBF, Art. 2º a 19; Jornal Grande Bahia, sorteio de 3 mar 2026;
+ * Itatiaia/Cassio Zirpoli, 31 mar 2026): 12 clubes, dois de cada federação (MG, PR, RJ, RS, SC,
+ * SP): o campeão estadual de 2025 e o melhor colocado seguinte (ou seletiva), excluídos os clubes
+ * em competições da Conmebol. 1ª fase: grupos A e B de seis, cada clube enfrenta os seis do outro
+ * grupo em turno único (3 mandos, 3 visitas); os dois primeiros de cada grupo seguem. 2ª fase
+ * (semifinal): 1º x 2º do mesmo grupo, ida e volta, volta no campo do 1º. 3ª fase (final): ida e
+ * volta, volta com a melhor campanha. Empate no confronto: saldo de gols, depois pênaltis.
+ * 25 mar a 7 jun, 42 jogos em 10 datas; inscrições até 19 mai, véspera da semifinal. Dinheiro
+ * (R$ 3,8 mi): cota da 1ª fase 300, 200, 150 e 100 mil (3 clubes em cada nível, ranking da CBF);
+ * semifinal 200 mil (4 clubes), vice 250 mil, campeão 500 mil. O campeão vai à 3ª fase da Copa do
+ * Brasil de 2027 (REC, Art. 5º).
+ *
  * PARÂMETRO (sem fonte; listados no PR): ver `NOTES`.
  */
 export const NORDESTE_ID = 'copa-nordeste';
 export const NORTE_ID = 'copa-norte';
 export const CENTRO_OESTE_ID = 'copa-centro-oeste';
 export const VERDE_ID = 'copa-verde';
+export const SUL_SUDESTE_ID = 'copa-sul-sudeste';
 export const SUPERCOPA_ID = 'supercopa';
-export const REGIONAL_IDS = [NORDESTE_ID, NORTE_ID, CENTRO_OESTE_ID, VERDE_ID] as const;
+export const REGIONAL_IDS = [
+  NORDESTE_ID,
+  NORTE_ID,
+  CENTRO_OESTE_ID,
+  VERDE_ID,
+  SUL_SUDESTE_ID,
+] as const;
 
 const K = 1_000;
 const M = 1_000_000;
@@ -69,10 +88,26 @@ export const CENTRO_OESTE_BERTHS: Record<string, number> = {
   TO: 2,
 };
 
+export const SUL_SUDESTE_BERTHS: Record<string, number> = {
+  MG: 2,
+  PR: 2,
+  RJ: 2,
+  RS: 2,
+  SC: 2,
+  SP: 2,
+};
+
+/**
+ * Clubs in the Conmebol's cups, who play neither the Copa do Nordeste (Bahia 2026) nor the Copa
+ * Sul-Sudeste (REC Art. 2º §1º): the Libertadores and Sul-Americana places of the Série A.
+ */
+export const CONMEBOL_PLACES = 12;
+
 /** Fixed share of the first phase by reputation block (four equal blocks, best first). */
 export const COTAS = {
   nordeste: [2_500 * K, 1_350 * K, 850 * K, 500 * K],
   verde: [200 * K, 125 * K, 100 * K, 75 * K],
+  sulSudeste: [300 * K, 200 * K, 150 * K, 100 * K],
 };
 
 /** Prizes by phase reached, paid on top of each other (Copa do Nordeste: 8 + 4 + 2 + 1 clubs). */
@@ -80,13 +115,15 @@ export const PRIZES = {
   nordeste: { quartas: 500 * K, semi: 600 * K, runnerUp: 700 * K, champion: 1 * M },
   /** Block semi-finals (CBF's "quartas": 8 clubs), block finals ("semifinal": 4), then the final. */
   verde: { semi: 100 * K, final: 200 * K, runnerUp: 250 * K, champion: 400 * K },
+  sulSudeste: { semi: 200 * K, runnerUp: 250 * K, champion: 500 * K },
   supercopa: { finalists: 6_350 * K, championExtra: 5_230 * K },
 };
 
 /** Where each rule stands, for the report and the next reader. */
 export const NOTES = [
   'Entry reads last season (the real 2026 cups used the 2025 state leagues): champion and runner-up of the state championship, the extra berth by reputation (CBF ranking stands in); the first season, which has no last season, takes the best by reputation. PARÂMETRO.',
-  'Clubs in Libertadores/Sul-Americana play no Copa do Nordeste in the real rule (Bahia 2026); not modelled. PARÂMETRO.',
+  "Clubs in Libertadores/Sul-Americana play neither the Copa do Nordeste (Bahia 2026) nor the Copa Sul-Sudeste (REC Art. 2º). The career has no Conmebol cups yet: the 12 best of last season's Série A and the Copa do Brasil champion stand in for them (Brazil had 13 or 14 places in 2026); a first season takes the 12 best Série A clubs by reputation. PARÂMETRO.",
+  'Copa Sul-Sudeste: the champion is guaranteed a Copa do Brasil place, ahead of the ranking in group 3 (2nd phase), not the 3rd phase of the REC: a fifth group-2 place breaks the 126-club format (48 clubs in the 3rd phase), and the 2027 Copa do Brasil regulation that fits it is not out. Group draw by reputation pots; dates by weekday (six Wednesdays from 25 March, semi-finals 20 and 27 May, final 3 and 7 June). PARÂMETRO.',
   'Dates move by weekday (first Wednesday on or after 24 March) so every season fits; the two final legs are Wed/Sun (real: Tue 2 Jun and Sat 6 Jun) and the Copa Norte final second leg Wed 27 May (real 28 May). PARÂMETRO.',
   'Draw: clubs in pots by reputation (the real draw is at the CBF); quarter-finals seeded 1 v 8, 4 v 5, 2 v 7, 3 v 6; Copa Verde single-game semi-finals host by the better seed. PARÂMETRO.',
   'First-phase share by reputation blocks, not the CBF ranking; priority below the national series (like the state championships); VAR on; results weigh half on boards. PARÂMETRO.',

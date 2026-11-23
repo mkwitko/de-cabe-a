@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
-import { NORDESTE_BERTHS, NORDESTE_ID, SUPERCOPA_ID } from '../competition/regionais-data';
+import {
+  COTAS,
+  NORDESTE_BERTHS,
+  NORDESTE_ID,
+  SUL_SUDESTE_ID,
+  SUPERCOPA_ID,
+} from '../competition/regionais-data';
 import { nextDecision, openCareer, playDecision } from './advance';
 import { regionalCotaFor } from './regional';
 import { budgetOf } from '../market/books';
@@ -57,6 +63,14 @@ describe('the person regional cup', () => {
     expect(note?.kind === 'regional' && note.prize).toBe(paid);
     // paying twice is not possible: the keys are the cup, season and prize line
     expect(new Set(prizes.map((e) => e.key)).size).toBe(prizes.length);
+  });
+
+  it('pays the Copa Sul-Sudeste share by ranking block: 300, 200, 150 and 100 thousand', () => {
+    const w = openCareer(pack, 5, first.id);
+    const ids = w.season.members[SUL_SUDESTE_ID] ?? [];
+    expect(ids).toHaveLength(12);
+    const paid = ids.map((id) => regionalCotaFor(w, id)).sort((a, b) => b - a);
+    expect(paid).toEqual(COTAS.sulSudeste.flatMap((c) => [c, c, c]));
   });
 
   it('puts the Supercopa on the first Sunday of February', () => {

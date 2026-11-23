@@ -77,6 +77,7 @@ export {
   NORTE_ID,
   CENTRO_OESTE_ID,
   VERDE_ID,
+  SUL_SUDESTE_ID,
   SUPERCOPA_ID,
 } from './competition/regionais-data';
 export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
