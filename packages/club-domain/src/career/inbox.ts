@@ -119,6 +119,8 @@ export type Note = { day: number } & (
   | { kind: 'electionYear' }
   /** The person's state championship ended: its champion, the club's place (0 = out early) and prize. */
   | { kind: 'estadual'; name: string; champion: string; position: number; prize: number }
+  /** A regional cup or the Supercopa the person's club played ended (regional.ts). */
+  | { kind: 'regional'; name: string; champion: string; position: number; prize: number }
   | { kind: 'season'; season: number; champion: string; move: 'promotion' | 'relegation' | 'stay' }
 );
 

@@ -22,7 +22,8 @@
  * What the pack cannot give, and the rule used instead (ASSUMPTIONS, documented):
  *  - State championships and the CBF ranking are not in the pack. Group 2 is the two best-ranked
  *    Série C and the two best-ranked Série D clubs (the real four are the champions of Série C
- *    and D and of two regional cups). Group 3 is the 102 best-ranked clubs of the three lower
+ *    and D and of two regional cups; since the regional cups are played, the places of the two
+ *    regional champions of last season, regionais.ts). Group 3 is the 102 best-ranked clubs of the three lower
  *    divisions left, ranked by the career's national ranking (the real list is state places plus
  *    CBF ranking vacancies); its 28 lowest start in the 1st phase, as in the REC.
  *  - Dates: the REC base dates are Wednesdays (the semi-finals and the final are Sundays). Each
@@ -73,6 +74,8 @@ export interface TierMembers {
 export function copaField(
   tiers: readonly TierMembers[],
   ranking: readonly string[],
+  /** Last season's Copa do Nordeste and Copa Verde, champion first (regionais.ts). */
+  regional: { nordeste: readonly string[]; verde: readonly string[] } = { nordeste: [], verde: [] },
 ): CopaField | null {
   const at = new Map(ranking.map((id, i) => [id, i]));
   const rank = (id: string) => at.get(id) ?? ranking.length;
@@ -81,11 +84,20 @@ export function copaField(
   const of = (tier: number) => tiers.find((t) => t.tier === tier)?.clubIds ?? [];
   const serieA = [...of(1)];
   if (serieA.length !== COPA_GROUPS.serieA) return null;
-  const c = best(of(3)).slice(0, 2);
-  const d = best(of(4)).slice(0, 2);
-  const group2 = [...c, ...d];
+  // Série C and D champions (the two best of each stand in), then the regional cups' champions;
+  // a champion already in through Série A or another place hands it to the runner-up, and with
+  // no regional result (a first season) the second best of Série C and D take the places.
+  const taken = new Set(serieA);
+  const take = (ids: readonly string[]) => {
+    const id = ids.find((x) => !taken.has(x));
+    if (id !== undefined) taken.add(id);
+    return id;
+  };
+  const [c, d] = [best(of(3)), best(of(4))];
+  const [c0, d0] = [take(c), take(d)];
+  const [ne, verde] = [take(regional.nordeste) ?? take(c), take(regional.verde) ?? take(d)];
+  const group2 = [c0, ne, d0, verde].filter((x): x is string => x !== undefined);
   if (group2.length !== COPA_GROUPS.others) return null;
-  const taken = new Set([...serieA, ...group2]);
   const rest = best(
     tiers.filter((t) => t.tier > 1).flatMap((t) => t.clubIds.filter((id) => !taken.has(id))),
   );

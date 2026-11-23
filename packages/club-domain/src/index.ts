@@ -72,6 +72,13 @@ export * from './career/coaches';
 export * from './career/coach-pool';
 export { attendance, tierOf } from './career/finance';
 export { estadualView, type EstadualView } from './career/estadual';
+export {
+  NORDESTE_ID,
+  NORTE_ID,
+  CENTRO_OESTE_ID,
+  VERDE_ID,
+  SUPERCOPA_ID,
+} from './competition/regionais-data';
 export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
 export * from './career/clubs';
 export * from './career/prices';

@@ -1413,6 +1413,7 @@ const FROM = {
   copaOut: 'board',
   copaTitle: 'board',
   estadual: 'press',
+  regional: 'press',
 } as const;
 const FROM_TONE = {
   board: 'bg-club-gold',
@@ -1613,6 +1614,14 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.copaTitle');
     case 'estadual':
       return t('inbox.estadual', {
+        name: n.name,
+        champion: n.clubName,
+        position: n.position,
+        prize: t('career.cash', { value: n.prize }),
+        paid: String(n.prize > 0),
+      });
+    case 'regional':
+      return t('inbox.regional', {
         name: n.name,
         champion: n.clubName,
         position: n.position,

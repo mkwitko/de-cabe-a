@@ -12,6 +12,7 @@ import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
 import { cotaFor } from '../career/estadual';
+import { regionalCotaFor } from '../career/regional';
 import { pricesOf } from '../career/prices';
 import { tvOf } from '../career/revenue';
 import type { Horizon } from '../career/clubs';
@@ -74,7 +75,7 @@ export const incomeOf = (w: CareerWorld, clubId: string) => {
     tier,
     pricesOf(w).prices,
     tv.equal + tv.audience + tv.perfMean,
-    cotaFor(w, clubId),
+    cotaFor(w, clubId) + regionalCotaFor(w, clubId),
   );
 };
 

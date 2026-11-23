@@ -33,6 +33,8 @@ import {
 import { roundRobin, standings, type Played, type Row, type TableRules } from './league';
 import { applyOutcomes, regulationsFor, type Results } from './outcomes';
 import { estadualCompetitions } from './estaduais';
+import { finalists, regionalCompetitions, supercopa, supercopaPair } from './regionais';
+import { NORDESTE_ID, SUPERCOPA_ID, VERDE_ID } from './regionais-data';
 import type { Competition, Phase } from './schema';
 
 /** Clubs entering a phase, from the regulation alone (selector widths). */
@@ -135,7 +137,7 @@ export interface SeasonOptions {
   /** Last season's results, for `{ from: 'competition', season: 'previous' }`. */
   previous?: Results;
   deduct?: Record<string, number>;
-  /** Also play the state championships (the career does; the competition tests do not). */
+  /** Also play the state championships, regional cups and Supercopa (the career does; the competition tests do not). */
   estaduais?: boolean;
 }
 
@@ -158,6 +160,9 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     const est = estadualCompetitions(pack, season, (k) => tier.get(k));
     competitions.push(...est.competitions);
     Object.assign(members, est.members);
+    const reg = regionalCompetitions(pack, season, opts.previous ?? {});
+    competitions.push(...reg.competitions);
+    Object.assign(members, reg.members);
   }
   const cityState = new Map(pack.cities.map((c) => [c.id, c.state]));
   const s: SeasonState = {
@@ -180,6 +185,7 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     ...(opts.deduct && Object.keys(opts.deduct).length > 0 && { deduct: opts.deduct }),
   };
   addCopa(s);
+  if (opts.estaduais) addSupercopa(s);
   openReady(s);
   return s;
 }
@@ -192,11 +198,26 @@ function addCopa(s: SeasonState): void {
   const tiers = s.competitions
     .filter((c) => c.scope === 'nacional' && c.tier !== null && c.category === 'profissional')
     .map((c) => ({ tier: c.tier!, clubIds: s.members[c.id] ?? [] }));
-  const field = copaField(tiers, s.ranking);
+  // Last season's Copa do Nordeste and Copa Verde champions take group 2 places (copa.ts).
+  const field = copaField(tiers, s.ranking, {
+    nordeste: finalists(s.previous, NORDESTE_ID),
+    verde: finalists(s.previous, VERDE_ID),
+  });
   if (!field) return;
   const cup = copaDoBrasil(s.season, field);
   s.competitions.push(cup);
   s.members[COPA_ID] = copaMembers(field);
+}
+
+/** The Supercopa joins when the top division is there: last season's two champions (regionais.ts). */
+function addSupercopa(s: SeasonState): void {
+  const serie = s.competitions.find(
+    (c) => c.scope === 'nacional' && c.tier === 1 && c.category === 'profissional',
+  );
+  const pair = serie && supercopaPair(serie, s.members[serie.id] ?? [], s.ranking, s.previous);
+  if (!pair) return;
+  s.competitions.push(supercopa(s.season, pair));
+  s.members[SUPERCOPA_ID] = [...pair];
 }
 
 const tableRules = (s: SeasonState, c: Competition, p: Phase): TableRules =>
@@ -504,7 +525,8 @@ export const finishSeason = (s: SeasonState, next: Competition[]) => {
 /**
  * Season checks of TEST_STRATEGY §6: every phase over and every match played;
  * nobody plays twice a day; rest kept; every moved match recorded; second
- * legs after first legs; division clubs in one division only.
+ * legs after first legs; division clubs in one division only. A match of priority 0 may be
+ * squeezed between two others (see below).
  */
 export function checkSeason(s: SeasonState): string[] {
   const problems: string[] = [];
@@ -519,7 +541,12 @@ export function checkSeason(s: SeasonState): string[] {
     for (let i = 1; i < list.length; i++) {
       const gap = list[i]!.day - list[i - 1]!.day;
       if (gap === 0) problems.push(`${club} plays twice on ${isoOf(list[i]!.day)}`);
-      else if (gap < Math.max(list[i]!.rest, list[i - 1]!.rest))
+      // Rest gives way for a lowest priority match (a state championship straggler behind
+      // league, cup and a weekly regional cup finds no rested day, calendar.ts `place`).
+      else if (
+        gap < Math.max(list[i]!.rest, list[i - 1]!.rest) &&
+        Math.min(list[i]!.priority, list[i - 1]!.priority) > 0
+      )
         problems.push(`${club} rests ${gap} day(s) before ${list[i]!.id}`);
     }
   }
