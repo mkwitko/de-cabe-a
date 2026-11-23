@@ -45,7 +45,7 @@
  * 25 mar a 7 jun, 42 jogos em 10 datas; inscrições até 19 mai, véspera da semifinal. Dinheiro
  * (R$ 3,8 mi): cota da 1ª fase 300, 200, 150 e 100 mil (3 clubes em cada nível, ranking da CBF);
  * semifinal 200 mil (4 clubes), vice 250 mil, campeão 500 mil. O campeão vai à 3ª fase da Copa do
- * Brasil de 2027 (REC, Art. 5º).
+ * Brasil do ano seguinte (REC, Art. 5º; copa.ts `group2Size`).
  *
  * PARÂMETRO (sem fonte; listados no PR): ver `NOTES`.
  */
@@ -123,10 +123,10 @@ export const PRIZES = {
 export const NOTES = [
   'Entry reads last season (the real 2026 cups used the 2025 state leagues): champion and runner-up of the state championship, the extra berth by reputation (CBF ranking stands in); the first season, which has no last season, takes the best by reputation. PARÂMETRO.',
   "Clubs in Libertadores/Sul-Americana play neither the Copa do Nordeste (Bahia 2026) nor the Copa Sul-Sudeste (REC Art. 2º). The career has no Conmebol cups yet: the 12 best of last season's Série A and the Copa do Brasil champion stand in for them (Brazil had 13 or 14 places in 2026); a first season takes the 12 best Série A clubs by reputation. PARÂMETRO.",
-  'Copa Sul-Sudeste: the champion is guaranteed a Copa do Brasil place, ahead of the ranking in group 3 (2nd phase), not the 3rd phase of the REC: a fifth group-2 place breaks the 126-club format (48 clubs in the 3rd phase), and the 2027 Copa do Brasil regulation that fits it is not out. Group draw by reputation pots; dates by weekday (six Wednesdays from 25 March, semi-finals 20 and 27 May, final 3 and 7 June). PARÂMETRO.',
+  'Copa Sul-Sudeste: group draw by reputation pots; dates by weekday (six Wednesdays from 25 March, semi-finals 20 and 27 May, final 3 and 7 June). PARÂMETRO.',
   'Dates move by weekday (first Wednesday on or after 24 March) so every season fits; the two final legs are Wed/Sun (real: Tue 2 Jun and Sat 6 Jun) and the Copa Norte final second leg Wed 27 May (real 28 May). PARÂMETRO.',
   'Draw: clubs in pots by reputation (the real draw is at the CBF); quarter-finals seeded 1 v 8, 4 v 5, 2 v 7, 3 v 6; Copa Verde single-game semi-finals host by the better seed. PARÂMETRO.',
   'First-phase share by reputation blocks, not the CBF ranking; priority below the national series (like the state championships); VAR on; results weigh half on boards. PARÂMETRO.',
   'Supercopa: first Sunday of February (2025 and 2026 editions), neutral venue (no home crowd, no one-sided trip, gate to the organiser; host drawn only for the listing); the Conmebol US$ 1 mi counted at the reported R$ 5,23 mi; first career season has no last season: the two best Série A clubs by reputation. PARÂMETRO.',
-  'Copa do Brasil 3rd phase: the 2026 regulation has four group-2 places (Série C, Série D, Copa Verde, Copa do Nordeste), so one Copa Verde place (the final winner). The 2027 press (TNH1, A Tarde, DOL, March 2026) has the CBF keeping the 126 clubs and changing only the state places (a federation ranked 15th to 27th may give one of its three to a state cup), with no extra regional place; a Copa Norte and a Copa Centro-Oeste place each would need a 127th club, so the 2026 four stay; a champion already in the Copa through Série A passes the place to the runner-up (as Confiança took Bahia place in 2026, Lance!). PARÂMETRO.',
+  'Copa do Brasil 3rd phase: 2026 has four group-2 places (Série C, Série D, Copa Verde, Copa do Nordeste). From 2027 each regional cup gives one (Copa do Nordeste, Copa Norte, Copa Centro-Oeste; Copa Sul-Sudeste by its REC Art. 5º) with Série C and D: six. The field stays 126 and the 3rd phase 48, so the 1st phase goes from 28 to 32 clubs and the ranking group from 102 to 100 (copa.ts `group2Size`); the CBF has not published how it fits them. A champion already in hands the place to its runner-up (Confiança for Bahia, 2026, Lance!). PARÂMETRO.',
 ] as const;

@@ -53,6 +53,20 @@ export const COPA_PHASES = [
 export const COPA_GROUPS = { serieA: 20, others: 4, ranking: 102 } as const;
 export const COPA_FIRST_PHASE = 28;
 
+/**
+ * Group 2 (straight into the 3rd phase) by season. 2026: the Série C, Série D, Copa Verde and
+ * Copa do Nordeste champions (REC 2026). From 2027 the regional cups give one place each: Copa do
+ * Nordeste, Copa Norte, Copa Centro-Oeste (CBF, the Copa Verde's two halves) and Copa Sul-Sudeste
+ * (its REC 2026, Art. 5º), with the Série C and D champions: six. The field stays 126 (TNH1, A
+ * Tarde, DOL, Mar 2026) and the 3rd phase 48, so the 1st phase grows by four (28 to 32) and
+ * the ranking group shrinks by two (102 to 100). How the CBF fits the six is not published:
+ * PARÂMETRO, the smallest change that keeps every phase a whole knockout.
+ */
+export const group2Size = (season: number): number => (season >= 2027 ? 6 : COPA_GROUPS.others);
+/** Clubs of the 1st phase: two more for each group 2 place above four. */
+export const firstPhaseSize = (group2: number): number => COPA_FIRST_PHASE + 2 * (group2 - 4);
+const rankingSize = (group2: number) => 126 - COPA_GROUPS.serieA - group2;
+
 export interface CopaField {
   /** The 20 Série A clubs, entering at the 5th phase. */
   serieA: string[];
@@ -74,12 +88,16 @@ export interface TierMembers {
 export function copaField(
   tiers: readonly TierMembers[],
   ranking: readonly string[],
-  /** Last season's Copa do Nordeste, Copa Verde and Copa Sul-Sudeste, champion first (regionais.ts). */
+  /** Last season's regional cups, champion first (regionais.ts). */
   regional: {
     nordeste: readonly string[];
     verde: readonly string[];
+    norte?: readonly string[];
+    centroOeste?: readonly string[];
     sulSudeste?: readonly string[];
   } = { nordeste: [], verde: [] },
+  /** The season the field is for: its group 2 (`group2Size`). */
+  season = 2026,
 ): CopaField | null {
   const at = new Map(ranking.map((id, i) => [id, i]));
   const rank = (id: string) => at.get(id) ?? ranking.length;
@@ -99,22 +117,31 @@ export function copaField(
   };
   const [c, d] = [best(of(3)), best(of(4))];
   const [c0, d0] = [take(c), take(d)];
-  const [ne, verde] = [take(regional.nordeste) ?? take(c), take(regional.verde) ?? take(d)];
-  const group2 = [c0, ne, d0, verde].filter((x): x is string => x !== undefined);
-  if (group2.length !== COPA_GROUPS.others) return null;
-  // The Copa Sul-Sudeste champion is sure of a place: first of group 3 (regionais-data.ts NOTES).
-  const ss = regional.sulSudeste?.[0];
-  const sure = ss !== undefined && !taken.has(ss) ? [ss] : [];
-  const rest = [
-    ...sure,
-    ...best(
-      tiers
-        .filter((t) => t.tier > 1)
-        .flatMap((t) => t.clubIds.filter((id) => !taken.has(id) && !sure.includes(id))),
-    ),
-  ];
-  if (rest.length < COPA_GROUPS.ranking) return null;
-  return { serieA, group2, group3: rest.slice(0, COPA_GROUPS.ranking) };
+  const six = group2Size(season) === 6;
+  // A regional champion already in hands the place to its runner-up; with no regional result (a
+  // first season) the next best of Série C or D stands in.
+  const regionalOf = (ids: readonly string[] | undefined, standIn: readonly string[]) =>
+    take(ids ?? []) ?? take(standIn);
+  const group2 = (
+    six
+      ? [
+          c0,
+          regionalOf(regional.nordeste, c),
+          d0,
+          regionalOf(regional.norte, d),
+          regionalOf(regional.centroOeste, c),
+          regionalOf(regional.sulSudeste, d),
+        ]
+      : [c0, regionalOf(regional.nordeste, c), d0, regionalOf(regional.verde, d)]
+  ).filter((x): x is string => x !== undefined);
+  if (group2.length !== group2Size(season)) return null;
+  // 2026: the Copa Sul-Sudeste champion's place is from 2027 (REC Art. 5º).
+  const rest = best(
+    tiers.filter((t) => t.tier > 1).flatMap((t) => t.clubIds.filter((id) => !taken.has(id))),
+  );
+  const size = rankingSize(group2.length);
+  if (rest.length < size) return null;
+  return { serieA, group2, group3: rest.slice(0, size) };
 }
 
 interface Spec {
@@ -153,7 +180,8 @@ export function copaDoBrasil(season: number, field: CopaField): Competition {
     return { start: shift(start, years), end: shift(end, years), weekdays };
   };
   const g3 = field.group3;
-  const entering = g3.length - COPA_FIRST_PHASE;
+  const first = firstPhaseSize(field.group2.length);
+  const entering = g3.length - first;
   const from = (phaseId: string, n: number) => ({
     from: 'phase' as const,
     phaseId,
@@ -189,19 +217,19 @@ export function copaDoBrasil(season: number, field: CopaField): Competition {
     excludeRelegated: false,
   });
   const phases: Phase[] = [
-    phase(0, 'mata-mata', [{ from: 'list', clubIds: g3.slice(-COPA_FIRST_PHASE) }], 1, 14, 'draw'),
+    phase(0, 'mata-mata', [{ from: 'list', clubIds: g3.slice(-first) }], 1, first / 2, 'draw'),
     phase(
       1,
       'mata-mata',
-      [from('fase-1', 14), { from: 'list', clubIds: g3.slice(0, entering) }],
+      [from('fase-1', first / 2), { from: 'list', clubIds: g3.slice(0, entering) }],
       1,
-      44,
+      (first / 2 + entering) / 2,
       'draw',
     ),
     phase(
       2,
       'mata-mata',
-      [from('fase-2', 44), { from: 'list', clubIds: field.group2 }],
+      [from('fase-2', (first / 2 + entering) / 2), { from: 'list', clubIds: field.group2 }],
       1,
       24,
       'draw',
@@ -227,7 +255,7 @@ export function copaDoBrasil(season: number, field: CopaField): Competition {
       place('supercopa-do-brasil', 'final', 1),
     ]),
   ];
-  const size = COPA_GROUPS.serieA + COPA_GROUPS.others + g3.length;
+  const size = COPA_GROUPS.serieA + field.group2.length + g3.length;
   return {
     id: COPA_ID,
     name: 'Copa do Brasil',
