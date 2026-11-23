@@ -370,6 +370,11 @@ for (const width of [360, 1280]) {
     );
     expect(drill).toBeGreaterThan(75);
     await expect(page.getByRole('listitem', { name: /fôlego \d+%/ })).not.toHaveCount(0);
+    // The week on the board: a session changed makes the plan the person's own.
+    await expect(page.getByText(/^Plano pronto: carga \d+/)).toBeVisible();
+    await page.getByRole('combobox', { name: 'Manhã' }).first().selectOption({ label: 'Tático' });
+    await expect(page.getByText(/^Seu plano: carga \d+/)).toBeVisible({ timeout: 30_000 });
+    await page.screenshot({ path: `test-results/treino-semana-${width}.png`, fullPage: true });
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );

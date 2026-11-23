@@ -140,7 +140,12 @@ import {
   MATCH_COST,
   RECOVERY,
   myStrength,
-  setIntensity,
+  setPlan,
+  PLANS,
+  planLoad,
+  drillTargetOf,
+  weekdayOf,
+  type Session,
   trainingOn,
   type Intensity,
   type SquadPlayer,
@@ -199,6 +204,8 @@ export type SimRequest = { id: number } & (
   /** One bid for a player of the person's, as its talk stands (BidTalk.tsx). */
   | { type: 'bid'; bidId: string }
   | { type: 'train'; intensity: Intensity }
+  /** The week planned session by session (club-domain career/training.ts `setPlan`). */
+  | { type: 'plan'; plan: Session[][] }
   | { type: 'promote'; playerId: string }
   /** The market: the person's players to sell and the best of the others, by position. */
   /** `club`: another club whose squad the person is looking at, or null. */
@@ -450,6 +457,15 @@ function outOf(w: CareerWorld, id: string): { kind: InjuryKind; days: number } |
 export interface TrainingView {
   intensity: Intensity;
   drill: number;
+  /** The week as planned, Monday first; the ready plan of the intensity when none was laid out. */
+  plan: Session[][];
+  /** Whether the person laid the plan out (else it is the ready one of the intensity). */
+  custom: boolean;
+  /** The plan's load (0..42) and where the drill settles under it, in percent. */
+  load: number;
+  settles: number;
+  /** The club's matches in the next seven days, by weekday (0 Monday), with the opponent. */
+  week: { weekday: number; iso: string; opponent: string; prepared: boolean }[];
   options: { intensity: Intensity; recovery: number; target: number }[];
   matchCost: number;
   /** Days to the next match; null when none is set. */
@@ -479,9 +495,25 @@ function trainingView(w: CareerWorld): TrainingView {
   const now = trainingOn(w, w.day);
   const then = trainingOn(w, matchDay(w));
   const xi = lineupOf(w).xi;
+  const plan = now.plan ?? PLANS[now.intensity];
+  const byId = new Map(w.pack.clubs.map((c) => [c.id, c]));
   return {
     intensity: now.intensity,
     drill: percent(now.drill),
+    plan,
+    // A ready plan picked by its button reads as that, not as the person's own.
+    custom:
+      now.plan !== undefined && JSON.stringify(now.plan) !== JSON.stringify(PLANS[now.intensity]),
+    load: planLoad(plan),
+    settles: percent(drillTargetOf(plan)),
+    week: upcomingFor(w.season, w.clubId, 3)
+      .filter((u) => u.day > w.day && u.day <= w.day + 7)
+      .map((u) => ({
+        weekday: weekdayOf(u.day),
+        iso: isoOf(u.day),
+        opponent: byId.get(u.home === w.clubId ? u.away : u.home)?.shortName ?? '',
+        prepared: plan[weekdayOf(u.day - 1)]!.includes('matchPrep'),
+      })),
     options: INTENSITIES.map((intensity) => ({
       intensity,
       // One decimal: 4.5% a day is not 5%.
@@ -1675,8 +1707,12 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       self.postMessage(reply, { transfer: reply.save ? [reply.save.bytes] : [] });
       return;
     }
-    if (world && (r.type === 'training' || r.type === 'train' || r.type === 'promote')) {
-      if (r.type === 'train') setIntensity(world, r.intensity);
+    if (
+      world &&
+      (r.type === 'training' || r.type === 'train' || r.type === 'plan' || r.type === 'promote')
+    ) {
+      if (r.type === 'train') setPlan(world, PLANS[r.intensity]);
+      if (r.type === 'plan') setPlan(world, r.plan);
       if (r.type === 'promote') promote(world, r.playerId);
       const reply: SimReply = { id: r.id, training: trainingView(world) };
       if (r.type !== 'training')
