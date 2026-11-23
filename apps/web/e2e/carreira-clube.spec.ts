@@ -2,16 +2,19 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * The career stops on a window's last day (deadline day) before the next match: close the
- * window until the match is next. Returns the play button.
+ * The career stops on each pre-season day and on a window's last day (deadline day) before the
+ * next match: skip to the debut and close the window until the match is next. Returns the play
+ * button.
  */
 async function toMatch(page: Page) {
   const play = page.getByRole('button', { name: 'Só o resultado' });
   const close = page.getByRole('button', { name: 'Fechar a janela' });
-  for (let i = 0; i < 3; i++) {
-    await expect(play.or(close)).toBeEnabled({ timeout: 60_000 });
-    if (!(await close.isVisible())) break;
-    await close.click();
+  const skip = page.getByRole('button', { name: 'Ir para a estreia' });
+  for (let i = 0; i < 4; i++) {
+    await expect(play.or(close).or(skip)).toBeEnabled({ timeout: 60_000 });
+    if (await skip.isVisible()) await skip.click();
+    else if (await close.isVisible()) await close.click();
+    else break;
   }
   await expect(play).toBeEnabled({ timeout: 60_000 });
   return play;
@@ -39,11 +42,17 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await page.screenshot({ path: 'test-results/carreira-ofertas-390.png', fullPage: true });
   await accept.first().click();
   const play = page.getByRole('button', { name: 'Só o resultado' });
-  // A new career shows the next match even on deadline day, a first-week guide, and an inbox
-  // split into what asks for an answer and the news.
-  await expect(page.getByText('Próximo jogo', { exact: true }).first()).toBeVisible({
+  // A new career opens on the squad's return (pre-season) with the debut beside it, a first-week
+  // guide, and an inbox split into what asks for an answer and the news.
+  await expect(page.getByRole('heading', { name: 'Pré-temporada' })).toBeVisible({
     timeout: 60_000,
   });
+  await expect(page.getByText('Estreia', { exact: true })).toBeVisible();
+  // One pre-season day passes on.
+  const day = page.getByText(/^Faltam? \d+ dias?/);
+  const dayBefore = await day.innerText();
+  await page.getByRole('button', { name: 'Avançar um dia' }).click();
+  await expect(day).not.toHaveText(dayBefore, { timeout: 60_000 });
   await expect(page.getByRole('region', { name: 'Primeiros passos' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pede resposta' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Notícias' })).toBeVisible();

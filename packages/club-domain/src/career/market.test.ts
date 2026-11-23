@@ -46,7 +46,7 @@ describe('transfers in the world (07)', () => {
         expect(w.day).toBe(d.day - 1);
         expect(windowOpen(d.day + 1)).toBe(false);
         stops.push(d.day);
-      } else playDecision(w, d);
+      } else if (d.kind === 'match') playDecision(w, d);
     }
     expect(stops.map((d) => windowOf(d))).toEqual(['domestic', 'second']);
   });
