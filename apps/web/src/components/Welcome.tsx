@@ -42,7 +42,8 @@ export function FirstRun() {
     if (!welcomed()) {
       // Already a member, or a guest who picked a nickname before: not a first visit.
       if (me.account || me.nickname) return markWelcomed();
-      if (/^\/(conta|entrar)(\/|$)/.test(pathname)) return;
+      // The Modo Clube pitch is read first: the welcome waits for the next page.
+      if (/^\/(conta|entrar|modo-clube)(\/|$)/.test(pathname)) return;
       if (sceneFor(pathname) === 'level' && !levelEnded) return;
       setWelcome(true);
       return;
@@ -129,7 +130,7 @@ function Welcome({ onDone }: { onDone: () => void }) {
             id="welcome-lede"
             className="max-w-[40ch] text-base font-medium sm:text-lg text-chalk-soft"
           >
-            Adivinhe o craque pela carreira, ganhe estrelas e cole as figurinhas no álbum.
+            Assuma um clube no Modo Clube ou adivinhe o craque nos minijogos.
           </p>
         </header>
 
