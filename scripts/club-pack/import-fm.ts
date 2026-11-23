@@ -372,6 +372,8 @@ for (const p of playerRows) {
 const ability = (p: Record<string, string>) => num(p.ability_current);
 const isKeeper = (p: Record<string, string>) => num(p.positions_gk) >= 15;
 const squadOf = new Map<string, Record<string, string>[]>();
+/** What is left of each club's under-20 (slot 1) and under-17 (slot 2) teams after the top-up. */
+const youthRowsOf = new Map<string, Record<string, string>[]>();
 for (const [uid, rows] of byClub) {
   const senior = rows.filter((p) => p.team_slot === '0');
   const rest = rows.filter((p) => p.team_slot !== '0').sort((a, b) => ability(b) - ability(a));
@@ -386,6 +388,7 @@ for (const [uid, rows] of byClub) {
   }
   for (let i = 0; i < rest.length; i++)
     drop('player in a reserve or U18 slot, outside the senior squad');
+  youthRowsOf.set(uid, rest);
   if (senior.length > MAX_SQUAD) {
     senior.sort((a, b) => ability(b) - ability(a));
     const kept = senior.slice(0, MAX_SQUAD);
@@ -839,6 +842,34 @@ for (const [uid, squad] of squadOf)
     const pl = playerOf(row, uid, `fm-p${row.uid}`);
     if (pl) players.push(pl);
   }
+
+// Youth teams (career/academy.ts): the boys of the clubs in the national divisions, up to twenty
+// years old, the best YOUTH_MAX of a club. Kept apart from `players`: only the person's club takes
+// its boys in, into its academy, on day one.
+const YOUTH_MAX = 40;
+const YOUTH_AGE = 20;
+const divisionClubs = new Set([
+  ...a27,
+  ...b27,
+  ...c27,
+  ...d27,
+  ...serieA,
+  ...serieB,
+  ...serieC,
+  ...serieD,
+]);
+const youth: { team: 'u20' | 'u17'; player: PackPlayer }[] = [];
+for (const [uid, rows] of youthRowsOf) {
+  if (!divisionClubs.has(uid)) continue;
+  const boys = rows
+    .filter((r) => num(r.age) > 0 && num(r.age) <= YOUTH_AGE)
+    .sort((a, b) => ability(b) - ability(a))
+    .slice(0, YOUTH_MAX);
+  for (const row of boys) {
+    const pl = playerOf(row, uid, `fm-p${row.uid}`);
+    if (pl) youth.push({ team: row.team_slot === '2' ? 'u17' : 'u20', player: pl });
+  }
+}
 
 // ── Clubs, cities, staff, governance ─────────────────────────────────────────────────────────────
 
@@ -1668,6 +1699,7 @@ const draft: Pack = {
   cities: [...cities.values()],
   academies: [],
   youthCompetitions: [],
+  youth,
   names: { first: FIRST_NAMES, last: LAST_NAMES, nicknames: NICKNAMES },
 };
 const t1 = Date.now();
@@ -1738,7 +1770,8 @@ const unmappedNations = players.filter((p) => p.nationality === 'XX').length;
 report.notes.push(
   `nations: ${unmappedNations} players with an unidentified nation (the ${Object.keys(nations).length} ids of fm-nations.json cover every player kept); the pack stores ISO codes only, names are not stored (Intl.DisplayNames('pt-BR') resolves all ${new Set(Object.values(nations)).size} codes when a name is needed)`,
   'regulations (05 §8): A, B, C (24 clubs in 2027, 28 in 2028) and D as realDivisions(); from 2028 C sends six down and D refills from the ranking: PARÂMETRO, not published',
-  'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
+  'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the senior squads: see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
+  `youth: ${youth.length} boys of the division clubs' under-20 and under-17 teams (up to ${YOUTH_MAX} a club, ${YOUTH_AGE} years old at most) in pack.youth, for the person's academy`,
   'cities: municipal data from data/br-cities.json (fetch-cities.ts): IBGE SIDRA 6579 population and 5938 GDP per capita a month as income, Wikidata P625/P2044 (Open-Meteo elevation where missing), NASA POWER monthly climate 2001-2025; a city the file does not know keeps the neutral climate and flat income (see estimated)',
   'rivals: curated derbies (data/rivals.json, sources inside) where the club has one, else HEURISTIC, the three best-reputed other clubs of the same FM city_id',
   `fans: ${fansResearched} clubs with their supporters from data/fans.json (Ipsos-Ipec 2025), the rest estimated from the public or reputation`,
