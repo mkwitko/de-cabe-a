@@ -40,15 +40,11 @@ export const POSTPONE_LIMIT_DAYS = 60;
 /** `rounds` base dates on the window's weekdays, spread evenly from the first one. */
 export function baseDates(w: DateWindow, rounds: number): number[] {
   const free: number[] = [];
-  const xs = (w.exclude ?? []).map((x) => ({
-    from: dayOf(x.start),
-    to: dayOf(x.end),
-    weekdays: x.weekdays,
-  }));
+  const x = w.exclude && { from: dayOf(w.exclude.start), to: dayOf(w.exclude.end) };
   for (let d = dayOf(w.start); d <= dayOf(w.end); d++)
     if (
       w.weekdays.includes(weekday(d)) &&
-      !xs.some((x) => d >= x.from && d <= x.to && x.weekdays.includes(weekday(d)))
+      !(x && d >= x.from && d <= x.to && w.exclude!.weekdays.includes(weekday(d)))
     )
       free.push(d);
   if (free.length < rounds)

@@ -65,19 +65,24 @@ export function Cup({ sim }: { sim: SimView }) {
           </ul>
         </div>
       )}
-      {[...cup.phases].reverse().map((p, i) => (
-        <details key={p.id} open={i === 0}>
-          <summary className="cursor-pointer font-semibold">
-            {t('copa.phase', { p: p.id })}
-            <span className="ml-2 text-xs text-chalk-soft">{p.ties.length}</span>
-          </summary>
-          <ol className="mt-1">
-            {p.ties.map((tie) => (
-              <Row key={tie.a + tie.b} tie={tie} cup={cup} clubId={sim.clubId} />
-            ))}
-          </ol>
-        </details>
-      ))}
+      <details>
+        <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-chalk-soft">
+          {t('cup.bracket')}
+        </summary>
+        {[...cup.phases].reverse().map((p, i) => (
+          <details key={p.id} open={i === 0}>
+            <summary className="cursor-pointer font-semibold">
+              {t('copa.phase', { p: p.id })}
+              <span className="ml-2 text-xs text-chalk-soft">{p.ties.length}</span>
+            </summary>
+            <ol className="mt-1">
+              {p.ties.map((tie) => (
+                <Row key={tie.a + tie.b} tie={tie} cup={cup} clubId={sim.clubId} />
+              ))}
+            </ol>
+          </details>
+        ))}
+      </details>
     </section>
   );
 }

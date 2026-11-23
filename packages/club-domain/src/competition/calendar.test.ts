@@ -84,7 +84,7 @@ describe('MC-173 placing matches', () => {
         start: '2026-01-25',
         end: '2026-03-15',
         weekdays: [0, 3],
-        exclude: [{ start: '2026-01-01', end: '2026-03-08', weekdays: [0] }],
+        exclude: { start: '2026-01-01', end: '2026-03-08', weekdays: [0] },
       },
       8,
     );

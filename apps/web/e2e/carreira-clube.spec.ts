@@ -95,6 +95,10 @@ test('career: free choice of a first-division club at 1280 px', async ({ page })
   await page.getByRole('listitem').getByRole('button').first().click();
   await expect(page.getByText(/Primeira Divisão, temporada/)).toBeVisible({ timeout: 30_000 });
   // The division table first; the state championship's table follows it.
+  await page
+    .getByRole('button', { name: /^Ver tabela/ })
+    .first()
+    .click();
   await expect(page.locator('table').first().locator('tbody tr')).toHaveCount(20);
   await page.screenshot({ path: 'test-results/carreira-casa-1280.png', fullPage: true });
 });
@@ -119,6 +123,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
     else if (await close.isVisible()) await close.click();
     else if (await play.isVisible()) await play.click();
   }
+  await page.getByText('Ver o extrato').click();
   await expect(page.getByText('Salários', { exact: true })).toBeVisible();
   await expect(page.getByText('Bilheteria', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'test-results/carreira-fim-1280.png', fullPage: true });
@@ -334,7 +339,7 @@ for (const width of [360, 1280]) {
       .first()
       .click();
     await room(page, 'Campo de treino').click();
-    await expect(page.getByRole('heading', { name: 'Semana de treino' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Ajustar dia a dia' })).toBeVisible({
       timeout: 30_000,
     });
     await expect(page.getByRole('button', { name: /^Normal/ })).toHaveAttribute(
@@ -355,6 +360,11 @@ for (const width of [360, 1280]) {
     );
     await page.getByRole('button', { name: /^Forte/ }).click();
     expect((await kept).status()).toBe(200);
+    await expect(page.getByRole('button', { name: /^Forte/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await page.waitForTimeout(1500);
     await room(page, 'Sala do técnico').click();
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
@@ -372,6 +382,7 @@ for (const width of [360, 1280]) {
     await expect(page.getByRole('listitem', { name: /fôlego \d+%/ })).not.toHaveCount(0);
     // The week on the board: a session changed makes the plan the person's own.
     await expect(page.getByText(/^Plano pronto: carga \d+/)).toBeVisible();
+    await page.getByText('Ajustar dia a dia').click();
     await page.getByRole('combobox', { name: 'Manhã' }).first().selectOption({ label: 'Tático' });
     await expect(page.getByText(/^Seu plano: carga \d+/)).toBeVisible({ timeout: 30_000 });
     await page.screenshot({ path: `test-results/treino-semana-${width}.png`, fullPage: true });
@@ -463,6 +474,7 @@ for (const width of [360, 1280]) {
     await expect(squad.getByRole('listitem')).toHaveCount(size + 1, { timeout: 30_000 });
     await expect(squad.getByRole('listitem').filter({ hasText: name })).not.toHaveCount(0);
     await room(page, 'Sala do técnico').click();
+    await page.getByText('Ver o extrato').click();
     await expect(page.getByText('Transferências', { exact: true })).toBeVisible();
     await room(page, 'Mercado').click();
     await part('Seu elenco').click();

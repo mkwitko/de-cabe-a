@@ -169,8 +169,4 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes pe
 - Regulamento Específico da Competição (CBF, PDF em [clicrdc](https://files.clicrdc.com.br/wp-content/uploads/2026/03/REC_COPA_SUL_SUDESTE_2026_96e5c88253-1.pdf)): participação (Art. 2º), vaga na 3ª fase da Copa do Brasil 2027 (Art. 5º), fases e confrontos (Art. 10 a 19).
 - Clubes e sorteio: [Jornal Grande Bahia](https://jornalgrandebahia.com.br/?p=1329805).
 - Cotas e prêmios (R$ 3,8 mi): [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/saiba-valores-recebido-pelos-times-que-disputam-as-copas-regionais/).
-- A partir de 2027 o campeão entra direto na 3ª fase, com os campeões do Nordeste, da Copa Norte e da Copa Centro-Oeste e das Séries C e D (seis vagas); para manter 126 clubes, a 1ª fase passa de 28 para 32 e o grupo do ranking de 102 para 100 (PARÂMETRO: a CBF não publicou como encaixa). Os clubes em torneios da Conmebol são os 12 melhores da Série A anterior mais o campeão da Copa do Brasil.
-
-## Pausa da Copa do Mundo
-
-- Série A 2026: 18ª rodada encerrada em 31/5, 19ª marcada para 22/7 (Copa do Mundo de 11/6 a 19/7). Fontes: [Band](https://www.band.com.br/esportes/saiba-quando-o-brasileirao-vai-voltar-apos-a-copa-do-mundo-202606010916), [90min](https://www.90min.com/pt-br/quando-brasileirao-parar-para-copa-do-mundo), [O Liberal](https://www.oliberal.com/esportes/copa-do-mundo/veja-quanto-tempo-o-brasileirao-ficara-paralisado-durante-a-copa-do-mundo-1.1123079). O jogo repete a pausa a cada quatro anos (2030, 2034...). A volta antecipada para 16/7 por causa das copas da Conmebol não foi modelada.
+- PARÂMETRO: no jogo, o campeão entra na Copa do Brasil pelo grupo 3 (2ª fase), não na 3ª fase. Os clubes em torneios da Conmebol são os 12 melhores da Série A anterior mais o campeão da Copa do Brasil.
