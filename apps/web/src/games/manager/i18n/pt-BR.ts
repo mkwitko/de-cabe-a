@@ -537,8 +537,13 @@ export const ptBR = {
   'training.prepHint':
     'Ponha uma preparação de jogo na véspera da partida: o time entra mais bem preparado para o adversário.',
   'training.planHint':
-    'Físico e técnico pesam mais nas pernas que tático e bola parada. A carga da semana decide o cansaço e a evolução (até 12 leve, até 20 normal). Mais tático sobe o entrosamento; recuperação devolve o fôlego mais rápido.',
+    'Físico e técnico pesam mais nas pernas que tático e bola parada. A carga da semana decide o cansaço e a evolução (até 12 leve, até 20 normal); dias de jogo não contam. Mais tático sobe o entrosamento; recuperação devolve o fôlego mais rápido.',
   'training.intensity': '{i, select, light {Leve} normal {Normal} other {Forte}}',
+  'training.focus': 'Foco da temporada',
+  'training.focusOf':
+    '{f, select, technical {Técnico} mental {Mental} physical {Físico} other {Equilibrado}}',
+  'training.focusHint':
+    'O grupo escolhido evolui mais rápido na virada da temporada; os outros, um pouco mais devagar. Vale para o elenco e a base.',
   'training.recovery': 'Fôlego volta {n, number}% por dia',
   'training.target': 'Entrosamento vai a {n}%',
   'training.drill': 'Entrosamento hoje',

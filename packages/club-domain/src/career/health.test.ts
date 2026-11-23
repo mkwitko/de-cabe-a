@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { careerMatch, nextDecision, openCareer, playDecision } from './advance';
-import { fielded, hurtIn, injuredOn, rivalOut, rivalOutIds } from './health';
+import { fielded, hurtIn, injuredOn, rested, rivalOut, rivalOutIds } from './health';
+import { isEstadual } from '../competition/estaduais';
+import { tierOfClub } from '../market/books';
 import { formationOf } from '../match/fixture-input';
 import { loadCareer, saveCareer } from './save';
 import { bestLineup, lineupOf, setLineup } from './squad';
@@ -140,7 +142,7 @@ describe('injuries (08, corte 1)', () => {
     const other = d.home === clubId ? d.away : d.home;
     const best = bestLineup({ pack: w.pack, clubId: other }, formationOf(other)).xi;
     const gone = rivalOutIds(w, other, best, d.day);
-    expect(gone.size).toBe(rivalOut(w, other, d.day));
+    expect(gone.size).toBe(Math.min(10, rivalOut(w, other, d.day) + rested(w, other, d.day)));
     const m = careerMatch(w, d);
     const theirs = m.input.teams[m.mine === 0 ? 1 : 0].players.slice(0, 11).map((p) => p.id);
     for (const id of gone) expect(theirs).not.toContain(id);
@@ -170,4 +172,24 @@ it('the eleven holds no more foreigners than the season allows', async () => {
   expect(foreign(bestLineup(w, lineupOf(w).formation, undefined, limit).xi)).toBeLessThanOrEqual(
     limit,
   );
+});
+
+it('a Série A club plays its estadual as pre-season, then its first team', () => {
+  const w = openCareer(pack, 111, clubId);
+  const ways = new Set<number>();
+  for (const c of w.pack.clubs) {
+    if (tierOfClub(w, c.id) !== 1) continue;
+    const ms = [...(w.season.calendar.byClub.get(c.id) ?? [])].sort((a, b) => a.day - b.day);
+    const debut = ms.find((m) => !isEstadual({ id: m.competitionId }))?.day ?? Infinity;
+    for (const m of ms) {
+      const n = rested(w, c.id, m.day);
+      if (!isEstadual({ id: m.competitionId }) || m.day > debut) expect(n).toBe(0);
+      else ways.add(n);
+    }
+  }
+  // Reserve sides, mixed ones and first teams among the clubs.
+  expect(ways.has(10) || ways.has(6)).toBe(true);
+  const lower = w.pack.clubs.find((c) => tierOfClub(w, c.id) > 1)!;
+  for (const m of w.season.calendar.byClub.get(lower.id) ?? [])
+    expect(rested(w, lower.id, m.day)).toBe(0);
 });

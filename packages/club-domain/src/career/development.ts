@@ -31,7 +31,7 @@ import type { Pack, PackPlayer } from '../pack/schema';
 import { goingWage } from '../market/value';
 import { PRICE_BASE, priced } from './prices';
 import { bestRoles } from '../player/ratings';
-import type { Intensity } from './training';
+import type { GrowthFocus, Intensity } from './training';
 
 type Group = 'technical' | 'mental' | 'physical';
 const GROUP = new Map<AttributeId, Group>([
@@ -79,6 +79,10 @@ function year(seed: number, p: PackPlayer, season: number): number {
   return roll < 16 ? 25 : roll >= 84 ? 170 : 80 + (roll % 5) * 10;
 }
 
+/** Percent of the year's effort on the group a club's work leans to, and on the others. */
+const FOCUSED = 130;
+const UNFOCUSED = 85;
+
 /**
  * One player a year older, at the start of `season`.
  *
@@ -91,7 +95,14 @@ function year(seed: number, p: PackPlayer, season: number): number {
  * neglected, under half and none. What age takes away none of this
  * changes.
  */
-export function develop(p: PackPlayer, seed: number, season: number, growth = 100): PackPlayer {
+export function develop(
+  p: PackPlayer,
+  seed: number,
+  season: number,
+  growth = 100,
+  /** The group his club's work leaned to: it grows faster, the others a little slower. */
+  focus?: GrowthFocus,
+): PackPlayer {
   const age = ageIn(p, season);
   const peak = p.potential.peakAge;
   const legs = legsPeak(p);
@@ -99,8 +110,10 @@ export function develop(p: PackPlayer, seed: number, season: number, growth = 10
   // All three factors in one percentage, so a point of rate stays a point.
   const effort = Math.round((drive(p) * year(seed, p, season) * growth) / 10_000);
   /** A share of what is left to the ceiling; a single point only now and then. */
-  const gain = (gap: number, rate: number, roll: number, often: number) =>
-    Math.max(roll < (often * effort) / 100 ? 1 : 0, Math.round((gap * rate * effort) / 10_000));
+  const gain = (gap: number, rate: number, roll: number, often: number, group: Group) => {
+    const e = focus ? Math.round((effort * (group === focus ? FOCUSED : UNFOCUSED)) / 100) : effort;
+    return Math.max(roll < (often * e) / 100 ? 1 : 0, Math.round((gap * rate * e) / 10_000));
+  };
   let k = 0;
   for (const a of Object.keys(out) as AttributeId[]) {
     const group = GROUP.get(a) ?? 'technical';
@@ -110,7 +123,7 @@ export function develop(p: PackPlayer, seed: number, season: number, growth = 10
       if (age <= legs) {
         const gap = p.potential.ceiling.physical - v;
         if (gap > 0)
-          out[a] = clamp(v + gain(gap, 9 + Math.round(p.potential.learning / 2), roll, 30));
+          out[a] = clamp(v + gain(gap, 9 + Math.round(p.potential.learning / 2), roll, 30, group));
       } else {
         // Past the peak the legs go: a point a year at first, two, then three.
         const past = age - legs;
@@ -128,7 +141,7 @@ export function develop(p: PackPlayer, seed: number, season: number, growth = 10
         age <= 21
           ? 9 + Math.round(p.potential.learning / 2)
           : 5 + Math.round(p.potential.learning / 3);
-      if (gap > 0) out[a] = clamp(v + gain(gap, rate, roll, 25));
+      if (gap > 0) out[a] = clamp(v + gain(gap, rate, roll, 25, group));
     } else if (group === 'mental') {
       // Experience still adds a little for some years, then holds.
       if (age <= peak + 4 && v < ceiling && roll < 35) out[a] = clamp(v + 1);
@@ -376,6 +389,8 @@ export interface SeasonLog {
   wages?: number;
   /** Each club's academy level for the crop, one digit a club in the opening pack's order. */
   youth?: string;
+  /** The group the person's work leaned to that season, and the players it was theirs for. */
+  focus?: { group: GrowthFocus; ids: string[] };
 }
 
 /** The academies' levels as `SeasonLog.youth` keeps them. */
@@ -479,10 +494,13 @@ export function codeOf(pack: Pack, mine: Mine, released: ReadonlySet<string>): s
 export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): Pack {
   const season = log.season + 1;
   const players: PackPlayer[] = [];
+  const focused = new Set(log.focus?.ids);
   for (const [i, p] of pack.players.entries()) {
     const growth = growthAt(log.growth, i);
     if (growth === null || retires(p, seed, season)) continue;
-    players.push(develop(p, seed, season, growth));
+    players.push(
+      develop(p, seed, season, growth, focused.has(p.id) ? log.focus!.group : undefined),
+    );
   }
   origin.clubs.forEach((c, i) => {
     const youth = log.youth ? Number(log.youth[i]) : undefined;
