@@ -141,6 +141,9 @@ test('career: a whole season, its money, and the turn to the next one', async ({
     timeout: 30_000,
   });
   await expect(page.getByText(/, temporada 2027/)).toBeVisible();
+  // A season that moved the club closes on a full-screen scene; walk past it.
+  const scene = page.getByRole('button', { name: /^Seguir para \d+$/ });
+  if (await scene.isVisible()) await scene.click();
   // The season is now in the club's history, in the boardroom.
   await room(page, 'Diretoria').click();
   const history = page.getByRole('heading', { name: 'História' });
