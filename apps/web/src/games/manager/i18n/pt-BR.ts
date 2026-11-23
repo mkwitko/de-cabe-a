@@ -445,6 +445,8 @@ export const ptBR = {
     '{source, select, copa {Copa do Brasil: {line, select, prize {premiação da final} other {cota da {phase}ª fase}} creditada, {amount}.} serieC {Série C: {line, select, advance {cota da fase final (quadrangular)} other {cota}} creditada, {amount}.} serieD {Série D: {line, select, prize {cota da final} other {cota da {phase}ª fase}} creditada, {amount}.} other {Direitos de TV da Série A: parte por colocação creditada, {amount}.}}',
   'inbox.estadual':
     '{position, select, 1 {Campeões do {name}!} other {{name}: {champion} é o campeão.}}{paid, select, true { Premiação creditada, {prize}.} other {}}',
+  'inbox.regional':
+    '{position, select, 1 {{name}: campeões!} other {{name}: {champion} é o campeão.}}{paid, select, true { Premiação creditada, {prize}.} other {}}',
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
   'inbox.copaDraw':

@@ -13,6 +13,7 @@ import { PRICE_BASE, priced, pricesOf } from './prices';
 import { upkeepOf } from './clubs';
 import { nationalDivisions } from './start';
 import { COTA_MONTHS, cotaFor } from './estadual';
+import { REGIONAL_MONTHS, regionalCotaFor } from './regional';
 import { closedDoors, crowdAt, punishmentAt, ticketOf, usualCrowd } from '../match/stadium';
 import { note } from './inbox';
 import { CURRENCIES, rateOf } from '../market/currency';
@@ -164,6 +165,9 @@ function monthlyBills(w: CareerWorld, day: number) {
   // three parts; the prize by position comes when it ends (estadual.ts).
   if (COTA_MONTHS.includes(month.slice(5)))
     post('cups', Math.round(priced(cotaFor(w, w.clubId), prices) / COTA_MONTHS.length));
+  // The regional cup's share (April to June, regional.ts).
+  if (REGIONAL_MONTHS.includes(month.slice(5)))
+    post('cups', Math.round(priced(regionalCotaFor(w, w.clubId), prices) / REGIONAL_MONTHS.length));
   post('sponsors', Math.round(priced(sponsors, prices) / 12));
 }
 

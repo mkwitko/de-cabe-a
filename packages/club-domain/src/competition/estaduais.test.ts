@@ -104,7 +104,8 @@ describe('state championship season', () => {
       const final = state.results[c.id]?.final;
       expect(final?.tables[0]?.[0]?.clubId, c.id).toBeTruthy();
     }
-    for (const m of state.calendar.matches.values()) expect(m.day).toBeLessThanOrEqual(end);
+    for (const m of state.calendar.matches.values())
+      if (m.competitionId.startsWith('est-')) expect(m.day).toBeLessThanOrEqual(end);
   });
 });
 

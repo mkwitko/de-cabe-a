@@ -1443,7 +1443,7 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'coachHired' ||
                   n.kind === 'approach'
                 ? n.club
-                : n.kind === 'season' || n.kind === 'estadual'
+                : n.kind === 'season' || n.kind === 'estadual' || n.kind === 'regional'
                   ? n.champion
                   : '',
           )?.name ??

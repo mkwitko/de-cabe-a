@@ -57,17 +57,21 @@ export function groupFixtures(
     const n = Math.max(...each.map((r) => r.length));
     return Array.from({ length: n }, (_, r) => each.flatMap((rounds) => rounds[r] ?? []));
   }
-  // Two groups that only meet each other: A[i] v B[(i + r) mod n].
-  const [a, b] = groups as [string[], string[]];
-  if (groups.length !== 2 || a.length !== b.length)
-    throw new Error('opponents "other" needs two groups of equal size');
-  const first: Pair[][] = a.map((_, r) =>
-    a.map((x, i): Pair => {
-      const y = b[(i + r) % b.length]!;
-      return (i + r) % 2 === 0 ? [x, y] : [y, x];
-    }),
-  );
-  return legs === 1 ? first : [...first, ...first.map((rd) => rd.map(([h, w]): Pair => [w, h]))];
+  // Groups meet in pairs (0 with 1, 2 with 3...): A[i] v B[(i + r) mod n]; four groups of five
+  // are two such pairs side by side (Copa do Nordeste).
+  if (groups.length % 2 || groups.some((g, i) => g.length !== groups[i ^ 1]!.length))
+    throw new Error('opponents "other" needs groups in pairs of equal size');
+  const pairs = Array.from({ length: groups.length / 2 }, (_, k) => {
+    const [a, b] = [groups[2 * k]!, groups[2 * k + 1]!];
+    const first: Pair[][] = a.map((_, r) =>
+      a.map((x, i): Pair => {
+        const y = b[(i + r) % b.length]!;
+        return (i + r) % 2 === 0 ? [x, y] : [y, x];
+      }),
+    );
+    return legs === 1 ? first : [...first, ...first.map((rd) => rd.map(([h, w]): Pair => [w, h]))];
+  });
+  return pairs[0]!.map((_, r) => pairs.flatMap((p) => p[r]!));
 }
 
 /**

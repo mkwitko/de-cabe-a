@@ -5,7 +5,7 @@
  * confidence brings an ultimatum (points in a number of matches); failing it ends the job.
  * Integers only; every number is a PARÂMETRO, not calibrated.
  */
-import { isEstadual } from '../competition/estaduais';
+import { isMinorCup } from '../competition/regionais';
 import { isDerby } from '../match/stadium';
 import { moodOf } from '../match/stadium';
 import type { Outcome } from '../competition/season';
@@ -260,7 +260,7 @@ export function boardAfterMatch(
     atHome ? match.away : match.home,
     mine,
     theirs,
-    match.competitionId !== undefined && isEstadual({ id: match.competitionId })
+    match.competitionId !== undefined && isMinorCup({ id: match.competitionId })
       ? { derby: false }
       : undefined,
   );
@@ -269,7 +269,7 @@ export function boardAfterMatch(
   if (
     result === 'L' &&
     match.competitionId !== undefined &&
-    isEstadual({ id: match.competitionId }) &&
+    isMinorCup({ id: match.competitionId }) &&
     isDerby(w.pack, match.home, match.away)
   )
     last.push({ kind: 'derby', value: DERBY_LOST });

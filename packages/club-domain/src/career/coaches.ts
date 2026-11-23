@@ -9,7 +9,7 @@
  * a vacancy at a bigger club, while the person's own board is pleased, is an approach they can
  * take; a dismissed person is offered the vacancies first (jobs.ts).
  */
-import { isEstadual } from '../competition/estaduais';
+import { isMinorCup } from '../competition/regionais';
 import { isDerby } from '../match/stadium';
 import type { Outcome } from '../competition/season';
 import type { CareerWorld } from './advance';
@@ -77,7 +77,7 @@ export function judgeCoaches(
   o: Outcome,
   day: number,
 ): void {
-  const estadual = isEstadual({ id: match.competitionId });
+  const estadual = isMinorCup({ id: match.competitionId });
   for (const [side, clubId] of [match.home, match.away].entries()) {
     if (clubId === w.clubId || !divisionOf(w, clubId)) continue;
     const t = (divisionTierOf(w, clubId) ?? 1) - 1;
