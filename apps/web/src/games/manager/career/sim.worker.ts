@@ -174,6 +174,8 @@ export type SimRequest = { id: number } & (
       snapshot: ArrayBuffer;
     }
   | { type: 'play' }
+  /** On a pre-season day: plays the days left to the debut. */
+  | { type: 'skipPreseason' }
   /** The squad and the eleven in force. */
   | { type: 'squad' }
   /** Picks the eleven; `xi` null asks the coach's best eleven for that formation. */
@@ -237,6 +239,8 @@ export interface SimView {
   } | null;
   /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
   deadline: string | null;
+  /** A pre-season day the career stopped on: the day, the debut's day and the days left to it. */
+  preseason: { iso: string; debut: string; days: number } | null;
   /** The club's next matches after this one, by date. */
   fixtures: {
     iso: string;
@@ -1081,7 +1085,7 @@ function view(w: CareerWorld, ms: number): SimView {
   const match =
     pending?.kind === 'match'
       ? pending
-      : pending?.kind === 'deadline'
+      : pending?.kind === 'deadline' || pending?.kind === 'preseason'
         ? upcomingFor(s, w.clubId, 1)[0]
         : undefined;
   const rivalId = match && (match.home === w.clubId ? match.away : match.home);
@@ -1217,6 +1221,14 @@ function view(w: CareerWorld, ms: number): SimView {
     history: (w.history ?? []).map((h) => ({ ...h, club: byId.get(h.clubId)?.shortName ?? '' })),
     cash: w.ledger.cash,
     deadline: pending?.kind === 'deadline' ? isoOf(pending.day) : null,
+    preseason:
+      pending?.kind === 'preseason'
+        ? {
+            iso: isoOf(pending.day),
+            debut: isoOf(pending.debut),
+            days: pending.debut - pending.day,
+          }
+        : null,
     next: match
       ? {
           iso: isoOf(match.day),
@@ -1276,10 +1288,11 @@ async function toNextDecision(
   w: CareerWorld,
   hired = false,
   say?: (s: Stage) => void,
+  skip = false,
 ): Promise<SimReply['save']> {
   const from = w.day;
   say?.('market');
-  pending = nextDecision(w, { deadlines: true });
+  pending = nextDecision(w, { deadlines: true, preseason: !skip });
   if (hired) w.hiredDay = w.day;
   if (w.day === from) return undefined;
   say?.('save');
@@ -1305,6 +1318,11 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       // A new career: the person arrives on the day of their first decision, not on day 0.
       const hired = r.snapshot.byteLength === 0;
       save = await toNextDecision(world, hired, say);
+    } else if (world && r.type === 'play' && pending?.kind === 'preseason') {
+      // One pre-season day passed on.
+      save = await toNextDecision(world);
+    } else if (world && r.type === 'skipPreseason' && pending?.kind === 'preseason') {
+      save = await toNextDecision(world, false, undefined, true);
     } else if (world && r.type === 'play' && pending?.kind === 'deadline') {
       // Deadline day passed on: the window closes and the days run to the next decision.
       save = await toNextDecision(world);

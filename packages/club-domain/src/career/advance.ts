@@ -188,7 +188,10 @@ export interface CareerWorld {
   agents?: AgentLedger;
   /** Image-rights contracts the person signed, by player (market/image.ts). */
   image?: Record<string, ImageDeal>;
-  /** The last window deadline the person was stopped at (nextDecision with deadlines). */
+  /**
+   * The last day the person was stopped at outside a match: a window deadline, or a pre-season
+   * day (nextDecision with deadlines or preseason).
+   */
   deadline?: number;
   /** Why the person's last match went as it did (report.ts); not saved, read right after it. */
   report?: ReportFact[];
@@ -206,6 +209,11 @@ export type Decision =
   | { kind: 'seasonOver' }
   /** The last day of a transfer window, before it is played: the person's last chance. */
   | { kind: 'deadline'; day: number }
+  /**
+   * A pre-season day, before it is played: the squad back from holiday (2 January), the window
+   * open, and `debut` the day of the club's first match of the season.
+   */
+  | { kind: 'preseason'; day: number; debut: number }
   /** The board ended the job: nothing else to decide in this career. */
   | { kind: 'fired' };
 
@@ -411,6 +419,14 @@ const clubPlays = (w: CareerWorld, day: number) =>
     return m.home === w.clubId || m.away === w.clubId;
   });
 
+/** The day of the person's club's first match of the season, or null with none scheduled. */
+function debutOf(w: CareerWorld): number | null {
+  let first: number | null = null;
+  for (const m of w.season.calendar.byClub.get(w.clubId) ?? [])
+    if (first === null || m.day < first) first = m.day;
+  return first;
+}
+
 /** The world as it stands after `day`: the start, then every match day up to it. */
 export function openCareer(base: Pack, seed: number, clubId: string, day = 0): CareerWorld {
   // The career's own pack object: what is read and kept beside it (the clubs' opinions, their
@@ -443,9 +459,24 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
  * Returns the decision; `w.day` is the last day played. With `deadlines`, the last day of each
  * transfer window is a decision too (the screen's deadline day).
  */
-export function nextDecision(w: CareerWorld, opts: { deadlines?: boolean } = {}): Decision {
+export function nextDecision(
+  w: CareerWorld,
+  opts: { deadlines?: boolean; preseason?: boolean } = {},
+): Decision {
   if (w.board?.fired) return { kind: 'fired' };
   for (let d = nextDay(w.season); d !== null; d = nextDay(w.season)) {
+    // Pre-season: from the squad's return (2 January) to the eve of the club's first match of the
+    // season, every day is the person's to train, sign and sell before it is played.
+    if (opts.preseason) {
+      const debut = debutOf(w);
+      const back = dayOf(`${w.season.season}-01-02`);
+      const x = Math.max(w.day, w.deadline ?? 0, back - 1) + 1;
+      if (debut !== null && x < debut && x <= d) {
+        w.deadline = x;
+        if (x - 1 > w.day) playDay(w, x - 1);
+        return { kind: 'preseason', day: x, debut };
+      }
+    }
     // The screen stops once before a window closes on the way to the next match day (deadline
     // day): the window's last day, which may fall between match days.
     if (opts.deadlines) {

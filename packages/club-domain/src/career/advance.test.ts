@@ -83,3 +83,36 @@ describe('watching the person’s match (level 1)', () => {
     expect(row.goalsFor).toBe(result.score[mine]);
   }, 60_000);
 });
+
+describe('pre-season', () => {
+  it('stops on every day from 2 January to the eve of the debut, then the debut', async () => {
+    const { dayOf } = await import('../competition/calendar');
+    const clubId = jobOffers(pack, 5)[0]!.clubId;
+    const w = openCareer(pack, 5, clubId);
+    const days: number[] = [];
+    let d = nextDecision(w, { deadlines: true, preseason: true });
+    while (d.kind === 'preseason') {
+      expect(w.day).toBe(d.day - 1);
+      days.push(d.day);
+      d = nextDecision(w, { deadlines: true, preseason: true });
+    }
+    expect(d.kind).toBe('match');
+    const debut = (d as { day: number }).day;
+    const back = dayOf('2026-01-02');
+    expect(days).toEqual(Array.from({ length: debut - back }, (_, k) => back + k));
+    // Once the season is under way there are no more pre-season stops.
+    if (d.kind === 'match') playDecision(w, d);
+    expect(nextDecision(w, { deadlines: true, preseason: true }).kind).not.toBe('preseason');
+  });
+
+  it('leaves the world as it is without the option', () => {
+    const clubId = jobOffers(pack, 5)[0]!.clubId;
+    const a = openCareer(pack, 5, clubId);
+    const b = openCareer(pack, 5, clubId);
+    const da = nextDecision(a, { deadlines: true });
+    for (let d = nextDecision(b, { deadlines: true, preseason: true }); d.kind === 'preseason';)
+      d = nextDecision(b, { deadlines: true, preseason: true });
+    expect(da.kind).toBe('match');
+    expect(b.day).toBeGreaterThanOrEqual(a.day);
+  });
+});
