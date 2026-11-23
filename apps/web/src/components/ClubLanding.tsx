@@ -1,5 +1,5 @@
 /**
- * The home's pitch for the Modo Clube career, the main game: the coach's office as the opening
+ * The pitch for the Modo Clube career (/modo-clube), the main game: the coach's office as the opening
  * scene, the five rooms as plates with what is decided in each, match day, and the way in.
  * Every claim is a fact of the mode (docs/GAME_DESIGN, club-domain); the plates are our own art.
  */
@@ -118,20 +118,69 @@ const FAQ = [
   },
 ] as const;
 
-export function ClubLanding() {
-  // The pitch stands on the career's night ground, not on the album's green paper.
+/** The pitch and the door stand on the career's night ground, not on the album's green paper. */
+function useClubStage() {
   useEffect(() => {
     document.documentElement.classList.add('club-stage');
     return () => document.documentElement.classList.remove('club-stage');
   }, []);
-  // Same endpoint ClubCareerPage reads; a failure just keeps the "start" wording.
+}
+
+/** Same endpoint ClubCareerPage reads; a failure just keeps the "start" wording. */
+function useHasCareer() {
   const { data } = useQuery({
     queryKey: ['manager-career-exists'],
     queryFn: () => api<{ career: unknown }>('/v1/manager/career'),
     staleTime: 60_000,
     retry: false,
   });
-  const has = Boolean(data?.career);
+  return Boolean(data?.career);
+}
+
+/** The home's way into the main game: one scene and one action. The pitch lives at /modo-clube. */
+export function ClubDoor() {
+  useClubStage();
+  const has = useHasCareer();
+  return (
+    <section
+      aria-labelledby="club-door"
+      className="relative flex min-h-[min(34rem,68svh)] flex-col justify-end overflow-hidden bg-club-night pt-10 pb-10 sm:pb-14"
+    >
+      <span className="club-landing-plate absolute inset-0">
+        <Plate name="gloria" lazy={false} />
+      </span>
+      <span aria-hidden="true" className={VEIL} />
+      <div className={`${WRAP} relative`}>
+        <div className="pitch-hero-copy flex max-w-4xl flex-col items-start gap-4">
+          <h1
+            id="club-door"
+            className={`font-condensed text-2xl leading-none font-black tracking-wide uppercase sm:text-3xl ${SHADOW}`}
+          >
+            Modo Clube
+          </h1>
+          <p
+            className={`font-condensed text-[clamp(2.75rem,9vw,5.5rem)] leading-[0.86] font-black text-balance uppercase ${SHADOW}`}
+          >
+            O clube é seu.
+            <span className="block text-club-gold">A glória também.</span>
+          </p>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Link to={TO} className={`${btnPrimary} min-h-14 bg-club-gold px-8 text-xl`}>
+              {has ? 'Continuar carreira' : 'Começar minha carreira'}
+            </Link>
+            <Link to="/modo-clube" className={`${btnSecondary} min-h-14 bg-club-night/70 px-6`}>
+              Conheça o Modo Clube
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function ClubLanding() {
+  useClubStage();
+  const has = useHasCareer();
   return (
     <div className="pitch">
       <section

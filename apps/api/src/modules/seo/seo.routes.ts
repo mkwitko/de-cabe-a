@@ -393,6 +393,7 @@ ${letters
     const o = origin();
     const fixed = [
       '/',
+      '/modo-clube',
       '/career-path',
       '/grid',
       '/impostor',

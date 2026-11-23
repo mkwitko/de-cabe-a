@@ -29,6 +29,11 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
     '/tecnico/carreira',
   );
   await expect(page.getByRole('heading', { name: 'Outros jogos' })).toBeVisible();
+  // The home is the way in; the pitch that sells the mode is its own page.
+  await expect(page.getByRole('link', { name: 'Conheça o Modo Clube' })).toHaveAttribute(
+    'href',
+    '/modo-clube',
+  );
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2

@@ -16,7 +16,7 @@ import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
-import { ClubLanding, GamesIndex, WRAP } from './components/ClubLanding';
+import { ClubDoor, ClubLanding, GamesIndex, WRAP } from './components/ClubLanding';
 import { SignInButton } from './components/SignInButton';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/launch';
@@ -380,7 +380,7 @@ function HomeRoute() {
   }, []);
   return (
     <>
-      <ClubLanding />
+      <ClubDoor />
       {LAUNCH_ALL ? <GamesIndex games={GAMES} /> : <Home />}
       <AdSlot slot={AD_SLOTS.home} />
       <p className="mt-10 text-center text-sm text-chalk-soft">
@@ -437,14 +437,14 @@ const NAV_LAUNCH = [
     to: '/tecnico/carreira',
     label: 'Clube',
     Icon: ClubIcon,
-    match: (p: string) => /^\/tecnico(\/|$)/.test(p),
+    match: (p: string) => /^\/(tecnico|modo-clube)(\/|$)/.test(p),
   },
   {
     to: '/',
     label: 'Minijogos',
     Icon: GamesIcon,
     match: (p: string) =>
-      !/^\/(tecnico|album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
+      !/^\/(tecnico|modo-clube|album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
   { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },
   {
@@ -464,8 +464,8 @@ function Shell({ children }: { children: ReactNode }) {
   const level = sceneFor(pathname) === 'level';
   // The Modo Clube career is its own stage: its rail and bar replace the site's strip.
   const stage = pathname === '/tecnico/carreira';
-  // The home that sells Modo Clube runs edge to edge; its sections keep their own gutter.
-  const wide = home;
+  // The home and the Modo Clube pitch run edge to edge; their sections keep their own gutter.
+  const wide = home || pathname === '/modo-clube';
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   useApplyCosmetics();
   return (
@@ -575,6 +575,7 @@ function PublicRoutes() {
         ) : (
           <Routes>
             <Route path="/" element={<HomeRoute />} />
+            <Route path="/modo-clube" element={<ClubLanding />} />
             <Route path="/career-path" element={<TrackPage mode="CAREER_PATH" />} />
             <Route path="/career-path/:level" element={<LevelRoute mode="CAREER_PATH" />} />
             <Route path="/grid" element={<TrackPage mode="FOOTBALL_GRID" />} />

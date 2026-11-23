@@ -56,6 +56,11 @@ const GAMES: Record<string, Meta> = {
 };
 const PAGES: Record<string, Meta> = {
   ...GAMES,
+  '/modo-clube': {
+    title: 'Modo Clube: o manager do futebol brasileiro',
+    description:
+      'Assuma um clube brasileiro e leve ele da Série D à Série A. Escale, treine, contrate e responda à diretoria. Grátis, no navegador.',
+  },
   '/d': {
     title: 'Desafio do Dia de futebol',
     description: 'Uma fase de cada jogo, a mesma para todo mundo, nova à meia-noite.',
