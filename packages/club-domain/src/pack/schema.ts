@@ -92,6 +92,17 @@ export const PackPlayerSchema = z.strictObject({
 });
 export type PackPlayer = z.infer<typeof PackPlayerSchema>;
 
+/**
+ * A boy of a club's youth teams (FM's under-20 and under-17 slots): a full player, kept apart
+ * from `players` so that only the person's club, which takes him into its academy, plays with
+ * him (career/academy.ts).
+ */
+export const PackYouthSchema = z.strictObject({
+  team: z.enum(['u20', 'u17']),
+  player: PackPlayerSchema,
+});
+export type PackYouth = z.infer<typeof PackYouthSchema>;
+
 // ── Clubs (04 §2, §6, §7) ────────────────────────────────────────────────────
 
 export const DEPARTMENTS = [
@@ -350,6 +361,8 @@ export const PackSchema = z
     cities: z.array(PackCitySchema),
     academies: z.array(PackAcademySchema),
     youthCompetitions: z.array(PackYouthCompetitionSchema),
+    /** The clubs' youth teams, where the data has them; optional, so older packs still load. */
+    youth: z.array(PackYouthSchema).optional(),
     names: z.strictObject({
       first: z.array(z.string().min(1)),
       last: z.array(z.string().min(1)),
@@ -378,6 +391,20 @@ export const PackSchema = z
     pack.clubs.forEach((c, i) => {
       ref(cities.has(c.cityId), ['clubs', i, 'cityId'], 'city');
       c.rivals.forEach((r, j) => ref(clubs.has(r), ['clubs', i, 'rivals', j], 'club'));
+    });
+    const playerIds = new Set(pack.players.map((p) => p.id));
+    (pack.youth ?? []).forEach((y, i) => {
+      ref(
+        y.player.clubId !== null && clubs.has(y.player.clubId),
+        ['youth', i, 'player', 'clubId'],
+        'club',
+      );
+      if (playerIds.has(y.player.id))
+        ctx.addIssue({
+          code: 'custom',
+          message: `duplicate id ${y.player.id}`,
+          path: ['youth', i, 'player', 'id'],
+        });
     });
     pack.players.forEach((p, i) => {
       if (p.clubId !== null) ref(clubs.has(p.clubId), ['players', i, 'clubId'], 'club');

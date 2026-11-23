@@ -1,3 +1,4 @@
+import { academyOf } from './academy';
 import { describe, expect, it } from 'vitest';
 import { generateDevPack } from '../generate/pack';
 import { bestRoles } from '../player/ratings';
@@ -190,8 +191,11 @@ describe('a year passes (03 §3)', () => {
     expect(w.pack.players.some((p) => p.id.startsWith('y2029-'))).toBe(true);
     expect(w.log!.some((l) => l.growth.includes('!'))).toBe(true);
     // One character a player for each finished season: that is all the log keeps.
-    // The opening pack and the first season's foreign market (04 §4.7).
-    expect(w.log![0]!.growth.length).toBe(pack.players.length + imports(pack, 61, 2026).length);
+    // The opening pack, the club's boys of day one (academy.ts) and the first season's foreign
+    // market (04 §4.7).
+    expect(w.log![0]!.growth.length).toBe(
+      pack.players.length + academyOf(pack, 61, clubId).length + imports(pack, 61, 2026).length,
+    );
     expect(w.log![0]!.growth).toMatch(/^[!0-v]+$/);
     const t = performance.now();
     const again = loadCareer(pack, 61, clubId, saveCareer(w));
@@ -208,7 +212,7 @@ describe('a year passes (03 §3)', () => {
     const boys = w.academy!;
     expect(boys.length).toBeGreaterThan(0);
     expect(again.academy).toEqual(boys);
-    expect(boys.every((id) => /^y202[789]-/.test(id))).toBe(true);
+    expect(boys.every((id) => /^y20\d\d-/.test(id))).toBe(true);
     expect(squadOf(w).some((p) => boys.includes(p.id))).toBe(false);
     expect(academyPlayers(w).map((p) => p.id)).toEqual(boys);
     promote(w, boys[0]!);

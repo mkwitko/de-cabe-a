@@ -140,3 +140,10 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes po
 - GO (Goiano, 12 clubes, 3 grupos de 4): https://ohoje.com/2025/11/26/goiano-de-2026-tera-calendario-ampliado/. Mata-mata e dinheiro: suposicao / estimativa.
 - Outros 17 estados (AC AL AM AP DF ES MA MS MT PA PB PI RN RO RR SE TO): formato generico do projeto (uma tabela, ou 2 grupos a partir de 11 clubes, e mata-mata dos 4 ou 8 melhores); numero de clubes aproximado (ESTIMATIVA); dinheiro ESTIMADO (cota por posicao de reputacao, premio do campeao), escalado pela divisao nacional do clube (x2 Serie A, x1,5 B, x1,2 C). A imprensa so diz que pagam muito menos que os grandes (https://www.lance.com.br/lance-negocios/levantamento-aponta-disparidade-milionaria-de-cotas-e-premiacoes-entre-os-estaduais.html).
 - Lacuna: regulamentos oficiais completos das federacoes nao lidos (so imprensa e Wikipedia); acesso e descenso estaduais nao modelados.
+
+## Categorias de base (pack.youth)
+
+- Fonte: o save do FM26 (`players.csv`, `team_slot` 1 = sub-20, 2 = sub-17). Entram os garotos de até 20 anos dos clubes das Séries A–D (2026 e 2027), até 40 por clube, os melhores primeiro. Mesma conversão de atributos dos profissionais.
+- Uso: só o clube do jogador recebe a sua base no primeiro dia, na academia (career/academy.ts). Os garotos dos outros clubes ficam fora do mundo, então a liga joga como antes.
+- Cobertura: 2.161 garotos. Série A tem base para os 20 clubes (média 27); Série B 18 de 20; Série C 23 de 24; Série D 72 de 96.
+- Lacuna: clube com menos de 12 garotos no save completa com até três safras geradas pela própria academia (development.ts `crop`), marcadas como geradas pelo id `y<ano>-`.

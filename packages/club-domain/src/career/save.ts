@@ -17,13 +17,14 @@ import type { Board } from './board';
 import { setJudgementClock } from '../market/judgement';
 import { withClubs, type ClubState } from './clubs';
 import { arrivalsOf, rebuildPack } from './years';
+import { withAcademy } from './academy';
 import type { Note } from './inbox';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 60;
+export const CAREER_RULES_VERSION = 61;
 
 interface Saved {
   v: number;
@@ -69,6 +70,7 @@ interface Saved {
   dna?: CareerWorld['dna'];
   styled?: CareerWorld['styled'];
   academy?: CareerWorld['academy'];
+  boysOf?: CareerWorld['boysOf'];
   image?: CareerWorld['image'];
   fairplay?: CareerWorld['fairplay'];
   /** Every club's cash, directors and structure (clubs.ts). */
@@ -171,6 +173,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.dna && { dna: w.dna }),
     ...(w.styled && { styled: w.styled }),
     ...(w.academy && { academy: w.academy }),
+    ...(w.boysOf !== undefined && { boysOf: w.boysOf }),
     ...(w.image && { image: w.image }),
     ...(w.fairplay && { fairplay: w.fairplay }),
     ...(w.clubs && { clubs: w.clubs }),
@@ -182,8 +185,10 @@ export function saveCareer(w: CareerWorld): string {
   return JSON.stringify(saved, replacer);
 }
 
-export function loadCareer(base: Pack, seed: number, clubId: string, json: string): CareerWorld {
+export function loadCareer(given: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
+  // The world the career opened with: the pack and the boys of the club it started at.
+  const base = saved.boysOf === undefined ? given : withAcademy(given, seed, saved.boysOf).pack;
   // The career's own pack object: the years replayed from the log, then this season's moves.
   const moves = unpackMoves(base, saved.moves);
   // A log from before the yearly growth was kept by character cannot be replayed: skipped.
@@ -246,6 +251,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.dna && { dna: saved.dna }),
     ...(saved.styled && { styled: saved.styled }),
     ...(saved.academy && { academy: saved.academy }),
+    ...(saved.boysOf !== undefined && { boysOf: saved.boysOf }),
     ...(saved.image && { image: saved.image }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),
     ...(saved.clubs && { clubs: saved.clubs }),
