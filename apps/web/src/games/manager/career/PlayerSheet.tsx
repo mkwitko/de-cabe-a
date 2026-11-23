@@ -17,6 +17,109 @@ const LABEL =
 const GROUPS = ['goalkeeping', 'technical', 'mental', 'tactical', 'physical'] as const;
 const money = (value: number) => t('career.cash', { value });
 
+/** An attribute's band, as Football Manager colours it: above 80 green, above 70 yellow. */
+const band = (v: number) => (v > 80 ? 'high' : v > 70 ? 'good' : 'plain');
+const TEXT = { high: 'text-club-high', good: 'text-club-gold', plain: 'text-chalk' } as const;
+const BAR = { high: 'bg-club-high', good: 'bg-club-gold', plain: 'bg-chalk/60' } as const;
+
+/** Where each position sits on a pitch drawn upright (x across, y from the opponents' goal). */
+const SPOT: Record<string, [number, number]> = {
+  GK: [50, 92],
+  CB: [50, 78],
+  LB: [16, 72],
+  RB: [84, 72],
+  DM: [50, 63],
+  CM: [50, 50],
+  LM: [16, 46],
+  RM: [84, 46],
+  AM: [50, 36],
+  LW: [16, 24],
+  RW: [84, 24],
+  SS: [50, 22],
+  ST: [50, 10],
+};
+const DOT = { 3: 'fill-club-high', 2: 'fill-club-gold', 1: 'fill-chalk/40' } as const;
+
+/** The positions he plays on a small pitch: green natural, yellow accomplished, grey makeshift. */
+function Pitch({ levels }: { levels: PlayerSheet['levels'] }) {
+  return (
+    <figure className="flex items-start gap-4">
+      <svg
+        viewBox="0 0 100 100"
+        role="img"
+        aria-label={levels
+          .map(
+            (l) =>
+              `${t('squad.position', { p: l.position })}: ${t('player.level', { n: l.level })}`,
+          )
+          .join(', ')}
+        className="aspect-[3/4] w-28 shrink-0 rounded-md bg-club-panel"
+        preserveAspectRatio="none"
+      >
+        <g
+          className="fill-none stroke-chalk/25"
+          strokeWidth={0.8}
+          vectorEffect="non-scaling-stroke"
+        >
+          <rect x={4} y={3} width={92} height={94} />
+          <line x1={4} y1={50} x2={96} y2={50} />
+          <rect x={28} y={3} width={44} height={14} />
+          <rect x={28} y={83} width={44} height={14} />
+        </g>
+        {levels.map((l) => {
+          const [x, y] = SPOT[l.position] ?? [50, 50];
+          return (
+            <ellipse
+              key={l.position}
+              cx={x}
+              cy={y}
+              rx={7}
+              ry={5.2}
+              className={DOT[l.level as 1 | 2 | 3] ?? DOT[1]}
+            />
+          );
+        })}
+      </svg>
+      <figcaption className="flex flex-col gap-1.5 text-sm text-chalk-soft">
+        {([3, 2, 1] as const).map((n) => {
+          const here = levels.filter((l) => l.level === n);
+          return (
+            here.length > 0 && (
+              <span key={n} className="flex items-center gap-2">
+                <svg viewBox="0 0 10 10" aria-hidden className={`size-2.5 ${DOT[n]}`}>
+                  <circle cx={5} cy={5} r={5} />
+                </svg>
+                <span>
+                  <span className="font-semibold text-chalk">{t('player.level', { n })}</span>
+                  {': '}
+                  {here.map((l) => t('squad.position', { p: l.position })).join(' · ')}
+                </span>
+              </span>
+            )
+          );
+        })}
+      </figcaption>
+    </figure>
+  );
+}
+
+/** One attribute row: name, bar and value, coloured by band; a key one marked. */
+function Attr({ id, value, isKey }: { id: string; value: number; isKey: boolean }) {
+  const b = band(value);
+  return (
+    <li className="flex items-center gap-3 py-1 text-sm">
+      <span className={`w-28 shrink-0 truncate sm:w-36 ${isKey ? 'font-bold text-chalk' : ''}`}>
+        {t('player.attr', { a: id })}
+        {isKey && <span className="sr-only"> ({t('player.keyMark')})</span>}
+      </span>
+      <span aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-chalk/12">
+        <span className={`block h-full rounded-full ${BAR[b]}`} style={{ width: `${value}%` }} />
+      </span>
+      <span className={`w-8 text-right font-bold tabular-nums ${TEXT[b]}`}>{value}</span>
+    </li>
+  );
+}
+
 /** The classes of a player's name that opens his sheet; the hit area grows past the text. */
 export const SHEET_NAME =
   'block max-w-full -my-2.5 truncate py-2.5 text-left font-semibold hover:underline';
@@ -58,7 +161,6 @@ function Body({ p, onClose }: { p: PlayerSheet; onClose: () => void }) {
   const tone =
     p.out || p.fresh < 65 ? 'bg-club-danger' : p.fresh < 85 ? 'bg-club-gold' : 'bg-club-turf';
   const facts: [string, ReactNode][] = [
-    [t('player.positions'), p.positions.map((x) => t('squad.position', { p: x })).join(' · ')],
     [t('player.fresh'), t('common.percent', { n: p.fresh })],
     [
       t('player.injury'),
@@ -80,7 +182,7 @@ function Body({ p, onClose }: { p: PlayerSheet; onClose: () => void }) {
     [t('player.agent'), p.agent],
   ];
   return (
-    <div className="sala-slab flex h-full flex-col rounded-none lg:rounded-l-[14px]">
+    <div className="sala-slab sheet-solid flex h-full flex-col rounded-none lg:rounded-l-[14px]">
       <header className="flex items-start gap-3 border-b border-chalk/10 p-4 sm:p-5">
         <span
           className={`mt-2 grid h-6 w-11 shrink-0 place-items-center rounded font-condensed text-sm font-extrabold ${p.starter ? 'bg-club-gold text-ink' : 'bg-chalk/10 text-chalk'}`}
@@ -130,6 +232,27 @@ function Body({ p, onClose }: { p: PlayerSheet; onClose: () => void }) {
             <span className="w-8 text-right font-bold text-chalk tabular-nums">{p.fresh}</span>
           </div>
         </div>
+        <section aria-labelledby="sheet-positions">
+          <h3 id="sheet-positions" className={LABEL}>
+            {t('player.positions')}
+          </h3>
+          <div className="mt-3">
+            <Pitch levels={p.levels} />
+          </div>
+        </section>
+        {p.key.length > 0 && (
+          <section aria-labelledby="sheet-key">
+            <h3 id="sheet-key" className={LABEL}>
+              {t('player.key', { role: t('squad.role', { r: p.best.role }) })}
+            </h3>
+            <ul className="mt-2">
+              {p.key.map((id) => {
+                const a = p.attributes.find((x) => x.id === id);
+                return a && <Attr key={id} id={id} value={a.value} isKey={false} />;
+              })}
+            </ul>
+          </section>
+        )}
         {GROUPS.map((g) => {
           const rows = p.attributes.filter((a) => a.group === g);
           return (
@@ -140,21 +263,7 @@ function Body({ p, onClose }: { p: PlayerSheet; onClose: () => void }) {
                 </h3>
                 <ul className="mt-2">
                   {rows.map((a) => (
-                    <li key={a.id} className="flex items-center gap-3 py-1 text-sm">
-                      <span className="w-28 shrink-0 truncate sm:w-36">
-                        {t('player.attr', { a: a.id })}
-                      </span>
-                      <span
-                        aria-hidden
-                        className="h-1.5 flex-1 overflow-hidden rounded-full bg-chalk/12"
-                      >
-                        <span
-                          className="block h-full rounded-full bg-chalk/60"
-                          style={{ width: `${a.value}%` }}
-                        />
-                      </span>
-                      <span className="w-8 text-right font-bold tabular-nums">{a.value}</span>
-                    </li>
+                    <Attr key={a.id} id={a.id} value={a.value} isKey={p.key.includes(a.id)} />
                   ))}
                 </ul>
               </section>
