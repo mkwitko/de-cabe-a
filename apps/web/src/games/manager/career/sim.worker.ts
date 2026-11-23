@@ -54,6 +54,11 @@ import {
   slotLevels,
   windowOpen,
   answerBid,
+  scoutStaff,
+  searchPlayers,
+  type Focus,
+  type PlayerQuery,
+  type Scout,
   playerStance,
   BID_DAYS,
   bidFee,
@@ -197,7 +202,14 @@ export type SimRequest = { id: number } & (
   | { type: 'promote'; playerId: string }
   /** The market: the person's players to sell and the best of the others, by position. */
   /** `club`: another club whose squad the person is looking at, or null. */
-  | { type: 'market'; position: string | null; club?: string | null; act?: MarketAct }
+  | {
+      type: 'market';
+      position: string | null;
+      club?: string | null;
+      act?: MarketAct;
+      /** A search of the world's players (market/scouts.ts `searchPlayers`). */
+      search?: PlayerQuery | null;
+    }
   | { type: 'nextSeason' }
   /** After a dismissal: takes one of the clubs that offered the job. */
   | { type: 'takeJob'; clubId: string }
@@ -516,7 +528,7 @@ export type MarketAct =
   | { do: 'bid'; bidId: string; answer: 'accept'; clauses?: SaleClauses }
   | { do: 'bid'; bidId: string; answer: 'refuse' }
   | { do: 'bid'; bidId: string; answer: 'counter'; fee: number; clauses?: SaleClauses }
-  | { do: 'scout'; area: string };
+  | { do: 'scout'; area: string; scout?: string; focus?: Focus };
 
 /** A player as the market lists him. */
 export interface MarketPlayer {
@@ -653,7 +665,19 @@ export interface MarketView {
     watchCost: number;
     /** Players in the club's files from scouts' reports. */
     known: number;
+    /** The scouts themselves (market/scouts.ts), each with where he is. */
+    staff: (Scout & { away: string | null; back: string | null })[];
+    /** The latest reports, newest first, each player with the scout's grade. */
+    reports: {
+      iso: string;
+      area: string;
+      scout: string;
+      focus: Focus | null;
+      players: (MarketPlayer & { grade: 'A' | 'B' | 'C' })[];
+    }[];
   };
+  /** What the last search found; null without a search. */
+  found: MarketPlayer[] | null;
   /** The other side's answer to what the person just did. */
   said?:
     | { at: 'fee'; answer: FeeAnswer }
@@ -669,21 +693,30 @@ const NO_CLUB: ClubFace = { name: '', shortName: '', colours: ['#3a4a42', '#9aa5
 const NEWS_ROWS = 15;
 
 /** A scouting area for the screen: a division's name, or the state's code. */
+/** The scouts' area of the players abroad who can come back. */
+const ABROAD_LABEL = 'Exterior';
+
 export function areaLabel(w: CareerWorld, area: string): string {
   const watched = watchedIn(area);
   if (watched !== null) {
     const p = w.pack.players.find((x) => x.id === watched);
     return p?.knownAs ?? p?.name ?? '';
   }
+  if (area === 'abroad') return ABROAD_LABEL;
+  if (area.startsWith('comp:'))
+    return w.season.competitions.find((c) => c.id === area.slice(5))?.name ?? area;
   if (!area.startsWith('tier:')) return area;
   const tier = Number(area.slice(5));
   return nationalDivisions(w.pack).find((d) => d.tier === tier)?.name ?? area;
 }
 
+const SEARCH_ROWS = 60;
+
 function marketView(
   w: CareerWorld,
   position: string | null,
   other: string | null = null,
+  search: PlayerQuery | null = null,
 ): MarketView {
   const season = w.season.season;
   const clubs = new Map<string, ClubFace>([
@@ -869,7 +902,29 @@ function marketView(
       })),
       watchCost: tripCost(w, 'player:'),
       known: Object.keys(w.scouting?.known ?? {}).length,
+      staff: scoutStaff(w).map((x) => {
+        // A mission from before scouts had names holds the scout of its place.
+        const m = (w.scouting?.missions ?? []).find((y, j) => (y.scout ?? `scout-${j}`) === x.id);
+        return {
+          ...x,
+          away: m ? areaLabel(w, m.area) : null,
+          back: m ? isoOf(m.until) : null,
+        };
+      }),
+      reports: (w.scouting?.reports ?? []).map((r) => ({
+        iso: isoOf(r.day),
+        area: areaLabel(w, r.area),
+        scout: scoutStaff(w).find((x) => x.id === r.scout)?.name ?? '',
+        focus: r.focus ?? null,
+        players: r.players
+          .map((x) => ({ p: byId.get(x.id), grade: x.grade }))
+          .filter((x) => x.p !== undefined)
+          .map((x) => ({ ...row(x.p!), grade: x.grade })),
+      })),
     },
+    found: search
+      ? searchPlayers(w, search, (id) => divisionTierOf(w, id) ?? null, SEARCH_ROWS).map(row)
+      : null,
     offered: Object.entries(w.agents?.offered ?? {})
       .filter(([, season]) => season === w.season.season)
       .map(([id]) => byId.get(id))
@@ -953,7 +1008,10 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       return { at: 'bid', answer, name: who };
     }
     case 'scout': {
-      const no = sendScout(w, act.area, w.day);
+      const no = sendScout(w, act.area, w.day, {
+        ...(act.scout && { scout: act.scout }),
+        ...(act.focus && { focus: act.focus }),
+      });
       return no
         ? { at: 'no', reason: `scout_${no}` }
         : { at: 'scout', area: areaLabel(w, act.area) };
@@ -1600,7 +1658,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         // A refused move (no cash, a talk already closed) is an answer, not a broken career.
         said = { at: 'no', reason: String(err).replace(/^Error: \w+: /, '') };
       }
-      const market = marketView(world, r.position, r.club ?? null);
+      const market = marketView(world, r.position, r.club ?? null, r.search ?? null);
       if (said) market.said = said;
       const reply: SimReply = { id: r.id, market };
       if (r.act) {

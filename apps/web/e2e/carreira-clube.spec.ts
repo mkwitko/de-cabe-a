@@ -567,9 +567,20 @@ test('career: send a scout from the market at 360 px', async ({ page }) => {
   await expect(scouts).toBeVisible({ timeout: 30_000 });
   await scouts.getByRole('button', { name: 'Mandar olheiro' }).click();
   await expect(page.getByText(/^Olheiro a caminho: /)).toBeVisible();
-  await expect(scouts.getByRole('listitem')).toHaveCount(1);
-  await expect(scouts.getByRole('listitem')).toContainText(/volta em \d\d\/\d\d/);
+  // The scout sent is away until his day; the rest stay free.
+  await expect(scouts.getByRole('listitem').filter({ hasText: /volta em \d\d\/\d\d/ })).toHaveCount(
+    1,
+  );
   await scouts.screenshot({ path: 'test-results/olheiros-360.png' });
+  // The search finds the first division's players; one can be watched by a scout.
+  const search = page
+    .locator('div.sala-slab')
+    .filter({ has: page.getByRole('heading', { name: 'Buscar jogadores' }) });
+  await search.getByLabel('Onde').selectOption({ label: 'Primeira Divisão' });
+  await search.getByRole('button', { name: 'Buscar' }).click();
+  await expect(search.getByRole('listitem').first()).toBeVisible({ timeout: 30_000 });
+  expect(await search.getByRole('listitem').count()).toBeGreaterThan(5);
+  await search.screenshot({ path: 'test-results/busca-360.png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   expect(errors).toEqual([]);
 });
