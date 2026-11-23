@@ -119,8 +119,8 @@ test('career: a whole season, its money, and the turn to the next one', async ({
     else if (await close.isVisible()) await close.click();
     else if (await play.isVisible()) await play.click();
   }
-  await expect(page.getByText('Salários')).toBeVisible();
-  await expect(page.getByText('Bilheteria')).toBeVisible();
+  await expect(page.getByText('Salários', { exact: true })).toBeVisible();
+  await expect(page.getByText('Bilheteria', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'test-results/carreira-fim-1280.png', fullPage: true });
   // The season read back: the board's verdict, the record, the most-used players.
   const review = page.getByTestId('season-review');
