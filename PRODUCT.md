@@ -10,9 +10,11 @@ web
 
 Brazilian football fans (PT-BR) who know players by heart and enjoy testing it. Primary situation: short sessions on the phone, a few levels at a time, over coffee, on the bus or during a break. They play to prove they know football: stars, titles, achievements and the rankings show it. They play alongside friends: the same Desafio do Dia, leagues created by link, results shared without spoilers, typically in WhatsApp groups.
 
-## Launch Scope (2026-11-10)
+## Launch Scope (updated 2026-11-23)
 
-Launch is Career Path only, polished to a premium, immersive standard (spec: `docs/superpowers/specs/2026-11-10-lancamento-career-path-design.md`). Open at launch: Career Path, the sticker album and public showcase, profile and account, how to play, legal pages. Every other game and page below exists in code but shows as "Em breve" behind one web flag (`apps/web/src/lib/launch.ts`) until reopened. Bottom bar at launch: Jogar · Álbum · Perfil. Titles: a 10-step ladder (Peneira to Rei da Bola). Background music and sound effects, separate toggles. One dark theme (the night match), no theme choice. LGPD cookie consent before analytics or ads.
+Modo Clube is the main game (owner, 2026-11-20): the player runs a real Brazilian club as its coach, season after season (`/tecnico/carreira`, sold by the landing at `/modo-clube`; the home `/` is the way into it). Every Modo Clube screen is its own full-screen, immersive stage. Open alongside it: Career Path and Mais ou Menos (`HIGHER_LOWER`), the sticker album and public showcase, profile and account, how to play, legal pages. The rest of this section is the original 2026-11-10 launch decision, kept for the minigames.
+
+The 2026-11-10 launch was Career Path only, polished to a premium, immersive standard (spec: `docs/superpowers/specs/2026-11-10-lancamento-career-path-design.md`). Open at launch: Career Path, the sticker album and public showcase, profile and account, how to play, legal pages. Every other game and page below exists in code but shows as "Em breve" behind one web flag (`apps/web/src/lib/launch.ts`) until reopened. Bottom bar at launch: Jogar · Álbum · Perfil. Titles: a 10-step ladder (Peneira to Rei da Bola). Background music and sound effects, separate toggles. One dark theme (the night match), no theme choice. LGPD cookie consent before analytics or ads.
 
 ## Product Purpose
 
@@ -36,7 +38,8 @@ Around the games:
 - Ligas de amigos by link (up to 20, weekly ranking, no chat), optional public profile, predefined reactions on a finished level, a friendly nickname generator with an offensive-word filter.
 - Copa dos Sonhos: draft an XI from the great World Cup sides (4 candidates per position), chemistry from players who really played together, a tactic per match and a simulated World Cup against legendary national teams. Ratings are ours, from each player's World Cup record (starts, rounds reached, titles), never a game studio's; Olheiro shows them, Raiz hides them until the end.
 - Oficina: players build a Football Grid on our data; the server checks it (8 valid answers per cell) and an editor approves it before it goes live. Votes only after finishing, lists by Wilson lower bound, plays and date; reports put a level under review, never remove it. Creator pages (`/criador/:apelido`) rank the audience; dated events open a set of levels with their own ranking and an optional "apresentado por" label. Oficina levels never count for stars, titles or the main rankings.
-- Modo Carreira: the player's own footballer, trained by the stars earned in the games, from the base to Europe.
+- Modo Clube (the main game): the player is the coach of a real Brazilian club, from the Série D to the Série A, with a club-manager career: squad and line-up, weekly training, transfer market with agents, scouts and negotiation, youth teams, board pressure, finances, national and state competitions, matches watched live or simulated by our own engine. Club and player data come from a licensed pack (ADR-020); the deep player wants Football Manager depth on a phone.
+- Modo Carreira (closed, not Modo Clube): the player's own footballer, trained by the stars earned in the games, from the base to Europe.
 - Opt-in push notifications: the new Desafio do Dia (09:00 Brasília) and a league's closed week.
 
 Guest-first; an optional account (e-mail and password, or Google) keeps progress across devices. Success: people come back, play with friends and bring them in by link (north-star metric in `docs/GROWTH_PLAN.md` §5, measured in `/admin`).
@@ -55,8 +58,8 @@ Mobile-first web (360 px base, up to 1280 px). Played one-handed on a phone; bot
 - Ads: Google AdSense, small fixed sizes, discreet on any page: in the pauses (end of a track page, under a level result, end of the album and profile, foot of the home) and as a thin strip at the top of a level, away from the controls. Never over the game, no interstitials or rewarded ads. Never personalised, for anyone (ADR-012).
 - No club logos (licensing): clubs are shown with initials and colours; countries with flags. Player photos only from Wikimedia Commons (free licences), always with author and licence next to them.
 - Never mock or expose real people.
-- PT-BR only. One dark theme, no choice. Preferences (music, effects, volumes, tracks, vibration, motion) live in the Ajustes sheet (gear in the header) and stay on the device. Performance comes before effects: the app has no looping animation, parallax, blur, blend or 3D decoration, and keeps only short (≤200 ms) transform/opacity feedback, so it feels instant on a weak phone (see `apps/web/DESIGN.md`, Motion).
-- Not yet live: deploy to decabecafc.com.br is pending (domain, VM, Google OAuth, Resend, AdSense; `docs/DEPLOY.md`).
+- PT-BR only. One dark theme, no choice. Preferences (music, effects, volumes, tracks, vibration, motion) live in the Ajustes sheet (gear in the header) and stay on the device. Performance comes before effects: the minigames and app chrome have no looping animation, parallax, blur, blend or 3D decoration, and keep only short (≤200 ms) transform/opacity feedback, so they feel instant on a weak phone. The owner lifted this for the Modo Clube stages and its landing (2026-11-17 and 2026-11-20: full width, motion, premium feel): there, motion is allowed when it is transform/opacity, holds up on a weak phone and ends under `prefers-reduced-motion` (see `apps/web/DESIGN.md`, Modo Clube).
+- Live at decabecafc.com.br since 2026-11; every merge to `main` deploys (`docs/DEPLOY.md`).
 - Full spec in `docs/` (PRD, game design, UX spec, growth plan).
 
 ## Brand Commitments
