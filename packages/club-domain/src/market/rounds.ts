@@ -21,6 +21,7 @@ import type { Pack, PackPlayer } from '../pack/schema';
 import { available, book, budgetOf, inDivisions, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
+  clauseOf,
   MAX_ROUNDS,
   answerFee,
   answerTerms,
@@ -519,7 +520,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
             (worth * (100 + Math.round(need.urgency / 2) + hand.pays + boardOverpay(w, id))) / 100,
           ),
         );
-        const clause = choice.p.contract?.releaseFee ?? null;
+        const clause = clauseOf(w.pack, choice.p, season);
         const pays = clause !== null && clause <= most;
         const fee = pays ? clause : Math.min(most, thousands((worth * hand.opens) / 100));
         w.bids = [

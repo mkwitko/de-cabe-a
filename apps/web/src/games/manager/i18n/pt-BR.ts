@@ -68,7 +68,7 @@ export const ptBR = {
   'career.todoEmpty': 'Nada esperando por você.',
   'career.news': 'Notícias',
   'career.todoText':
-    '{k, select, bid {O {club} fez proposta de {fee} por {name}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} leaveRequest {{name} pediu para sair.} other {{n} jogadores terminam o contrato este ano.}}',
+    '{k, select, bid {Chegou proposta: {club} quer {name} por {fee}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} leaveRequest {{name} pediu para sair.} other {{n} jogadores terminam o contrato este ano.}}',
   'career.todoGo':
     '{k, select, bid {Negociar} approach {Ver convite} agentOffer {Ver no Mercado} leaveRequest {Responder no Mercado} other {Ver no Mercado}}',
   'guide.title': 'Primeiros passos',
@@ -106,7 +106,7 @@ export const ptBR = {
   'career.room':
     '{r, select, sala {Sala do técnico} vestiario {Vestiário} treino {Campo de treino} mercado {Mercado} other {Diretoria}}',
   'squad.title': 'Escalação',
-  'squad.col': '{c, select, pos {Pos.} name {Jogador} age {Idade} fresh {Fôlego} other {Nota}}',
+  'squad.col': '{c, select, pos {Pos.} name {Jogador} age {Idade} fresh {Fôlego} other {Nível}}',
   'squad.formation': 'Formação',
   'squad.auto': 'Escalação do treinador',
   'squad.strength': 'Força do time',
@@ -117,8 +117,8 @@ export const ptBR = {
   'squad.hint':
     'Toque numa posição do campo e depois no jogador, ou no jogador e depois na posição. Duas posições seguidas trocam os jogadores de lugar. No computador, dá para arrastar. A escolha vale no próximo jogo.',
   'squad.placing': 'Toque na posição de {name} no campo.',
-  'squad.slot': '{role}: {name}, nota {n}, {known}',
-  'squad.choose': '{name}, {age} anos, nota {n}, {known}',
+  'squad.slot': '{role}: {name}, nível {n}, {known}',
+  'squad.choose': '{name}, {age} anos, nível {n}, {known}',
   'squad.starter': 'Titular',
   'squad.fresh': 'Fôlego {n}%',
   'market.open': 'Janela aberta',
@@ -219,7 +219,7 @@ export const ptBR = {
   'market.value': 'Valor {value}',
   'market.wage': '{wage} por mês',
   'market.talk': 'Negociar',
-  'market.talkFor': 'Negociar {name}, {age} anos, nota {n}, valor {value}',
+  'market.talkFor': 'Negociar {name}, {age} anos, nível {n}, valor {value}',
   'market.no':
     '{r, select, window {Janela fechada} embargo {Proibido de contratar} squadFull {Elenco cheio} theirSquad {Clube não libera} cold {Conversa encerrada} justMoved {Recém-contratado} abroad {Jogando no exterior} loyal {Não quer sair} stepDown {Não aceita descer} role {Não vem para o banco} other {Sem acordo}}',
   'market.part': '{p, select, starter {Titular} cover {Reserva imediato} other {Sobra no elenco}}',
@@ -250,8 +250,8 @@ export const ptBR = {
   'market.previewBill': 'Folha mensal: {after} ({delta} por mês), hoje {now}',
   'market.previewRoom': 'Espaço salarial que sobra: {room}',
   'market.previewOver': 'Passa do teto da diretoria em {over}.',
-  'market.previewEnters': 'Entra no time ideal com nota {rating}.',
-  'market.previewPushes': 'Tira {name} (nota {old}) do time ideal.',
+  'market.previewEnters': 'Entra no time ideal com nível {rating}.',
+  'market.previewPushes': 'Tira {name} (nível {old}) do time ideal.',
   'market.previewBench': 'Não entra no time ideal: fica como reserva.',
   'market.previewRenew': 'Já está no elenco: o time ideal não muda.',
   'market.takeAsk': 'Aceitar o pedido',
@@ -262,6 +262,7 @@ export const ptBR = {
   'bidTalk.gone': 'Essa proposta já não está na mesa: foi respondida, retirada ou o prazo acabou.',
   'bidTalk.club': '{known, select, true {{division}, reputação {rep}} other {Clube do exterior}}',
   'bidTalk.player': '{name}, {pos}, {age} anos',
+  'bidTalk.under': 'Isso é menos do que eles ofereceram.',
   'bidTalk.rating': 'Nível',
   'bidTalk.value': 'Valor de mercado',
   'bidTalk.wage': 'Salário',
@@ -326,7 +327,7 @@ export const ptBR = {
   'market.noNews': 'Nenhum negócio ainda nesta janela.',
   'market.deal':
     '{to} contratou {name} do {from} por {fee} para ser {for, select, starter {titular} other {reserva}}.',
-  'market.judged': 'Avaliaram ele em nota {seen}. Diretoria de futebol nível {office} de 5.',
+  'market.judged': 'Avaliaram ele em nível {seen}. Diretoria de futebol nível {office} de 5.',
   'market.why':
     'Por quê: necessidade {need}, encaixe {fit}, evolução {growth}, revenda {resale}, custo −{cost}, folha −{wages}.',
   'market.bought': '{name} contratado junto ao {club} por {price}.',
@@ -359,7 +360,7 @@ export const ptBR = {
   'academy.hint':
     'Na base o garoto cresce no ritmo dele. No elenco cresce mais se jogar e menos se ficar parado. Aos 19 anos ele sobe sozinho.',
   'academy.empty': 'Nenhum garoto na base agora. A próxima safra chega na virada da temporada.',
-  'academy.line': '{age} anos, nota {rating}, potencial {lo} a {hi}',
+  'academy.line': '{age} anos, nível {rating}, potencial {lo} a {hi}',
   'academy.promote': 'Subir',
   'academy.promoteName': 'Subir {name} para o elenco',
   'inbox.contractsEnding':
@@ -375,7 +376,7 @@ export const ptBR = {
   'inbox.loanIn': '{name} chegou por empréstimo do {club}, por {fee}.',
   'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
   'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
-  'inbox.bid': 'O {club} fez proposta de {fee} por {name}. Responda no Mercado.',
+  'inbox.bid': 'Chegou proposta: {club} quer {name} por {fee}. Responda no Mercado.',
   'inbox.fairplay':
     '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita, acima do limite da CBF. Advertência pública.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). Multa de {fine}.} 3 {Fair play financeiro: terceira temporada acima do limite ({cost}%). Multa de {fine} e registro de atletas bloqueado: o clube não pode contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Multa de {fine}, registro bloqueado e {points} pontos a menos na tabela.}}',
   'inbox.directors':
@@ -776,7 +777,7 @@ export const ptBR = {
     '{g, select, technical {Técnica} mental {Mental} tactical {Tática} physical {Físico} other {Goleiro}}',
   'player.attr':
     '{a, select, firstTouch {Domínio} passing {Passe curto} technique {Técnica} dribbling {Drible} crossing {Cruzamento} finishing {Finalização} heading {Cabeceio} tackling {Desarme} marking {Marcação} setPieces {Bola parada} longPassing {Passe longo} longShots {Chute de longe} weakFoot {Perna fraca} shielding {Proteção de bola} decisions {Decisão} vision {Visão de jogo} anticipation {Antecipação} positioning {Posicionamento} offTheBall {Sem a bola} composure {Frieza} concentration {Concentração} teamwork {Espírito de equipe} workRate {Disposição} leadership {Liderança} aggression {Agressividade} bravery {Coragem} determination {Determinação} flair {Improviso} scanning {Olhar o jogo} spatialAwareness {Noção de espaço} tacticalReading {Leitura tática} bodyOrientation {Corpo orientado} discipline {Disciplina} timing {Tempo de bola} pressing {Pressão} covering {Cobertura} lossReaction {Reação à perda} communication {Comunicação} acceleration {Aceleração} pace {Velocidade} agility {Agilidade} balance {Equilíbrio} strength {Força} stamina {Resistência} jumping {Impulsão} recovery {Recuperação} deceleration {Freada} reflexes {Reflexos} handling {Segurança} oneOnOne {Mano a mano} commandOfArea {Comando da área} distribution {Reposição} gkPositioning {Posição do goleiro} other {Saída de bola}}',
-  'player.best': 'Rende mais de {role}: nota {n}',
+  'player.best': 'Rende mais de {role}: nível {n}',
   'player.part':
     '{p, select, starter {Está no plano do time titular} cover {Primeiro reserva} other {Sobra no elenco}}',
   'player.inXi': 'Joga no time de hoje',

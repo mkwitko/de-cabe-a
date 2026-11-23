@@ -73,6 +73,7 @@ import {
   borrow,
   buyBackFor,
   clausesOf,
+  clauseOf,
   answerRequest,
   openBuyBack,
   openOption,
@@ -770,13 +771,16 @@ function marketView(
   const row = (p: Pack['players'][number]): MarketPlayer => {
     // Another club's player is read through what the club knows of him (scouts, matches).
     const rep = p.clubId === w.clubId ? null : personReading(w, p);
+    const rating = rep?.rating ?? seenLevel(w.pack, w.clubId, p);
     return {
       id: p.id,
       name: p.knownAs ?? p.name,
       age: season - Number(p.birthDate.slice(0, 4)),
       position: [...p.positions].sort((a, b) => b.level - a.level)[0]!.position,
-      rating: rep?.rating ?? seenLevel(w.pack, w.clubId, p),
-      range: rep?.range ?? levelRange(w.pack, w.clubId, p),
+      rating,
+      // Your own player has an exact level; only other clubs' are an estimated band.
+      range:
+        rep?.range ?? (p.clubId === w.clubId ? [rating, rating] : levelRange(w.pack, w.clubId, p)),
       potential: rep?.potential ?? ceilingRange(w.pack, w.clubId, p),
       knowledge: rep?.knowledge ?? null,
       seenMonths: rep?.seen != null ? Math.floor((w.day - rep.seen) / 30) : null,
@@ -784,7 +788,7 @@ function marketView(
         const a = agentOf(w.pack, p);
         return { name: a.name, size: a.size, ...seenTraits(w, a), standing: affinity(w, a) };
       })(),
-      release: p.contract?.releaseFee ?? null,
+      release: clauseOf(w.pack, p, season),
       clauses: (() => {
         const c = clausesOf(w, p.id);
         const bb = c?.buyBack && buyBackFor(w, p);
@@ -1203,7 +1207,7 @@ function playerSheet(w: CareerWorld, id: string): PlayerSheet | null {
       ? {
           wage: p.contract.wage,
           until: Number(p.contract.until.slice(0, 4)),
-          release: p.contract.releaseFee,
+          release: clauseOf(w.pack, p, w.season.season),
         }
       : null,
     value: marketValue(w.pack, p, w.season.season),
@@ -1377,7 +1381,7 @@ function view(w: CareerWorld, ms: number): SimView {
   const rival = rivalId ? coachAt(w, rivalId) : undefined;
   return {
     season: w.season.season,
-    today: isoOf(w.day),
+    today: isoOf(matchDay(w)),
     form,
     // The first one is the next match, shown on its own.
     fixtures: match ? upcoming.slice(1) : upcoming,
