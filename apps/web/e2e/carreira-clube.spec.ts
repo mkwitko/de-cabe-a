@@ -109,8 +109,10 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   const turn = page.getByRole('button', { name: 'Começar a temporada 2027' });
   for (let i = 0; i < 60 && !(await turn.isVisible()); i++) {
     const close = page.getByRole('button', { name: 'Fechar a janela' });
-    await expect(play.or(turn).or(close)).toBeEnabled({ timeout: 30_000 });
-    if (await close.isVisible()) await close.click();
+    const skip = page.getByRole('button', { name: 'Ir para a estreia' });
+    await expect(play.or(turn).or(close).or(skip)).toBeEnabled({ timeout: 30_000 });
+    if (await skip.isVisible()) await skip.click();
+    else if (await close.isVisible()) await close.click();
     else if (await play.isVisible()) await play.click();
   }
   await expect(page.getByText('Salários')).toBeVisible();
@@ -250,6 +252,34 @@ for (const width of [360, 1280]) {
     await expect(board.last()).not.toHaveAttribute('aria-label', before!);
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
 
+    // Two board slots tapped in turn swap their players.
+    const saved = () =>
+      page.waitForResponse((r) => r.url().includes('still=1') && r.request().method() === 'PUT');
+    const nameOn = async (i: number) =>
+      (await board.nth(i).getAttribute('aria-label'))!.split(': ')[1]!.split(', nota')[0]!;
+    const [na, nb] = [await nameOn(9), await nameOn(10)];
+    let put = saved();
+    await board.nth(9).click();
+    await board.nth(10).click();
+    expect((await put).status()).toBe(200);
+    await expect(board.nth(9)).toHaveAttribute('aria-label', new RegExp(`: ${nb}, nota `));
+    await expect(board.nth(10)).toHaveAttribute('aria-label', new RegExp(`: ${na}, nota `));
+
+    // A bench player (not a goalkeeper) tapped first, then his slot.
+    const first = page
+      .locator('li')
+      .filter({ hasNotText: 'Titular' })
+      .filter({ hasNot: page.getByText('GOL', { exact: true }) })
+      .getByRole('button', { disabled: false })
+      .first();
+    const firstName = (await first.getAttribute('aria-label'))!.split(',')[0]!;
+    await first.click();
+    await expect(page.getByText(`Toque na posição de ${firstName} no campo.`)).toBeVisible();
+    put = saved();
+    await board.nth(10).click();
+    expect((await put).status()).toBe(200);
+    await expect(board.nth(10)).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nota `));
+
     // The game plan: a high block.
     const kept = page.waitForResponse(
       (r) => r.url().includes('still=1') && r.request().method() === 'PUT',
@@ -264,7 +294,7 @@ for (const width of [360, 1280]) {
     // The pick is kept on the server at once: a reload brings it back.
     await page.reload();
     await page.getByRole('button', { name: 'Vestiário', exact: true }).click();
-    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `), {
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nota `), {
       timeout: 30_000,
     });
     await expect(page.getByRole('button', { name: 'Alto' })).toHaveAttribute(
@@ -277,7 +307,7 @@ for (const width of [360, 1280]) {
     await (await toMatch(page)).click();
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await page.getByRole('button', { name: 'Vestiário', exact: true }).click();
-    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${name}, nota `));
+    await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nota `));
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
