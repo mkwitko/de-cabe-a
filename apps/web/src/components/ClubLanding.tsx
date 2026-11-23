@@ -149,7 +149,7 @@ export function ClubDoor() {
   return (
     <section
       aria-labelledby="club-door"
-      className="relative flex min-h-[min(34rem,68svh)] flex-col justify-end overflow-hidden bg-club-night pt-10 pb-10 sm:pb-14"
+      className="relative flex min-h-[min(26rem,60svh)] flex-col justify-end overflow-hidden bg-club-night pt-10 pb-10 sm:pb-14"
     >
       <span className="club-landing-plate absolute inset-0">
         <Plate name="gloria" lazy={false} />

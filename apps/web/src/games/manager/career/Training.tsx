@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
+import { surname } from './Squad';
 import type { SimReply, SimRequest, TrainingView } from './sim.worker';
 
 type Session = TrainingView['plan'][number][number];
@@ -292,7 +293,8 @@ export function Training(props: {
                       className={SHEET_NAME}
                       onClick={(e) => card.open(p.id, e.currentTarget)}
                     >
-                      {p.name}
+                      <span className="sm:hidden">{surname(p.name)}</span>
+                      <span className="max-sm:hidden">{p.name}</span>
                     </button>
                     {p.out && (
                       <span className="shrink-0 text-xs font-bold text-club-danger">

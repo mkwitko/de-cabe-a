@@ -29,7 +29,8 @@ export const ptBR = {
   'career.axis':
     '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}',
   'career.axisValue':
-    '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}: {n} de 100',
+    '{a, select, budget {Dinheiro} crowd {Torcida} structure {Estrutura} staff {Comissão} squad {Elenco} other {Ambição}}: {n} de 100, {b}',
+  'career.band': '{b, select, low {baixo} mid {médio} other {alto}}',
   'career.reputation': 'Reputação {n}',
   'career.accept': 'Assumir o {club}',
   'career.divisions': 'Divisões',
@@ -96,6 +97,7 @@ export const ptBR = {
   'career.tableMore': 'Ver tabela ({n} clubes)',
   'career.tableFewer': 'Ver só ao redor do clube',
   'career.net': 'Saldo da temporada',
+  'career.netOpening': 'Só saíram custos até agora. A receita entra com os jogos.',
   'career.cash': '{value, number, currency}',
   'career.next': 'Próximo jogo',
   'career.rooms': 'Salas do clube',
@@ -525,7 +527,7 @@ export const ptBR = {
   'board.fairplayLimit': 'da receita vai em salários. O limite da CBF é {n}%.',
   'board.fairplayNoLimit': 'da receita vai em salários. Esta divisão não tem limite da CBF.',
   'board.fairplayState':
-    '{s, select, 0 {{over, select, yes {Acima do limite. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e vem multa.} 2 {Multado. Mais uma temporada acima do limite e o registro de atletas é bloqueado.} 3 {Registro bloqueado: sem contratações nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Registro bloqueado. O clube começou a temporada com {points} pontos a menos.}}',
+    '{s, select, 0 {{over, select, yes {Acima do limite: corte salários ou venda jogadores. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e vem multa.} 2 {Multado. Mais uma temporada acima do limite e o registro de atletas é bloqueado.} 3 {Registro bloqueado: sem contratações nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Registro bloqueado. O clube começou a temporada com {points} pontos a menos.}}',
   'board.calm': 'Sem ultimato. Abaixo de 25 de confiança, a direção dá um prazo.',
   'board.fired': 'A diretoria do {club} chamou outro caminho',
   'board.firedText':
