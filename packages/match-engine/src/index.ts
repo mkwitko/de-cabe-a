@@ -16,5 +16,6 @@ export {
 } from './sandbox';
 export { FORMATIONS, coachOf, defaultPlan, type Formation } from './presets';
 export { simulateMatch } from './match/simulate';
+export { simulateLevel2 } from './possession/engine';
 export { advanceMatch, MATCH_MAX_CHUNK, type MatchChunk } from './match/advance';
 export { advanceLiveMatch, startLiveMatch, type LiveMatch } from './match/live';

@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { atan, atan2, exp, gaussian, logistic } from './math';
 import { contest } from './duel';
 import { cardChance } from './discipline';
+import { valueAt } from './value';
 
 const SRC = join(__dirname, '..');
 const files = (dir: string): string[] =>
@@ -118,5 +119,19 @@ describe('the card for a foul (law 12)', () => {
     expect(spa).toBeGreaterThan(2 * careless);
     expect(tactical).toBeGreaterThan(spa);
     expect(tactical).toBeLessThan(0.9);
+  });
+});
+
+describe('the possession value (02 §5.4)', () => {
+  // Reference: open expected-threat grid 12 × 8 (Karun Singh, "Introducing
+  // Expected Threat", karun.in/blog/expected-threat.html, open_xt_12x8_v1),
+  // cell centres. The engine keeps its own formula; the grid is the target.
+  const cell = (c: number, r: number) => valueAt(((c + 0.5) * 105) / 12, ((r + 0.5) * 68) / 8);
+  it('is close to the published grid in midfield and around the box', () => {
+    expect(cell(0, 3)).toBeCloseTo(0.0094, 2); // own goal area
+    expect(cell(6, 3)).toBeCloseTo(0.0169, 2); // centre circle, attacking side
+    expect(Math.abs(cell(9, 3) - 0.0351)).toBeLessThan(0.015);
+    expect(Math.abs(cell(10, 0) - 0.0349)).toBeLessThan(0.01); // wide by the box
+    expect(Math.abs(cell(11, 3) - 0.2575)).toBeLessThan(0.03); // six-yard box
   });
 });

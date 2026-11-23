@@ -23,7 +23,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 19;
+export const CAREER_RULES_VERSION = 60;
 
 interface Saved {
   v: number;
@@ -40,6 +40,8 @@ interface Saved {
   /** The moves in force, packed (`packMoves`); a plain map in snapshots of older versions. */
   moves?: PackedMoves | Moves;
   board?: Board;
+  hired?: number;
+  hiredDay?: number;
   inbox?: Note[];
   books?: CareerWorld['books'];
   deals?: CareerWorld['deals'];
@@ -53,14 +55,28 @@ interface Saved {
   idle?: CareerWorld['idle'];
   loans?: CareerWorld['loans'];
   forLoan?: CareerWorld['forLoan'];
+  optionFor?: CareerWorld['optionFor'];
+  clauses?: CareerWorld['clauses'];
+  unhappy?: CareerWorld['unhappy'];
   log?: CareerWorld['log'];
   injuries?: CareerWorld['injuries'];
+  cards?: CareerWorld['cards'];
+  arrears?: CareerWorld['arrears'];
+  benches?: CareerWorld['benches'];
+  vacancies?: CareerWorld['vacancies'];
+  sacked?: CareerWorld['sacked'];
+  coaches?: CareerWorld['coaches'];
+  dna?: CareerWorld['dna'];
+  styled?: CareerWorld['styled'];
   academy?: CareerWorld['academy'];
+  image?: CareerWorld['image'];
   fairplay?: CareerWorld['fairplay'];
   /** Every club's cash, directors and structure (clubs.ts). */
   clubs?: Record<string, ClubState>;
   starts?: CareerWorld['starts'];
+  scored?: CareerWorld['scored'];
   played?: CareerWorld['played'];
+  history?: CareerWorld['history'];
 }
 
 // Maps and Sets as tagged lists; the calendar's index by club is rebuilt on load.
@@ -126,6 +142,8 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.training && { training: w.training }),
     ...(w.moves && { moves: packMoves(w.pack, w.moves) }),
     ...(w.board && { board: w.board }),
+    ...(w.hired !== undefined && { hired: w.hired }),
+    ...(w.hiredDay !== undefined && { hiredDay: w.hiredDay }),
     ...(w.inbox && { inbox: w.inbox }),
     ...(w.books && { books: w.books }),
     ...(w.deals && { deals: w.deals }),
@@ -139,13 +157,27 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.idle && { idle: w.idle }),
     ...(w.loans && { loans: w.loans }),
     ...(w.forLoan && { forLoan: w.forLoan }),
+    ...(w.optionFor && { optionFor: w.optionFor }),
+    ...(w.clauses && { clauses: w.clauses }),
+    ...(w.unhappy && { unhappy: w.unhappy }),
     ...(w.log && { log: w.log }),
     ...(w.injuries && { injuries: w.injuries }),
+    ...(w.cards && { cards: w.cards }),
+    ...(w.arrears && { arrears: w.arrears }),
+    ...(w.benches && { benches: w.benches }),
+    ...(w.vacancies && { vacancies: w.vacancies }),
+    ...(w.sacked && { sacked: w.sacked }),
+    ...(w.coaches && { coaches: w.coaches }),
+    ...(w.dna && { dna: w.dna }),
+    ...(w.styled && { styled: w.styled }),
     ...(w.academy && { academy: w.academy }),
+    ...(w.image && { image: w.image }),
     ...(w.fairplay && { fairplay: w.fairplay }),
     ...(w.clubs && { clubs: w.clubs }),
     ...(w.starts && { starts: w.starts }),
+    ...(w.scored && { scored: w.scored }),
     ...(w.played !== undefined && { played: w.played }),
+    ...(w.history && { history: w.history }),
   };
   return JSON.stringify(saved, replacer);
 }
@@ -157,7 +189,7 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
   // A log from before the yearly growth was kept by character cannot be replayed: skipped.
   const log = (saved.log ?? []).filter((l) => typeof l.growth === 'string');
   const opening = log[0]?.season ?? (saved.season as SeasonState).season;
-  const pack = withClubs(rebuildPack(base, seed, log, moves, opening), saved.clubs);
+  const pack = withClubs(rebuildPack(base, seed, log, moves, opening), saved.clubs, base);
   if (saved.v > CAREER_RULES_VERSION) throw new Error('career: saved by a newer version');
   const season = saved.season as SeasonState;
   // The same Scheduled objects in both indexes, in the order they were placed.
@@ -180,11 +212,13 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     season,
     ledger: createLedger(saved.ledger.today, saved.ledger.entries),
     day: saved.day,
-    ...clubLevels(pack),
+    ...clubLevels(pack, season.season),
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
     ...(saved.moves && { moves }),
     ...(saved.board && { board: saved.board }),
+    ...(saved.hired !== undefined && { hired: saved.hired }),
+    ...(saved.hiredDay !== undefined && { hiredDay: saved.hiredDay }),
     ...(saved.inbox && { inbox: saved.inbox }),
     ...(saved.books && { books: saved.books }),
     ...(saved.deals && { deals: saved.deals }),
@@ -198,12 +232,26 @@ export function loadCareer(base: Pack, seed: number, clubId: string, json: strin
     ...(saved.idle && { idle: saved.idle }),
     ...(saved.loans && { loans: saved.loans }),
     ...(saved.forLoan && { forLoan: saved.forLoan }),
+    ...(saved.optionFor && { optionFor: saved.optionFor }),
+    ...(saved.clauses && { clauses: saved.clauses }),
+    ...(saved.unhappy && { unhappy: saved.unhappy }),
     ...(saved.log && { log }),
     ...(saved.injuries && { injuries: saved.injuries }),
+    ...(saved.cards && { cards: saved.cards }),
+    ...(saved.arrears && { arrears: saved.arrears }),
+    ...(saved.benches && { benches: saved.benches }),
+    ...(saved.vacancies && { vacancies: saved.vacancies }),
+    ...(saved.sacked && { sacked: saved.sacked }),
+    ...(saved.coaches && { coaches: saved.coaches }),
+    ...(saved.dna && { dna: saved.dna }),
+    ...(saved.styled && { styled: saved.styled }),
     ...(saved.academy && { academy: saved.academy }),
+    ...(saved.image && { image: saved.image }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),
     ...(saved.clubs && { clubs: saved.clubs }),
     ...(saved.starts && { starts: saved.starts }),
+    ...(saved.scored && { scored: saved.scored }),
     ...(saved.played !== undefined && { played: saved.played }),
+    ...(saved.history && { history: saved.history }),
   };
 }

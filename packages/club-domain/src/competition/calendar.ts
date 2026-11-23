@@ -96,7 +96,8 @@ export function take(cal: Calendar, m: Scheduled): void {
 /**
  * Places a fixture on its base day or the first free day after it and returns
  * the day. A second leg's base moves past the first leg (`after`); that is not
- * a postponement. `from` is used when a bumped match is placed again.
+ * a postponement. `from` is used when a bumped match is placed again. Past the postpone
+ * limit the rest rule gives way (only one match a day is kept), so a date is always found.
  */
 export function place(cal: Calendar, fixture: Fixture, from?: number): number {
   const f = { ...fixture, base: Math.max(fixture.base, (fixture.after ?? -Infinity) + 1) };
@@ -127,5 +128,18 @@ export function place(cal: Calendar, fixture: Fixture, from?: number): number {
     }
     return d;
   }
-  throw new Error(`no date for ${f.id} within ${POSTPONE_LIMIT_DAYS} days of ${isoOf(f.base)}`);
+  // A club so busy that no rested slot exists (a low priority match behind cup and league):
+  // the match takes the first day on which neither club plays, rest or not. It never fails.
+  for (let d = start; ; d++) {
+    if (
+      [f.home, f.away].some((c) =>
+        [...(cal.byClub.get(c) ?? [])].some((m) => m.id !== f.id && m.day === d),
+      )
+    )
+      continue;
+    put(cal, { ...f, day: d, played: false });
+    if (from === undefined && d !== f.base)
+      cal.postponements.push({ matchId: f.id, from: f.base, to: d, reason: 'rest' });
+    return d;
+  }
 }

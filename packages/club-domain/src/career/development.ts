@@ -22,6 +22,7 @@ import {
   pick,
   rngFrom,
   type AttributeId,
+  type Rng,
 } from '@decabeca/match-engine';
 import { generateAttributes, generatePlayer, SQUAD } from '../generate/player';
 import { WHOLE, cached } from '../lib/pack-cache';
@@ -165,6 +166,30 @@ const baseLevels = (origin: Pack) =>
     );
   });
 
+/**
+ * The talent map (mapa de conhecimento §2.9): how many players of the pack a club formed
+ * (`origin.clubId`) who play at a professional level today. A club with a record of forming
+ * players brings better boys and more gems. PARÂMETROS.
+ */
+const FORMED_LEVEL = 58;
+const FORMER_TIERS: readonly { formed: number; quality: number; gem: number }[] = [
+  { formed: 20, quality: 2, gem: 4 },
+  { formed: 8, quality: 1, gem: 5 },
+  { formed: 0, quality: 0, gem: 6 },
+];
+export const formedBy = (pack: Pack): Map<string, number> =>
+  cached(pack, 'formedBy', WHOLE, () => {
+    const by = new Map<string, number>();
+    for (const p of pack.players) {
+      const club = p.origin?.clubId;
+      if (club && bestRoles(p.attributes, 1)[0]!.rating >= FORMED_LEVEL)
+        by.set(club, (by.get(club) ?? 0) + 1);
+    }
+    return by;
+  });
+const formerOf = (pack: Pack, clubId: string) =>
+  FORMER_TIERS.find((t) => (formedBy(pack).get(clubId) ?? 0) >= t.formed)!;
+
 /** Boys a club's academy brings up in a year, by its youth level 1..5. */
 const CROP = [3, 3, 4, 5, 6] as const;
 
@@ -184,12 +209,15 @@ export function crop(
   const level = baseLevels(origin).get(clubId) ?? 40;
   const youth = youthLevel ?? club.facilities.youth;
   const root = fork(rngFrom(seed), `crop:${season}:${clubId}`);
+  const former = formerOf(origin, clubId);
   const out: PackPlayer[] = [];
   for (let k = 0; k < CROP[youth - 1]!; k++) {
     const r = fork(root, `boy:${k}`);
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = 15 + pick(r, 3);
-    const quality = Math.max(20, level - 13 + youth + pick(r, 7));
+    // An academy of a club that bets on boys (youthPolicy) brings in a little better: -2..+2.
+    const lean = Math.round((club.profile.youthPolicy - 50) / 25);
+    const quality = Math.max(20, level - 13 + youth + former.quality + lean + pick(r, 7));
     const made = generatePlayer(r, {
       id: `y${season}-${clubId}-${k}`,
       position,
@@ -197,8 +225,9 @@ export function crop(
       clubId,
       season,
     });
-    // One in six is the kind that outgrows the club; the rest reach about its level.
-    const gem = pick(r, 6) === 0 ? 10 + pick(r, 12) : 0;
+    // One in six is the kind that outgrows the club (one in four at a great former); the rest
+    // reach about its level.
+    const gem = pick(r, former.gem) === 0 ? 10 + pick(r, 12) : 0;
     const reach = (base: number) => clamp(level + base + gem + pick(r, 8));
     const attributes = generateAttributes(fork(r, 'attributes'), position, quality, age);
     // A first contract: two fifths of what the market pays a man of his level today.
@@ -214,16 +243,75 @@ export function crop(
         ceiling: { technical: reach(-2), mental: reach(0), physical: reach(-4) },
       },
       contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },
+      // Formed here: the club's solidarity share when he is sold on.
+      origin: { ...made.origin, clubId },
     });
   }
   return out;
 }
 
-/** Players the foreign market offers each season, and their levels and ages. PARÂMETRO. */
-const IMPORTS = 70;
-/** Quality from 58 to 85, the better of two draws: the clubs here buy from the top of the
- * South American market and bring players home from Europe. */
-const IMPORT_QUALITY: [number, number] = [58, 85];
+/**
+ * Players the foreign market offers each season, and their levels and ages. PARÂMETRO, set so the
+ * league pays abroad about what the Banco Central counts (US$ 180-235 mi in 2024-2025, reality
+ * bench). 320 -> 334 with the state championships: their extra matches tire and hurt squads,
+ * which moved the bench's marginal figures (foreign signings, top values); re-measured.
+ */
+const IMPORTS = 334;
+/**
+ * Quality from 52 to 82, one draw: most who come are the middle of the South American market,
+ * cheap next to a Brazilian of the same level, a few are stars back from Europe.
+ */
+const IMPORT_QUALITY: [number, number] = [52, 82];
+/**
+ * Where they come from, per hundred: the foreigners of the Série A 2025 by nationality
+ * (Tribuna do Planalto: 47 Argentines, 27 Uruguayans, 19 Colombians, 8 Ecuadorians, 7
+ * Portuguese; Itatiaia: 7 Paraguayans, 7 Chileans, 2 Venezuelans, 2 Bolivians).
+ */
+const IMPORT_NATIONS: readonly [string, number][] = [
+  ['AR', 36],
+  ['UY', 20],
+  ['CO', 15],
+  ['EC', 6],
+  ['PY', 6],
+  ['CL', 5],
+  ['PT', 5],
+  ['VE', 2],
+  ['PE', 2],
+  ['BO', 2],
+  ['ES', 1],
+];
+/** Names for those who come from the Spanish-speaking market; the Portuguese keep Brazil's. */
+const HISPANIC_FIRST = (
+  'Agustín Alan Alejandro Andrés Bruno Camilo Cristian Diego Emiliano Enzo Esteban Facundo ' +
+  'Federico Franco Gastón Gonzalo Ignacio Joaquín Jorge Juan Julián Leandro Lucas Lucio Manuel ' +
+  'Marcos Martín Matías Maximiliano Nahuel Nicolás Pablo Rodrigo Santiago Sebastián Tomás Valentín'
+).split(' ');
+const HISPANIC_LAST = (
+  'Acosta Aguirre Álvarez Benítez Cabrera Castro Cáceres Díaz Domínguez Fernández Flores ' +
+  'Giménez Gómez González Gutiérrez Herrera Ibáñez López Medina Méndez Molina Morales Muñoz ' +
+  'Núñez Ortiz Pereyra Ramírez Ríos Rodríguez Romero Rojas Sánchez Sosa Suárez Torres Vargas ' +
+  'Vázquez Villalba Zapata'
+).split(' ');
+
+/** A foreign market player's nation and name, drawn apart from the rest of him. */
+function foreignerOf(
+  r: Rng,
+  made: PackPlayer,
+): Pick<PackPlayer, 'nationality' | 'name' | 'knownAs'> {
+  const f = fork(r, 'nation');
+  let roll = pick(f, 100);
+  let nation = IMPORT_NATIONS[0]![0];
+  for (const [n, share] of IMPORT_NATIONS) {
+    nation = n;
+    if (roll < share) break;
+    roll -= share;
+  }
+  if (nation === 'PT') return { nationality: nation, name: made.name, knownAs: made.knownAs };
+  const first = HISPANIC_FIRST[pick(f, HISPANIC_FIRST.length)]!;
+  const last = HISPANIC_LAST[pick(f, HISPANIC_LAST.length)]!;
+  // Known by the surname, the way the press calls them here.
+  return { nationality: nation, name: `${first} ${last}`, knownAs: last };
+}
 const IMPORT_AGES: [number, number] = [22, 32];
 
 /** True for a player of the foreign market who has not signed for a club of the league. */
@@ -247,7 +335,7 @@ export function imports(
     const position = SQUAD[pick(r, SQUAD.length)]!;
     const age = IMPORT_AGES[0] + pick(r, IMPORT_AGES[1] - IMPORT_AGES[0] + 1);
     const span = IMPORT_QUALITY[1] - IMPORT_QUALITY[0] + 1;
-    const quality = IMPORT_QUALITY[0] + Math.max(pick(r, span), pick(r, span));
+    const quality = IMPORT_QUALITY[0] + pick(r, span);
     const made = generatePlayer(r, {
       id: `f${season}-${k}`,
       position,
@@ -259,6 +347,7 @@ export function imports(
     const wage = priced(goingWage(origin, bestRoles(attributes, 1)[0]!.rating), wages);
     out.push({
       ...made,
+      ...foreignerOf(r, made),
       birthDate: `${season - age}${made.birthDate.slice(4)}`,
       attributes,
       contract: { wage, until: `${season + 2}-12-31`, releaseFee: null },

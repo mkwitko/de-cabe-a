@@ -12,6 +12,8 @@
  * not work out, to a club here that needs them, at the opening of each window.
  * Every number here is a PARÂMETRO, to be calibrated against the real yearly exodus.
  */
+import { clubById } from '../lib/pack-cache';
+import { resale } from './clauses';
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { note } from '../career/inbox';
@@ -19,7 +21,7 @@ import { movePlayer, releasePlayer, windowOf } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import { seedOf } from '../competition/season';
 import type { PackPlayer } from '../pack/schema';
-import { booksOf, solidarity, tierOfClub, wageRoom } from './books';
+import { booksOf, inDivisions, solidarity, tierOfClub, wageRoom } from './books';
 import { CLAUSE_TIMES, playerStance, type PlayerStance } from './deals';
 import { fitFor, squadPlanOf } from './plan';
 import { ROUND_DAYS, type Deal } from './rounds';
@@ -28,6 +30,7 @@ import { affinity, agentOf, networkOf } from './agents';
 import { isImport } from '../career/development';
 import { fameOf, noteExport } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
+import { atRate, currencyOfNation, type Currency } from './currency';
 
 /** Where a player sold abroad sits in the pack. */
 export const ABROAD = 'abroad';
@@ -41,17 +44,70 @@ export interface ForeignTier {
   ages: [number, number];
   /** Chance of an offer over a whole season of windows, in tenths of a percent, at Série A. */
   chance: number;
-  /** Fee as a percentage of his value. */
+  /** Fee as a percentage of his value, at the opening exchange rate. */
   pays: number;
+  /** The money it pays in: its fee follows the rate (currency.ts). */
+  currency: Currency;
 }
 
 /** Best first: a player gets offers from the first tier he reaches. */
 export const FOREIGN_TIERS: readonly ForeignTier[] = [
-  { id: 'abroad:eu1', name: 'Elite europeia', level: 73, ages: [17, 24], chance: 450, pays: 200 },
-  { id: 'abroad:eu2', name: 'Europa', level: 68, ages: [18, 27], chance: 260, pays: 140 },
-  { id: 'abroad:gulf', name: 'Golfo Pérsico', level: 66, ages: [25, 33], chance: 180, pays: 130 },
-  { id: 'abroad:asia', name: 'Ásia e EUA', level: 62, ages: [20, 31], chance: 150, pays: 110 },
-  { id: 'abroad:minor', name: 'Exterior', level: 57, ages: [20, 30], chance: 100, pays: 100 },
+  {
+    id: 'abroad:eu1',
+    name: 'Elite europeia',
+    level: 73,
+    ages: [17, 24],
+    chance: 560,
+    pays: 220,
+    currency: 'EUR',
+  },
+  {
+    id: 'abroad:eu2',
+    name: 'Europa',
+    level: 68,
+    ages: [18, 27],
+    chance: 330,
+    pays: 155,
+    currency: 'EUR',
+  },
+  {
+    id: 'abroad:gulf',
+    name: 'Golfo Pérsico',
+    level: 66,
+    ages: [25, 33],
+    chance: 220,
+    pays: 145,
+    currency: 'USD',
+  },
+  // Portugal: the busiest route out of Brazil (FIFA Global Transfer Report 2025: 184 of 1,005
+  // departures), young men of the middle of the league, cheap, to be sold on in Europe.
+  {
+    id: 'abroad:pt',
+    name: 'Portugal',
+    level: 60,
+    ages: [18, 26],
+    chance: 140,
+    pays: 85,
+    currency: 'EUR',
+  },
+  {
+    id: 'abroad:asia',
+    name: 'Ásia e EUA',
+    level: 62,
+    ages: [20, 31],
+    chance: 190,
+    pays: 120,
+    currency: 'USD',
+  },
+  {
+    id: 'abroad:minor',
+    name: 'Exterior',
+    level: 57,
+    ages: [20, 30],
+    chance: 125,
+    pays: 110,
+    currency: 'USD',
+  },
 ];
 
 /** A young talent's ceiling that the elite tier buys on promise. */
@@ -108,11 +164,17 @@ export const signable = (p: PackPlayer, _season: number) => p.clubId === ABROAD 
 
 /** The fee to bring him from abroad. */
 export const importFee = (w: CareerWorld, p: PackPlayer) =>
-  thousands((marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100);
+  thousands(
+    atRate(
+      w,
+      currencyOfNation(p.nationality),
+      (marketValue(w.pack, p, w.season.season) * (100 + IMPORT_PREMIUM)) / 100,
+    ),
+  );
 
 /** What he wants to sign for `buyerId`, coming from his club, from nowhere or from abroad. */
 export function stanceFor(w: CareerWorld, p: PackPlayer, buyerId: string): PlayerStance {
-  const club = (id: string) => w.pack.clubs.find((x) => x.id === id)!;
+  const club = (id: string) => clubById(w.pack, id)!;
   const from = p.clubId === null || p.clubId === ABROAD ? null : club(p.clubId);
   const s = playerStance(w.pack, p, from, club(buyerId), w.season.season);
   return p.clubId === ABROAD ? { ...s, wage: Math.round((s.wage * (100 + IMPORT_WAGE)) / 100) } : s;
@@ -135,15 +197,37 @@ export const wantsToGo = (p: PackPlayer) =>
 
 /** The fee a tier offers for him. */
 export const foreignFee = (w: CareerWorld, p: PackPlayer, t: ForeignTier) =>
-  thousands((marketValue(w.pack, p, w.season.season) * t.pays) / 100);
+  thousands(atRate(w, t.currency, (marketValue(w.pack, p, w.season.season) * t.pays) / 100));
 
 /** Sends a player abroad: he leaves the league for good; the fee goes to his club's season. */
 export function sellAbroad(w: CareerWorld, p: PackPlayer, fee: number): void {
   const from = p.clubId!;
   movePlayer(w, p, ABROAD, { wage: 0, until: `${w.season.season + YEARS_ABROAD}-12-31` });
   const got = booksOf(w, from);
-  w.books = { ...w.books, [from]: { ...got, earned: got.earned + fee } };
+  // The foreign side's book: what it paid here (`spent`) and what it sold here (`earned`).
+  const world = booksOf(w, ABROAD);
+  w.books = {
+    ...w.books,
+    [from]: { ...got, earned: got.earned + fee },
+    [ABROAD]: { ...world, spent: world.spent + fee },
+  };
   solidarity(w, p, from, fee, true);
+  resale(w, p, from, ABROAD, fee);
+}
+
+/**
+ * A player bought from abroad: the fee leaves the league. The buyer's books see it spent and the
+ * foreign side's book (`ABROAD`) sees it earned, so the season's imports can be read back.
+ */
+export function bookImport(w: CareerWorld, buyerId: string, fee: number, p?: PackPlayer): void {
+  if (p) resale(w, p, ABROAD, buyerId, fee);
+  const b = booksOf(w, buyerId);
+  const world = booksOf(w, ABROAD);
+  w.books = {
+    ...w.books,
+    [buyerId]: { ...b, spent: b.spent + fee },
+    [ABROAD]: { ...world, earned: world.earned + fee },
+  };
 }
 
 /** One round of foreign offers. Returns the sales between the world's clubs and abroad. */
@@ -153,7 +237,7 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
   const share = window === 'second' ? SECOND / ROUNDS_SECOND : (100 - SECOND) / ROUNDS_FIRST;
   const draw = rngFrom(seedOf(w.seed, `abroad:${day}`));
   const done: Deal[] = [];
-  const clubs = [...w.season.calendar.byClub.keys()].sort();
+  const clubs = [...w.season.calendar.byClub.keys()].filter((id) => inDivisions(w, id)).sort();
   for (const clubId of clubs) {
     // Europe watches the clubs whose names it knows: international fame (clubs.ts) moves the
     // division's visibility from 70% to 130% (04 §4.6: no club grows unbeatable).
@@ -233,7 +317,7 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
   const draw = rngFrom(seedOf(w.seed, `home:${day}`));
   const read = readingsOf(w.pack);
   const playing = w.pack.clubs
-    .filter((c) => w.season.calendar.byClub.has(c.id))
+    .filter((c) => inDivisions(w, c.id))
     .sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1));
   const done: Deal[] = [];
   // In the pack's order, one draw each, whatever happens.

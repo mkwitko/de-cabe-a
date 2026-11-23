@@ -4,9 +4,11 @@
  * `Fired` is the end of the job.
  */
 import { btnPrimary } from '../../../components/ui';
+import { ClubBadge } from '../../../components/ClubBadge';
 import { t } from '../i18n';
 import type { Front, WorkNo } from '@decabeca/club-domain';
 import type { SimView } from './sim.worker';
+import { History } from './SeasonReview';
 
 const LABEL =
   'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
@@ -51,6 +53,12 @@ export function Board({
           <p className={b.position <= b.goal ? 'text-chalk' : 'font-semibold text-club-danger'}>
             {t('board.position', { n: b.position })}
           </p>
+          {b.election && (
+            <p className="font-condensed text-xl font-extrabold text-club-gold uppercase">
+              {t('board.electionYear')}
+            </p>
+          )}
+          <p className="text-chalk-soft">{t('board.dna', { s: b.dna })}</p>
           <p className="text-chalk-soft">
             {t('board.directors', {
               h: b.directors.horizon,
@@ -235,6 +243,7 @@ export function Board({
           ))}
         </ul>
       </div>
+      <History history={sim.history} club={sim.club} />
     </section>
   );
 }
@@ -279,11 +288,7 @@ export function Fired({
                   key={o.clubId}
                   className="flex min-w-0 items-center gap-3 rounded-lg bg-club-night/60 p-3 text-left"
                 >
-                  <span
-                    aria-hidden
-                    className="size-8 shrink-0 rounded-full border-2"
-                    style={{ background: o.colours[0], borderColor: o.colours[1] }}
-                  />
+                  <ClubBadge name={o.name} size="sm" colours={o.colours} />
                   <span className="min-w-0 flex-1">
                     <span className="block font-condensed text-lg leading-tight font-extrabold text-balance uppercase">
                       {o.name}

@@ -3432,6 +3432,9 @@ html.club-stage:has(.sala-scene) body {
   .pitch-hero-copy > :nth-child(4) {
     animation-delay: 640ms;
   }
+  .pitch-hero-copy > :nth-child(5) {
+    animation-delay: 760ms;
+  }
   .pitch-ticker-track {
     animation: pitch-ticker 38s linear infinite;
   }

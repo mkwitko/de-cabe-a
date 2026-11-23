@@ -31,9 +31,19 @@ import {
   type PackPlayer,
 } from '../../packages/club-domain/src/index';
 import { realDivisions } from '../../packages/club-domain/src/generate/competitions';
+import {
+  clubKey,
+  facilitiesFrom,
+  isCertified,
+  marketFrom,
+  styleFrom,
+  youthPolicyFrom,
+  type StyleRates,
+} from '../../packages/club-domain/src/generate/structure';
 import { FIRST_NAMES, LAST_NAMES, NICKNAMES } from '../../packages/club-domain/src/generate/names';
 
 import { parseCsv } from './lib/csv';
+import { parseDerbies, resolveRivals } from './lib/rivals';
 
 const BRAZIL = '189';
 /** The save was exported in December 2026 (last played fixture 2026-12-17); the pack opens 2027. */
@@ -87,6 +97,65 @@ function modelOf(name: string, short: string, state: string | undefined) {
       : ('ownedSaf' as const);
   }
   return /\bSAF\b/.test(name) ? ('ownedSaf' as const) : ('association' as const);
+}
+
+// ── Money: real cash and debt (data/finances-audited.json, data/finances.json) ──────────────────
+// Cash: the audited 2025 balance sheet (7 clubs), else CASH_SHARE of revenue (median of those 7:
+// 2.1 %, flagged estimate). Debt: the audited gross loans, else the press total debt (Anresf 2025,
+// finances.json), held to DEBT_CAP x revenue: the game repays the pack's debt in five years, and
+// real clubs service the rest over decades (Lei SAF: 20 % of monthly revenue). Revenue: audited or
+// press 2025, else the economy's payroll over PAYROLL_SHARE (the dev pack's 55-76 % of income).
+const PAYROLL_SHARE = 0.65;
+const CASH_SHARE = 0.021;
+const DEBT_CAP = 0.8;
+interface RealMoney {
+  revenue: number | null;
+  cash: number | null;
+  debt: number | null;
+}
+const MONEY = new Map<string, RealMoney>();
+{
+  type Num = { value: number } | null;
+  const dir = new URL('./data/', import.meta.url);
+  const press = JSON.parse(readFileSync(new URL('finances.json', dir), 'utf8')) as {
+    clubs: {
+      club: string;
+      division: string;
+      revenueTotal: number | null;
+      totalDebt: number | null;
+    }[];
+  };
+  const audited = JSON.parse(readFileSync(new URL('finances-audited.json', dir), 'utf8')) as {
+    clubs: {
+      club: string;
+      values: Record<string, Num | undefined>;
+      extra?: Record<string, Num | undefined>;
+    }[];
+  };
+  for (const p of press.clubs)
+    if (p.division.startsWith('br-'))
+      MONEY.set(fold(p.club), { revenue: p.revenueTotal, cash: null, debt: p.totalDebt });
+  for (const a of audited.clubs) {
+    const m = MONEY.get(fold(a.club));
+    if (!m) continue;
+    m.revenue = a.values.revenueTotal?.value ?? m.revenue;
+    m.cash = a.values.cash?.value ?? null;
+    m.debt = a.values.grossDebt?.value ?? a.extra?.loansAndFinancing?.value ?? m.debt;
+  }
+}
+// Pack short names that differ from the research's.
+const MONEY_ALIAS: Record<string, string> = {
+  vasco: 'vasco da gama',
+  'rb bragantino': 'red bull bragantino',
+  'operario (pr)': 'operario-pr',
+  'vila nova (go)': 'vila nova',
+  'botafogo (sp)': 'botafogo-sp',
+  'athletic (mg)': 'athletic-mg',
+  sport: 'sport recife',
+};
+function realMoney(name: string, short: string): RealMoney | undefined {
+  const k = fold(short || name);
+  return MONEY.get(MONEY_ALIAS[k] ?? k) ?? MONEY.get(fold(name));
 }
 
 const [, , dirArg, outArg] = process.argv;
@@ -145,6 +214,9 @@ const fixtureRows = load(
   'fixtures.csv',
   'played results of competitions 124/136/137/2227: 2026 play-offs and knockouts',
 );
+const contractRows = load('contracts.csv', 'clauses (JSON): release fees, see clauseOf');
+const injuryRows = load('injuries.csv', 'history rows: injury proneness, see injuryBump');
+const staffRows = load('staff.csv', 'head coaches: see headCoachOf');
 console.log(`read CSVs in ${Date.now() - t0} ms`);
 
 const nations = (
@@ -524,7 +596,7 @@ function positionsOf(p: Record<string, string>) {
  * gives the first block, which is certain. The second block is INFERRED from what the players who
  * carry the code look like (mean z-score of attributes, positions, feet) and is marked as such in
  * the report: 3 (off_the_ball +1.3, forwards), 6 (marking, tackling, DM/MC), 17 (temperament
- * -1.1, sportsmanship -1.0), 57 and 58 (left and right wing positions; right foot 92 / left foot
+ * -1.1, sportsmanship -1.0), 9 (long shots, penalties, strength: shoots with power), 57 and 58 (left and right wing positions; right foot 92 / left foot
  * 94, so they cut inside). Everything else (killer balls, channels, weaker foot...) is dropped and
  * counted.
  */
@@ -541,10 +613,77 @@ const TRAIT_CODE: Record<number, { trait: (typeof TRAITS)[number]; certain: bool
   17: { trait: 'arguesWithReferee', certain: false },
   57: { trait: 'cutsInside', certain: false },
   58: { trait: 'cutsInside', certain: false },
+  // 9: long_shots +1.6, penalties +1.6, free kicks +1.2, strength +1.2 (mean z) and it co-occurs
+  // with shoots_from_distance: "shoots with power".
+  9: { trait: 'shootsFromDistance', certain: false },
 };
 const droppedTraits: Record<string, number> = {};
 
 const CEILING_GAIN = { technical: 0.45, mental: 0.55, physical: 0.3 };
+
+/**
+ * The club that formed him (solidarity, training compensation, the talent map): FM's
+ * home_grown_club_uids, the clubs where he trained three years between 15 and 21; the first one
+ * the pack keeps. FM: high confidence for who formed him.
+ */
+let formedKnown = 0;
+function formedAt(
+  p: Record<string, string>,
+): { origin: { clubId: string } } | Record<string, never> {
+  for (const u of (p.home_grown_club_uids ?? '').split(';'))
+    if (u && squadOf.has(u)) {
+      formedKnown++;
+      return { origin: { clubId: `fm-c${u}` } };
+    }
+  return {};
+}
+
+// ── Release clauses and injury history (own block) ───────────────────────────────────────────────
+
+/**
+ * contracts.csv `clauses` is a JSON array of {kind, kind_code, parameter, value}. The release
+ * clauses are `minimum_fee_release_domestic` (18), `minimum_fee_release_foreign` (16), the generic
+ * `minimum_fee_release` (0) and the conditional `relegation_release` (1) / `non_promotion_release`
+ * (2); `value` is the fee in the save's money (GBP, like the wages). The pack has one field, and a
+ * Brazilian buyer is the case that matters: domestic, else the generic one; a foreign-only or
+ * conditional clause is not a clause the pack's world can trigger, so it stays null.
+ * Lei Geral do Esporte (Lei 14.597/2023, art. 28, par. 1) caps the cláusula indenizatória
+ * desportiva of a transfer inside Brazil at 2,000 times the average contract wage, and leaves the
+ * international transfer without a limit: a domestic fee above 2,000 monthly wages is cut to it.
+ * One contract per player: the row at the club that holds him, not a loan row.
+ */
+const LGE_DOMESTIC_CAP = 2000;
+const clauseOf = new Map<string, number>();
+{
+  const kept = new Map<string, Record<string, string>>();
+  for (const row of contractRows) {
+    if (!row.clauses) continue;
+    const have = kept.get(row.player_uid);
+    if (!have || (have.on_loan === 'true' && row.on_loan !== 'true')) kept.set(row.player_uid, row);
+  }
+  for (const [uid, row] of kept) {
+    const list = JSON.parse(row.clauses) as { kind: string; value: number | null }[];
+    const pick = (k: string) => list.find((c) => c.kind === k && c.value && c.value > 0)?.value;
+    const fee = pick('minimum_fee_release_domestic') ?? pick('minimum_fee_release');
+    if (fee) clauseOf.set(uid, brl(fee));
+  }
+}
+const clauseStats = { found: 0, capped: 0, noWage: 0 };
+
+/**
+ * Injury proneness from the history in injuries.csv: the save's own hidden value stays and each
+ * two points of severity in the history (minor 1, moderate 2, major 3) add one, at most three.
+ * PARÂMETRO: only a history that already shows pushes it up (the table has no exposure time).
+ */
+const injuryWeight = new Map<string, number>();
+for (const row of injuryRows)
+  if (row.kind === 'history')
+    injuryWeight.set(
+      row.player_uid,
+      (injuryWeight.get(row.player_uid) ?? 0) + Math.max(1, num(row.severity_code, 1)),
+    );
+const injuryBump = (uid: string) => Math.min(3, Math.floor((injuryWeight.get(uid) ?? 0) / 2));
+const injuryStats = { bumped: 0 };
 
 function playerOf(p: Record<string, string>, clubUid: string, id: string): PackPlayer | null {
   const positions = positionsOf(p);
@@ -635,6 +774,22 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
   const loan = p.on_loan === 'true' && p.loan_parent_club_uid && scope.has(p.loan_parent_club_uid);
   if (p.on_loan === 'true' && !loan) est('loan: parent club outside the pack, loan link dropped');
 
+  const wage = monthlyBrl(num(p.contract_wage));
+  let releaseFee: number | null = clauseOf.get(p.uid) ?? null;
+  if (releaseFee !== null) {
+    if (wage <= 0) {
+      releaseFee = null;
+      clauseStats.noWage++;
+    } else {
+      clauseStats.found++;
+      if (releaseFee > wage * LGE_DOMESTIC_CAP) {
+        releaseFee = wage * LGE_DOMESTIC_CAP;
+        clauseStats.capped++;
+      }
+    }
+  }
+  if (injuryBump(p.uid)) injuryStats.bumped++;
+
   const full = p.full_name || p.name;
   return {
     id,
@@ -665,13 +820,14 @@ function playerOf(p: Record<string, string>, clubUid: string, id: string): PackP
     hidden: {
       consistency: hid('consistency'),
       bigMatches: hid('important_matches'),
-      injuryProneness: hid('injury_proneness'),
+      injuryProneness: clamp20(hid('injury_proneness') + injuryBump(p.uid)),
       adaptability: pers('adaptability'),
       versatility: hid('versatility'),
     },
     traits,
     clubId: `fm-c${clubUid}`,
-    contract: { wage: monthlyBrl(num(p.contract_wage)), until, releaseFee: null },
+    ...formedAt(p),
+    contract: { wage, until, releaseFee },
     ...(loan ? { loanFromClubId: `fm-c${p.loan_parent_club_uid}` } : {}),
     field,
   };
@@ -719,6 +875,19 @@ const colourOf = (uid: string, k: number) =>
     .map((i) => (48 + (hashByte(uid, k * 3 + i) % 176)).toString(16).padStart(2, '0'))
     .join('');
 
+// ── Kits: scripts/club-pack/fetch-kits.ts -> data/kits.json (Wikipedia infoboxes), keyed by FM uid
+type KitRow = {
+  body: string;
+  sleeves: string;
+  shorts: string;
+  socks: string;
+  pattern?: PackKit['pattern'];
+};
+type PackKit = NonNullable<PackClub['kits']>['home'];
+const kits = JSON.parse(readFileSync(new URL('./data/kits.json', import.meta.url), 'utf8')) as {
+  clubs: Record<string, { home: KitRow; away?: KitRow }>;
+};
+
 // ── Geography: scripts/club-pack/enrich-fm-clubs.ts -> data/br-club-geo.json (Wikidata + openfootball)
 type GeoCity = {
   name: string;
@@ -746,6 +915,10 @@ const geo = JSON.parse(
     { city: string; state: string | null; stadium?: { name: string; capacity: number } }
   >;
 };
+// Gap-filler venues (enrich-stadiums.ts): the stadium side of Wikidata (occupant/owner) and dated P1083.
+const venueGap = JSON.parse(
+  readFileSync(new URL('./data/stadiums.json', import.meta.url), 'utf8'),
+) as Record<string, { name: string | null; capacity: number | null }>;
 const slug = (s: string) =>
   s
     .normalize('NFD')
@@ -754,23 +927,64 @@ const slug = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 const cities = new Map<string, Pack['cities'][number]>();
-// PARÂMETRO: neutral climate and a flat income for every city (no source in the save or in the
-// open data used here; IBGE income and INMET climate would be the next sources).
+// Municipal data (IBGE, Wikidata, NASA POWER) from scripts/club-pack/fetch-cities.ts ->
+// data/br-cities.json: population, income (GDP per capita a month), coordinates, altitude and monthly
+// climate by IBGE municipality, and the municipality of clubs the save and Wikidata left without one.
+type Muni = {
+  name: string;
+  uf: string;
+  qid?: string;
+  lat: number | null;
+  lon: number | null;
+  altitudeM: number | null;
+  altSource?: string;
+  population: number | null;
+  income: number | null;
+  climate: [number, number, number][] | null;
+};
+const CITIES = JSON.parse(
+  readFileSync(new URL('./data/br-cities.json', import.meta.url), 'utf8'),
+) as {
+  municipalities: Record<string, Muni>;
+  clubCity: Record<string, { ibge: string; by: 'wikidata' | 'ptwiki' | 'name' }>;
+};
+const muniByQid = new Map<string, Muni>();
+const muniByName = new Map<string, Muni>();
+for (const m of Object.values(CITIES.municipalities)) {
+  if (m.qid) muniByQid.set(m.qid, m);
+  muniByName.set(`${slug(m.name)}|${m.uf}`, m);
+}
+// PARÂMETRO: the neutral climate and the flat income only fill a city the municipal file does not
+// know (a foreign or unmatched birthplace); every one of them is flagged in the report.
 const NEUTRAL = Array.from({ length: 12 }, () => ({ rainMm: 100, tempC: 22, humidity: 70 }));
 function addCity(id: string, c: GeoCity): string {
   if (!cities.has(id)) {
-    if (c.lat === null || c.lon === null) est('city: no coordinates, centre of Brazil');
-    if (c.population === null) est('city: no population');
+    const m =
+      (id.startsWith('wd-') ? muniByQid.get(id.slice(3)) : undefined) ??
+      muniByName.get(`${slug(c.name)}|${c.state}`);
+    const lat = m?.lat ?? c.lat;
+    const lon = m?.lon ?? c.lon;
+    const population = m?.population ?? c.population;
+    const altitudeM = m?.altitudeM ?? c.altitudeM;
+    if (lat === null || lon === null) est('city: no coordinates, centre of Brazil');
+    if (population === null) est('city: no population');
+    if (m?.altSource === 'open-meteo')
+      est('city: altitude from the Open-Meteo 90 m elevation model');
+    else if (altitudeM === null) est('city: no altitude, sea level');
+    if (m?.income == null) est('city: no income, flat 2000');
+    if (!m?.climate) est('city: no climate, neutral 100 mm / 22 C / 70 %');
     cities.set(id, {
       id,
-      name: c.name.slice(0, 80),
-      state: c.state ?? 'XX',
-      population: Math.round(c.population ?? 0),
-      income: 2000,
-      altitudeM: clamp(c.altitudeM ?? 0, 0, 4500),
-      lat: c.lat ?? -15,
-      lon: c.lon ?? -50,
-      climate: NEUTRAL,
+      name: (m?.name ?? c.name).slice(0, 80),
+      state: m?.uf ?? c.state ?? 'XX',
+      population: Math.round(population ?? 0),
+      income: m?.income ?? 2000,
+      altitudeM: clamp(altitudeM ?? 0, 0, 4500),
+      lat: lat ?? -15,
+      lon: lon ?? -50,
+      climate: m?.climate
+        ? m.climate.map(([rainMm, tempC, humidity]) => ({ rainMm, tempC, humidity }))
+        : NEUTRAL,
     });
   }
   return id;
@@ -802,6 +1016,26 @@ for (const uid of scope) {
           }),
     );
     est('city: from openfootball (name and state only)');
+  } else if (CITIES.clubCity[uid]) {
+    // fetch-cities.ts: Wikidata P159/P115/P740, the pt.wikipedia article, or the club's own name.
+    const { ibge, by } = CITIES.clubCity[uid]!;
+    const m = CITIES.municipalities[ibge]!;
+    cityOfClub.set(
+      uid,
+      addCity(m.qid ? `wd-${m.qid}` : `ibge-${ibge}`, {
+        name: m.name,
+        state: m.uf,
+        lat: m.lat,
+        lon: m.lon,
+        population: m.population,
+        altitudeM: m.altitudeM,
+      }),
+    );
+    est(
+      by === 'name'
+        ? 'city: municipality read from the club name (fetch-cities.ts, conservative rule)'
+        : `city: municipality from ${by === 'wikidata' ? 'Wikidata' : 'the pt.wikipedia article'} (fetch-cities.ts)`,
+    );
   }
 }
 const fmCity = new Map<string, Set<string>>();
@@ -844,6 +1078,209 @@ for (const uid of scope)
     est('city: unresolved placeholder (name "Cidade N")');
   }
 
+// Birthplaces (birthCityId): Wikidata's place of birth for Brazilian footballers
+// (data/birthplaces.json, fetch-birthplaces.ts), matched on the birth date and the name: the
+// label equal to the player's known or full name, or all its words inside the full name; a date
+// with two such candidates is left alone. FM has no birthplace.
+const BIRTHS = (
+  JSON.parse(readFileSync(new URL('./data/birthplaces.json', import.meta.url), 'utf8')) as {
+    players: {
+      qid: string;
+      name: string;
+      birth: string;
+      place: {
+        qid: string;
+        name: string;
+        state: string;
+        lat: number | null;
+        lon: number | null;
+        population: number | null;
+      };
+    }[];
+  }
+).players;
+let bornKnown = 0;
+{
+  const byDate = new Map<string, typeof BIRTHS>();
+  for (const b of BIRTHS) (byDate.get(b.birth) ?? byDate.set(b.birth, []).get(b.birth)!).push(b);
+  const words = (x: string) =>
+    fold(x)
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+  for (const pl of players) {
+    const names = [pl.knownAs, pl.name].filter((x): x is string => !!x);
+    const full = new Set(names.flatMap(words));
+    const hits = (byDate.get(pl.birthDate) ?? []).filter((b) => {
+      const label = words(b.name);
+      return (
+        names.some((n) => fold(n) === fold(b.name)) ||
+        (label.length >= 2 && label.every((x) => full.has(x)))
+      );
+    });
+    if (hits.length !== 1) continue;
+    const at = hits[0]!.place;
+    const cityId = addCity(`wd-${at.qid}`, {
+      name: at.name,
+      state: at.state,
+      lat: at.lat,
+      lon: at.lon,
+      population: at.population,
+      altitudeM: null,
+    });
+    pl.birthCityId = cityId;
+    bornKnown++;
+  }
+}
+
+// Second citizenships (secondNationality): Wikidata's footballers holding Brazil's and another
+// (data/citizenships.json, fetch-citizenships.ts), matched as the birthplaces are. A foreigner
+// with a Brazilian passport gets 'BR'; a Brazilian, his other one. FM's second_nation_ids is not
+// used: it names Brazil for foreigners who do not hold its passport (Mercado, Cuello, Ferraresi).
+const CITIZENS = (
+  JSON.parse(readFileSync(new URL('./data/citizenships.json', import.meta.url), 'utf8')) as {
+    players: { qid: string; name: string; birth: string; others: string[] }[];
+  }
+).players;
+let dualKnown = 0;
+{
+  const byDate = new Map<string, typeof CITIZENS>();
+  for (const b of CITIZENS) (byDate.get(b.birth) ?? byDate.set(b.birth, []).get(b.birth)!).push(b);
+  const words = (x: string) =>
+    fold(x)
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+  for (const pl of players) {
+    const names = [pl.knownAs, pl.name].filter((x): x is string => !!x);
+    const full = new Set(names.flatMap(words));
+    const hits = (byDate.get(pl.birthDate) ?? []).filter((b) => {
+      const label = words(b.name);
+      return (
+        names.some((n) => fold(n) === fold(b.name)) ||
+        (label.length >= 2 && label.every((x) => full.has(x)))
+      );
+    });
+    if (hits.length !== 1) continue;
+    const other = pl.nationality === 'BR' ? hits[0]!.others[0] : 'BR';
+    if (!other || other === pl.nationality) continue;
+    pl.secondNationality = other;
+    dualKnown++;
+  }
+}
+
+// ── Club structure from real signals (facilities, style, youth policy, market) ─────────────────
+// Mappings in packages/club-domain/src/generate/structure.ts; sources in data/FONTES.md.
+const facilityCode = new Map(
+  load('facilities.csv', 'corporate_facilities_code is the only facility column').map((r) => [
+    r.club_uid,
+    num(r.corporate_facilities_code),
+  ]),
+);
+const CBF_FORMADORES = new Set(
+  (
+    JSON.parse(readFileSync(new URL('./data/clubes-formadores.json', import.meta.url), 'utf8')) as {
+      clubs: string[];
+    }
+  ).clubs.map(clubKey),
+);
+const seasonRows = load('player-season-stats.csv', 'kind overall, team slot 0: style and minutes');
+const styleSum = new Map<string, StyleRates & { minutes: number }>();
+const minutesAt = new Map<string, number>();
+for (const s of seasonRows) {
+  if (s.kind !== 'overall' || s.team_slot !== '0' || !s.club_uid) continue;
+  const m = num(s.minutes);
+  const t = styleSum.get(s.club_uid) ?? {
+    minutes: 0, passes: 0, progressive: 0, pressures: 0, clearances: 0, crosses: 0, sprints: 0, lost: 0,
+  }; // prettier-ignore
+  t.minutes += m;
+  t.passes += num(s.passes_attempted);
+  t.progressive += num(s.progressive_passes);
+  t.pressures += num(s.pressures_attempted);
+  t.clearances += num(s.clearances);
+  t.crosses += num(s.crosses_attempted);
+  t.sprints += num(s.high_intensity_sprints);
+  t.lost += num(s.possession_lost);
+  styleSum.set(s.club_uid, t);
+  minutesAt.set(`fm-p${s.player_uid}|fm-c${s.club_uid}`, m);
+}
+const MIN_STYLE_MINUTES = 5000; // about five matches of data
+const styleRates = new Map<string, StyleRates>();
+for (const [u, t] of styleSum)
+  if (scope.has(u) && t.minutes >= MIN_STYLE_MINUTES) {
+    const k = 990 / t.minutes; // per 90 minutes of a team of 11
+    styleRates.set(u, {
+      passes: t.passes * k, progressive: t.progressive * k, pressures: t.pressures * k,
+      clearances: t.clearances * k, crosses: t.crosses * k, sprints: t.sprints * k, lost: t.lost * k,
+    }); // prettier-ignore
+  }
+const styleCohort = [...styleRates.values()];
+const squadOfClub = new Map<string, PackPlayer[]>();
+for (const p of players)
+  if (p.clubId) (squadOfClub.get(p.clubId) ?? squadOfClub.set(p.clubId, []).get(p.clubId)!).push(p);
+const structure = { facilities: 0, certified: 0, style: 0, youth: 0 };
+
+// ── Real head coaches (own block) ────────────────────────────────────────────────────────────────
+
+/**
+ * staff.csv has 4,859 people with a club, but NO job (`job` and `job_code` are empty) and none of the
+ * coaching attributes (every `attributes_*` but adaptability is empty). What it does have: the
+ * wage, the current ability (1..200), the personality, the tactical preferences (1..20) and
+ * `in_club_lists`: it is false for the club's manager and true for everyone listed beside him
+ * (checked on the Série A clubs: Abel Ferreira, Leonardo Jardim, Tite, Dorival Júnior, Rogério
+ * Ceni, Luís Castro... are the false ones, the executives and assistants are true). So the head coach
+ * of a club is its best-paid person that is not in the club lists; a club with none keeps the
+ * generated one. The other posts (assistant, fitness, goalkeeping, scouts...) cannot be told apart
+ * without a job, and the pack's assignments feed the club's wage bill: they are not imported.
+ */
+const headCoachOf = new Map<string, Record<string, string>>();
+for (const row of staffRows) {
+  if (row.in_club_lists !== 'false' || row.has_contract !== 'true' || !row.club_uid) continue;
+  const have = headCoachOf.get(row.club_uid);
+  if (!have || num(row.wage) > num(have.wage)) headCoachOf.set(row.club_uid, row);
+}
+const coachStats = { real: 0, generated: 0 };
+const usedCoach = new Set<string>();
+
+function realCoach(row: Record<string, string>): Pack['staff'][number] {
+  const ca = num(row.ability_current); // 0..200
+  const to20 = (x: number) => clamp20(1 + (x / 200) * 19);
+  const pref = (k: string) => clamp20(num(row['preferences_' + k], 10));
+  const mark = { origin: 'estimated', confidence: 'low' } as const;
+  return {
+    id: `fm-s${row.uid}`,
+    name: (row.full_name || row.name).slice(0, 80),
+    birthDate: row.birth_date,
+    nationality: nations[row.nation_id] ?? 'BR',
+    roles: ['headCoach'],
+    // Tactical preferences, read back by the game's coach pool (career/coach-pool.ts, prefOf).
+    specialties: [
+      ['press', 'trigger_press'],
+      ['tempo', 'tempo'],
+      ['width', 'width'],
+      ['attacking', 'attacking'],
+      ['directness', 'directness'],
+      ['patience', 'patience'],
+      ['rotation', 'squad_rotation'],
+    ].map(([k, f]) => `pref:${k}=${pref(f!)}`),
+    attributes: {
+      tactics: to20(ca),
+      gameReading: to20(ca),
+      manManagement: clamp20(num(row.personality_adaptability, 10)),
+      motivation: clamp20(num(row.personality_ambition, 10)),
+    },
+    licence: ca >= 130 ? 'Pro' : ca >= 90 ? 'A' : 'B',
+    experienceYears: clamp(num(row.age) - 30, 0, 40),
+    reputation: clamp(ca / 2, 0, 100),
+    ties: [],
+    field: {
+      identity: { origin: 'imported', confidence: 'medium' },
+      attributes: mark,
+      licence: mark,
+      experienceYears: mark,
+      reputation: mark,
+    },
+  };
+}
+
 const root = rngFrom(20261117);
 const clubs: PackClub[] = [];
 const staff: Pack['staff'] = [];
@@ -876,16 +1313,24 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     (a, b) => num(b.total_capacity) - num(a.total_capacity),
   )[0];
   const capacity = st ? clamp(num(st.total_capacity), 0, 120_000) : 0;
-  if (!capacity && !(geo.clubs[uid]?.stadium?.capacity || geo.openfootball[uid]?.stadium?.capacity))
+  const gapSt = venueGap[uid];
+  if (
+    !capacity &&
+    !(
+      geo.clubs[uid]?.stadium?.capacity ||
+      gapSt?.capacity ||
+      geo.openfootball[uid]?.stadium?.capacity
+    )
+  )
     est('stadium: capacity estimated from reputation');
   const shared = st && st.home_club_uids.includes(';');
   // Name: Wikidata home venue, then openfootball, then the save, then a placeholder. Capacity: the
   // save when it has one (the game's own number), else Wikidata (P1083), else openfootball.
   const wdSt = geo.clubs[uid]?.stadium;
   const ofSt = geo.openfootball[uid]?.stadium;
-  const named = wdSt?.name || ofSt?.name || st?.name;
+  const named = wdSt?.name || gapSt?.name || ofSt?.name || st?.name;
   if (!named) est('stadium: name is a placeholder');
-  const openCap = wdSt?.capacity || ofSt?.capacity || 0;
+  const openCap = wdSt?.capacity || gapSt?.capacity || ofSt?.capacity || 0;
   if (!capacity && openCap) est('stadium: capacity from Wikidata/openfootball');
   const stadium: PackClub['stadium'] = {
     name: (named || `Estádio ${c.short_name || c.name}`).slice(0, 80),
@@ -902,30 +1347,102 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
   };
 
   const fin = latestFinance.get(uid);
-  let initialCash = money.payroll * 3;
+  let initialCash: number;
   let initialDebt = 0;
   if (fin) {
     const balance = brl(num(fin.balance));
-    // A negative balance is debt (the pack repays it in instalments); a positive one is cash.
-    initialCash = Math.max(0, balance);
+    // A negative balance is debt (the pack repays it in instalments); cash comes below.
     initialDebt = Math.max(0, -balance);
-  } else est('finance: no finances row, cash = three months of the economy payroll');
+  } else est('finance: no finances row in the save');
+  // ── Real cash and debt (data/finances-audited.json, data/finances.json) ──
+  // The save's balance is a game number (negative for every club of A to C, so cash was 0).
+  {
+    const real = realMoney(c.name, c.short_name);
+    const revenue = real?.revenue ?? Math.round((money.payroll * 12) / PAYROLL_SHARE);
+    if (real?.cash != null) {
+      initialCash = real.cash;
+      est('finance: cash from the audited 2025 balance sheet (data/finances-audited.json)');
+    } else {
+      initialCash = Math.round(revenue * CASH_SHARE);
+      est('finance: cash ESTIMATED as 2.1% of revenue (median of the audited clubs)');
+    }
+    if (real?.debt != null) {
+      initialDebt = Math.min(real.debt, Math.round(revenue * DEBT_CAP));
+      est('finance: debt from audited loans or press total debt 2025, capped at 0.8x revenue');
+    } else if (initialDebt > revenue * DEBT_CAP) {
+      initialDebt = Math.round(revenue * DEBT_CAP);
+      est('finance: save-derived debt capped at 0.8x revenue');
+    }
+  }
 
   const sp = (sponsorsOf.get(uid) ?? []).filter((s) => num(s.annual_value) > 0 && s.end);
   if (!sp.length) est('sponsors: none in the save');
 
+  // Colours: the home kit (body + the dominant second colour) first, then Wikidata, then a hash.
+  const kit = kits.clubs[uid];
   const official = geo.clubs[uid]?.colours;
-  if (!official?.length) est('club colours: hash fallback, not the real colours');
-  const colours: PackClub['colours'] = official?.length
-    ? [official[0]!, official[1] ?? (official[0] === '#ffffff' ? '#000000' : '#ffffff')]
-    : [colourOf(uid, 0), colourOf(uid, 1)];
+  let colours: PackClub['colours'];
+  if (kit) {
+    const h = kit.home;
+    const second = [h.sleeves, h.shorts, h.socks].find((x) => x !== h.body);
+    colours = [h.body, second ?? (h.body === '#ffffff' ? '#000000' : '#ffffff')];
+    if (!second) est('club colours: kit is one colour, second colour assumed');
+  } else if (official?.length) {
+    colours = [official[0]!, official[1] ?? (official[0] === '#ffffff' ? '#000000' : '#ffffff')];
+  } else {
+    est('club colours: hash fallback, not the real colours');
+    colours = [colourOf(uid, 0), colourOf(uid, 1)];
+  }
   const body = estimatedBody(r, strength, 'inferred', 'low');
+  {
+    // Structure from real signals; what has none keeps the reputation estimate above.
+    const id = `fm-c${uid}`;
+    const squad = squadOfClub.get(id) ?? [];
+    let total = 0;
+    let academy = 0;
+    for (const p of squad) {
+      const m = minutesAt.get(`${p.id}|${id}`) ?? 0;
+      total += m;
+      if (p.origin?.clubId === id) academy += m;
+    }
+    const academyShare = total >= 5000 ? academy / total : null;
+    const code = facilityCode.get(uid) ?? null;
+    const certified = isCertified([c.name, c.short_name], CBF_FORMADORES);
+    if (code) structure.facilities++;
+    if (certified) structure.certified++;
+    body.facilities = facilitiesFrom({
+      repLevel: lvl,
+      corporateCode: code,
+      certified,
+      academyShare,
+    });
+    const rates = styleRates.get(uid);
+    if (rates) {
+      structure.style++;
+      body.profile.playingStyle = styleFrom(rates, styleCohort);
+      body.profile.confidence = 'medium';
+    } else est('profile: playing style kept as the reputation draw (no season stats)');
+    if (academyShare !== null) {
+      structure.youth++;
+      body.profile.youthPolicy = youthPolicyFrom(academyShare);
+    }
+    if (squad.length >= 11) {
+      const yr = (p: PackPlayer) => Number(p.birthDate.slice(0, 4));
+      const age = squad.reduce((s, p) => s + (SEASON - yr(p)), 0) / squad.length;
+      body.profile.market = marketFrom(
+        age,
+        squad.filter((p) => p.nationality !== 'BR').length / squad.length,
+        squad.filter((p) => p.origin?.clubId !== id).length / squad.length,
+      );
+    }
+  }
   const club: PackClub = {
     id: `fm-c${uid}`,
     name: c.name.slice(0, 80),
     shortName: (c.short_name || c.name).slice(0, 24),
     cityId: cityKey,
     colours,
+    ...(kit ? { kits: { home: kit.home, ...(kit.away ? { away: kit.away } : {}) } } : {}),
     stadium,
     reputation: clamp(100 * Math.sqrt(Math.min(rep, 8000) / 8000), 0, 100),
     initialCash,
@@ -948,6 +1465,15 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     clubs.length - 1,
     modelOf(c.name, c.short_name || c.name, cities.get(cityKey)?.state),
   );
+  const hc = headCoachOf.get(uid);
+  if (hc && /^\d{4}-\d{2}-\d{2}$/.test(hc.birth_date) && !usedCoach.has(hc.uid)) {
+    usedCoach.add(hc.uid); // the save lists some people at two clubs: one job each
+    // The real man replaces the generated one; the draw above still happened, so the stream and
+    // the assignment's calibrated wage and clause do not move.
+    own.coach = realCoach(hc);
+    own.assignment.staffId = own.coach.id;
+    coachStats.real++;
+  } else coachStats.generated++;
   staff.push(own.coach);
   assignments.push(own.assignment);
   governance.push(own.governance);
@@ -957,23 +1483,169 @@ if (!clubs.length) throw new Error('no clubs');
 // ── Pack ─────────────────────────────────────────────────────────────────────────────────────────
 
 const ids = (list: string[]) => list.map((u) => `fm-c${u}`);
+
+/**
+ * Stadium operation (mapa de conhecimento §2.11): `fans.demand` is the share of seats a club fills
+ * on an ordinary league day and `fans.priceSensitivity` sets its ticket against the tier's
+ * (match/stadium.ts). From data/attendance.json (Brasileirão 2025, ge and mktesportivo) where the
+ * club is there; else the median of the researched clubs of its 2027 division. Série C has a
+ * league average only (3.466 paying a match in 2025, DGABC): its clubs fill the share of seats
+ * that gives it over their median stadium. Série D has none published: the same share as C, a
+ * confirmar.
+ */
+const ATTENDANCE = (
+  JSON.parse(readFileSync(new URL('./data/attendance.json', import.meta.url), 'utf8')) as {
+    clubs: {
+      club: string;
+      state: string;
+      aliases: string[];
+      division2025: 'A' | 'B' | 'C' | 'D';
+      avgAttendance: number;
+      avgTicket: number | null;
+    }[];
+  }
+).clubs;
+// The survey ratio (fans per paying head) only holds for the A and B averages.
+const ATTENDANCE_AB = ATTENDANCE.filter((x) => x.division2025 === 'A' || x.division2025 === 'B');
+const TIER_TICKET: Record<number, number> = { 1: 51, 2: 26 };
+/** Série C 2025, paying public a match (DGABC). */
+const SERIE_C_AVERAGE = 3466;
+let attendanceResearched = 0;
+{
+  const tierOfUid = new Map<string, number>();
+  [a27, b27, c27, d27].forEach((list, i) => list.forEach((u) => tierOfUid.set(`fm-c${u}`, i + 1)));
+  const found = new Map<PackClub, (typeof ATTENDANCE)[number]>();
+  for (const club of clubs) {
+    const names = [fold(club.name), fold(club.shortName)];
+    const state = cities.get(club.cityId)?.state;
+    const a = ATTENDANCE.find(
+      (x) => x.state === state && [x.club, ...x.aliases].some((n) => names.includes(fold(n))),
+    );
+    if (a && club.stadium.capacity > 0) found.set(club, a);
+  }
+  const byTier = new Map<number, number[]>();
+  for (const [club, a] of found) {
+    const demand = clamp(Math.round((100 * a.avgAttendance) / club.stadium.capacity), 1, 100);
+    club.fans.demand = demand;
+    const tierTicket = TIER_TICKET[a.division2025 === 'A' ? 1 : 2]!;
+    // ticket = tier's × (200 − 2 × sensitivity) / 100 (match/stadium.ts)
+    if (a.avgTicket)
+      club.fans.priceSensitivity = clamp(Math.round(100 - (50 * a.avgTicket) / tierTicket), 0, 87);
+    const t = tierOfUid.get(club.id) ?? 4;
+    (byTier.get(t) ?? byTier.set(t, []).get(t)!).push(demand);
+    attendanceResearched++;
+  }
+  const median = (xs: number[]) => [...xs].sort((x, y) => x - y)[xs.length >> 1]!;
+  const capC = median(
+    clubs
+      .filter((c) => tierOfUid.get(c.id) === 3 && c.stadium.capacity > 0)
+      .map((c) => c.stadium.capacity),
+  );
+  const lowerShare = clamp(Math.round((100 * SERIE_C_AVERAGE) / Math.max(1, capC)), 1, 100);
+  for (const club of clubs) {
+    if (found.has(club)) continue;
+    const t = tierOfUid.get(club.id) ?? 4;
+    // A and B by their researched clubs; below, the Série C average.
+    const known = t <= 2 ? byTier.get(t) : undefined;
+    club.fans.demand = known?.length ? median(known) : lowerShare;
+    est(
+      known?.length
+        ? 'fans: demand is the median of researched clubs of the division'
+        : t === 3
+          ? 'fans: demand from the Série C 2025 average over the median stadium'
+          : 'fans: demand as Série C, a confirmar (no published Série D average)',
+    );
+  }
+}
+/**
+ * Fan base (`fans.size`, supporters across the country): the Ipsos-Ipec survey of 2025 for the
+ * twenty clubs it lists (data/fans.json, 0.5% of Brazilians or more). Below that, a club with a
+ * researched 2025 public (data/attendance.json) gets it times the median ratio of the listed
+ * clubs, under the survey's floor; the rest, Série C and D mostly, by reputation, squared, under
+ * a fifth of it. Estimates, flagged.
+ */
+const FANS = JSON.parse(readFileSync(new URL('./data/fans.json', import.meta.url), 'utf8')) as {
+  population: number;
+  floor: number;
+  clubs: { club: string; state: string; aliases: string[]; share: number }[];
+};
+let fansResearched = 0;
+{
+  const base = FANS.population;
+  const floor = (base * FANS.floor) / 100;
+  const find = <T extends { club: string; state: string; aliases: string[] }>(
+    list: T[],
+    club: PackClub,
+  ) => {
+    const names = [fold(club.name), fold(club.shortName)];
+    const state = cities.get(club.cityId)?.state;
+    return list.find(
+      (x) => x.state === state && [x.club, ...x.aliases].some((n) => names.includes(fold(n))),
+    );
+  };
+  const ratios: number[] = [];
+  const rest: PackClub[] = [];
+  for (const club of clubs) {
+    const f = find(FANS.clubs, club);
+    if (!f) {
+      rest.push(club);
+      continue;
+    }
+    club.fans.size = Math.round((base * f.share) / 100);
+    fansResearched++;
+    const a = find(ATTENDANCE_AB, club);
+    if (a) ratios.push(club.fans.size / a.avgAttendance);
+  }
+  const ratio = [...ratios].sort((x, y) => x - y)[ratios.length >> 1] ?? 0;
+  for (const club of rest) {
+    const a = find(ATTENDANCE_AB, club);
+    if (a && ratio) {
+      club.fans.size = Math.round(Math.min(floor * 0.9, a.avgAttendance * ratio));
+      est('fans: size from the 2025 public, by the ratio of the surveyed clubs');
+      continue;
+    }
+    const r = Math.max(0, club.reputation - 30) / 60;
+    club.fans.size = Math.max(1000, Math.round((floor * Math.min(1, r * r)) / 5));
+    est('fans: size from reputation, under a fifth of the survey floor');
+  }
+}
 const competitions = realDivisions(SEASON, [a27, b27, c27, d27].map(ids));
 
-// Rivals (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID"): HEURISTIC,
-// the up to three best-reputed other clubs of the same FM city_id that are in the pack.
+// Rivals: the curated derbies of data/rivals.json (name + UF, intensity 1-3, strongest first) where
+// a club has one; else HEURISTIC, the up to three best-reputed other clubs of the same FM city_id
+// (Wikidata has no rivalry property, checked 2026-11-17: only "Rivals.com ID").
 const byFmCity = new Map<string, string[]>();
 for (const c of clubs) {
   const k = clubById.get(c.id.slice(4))!.city_id!;
   (byFmCity.get(k) ?? byFmCity.set(k, []).get(k)!).push(c.id);
 }
 const repOf = new Map(clubs.map((c) => [c.id, c.reputation]));
+const byNameState = new Map<string, string>();
 for (const c of clubs) {
+  const st = cities.get(c.cityId)?.state;
+  for (const n of [c.shortName, c.name]) byNameState.set(`${fold(n)}|${st}`, c.id);
+}
+const curated = resolveRivals(
+  parseDerbies(JSON.parse(readFileSync(new URL('./data/rivals.json', import.meta.url), 'utf8'))),
+  (n, st) => byNameState.get(`${fold(n)}|${st}`),
+);
+let curatedClubs = 0;
+for (const c of clubs) {
+  const known = curated.rivals.get(c.id);
+  if (known?.length) {
+    c.rivals = known.slice(0, 5);
+    curatedClubs++;
+    continue;
+  }
   c.rivals = (byFmCity.get(clubById.get(c.id.slice(4))!.city_id!) ?? [])
     .filter((k) => k !== c.id)
     .sort((a, b) => repOf.get(b)! - repOf.get(a)! || a.localeCompare(b))
     .slice(0, 3);
 }
 const rivalStats = {
+  curatedClubs,
+  curatedDerbies: curated.matched,
+  curatedDerbiesNotInPack: curated.unmatched.map(([a, sa, b, sb]) => `${a} (${sa}) x ${b} (${sb})`),
   clubsWithRivals: clubs.filter((c) => c.rivals.length).length,
   largestSameCityGroup: Math.max(...[...byFmCity.values()].map((g) => g.length)),
 };
@@ -1043,19 +1715,44 @@ const inDivisions = clubs.filter((c) => tierOf.has(c.id));
 const geoQuality = {
   divisionClubs: inDivisions.length,
   withRealCity: inDivisions.filter((c) => !c.cityId.startsWith('fm-city-')).length,
+  withKitColours: inDivisions.filter((c) => kits.clubs[c.id.slice(4)]).length,
   withOfficialColours: inDivisions.filter((c) => geo.clubs[c.id.slice(4)]?.colours?.length).length,
+  withAnyRealColours: inDivisions.filter(
+    (c) => kits.clubs[c.id.slice(4)] || geo.clubs[c.id.slice(4)]?.colours?.length,
+  ).length,
 };
+
+/** Real colours by division: the home kit, Wikidata only, or the hash fallback. */
+const colourCoverage: Record<
+  string,
+  { clubs: number; kit: number; wikidata: number; hash: number }
+> = {};
+for (const c of inDivisions) {
+  const uid = c.id.slice(4);
+  const row = (colourCoverage[tierOf.get(c.id)!] ??= { clubs: 0, kit: 0, wikidata: 0, hash: 0 });
+  row.clubs++;
+  row[kits.clubs[uid] ? 'kit' : geo.clubs[uid]?.colours?.length ? 'wikidata' : 'hash']++;
+}
 
 const unmappedNations = players.filter((p) => p.nationality === 'XX').length;
 report.notes.push(
   `nations: ${unmappedNations} players with an unidentified nation (the ${Object.keys(nations).length} ids of fm-nations.json cover every player kept); the pack stores ISO codes only, names are not stored (Intl.DisplayNames('pt-BR') resolves all ${new Set(Object.values(nations)).size} codes when a name is needed)`,
   'regulations (05 §8): A, B, C (24 clubs in 2027, 28 in 2028) and D as realDivisions(); from 2028 C sends six down and D refills from the ranking: PARÂMETRO, not published',
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the pack (the schema has no youth squad per club): see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
-  'cities: climate is neutral (rain 100 mm, 22 C, 70 %) and income is a flat 2000 for every city: no source used yet; population and altitude are Wikidata P1082 (largest value) and P2044',
-  'rivals: HEURISTIC, the three best-reputed other clubs of the same FM city_id (Wikidata has no rivalry property)',
+  'cities: municipal data from data/br-cities.json (fetch-cities.ts): IBGE SIDRA 6579 population and 5938 GDP per capita a month as income, Wikidata P625/P2044 (Open-Meteo elevation where missing), NASA POWER monthly climate 2001-2025; a city the file does not know keeps the neutral climate and flat income (see estimated)',
+  'rivals: curated derbies (data/rivals.json, sources inside) where the club has one, else HEURISTIC, the three best-reputed other clubs of the same FM city_id',
+  `fans: ${fansResearched} clubs with their supporters from data/fans.json (Ipsos-Ipec 2025), the rest estimated from the public or reputation`,
+  `attendance: ${attendanceResearched} clubs with their 2025 average public and ticket from data/attendance.json (ge, mktesportivo); fans.demand is the share of seats filled on an ordinary day, fans.priceSensitivity sets the ticket`,
   `governance: ${governanceResearched} clubs from data/governance.json (researched, a source each, 2026-11-18); the rest from a FM26 legal name with SAF in it, else association`,
-  'colours: Wikidata P6364 + P465 where present; the rest is a hash pair, NOT the real colours (see estimated)',
-  'traits: codes 3, 6, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
+  `secondNationality: ${dualKnown} players matched to Wikidata's dual citizenships (data/citizenships.json)`,
+  `birthplace: ${bornKnown} players matched to Wikidata's place of birth (data/birthplaces.json, by birth date and name)`,
+  `origin: ${formedKnown} players with the club that formed them (FM home_grown_club_uids, first one in the pack)`,
+  `structure: ${structure.facilities}/${clubs.length} clubs with an FM facilities rating, ${structure.certified} CBF clube formador, ${structure.style} playing styles from season stats, ${structure.youth} youth policies from academy minutes; departments kept (staff.csv has no job or attributes)`,
+  'colours: the home kit of the Wikipedia infobox (data/kits.json, also stored as club.kits with the away kit), else Wikidata P6364 + P465; the rest is a hash pair, NOT the real colours (see estimated)',
+  `coaches: ${coachStats.real} head coaches are real FM26 people (best-paid staff outside the club lists, see headCoachOf), ${coachStats.generated} clubs keep a generated one; attributes come from current ability and personality (estimated, low): staff.csv has no job and no coaching attributes. Wage and clause stay the economy's (the assignments feed the club's wage bill); other backroom posts are not imported`,
+  `releaseFee: ${clauseStats.found} contracts with a domestic/generic release clause from contracts.clauses (${clauseStats.capped} cut to the Lei Geral do Esporte cap of 2,000 monthly wages), ${clauseStats.noWage} dropped for a zero wage; foreign-only and conditional clauses stay null`,
+  `injuryProneness: ${injuryStats.bumped} players raised by their injuries.csv history`,
+  'traits: codes 3, 6, 9, 17, 57, 58 are inferred from the players who carry them, not named by the save (see TRAIT_CODE)',
 );
 
 const out = {
@@ -1083,6 +1780,7 @@ const out = {
   estimated: report.estimated,
   droppedFmTraits: droppedTraits,
   geography: geoQuality,
+  colourCoverage,
   squads: squadCheck,
   rivals: rivalStats,
   notes: report.notes,

@@ -37,6 +37,13 @@ services:
     environment:
       DATABASE_URL: postgresql://decabeca:${POSTGRES_PASSWORD}@postgres:5432/decabeca
       TRUST_PROXY: '1'
+      # Every pack ever published, kept by id and checksum (ADR-023); the API archives its own on boot.
+      CLUB_PACK_ARCHIVE_DIR: /club-packs/archive
+    # The Modo Clube real pack (ADR-014): apps/api/club-packs/ on the VM, never in git, carried
+    # from release to release by deploy/release.sh. CLUB_PACK_PATH in .env.prod points at it
+    # (/club-packs/club-pack.json.gz); unset, the API and the web both use the generated dev pack.
+    # Also read-only at /packs: the path the first setup wrote into .env.prod keeps working.
+    volumes: ['../apps/api/club-packs:/club-packs', '../apps/api/club-packs:/packs:ro']
     # Gates the rolling swap (deploy/rollout.sh): the old container goes only once this passes.
     healthcheck:
       test: ['CMD', 'wget', '-qO', '/dev/null', 'http://127.0.0.1:3000/v1/health']
@@ -60,6 +67,8 @@ services:
         VITE_ADSENSE_SLOT_LEVEL: ${VITE_ADSENSE_SLOT_LEVEL:-5515537126}
         VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
         VITE_POSTHOG_KEY: ${VITE_POSTHOG_KEY:-}
+        # The same pack as the API, slimmed into /packs/<id>.<checksum>.json (vite.config.ts).
+        CLUB_PACK_PATH: ${CLUB_PACK_PATH:+/app/apps/api/club-packs/club-pack.json.gz}
     restart: unless-stopped
     logging: *logging
     healthcheck:

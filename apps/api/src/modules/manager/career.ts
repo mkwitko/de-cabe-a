@@ -5,38 +5,25 @@
  * validates the start and keeps the record.
  */
 import { createHash, randomInt } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
   canStartAt,
-  generateDevPack,
   jobOffers,
   nationalDivisions,
-  PackSchema,
+  CAREER_RULES_VERSION,
   START_MODES,
 } from '@decabeca/club-domain';
 import { MATCH_ENGINE_VERSION } from '@decabeca/match-engine';
 import { AppError } from '../../errors';
 import type { PrismaClient } from '../../generated/prisma/client';
+import { pack, packOf, packVersion } from './packs';
 
 export const ownerOf = (req: { sessionId: string; userId: string | null }) =>
   req.userId ?? req.sessionId;
 
-/**
- * The career pack. The browser downloads the same pack as a static file named by its checksum
- * (apps/web vite.config.ts worldPacks, ADR-020); the API never serves it.
- */
-/**
- * `CLUB_PACK_PATH` points at a gzipped pack JSON (the real FM import, scripts/club-pack/import-fm.ts,
- * never committed); without it the career runs on the generated `br-dev-1`, so tests need no file.
- * A file is validated and keeps its own checksum as the version.
- */
-const pack = process.env.CLUB_PACK_PATH
-  ? PackSchema.parse(JSON.parse(gunzipSync(readFileSync(process.env.CLUB_PACK_PATH)).toString()))
-  : generateDevPack();
-const packVersion = pack.checksum;
+/** The newest pack, for new careers; a career keeps its own (packs.ts, ADR-023). */
 const divisions = nationalDivisions(pack);
 const clubById = new Map(pack.clubs.map((c) => [c.id, c]));
 
@@ -80,6 +67,25 @@ const MAX_STEP = 400;
 /** PARÂMETRO: a snapshot is ~45–70 KB gzip for the big pack (MC-084); room for growth. */
 const MAX_SNAPSHOT = 512 * 1024;
 
+/** The backup file (ADR-023). `snapshot` is the parsed `saveCareer` JSON; null on day one. */
+const CAREER_FILE_KIND = 'decabeca-career';
+const CareerFileSchema = z.strictObject({
+  kind: z.literal(CAREER_FILE_KIND),
+  v: z.literal(1),
+  packId: z.string().min(1).max(60),
+  packVersion: z.string().min(1).max(80),
+  rules: z.number().int().min(1).nullable(),
+  seed: z.number().int().min(0).max(0x7fffffff),
+  startMode: z.enum(START_MODES),
+  clubId: z.string().min(1).max(40).nullable(),
+  season: z.number().int().min(1900).max(2200),
+  day: z.number().int().min(0).max(1_000_000),
+  snapshot: z.record(z.string(), z.unknown()).nullable(),
+});
+type CareerFile = z.infer<typeof CareerFileSchema>;
+/** PARÂMETRO: the unzipped file; a snapshot is a few MB of JSON at most. Bounds a zip bomb. */
+const MAX_UNZIPPED = 32 * 1024 * 1024;
+
 const CreateBody = z.strictObject({
   startMode: z.enum(START_MODES),
   clubId: z.string().min(1).max(40),
@@ -116,6 +122,7 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
         name: c.name,
         shortName: c.shortName,
         colours: c.colours,
+        kits: c.kits,
         reputation: c.reputation,
       };
     };
@@ -256,4 +263,114 @@ export const careerRoutes: FastifyPluginAsyncZod = async (app) => {
     reply.type('application/octet-stream');
     return Buffer.from(w.data);
   });
+
+  /**
+   * The player's backup (ADR-023): the career as one gzip JSON file, naming the pack and rules
+   * version it needs. The snapshot travels as the JSON it is, so the file is one gzip, not two.
+   */
+  app.get('/manager/career/export', async (req, reply) => {
+    const c = await currentCareer(prisma, ownerOf(req));
+    if (!c) throw new AppError(404, 'NOT_FOUND', 'Nenhuma carreira em andamento.');
+    const w = await prisma.clubWorld.findUniqueOrThrow({
+      where: { id: c.world.id },
+      select: { data: true },
+    });
+    const snapshot = w.data.length ? JSON.parse(gunzipSync(w.data).toString()) : null;
+    const file: CareerFile = {
+      kind: CAREER_FILE_KIND,
+      v: 1,
+      packId: c.world.packId,
+      packVersion: c.world.packVersion,
+      rules: snapshot ? (snapshot.v as number) : null,
+      seed: c.world.seed,
+      startMode: c.startMode as (typeof START_MODES)[number],
+      clubId: c.clubId,
+      season: c.world.season,
+      day: c.world.day,
+      snapshot,
+    };
+    reply.header('cache-control', 'no-store');
+    reply.header('content-disposition', 'attachment; filename="carreira.json.gz"');
+    reply.type('application/gzip');
+    return gzipSync(JSON.stringify(file));
+  });
+
+  /**
+   * Restores a backup as the person's career, replacing the one in progress. Everything is
+   * validated here: size, schema, that the pack still exists and that the rules version is not
+   * newer than this server's. The snapshot is stored as it was (older rules still load, ADR-023).
+   */
+  app.post(
+    '/manager/career/import',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (req, reply) => {
+      const bad = () => new AppError(400, 'VALIDATION_ERROR', 'Arquivo de carreira inválido.');
+      const bytes = req.body;
+      if (!(bytes instanceof Buffer) || bytes.length < 2 || bytes[0] !== 0x1f || bytes[1] !== 0x8b)
+        throw bad();
+      let file: CareerFile;
+      try {
+        const text = gunzipSync(bytes, { maxOutputLength: MAX_UNZIPPED }).toString();
+        file = CareerFileSchema.parse(JSON.parse(text));
+      } catch {
+        throw bad();
+      }
+      const { snapshot } = file;
+      const p = packOf(file.packId, file.packVersion);
+      if (!p)
+        throw new AppError(
+          422,
+          'VALIDATION_ERROR',
+          'Os dados desta carreira não estão mais disponíveis.',
+        );
+      if ((file.day === 0) !== (snapshot === null)) throw bad();
+      if (snapshot) {
+        if (
+          typeof snapshot.v !== 'number' ||
+          snapshot.v < 1 ||
+          snapshot.v !== file.rules ||
+          snapshot.day !== file.day
+        )
+          throw bad();
+        if (snapshot.v > CAREER_RULES_VERSION)
+          throw new AppError(
+            422,
+            'VALIDATION_ERROR',
+            'Esta carreira é de uma versão mais nova do jogo.',
+          );
+      }
+      if (
+        file.clubId &&
+        !(snapshot && snapshot.clubs) &&
+        !p.clubs.some((x) => x.id === file.clubId)
+      )
+        throw bad();
+      const data = snapshot ? new Uint8Array(gzipSync(JSON.stringify(snapshot))) : new Uint8Array();
+      if (data.length > MAX_SNAPSHOT)
+        throw new AppError(413, 'VALIDATION_ERROR', 'Arquivo grande demais.');
+      const pk = ownerOf(req);
+      const world = {
+        packId: file.packId,
+        packVersion: file.packVersion,
+        engineVersion: MATCH_ENGINE_VERSION,
+        seed: file.seed,
+        season: file.season,
+        day: file.day,
+        data,
+      };
+      await prisma.$transaction(async (tx) => {
+        // The one in progress (if any) is over: the backup takes its place.
+        await tx.clubCareer.updateMany({
+          where: { pk, status: { not: 'ended' } },
+          data: { status: 'ended' },
+        });
+        await tx.clubCareer.create({
+          data: { pk, startMode: file.startMode, clubId: file.clubId, world: { create: world } },
+        });
+      });
+      const c = (await currentCareer(prisma, pk))!;
+      reply.code(201);
+      return { career: view(c) };
+    },
+  );
 };

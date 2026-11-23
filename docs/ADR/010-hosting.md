@@ -3,7 +3,8 @@
 Status: aceito (2026-11-06).
 
 ## Decisão
-- **Web** (`apps/web`, estático): Cloudflare Pages.
+- **Web** (`apps/web`, estático): na mesma VM, servido por Caddy atrás do túnel do Cloudflare (o plano inicial era Cloudflare Pages; não foi adotado: o site e a API ficam na mesma origem pelo proxy de borda `deploy/edge.Caddyfile`, sem custo de Workers).
+- **Deploy**: automático pelo GitHub Actions (`.github/workflows/deploy.yml`) quando o CI passa na `main`: roda `deploy/release.sh`, o mesmo script do deploy manual (2026-11-19).
 - **API e Postgres**: na VM da Oracle Cloud que já existe, em Docker Compose (Postgres 16 + API), atrás de um proxy com HTTPS (Caddy).
 - **Mesmo domínio para web e API**: o site chama `/v1` no próprio endereço, e o cookie de convidado e o login (Better Auth) dependem disso; o retorno do Google é `<site>/v1/auth/callback/google`. O Cloudflare encaminha `decabecafc.com.br/v1/*` para a VM (Pages Function ou regra de rota); a API não fica num subdomínio próprio.
 - **Backup**: `pg_dump` diário enviado para fora da VM (Cloudflare R2, plano grátis).

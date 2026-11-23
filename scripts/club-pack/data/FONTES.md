@@ -49,3 +49,94 @@ Cada valor tem `sourceUrl` + `page` (pagina do PDF; Palmeiras e Novorizontino us
 - REC Serie D (PDF) e demais artigos da Copa do Brasil (ida/volta, prorrogacao) nao lidos.
 - SSF/RSSF (fair play financeiro) citado no REC Serie A art. 1, nao extraido.
 - `rules.json` anterior (Wikipedia) nao foi alterado; `rules-official.json` o substitui onde ha dado.
+
+## Torcidas (`fans.size`, data/fans.json)
+
+- Ipsos-Ipec / O Globo, campo 5-9 jun 2025 (2.000 entrevistas, 132 municipios, margem 2,2 p.p.): 20 clubes de 0,5% para cima, aplicados a populacao IBGE 2025. https://tvtnews.com.br/maiores-torcidas-do-brasil-nova-pesquisa-2025/ e https://www.diariodepernambuco.com.br/esportes-dp/sport/2025/07/amp/7795455-pesquisa-aponta-o-sport-com-a-13-maior-torcida-do-pais-santa-cruz-tambem-ocupa-o-top-20.html
+- Conferencia: CBF/Nexus, nov 2025 (mesma ordem no top 10). https://www.netvasco.com.br/n/372844/pesquisa-de-torcidas-encomendada-pela-cbf-diz-que-o-vasco-tem-5-da-preferencia-no-brasil
+- Abaixo de 0,5%: estimado (publico 2025 x razao mediana dos clubes pesquisados, ou reputacao), marcado no relatorio.
+
+## Naturalidade (`origin.cityId`, data/birthplaces.json)
+
+- Wikidata (CC0), SPARQL por ano de nascimento 1980-2011: futebolistas (P106 Q937857) brasileiros (P27 Q155) com data (P569) e local de nascimento (P19), estado (P131* ate Q485258), coordenadas (P625) e populacao (P1082). Gerado por `fetch-birthplaces.ts`.
+- Casamento em `import-fm.ts`: mesma data de nascimento e nome (igual ao conhecido/completo, ou todas as palavras do rotulo dentro do nome completo); data com dois candidatos fica sem. Cobertura 2027: Serie A 57%, B 38%, C 24%, D 11%.
+
+## Segunda nacionalidade (`secondNationality`, data/citizenships.json)
+
+- Wikidata (CC0), SPARQL por ano de nascimento: futebolistas com cidadania brasileira (P27 Q155) e outra (P27 com ISO P297). Gerado por `fetch-citizenships.ts`; casado em `import-fm.ts` como a naturalidade. 18 jogadores no pacote (ex.: Rafael Toloi IT+BR, Jorginho IT+BR, Coutinho BR+ES).
+- `second_nation_ids` do FM nao e usado: marca Brasil para estrangeiros sem passaporte brasileiro (Mercado, Cuello, Ferraresi).
+- `birthCityId` (campo de naturalidade do esquema) passa a guardar a naturalidade, em vez de `origin.cityId`.
+
+## Estrutura do clube (`facilities`, `profile`, data/clubes-formadores.json)
+
+- Instalacoes: `facilities.csv` do FM so traz `corporate_facilities_code` (1-20; basic 1-2, fairly basic 3-5, adequate 6-9, average 10-12, good 13-14, excellent 15+), mapeado a 1-5 e **mediado com o nivel por reputacao** (treino e saude). Base = a mesma media, +1 se o clube esta na lista CBF de Clubes Formadores, +1 se >= 40% dos minutos do time titular vem de jogadores formados no clube (`home_grown_club_uids`). Sem nota do FM, vale a reputacao.
+- CBF, Certificado de Clube Formador: https://www.cbf.com.br/a-cbf/drt/clubes-formadores (pagina de 09/09/2026, lista de 20/10/2026, 78 clubes; sem categoria publicada). Casamento por nome sem formas juridicas. Conferencia: https://diariodopara.com.br/bola/para-fica-fora-da-lista-de-clubes-formadores-da-cbf-em-2026/ e Lance! (categoria A 2 anos, B 1 ano).
+- Departamentos: mantidos (derivados da reputacao). `staff.csv` do FM nao tem `job` nem atributos de comissao preenchidos, so preferencias taticas.
+- Estilo de jogo (`profile.playingStyle`): `player-season-stats.csv` (kind overall, time principal), taxas por 90 min do time, percentil entre os clubes do pacote, limitado a 10-90: posse = passes; verticalidade = passes progressivos por passe; pressao = pressoes; bloco = poucos cortes (clearances); largura = cruzamentos; ritmo = sprints; risco = bolas perdidas. So clubes com >= 5000 minutos (303); os demais mantem o sorteio por reputacao.
+- Politica de base (`youthPolicy`): parcela dos minutos de jogadores formados no clube, 50% = 95.
+- Mercado: `readyVsYoung` pela idade media do elenco (21 = 10, 31 = 90); `regionalVsNational` = 25 + 400 x parcela de estrangeiros + 50 x parcela nao formada no clube.
+
+## Blocos de TV, caixa/divida e valores de mercado (2026-11-20)
+
+- **Blocos de TV Serie A** (`tv-blocs.json`, espelhado em `LIBRA_CLUB_IDS` de `revenue.ts`): Libra = Atletico-MG, Bahia, Flamengo, Gremio, Palmeiras, Bragantino, Remo, Santos, Sao Paulo, Vitoria; FFU = os demais da Serie A 2026. Fontes: Lance! 27/01/2026, Wikipedia "Liga Forte Uniao" (16/02/2026), Band 05/05/2026 (Palmeiras sai da Libra mas mantem o contrato ate 2029). Clubes fora da lista: FFU (padrao, bloco com ~35 membros).
+- **Caixa**: balanco auditado 2025 dos 7 clubes (Palmeiras, Gremio, Santos, Inter, Vasco, Fortaleza, Novorizontino); demais clubes: ESTIMATIVA de 2,1% da receita (mediana dos 7), sinalizada no relatorio do pack. Receita: auditada/imprensa 2025 (`finances.json`), senao folha mensal da economia x 12 / 0,65. Causa do zero antigo: o saldo do FM e negativo em A-C e virava so divida.
+- **Divida**: emprestimos/divida bruta auditados (Gremio, Vasco, Fortaleza, Palmeiras), senao divida total Anresf 2025 (`finances.json`, imprensa), limitada a 0,8x a receita: o jogo quita em 5 anos com 10% de juros e a Lei SAF limita o pagamento a 20% da receita mensal (0,2 x 5 / (1 + juros medios) ~ 0,77). PARAMETRO.
+- **33 balancos faltantes**: nenhum novo localizado nesta passada (Flamengo so 1T2026 nao auditado; ver acima).
+- **Valor de mercado**: nao ha base publica com licenca por jogador. CIES publica so listas curtas na imprensa (top 10 do Brasil, 24/09/2026: Flaco Lopez EUR 53,9 mi ... Gomez 24,5; soma EUR 354,6 mi, R$ 5,90/EUR). Transfermarkt nao usado (ToS). `market/value.ts` ficou como esta; o bench ganhou uma linha com a soma dos 10 mais valiosos (faixa R$ 1,4-2,6 bi; pack ~1,5 bi, baixo mas dentro). Comparacao por jogador (Kaio Jorge, Montoro, Arroyo...) foi inconclusiva: o pack e um retrato do FM com outros elencos.
+
+## Comissao tecnica (`staff.csv` do FM, em `import-fm.ts`)
+
+- `staff.csv` nao traz cargo (`job`/`job_code` vazios) nem atributos de treinador (so `attributes_adaptability`). Tem salario, habilidade atual (1-200), personalidade, preferencias taticas (1-20) e `in_club_lists`: falso para o tecnico do clube, verdadeiro para quem esta listado ao lado dele (conferido na Serie A: Abel Ferreira, Leonardo Jardim, Tite, Dorival Junior, Rogerio Ceni, Luis Castro). Tecnico = maior salario entre os `in_club_lists` falsos. 776 de 829 clubes; os demais ficam com o gerado.
+- Atributos (`tactics`, `gameReading`) da habilidade atual; `manManagement`/`motivation` da personalidade (estimado, baixa confianca). As preferencias vao em `specialties` como `pref:<chave>=<n>` e o `career/coach-pool.ts` as le (filosofia: pressao, ritmo, largura, ataque, jogo direto; qualidade: habilidade). Os tecnicos de clubes fora das divisoes formam a reserva livre. Auxiliares, preparadores, olheiros etc. nao sao importados: sem cargo nao ha como separar, e as atribuicoes entram na folha do clube.
+
+## Clausula de rescisao (`contract.releaseFee`, `contracts.csv`)
+
+- `clauses` e um JSON `[{kind, kind_code, parameter, value}]`. Usadas: `minimum_fee_release_domestic` (18), senao `minimum_fee_release` (0); `value` na moeda do save (GBP como os salarios, convertido a 7,0). `minimum_fee_release_foreign` (16), `relegation_release` (1) e `non_promotion_release` (2) ficam de fora (nao disparam dentro do mundo do pack). 15.049 de 15.689 jogadores (96%).
+- Sanidade: Lei Geral do Esporte (Lei 14.597/2023, art. 28, par. 1): clausula indenizatoria desportiva ate 2.000 vezes o salario contratual medio em transferencia nacional, sem limite na internacional. O valor domestico e cortado em 2.000 salarios mensais (1 caso).
+
+## Lesoes e tracos
+
+- `injuries.csv` (linhas `history`): cada 2 pontos de gravidade (leve 1, media 2, grave 3) somam 1 a `injuryProneness` do FM, ate +3 (PARAMETRO). 3.002 jogadores.
+- Traco FM codigo 9 (chutes de longe, penaltis, forca; coocorre com `shoots_from_distance`): inferido `shootsFromDistance`. Codigos 20, 44 (bola parada, visao), 33, 60 (marcacao) nao tem traco equivalente no motor e seguem descartados.
+
+## Estadios, rivalidades, publico C/D e torcida (2026-11-20)
+
+- `stadiums.json` (enrich-stadiums.ts): estadio de cada clube ligado ao Wikidata (CC0, QLever) lido pelo lado do estadio (P466 ocupante, P127 dono), P115 vigente (sem data fim) e capacidade P1083 mais recente (qualificador P585); depois infobox da pt.wikipedia (CC BY-SA, campo estadio do clube, capacidade do estadio) so para quem ainda nao tinha nome ou capacidade. Ordem no pacote: capacidade do save do FM, depois Wikidata/ptwiki; nome: Wikidata, `stadiums.json`, openfootball, save. O que nenhuma fonte tem segue marcado `estimated`. Cadastro Nacional de Estadios da CBF: nao encontrado em formato aberto.
+- `rivals.json`: 115 classicos/derbies reais com nome e intensidade 1-3 (listas de classicos da pt.wikipedia, fontes no arquivo). Onde o clube tem classico curado ele substitui a heuristica de mesma cidade; os demais seguem na heuristica. A intensidade ordena os rivais (o schema nao tem campo para ela; `isDerby` segue booleano).
+- `attendance.json`: acrescentados Serie C 2025 (Nautico 9.040, Ponte Preta 7.214, Figueirense 6.712, Sao Bernardo 970, Retro 92; DGABC) e Serie D 2025 (Santa Cruz 21.003, ge via Diario do Nordeste). Nao ha tabela por clube de C/D publica e legivel por maquina (borderos da CBF sao PDF por jogo; os artigos da ptwiki so trazem o total da liga); os demais seguem estimados e sinalizados.
+- Outros tracos da torcida (lealdade, paciencia, identidade local, orgulho da base, ambicao): nenhum proxy publico defensavel por clube (contagem de socios so existe para uns 20 clubes, sem serie comparavel); mantidos derivados da reputacao, documentados em `estimated`.
+
+## Cores e uniformes (`club.colours`, `club.kits`, data/kits.json)
+
+- Wikipedia (CC BY-SA 4.0), caixas de informacao: pt "Info/Clube de futebol" (corpo1, bracoesquerdo1, calcoes1, meias1; 2 = reserva) e en "Infobox football club" (body1, leftarm1, shorts1, socks1, pattern_b1); so os codigos de cor, nenhum escudo. Titulos pelos sitelinks do Wikidata (CC0); clubes sem QID sao buscados pelo nome na pt.wikipedia (`match: "name"` no JSON). Gerado por `fetch-kits.ts`.
+- `club.colours` = corpo do uniforme 1 + a segunda cor dominante (mangas, calcao ou meias); cai para Wikidata P6364/P465 e, por ultimo, para um par por hash (marcado como estimado). O padrao (listras, faixas, diagonal, metades) sai do nome do arquivo de padrao da en.wikipedia, quando existe.
+- `club.kits` e um campo novo e opcional no esquema (estrito): implantar pacote e codigo juntos, builds antigos rejeitam o campo.
+- Escudos e camisas do jogo sao desenho proprio (SVG a partir das cores), sem logos reais.
+
+## Municípios (`cities`, data/br-cities.json)
+
+Gerado por `fetch-cities.ts` (respostas em cache local, requisições espaçadas). Um registro por município usado no pacote, chave = código IBGE.
+
+- Nomes e UF: API de localidades do IBGE, https://servicodados.ibge.gov.br/api/v1/localidades/municipios (5.570 municípios).
+- População: SIDRA tabela 6579 (estimativas da população residente), variável 9324, último ano publicado. https://apisidra.ibge.gov.br/values/t/6579/n6/all/v/9324/p/last
+- Renda (`income`): PIB per capita mensal em R$ = PIB a preços correntes (SIDRA tabela 5938, variável 37, 2023, mil R$) / população estimada 2024 (tabela 6579; o ano de 2023 não tem estimativa) / 12. Não é renda domiciliar: o Censo 2022 não publica renda média por município numa tabela única completa; o PIB per capita cobre todos e distingue municípios industriais, petroleiros e do agro dos pobres (extremos como refinarias não são aparados, o jogo não usa a renda da cidade). https://apisidra.ibge.gov.br/values/t/5938/n6/all/v/37/p/2023
+- Coordenadas (P625) e altitude (P2044): Wikidata (CC0) via QLever, casadas pelo código IBGE (P1585). Sem P2044: modelo de elevação de 90 m do Open-Meteo (Copernicus DEM, CC BY 4.0), https://open-meteo.com/en/docs/elevation-api, marcado `altSource: open-meteo` e como estimado no relatório.
+- Clima (chuva mm/mês, temperatura média °C, umidade relativa %): NASA POWER, climatologia mensal 2001-2025 (T2M, PRECTOTCORR, RH2M; MERRA-2), uma chamada por célula de 0,5 grau, https://power.larc.nasa.gov/api/temporal/climatology/point. Escolhida no lugar das normais INMET 1991-2020 (só ~250 estações, a maioria dos municípios ficaria longe de uma) e do Open-Meteo (histórico diário de 30 anos por município estoura o limite gratuito). A chuva mm/dia vira mm/mês pelo número de dias.
+- Município dos clubes sem cidade ("Cidade N"), campo `clubCity`: Wikidata P159 (sede), P115 (estádio) ou P740 (local de fundação) subindo por P131 até um município com código IBGE (`by: wikidata`); senão o artigo da pt.wikipedia com o mesmo nome do clube, ligado ao item Wikidata de clube de futebol (`by: ptwiki`); senão o município citado no próprio nome ("... de Porto Velho", ou o nome sem as palavras genéricas igual ao município; `by: name`, estimado). Uma marca "(UF)" no nome do clube que contradiz o município descarta o resultado.
+
+## Campeonatos estaduais (`packages/club-domain/src/competition/estaduais-data.ts`)
+
+Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes por estado vem das cidades dos clubes (`state`), so a primeira divisao de cada estado, clubes das divisoes nacionais primeiro, depois por reputacao. Janela CBF: 11 jan a 8 mar de 2026; 10 jan a 7 mar de 2027 (primeiro domingo a partir de 9 jan, 56 dias; domingos e quartas). Sem acesso/descenso estadual: o pacote nao tem divisoes estaduais inferiores. Formatos e dinheiro por relato de imprensa (os PDFs das federacoes nem sempre estao publicos); onde as fontes divergem a escolha esta na `note` de cada estado.
+
+- SP (Paulista A1, 16 clubes, 2 grupos de 8 no modelo, final em 2 jogos): https://www.band.com.br/esportes/paulistao-entenda-novo-regulamento-e-veja-jogos-sorteados, https://www.gazetaesportiva.com/campeonatos/paulista/paulistao-2026-novo-formato-como-sera-disputa/, https://en.wikipedia.org/wiki/2026_Campeonato_Paulista. Dinheiro: cota de R$ 35 mi para Corinthians, Palmeiras, Sao Paulo e Santos; R$ 10 mi Mirassol e Bragantino; ~R$ 7-8 mi os demais; campeao R$ 5 mi, vice R$ 1,5 mi (https://abcdoabc.com.br/paulistao-2026-grandes-ganham-milhoes-cada/, https://www.band.com.br/esportes/quanto-o-palmeiras-ganha-com-o-titulo-do-paulistao-veja-premiacoes-202603082239). Fontes divergem sobre a final (Palmeiras: jogo unico).
+- RJ (Carioca, 12 clubes, 2 grupos de 6 que so enfrentam o outro grupo, quartas, final unica): https://www.band.com.br/esportes/campeonato-carioca-2026-quando-comeca-regulamento-e-todos-os-jogos-202512311732, https://jovempan.com.br/esportes/futebol/campeonato-carioca-tem-reducao-de-dias-e-passara-a-ter-final-unica.html. Dinheiro: Flamengo R$ 10 mi de cota, Botafogo/Fluminense/Vasco R$ 6,6 mi, campeao R$ 10 mi, semifinalistas R$ 5,5 mi (https://www.mktesportivo.com/2025/11/campeonato-carioca-de-2026-volta-a-pagar-premiacao-aos-clubes-e-define-alteracoes-no-regulamento/, https://www.netvasco.com.br/n/375667/vasco-recebera-r-66-milhoes-fixos-mais-premiacao-por-metas-no-carioca-2026). Taca Guanabara/Taca Rio nao modeladas.
+- MG (Mineiro, 12 clubes, 3 grupos de 4, lideres + melhor 2o em semis de ida e volta, final unica): https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/campeonato-mineiro/fmf-confirma-retorno-da-final-unica-para-o-campeonato-mineiro-de-2026/, https://www.goal.com/br/listas/como-funciona-regulamento-campeonato-mineiro-2026/blt0c685dc1bbf74c1a. Cota R$ 9 mi Atletico e Cruzeiro, sem premio ao campeao (Goal, Lance).
+- RS (Gaucho, 12 clubes, 2 grupos de 6 contra o outro grupo, quartas unicas, semi e final em 2 jogos): regulamento FGF (PDF, ver estaduais-data.ts), https://www.goal.com/br/listas/como-funciona-regulamento-campeonato-gaucho-2026/bltbab8e2c2e3c8fca8. Cota ~R$ 10 mi Gremio e Inter, sem premio (Lance, Itatiaia).
+- PR (Paranaense, 12 clubes, 2 grupos de 6, 8 avancam, mata-mata em ida e volta): https://www.bandab.com.br/esporte/futebol/paranaense-2026-regulamento-definido-inicio-janeiro-veja-detalhes/amp/. Dinheiro: estimativa.
+- SC (Catarinense, 12 clubes em 2 grupos de 6; 10 em 2027): https://www.nsctotal.com.br/?p=7687334, https://www.nsctotal.com.br/?p=7770379. Mata-mata e dinheiro: suposicao / estimativa.
+- BA (Baiano, 10 clubes, turno unico, 4 avancam, semi e final unicas): https://www.bnews.com.br/noticias/esporte/novo-formato-saiba-o-que-muda-no-regulamento-do-baianao-2026.html, https://atarde.com.br/esportes/campeonato-baiano-2026-tera-duas-datas-a-menos-e-final-em-jogo-unico-1366907. Cota R$ 1,2 mi Bahia e Vitoria; premio do campeao R$ 315 mil (valor de 2025).
+- PE (Pernambucano, 8 clubes, turno unico, final em ida e volta): https://www.diariodepernambuco.com.br/amp/esportes-dp/nacional/2025/11/11701720-pernambucano-de-2026-e-confirmado-com-final-em-ida-e-volta-confira-formato-da-disputa.html. Pool de cotas R$ 3 mi fixado pela FPF (https://www.diariodepernambuco.com.br/esportes-dp/nacional/2025/11/11701734-fpf-fixa-cotas-do-pernambucano-2026-em-rs-3-milhoes-confira-divisao.html); a divisao entre clubes e suposicao.
+- CE (Cearense, 10 clubes, 2 grupos de 5 e segunda fase contra o outro grupo): https://diariodonordeste.verdesmares.com.br/jogada/regulamento-do-campeonato-cearense-2026-tera-mudancas-veja-nova-formula-e-tabela-1.3707688. Mata-mata e dinheiro: suposicao / estimativa.
+- GO (Goiano, 12 clubes, 3 grupos de 4): https://ohoje.com/2025/11/26/goiano-de-2026-tera-calendario-ampliado/. Mata-mata e dinheiro: suposicao / estimativa.
+- Outros 17 estados (AC AL AM AP DF ES MA MS MT PA PB PI RN RO RR SE TO): formato generico do projeto (uma tabela, ou 2 grupos a partir de 11 clubes, e mata-mata dos 4 ou 8 melhores); numero de clubes aproximado (ESTIMATIVA); dinheiro ESTIMADO (cota por posicao de reputacao, premio do campeao), escalado pela divisao nacional do clube (x2 Serie A, x1,5 B, x1,2 C). A imprensa so diz que pagam muito menos que os grandes (https://www.lance.com.br/lance-negocios/levantamento-aponta-disparidade-milionaria-de-cotas-e-premiacoes-entre-os-estaduais.html).
+- Lacuna: regulamentos oficiais completos das federacoes nao lidos (so imprensa e Wikipedia); acesso e descenso estaduais nao modelados.

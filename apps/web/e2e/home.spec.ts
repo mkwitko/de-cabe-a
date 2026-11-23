@@ -21,8 +21,14 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
 }) => {
   // 1. Home without sign-up: the brand and Career Path (the other modes are closed to the public)
   await page.goto('/');
-  await expect(page).toHaveTitle('De Cabeça F.C. · Minijogos de futebol');
-  await expect(page.getByRole('heading', { level: 1, name: 'De Cabeça F.C.' })).toBeVisible();
+  await expect(page).toHaveTitle('De Cabeça F.C. · Modo Clube, o manager do futebol brasileiro');
+  await expect(page.getByRole('heading', { level: 1, name: 'Modo Clube' })).toBeVisible();
+  // The hero is the way into Modo Clube (a fresh guest has no career yet).
+  await expect(page.getByRole('link', { name: 'Começar minha carreira' })).toHaveAttribute(
+    'href',
+    '/tecnico/carreira',
+  );
+  await expect(page.getByRole('heading', { name: 'Outros jogos' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Career Path' })).toBeVisible();
 
   // 2. Career Path level 1: wrong guess reveals club 2
@@ -66,9 +72,9 @@ test('guest plays level 1 of each game, gets stars, signs up to join the ranking
   await expect(
     page.getByRole('list', { name: 'Trajetória completa' }).getByRole('listitem'),
   ).toHaveCount(7);
-  // When level 1 is also today's Desafio do Dia, the way on is back to it (LevelParts `daily`).
+  // On a day whose Desafio do Dia holds this level, the end screen leads back to it instead.
   await expect(
-    page.getByRole('link', { name: /Próxima fase · 2|Voltar ao Desafio do Dia/ }),
+    page.getByRole('link', { name: /^(Próxima fase · 2|Voltar ao Desafio do Dia)$/ }),
   ).toBeVisible();
 
   // Reações (2.5): react, then tap again to undo
@@ -172,7 +178,11 @@ test('Modo Carreira: create a footballer, train him with a level, play a match',
   await page.getByRole('button', { name: 'Chutar' }).click();
   await skipCeremony(page);
   await expect(page.getByRole('heading', { name: 'De placa! Na primeira.' })).toBeVisible();
-  await page.getByRole('link', { name: /de treino para o seu craque/ }).click();
+  // The result page still settles (the passport stamps in) on a slow CI runner, so a click can
+  // land on the section instead: check the way on, then follow it.
+  const training = page.getByRole('link', { name: /de treino para o seu craque/ });
+  await expect(training).toHaveAttribute('href', '/carreira');
+  await page.goto('/carreira');
 
   await page.getByRole('button', { name: 'Jogar a partida' }).click();
   await expect(page.getByText('Rodada 1 ·', { exact: false }).first()).toBeVisible();

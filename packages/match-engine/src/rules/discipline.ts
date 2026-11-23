@@ -57,11 +57,11 @@ export interface FoulContext {
  */
 export function cardChance(strictness: number, d: Tackler, c: FoulContext): number {
   return (
-    (0.03 +
-      0.06 * norm(d.attrs.aggression) +
-      (c.playedBall === false ? 0.03 : 0) +
-      (c.promising ? 0.08 : 0) +
-      (c.tactical ? 0.3 : 0)) *
+    (0.0375 +
+      0.075 * norm(d.attrs.aggression) +
+      (c.playedBall === false ? 0.0375 : 0) +
+      (c.promising ? 0.1 : 0) +
+      (c.tactical ? 0.375 : 0)) *
     (0.7 + 0.6 * strictness)
   );
 }

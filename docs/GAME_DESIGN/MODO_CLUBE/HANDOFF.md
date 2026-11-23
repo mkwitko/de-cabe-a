@@ -164,10 +164,50 @@ Ramo: `feat/modo-clube-sandbox`, criado a partir de `main`. Regra de commit deci
   - Amarelos 2,13 e vermelhos 0,085, logo abaixo das faixas. Os vermelhos são quase todos segundo amarelo.
   - Escanteios 5,5, no limite da faixa.
   - Chute depois de perda alta 20%, dentro de Opta 13% a 21%.
-- **Próximo passo: volume de chutes, sobretudo de fora da área** (2,9 por time contra 5,4 na Série A).
-  - Causa provável: o valor de posse (`rules/value.ts`) vale 80% do `xG` de um chute livre daquele ponto, um PARÂMETRO sem fonte. Levar a bola 7 m até a entrada da área vale cerca de 0,09; chutar de 25 m vale cerca de 0,025. Então o condutor só chuta de longe quando é parado.
-  - Calibrar exige uma grade de valor de posse com fonte (por exemplo, a xT publicada).
-  - Mexe em toda decisão do motor: fazer em PR próprio, com comparação pareada.
+- **Valor de posse ajustado à xT publicada** (2026-11-18 à noite, #145, `02`). Gols 2,79 para 2,09, gols por chute 0,096 (na faixa), grandes chances 2,15 para 1,22, passes 433 para 489, passes progressivos (definição FBref, novo na bancada) 20,0 para 17,4 por time. Empates subiram de 27% para 38% (Série A 27,5%), porque os gols caíram. O dono aceitou assim; o ajuste de posicionamento deve devolver gols e trazer os empates de volta à referência.
+- **Posicionamento com bola por função** (2026-11-19, `02` §5.11 DECISÃO, ADR-018 item 7 aplicado). Pontas na largura 5 m antes da última linha, tarefas por função com a bola, corridas em vez de trote, última linha que desliza para o lado de quem saiu. Bancada pareada (400): gols 2,45, chutes 12,3, no alvo 4,0, passes 435, progressivos 21,5, grandes chances 1,54, impedimentos 1,64, escanteios 6,9 (fora), mandante/empate/visitante 40/34/26. S3 com célula T2 de 23 m no bloco baixo.
+- **Plano aprovado em 2026-11-19 (ordem).** Fase 1, aprofundar movimento: (1.1) defesa perto do gol `02` §5.12 com o lateral do lado oposto fechando por dentro (causa do S3; meta voltar a 22 m); (1.2) tempo da corrida de ruptura pelo `timing` e passe em profundidade (grandes chances 1,5 contra 2,2); (1.3) origem dos escanteios (cruzamento travado, chute bloqueado, alívio) contra referência publicada; (1.4) marcação do alvo da bola longa (duelos aéreos ~6 contra 35 a 40); (1.5) homem livre e terceiro homem na saída sob pressão (pesquisa 15). Fase 2, medir o que ainda não tem régua: vantagem de mandante (40% contra 47,6%), empates, média da liga em passes progressivos (dono fornece), custo por partida em uma thread contra a meta de 1 s. Fase 3, fechar o corte 0,5: torneio de presets (MC-045), zebras (MC-166), T4, T6 a T8 e T10 (MC-203), percepção (MC-159), vantagem do árbitro e pênaltis de desempate (MC-039, MC-040), tela da partida avulsa e direção visual (MC-262, MC-250), quadros por segundo em celular (MC-030) e portão do dono (MC-048).
+- **Rodada de 2026-11-19, itens 1.1 a 1.3.** (1.1) Defesa perto do gol: na recepção a até 22 m do gol o defensor mais próximo está a 3,9 m (critério de `02` §5.12: abaixo de 2,5 m) e o marcador a 9 m do próprio ponto. Causa da rotatividade: o marcado sai da lista de perigo (passa para trás da bola ou chega a menos de 8 m dela), não a histerese. Seguir o marcado nesses casos baixa a distância para 3,4 m, mas reprova a prova de coordenação (vão da última linha 24 m no S3, T1 4 no S2 e no S6), o mesmo conflito das tentativas anteriores. Revertido. (1.2) Grandes chances: passes em profundidade do terço final são só 1,6 por time, recebidos a 19 m do gol, e quase nunca viram grande chance (0,03 por time); o xG depois de passe em profundidade é 0,06 por chute. A causa provável é a corrida de ruptura (o atacante espera na linha), ainda sem mudança. (1.3) Escanteios: `02` §6.3 DECISÃO, 6,9 para 5,5.
+- **Desempenho medido limpo** (2026-11-19, `pnpm --filter @decabeca/match-engine bench`, um núcleo, Intel Core 7 250U): partida nível 1 com média de 1,56 s e p90 de 2,7 s, contra a meta de 1 s. Próximo item antes de mais calibragem.
+- **Simetria entre mandante e visitante** (2026-11-19, `02` §6.3 DECISÃO). Bug de referencial: velocidade espelhada como posição favorecia o time 1 em quatro pontos. Corrigido com `flipVec`; cartões recalibrados; linha alta recua correndo. Perfil de desempenho da mesma data: `coordinate` 47% do tempo (atribuição 17%, tarefas 6%, âncoras 5%, o resto alocação por passo), decisão do portador 15%, bola solta 10%; `arrivalTime` é chamado 3,1 milhões de vezes por partida. Memorizar trajetória da bola e custo da atribuição dá resultado idêntico mas ganho abaixo do ruído desta máquina (outro processo pesado rodando); a meta de 1 s pede reduzir a alocação por passo em `coordinate` e as chamadas de `arrivalTime`, com o hash de 12 partidas como guarda de igualdade.
+- **Nível 2, primeira versão** (2026-11-19, `02` §12 DECISÃO; MC-046, MC-046b, MC-167, MC-252).
+  - O que entrou:
+    - `possession/engine.ts` joga a partida inteira com o contrato do nível 1;
+    - o núcleo ganhou `rules/shot.ts`, `rules/tempo.ts`, `rules/subs.ts` e `rules/restart.ts`. O nível 1 dá resultado idêntico (hash de 12 partidas igual);
+    - `calibration/equivalence.ts` é o protocolo §2.1. `LEVEL=2` roda qualquer script de lote no nível 2.
+  - Relatório no conjunto de calibragem (400 partidas por célula): 101 métricas reprovadas.
+    - Equilibrado: resultado, passes, fôlego e substituições batem. Ficam abaixo os gols (1,98 contra 2,46) e o `xG` (1,11 contra 1,30).
+    - Favorito forte: saldo de 4,7 contra 2,2. A força decide demais no nível 2, e a causa ainda não foi isolada.
+    - Estilos: pressão contra saída curta e jogo direto contra linha alta exageram o vencedor. O fôlego e as substituições dependem do plano de um jeito que o nível 1 não mostra.
+  - Ainda não entrou na carreira. O patch da ligação está pronto: tabela e mata-matas da pessoa no nível 2, viagem nas pernas do visitante; todos os testes da carreira passavam.
+  - Custo: cerca de 10 ms por partida medido em máquina carregada, contra a meta de 2 ms.
+  - Próximos passos:
+    1. isolar o que dá peso demais à força (passe, desarme, duelo, chute), um fator por vez, contra o nível 1;
+    2. termo de espaço nas costas da defesa, que destrava contra-ataque e defesa de segurança;
+    3. novo ajuste com `mfit` em todas as células;
+    4. validação com 2.500 partidas por célula (cache do nível 1 em geração);
+    5. ligar na carreira.
+- **Nível 2, segunda rodada** (2026-11-19, noite).
+  - Causa isolada: igualar grupos de atributos entre favorito e azarão no confronto de favorito forte.
+    - Saldo de gols, nível 1 contra nível 2: nenhum grupo igualado 2,22 / 4,68; duelo 1,81 / 2,41; físico 1,59 / 2,39.
+    - Velocidade e aceleração sozinhas levam o nível 2 de 4,2 a 2,7.
+  - Correções:
+    - o desarme ganho segue o nível 1: lateral, linha de fundo ou bola solta;
+    - a corrida pela bola nas costas tem espalhamento próprio do nível 2 (`raceSpread`);
+    - o jogador livre se desmarca menos pela diferença de atributos (`spaceSkill`).
+  - Mecanismos novos:
+    - espaço nas costas de uma defesa curta logo depois de ganhar a bola. O contra-ataque passou a mover a métrica: o teste de coerência agora passa;
+    - bola por cima da linha alta (código 5, como no nível 1);
+    - cansaço de pressão e de ritmo.
+  - Relatório no conjunto de calibragem: 94 reprovações, contra 101 antes.
+    - Favorito forte: saldo de 2,78 contra 2,19 (antes 4,67).
+    - Favorito leve: 1,03 contra 0,86.
+    - Equilibrado: resultado e `xG` batem; gols 2,15 contra 2,46.
+  - Pendente nos confrontos de estilo, sempre com o lado que ataca a defesa do outro estilo criando pouco:
+    - pressão alta contra saída curta: diferença de `xG` 2,07 contra 1,27;
+    - bloco baixo contra posse: o time de posse cria cerca de metade do `xG` do nível 1;
+    - jogo direto contra linha alta: o jogo direto cria cerca de metade.
+  - Defesa de segurança continua em aberto.
 - **Disputas aéreas: origem medida** (60 partidas, 15,1 por jogo contra cerca de 25).
   - Passe longo em jogo corrido 7,5; escanteio 3,6; passe por cima 1,3; afastamento 0,7; cruzamento em jogo corrido 0,6; falta 0,5; tiro de meta 0,5; bola longa do goleiro em jogo corrido 0,3.
   - Tiro de meta e reposição do goleiro quase não geram disputa: há só 1,4 tiro de meta longo por time.

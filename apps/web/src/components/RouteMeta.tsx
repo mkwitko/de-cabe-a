@@ -7,9 +7,9 @@ import { useLocation } from 'react-router';
 
 const SITE = 'https://decabecafc.com.br';
 const DEFAULT = {
-  title: 'De Cabeça F.C. · Minijogos de futebol',
+  title: 'De Cabeça F.C. · Modo Clube, o manager do futebol brasileiro',
   description:
-    'Minijogos de futebol: adivinhe o jogador pela carreira, complete a grade, monte a escalação. Fase por fase, estrela por estrela, até virar lenda.',
+    'Modo Clube: seja técnico e dirigente de um clube brasileiro de verdade, da Série D à Série A. E ainda minijogos de futebol, como o Career Path.',
 };
 type Meta = { title: string; description: string };
 const GAMES: Record<string, Meta> = {

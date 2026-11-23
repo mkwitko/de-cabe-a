@@ -3,17 +3,33 @@
  * by one of three offers from the last one; then the career home. The world is built in the
  * browser by a worker (ADR-020); the server only keeps the record and the seed.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SeasonReview } from './SeasonReview';
+import { SeasonBridge } from './SeasonBridge';
+import { trackDecision, trackSeen, trackTiming } from './telemetry';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
 import { Link } from 'react-router';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../../components/ui';
 import { Icon } from '../../../components/Icon';
+import { ClubBadge } from '../../../components/ClubBadge';
+import { kitUri } from '../../../components/clubArt';
 import { t } from '../i18n';
-import type { ClubFace, InboxItem, MatchClub, SimReply, SimRequest, SimView } from './sim.worker';
+import type {
+  ClubFace,
+  ClubKits,
+  InboxItem,
+  MatchClub,
+  SimReply,
+  SimRequest,
+  SimView,
+  Stage,
+} from './sim.worker';
 import { Squad } from './Squad';
 import { Training } from './Training';
+import { Cup } from './Cup';
 import { Market } from './Market';
 import { Board, type WorkSaid, Fired } from './Board';
+import { Backup } from './Backup';
 import {
   Match,
   PLAN,
@@ -29,6 +45,7 @@ interface ClubOption {
   name: string;
   shortName: string;
   colours: [string, string];
+  kits?: ClubKits | undefined;
   reputation: number;
 }
 const AXES = ['budget', 'crowd', 'structure', 'staff', 'squad', 'ambition'] as const;
@@ -41,6 +58,13 @@ const PLATE: Partial<Record<string, Plate>> = { mercado: 'olheiro' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
 const NO_PORTRAIT: readonly string[] = [];
 const STILL = '&still=1';
+const STAGE_TEXT = {
+  pack: 'career.stage.pack',
+  open: 'career.stage.open',
+  market: 'career.stage.market',
+  turn: 'career.stage.turn',
+  save: 'career.stage.save',
+} as const satisfies Record<Stage, string>;
 const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
 interface Options {
@@ -85,29 +109,45 @@ export function ClubCareerPage() {
   );
 }
 
-/** Text that reads on a club colour: ink on light colours, chalk on dark ones. */
-function inkOn(hex: string) {
-  const n = Number.parseInt(hex.slice(1), 16);
-  const y = 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
-  return y > 150 ? 'text-ink' : 'text-chalk';
-}
+const CREST = { sm: 'xs', md: 'md', lg: 'lg', xl: 'xl' } as const;
 
-const CREST = {
-  sm: 'size-6 border-2 text-[0.55rem]',
-  md: 'size-10 border-[3px] text-xs',
-  lg: 'size-14 border-4 text-base',
-  xl: 'size-16 border-4 text-lg sm:size-24 sm:border-[5px] sm:text-2xl',
-} as const;
-
-/** A club is a round colour badge with its initials, never a logo (DESIGN.md). */
+/** A club's crest: our own drawing from its colours and kit pattern, never a logo (DESIGN.md). */
 function Crest({ club, size = 'md' }: { club: ClubFace; size?: keyof typeof CREST }) {
   return (
-    <span
-      aria-hidden
-      className={`inline-grid shrink-0 place-items-center rounded-full font-condensed leading-none font-black tracking-tight shadow-[0_4px_10px_-4px_rgb(0_0_0/0.7)] ${CREST[size]} ${inkOn(club.colours[0])}`}
-      style={{ background: club.colours[0], borderColor: club.colours[1] }}
-    >
-      {club.shortName}
+    <ClubBadge
+      name={club.shortName}
+      size={CREST[size]}
+      colours={club.colours}
+      pattern={club.kits?.home.pattern}
+    />
+  );
+}
+
+/** A club's home kit, and its away kit when it has one; nothing without kit data. */
+function Kits({
+  club,
+  away = false,
+  both = false,
+}: {
+  club: ClubFace;
+  away?: boolean;
+  both?: boolean;
+}) {
+  if (!club.kits) return null;
+  const list = both
+    ? [club.kits.home, club.kits.away].filter((k) => k !== undefined)
+    : [(away && club.kits.away) || club.kits.home];
+  return (
+    <span aria-hidden className="flex items-end gap-1">
+      {list.map((k) => (
+        <img
+          key={kitUri(k)}
+          alt=""
+          draggable={false}
+          src={kitUri(k)}
+          className="h-14 w-auto sm:h-20"
+        />
+      ))}
     </span>
   );
 }
@@ -280,6 +320,8 @@ type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const [sim, setSim] = useState<SimView | null>(null);
   const [busy, setBusy] = useState(true);
+  // The long step the worker is on (opening, the turn of the season), when it said so.
+  const [stage, setStage] = useState<Stage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ask, setAsk] = useState<Ask | null>(null);
   const [watching, setWatching] = useState<{
@@ -313,6 +355,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const apply = async (reply: SimReply) => {
     if (reply.save) await put(reply.save, reply.save.still === true);
     if (reply.view) setSim(reply.view);
+    setStage(null);
     setBusy(false);
   };
 
@@ -321,6 +364,10 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     const waiting = new Map<number, (r: SimReply) => void>();
     let seq = 0;
     w.onmessage = (e: MessageEvent<SimReply>) => {
+      if (e.data.stage) {
+        setStage(e.data.stage);
+        return;
+      }
       waiting.get(e.data.id)?.(e.data);
       waiting.delete(e.data.id);
     };
@@ -331,6 +378,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
         w.postMessage({ ...req, id }, req.type === 'open' ? [req.snapshot] : []);
       });
     setAsk(() => call);
+    const opened = performance.now();
     apiFetch('/v1/manager/career/world')
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((snapshot) =>
@@ -343,7 +391,10 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           snapshot,
         }),
       )
-      .then(apply)
+      .then((r) => {
+        trackTiming('open', performance.now() - opened);
+        return apply(r);
+      })
       .catch((err: Error) => setError(err.message));
     return () => w.terminate();
   }, [career]);
@@ -353,23 +404,48 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const keep = useCallback((reply: SimReply) => {
     if (reply.save) put(reply.save, true).catch(() => undefined);
   }, []);
+  const pickedLineup = useCallback(
+    (reply: SimReply) => {
+      keep(reply);
+      trackDecision(career.id, 'lineup');
+    },
+    [keep, career.id],
+  );
 
   // A transfer: the snapshot is kept and the hub shows the new cash and squad.
   const deal = useCallback(
     (reply: SimReply) => {
       keep(reply);
+      trackDecision(career.id, 'signing');
       if (reply.view) setSim(reply.view);
     },
-    [keep],
+    [keep, career.id],
   );
 
   const step = (type: 'play' | 'nextSeason') => {
     if (!ask) return;
     setBusy(true);
+    const t0 = performance.now();
     ask({ type })
-      .then(apply)
+      .then((r) => {
+        if (type === 'nextSeason') trackTiming('seasonTurn', performance.now() - t0);
+        return apply(r);
+      })
       .catch((err: Error) => setError(err.message));
   };
+
+  // The funnel milestones the view shows (telemetry.ts); each goes out once per career.
+  useEffect(() => {
+    if (!sim) return;
+    trackSeen(career.id, {
+      fresh: sim.fresh,
+      tier: sim.tier,
+      n: sim.history.length + 1,
+      fired: sim.board.fired,
+      over: sim.review ? (sim.review.fired ? 'fired' : sim.review.met ? 'met' : 'missed') : null,
+    });
+  }, [sim, career.id]);
+  const [bridgeSeen, setBridgeSeen] = useState<number | null>(null);
 
   const [tunnel, setTunnel] = useState(false);
   const [workSaid, setWorkSaid] = useState<WorkSaid>(null);
@@ -454,7 +530,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   if (!sim)
     return (
       <p role="status" className={`${PAGE} text-chalk-soft`}>
-        {t('career.computing')}
+        {t(stage ? STAGE_TEXT[stage] : 'career.computing')}
       </p>
     );
   if (sim.board.fired)
@@ -503,6 +579,9 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             <p className="mt-1 text-xs font-semibold text-chalk-soft">
               {t('career.where', { division: sim.division, season: sim.season })}
             </p>
+            <span className="mt-2 block">
+              <Kits club={sim.club} both />
+            </span>
           </div>
         </div>
         <nav aria-label={t('career.rooms')} className="sala-rooms">
@@ -589,30 +668,65 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           )}
         </header>
         <div className="club-room-body">
+          {sim.board.offers.map((o) => (
+            <aside
+              key={o.clubId}
+              id={`convite-${o.clubId}`}
+              aria-label={t('career.approach', { club: o.name })}
+              className="sala-slab flex flex-wrap items-center gap-3 p-4"
+            >
+              <p className="min-w-0 flex-1">
+                {t('career.approachText', { club: o.name, division: o.division })}
+              </p>
+              <button
+                type="button"
+                disabled={busy || !ask}
+                className="min-h-11 rounded-lg bg-club-gold px-4 font-bold text-ink"
+                onClick={() => {
+                  if (!ask) return;
+                  setBusy(true);
+                  ask({ type: 'takeJob', clubId: o.clubId })
+                    .then(apply)
+                    .catch((err: Error) => {
+                      setBusy(false);
+                      setError(err.message);
+                    });
+                }}
+              >
+                {t('career.approachTake', { club: o.name })}
+              </button>
+            </aside>
+          ))}
+          {sim.fresh && <Guide careerId={career.id} onRoom={go} />}
           {room === 'diretoria' && (
-            <Board
-              sim={sim}
-              busy={busy}
-              said={workSaid}
-              onWork={
-                ask
-                  ? (front) => {
-                      setBusy(true);
-                      ask({ type: 'work', front })
-                        .then((reply) => {
-                          deal(reply);
-                          if (reply.work) setWorkSaid(reply.work);
-                        })
-                        .catch((err: Error) => setError(err.message))
-                        .finally(() => setBusy(false));
-                    }
-                  : undefined
-              }
-            />
+            <>
+              <Board
+                sim={sim}
+                busy={busy}
+                said={workSaid}
+                onWork={
+                  ask
+                    ? (front) => {
+                        setBusy(true);
+                        ask({ type: 'work', front })
+                          .then((reply) => {
+                            deal(reply);
+                            if (reply.work) setWorkSaid(reply.work);
+                          })
+                          .catch((err: Error) => setError(err.message))
+                          .finally(() => setBusy(false));
+                      }
+                    : undefined
+                }
+              />
+              <Backup onError={setError} />
+            </>
           )}
           {room === 'mercado' && ask && <Market ask={ask} onError={setError} onDeal={deal} />}
           {room === 'treino' && ask && <Training ask={ask} onError={setError} onPicked={keep} />}
-          {room === 'vestiario' && ask && <Squad ask={ask} onError={setError} onPicked={keep} />}
+          {room === 'vestiario' && ask && (
+            <Squad ask={ask} onError={setError} onPicked={pickedLineup} />
+          )}
           {room === 'sala' && (
             <>
               {sim.turn && (
@@ -627,9 +741,13 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                   })}
                 </p>
               )}
+              {sim.bridge && sim.turn && bridgeSeen !== sim.turn.season && (
+                <SeasonBridge bridge={sim.bridge} onClose={() => setBridgeSeen(sim.turn!.season)} />
+              )}
               <NextMatch
                 sim={sim}
                 busy={busy}
+                stage={stage}
                 onWatch={watch}
                 onPlay={() => step('play')}
                 onNextSeason={() => step('nextSeason')}
@@ -638,7 +756,13 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
               <section className="sala-desk grid min-w-0 lg:grid-cols-[1.4fr_1fr]">
                 <Inbox sim={sim} onGo={go} />
                 <div className="flex min-w-0 flex-col">
-                  <Table sim={sim} clubId={sim.clubId} />
+                  <Table
+                    rows={sim.table}
+                    title={t('career.table')}
+                    clubId={sim.clubId}
+                    zones={sim.zones}
+                  />
+                  {sim.estadual && <Estadual e={sim.estadual} clubId={sim.clubId} />}
                   <Form sim={sim} />
                   <Fixtures sim={sim} />
                   <section className={PANEL}>
@@ -667,9 +791,20 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                         </dd>
                       </div>
                     </dl>
+                    <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-chalk/15 pt-3 text-sm tabular-nums">
+                      {sim.fx.map((x) => (
+                        <Fragment key={x.currency}>
+                          <dt className="text-chalk-soft">{t('career.fx', { c: x.currency })}</dt>
+                          <dd>{t('career.fxRate', { rate: x.rate, change: x.change / 10 })}</dd>
+                        </Fragment>
+                      ))}
+                    </dl>
                   </section>
                 </div>
               </section>
+              <div className="sala-slab empty:hidden">
+                <Cup sim={sim} />
+              </div>
             </>
           )}
           {import.meta.env.DEV && (
@@ -797,12 +932,13 @@ function Scene({ plate }: { plate: Plate }) {
 function NextMatch(props: {
   sim: SimView;
   busy: boolean;
+  stage: Stage | null;
   onWatch: (w: Watch) => void;
   onPlay: () => void;
   onNextSeason: () => void;
   onMarket: () => void;
 }) {
-  const { sim, busy } = props;
+  const { sim, busy, stage } = props;
   const next = sim.next;
   if (sim.deadline)
     return (
@@ -817,6 +953,26 @@ function NextMatch(props: {
           <p className="text-balance">
             {t('career.deadlineText', { d: new Date(`${sim.deadline}T12:00:00Z`) })}
           </p>
+          {next && (
+            <div className="flex w-full flex-col items-center gap-2 border-t border-chalk/15 pt-3">
+              <p className="font-condensed text-lg font-extrabold text-club-gold uppercase">
+                {t('career.next')}
+              </p>
+              <div className="flex items-center gap-3">
+                <Crest club={next.home} size="lg" />
+                <span className="font-condensed text-2xl font-black text-club-gold">×</span>
+                <Crest club={next.away} size="lg" />
+              </div>
+              <p className="text-sm font-semibold text-balance">
+                {next.home.shortName} × {next.away.shortName}
+                <span className="mx-2 text-club-gold">/</span>
+                {t('career.dateLong', { d: new Date(`${next.iso}T12:00:00Z`) })}
+                <span className="mx-2 text-club-gold">/</span>
+                {competitionLabel(next)}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-balance text-chalk-soft">{t('career.deadlineWhy')}</p>
           <div className="grid w-full max-w-md grid-cols-2 gap-2">
             <button
               type="button"
@@ -856,6 +1012,7 @@ function NextMatch(props: {
                 className={`sala-side flex min-w-0 items-center gap-3 sm:gap-4 ${k === 0 ? 'order-1 flex-col sm:flex-row-reverse sm:text-right' : 'order-3 flex-col [animation-delay:140ms] sm:flex-row'}`}
               >
                 <Crest club={c} size="xl" />
+                <Kits club={c} away={k === 1} />
                 <span className="font-condensed text-3xl leading-[0.9] font-black text-balance uppercase sm:text-5xl">
                   <span className="sm:hidden">{c.shortName}</span>
                   <span className="hidden sm:inline">{c.name}</span>
@@ -874,8 +1031,32 @@ function NextMatch(props: {
             <span className="mx-2 text-club-gold">/</span>
             {t('career.venue', { v: VENUE[Number(next.atHome)]! })}
             <span className="mx-2 text-club-gold">/</span>
-            {next.competition}
+            {competitionLabel(next)}
           </p>
+          {next.rest !== null && next.rest <= CONGESTED && (
+            <p className="text-center text-sm text-balance text-club-gold">
+              {t('copa.congested', { n: next.rest })}
+            </p>
+          )}
+          {next.coach && (
+            <p className="text-center text-sm text-balance text-chalk-soft">
+              {t('career.rivalCoach', { coach: next.coach.name, style: next.coach.style })}
+            </p>
+          )}
+          {(next.banned.theirs.length > 0 || next.banned.ours.length > 0) && (
+            <p className="text-center text-sm text-balance text-chalk-soft">
+              {next.banned.ours.length > 0 && (
+                <span className="block">
+                  {t('career.bannedOurs', { names: next.banned.ours.join(', ') })}
+                </span>
+              )}
+              {next.banned.theirs.length > 0 && (
+                <span className="block">
+                  {t('career.bannedTheirs', { names: next.banned.theirs.join(', ') })}
+                </span>
+              )}
+            </p>
+          )}
           <div className="grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-[1.2fr_1fr_1fr] sm:whitespace-nowrap">
             <button
               type="button"
@@ -908,6 +1089,7 @@ function NextMatch(props: {
           <p className="font-condensed text-3xl leading-none font-black uppercase sm:text-5xl">
             {t('career.seasonOver')}
           </p>
+          {sim.review && <SeasonReview review={sim.review} club={sim.club} />}
           <button
             type="button"
             disabled={busy}
@@ -916,6 +1098,11 @@ function NextMatch(props: {
           >
             {t('career.nextSeason', { season: sim.season + 1 })}
           </button>
+          {busy && stage && (
+            <p role="status" className="text-chalk-soft">
+              {t(STAGE_TEXT[stage])}
+            </p>
+          )}
         </div>
       )}
     </section>
@@ -983,6 +1170,23 @@ function Form({ sim }: { sim: SimView }) {
           ))}
         </ol>
       )}
+      {sim.last && sim.last.why.length > 0 && (
+        <div className="flex flex-col gap-2 border-t border-chalk/10 pt-3">
+          <h4 className={LABEL}>{t('career.why')}</h4>
+          <ol className="flex flex-col gap-1.5">
+            {sim.last.why.map((f) => (
+              <li key={f.kind} className="flex items-start gap-2 text-sm">
+                <span
+                  className={`mt-0.5 shrink-0 rounded px-1.5 text-xs font-bold uppercase ${f.side > 0 ? 'bg-club-gold/20 text-club-gold' : 'bg-club-danger/20 text-club-danger'}`}
+                >
+                  {t('career.whySide', { s: sideOf(f.side) })}
+                </span>
+                <span>{t('career.whyFact', { k: f.kind, n: f.n })}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
       {sim.last && (
         <p className="sr-only" aria-live="polite">
           {t('career.lastResult', {
@@ -1016,7 +1220,17 @@ function Fixtures({ sim }: { sim: SimView }) {
               {t('career.date', { d: new Date(`${f.iso}T12:00:00Z`) })}
             </span>
             <Crest club={f.opponent} size="sm" />
-            <span className="min-w-0 flex-1 truncate font-semibold">{f.opponent.name}</span>
+            <span className="min-w-0 flex-1 truncate font-semibold">
+              {f.opponent.name}
+              <span className="ml-2 text-xs font-normal text-chalk-soft">
+                {competitionLabel(f)}
+              </span>
+            </span>
+            {f.rest !== null && f.rest <= CONGESTED && (
+              <span className="text-xs font-bold text-club-gold tabular-nums">
+                {t('copa.rest', { n: f.rest })}
+              </span>
+            )}
             <span className="text-xs font-bold text-chalk-soft uppercase">
               {t('career.venueShort', { v: VENUE[Number(f.atHome)]! })}
             </span>
@@ -1046,6 +1260,14 @@ const FROM = {
   ultimatumMet: 'board',
   goal: 'board',
   cashRed: 'finance',
+  closedDoors: 'press',
+  sponsor: 'finance',
+  protest: 'press',
+  press: 'press',
+  coachSacked: 'press',
+  coachHired: 'press',
+  approach: 'board',
+  courtBan: 'press',
   tired: 'staff',
   bought: 'market',
   sold: 'market',
@@ -1064,12 +1286,33 @@ const FROM = {
   agentOffer: 'market',
   homecoming: 'market',
   solidarity: 'finance',
+  sellOn: 'finance',
+  optionBought: 'market',
+  optionSold: 'market',
+  unhappy: 'staff',
+  leaveRequest: 'staff',
+  promiseKept: 'staff',
+  promiseBroken: 'staff',
   injury: 'staff',
-  prize: 'finance',
+  suspension: 'staff',
+  calledUp: 'staff',
+  quota: 'finance',
+  arrears: 'staff',
+  arrearsPaid: 'staff',
+  walkout: 'press',
+  imageClaim: 'finance',
+  fx: 'finance',
+  owners: 'board',
   fairplay: 'finance',
   fairplayRival: 'press',
   directors: 'board',
+  election: 'board',
+  electionYear: 'board',
   season: 'press',
+  copaDraw: 'board',
+  copaOut: 'board',
+  copaTitle: 'board',
+  estadual: 'press',
 } as const;
 const FROM_TONE = {
   board: 'bg-club-gold',
@@ -1104,6 +1347,26 @@ function noteText(n: InboxItem, sim: SimView): string {
       return t('inbox.goal', { met: BOOL[Number(n.met)]!, position: n.position, goal: n.goal });
     case 'cashRed':
       return t('career.msgCash');
+    case 'closedDoors':
+      return t('inbox.closedDoors');
+    case 'sponsor':
+      return t('inbox.sponsor', {
+        name: n.name,
+        value: t('career.cash', { value: n.annual }),
+        years: n.years,
+      });
+    case 'protest':
+      return t('inbox.protest');
+    case 'press':
+      return t('inbox.press', { n: n.matches });
+    case 'coachSacked':
+      return t('inbox.coachSacked', { club: n.clubName });
+    case 'coachHired':
+      return t('inbox.coachHired', { club: n.clubName, coach: n.coach, style: n.style });
+    case 'approach':
+      return t('inbox.approach', { club: n.clubName });
+    case 'courtBan':
+      return t('inbox.courtBan', { n: n.matches });
     case 'tired':
       return t('inbox.tired', { n: n.players });
     case 'bought':
@@ -1151,10 +1414,34 @@ function noteText(n: InboxItem, sim: SimView): string {
         h: n.horizon,
         mine: n.club === sim.clubId ? 'yes' : 'no',
       });
+    case 'election':
+      return t('inbox.election', {
+        club: n.clubName,
+        r: n.result,
+        h: n.horizon,
+        mine: n.club === sim.clubId ? 'yes' : 'no',
+        out: n.coachOut ? 'yes' : 'no',
+      });
+    case 'electionYear':
+      return t('inbox.electionYear');
     case 'hired':
       return t('inbox.hired', { club: n.clubName });
     case 'solidarity':
       return t('inbox.solidarity', { name: n.player, fee: t('career.cash', { value: n.fee }) });
+    case 'sellOn':
+      return t('inbox.sellOn', { name: n.player, fee: t('career.cash', { value: n.fee }) });
+    case 'optionBought':
+    case 'optionSold':
+      return t(`inbox.${n.kind}`, {
+        club: n.clubName,
+        name: n.player,
+        fee: t('career.cash', { value: n.fee }),
+      });
+    case 'unhappy':
+    case 'leaveRequest':
+    case 'promiseKept':
+    case 'promiseBroken':
+      return t(`inbox.${n.kind}`, { name: n.player });
     case 'agentOffer':
       return t('inbox.agentOffer', { agent: n.agent, name: n.player, club: n.clubName || 'none' });
     case 'homecoming':
@@ -1175,19 +1462,75 @@ function noteText(n: InboxItem, sim: SimView): string {
         kind: t('health.kind', { k: n.injury }),
         days: n.days,
       });
+    case 'calledUp':
+      return t('inbox.calledUp', { name: n.player });
+    case 'suspension':
+      return t('inbox.suspension', { name: n.player, n: n.matches, why: n.why });
     case 'contractsEnding':
       return t('inbox.contractsEnding', { n: n.players });
     case 'window':
       return t('inbox.window', { open: BOOL[Number(n.open)]! });
-    case 'prize':
-      return t('inbox.prize', {
-        position: n.position,
+    case 'owners':
+      return t('inbox.owners', { value: t('career.cash', { value: n.amount }) });
+    case 'fx':
+      return t('inbox.fx', {
+        c: n.currency,
+        rate: n.rate / 10_000,
+        change: Math.abs(n.change) / 10,
+        up: String(n.change > 0),
+      });
+    case 'arrears':
+      return t('inbox.arrears', { n: n.months });
+    case 'arrearsPaid':
+      return t('inbox.arrearsPaid');
+    case 'imageClaim':
+      return t('inbox.imageClaim', {
+        name: n.player,
+        value: t('career.cash', { value: n.amount }),
+      });
+    case 'walkout':
+      return t('inbox.walkout', { name: n.player });
+    case 'quota':
+      return t('inbox.quota', {
+        line: n.line,
+        source: n.source,
+        phase: n.phase,
         amount: t('career.cash', { value: n.amount }),
+      });
+    case 'copaDraw':
+      return t('inbox.copaDraw', {
+        phase: t('copa.phase', { p: n.phase }),
+        legs: n.legs,
+        opp: n.clubName,
+        home: BOOL[Number(n.atHome)]!,
+      });
+    case 'copaOut':
+      return t('inbox.copaOut', {
+        phase: t('copa.phaseIn', { p: n.phase }),
+        by: n.by,
+      });
+    case 'copaTitle':
+      return t('inbox.copaTitle');
+    case 'estadual':
+      return t('inbox.estadual', {
+        name: n.name,
+        champion: n.clubName,
+        position: n.position,
+        prize: t('career.cash', { value: n.prize }),
+        paid: String(n.prize > 0),
       });
     case 'season':
       return t('inbox.season', { season: n.season, champion: n.clubName, move: n.move });
   }
 }
+
+/** Where each kind of request is answered. */
+const TODO_ROOM = {
+  bid: 'mercado',
+  agentOffer: 'mercado',
+  contractsEnding: 'mercado',
+  leaveRequest: 'mercado',
+} as const;
 
 /** Where a note is acted on, when it asks for anything. */
 const NOTE_ROOM: Partial<Record<InboxItem['kind'], Room>> = {
@@ -1236,6 +1579,44 @@ function Inbox({ sim, onGo }: { sim: SimView; onGo: (r: Room) => void }) {
   return (
     <section className={PANEL}>
       <h3 className={LABEL}>{t('career.inbox')}</h3>
+      <h4 className="font-condensed text-base font-extrabold uppercase">{t('career.todo')}</h4>
+      {sim.todo.length === 0 ? (
+        <p className="text-chalk-soft">{t('career.todoEmpty')}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {sim.todo.map((x, i) => (
+            <li
+              key={`${x.kind}-${i}`}
+              className="flex flex-wrap items-center gap-2 border-t border-chalk/10 pt-2 first:border-0 first:pt-0"
+            >
+              <p className="min-w-[14rem] flex-1">
+                {t('career.todoText', {
+                  k: x.kind,
+                  club: x.clubName,
+                  where: x.clubName ? ` (${x.clubName})` : '',
+                  name: x.playerName,
+                  fee: x.kind === 'bid' ? t('career.cash', { value: x.fee }) : '',
+                  n: x.kind === 'contractsEnding' ? x.players : 0,
+                })}
+              </p>
+              <button
+                type="button"
+                className={`${btnSecondary} min-h-11 px-3 text-base`}
+                onClick={() =>
+                  x.kind === 'approach'
+                    ? document
+                        .getElementById(`convite-${x.club}`)
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    : onGo(TODO_ROOM[x.kind])
+                }
+              >
+                {t('career.todoGo', { k: x.kind })}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <h4 className="mt-2 font-condensed text-base font-extrabold uppercase">{t('career.news')}</h4>
       {notes.length === 0 ? (
         <p className="text-chalk-soft">{t('inbox.empty')}</p>
       ) : (
@@ -1287,13 +1668,96 @@ function Inbox({ sim, onGo }: { sim: SimView; onGo: (r: Room) => void }) {
     </section>
   );
 }
+
+const GUIDE = ['vestiario', 'mercado', 'diretoria', 'jogar'] as const;
+const guideKey = (id: string) => `clube-guia:${id}`;
+
+/** The first week's guide: one card per step, each linking to its room; remembered as done. */
+function Guide({ careerId, onRoom }: { careerId: string; onRoom: (r: Room) => void }) {
+  const [step, setStep] = useState(0);
+  const [done, setDone] = useState(() => {
+    try {
+      return localStorage.getItem(guideKey(careerId)) === '1';
+    } catch {
+      return false;
+    }
+  });
+  if (done) return null;
+  const finish = () => {
+    try {
+      localStorage.setItem(guideKey(careerId), '1');
+    } catch {
+      // Private mode: the guide only comes back on the next visit.
+    }
+    setDone(true);
+  };
+  const key = GUIDE[step]!;
+  const last = step === GUIDE.length - 1;
+  return (
+    <section aria-label={t('guide.title')} className={`${PANEL} sala-slab`}>
+      <h3 className={LABEL}>{t('guide.step', { n: step + 1, total: GUIDE.length })}</h3>
+      <p className="text-balance">{t('guide.text', { k: key })}</p>
+      <div className="flex flex-wrap gap-2">
+        {!last && (
+          <button
+            type="button"
+            className={`${btnPrimary} min-h-11 bg-club-gold px-4 text-base`}
+            onClick={() => {
+              onRoom(key as Room);
+              setStep(step + 1);
+            }}
+          >
+            {t('guide.go', { k: key })}
+          </button>
+        )}
+        <button
+          type="button"
+          className={`${btnSecondary} min-h-11 px-4 text-base`}
+          onClick={last ? finish : () => setStep(step + 1)}
+        >
+          {last ? t('guide.done') : t('guide.next')}
+        </button>
+        {!last && (
+          <button
+            type="button"
+            className="min-h-11 px-3 text-chalk-soft underline"
+            onClick={finish}
+          >
+            {t('guide.skip')}
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+/** Three days or less between two matches: a congested week, the squad needs rotating. */
+const CONGESTED = 3;
+/** A match's competition, with the phase and the leg in the cup. */
+const competitionLabel = (m: {
+  competition: string;
+  stage: SimView['fixtures'][number]['stage'];
+}) =>
+  m.stage
+    ? t('copa.label', {
+        name: m.competition,
+        phase: t('copa.phase', { p: m.stage.phase }),
+        leg: t('copa.leg', { legs: m.stage.legs, leg: m.stage.leg }),
+      })
+    : m.competition;
 const MSG_RESULT = { W: 'career.msgWin', D: 'career.msgDraw', L: 'career.msgLoss' } as const;
 
 const HEAD = ['pos', 'club', 'played', 'won', 'drawn', 'lost', 'gd', 'points'] as const;
 
-function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
-  const { up, down } = sim.zones;
-  const size = sim.table.length;
+function Table(props: {
+  rows: SimView['table'];
+  title: string;
+  clubId: string;
+  /** Places that go up and down; a table without them (a state group) draws no zone. */
+  zones?: SimView['zones'];
+}) {
+  const { rows, title, clubId } = props;
+  const { up, down } = props.zones ?? { up: 0, down: 0 };
+  const size = rows.length;
   // A hairline closes each zone: after the last place that goes up, before the first that falls.
   const edge = (i: number) =>
     up > 0 && i === up
@@ -1303,7 +1767,7 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
         : 'border-t border-chalk/10';
   return (
     <section className={PANEL}>
-      <h3 className={LABEL}>{t('career.table')}</h3>
+      <h3 className={LABEL}>{title}</h3>
       <table className="w-full table-fixed text-sm tabular-nums">
         <thead className="text-chalk-soft">
           <tr>
@@ -1321,7 +1785,7 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
           </tr>
         </thead>
         <tbody>
-          {sim.table.map((r, i) => (
+          {rows.map((r, i) => (
             <tr
               key={r.clubId}
               aria-current={r.clubId === clubId || undefined}
@@ -1357,3 +1821,39 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
     </section>
   );
 }
+
+/** The state championship: the club's group table, then the knockout ties as they were played. */
+function Estadual({ e, clubId }: { e: NonNullable<SimView['estadual']>; clubId: string }) {
+  return (
+    <>
+      <Table rows={e.table} title={e.name} clubId={clubId} />
+      {e.ties.length > 0 && (
+        <section className={PANEL}>
+          <h3 className={LABEL}>{t('career.estadualKnockout')}</h3>
+          <ul className="flex flex-col gap-1 text-sm tabular-nums">
+            {e.ties.map((x, i) => (
+              <li key={i} className="flex items-center justify-between gap-2">
+                <span className="text-chalk-soft">{t('career.estadualStage', { s: x.stage })}</span>
+                <span>
+                  {t('career.estadualTie', {
+                    home: x.home.shortName,
+                    away: x.away.shortName,
+                    played: String(x.goals !== null),
+                    a: x.goals?.[0] ?? 0,
+                    b: x.goals?.[1] ?? 0,
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {e.champion && (
+            <p className="font-bold">{t('career.estadualChampion', { name: e.champion })}</p>
+          )}
+        </section>
+      )}
+    </>
+  );
+}
+
+/** A fact's side as the report's select reads it. */
+const sideOf = (side: number) => (side > 0 ? 'for' : 'against');

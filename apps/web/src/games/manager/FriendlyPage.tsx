@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
+import { ClubBadge } from '../../components/ClubBadge';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
 import { drawPlayers, kitsFor, pitchLayer, view, type View } from './pitch';
@@ -165,24 +166,10 @@ export function FriendlyPage() {
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 
-const CREST = {
-  md: 'size-9 border-2 text-[0.65rem]',
-  lg: 'size-14 border-4 text-base sm:size-20 sm:text-xl',
-} as const;
+const CREST = { md: 'sm', lg: 'lg' } as const;
 
-/** A club is a round colour badge with its initials, never a logo (DESIGN.md). */
 function Crest({ club, size = 'md' }: { club: Club; size?: keyof typeof CREST }) {
-  const n = Number.parseInt(club.colours[0].slice(1), 16);
-  const light = 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255) > 150;
-  return (
-    <span
-      aria-hidden
-      className={`inline-grid shrink-0 place-items-center rounded-full font-condensed leading-none font-black tracking-tight shadow-[0_4px_10px_-4px_rgb(0_0_0/0.7)] ${CREST[size]} ${light ? 'text-ink' : 'text-chalk'}`}
-      style={{ background: club.colours[0], borderColor: club.colours[1] }}
-    >
-      {club.shortName}
-    </span>
-  );
+  return <ClubBadge name={club.shortName} size={CREST[size]} colours={club.colours} />;
 }
 
 function Range({

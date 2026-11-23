@@ -33,7 +33,19 @@ export const ptBR = {
   'career.reputation': 'Reputação {n}',
   'career.accept': 'Assumir o {club}',
   'career.divisions': 'Divisões',
+  'backup.title': 'Cópia de segurança',
+  'backup.text':
+    'Baixe um arquivo com a sua carreira e guarde. Se um dia precisar, restaure por aqui, mesmo em outro aparelho. Restaurar troca a carreira em andamento.',
+  'backup.export': 'Baixar a carreira',
+  'backup.import': 'Restaurar de um arquivo',
+  'backup.confirm': 'Restaurar vai substituir a carreira em andamento. Continuar?',
+  'backup.error': 'Não deu para concluir',
   'career.computing': 'Montando a temporada no seu aparelho…',
+  'career.stage.pack': 'Baixando o mundo do futebol…',
+  'career.stage.open': 'Montando elencos, calendário e finanças…',
+  'career.stage.market': 'Os clubes estão negociando no mercado…',
+  'career.stage.turn': 'Virando a temporada: acessos, rebaixamentos e contratos…',
+  'career.stage.save': 'Guardando a carreira…',
   'career.where': '{division}, temporada {season}',
   'career.cashLabel': 'Caixa',
   'career.venue': '{v, select, home {Em casa} other {Fora de casa}}',
@@ -52,10 +64,30 @@ export const ptBR = {
   'career.fixturesLess': 'Ver só os próximos',
   'career.venueShort': '{v, select, home {Casa} other {Fora}}',
   'career.inbox': 'Caixa de entrada',
+  'career.todo': 'Pede resposta',
+  'career.todoEmpty': 'Nada esperando por você.',
+  'career.news': 'Notícias',
+  'career.todoText':
+    '{k, select, bid {O {club} fez proposta de {fee} por {name}.} approach {O {club} procurou você para o cargo de técnico.} agentOffer {O empresário oferece {name}{where}. Está disponível no Mercado.} leaveRequest {{name} pediu para sair.} other {{n} jogadores terminam o contrato este ano.}}',
+  'career.todoGo':
+    '{k, select, bid {Responder no Mercado} approach {Ver convite} agentOffer {Ver no Mercado} leaveRequest {Responder no Mercado} other {Ver no Mercado}}',
+  'guide.title': 'Primeiros passos',
+  'guide.step': 'Primeiros passos: {n} de {total}',
+  'guide.text':
+    '{k, select, vestiario {Vestiário: monte a escalação e a tática do time. Sem isso, o treinador escolhe por você.} mercado {Mercado: a janela de transferências está aberta. Aqui você contrata, vende e responde às propostas.} diretoria {Diretoria: veja a meta da temporada e a confiança do presidente. É por ela que você é cobrado.} other {Jogar: volte à sala do técnico e jogue a partida. Assista ou veja só o resultado.}}',
+  'guide.go':
+    '{k, select, vestiario {Ir ao Vestiário} mercado {Ir ao Mercado} other {Ir à Diretoria}}',
+  'guide.next': 'Próximo',
+  'guide.skip': 'Pular guia',
+  'guide.done': 'Entendi',
   'career.from':
     '{f, select, board {Diretoria} press {Imprensa} staff {Comissão} market {Mercado} other {Financeiro}}',
   'career.msgWelcome':
     'Bem-vindo ao {club}. A diretoria espera trabalho sério desde o primeiro jogo da {division}.',
+  'career.why': 'Por que deu esse resultado',
+  'career.whySide': '{s, select, for {A favor} other {Contra}}',
+  'career.whyFact':
+    '{k, select, quality {A diferença de qualidade entre os elencos pesou.} out {{n, plural, one {# titular desfalcado (lesão, suspensão ou limite de estrangeiros) mudou o time.} other {# titulares desfalcados (lesão, suspensão ou limite de estrangeiros) mudaram o time.}}} tired {As pernas cansadas do time titular pesaram.} owed {Os salários atrasados abateram a força do time.} rivalShort {O adversário veio desfalcado ou cansado.} travel {A viagem de {n} km pesou no visitante.} crowd {O estádio com {n}% de ocupação mexeu com o mandante.} other {}}',
   'career.msgWin': 'Vitória por {a} a {b} sobre o {opp}. A torcida saiu cantando.',
   'career.msgDraw': 'Empate em {a} a {b} com o {opp}. Um ponto para a conta.',
   'career.msgLoss': 'Derrota por {a} a {b} para o {opp}. A imprensa cobra reação.',
@@ -78,6 +110,8 @@ export const ptBR = {
   'squad.formation': 'Formação',
   'squad.auto': 'Escalação do treinador',
   'squad.strength': 'Força do time',
+  'squad.foreigners':
+    'Estrangeiros: {named}/{limit}{over, select, true { — acima do limite: os últimos ficam de fora} other {}}',
   'squad.list': 'Elenco',
   'squad.pick': 'Quem joga de {role}?',
   'squad.hint':
@@ -96,7 +130,37 @@ export const ptBR = {
   'market.band': '{lo} a {hi}',
   'market.potential': 'Potencial {lo} a {hi}',
   'market.clause': 'Multa {fee}',
+  'market.clauseSellOn':
+    'Revenda {pct}%{mine, select, true { para o seu clube} other { para o clube que vendeu}}',
+  'market.clauseBuyBack':
+    'Recompra por {price} até {year}{mine, select, true { (seu clube)} other { (do clube que vendeu)}}',
+  'market.clauseLoan':
+    '{kind, select, option {Opção de compra} other {Obrigação de compra}}: {price}{mine, select, true { (a favor do seu clube)} other { (a favor de quem pegou)}}',
+  'market.unhappy':
+    '{s, select, unhappy {Insatisfeito com os minutos} asked {Pediu para sair} other {Aguarda a promessa de minutos}}',
+  'market.sellOnLabel': 'Percentual de revenda (0 a 30%)',
+  'market.buyBackLabel': 'Recompra (100 a 200% do valor; vazio = sem)',
+  'market.buyBackSeasons': 'Temporadas da recompra',
+  'market.netFee':
+    'O comprador desconta o que você pede: a proposta vira {fee}; no seu preço, {ask}.',
+  'market.buyBackGo': 'Recomprar por {price}',
+  'market.optionGo': 'Exercer a opção de compra por {price}',
+  'market.loanKind': 'Cláusula do empréstimo',
+  'market.loanKindName': '{k, select, option {Opção de compra} other {Obrigação de compra}}',
+  'market.borrowWith': 'Com cláusula',
+  'market.lendWith': 'Ceder com cláusula',
+  'market.requests': 'Jogadores que pediram para sair',
+  'market.requestText':
+    '{name} diz que joga menos do que merece e pediu para sair. Você pode pô-lo na lista, prometer minutos (será cobrado) ou recusar (ele guarda rancor e o vestiário sente).',
+  'market.pleaList': 'Pôr na lista',
+  'market.pleaPromise': 'Prometer minutos',
+  'market.pleaRefuse': 'Recusar',
   'market.payClause': 'Pagar a multa',
+  'market.imageLabel': 'Direito de imagem (parte do salário)',
+  'market.imageUsual': 'Padrão do clube',
+  'market.imageShare': '{s}% do salário',
+  'market.imageHint':
+    'Lei Pelé: até 40%. Sem encargos para o clube e menos imposto para o jogador, mas quanto maior a parcela, maior o risco de a Justiça do Trabalho reclassificar como salário (a partir de 10%).',
   'market.yourClause': 'Multa rescisória em reais (opcional)',
   'market.borrow': 'Emprestar',
   'market.borrowFor': 'Pegar {name} emprestado até o fim da temporada por {fee}',
@@ -148,6 +212,15 @@ export const ptBR = {
   'market.years': 'Anos de contrato',
   'market.roleLabel': 'Papel prometido',
   'market.propose': 'Propor',
+  'market.previewTitle': 'O que muda se fechar assim',
+  'market.previewCash': 'Caixa depois da taxa: {after} (hoje {now})',
+  'market.previewBill': 'Folha mensal: {after} ({delta} por mês), hoje {now}',
+  'market.previewRoom': 'Espaço salarial que sobra: {room}',
+  'market.previewOver': 'Passa do teto da diretoria em {over}.',
+  'market.previewEnters': 'Entra no time ideal com nota {rating}.',
+  'market.previewPushes': 'Tira {name} (nota {old}) do time ideal.',
+  'market.previewBench': 'Não entra no time ideal: fica como reserva.',
+  'market.previewRenew': 'Já está no elenco: o time ideal não muda.',
   'market.takeAsk': 'Aceitar o pedido',
   'market.bids': 'Propostas recebidas',
   'market.bidText': 'O {club} oferece {fee} por {name}.',
@@ -208,6 +281,9 @@ export const ptBR = {
     '{k, select, knock {pancada} muscle {lesão muscular} sprain {entorse} other {lesão grave}}',
   'health.out': '{n, plural, one {Lesionado: volta em # dia} other {Lesionado: volta em # dias}}',
   'health.outLabel': 'Lesionado',
+  'squad.banned': 'Suspenso',
+  'career.bannedOurs': 'Suspensos do seu time: {names}',
+  'career.bannedTheirs': 'Desfalques do adversário por suspensão: {names}',
   'inbox.crop':
     '{n, plural, one {# garoto chegou} other {# garotos chegaram}} à base. Veja no Campo de treino quem merece subir.',
   'inbox.solidarity':
@@ -231,6 +307,13 @@ export const ptBR = {
   'inbox.contractsEnding':
     '{n, plural, one {# jogador termina} other {# jogadores terminam}} o contrato no fim da temporada. Renove no Mercado quem você quer manter.',
   'inbox.clausePaid': 'O {club} pagou a multa de {name}: {fee}. Ele foi embora.',
+  'inbox.sellOn': '{name} foi revendido: o percentual de revenda rendeu {fee} ao caixa.',
+  'inbox.optionBought': '{name} foi comprado do {club} pela cláusula do empréstimo: {fee}.',
+  'inbox.optionSold': 'O {club} exerceu a compra de {name}: {fee} no caixa.',
+  'inbox.unhappy': '{name} está insatisfeito: joga menos do que acha que merece.',
+  'inbox.leaveRequest': '{name} pediu para sair. Responda no Mercado.',
+  'inbox.promiseKept': '{name} viu a promessa de minutos cumprida e se acalmou.',
+  'inbox.promiseBroken': '{name} não teve os minutos prometidos e pediu para sair de novo.',
   'inbox.loanIn': '{name} chegou por empréstimo do {club}, por {fee}.',
   'inbox.loanOut': '{name} foi emprestado ao {club}, por {fee}.',
   'inbox.loanBack': 'Fim do empréstimo de {name} ({club}).',
@@ -239,6 +322,10 @@ export const ptBR = {
     '{s, select, 1 {Fair play financeiro: os salários fecharam a temporada em {cost}% da receita, acima do limite da CBF. Advertência pública.} 2 {Fair play financeiro: segunda temporada acima do limite ({cost}%). Multa de {fine}.} 3 {Fair play financeiro: terceira temporada acima do limite ({cost}%). Multa de {fine} e registro de atletas bloqueado: o clube não pode contratar.} other {Fair play financeiro: o clube segue acima do limite ({cost}%). Multa de {fine}, registro bloqueado e {points} pontos a menos na tabela.}}',
   'inbox.directors':
     '{mine, select, yes {{why, select, sale {O clube foi vendido. O novo dono} other {Eleição no clube. A nova diretoria}} é {h, select, short {imediatista: quer resultado já, com mais verba para reforços e menos paciência.} long {de longo prazo: segura verba para estrutura e base e dá tempo ao trabalho.} other {equilibrada.}} A meta da temporada foi refeita.} other {{why, select, sale {O {club} foi vendido} other {O {club} elegeu nova diretoria}}, {h, select, short {imediatista} long {de longo prazo} other {equilibrada}}.}}',
+  'inbox.election':
+    '{mine, select, yes {{r, select, reelected {Eleição no clube: situação reeleita. A diretoria segue e a sua confiança também.} other {Eleição no clube: a oposição venceu. {out, select, yes {O novo presidente quer treinador próprio: você foi demitido.} other {O novo presidente manteve você, mas a confiança recomeça do zero e a meta foi refeita.}}}}} other {{r, select, reelected {No {club}, a situação foi reeleita.} other {No {club}, a oposição venceu a eleição}}{h, select, short {, com diretoria imediatista.} long {, com diretoria de longo prazo.} other {.}}}}',
+  'inbox.electionYear':
+    'Ano de eleição: a diretoria olha para o voto de fim de temporada. Mais pressa por resultado, mais verba para reforços e menos para estrutura.',
   'inbox.fairplayRival':
     'Fair play financeiro: o {club} começa a temporada com {points} pontos a menos.',
   'inbox.hired': 'Você assumiu o {club}. A direção começa do zero com você.',
@@ -253,13 +340,74 @@ export const ptBR = {
   'inbox.ultimatumMet': 'Ultimato cumprido. A direção recua.',
   'inbox.goal':
     '{met, select, true {Meta cumprida} other {Meta não cumprida}}: o clube terminou em {position}º e a meta era o {goal}º lugar.',
+  'inbox.sponsor':
+    'Contrato renovado com {name}: {value} por ano, {years, plural, one {por # temporada} other {por # temporadas}}.',
+  'inbox.calledUp':
+    '{name} foi convocado pela seleção e desfalca o clube na data FIFA: os jogos seguem sem ele.',
+  'inbox.suspension':
+    '{why, select, yellows {{name} recebeu o terceiro amarelo e cumpre suspensão automática no próximo jogo da competição.} red {{name} foi expulso e cumpre suspensão automática no próximo jogo da competição.} other {O STJD julgou a expulsão de {name}: mais {n, plural, one {# jogo} other {# jogos}} de suspensão.}}',
+  'career.fx': '{c, select, USD {Dólar} other {Euro}}',
+  'career.fxRate': 'R$ {rate, number, ::.00} ({change, number, ::+.0}% no ano)',
+  'inbox.fx':
+    '{up, select, true {O real desabou: o {c, select, USD {dólar} other {euro}} subiu {change, number, ::.0}% no mês e vale R$ {rate, number, ::.00}. Contratar no exterior ficou mais caro; vender para fora rende mais.} other {O real se valorizou: o {c, select, USD {dólar} other {euro}} caiu {change, number, ::.0}% no mês e vale R$ {rate, number, ::.00}. Contratar no exterior ficou mais barato; vender para fora rende menos.}}',
+  'inbox.owners':
+    'A temporada fechou no vermelho. Os donos do clube aportaram {value} para cobrir parte do prejuízo; o resto vira dívida.',
+  'inbox.arrears':
+    '{n, plural, one {O caixa está no vermelho e os salários do mês não foram pagos. O elenco sente: rende menos em campo.} other {Salários atrasados há # meses. O vestiário está em pé de guerra{n, select, 2 { — no terceiro mês a Lei Pelé deixa os jogadores rescindirem} other {: quem tem mercado pode ir embora de graça}}.}}',
+  'inbox.arrearsPaid': 'Os salários atrasados foram quitados. O vestiário respira de novo.',
+  'inbox.imageClaim':
+    '{name} ganhou na Justiça do Trabalho: o direito de imagem era salário disfarçado. O clube pagou {value} em encargos atrasados e multa.',
+  'inbox.walkout':
+    '{name} entrou na Justiça pelos salários atrasados, rescindiu o contrato e saiu de graça.',
+  'inbox.coachSacked': 'O {club} demitiu o técnico. A vaga está aberta.',
+  'inbox.coachHired':
+    'O {club} contratou {coach}, de estilo {style, select, attacking {ofensivo} defensive {defensivo} pressing {de pressão} possession {de posse de bola} direct {direto} other {equilibrado}}.',
+  'career.rivalCoach':
+    'Técnico rival: {coach}, de estilo {style, select, attacking {ofensivo} defensive {defensivo} pressing {de pressão} possession {de posse de bola} direct {direto} other {equilibrado}}.',
+  'board.dna':
+    'Identidade do clube: jogo {s, select, attacking {ofensivo} defensive {defensivo} pressing {de pressão} possession {de posse de bola} direct {direto} other {equilibrado}}. Mudar o estilo custa tempo: a torcida e a diretoria se acostumam devagar.',
+  'inbox.approach':
+    'O {club} demitiu o técnico e sondou você para o cargo. A proposta vale enquanto a vaga estiver aberta.',
+  'career.approach': 'Proposta do {club}',
+  'career.approachText': 'O {club} ({division}) quer você como técnico.',
+  'career.approachTake': 'Aceitar e assumir o {club}',
+  'inbox.press':
+    'A imprensa fala em crise: {n} jogos sem vencer. A cobrança chega à diretoria, e a paciência com o técnico encurta.',
+  'inbox.protest':
+    'A torcida protestou depois da derrota: cobra a diretoria e o técnico. A paciência do conselho diminuiu.',
+  'inbox.closedDoors':
+    'Jogo de portões fechados, por punição do STJD: sem torcida, sem bilheteria.',
+  'inbox.courtBan':
+    'Confusão no nosso estádio. O STJD vai nos tirar {n, plural, one {# mando de campo} other {# mandos de campo}}, a partir do segundo jogo em casa.',
   'inbox.tired':
     '{n, plural, one {# titular saiu} other {# titulares saíram}} do jogo com menos de metade do fôlego. Vale rodar o elenco.',
   'inbox.window':
     '{open, select, true {A janela de transferências abriu.} other {A janela de transferências fechou.}}',
-  'inbox.prize': 'Premiação pelo {position}º lugar: {amount}.',
+  'inbox.quota':
+    '{source, select, copa {Copa do Brasil: {line, select, prize {premiação da final} other {cota da {phase}ª fase}} creditada, {amount}.} serieC {Série C: {line, select, advance {cota da fase final (quadrangular)} other {cota}} creditada, {amount}.} serieD {Série D: {line, select, prize {cota da final} other {cota da {phase}ª fase}} creditada, {amount}.} other {Direitos de TV da Série A: parte por colocação creditada, {amount}.}}',
+  'inbox.estadual':
+    '{position, select, 1 {Campeões do {name}!} other {{name}: {champion} é o campeão.}}{paid, select, true { Premiação creditada, {prize}.} other {}}',
   'inbox.season':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {O clube subiu.} relegation {O clube caiu.} other {O clube fica onde está.}}',
+  'inbox.copaDraw':
+    'Sorteio da Copa do Brasil ({phase}): {legs, select, 2 {ida e volta contra {opp}, com a ida {home, select, true {em casa} other {fora}}.} other {jogo único contra {opp}, {home, select, true {em casa} other {fora}}.}}',
+  'inbox.copaOut':
+    'Eliminados da Copa do Brasil {phase}{by, select, penalties {, nos pênaltis} penaltyDraw {, nos pênaltis} other {}}. O foco volta ao campeonato.',
+  'inbox.copaTitle': 'Campeões da Copa do Brasil! A taça é nossa.',
+  'copa.phase':
+    '{p, select, fase-1 {1ª fase} fase-2 {2ª fase} fase-3 {3ª fase} fase-4 {4ª fase} fase-5 {5ª fase} oitavas {Oitavas de final} quartas {Quartas de final} semifinal {Semifinal} other {Final}}',
+  'copa.phaseIn':
+    '{p, select, fase-1 {na 1ª fase} fase-2 {na 2ª fase} fase-3 {na 3ª fase} fase-4 {na 4ª fase} fase-5 {na 5ª fase} oitavas {nas oitavas de final} quartas {nas quartas de final} semifinal {na semifinal} other {na final}}',
+  'copa.leg': '{legs, select, 2 {{leg, select, 1 {ida} other {volta}}} other {jogo único}}',
+  'copa.label': '{name}, {phase}, {leg}',
+  'copa.congested':
+    'Semana cheia: {n, plural, one {# dia} other {# dias}} desde o último jogo. Vale rodar o elenco.',
+  'copa.rest': '{n}d',
+  'cup.title': 'Copa do Brasil',
+  'cup.mine': 'Seu caminho',
+  'cup.pens': 'pên.',
+  'cup.empty': 'Sem partidas desta fase ainda.',
+  'review.copa': 'Copa do Brasil: até {phase}.',
   'board.goal': 'Meta da temporada',
   'board.structure': 'Estrutura do clube',
   'market.officeCash': 'Caixa',
@@ -284,6 +432,7 @@ export const ptBR = {
   'board.workYes': 'A diretoria aprovou a obra: {f} fica pronta na virada da temporada.',
   'board.workNo':
     '{r, select, cash {A diretoria negou: o caixa não cobre a obra e a reserva que ela quer manter.} horizon {A diretoria negou: obra cara demais para quem quer resultado agora.} useless {A diretoria negou: o estádio não lota, ampliar seria dinheiro jogado fora.} busy {Já há uma obra nessa frente.} top {Essa frente já está no nível máximo.} other {A diretoria negou.}}',
+  'board.electionYear': 'Ano de eleição',
   'board.directors':
     '{h, select, short {Diretoria imediatista: quer resultado já, libera mais verba para reforços e tem pouca paciência com derrotas.} long {Diretoria de longo prazo: segura verba para estrutura e base, dá tempo ao trabalho.} other {Diretoria equilibrada: cobra resultado sem abrir mão do planejamento.}} Competência {n} de 100.',
   'board.goalText': 'Terminar a {division} até o {n}º lugar.',
@@ -296,7 +445,7 @@ export const ptBR = {
   'board.result':
     '{r, select, W {Vitória} D {Empate} other {Derrota}} {odds, select, favourite {como favorito} underdog {como azarão} other {em jogo parelho}}',
   'board.reason':
-    '{k, select, cash {Caixa no vermelho} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} other {Ultimato cumprido}}',
+    '{k, select, cash {Salários atrasados} goalMet {Meta da temporada cumprida} goalMissed {Meta da temporada não cumprida} fairplay {Fair play financeiro: salários acima do limite} protest {Protesto da torcida} homegrown {A torcida aplaude os crias da casa} locals {A torcida se vê nos jogadores da terra} press {Crise na imprensa} derby {Clássico perdido no estadual} exit {Eliminação precoce no estadual} identity {Estilo de jogo e identidade do clube} other {Ultimato cumprido}}',
   'board.up': '+{n}',
   'board.down': '−{n}',
   'board.ultimatum': 'Ultimato',
@@ -338,6 +487,8 @@ export const ptBR = {
   'squad.planHint':
     'O plano vale quando você assiste à partida ou vê os melhores momentos. Em "Só o resultado" conta apenas a escalação.',
   'squad.age': '{n} anos',
+  'squad.scored':
+    '{g, plural, one {# gol} other {# gols}}, {a, plural, one {# assistência} other {# assistências}}',
   'squad.role':
     '{r, select, goalkeeper {Goleiro} sweeperKeeper {Goleiro líbero} centreBack {Zagueiro} libero {Líbero} supportFullBack {Lateral} invertedFullBack {Lateral por dentro} wingBack {Ala} anchor {Volante} deepPlaymaker {Volante armador} boxToBox {Meia área a área} playmaker {Armador} wideWinger {Ponta aberto} insideForward {Ponta por dentro} targetMan {Pivô} falseNine {Falso nove} advancedForward {Centroavante} other {Jogador}}',
   'squad.position':
@@ -349,12 +500,90 @@ export const ptBR = {
   'career.watchHighlights': 'Melhores momentos',
   'career.lastResult': '{home} {a} × {b} {away}',
   'career.seasonOver': 'Temporada encerrada.',
+  'review.title': 'Balanço da temporada {season}',
+  'review.position': '{n}º de {places} na {division}',
+  'review.verdict':
+    '{v, select, met {Meta cumprida (até o {goal}º).} fired {Você foi demitido durante a temporada.} other {Meta não cumprida (até o {goal}º).}}',
+  'review.confidence': 'Confiança da direção: {from} para {to}.',
+  'review.champion': 'Campeão da {division}!',
+  'review.championOther': 'Campeão da divisão: {name}.',
+  'review.move': '{m, select, promotion {Acesso conquistado!} other {Rebaixado.}}',
+  'review.revenue': 'Receitas de competições e TV',
+  'review.cup': 'Campeão: {name}!',
+  'review.record':
+    '{w, plural, one {# vitória} other {# vitórias}}, {d, plural, one {# empate} other {# empates}}, {l, plural, one {# derrota} other {# derrotas}}. Gols: {gf} pró, {ga} contra.',
+  'review.bestWin': 'Maior vitória: {score} contra {opponent}',
+  'review.worstLoss': 'Pior derrota: {score} contra {opponent}',
+  'review.used': 'Mais utilizados',
+  'review.usedRow': '{name}: {n, plural, one {# jogo como titular} other {# jogos como titular}}',
+  'history.title': 'História',
+  'history.none': 'Nenhuma temporada completa ainda.',
+  'history.row':
+    '{club}, {n}º na {division} (meta {goal}º{met, select, met {, cumprida} fired {, demitido} other {, não cumprida}})',
+  'history.title1': 'Campeão',
+  'history.promoted': 'Acesso',
+  'history.relegated': 'Rebaixado',
+  'share.season': 'Compartilhar temporada',
+  'share.career': 'Compartilhar carreira',
+  'share.story': 'Formato story',
+  'share.copy': 'Copiar texto',
+  'share.copied': 'Texto copiado!',
+  'share.busy': 'Gerando…',
+  'share.brand': 'DE CABEÇA F.C. · MODO CLUBE',
+  'share.url': 'decabecafc.com.br',
+  'share.headline':
+    '{h, select, titleUp {Campeão e acesso!} title {Campeão da {division}!} cup {Campeão: {cup}!} up {Acesso histórico!} down {Rebaixado, a volta por cima vem aí} escaped {Escapou do rebaixamento} fired {Demitido no meio da temporada} met {Meta cumprida} other {Meta não cumprida}}',
+  'share.seasonLine': '{club} na temporada {season}',
+  'share.posLine': '{n}º de {places} na {division}',
+  'share.goalLine':
+    '{met, select, yes {Meta cumprida (até o {goal}º)} other {Meta não cumprida (até o {goal}º)}}',
+  'share.recordLine': '{w}V {d}E {l}D · gols {gf} × {ga}',
+  'share.topLine': 'Mais utilizado: {name}',
+  'share.careerTitle': 'Minha carreira como técnico',
+  'share.careerSeasons': '{seasons, plural, one {# temporada} other {# temporadas}}',
+  'share.careerStats':
+    '{titles, plural, =0 {nenhum título} one {# título} other {# títulos}} · {ups, plural, =0 {nenhum acesso} one {# acesso} other {# acessos}}',
+  'share.careerClubs': '{clubs}',
+  'share.careerBest':
+    'Melhor temporada: {season}, {n}º na {division}{club, select, none {} other { com o {club}}}',
+  'share.careerBestTitle':
+    'Melhor temporada: {season}, campeão da {division}{club, select, none {} other { com o {club}}}',
+  'review.scorers': 'Gols e assistências na liga',
+  'review.topScorer': 'Artilheiro do clube: {name} ({n, plural, one {# gol} other {# gols}})',
+  'review.topAssister':
+    'Líder em assistências: {name} ({n, plural, one {# assistência} other {# assistências}})',
+  'review.artilharia':
+    'Artilheiro da divisão: {name} ({club}), {n, plural, one {# gol} other {# gols}}',
+  'history.scorer': 'Artilheiro: {name} ({n, plural, one {# gol} other {# gols}})',
+  'history.top': 'Mais utilizado: {name} ({n, plural, one {# jogo} other {# jogos}})',
   'career.deadline': 'Último dia da janela',
   'career.deadlineText':
     'A janela de transferências fecha em {d, date, long}. Depois dela, só dá para contratar jogadores sem clube.',
+  'career.deadlineWhy':
+    'Você chegou no último dia da janela: se quiser reforçar ou vender alguém, é agora. Se não, feche a janela e siga para o jogo.',
   'career.deadlineMarket': 'Fazer contratações',
   'career.deadlineGo': 'Fechar a janela',
   'career.nextSeason': 'Começar a temporada {season}',
+  'bridge.title': 'O que vem aí',
+  'bridge.happened': 'O que aconteceu',
+  'bridge.carried': 'O que fica para a temporada',
+  'bridge.ahead': 'Problemas pela frente',
+  'bridge.close': 'Entendi',
+  'bridge.season':
+    '{move, select, promotion {Acesso conquistado.} relegation {Rebaixamento.} other {{fired, select, true {Demissão no meio do ano.} other {{champion, select, true {Título da divisão.} other {Temporada na mesma divisão.}}}}}}',
+  'bridge.sale': 'Venda: {player} por {fee, number, currency}.',
+  'bridge.idol': '{name} foi o mais utilizado, com {starts} jogos como titular.',
+  'bridge.crisis':
+    '{what, select, ultimatum {A diretoria deu um ultimato.} cashRed {O caixa ficou no vermelho.} other {Salários atrasaram.}}',
+  'bridge.cash': 'Caixa: {from, number, currency} para {to, number, currency}.',
+  'bridge.squad': 'Elenco: {lost} saíram, {won} chegaram.',
+  'bridge.confidence': 'Confiança da direção: {from} para {to}.',
+  'bridge.election': 'Há eleição no clube nesta temporada.',
+  'bridge.contracts':
+    '{players, plural, one {# contrato termina} other {# contratos terminam}} no fim da temporada.',
+  'bridge.ageing':
+    '{players, plural, one {# jogador tem} other {# jogadores têm}} 32 anos ou mais.',
+  'bridge.goal': 'Nova meta da direção: terminar até o {position}º lugar.',
   'career.turn':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
   'career.momentTitle': '{m, select, champion {Campeão!} promotion {Subimos!} other {Rebaixado}}',
@@ -363,11 +592,16 @@ export const ptBR = {
   'career.momentGo': 'Seguir para {season}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
-    '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
+    '{k, select, wages {Salários} debt {Parcela da dívida} interest {Juros da dívida} tv {Direitos de TV} quota {Cota de participação} advance {Cota por fase} prize {Premiação de final} sponsors {Patrocínio} tickets {Bilheteria} members {Sócios} owners {Aporte dos donos} cups {Campeonato estadual} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} lawsuit {Condenação trabalhista} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
   'career.table': 'Classificação',
   'career.colRecord': '{c, select, won {V} drawn {E} other {D}}',
   'career.zoneUp': 'Sobem {n}',
   'career.zoneDown': 'Caem {n}',
+  'career.estadualKnockout': 'Mata-mata do estadual',
+  'career.estadualStage':
+    '{s, select, quartas {Quartas} semi {Semifinal} final {Final} other {Fase}}',
+  'career.estadualTie': '{played, select, true {{home} {a} x {b} {away}} other {{home} x {away}}}',
+  'career.estadualChampion': 'Campeão: {name}',
   'career.col': '{c, select, pos {#} club {Clube} played {J} gd {SG} other {P}}',
   'friendly.continue': 'Continuar',
   'friendly.title': 'Amistoso',

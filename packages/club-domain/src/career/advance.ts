@@ -20,13 +20,33 @@ import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
 import { formationOf, matchInputFor } from '../match/fixture-input';
+import { crowdShare, isDerby, moodOf } from '../match/stadium';
+import { whistleOf } from '../match/referee';
 import { coachOf } from '@decabeca/match-engine';
 import type { Outcome } from '../competition/season';
 import type { Pack } from '../pack/schema';
 import { nationalDivisions, startCareer } from './start';
 import { fielded, hurtIn, rivalOutIds, type Injury } from './health';
+import { monthTurned, moraleOf, strengthOwed } from './arrears';
+import { coachEdge, rivalPlan, styled, type Coaches, type Style } from './coach-pool';
+import { fillVacancies, judgeCoaches, newSeasonCoaches, type Bench } from './coaches';
+import {
+  afterMatch,
+  bookingsOf,
+  rivalPitch,
+  suspendedIn,
+  newSeasonDiscipline,
+  sitCourt,
+  type Booking,
+  type Discipline,
+  type Sentence,
+} from './discipline';
 import { windowOpen, type Moves } from './market';
+import { calledOf, fifaWindowOn } from './callups';
 import { note, type Note } from './inbox';
+import { entryOf, seasonReview, type HistoryEntry } from './history';
+import { credit, leagueIds, sideGoals, type Scored } from './scoring';
+import type { Goal } from '../match/scorers';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
 import { agentOffers, type AgentLedger } from '../market/agents';
@@ -35,7 +55,10 @@ import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
 import { endingSoon, expireContracts, trimSquads } from '../market/contracts';
-import { returnLoans, type Loan } from '../market/loans';
+import { settleImageClaims, type ImageDeal } from '../market/image';
+import { returnLoans, type Loan, type LoanOption } from '../market/loans';
+import { pruneClauses, type Clauses } from '../market/clauses';
+import { unrestTurn, type Unrest } from '../market/unrest';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
 import { codeOf, withImports, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
@@ -43,12 +66,24 @@ import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { dayOf, isoOf } from '../competition/calendar';
-import { postPrize } from './finance';
+import { postOwners } from './finance';
+import { postCups, postSeasonEnd } from './revenue';
+import { cupNotes, cupStages } from './cup';
+import { isEstadual } from '../competition/estaduais';
+import { estadualExits, settleEstadual } from './estadual';
+import { matchReport, type ReportFact } from './report';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
 import { tierOfClub } from '../market/books';
-import { boardAfterMatch, boardAfterSeason, goalFor, positionOf, type Board } from './board';
-import { bestLineup, teamWith, type Lineup } from './squad';
+import {
+  boardAfterMatch,
+  boardAfterSeason,
+  freshBoard,
+  goalFor,
+  positionOf,
+  type Board,
+} from './board';
+import { bestLineup, foreignLimit, planOf, teamWith, type Lineup } from './squad';
 import {
   RIVAL_DRILL,
   clubLevels,
@@ -84,6 +119,10 @@ export interface CareerWorld {
   moves?: Moves;
   /** The board's goal and confidence; absent before the person's first match (board.ts). */
   board?: Board;
+  /** Season the person took the job (the outgoing directors' man, when since then; clubs.ts). */
+  hired?: number;
+  /** The day of the person's first decision: older notes happened before they arrived. */
+  hiredDay?: number;
   /** What happened, newest last (inbox.ts). */
   inbox?: Note[];
   /** Fees each club paid and received this season (market/books.ts). */
@@ -100,17 +139,43 @@ export interface CareerWorld {
   cold?: Record<string, number>;
   /** The boys of the person's academy, by id: under contract, out of the first team. */
   academy?: string[];
+  /** Months of wages the person's club owes its squad (arrears.ts); absent when paid up. */
+  arrears?: number;
+  /** The other clubs' coaches as their boards see them (coaches.ts). */
+  benches?: Record<string, Bench>;
+  /** Clubs without a coach, and the day the last one was sacked. */
+  vacancies?: Record<string, number>;
+  /** The clubs that sacked their coach this season, in order (one entry a sacking). */
+  sacked?: string[];
+  /** The named coaches of the other clubs and the free pool (coach-pool.ts). */
+  coaches?: Coaches;
+  /** Clubs' DNA after the seasons, by club; the pack's playing style where absent. */
+  dna?: Record<string, Style>;
+  /** The person's style this season: matches and the sum of each axis (coach-pool.ts). */
+  styled?: { n: number; sum: number[] };
   /** The person's injured players: what, since when and until when (health.ts). */
   injuries?: Record<string, Injury>;
+  /** Each club's cards and bans, by club (discipline.ts); absent before the first card. */
+  cards?: Record<string, Discipline>;
   /** Each finished season: its moves and what the person did that the next year grew from. */
   log?: SeasonLog[];
   /** Matches each of the person's players started this season, and how many the club played. */
   starts?: Record<string, number>;
   played?: number;
+  /** League goals and assists this season, `[goals, assists]` by player (scoring.ts). */
+  scored?: Scored;
+  /** One entry per season played, whichever club the person coached (history.ts). */
+  history?: HistoryEntry[];
   /** Players on loan this season, by id: who owns each and the contract he returns to. */
   loans?: Record<string, Loan>;
   /** The person's players offered on loan. */
   forLoan?: string[];
+  /** What the person asks of the club that borrows each player offered on loan. */
+  optionFor?: Record<string, LoanOption['kind']>;
+  /** Sell-on and buy-back clauses on players the person sold (market/clauses.ts). */
+  clauses?: Record<string, Clauses>;
+  /** Players of the person's club who are unhappy, by id (market/unrest.ts). */
+  unhappy?: Record<string, Unrest>;
   /** Seasons in a row each club ended over the fair play limit; absent when none (fairplay.ts). */
   fairplay?: Record<string, number>;
   /** Every club's cash, directors and structure; absent before the first season's turn. */
@@ -121,8 +186,12 @@ export interface CareerWorld {
   scouting?: Scouting;
   /** The person's club's standing with agents (market/agents.ts). */
   agents?: AgentLedger;
+  /** Image-rights contracts the person signed, by player (market/image.ts). */
+  image?: Record<string, ImageDeal>;
   /** The last window deadline the person was stopped at (nextDecision with deadlines). */
   deadline?: number;
+  /** Why the person's last match went as it did (report.ts); not saved, read right after it. */
+  report?: ReportFact[];
 }
 
 export type Decision =
@@ -143,13 +212,21 @@ export type Decision =
 function playDay(
   w: CareerWorld,
   day: number,
-  given?: { id: string; outcome: Outcome },
+  given?: {
+    id: string;
+    outcome: Outcome;
+    bookings?: readonly Booking[] | undefined;
+    /** Who scored on screen, by side (home, away). */
+    goals?: readonly [readonly Goal[], readonly Goal[]] | undefined;
+  },
 ): Map<string, Outcome> {
   const out = new Map<string, Outcome>();
   // The person's club as it stands that day (rest and training since the last one applied).
   let training = trainingOn(w, day);
   const strength = (clubId: string) =>
-    clubId === w.clubId ? myStrength(w, training, fielded(w, day)) : rivalStrength(w, clubId, day);
+    clubId === w.clubId
+      ? strengthOwed(w, myStrength(w, training, fielded(w, day)))
+      : rivalStrength(w, clubId, day) + coachEdge(w, clubId);
   const cashBefore = w.ledger.cash;
   if (windowOpen(w.day) !== windowOpen(day)) {
     note(w, { day, kind: 'window', open: windowOpen(day) });
@@ -157,6 +234,13 @@ function playDay(
     const ending = endingSoon(w).length;
     if (windowOpen(day) && isoOf(day).slice(5, 7) === '07' && ending > 0)
       note(w, { day, kind: 'contractsEnding', players: ending });
+  }
+  // A FIFA window opens: the national teams take the person's players for it (callups.ts).
+  const fifa = fifaWindowOn(day);
+  if (fifa !== null && fifa !== fifaWindowOn(w.day)) {
+    const n = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+    for (const id of calledOf(w, w.clubId, day))
+      note(w, { day, kind: 'calledUp', player: n.get(id) ?? '' });
   }
   // The clubs trade among themselves before the day's matches: the rounds due since the last day.
   for (const round of roundsBetween(w.day, day)) {
@@ -169,7 +253,28 @@ function playDay(
     agentOffers(w, round);
   }
   scoutingDay(w, day);
+  fillVacancies(w, day);
   postMonths(w, w.day, day);
+  postCups(w, w.day, day);
+  const names = () => new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+  const banned = (sentences: Sentence[]) => {
+    if (!sentences.length) return;
+    const n = names();
+    for (const x of sentences)
+      note(w, {
+        day,
+        kind: 'suspension',
+        player: n.get(x.playerId) ?? '',
+        matches: x.matches,
+        why: x.why,
+      });
+  };
+  // The sports court sits before the day's matches: what it adds is served from today.
+  banned(sitCourt(w, day));
+  const leagues = leagueIds(w);
+  // The Copa's draws are made as its phases end: what the person's club was in before the day.
+  const cupBefore = cupStages(w.season, w.clubId);
+  const decided = w.season.decisions.length;
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
     const o =
@@ -180,23 +285,79 @@ function playDay(
             seedOf(w.seed, id),
             strength(m.home),
             (strength(m.away) * (1000 - awayLoss(distanceKm(w.pack, m.home, m.away)))) / 1000,
+            // The crowd carries the home side; behind closed doors it is gone (match/stadium.ts).
+            crowdShare(w.pack, w.season, id),
+            whistleOf(w.season, id, isDerby(w.pack, m.home, m.away)),
           );
+    const decided = w.season.decisions.length;
     record(w.season, id, o);
     out.set(id, o);
+    if (isEstadual({ id: m.competitionId })) {
+      estadualExits(w, m, decided, day);
+      if (m.phaseId === 'final') settleEstadual(w, m.competitionId, day);
+    }
+    judgeCoaches(w, m, o, day);
+    // The other clubs' cards and goals fall on their best men; the person's are dealt below.
+    const league = leagues.has(m.competitionId);
+    for (const [side, clubId] of [m.home, m.away].entries()) {
+      if (clubId === w.clubId) continue;
+      const pitch = rivalPitch(w, clubId, m.competitionId);
+      afterMatch(
+        w,
+        m.competitionId,
+        day,
+        bookingsOf(w, pitch, o.cards[side]!, day, clubId),
+        clubId,
+      );
+      if (league)
+        credit(
+          w,
+          sideGoals(
+            w,
+            seedOf(w.seed, `${id}:${side}`),
+            clubId,
+            o.goals[side]!,
+            pitch,
+            given?.id === id ? given.goals?.[side] : undefined,
+          ),
+        );
+    }
     if (m.home === w.clubId || m.away === w.clubId) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
+      styled(w, planOf(w));
       postHomeMatch(w, id, day);
       const km = postAwayTrip(w, id, day);
+      w.report = matchReport(w, id, day, training);
       const eleven = fielded(w, day).xi;
       // Who was hurt, read with the legs each had at kick-off.
       const hurt = hurtIn(w, eleven, day, training);
       training = tire(training, eleven, travelTire(km));
-      const names = new Map(w.pack.players.map((p) => [p.id, p.knownAs ?? p.name]));
+      const mine = m.home === w.clubId ? 0 : 1;
+      // The cards: who got them on screen, or drawn among the eleven for a match not watched.
+      const squad = new Set(w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.id));
+      const bookings =
+        given?.id === id && given.bookings
+          ? given.bookings.filter((b) => squad.has(b.playerId))
+          : bookingsOf(w, eleven, o.cards[mine], day);
+      banned(afterMatch(w, m.competitionId, day, bookings));
+      if (league)
+        credit(
+          w,
+          sideGoals(
+            w,
+            seedOf(w.seed, `${id}:${mine}`),
+            w.clubId,
+            o.goals[mine]!,
+            eleven,
+            given?.id === id ? given.goals?.[mine] : undefined,
+          ),
+        );
+      const n = names();
       for (const [pid, i] of Object.entries(hurt))
         note(w, {
           day,
           kind: 'injury',
-          player: names.get(pid) ?? '',
+          player: n.get(pid) ?? '',
           injury: i.kind,
           days: i.until - day,
         });
@@ -217,16 +378,29 @@ function playDay(
       const spent = Object.values(training.fresh).filter((f) => f < 0.5).length;
       if (spent >= 3) note(w, { day, kind: 'tired', players: spent });
       const before = w.board;
-      w.board = boardAfterMatch(w, m, o);
+      w.board = boardAfterMatch(w, m, o, day);
+      if (w.board.last?.some((r) => r.kind === 'protest')) note(w, { day, kind: 'protest' });
+      // The press story: at a run's third winless match, and again each three more.
+      if (w.board.last?.some((r) => r.kind === 'press'))
+        note(w, { day, kind: 'press', matches: w.board.winless! });
       if (w.board.ultimatum && !before?.ultimatum)
         note(w, { day, kind: 'ultimatum', ...w.board.ultimatum });
       if (w.board.last?.some((r) => r.kind === 'ultimatumMet'))
         note(w, { day, kind: 'ultimatumMet' });
     }
   }
+  cupNotes(w, day, cupBefore, decided);
+  // A month turned on the way: were the wages paid?
+  let turned = false;
+  for (let d = Math.max(w.day + 1, dayOf(`${w.season.season}-01-01`)); d <= day; d++)
+    if (isoOf(d).endsWith('-01')) turned = true;
   w.training = training;
   w.day = day;
   advanceLedger(w.ledger, day);
+  if (turned) {
+    monthTurned(w, day);
+    unrestTurn(w, day);
+  }
   if (cashBefore >= 0 && w.ledger.cash < 0) note(w, { day, kind: 'cashRed' });
   return out;
 }
@@ -247,8 +421,17 @@ export function openCareer(base: Pack, seed: number, clubId: string, day = 0): C
   // The foreign market is open from the first season (04 §4.7); a new pack object, read afresh.
   const pack = withImports(base, seed, start.season.season);
   recache(pack, 'goingWages', WHOLE, goingWages(base));
-  const w: CareerWorld = { pack, origin: base, seed, ...start, day: 0, ...clubLevels(pack) };
+  const w: CareerWorld = {
+    pack,
+    origin: base,
+    seed,
+    ...start,
+    day: 0,
+    hired: start.season.season,
+    ...clubLevels(pack, start.season.season),
+  };
   note(w, { day: 0, kind: 'welcome' });
+  cupNotes(w, 0, new Set(), 0);
   setJudgementClock(pack, seed, w.season.season);
   for (let d = nextDay(w.season); d !== null && d <= day; d = nextDay(w.season)) playDay(w, d);
   w.day = day;
@@ -301,22 +484,45 @@ export function playDecision(
   w: CareerWorld,
   d: Extract<Decision, { kind: 'match' }>,
   watched?: Outcome,
+  /** Who was booked on screen; the person's players only count. */
+  bookings?: readonly Booking[],
+  /** Who scored on screen, by side (home, away); own goals left out. */
+  goals?: readonly [readonly Goal[], readonly Goal[]],
 ): Outcome {
   if (nextDay(w.season) !== d.day) throw new Error('career: that match is not next');
-  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched }).get(d.matchId)!;
+  return playDay(w, d.day, watched && { id: d.matchId, outcome: watched, bookings, goals }).get(
+    d.matchId,
+  )!;
 }
 
-/** Another club's eleven for the day: its best, without the starters it is short of. */
-function rivalEleven(w: CareerWorld, c: { pack: Pack; clubId: string }, day: number): Lineup {
-  const formation = formationOf(c.clubId);
-  const best = bestLineup(c, formation);
-  const out = rivalOutIds(w, c.clubId, best.xi, day);
-  if (out.size === 0) return best;
+/** Another club's eleven for the day: its best, without the starters it is short of or banned. */
+function rivalEleven(
+  w: CareerWorld,
+  c: { pack: Pack; clubId: string },
+  day: number,
+  competitionId: string,
+): Lineup {
+  // His coach's formation and instructions over the club's DNA (coach-pool.ts).
+  const style = rivalPlan(w, c.clubId);
+  const formation = style?.formation ?? formationOf(c.clubId);
+  // The banned do not travel; of those who do, some starters are short (health.ts); past the
+  // season's limit of foreigners, Brazilians start (squad.ts).
+  const banned = suspendedIn(w, competitionId, c.clubId);
+  const limit = foreignLimit(w.season.season);
+  let best: Lineup;
   try {
-    return bestLineup(c, formation, out);
+    best = bestLineup(c, formation, banned, limit);
+  } catch {
+    best = bestLineup(c, formation, undefined, limit);
+  }
+  const out = rivalOutIds(w, c.clubId, best.xi, day);
+  const withPlan = (l: Lineup): Lineup => (style ? { ...l, plan: style.plan } : l);
+  if (out.size === 0) return withPlan(best);
+  try {
+    return withPlan(bestLineup(c, formation, new Set([...out, ...banned]), limit));
   } catch {
     // No one left for a slot without them: they play.
-    return best;
+    return withPlan(best);
   }
 }
 
@@ -336,8 +542,9 @@ export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match'
       ? teamWith(c, fielded(w, d.day), {
           fresh: (id) => training.fresh[id] ?? 1,
           familiarity: drilled(training.drill),
+          morale: moraleOf(w),
         })
-      : teamWith(c, rivalEleven(w, c, d.day), {
+      : teamWith(c, rivalEleven(w, c, d.day, d.competitionId), {
           fresh: () => rivalFresh(w, clubId, d.day),
           familiarity: drilled(RIVAL_DRILL),
         });
@@ -393,6 +600,8 @@ const FIRST_TEAM_AGE = 19;
  */
 export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (!isOver(w.season)) throw new Error('career: the season is not over');
+  // The season's story, read before anything turns.
+  const entry = entryOf(seasonReview(w)!);
   let judged = boardAfterSeason(w);
   // The season's accounts are judged as the squads stood while it was played.
   const verdict = judgeFairPlay(w);
@@ -403,15 +612,25 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
       last: [...(judged.last ?? []), { kind: 'fairplay', value: verdict.board }],
     };
   // Every other club's accounts for the season, with the squads it was played with.
+  const placed = new Map<string, { position: number; places: number }>();
   const placeOf = (id: string) => {
-    const rows = divisionTableOf(w, id).rows;
-    return { position: rows.findIndex((r) => r.clubId === id) + 1, places: rows.length };
+    let at = placed.get(id);
+    if (!at) {
+      const rows = divisionTableOf(w, id).rows;
+      placed.set(
+        id,
+        (at = { position: rows.findIndex((r) => r.clubId === id) + 1, places: rows.length }),
+      );
+    }
+    return at;
   };
   settleSeason(w, placeOf);
   // Loans end with the season: everyone goes back before the contracts are looked at.
   returnLoans(w);
   // Contracts that ran out: renewed, or the player walks (market/contracts.ts).
   expireContracts(w);
+  // Labour claims over image-rights shares above the safe line (market/image.ts).
+  settleImageClaims(w);
   const position = positionOf(w);
   if (!judged.fired)
     note(w, {
@@ -421,8 +640,10 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
       position,
       goal: judged.goal,
     });
-  const prize = postPrize(w, position, divisionTable(w).rows.length);
-  if (prize > 0) note(w, { day: w.day, kind: 'prize', position, amount: prize });
+  postSeasonEnd(w, position, divisionTable(w).rows.length);
+  const owners = postOwners(w);
+  if (owners > 0) note(w, { day: w.day, kind: 'owners', amount: owners });
+  w.history = [...(w.history ?? []), entry];
   const played = w.season.season;
   const divisionId = w.season.competitions.find((c) => c.name === divisionTable(w).name)?.id;
   const year = w.season.season + 1;
@@ -442,8 +663,10 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
     previous: w.season.results,
     ranking: w.season.ranking,
     deduct: verdict.deduct,
+    estaduais: true,
   });
   noteFairPlay(w, verdict);
+  cupNotes(w, w.day, new Set(), w.season.decisions.length);
   note(w, {
     day: w.day,
     kind: 'season',
@@ -484,8 +707,16 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   w.pack = yearOn(w.pack, w.origin, w.seed, log);
   // Works finished, directors elected, the money to spare split (clubs.ts); the pack then
   // carries the structure as it now stands.
-  planSeason(w, new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)));
-  w.pack = withClubs(w.pack, w.clubs);
+  const vote = planSeason(
+    w,
+    new Set(t.moves.filter((m) => m.kind === 'relegation').map((m) => m.clubId)),
+    {
+      placed: (id) => placed.get(id),
+      board: judged,
+      mood: (id) => moodOf(w.pack, w.season, id, w.day + 1),
+    },
+  );
+  w.pack = withClubs(w.pack, w.clubs, w.origin);
   // The moves in force stay (each player's club and contract); those of players gone do not.
   const alive = new Set(w.pack.players.map((p) => p.id));
   w.moves = Object.fromEntries(Object.entries(w.moves ?? {}).filter(([id]) => alive.has(id)));
@@ -508,13 +739,19 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (boys > 0) note(w, { day: w.day, kind: 'crop', players: boys });
   if (up > 0) note(w, { day: w.day, kind: 'cameUp', players: up });
   delete w.starts;
+  delete w.scored;
+  // Minutes start over: unrest and promises with them; buy-backs of seasons gone expire.
+  delete w.unhappy;
+  pruneClauses(w);
   delete w.played;
+  newSeasonDiscipline(w);
+  newSeasonCoaches(w);
   // Each office has had another season with its players.
   setJudgementClock(w.pack, w.seed, year, arrivalsOf(w.moves));
   // Rival squads cleared for the new season, read with the new clock: spares go, and
   // sanctioned clubs cut (contracts.ts).
   trimSquads(w);
-  const levels = clubLevels(w.pack);
+  const levels = clubLevels(w.pack, w.season.season);
   w.strength = levels.strength;
   w.eleven = levels.eleven;
   // A picked eleven with someone who retired goes back to the coach.
@@ -522,6 +759,9 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   if (w.lineup?.xi.some((id) => !here.has(id))) delete w.lineup;
   // The goal is set again for the table the club is now in.
   w.board = { ...judged, goal: goalFor(w) };
+  // A new president: the board's confidence starts over, or he brings his own coach.
+  if (vote === 'fresh') w.board = freshBoard(w);
+  if (vote === 'fired') w.board = { ...freshBoard(w), fired: true };
   // Every club's market season starts again; open talks and bids do not cross the year.
   delete w.books;
   delete w.talks;

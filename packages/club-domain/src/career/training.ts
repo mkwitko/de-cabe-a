@@ -17,6 +17,7 @@
 import type { CareerWorld } from './advance';
 import {
   bestLineup,
+  foreignLimit,
   lineupOf,
   lineupStrength,
   slotRatings,
@@ -26,6 +27,8 @@ import {
 } from './squad';
 import { formationOf } from '../match/fixture-input';
 import { MISSING, rivalOut } from './health';
+import { bannedStarters } from './discipline';
+import { calledOf } from './callups';
 import { clubStrengthOf } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
@@ -124,14 +127,18 @@ export function myStrength(w: CareerWorld, t: Training, lineup: Lineup = lineupO
  * which is what tiredness takes from. A club that cannot field that eleven keeps the plain squad
  * reading.
  */
-export function clubLevels(pack: Pack): {
+export function clubLevels(
+  pack: Pack,
+  /** The season: its limit of foreigners holds the eleven (squad.ts). */
+  season: number,
+): {
   strength: Map<string, number>;
   eleven: Map<string, number>;
 } {
   const strength = new Map<string, number>();
   const eleven = new Map<string, number>();
   for (const club of pack.clubs) {
-    const level = clubLevel(pack, club.id);
+    const level = clubLevel(pack, club.id, season);
     strength.set(club.id, level.strength);
     eleven.set(club.id, level.eleven);
   }
@@ -139,10 +146,14 @@ export function clubLevels(pack: Pack): {
 }
 
 /** One club's measure (see `clubLevels`); recomputed when its squad changes. */
-export function clubLevel(pack: Pack, clubId: string): { strength: number; eleven: number } {
+export function clubLevel(
+  pack: Pack,
+  clubId: string,
+  season: number,
+): { strength: number; eleven: number } {
   const c = { pack, clubId };
   try {
-    const l = bestLineup(c, formationOf(clubId));
+    const l = bestLineup(c, formationOf(clubId), undefined, foreignLimit(season));
     const fit = slotRatings(c, l.formation);
     return {
       strength: lineupStrength(c, l),
@@ -169,4 +180,10 @@ export function rivalFresh(w: CareerWorld, clubId: string, day: number): number 
 export const rivalStrength = (w: CareerWorld, clubId: string, day: number): number =>
   (w.strength.get(clubId) ?? 50) -
   (w.eleven.get(clubId) ?? 0) *
-    (1 - freshFactor(rivalFresh(w, clubId, day)) + (rivalOut(w, clubId, day) * MISSING) / 1000);
+    (1 -
+      freshFactor(rivalFresh(w, clubId, day)) +
+      ((rivalOut(w, clubId, day) +
+        bannedStarters(w, clubId, day) +
+        calledOf(w, clubId, day).length) *
+        MISSING) /
+        1000);

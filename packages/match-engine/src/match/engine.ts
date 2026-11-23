@@ -16,7 +16,7 @@ import {
 } from '../rules/duel';
 import { gaussian } from '../rules/math';
 import { DT, blockBody, moveTowards, maxSpeed } from '../movement';
-import { CENTER, LENGTH, WIDTH, clamp, dist, flip, type Vec2 } from '../pitch';
+import { CENTER, LENGTH, WIDTH, clamp, dist, flip, flipVec, type Vec2 } from '../pitch';
 import { between, next } from '../random';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
@@ -34,6 +34,8 @@ import {
 import { emit } from './events';
 import { kick, shoot } from './kick';
 import { PENALTY_XG } from '../rules/xg';
+import { holdChance } from '../rules/shot';
+import { DEAD_SECONDS, STOPPAGE_MS } from '../rules/restart';
 import { acuteLoad, drain, recover } from '../rules/stamina';
 import { ACUTE_LOSS, fatigue } from '../kinematics';
 import { aerialFoulChance, beatenFoulChance, foulChance, cardFor } from '../rules/discipline';
@@ -53,15 +55,7 @@ const inOwnBox = (team: 0 | 1, p: Vec2) => {
 };
 
 /** PARAMETERS: seconds the clock runs while the ball is dead, by restart (02 §2: ball in play 52 to 58 min). */
-const DEAD: Record<RestartKind | 'goal', [number, number]> = {
-  kickOff: [10, 15],
-  goal: [45, 70],
-  throwIn: [10, 18],
-  corner: [26, 40],
-  goalKick: [22, 34],
-  freeKick: [24, 40],
-  penalty: [55, 85],
-};
+const DEAD: Record<RestartKind | 'goal', readonly [number, number]> = DEAD_SECONDS;
 
 export interface StepOptions {
   /** Called with each 4 Hz frame (decimetres), only for matches someone watches. */
@@ -84,7 +78,7 @@ export function setRestart(
   const ms = Math.round(between(s.rngs.referee, lo, hi) * 1000);
   s.clockMs += ms;
   // Stoppage: goals, cards, injuries and substitutions are added back (02 §6.5 acréscimos). PARAMETER.
-  if (why === 'goal') s.stoppage += 30000;
+  if (why === 'goal') s.stoppage += STOPPAGE_MS.goal;
   // Players recover a little while the ball is dead.
   for (const p of s.players)
     if (p.active) {
@@ -289,6 +283,12 @@ function gainBall(s: MatchState, p: MatchPlayer, restart = false) {
   }
 }
 
+/**
+ * A blocked shot or cross goes behind for a corner this share of the time; otherwise it ricochets
+ * into play (PARAMETER, one rule for any block; set by corners per match, 02 §11, 2026-11-19).
+ */
+const BLOCK_BEHIND = 0.58;
+
 function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number, vz = 0) {
   s.owner = null;
   s.flight = {
@@ -366,11 +366,26 @@ function carrierStep(s: MatchState, restartAllowed: Allowed | null) {
   if (s.flight.kind !== 'shot')
     for (const o of opponents(s, c.team)) o.reactUntil = s.tick + Math.round(readTime(o) / DT);
   if (s.flight.blocked !== undefined && s.flight.blocked >= 0) {
-    s.lastTouch = s.flight.blocked;
-    setRestart(s, 'corner', c.team, {
-      x: c.team === 0 ? LENGTH : 0,
-      y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
-    });
+    // The closer gets a foot to the cross: the same ricochet rule as a blocked shot.
+    const blocker = s.players[s.flight.blocked]!;
+    s.lastTouch = blocker.index;
+    if (next(s.rngs.execution) < BLOCK_BEHIND) {
+      setRestart(s, 'corner', c.team, {
+        x: c.team === 0 ? LENGTH : 0,
+        y: c.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
+      });
+      return;
+    }
+    const b = s.flight.ball;
+    const keep = 0.3 + 0.4 * next(s.rngs.execution);
+    const side = gaussian(() => next(s.rngs.execution));
+    looseBall(
+      s,
+      blocker.index,
+      c.pos,
+      b.vx * keep - b.vy * side * 0.6,
+      b.vy * keep + b.vx * side * 0.6,
+    );
     return;
   }
   s.owner = null;
@@ -447,10 +462,10 @@ function pressTriggered(s: MatchState, team: 0 | 1): boolean {
   if (theirs && f!.kind === 'pass') {
     // A real back pass: most of the ball's pace goes towards their own goal.
     const v = Math.sqrt(f!.ball.vx * f!.ball.vx + f!.ball.vy * f!.ball.vy);
-    const back = flip(kicker!.team, { x: f!.ball.vx, y: f!.ball.vy }).x < -0.7 * v;
+    const back = flipVec(kicker!.team, { x: f!.ball.vx, y: f!.ball.vy }).x < -0.7 * v;
     if (on.includes('backPass') && back && v > 3) fire = true;
     const r = f!.to !== null ? s.players[f!.to] : undefined;
-    if (on.includes('receiverFacingOwnGoal') && r && flip(r.team, r.vel).x < -1) fire = true;
+    if (on.includes('receiverFacingOwnGoal') && r && flipVec(r.team, r.vel).x < -1) fire = true;
   }
   if (on.includes('poorTouch') && theirs && f!.kind === 'loose' && f!.from === s.lastTouch)
     fire = true;
@@ -471,7 +486,7 @@ const TACTICAL_FOUL = 0.25;
 function tacticalFoul(s: MatchState, d: MatchPlayer, c: MatchPlayer): boolean {
   if (s.tick - s.possessionSince > 32) return false;
   const cg = flip(c.team, c.pos);
-  if (cg.x < 45 || flip(c.team, c.vel).x < 2) return false;
+  if (cg.x < 45 || flipVec(c.team, c.vel).x < 2) return false;
   const goalSide = opponents(s, c.team).filter(
     (o) => lineOf(o.role) !== 'gk' && flip(c.team, o.pos).x > cg.x,
   ).length;
@@ -595,7 +610,7 @@ export function foul(
       card: red ? 2 : 1,
       second: prev === 1 ? 1 : 0,
     });
-    s.stoppage += 15000;
+    s.stoppage += STOPPAGE_MS.card;
     if (red) {
       s.teams[d.team].stats.redCards++;
       if (prev === 1) s.teams[d.team].stats.yellowCards++;
@@ -616,7 +631,7 @@ function injure(s: MatchState, p: MatchPlayer, contact: boolean) {
   p.pace = Math.round(p.pace * 0.6);
   p.acceleration = Math.round(p.acceleration * 0.6);
   emit(s, 'injury', p.team, p.index, null, p.pos, { contact: contact ? 1 : 0 });
-  s.stoppage += 60000;
+  s.stoppage += STOPPAGE_MS.injury;
 }
 
 // ── Ball in flight ──────────────────────────────────────────────────────────
@@ -768,8 +783,7 @@ function touch(s: MatchState, p: MatchPlayer) {
     // Block: the ball keeps part of its pace and changes direction (often behind for a corner).
     emit(s, 'save', p.team, p.index, kicker.index, p.pos, { block: 1 });
     p.score += 0.1;
-    // A blocked shot goes behind for a corner a good share of the time (PARAMETER, corners per match 02 §11).
-    if (next(s.rngs.execution) < 0.72) {
+    if (next(s.rngs.execution) < BLOCK_BEHIND) {
       setRestart(s, 'corner', kicker.team, {
         x: p.team === 0 ? 0 : LENGTH,
         y: p.pos.y < CENTER.y ? 0.5 : WIDTH - 0.5,
@@ -846,8 +860,7 @@ function save(s: MatchState, k: MatchPlayer, f: NonNullable<MatchState['flight']
   const shooter = s.players[f.from]!;
   emit(s, 'save', k.team, k.index, shooter.index, k.pos, { xg: f.shot?.xg ?? 0 });
   k.score += 0.35;
-  const hold =
-    next(s.rngs.execution) < 0.35 + 0.45 * weighted(k.attrs, { handling: 0.7, reflexes: 0.3 });
+  const hold = next(s.rngs.execution) < holdChance(k.attrs);
   if (hold) {
     gainBall(s, k);
     k.decideAt = s.tick + 16;

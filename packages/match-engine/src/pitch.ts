@@ -16,6 +16,10 @@ export interface Vec2 {
 export const flip = (team: 0 | 1, v: Vec2): Vec2 =>
   team === 0 ? { x: v.x, y: v.y } : { x: LENGTH - v.x, y: WIDTH - v.y };
 
+/** A direction or velocity in team `team`'s frame: the 180° turn negates it (positions use flip). */
+export const flipVec = (team: 0 | 1, v: Vec2): Vec2 =>
+  team === 0 ? { x: v.x, y: v.y } : { x: -v.x, y: -v.y };
+
 export const dist = (a: Vec2, b: Vec2) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 
 export const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);

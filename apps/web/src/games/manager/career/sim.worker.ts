@@ -4,11 +4,17 @@
  * up to the next decision, plays the person's match, and hands back a gzip snapshot after every
  * step for the server to keep.
  */
+import type { Kit } from '../../../components/clubArt';
 import {
   dayOf,
   divisionTable,
+  estadualView,
   resultBetween,
   startNextSeason,
+  bridgeBefore,
+  divisionTierOf,
+  bridgeAfter,
+  type Bridge,
   isoOf,
   loadCareer,
   nextDecision,
@@ -22,9 +28,20 @@ import {
   careerMatch,
   nextMoment,
   outcomeOf,
+  type Booking,
+  type Goal,
+  CURRENCIES,
+  type Currency,
+  rateOf,
+  suspendedIn,
+  foreignLimit,
+  isForeign,
   type Moment,
   type MomentMode,
   upcomingFor,
+  cupStage,
+  cupView,
+  restBefore,
   lineupOf,
   academyPlayers,
   promote,
@@ -47,6 +64,14 @@ import {
   openRenewal,
   openingWage,
   borrow,
+  buyBackFor,
+  clausesOf,
+  answerRequest,
+  openBuyBack,
+  openOption,
+  type LoanOption,
+  type Plea,
+  type SaleClauses,
   cannotBorrow,
   listForLoan,
   loanFee,
@@ -64,6 +89,10 @@ import {
   sendScout,
   seenLevel,
   myWageRoom,
+  signingEffect,
+  wageBill,
+  type ReportFact,
+  type SigningEffect,
   squadPlanOf,
   eyeOf,
   MAX_ROUNDS,
@@ -80,6 +109,7 @@ import {
   strikesOf,
   costLimitOf,
   clubState,
+  electionYear,
   fameOf,
   type Fame,
   FRONTS,
@@ -91,6 +121,7 @@ import {
   type Front,
   type WorkNo,
   jobsAfter,
+  approaches,
   nationalDivisions,
   takeJob,
   positionOf,
@@ -110,6 +141,16 @@ import {
   signable,
   FOREIGN_TIERS,
   foreignName,
+  seasonReview,
+  type HistoryEntry,
+  type SeasonReview,
+  newsOf,
+  todoOf,
+  type Todo,
+  coachAt,
+  dnaOf,
+  playedStyle,
+  styleKind,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -164,15 +205,36 @@ export type SimRequest = { id: number } & (
   | { type: 'work'; front: Front }
 );
 
+/** A league table's rows as the screens draw them. */
+type TableRows = (ClubFace & {
+  clubId: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  gd: number;
+})[];
+
 export interface SimView {
   season: number;
   clubId: string;
-  club: { name: string; shortName: string; colours: [string, string] };
+  club: { name: string; shortName: string; colours: [string, string]; kits?: ClubKits | undefined };
   /** This season's money by kind (wages, tv, sponsors, tickets, debt). */
   money: { kind: string; amount: number }[];
+  /** Reais per dollar and per euro today, and the move since the season opened, in ‰. */
+  fx: { currency: Currency; rate: number; change: number }[];
   /** After a season turn: titles of the person's division and the club's move. */
   turn: { champion: string; move: 'promotion' | 'relegation' | 'stay'; season: number } | null;
+  /** After a season turn: what happened, what carries over, what is ahead (club-domain bridge.ts). */
+  bridge: Bridge | null;
+  /** The club's division tier (1 = Série A). */
+  tier: number;
   division: string;
+  /** At the season's end, before the turn: the season read back (club-domain history.ts). */
+  review: SeasonReview | null;
+  /** The career's seasons, oldest first, each with the club's short name. */
+  history: (HistoryEntry & { club: string })[];
   cash: number;
   /** The world's date. */
   today: string;
@@ -182,25 +244,61 @@ export interface SimView {
     away: ClubFace;
     atHome: boolean;
     competition: string;
+    /** In the Copa do Brasil: the phase and the leg; null in the leagues. */
+    stage: CupStage | null;
+    /** Days since the club's match before this one; three or less is a congested week. */
+    rest: number | null;
+    /** Names of the opponent's players banned from this match, and the person's own. */
+    banned: { theirs: string[]; ours: string[] };
+    /** The rival's coach and his style's word (coach-pool.ts); null while it has none. */
+    coach: { name: string; style: string } | null;
   } | null;
   /** The last day of the open transfer window, when the career stopped on it; null otherwise. */
   deadline: string | null;
   /** The club's next matches after this one, by date. */
-  fixtures: { iso: string; opponent: ClubFace; atHome: boolean; competition: string }[];
+  fixtures: {
+    iso: string;
+    opponent: ClubFace;
+    atHome: boolean;
+    competition: string;
+    stage: CupStage | null;
+    rest: number | null;
+  }[];
+  /** The Copa do Brasil as drawn so far: every tie by phase, with the clubs' faces by id. */
+  cup: {
+    phases: {
+      id: string;
+      ties: {
+        a: string;
+        b: string;
+        legs: { iso: string; home: string; goals: [number, number] | null }[];
+        winner: string | null;
+        by: string | null;
+      }[];
+    }[];
+    clubs: Record<string, ClubFace>;
+  } | null;
   /** The club's last five results, oldest first, from the club's side. */
   form: { result: 'W' | 'D' | 'L'; goals: [number, number]; opponent: ClubFace; atHome: boolean }[];
-  last: { home: ClubFace; away: ClubFace; goals: [number, number] } | null;
-  table: (ClubFace & {
-    clubId: string;
-    played: number;
-    won: number;
-    drawn: number;
-    lost: number;
-    points: number;
-    gd: number;
-  })[];
+  last: {
+    home: ClubFace;
+    away: ClubFace;
+    goals: [number, number];
+    /** The biggest facts behind the person's result (report.ts); empty when nothing stood out. */
+    why: ReportFact[];
+    /** Which side the person's club was: 0 home, 1 away. */
+    mine: 0 | 1;
+  } | null;
+  table: TableRows;
   /** Places that go up and places that go down at the season's end, from the division's rules. */
   zones: { up: number; down: number };
+  /** The person's state championship: their group's table and the knockout ties so far. */
+  estadual: {
+    name: string;
+    table: TableRows;
+    ties: { stage: string; home: ClubFace; away: ClubFace; goals: [number, number] | null }[];
+    champion: string;
+  } | null;
   /** The board: the season's goal, its confidence, and what last moved it. */
   board: {
     confidence: number;
@@ -220,6 +318,10 @@ export interface SimView {
     fame: Fame;
     /** Who runs the club: how far they look and how well they read it (clubs.ts). */
     directors: { horizon: 'short' | 'medium' | 'long'; competence: number };
+    /** The club's DNA in a word (coach-pool.ts `styleKind`). */
+    dna: string;
+    /** The season being played ends in a vote of the club's board. */
+    election: boolean;
     position: number;
     ultimatum: { matches: number; points: number } | null;
     last: BoardReason[];
@@ -230,21 +332,37 @@ export interface SimView {
     /** After a dismissal: the clubs that offer the job, each with its division. */
     offers: (ClubFace & { clubId: string; division: string })[];
   };
-  /** The inbox, newest first: each note with its clubs named and its date. */
+  /** The inbox's news, newest first: each note with its clubs named and its date. */
   inbox: InboxItem[];
+  /** What waits for the person's answer, with names; answered or expired ones are gone. */
+  todo: TodoItem[];
+  /** True while the person has made no decision yet on a new career (first-week guide). */
+  fresh: boolean;
   /** ms the last step took on this device. */
   ms: number;
 }
 
 /** A note as the screen reads it: the fact, its date, and club ids turned into names. */
+export type TodoItem = Todo & { playerName: string; clubName: string };
 export type InboxItem = Note & { iso: string; clubName: string };
 const INBOX_SHOWN = 12;
+
+/** Home and away kits of a club (real ones, when the pack has them). */
+export type ClubKits = { home: Kit; away?: Kit | undefined };
+
+/** A cup match's place: the phase's id, the leg (1-based) and how many legs the tie has. */
+export interface CupStage {
+  phase: string;
+  leg: number;
+  legs: 1 | 2;
+}
 
 /** What the screen draws for a club: names and the colour badge. */
 export interface ClubFace {
   name: string;
   shortName: string;
   colours: [string, string];
+  kits?: ClubKits | undefined;
 }
 /** Foreign buyers and the abroad bucket have no club in the pack: a plain badge with a name. */
 const ABROAD_FACES: [string, ClubFace][] = [ABROAD, ...FOREIGN_TIERS.map((t) => t.id)].map((id) => [
@@ -255,6 +373,7 @@ const face = (c: ClubFace): ClubFace => ({
   name: c.name,
   shortName: c.shortName,
   colours: c.colours,
+  kits: c.kits,
 });
 
 export interface MatchClub {
@@ -262,6 +381,7 @@ export interface MatchClub {
   name: string;
   shortName: string;
   colours: [string, string];
+  kits?: ClubKits | undefined;
 }
 
 /** The dressing room: the formation's slots on the pitch and everyone who can fill them. */
@@ -280,10 +400,21 @@ export interface SquadView {
     fresh: number;
     /** Days until he is back from injury; null when fit. */
     out: number | null;
+    /** Barred from the next match by a suspension. */
+    banned: boolean;
+    /** League goals and assists this season. */
+    goals: number;
+    assists: number;
   })[];
   strength: number;
+  /** Foreigners in the eleven and how many the rules allow this season. */
+  foreigners: { named: number; limit: number };
   plan: PlanChoice;
 }
+
+/** Display names of a set of players, as they go by. */
+const namesOf = (w: CareerWorld, ids: ReadonlySet<string>) =>
+  w.pack.players.filter((p) => ids.has(p.id)).map((p) => p.knownAs ?? p.name);
 
 /** The day the squad is being prepared for: the next match, or today. */
 const matchDay = (w: CareerWorld) => (pending?.kind === 'match' ? pending.day : w.day);
@@ -367,10 +498,16 @@ export type MarketAct =
   | { do: 'open' | 'drop' | 'renew'; playerId: string }
   | { do: 'fee'; playerId: string; fee: number }
   | { do: 'terms'; playerId: string; terms: Terms }
-  | { do: 'list' | 'lend'; playerId: string; on: boolean }
-  | { do: 'borrow'; playerId: string }
-  | { do: 'bid'; bidId: string; answer: 'accept' | 'refuse' }
-  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number }
+  | { do: 'list'; playerId: string; on: boolean }
+  | { do: 'lend'; playerId: string; on: boolean; kind?: LoanOption['kind'] }
+  | { do: 'borrow'; playerId: string; kind?: LoanOption['kind'] }
+  /** Take up a buy-back clause or the option of a player on loan: a talk opens at the contract. */
+  | { do: 'buyback' | 'option'; playerId: string }
+  /** Answer a player who asked to leave. */
+  | { do: 'plead'; playerId: string; plea: Plea }
+  | { do: 'bid'; bidId: string; answer: 'accept'; clauses?: SaleClauses }
+  | { do: 'bid'; bidId: string; answer: 'refuse' }
+  | { do: 'bid'; bidId: string; answer: 'counter'; fee: number; clauses?: SaleClauses }
   | { do: 'scout'; area: string };
 
 /** A player as the market lists him. */
@@ -398,6 +535,14 @@ export interface MarketPlayer {
   knowledge: number | null;
   /** Whole months since the club last learned of him; null when it never looked. */
   seenMonths: number | null;
+  /** Clauses on him: what the person kept or holds, and where he stands with the dressing room. */
+  clauses: {
+    sellOn: { pct: number; mine: boolean } | null;
+    buyBack: { price: number; until: number; mine: boolean; no: string | null } | null;
+    /** A purchase clause of his loan: `mine` when the person's club is the one that may buy. */
+    loan: { kind: LoanOption['kind']; price: number; mine: boolean } | null;
+    unhappy: 'unhappy' | 'asked' | 'promised' | null;
+  };
   /** His agent, as the person's club knows him: traits seen so far, and its standing with him. */
   agent: {
     name: string;
@@ -413,6 +558,8 @@ export interface MarketView {
   cash: number;
   /** Monthly wage the board still lets the club add. */
   wageRoom: number;
+  /** The monthly wage bill now. */
+  bill: number;
   /** Forty of the other clubs' players for the position asked: those within reach first. */
   /** `asks`: the monthly wage he would open with at the person's table. */
   targets: (MarketPlayer & {
@@ -444,7 +591,11 @@ export interface MarketView {
     release: number | null;
     fee: number | null;
     wants: Terms | null;
+    /** What he does to the best eleven, while the terms are open for a man not yet here. */
+    effect: SigningEffect | null;
   }[];
+  /** Players of the club who asked to leave and wait for the person's answer. */
+  requests: { player: MarketPlayer; canPromise: boolean }[];
   /** Bids waiting for an answer. */
   bids: { id: string; player: MarketPlayer; from: ClubFace; fee: number }[];
   /** The latest deals between clubs, newest first, with the buyer's reasons. */
@@ -550,6 +701,27 @@ function marketView(
         return { name: a.name, size: a.size, ...seenTraits(w, a), standing: affinity(w, a) };
       })(),
       release: p.contract?.releaseFee ?? null,
+      clauses: (() => {
+        const c = clausesOf(w, p.id);
+        const bb = c?.buyBack && buyBackFor(w, p);
+        const loan = w.loans?.[p.id]?.option;
+        const u = w.unhappy?.[p.id];
+        return {
+          sellOn: c?.sellOn ? { pct: c.sellOn.pct, mine: c.sellOn.holder === w.clubId } : null,
+          buyBack: c?.buyBack
+            ? {
+                price: c.buyBack.price,
+                until: c.buyBack.until,
+                mine: c.buyBack.holder === w.clubId,
+                no: bb?.no ?? null,
+              }
+            : null,
+          loan: loan
+            ? { kind: loan.kind, price: loan.price, mine: w.loans![p.id]!.owner === w.clubId }
+            : null,
+          unhappy: u ? (u.asked ? 'asked' : u.promise ? 'promised' : 'unhappy') : null,
+        } as const;
+      })(),
       wage: p.contract?.wage ?? 0,
       value: marketValue(w.pack, p, season),
       club: p.clubId ? face(clubs.get(p.clubId)!) : NO_CLUB,
@@ -568,6 +740,7 @@ function marketView(
     open: windowOpen(w.day),
     cash: w.ledger.cash,
     wageRoom: myWageRoom(w),
+    bill: wageBill(w, w.clubId),
     mine: w.pack.players
       .filter((p) => p.clubId === w.clubId)
       .map((p) => ({
@@ -621,7 +794,11 @@ function marketView(
       release: t.release ?? null,
       fee: t.fee ?? null,
       wants: t.wants ?? null,
+      effect: t.stage === 'terms' && t.seller !== w.clubId ? signingEffect(w, t.player) : null,
     })),
+    requests: Object.entries(w.unhappy ?? {})
+      .filter(([, u]) => u.asked)
+      .map(([id, u]) => ({ player: row(byId.get(id)!), canPromise: u.grudge === 0 })),
     // A bid coming back after a refusal shows once the club announces it.
     bids: (w.bids ?? [])
       .filter((b) => !b.again)
@@ -730,10 +907,19 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       listPlayer(w, act.playerId, act.on);
       return undefined;
     case 'lend':
-      listForLoan(w, act.playerId, act.on);
+      listForLoan(w, act.playerId, act.on, act.kind);
       return undefined;
     case 'borrow':
-      borrow(w, act.playerId);
+      borrow(w, act.playerId, act.kind);
+      return undefined;
+    case 'buyback':
+      openBuyBack(w, act.playerId);
+      return undefined;
+    case 'option':
+      openOption(w, act.playerId);
+      return undefined;
+    case 'plead':
+      answerRequest(w, act.playerId, act.plea);
       return undefined;
     case 'fee':
       return { at: 'fee', answer: bidFee(w, act.playerId, act.fee) };
@@ -745,8 +931,17 @@ function marketAct(w: CareerWorld, act: MarketAct): MarketView['said'] {
       const who = name((w.bids ?? []).find((b) => b.id === act.bidId)?.player ?? '');
       const answer =
         act.answer === 'counter'
-          ? answerBid(w, act.bidId, { kind: 'counter', fee: act.fee })
-          : answerBid(w, act.bidId, { kind: act.answer });
+          ? answerBid(w, act.bidId, {
+              kind: 'counter',
+              fee: act.fee,
+              ...(act.clauses && { clauses: act.clauses }),
+            })
+          : act.answer === 'accept'
+            ? answerBid(w, act.bidId, {
+                kind: 'accept',
+                ...(act.clauses && { clauses: act.clauses }),
+              })
+            : answerBid(w, act.bidId, { kind: 'refuse' });
       return { at: 'bid', answer, name: who };
     }
     case 'scout': {
@@ -842,6 +1037,8 @@ function squadView(w: CareerWorld): SquadView {
   const f = FORMATIONS[l.formation]!;
   const fit = slotRatings(w, l.formation);
   const known = slotLevels(w, l.formation);
+  const banned =
+    pending?.kind === 'match' ? suspendedIn(w, pending.competitionId) : new Set<string>();
   return {
     formation: l.formation,
     formations: Object.keys(FORMATIONS),
@@ -854,14 +1051,29 @@ function squadView(w: CareerWorld): SquadView {
       keeper: p.positions.includes('GK'),
       fresh: percent(then.fresh[p.id] ?? 1),
       out: outOf(w, p.id)?.days ?? null,
+      banned: banned.has(p.id),
+      goals: w.scored?.[p.id]?.[0] ?? 0,
+      assists: w.scored?.[p.id]?.[1] ?? 0,
     })),
     strength: Math.round(myStrength(w, then)),
+    foreigners: {
+      named: l.xi.filter((id) => {
+        const p = w.pack.players.find((x) => x.id === id);
+        return p !== undefined && isForeign(p);
+      }).length,
+      limit: foreignLimit(w.season.season),
+    },
     plan: planOf(w),
   };
 }
 
+/** The long steps of opening a career and turning a season, for the screen to name. */
+export type Stage = 'pack' | 'open' | 'market' | 'turn' | 'save';
+
 export interface SimReply {
   id: number;
+  /** A step started: sent before the answer, which comes later with the same id. */
+  stage?: Stage;
   /** The board's answer to a proposed work: null when it signed. */
   work?: { front: Front; no: WorkNo | null };
   squad?: SquadView;
@@ -882,6 +1094,7 @@ let world: CareerWorld | null = null;
 let pending: Decision | null = null;
 let last: SimView['last'] = null;
 let turn: SimView['turn'] = null;
+let bridge: Bridge | null = null;
 /** The person's match being watched, and the plan changes sent so far. */
 let live: LiveMatch | null = null;
 let liveCommands: TimedCommand[] = [];
@@ -904,13 +1117,40 @@ function zonesOf(w: CareerWorld, division: string): SimView['zones'] {
   return { up: places('promotion'), down: places('relegation') };
 }
 
+/** The cup's ties with the faces of the clubs in them. */
+function cupFaces(w: CareerWorld, byId: Map<string, Pack['clubs'][number]>): SimView['cup'] {
+  const v = cupView(w.season);
+  if (!v) return null;
+  const clubs: Record<string, ClubFace> = {};
+  const add = (id: string) => (clubs[id] ??= face(byId.get(id)!));
+  return {
+    clubs,
+    phases: v.phases.map((p) => ({
+      id: p.id,
+      ties: p.ties.map((t) => {
+        add(t.a);
+        add(t.b);
+        return {
+          a: t.a,
+          b: t.b,
+          winner: t.winner,
+          by: t.by,
+          legs: t.legs.map((l) => ({ iso: isoOf(l.day), home: l.home, goals: l.goals })),
+        };
+      }),
+    })),
+  };
+}
+
 function view(w: CareerWorld, ms: number): SimView {
   const byId = new Map(w.pack.clubs.map((c) => [c.id, c]));
   const club = byId.get(w.clubId)!;
   const table = divisionTable(w);
+  // In the first season a deal made before any day was played (the first match is in January,
+  // in the state championship) sits at day 0: it still belongs to the season.
   const money = resultBetween(
     w.ledger,
-    dayOf(`${w.season.season}-01-01`),
+    w.hired === w.season.season ? 0 : dayOf(`${w.season.season}-01-01`),
     dayOf(`${w.season.season}-12-31`),
   );
   const s = w.season;
@@ -942,18 +1182,66 @@ function view(w: CareerWorld, ms: number): SimView {
     opponent: face(byId.get(u.home === w.clubId ? u.away : u.home)!),
     atHome: u.home === w.clubId,
     competition: competition(u.competitionId),
+    stage: cupStage(s, u.id),
+    rest: restBefore(s, w.clubId, u.day),
   }));
+  // On deadline day the next match is still the next match: shown beside the window decision.
+  const match =
+    pending?.kind === 'match'
+      ? pending
+      : pending?.kind === 'deadline'
+        ? upcomingFor(s, w.clubId, 1)[0]
+        : undefined;
+  const rivalId = match && (match.home === w.clubId ? match.away : match.home);
+  const rival = rivalId ? coachAt(w, rivalId) : undefined;
   return {
     season: w.season.season,
     today: isoOf(w.day),
     form,
     // The first one is the next match, shown on its own.
-    fixtures: pending?.kind === 'match' ? upcoming.slice(1) : upcoming,
+    fixtures: match ? upcoming.slice(1) : upcoming,
+    fx: CURRENCIES.map((currency) => {
+      const rate = rateOf(w, currency);
+      const opened = rateOf(w, currency, dayOf(`${w.season.season}-01-01`));
+      return {
+        currency,
+        rate: rate / 10_000,
+        change: Math.round(((rate - opened) * 1000) / opened),
+      };
+    }),
     money: Object.entries(money.byKind)
       .filter(([kind]) => kind !== 'opening')
       .map(([kind, amount]) => ({ kind, amount })),
     turn,
-    inbox: (w.inbox ?? [])
+    bridge,
+    tier: divisionTierOf(w, w.clubId) ?? 1,
+    todo: todoOf(w).map((t) => ({
+      ...t,
+      playerName:
+        t.kind === 'bid'
+          ? (() => {
+              const p = w.pack.players.find((x) => x.id === t.player);
+              return p?.knownAs ?? p?.name ?? '';
+            })()
+          : t.kind === 'leaveRequest'
+            ? (() => {
+                const p = w.pack.players.find((x) => x.id === t.player);
+                return p?.knownAs ?? p?.name ?? '';
+              })()
+            : t.kind === 'agentOffer'
+              ? t.player
+              : '',
+      clubName:
+        t.kind === 'bid'
+          ? (byId.get(t.from)?.name ?? foreignName(t.from))
+          : t.kind === 'approach'
+            ? (byId.get(t.club)?.name ?? '')
+            : t.kind === 'agentOffer'
+              ? (byId.get(t.club)?.name ?? '')
+              : '',
+    })),
+    fresh: w.hiredDay !== undefined && w.day - w.hiredDay <= 7,
+    inbox: newsOf(w)
       .slice(-INBOX_SHOWN)
       .reverse()
       .map((n) => ({
@@ -961,7 +1249,7 @@ function view(w: CareerWorld, ms: number): SimView {
         iso: isoOf(n.day || w.day),
         clubName:
           byId.get(
-            n.kind === 'result'
+            n.kind === 'result' || n.kind === 'copaDraw'
               ? n.opponent
               : n.kind === 'bought' ||
                   n.kind === 'sold' ||
@@ -970,12 +1258,18 @@ function view(w: CareerWorld, ms: number): SimView {
                   n.kind === 'loanIn' ||
                   n.kind === 'loanOut' ||
                   n.kind === 'loanBack' ||
+                  n.kind === 'optionBought' ||
+                  n.kind === 'optionSold' ||
                   n.kind === 'hired' ||
                   n.kind === 'agentOffer' ||
                   n.kind === 'fairplayRival' ||
-                  n.kind === 'directors'
+                  n.kind === 'directors' ||
+                  n.kind === 'election' ||
+                  n.kind === 'coachSacked' ||
+                  n.kind === 'coachHired' ||
+                  n.kind === 'approach'
                 ? n.club
-                : n.kind === 'season'
+                : n.kind === 'season' || n.kind === 'estadual'
                   ? n.champion
                   : '',
           )?.name ??
@@ -1004,6 +1298,8 @@ function view(w: CareerWorld, ms: number): SimView {
       directors: (({ horizon, competence }) => ({ horizon, competence }))(
         clubState(w, w.clubId).directors,
       ),
+      dna: styleKind(dnaOf(w, w.clubId)),
+      election: electionYear(w, w.clubId),
       position: positionOf(w),
       ultimatum: boardOf(w).ultimatum ?? null,
       last: boardOf(w).last ?? [],
@@ -1014,7 +1310,8 @@ function view(w: CareerWorld, ms: number): SimView {
         strikes: strikesOf(w, w.clubId),
         points: s.deduct?.[w.clubId] ?? 0,
       },
-      offers: jobsAfter(w).map((clubId) => ({
+      // After a dismissal, the clubs that call; in a job, the bigger clubs that approached.
+      offers: (boardOf(w).fired ? jobsAfter(w) : approaches(w)).map((clubId) => ({
         clubId,
         ...face(byId.get(clubId)!),
         division:
@@ -1024,19 +1321,35 @@ function view(w: CareerWorld, ms: number): SimView {
     clubId: w.clubId,
     club: face(club),
     division: table.name,
+    review: pending?.kind === 'seasonOver' ? seasonReview(w) : null,
+    history: (w.history ?? []).map((h) => ({ ...h, club: byId.get(h.clubId)?.shortName ?? '' })),
     cash: w.ledger.cash,
     deadline: pending?.kind === 'deadline' ? isoOf(pending.day) : null,
-    next:
-      pending?.kind === 'match'
-        ? {
-            iso: isoOf(pending.day),
-            home: face(byId.get(pending.home)!),
-            away: face(byId.get(pending.away)!),
-            atHome: pending.home === w.clubId,
-            competition: competition(pending.competitionId),
-          }
-        : null,
+    next: match
+      ? {
+          iso: isoOf(match.day),
+          home: face(byId.get(match.home)!),
+          away: face(byId.get(match.away)!),
+          atHome: match.home === w.clubId,
+          competition: competition(match.competitionId),
+          stage: cupStage(s, 'matchId' in match ? match.matchId : match.id),
+          rest: restBefore(s, w.clubId, match.day),
+          coach: rival ? { name: rival.name, style: styleKind(playedStyle(w, rivalId!)) } : null,
+          banned: {
+            theirs: namesOf(
+              w,
+              suspendedIn(
+                w,
+                match.competitionId,
+                match.home === w.clubId ? match.away : match.home,
+              ),
+            ),
+            ours: namesOf(w, suspendedIn(w, match.competitionId)),
+          },
+        }
+      : null,
     last,
+    cup: cupFaces(w, byId),
     table: table.rows.map((r) => ({
       clubId: r.clubId,
       ...face(byId.get(r.clubId)!),
@@ -1048,33 +1361,65 @@ function view(w: CareerWorld, ms: number): SimView {
       gd: r.goalsFor - r.goalsAgainst,
     })),
     zones: zonesOf(w, table.name),
+    estadual: ((e) =>
+      e && {
+        name: e.name,
+        table: e.rows.map((r) => ({
+          clubId: r.clubId,
+          ...face(byId.get(r.clubId)!),
+          played: r.played,
+          won: r.won,
+          drawn: r.drawn,
+          lost: r.lost,
+          points: r.points,
+          gd: r.goalsFor - r.goalsAgainst,
+        })),
+        ties: e.ties.map((t) => ({
+          stage: t.stage,
+          home: face(byId.get(t.home)!),
+          away: face(byId.get(t.away)!),
+          goals: t.goals,
+        })),
+        champion: byId.get(e.champion ?? '')?.shortName ?? '',
+      })(estadualView(w)),
     ms,
   };
 }
 
 /** Moves to the next decision; a snapshot to save when days were played on the way. */
-async function toNextDecision(w: CareerWorld): Promise<SimReply['save']> {
+async function toNextDecision(
+  w: CareerWorld,
+  hired = false,
+  say?: (s: Stage) => void,
+): Promise<SimReply['save']> {
   const from = w.day;
+  say?.('market');
   pending = nextDecision(w, { deadlines: true });
-  return w.day !== from
-    ? { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) }
-    : undefined;
+  if (hired) w.hiredDay = w.day;
+  if (w.day === from) return undefined;
+  say?.('save');
+  return { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) };
 }
 
 self.onmessage = async (e: MessageEvent<SimRequest>) => {
   try {
     const t = performance.now();
     const r = e.data;
+    const say = (stage: Stage) => self.postMessage({ id: r.id, stage } satisfies SimReply);
     let save: SimReply['save'];
     if (r.type === 'open') {
+      say('pack');
       const res = await fetch(`/packs/${r.packId}.${r.packVersion}.json`);
       if (!res.ok) throw new Error(`pack ${res.status}`);
       const pack = (await res.json()) as Pack;
+      say('open');
       world =
         r.snapshot.byteLength > 0
           ? loadCareer(pack, r.seed, r.clubId, await gunzip(r.snapshot))
           : openCareer(pack, r.seed, r.clubId);
-      save = await toNextDecision(world);
+      // A new career: the person arrives on the day of their first decision, not on day 0.
+      const hired = r.snapshot.byteLength === 0;
+      save = await toNextDecision(world, hired, say);
     } else if (world && r.type === 'play' && pending?.kind === 'deadline') {
       // Deadline day passed on: the window closes and the days run to the next decision.
       save = await toNextDecision(world);
@@ -1083,7 +1428,13 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const d = pending;
       const o = playDecision(world, d);
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
-      last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
+      last = {
+        home: face(byId.get(d.home)!),
+        away: face(byId.get(d.away)!),
+        goals: o.goals,
+        why: world.report ?? [],
+        mine: d.home === world.clubId ? 0 : 1,
+      };
       const after = await toNextDecision(world);
       save = {
         from,
@@ -1096,7 +1447,10 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const before = divisionTable(world).name;
       const divId = world.season.competitions.find((c) => c.name === before)?.id;
       const from = world.day;
+      say('turn');
+      const bridged = bridgeBefore(world);
       const t: SeasonTurn = startNextSeason(world);
+      bridge = bridgeAfter(world, bridged);
       const names = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
       const champion = t.titles.find((x) => x.competitionId === divId)?.clubId ?? '';
       turn = {
@@ -1105,7 +1459,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: t.season - 1,
       };
       last = null;
-      const after = await toNextDecision(world);
+      const after = await toNextDecision(world, false, say);
       // The season changed even if no day was played yet: always saved.
       save = after ?? {
         from,
@@ -1113,7 +1467,11 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         season: world.season.season,
         bytes: await gzip(saveCareer(world)),
       };
-    } else if (world && r.type === 'takeJob' && pending?.kind === 'fired') {
+    } else if (
+      world &&
+      r.type === 'takeJob' &&
+      (pending?.kind === 'fired' || approaches(world).includes(r.clubId))
+    ) {
       const from = world.day;
       takeJob(world, r.clubId);
       last = null;
@@ -1214,7 +1572,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       liveCommands = [];
       const club = (id: string): MatchClub => {
         const c = world!.pack.clubs.find((x) => x.id === id)!;
-        return { id, name: c.name, shortName: c.shortName, colours: c.colours };
+        return { id, name: c.name, shortName: c.shortName, colours: c.colours, kits: c.kits };
       };
       self.postMessage({
         id: r.id,
@@ -1247,9 +1605,28 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       live = null;
       const from = world.day;
       const d = pending;
-      const o = playDecision(world, d, outcomeOf(result));
+      // Who the referee booked on screen; a second yellow comes as a red with `second`.
+      const booked = new Map<string, Booking>();
+      for (const ev of result.events)
+        if (ev.kind === 'card' && ev.playerId)
+          booked.set(ev.playerId, {
+            playerId: ev.playerId,
+            card: ev.data.card === 2 ? (ev.data.second ? 'second' : 'red') : 'yellow',
+          });
+      // Who scored and set it up on screen, by side; own goals credit nobody.
+      const scored: [Goal[], Goal[]] = [[], []];
+      for (const ev of result.events)
+        if (ev.kind === 'goal' && ev.playerId && !ev.data.own && ev.team !== null)
+          scored[ev.team].push({ scorer: ev.playerId, assist: ev.otherId });
+      const o = playDecision(world, d, outcomeOf(result), [...booked.values()], scored);
       const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
-      last = { home: face(byId.get(d.home)!), away: face(byId.get(d.away)!), goals: o.goals };
+      last = {
+        home: face(byId.get(d.home)!),
+        away: face(byId.get(d.away)!),
+        goals: o.goals,
+        why: world.report ?? [],
+        mine: d.home === world.clubId ? 0 : 1,
+      };
       const after = await toNextDecision(world);
       save = {
         from,

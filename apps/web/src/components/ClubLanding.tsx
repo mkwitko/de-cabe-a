@@ -4,7 +4,9 @@
  * Every claim is a fact of the mode (docs/GAME_DESIGN, club-domain); the plates are our own art.
  */
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
+import { api } from '../lib/api';
 import { Icon } from './Icon';
 import { btnPrimary, btnSecondary } from './ui';
 
@@ -122,6 +124,14 @@ export function ClubLanding() {
     document.documentElement.classList.add('club-stage');
     return () => document.documentElement.classList.remove('club-stage');
   }, []);
+  // Same endpoint ClubCareerPage reads; a failure just keeps the "start" wording.
+  const { data } = useQuery({
+    queryKey: ['manager-career-exists'],
+    queryFn: () => api<{ career: unknown }>('/v1/manager/career'),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const has = Boolean(data?.career);
   return (
     <div className="pitch">
       <section
@@ -134,22 +144,27 @@ export function ClubLanding() {
         <span aria-hidden="true" className={VEIL} />
         <div className={`${WRAP} relative`}>
           <div className="pitch-hero-copy flex max-w-5xl flex-col items-start gap-5">
-            <h2
+            <h1
               id="club-pitch"
+              className={`font-condensed text-2xl leading-none font-black tracking-wide uppercase sm:text-3xl ${SHADOW}`}
+            >
+              Modo Clube
+            </h1>
+            <p
               className={`font-condensed text-[clamp(3.25rem,11vw,6rem)] leading-[0.84] lg:text-[clamp(5.5rem,7.2vw,8rem)] font-black text-balance uppercase ${SHADOW}`}
             >
               O clube é seu.
               <span className="block text-club-gold">A glória também.</span>
-            </h2>
+            </p>
             <p
               className={`max-w-[44ch] text-lg leading-snug font-medium text-pretty sm:text-xl ${SHADOW}`}
             >
-              Assuma um time da última divisão e leve ele até a elite. Você escala, treina, contrata
-              e responde à diretoria. Cada jogo conta.
+              Assuma um clube brasileiro de verdade e leve ele da Série D à Série A. Você escala,
+              treina, contrata e responde à diretoria.
             </p>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Link to={TO} className={`${btnPrimary} min-h-14 bg-club-gold px-8 text-xl`}>
-                Começar a carreira
+                {has ? 'Continuar carreira' : 'Começar minha carreira'}
               </Link>
               <a href="#salas" className={`${btnSecondary} min-h-14 bg-club-night/70 px-6`}>
                 Ver o que você decide
@@ -352,7 +367,7 @@ export function GamesIndex({
   return (
     <section aria-labelledby="games-index" className={`${WRAP} mb-10 pt-14 sm:pt-24`}>
       <h2 id="games-index" className={H2}>
-        Entre um jogo e outro
+        Outros jogos
       </h2>
       <p className={LEAD}>Minijogos para provar que você manja de bola. Uma fase leva um minuto.</p>
       <ul className="mt-7 grid gap-x-12 border-t border-chalk/20 lg:grid-cols-2">

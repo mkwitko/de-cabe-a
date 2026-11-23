@@ -85,6 +85,14 @@ export function Squad(props: {
           <h3 id="squad-title" className={LABEL}>
             {t('squad.title')}
           </h3>
+          <p
+            className={`text-sm ${squad.foreigners.named > squad.foreigners.limit ? 'font-bold text-club-danger' : 'text-chalk-soft'}`}
+          >
+            {t('squad.foreigners', {
+              ...squad.foreigners,
+              over: String(squad.foreigners.named > squad.foreigners.limit),
+            })}
+          </p>
           <p className="text-sm text-chalk-soft">
             {t('squad.strength')}
             <span className="ml-2 font-condensed text-2xl leading-none font-black text-chalk tabular-nums">
@@ -177,7 +185,12 @@ export function Squad(props: {
           {rows.map((p, k) => {
             const at = squad.xi.indexOf(p.id);
             const n = slot === null ? p.best.rating : p.fit[slot]!;
-            const able = slot !== null && p.keeper === keeperSlot && at !== slot && p.out === null;
+            const able =
+              slot !== null &&
+              p.keeper === keeperSlot &&
+              at !== slot &&
+              p.out === null &&
+              !p.banned;
             const tone = toneOf(p.out !== null, p.fresh);
             // The bench starts where the eleven ends (the list is sorted starters first).
             const bench = slot === null && at < 0 && k > 0 && squad.xi.includes(rows[k - 1]!.id);
@@ -206,8 +219,22 @@ export function Squad(props: {
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{p.name}</span>
-                    {(p.out !== null || slot !== null) && (
+                    {(p.out !== null ||
+                      p.banned ||
+                      p.goals > 0 ||
+                      p.assists > 0 ||
+                      slot !== null) && (
                       <span className="block text-xs">
+                        {(p.goals > 0 || p.assists > 0) && (
+                          <span className="mr-2 text-chalk-soft">
+                            {t('squad.scored', { g: p.goals, a: p.assists })}
+                          </span>
+                        )}
+                        {p.banned && (
+                          <span className="mr-2 font-bold text-club-danger">
+                            {t('squad.banned')}
+                          </span>
+                        )}
                         {p.out !== null && (
                           <span className="mr-2 font-bold text-club-danger">
                             {t('health.out', { n: p.out })}

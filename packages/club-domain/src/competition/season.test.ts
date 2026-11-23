@@ -42,7 +42,8 @@ describe.each([
 ])('MC-179 season without the user in %s', (_, pack) => {
   it('plays every match the regulations produce and passes the season checks', async () => {
     const state = await season(pack);
-    const expected = pack.competitions.reduce((s, c) => s + matchCount(c), 0);
+    // The Copa do Brasil joins the season when the pack makes the real field (copa.ts).
+    const expected = state.competitions.reduce((s, c) => s + matchCount(c), 0);
     expect(state.outcomes.size).toBe(expected);
     expect(checkSeason(state)).toEqual([]);
   });
@@ -55,7 +56,7 @@ describe.each([
     const all = divisions.flatMap((c) => t.members[c.id]!);
     expect(new Set(all).size).toBe(all.length);
     // One champion per competition that declares a title.
-    const titled = pack.competitions.filter((c) =>
+    const titled = state.competitions.filter((c) =>
       c.phases.some((p) => p.outcomes.some((o) => o.kind === 'title')),
     );
     expect(new Set(t.titles.map((x) => x.competitionId)).size).toBe(titled.length);

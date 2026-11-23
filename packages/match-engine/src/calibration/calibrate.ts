@@ -60,6 +60,9 @@ async function main() {
   console.log(
     `big chances per team ${(both('bigChances') / 2).toFixed(2)}, from a pass ${(both('bigFromPass') / 2).toFixed(2)} (Statz 2026 about 2.2), converted ${((100 * both('bigGoals')) / both('bigChances')).toFixed(0)}%`,
   );
+  console.log(
+    `progressive passes per team ${(both('progressive') / 2).toFixed(1)} (FBref definition)`,
+  );
   const home = rs.filter((s) => s.score[0] > s.score[1]).length / n;
   const draw = rs.filter((s) => s.score[0] === s.score[1]).length / n;
   for (const [k, [lo, hi]] of Object.entries(BANDS_11))

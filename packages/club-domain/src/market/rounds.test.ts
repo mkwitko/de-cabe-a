@@ -65,6 +65,26 @@ describe('the market between clubs (07 §6, 04 §8)', () => {
     expect(pack.clubs.some((c) => wageRoom(w, c.id) < 0)).toBe(false);
   });
 
+  it('a club full of foreigners signs Brazilians only', () => {
+    // Half the clubs with an all-foreign squad: past the limit plus spares, they may not sign
+    // another; the other half trade as before.
+    const full = new Set(pack.clubs.filter((_, i) => i % 2 === 0).map((c) => c.id));
+    const w = openCareer(
+      {
+        ...pack,
+        players: pack.players.map((p) =>
+          full.has(p.clubId ?? '') ? { ...p, nationality: 'AR' } : p,
+        ),
+      },
+      91,
+      clubId,
+    );
+    const nation = new Map(w.pack.players.map((p) => [p.id, p.nationality]));
+    const deals = [0, 14, 28, 42].flatMap((k) => marketRound(w, ROUND + k));
+    expect(deals.length).toBeGreaterThan(10);
+    for (const d of deals.filter((d) => full.has(d.to))) expect(nation.get(d.player)).toBe('BR');
+  });
+
   it('the same world gives the same market, and a loaded snapshot goes on the same', () => {
     const a = openCareer(pack, 92, clubId);
     const b = openCareer(pack, 92, clubId);

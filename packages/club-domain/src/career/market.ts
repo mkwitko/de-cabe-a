@@ -5,9 +5,10 @@
  * rebuild it. Who buys whom and for how much is decided in `market/` (the clubs' rounds and the
  * person's two tables); money goes through the ledger and nowhere else.
  */
+import { ruleOn } from '../rules/registry';
 import { isoOf } from '../competition/calendar';
 import { postEntry } from '../finance/ledger';
-import { carryCache } from '../lib/pack-cache';
+import { carryCache, peek, recache } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
@@ -33,18 +34,19 @@ export type Moves = Record<
 >;
 
 /**
- * The CBF's transfer windows (2026 calendar): the first to 3 March, a domestic one for clubs
- * here only from 4 to 27 March (after the state championships), and the second from 20 July to
- * 11 September. PARÂMETRO: the dates move a little each year. The first opens on 5 January in
- * the CBF's calendar; here it opens with the year, since a career starts on 1 January and its
- * first days would otherwise find the market shut.
+ * The CBF's transfer windows in force that year (rules/registry.ts): a first, a domestic one for
+ * clubs here only after the state championships, and a second.
  */
 export type TransferWindow = 'first' | 'domestic' | 'second';
 export function windowOf(day: number): TransferWindow | null {
-  const md = isoOf(day).slice(5);
-  if (md <= '03-03') return 'first';
-  if (md >= '03-04' && md <= '03-27') return 'domestic';
-  if (md >= '07-20' && md <= '09-11') return 'second';
+  const iso = isoOf(day);
+  const md = iso.slice(5);
+  const w = ruleOn('windows', iso);
+  const inside = (span: readonly [string, string] | null) =>
+    span !== null && md >= span[0] && md <= span[1];
+  if (inside(w.first)) return 'first';
+  if (inside(w.domestic)) return 'domestic';
+  if (inside(w.second)) return 'second';
   return null;
 }
 export const windowOpen = (day: number): boolean => windowOf(day) !== null;
@@ -97,6 +99,8 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
   if (ids.length === 0) return;
   const season = w.season.season;
   const touched = new Set<string>();
+  const leaving = new Map<string, Set<string>>();
+  const joining = new Map<string, string[]>();
   const left = new Set<string>();
   const stamped: Moves = {};
   const before = w.pack;
@@ -113,19 +117,41 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     players[i] = moved(players[i]!, stamped[id]!);
     // A renewal changes neither squad.
     if (from === to) continue;
-    if (from && from !== ABROAD) touched.add(from);
-    if (to && to !== ABROAD) touched.add(to);
+    if (from && from !== ABROAD) {
+      touched.add(from);
+      (leaving.get(from) ?? leaving.set(from, new Set()).get(from)!).add(id);
+    }
+    if (to && to !== ABROAD) {
+      touched.add(to);
+      (joining.get(to) ?? joining.set(to, []).get(to)!).push(id);
+    }
     left.add(id);
   }
-  w.moves = { ...w.moves, ...stamped };
+  // Updated in place: a copy of every move so far per transfer cost more than all the rest.
+  w.moves = Object.assign(w.moves ?? {}, stamped);
   w.pack = { ...before, players };
   places.set(w.pack, at);
   carryCache(before, w.pack, [...touched]);
+  // The squads of the clubs that changed, from their old lists and not from a pass over every
+  // player of the pack (what a missing squad costs): the same players, as the new objects.
+  for (const clubId of touched) {
+    const old = peek<PackPlayer[]>(before, 'squad', clubId);
+    if (!old) continue;
+    const gone = leaving.get(clubId);
+    const ids = old.filter((p) => !gone?.has(p.id)).map((p) => p.id);
+    ids.push(...(joining.get(clubId) ?? []));
+    recache(
+      w.pack,
+      'squad',
+      clubId,
+      ids.map((id) => players[at.get(id)!]!).sort((x, y) => (x.id < y.id ? -1 : 1)),
+    );
+  }
   for (const id of left)
     // A new club starts to know him now.
     if (stamped[id]!.clubId) markArrival(w.pack, id, season);
   for (const clubId of touched) {
-    const level = clubLevel(w.pack, clubId);
+    const level = clubLevel(w.pack, clubId, w.season.season);
     w.strength.set(clubId, level.strength);
     w.eleven.set(clubId, level.eleven);
   }

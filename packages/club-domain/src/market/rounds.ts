@@ -11,13 +11,13 @@
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { movePlayer, windowOpen } from '../career/market';
-import { squadPlayers } from '../career/squad';
+import { foreignLimit, isForeign, squadPlayers } from '../career/squad';
 import { isoOf } from '../competition/calendar';
 import { seedOf } from '../competition/season';
 import { note } from '../career/inbox';
-import { WHOLE, cached } from '../lib/pack-cache';
+import { WHOLE, cached, clubById } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { available, book, booksOf, budgetOf, wageRoom } from './books';
+import { available, book, budgetOf, inDivisions, wageRoom, inRed } from './books';
 import {
   CLAUSE_TIMES,
   MAX_ROUNDS,
@@ -28,10 +28,17 @@ import {
   type Terms,
 } from './deals';
 import { fitFor, squadPlanOf, type Need } from './plan';
-import { MAX_LEVEL_ERROR, bargaining, levelError, seenRise, seenValue } from './judgement';
+import {
+  MAX_LEVEL_ERROR,
+  bargaining,
+  levelError,
+  levelErrorOfOthers,
+  seenRise,
+  seenValue,
+} from './judgement';
 import { lendListed } from './loans';
-import { ABROAD, importFee, signable, stanceFor } from './abroad';
-import { clubKnows } from './scouting';
+import { ABROAD, bookImport, importFee, signable, stanceFor } from './abroad';
+import { knowerOf } from './scouting';
 import { agentOf, aiCommission, commission } from './agents';
 import { answerBid } from './talks';
 import { boardOverpay } from '../career/clubs';
@@ -98,6 +105,31 @@ const MAX_SQUAD = 42;
 
 const total = (y: Why) => y.need + y.fit + y.growth + y.resale - y.cost - y.wages;
 
+/** What he gives the club for this need before price and wage: the terms that add. */
+function gains(
+  w: CareerWorld,
+  buyerId: string,
+  p: PackPlayer,
+  need: Need,
+): Pick<Why, 'need' | 'fit' | 'growth' | 'resale'> {
+  const buyer = { pack: w.pack, clubId: buyerId };
+  const club = clubById(w.pack, buyerId)!;
+  const season = w.season.season;
+  const age = ageOf(p, season);
+  // Everything the club weighs is what it sees of him, right or wrong (judgement.ts).
+  const off = levelError(w.pack, buyerId, p);
+  const over = Math.max(0, Math.min(12, fitFor(buyer, p, need) + off - need.wanted + 4));
+  const rise = seenRise(w.pack, buyerId, p, season, 2);
+  const natural = p.positions.some((x) => need.positions.includes(x.position) && x.level === 3);
+  return {
+    need: Math.round((need.urgency * over) / 12),
+    fit: natural ? 10 : 0,
+    // A club that buys ready players (readyVsYoung high) discounts what he may become.
+    growth: Math.round((Math.max(0, rise) * 4 * (100 - club.profile.market.readyVsYoung)) / 100),
+    resale: age <= 25 ? Math.max(0, rise) * 2 : age > 29 ? -(age - 29) * 3 : 0,
+  };
+}
+
 /** How much this player helps this club for this need, at this price and wage. */
 export function utility(
   w: CareerWorld,
@@ -112,32 +144,26 @@ export function utility(
     room: wageRoom(w, buyerId),
   },
 ): Why {
-  const buyer = { pack: w.pack, clubId: buyerId };
-  const club = w.pack.clubs.find((c) => c.id === buyerId)!;
-  const season = w.season.season;
-  const age = ageOf(p, season);
-  // Everything the club weighs is what it sees of him, right or wrong (judgement.ts).
-  const off = levelError(w.pack, buyerId, p);
-  const over = Math.max(0, Math.min(12, fitFor(buyer, p, need) + off - need.wanted + 4));
-  const rise = seenRise(w.pack, buyerId, p, season, 2);
-  const natural = p.positions.some((x) => need.positions.includes(x.position) && x.level === 3);
-  return {
-    need: Math.round((need.urgency * over) / 12),
-    fit: natural ? 10 : 0,
-    // A club that buys ready players (readyVsYoung high) discounts what he may become.
-    growth: Math.round((Math.max(0, rise) * 4 * (100 - club.profile.market.readyVsYoung)) / 100),
-    resale: age <= 25 ? Math.max(0, rise) * 2 : age > 29 ? -(age - 29) * 3 : 0,
-    cost: Math.round((price * 60) / Math.max(1, means.money)),
-    wages: Math.round((wage * 40) / Math.max(1, means.room)),
-  };
+  return withCosts(gains(w, buyerId, p, need), price, wage, means);
 }
 
-const canLose = (w: CareerWorld, p: PackPlayer) => {
+const withCosts = (
+  g: Pick<Why, 'need' | 'fit' | 'growth' | 'resale'>,
+  price: number,
+  wage: number,
+  means: { money: number; room: number },
+): Why => ({
+  ...g,
+  cost: Math.round((price * 60) / Math.max(1, means.money)),
+  wages: Math.round((wage * 40) / Math.max(1, means.room)),
+});
+
+const canLose = (w: CareerWorld, p: PackPlayer, read = readingsOf(w.pack)) => {
   const squad = squadPlayers({ pack: w.pack, clubId: p.clubId! });
-  const keeper = readingsOf(w.pack).get(p.id)!.keeper;
+  const keeper = read.get(p.id)!.keeper;
   return (
     squad.length > MIN_SQUAD &&
-    (!keeper || squad.filter((x) => readingsOf(w.pack).get(x.id)!.keeper).length > MIN_KEEPERS)
+    (!keeper || squad.filter((x) => read.get(x.id)!.keeper).length > MIN_KEEPERS)
   );
 };
 
@@ -202,6 +228,9 @@ interface Choice {
 }
 
 /** The best signing for one need, or null: the whole market read through the club's filter. */
+/** Foreigners a club keeps beyond the match limit before it stops signing them. */
+export const FOREIGN_SPARES = 3;
+
 function choose(
   w: CareerWorld,
   buyerId: string,
@@ -215,53 +244,71 @@ function choose(
   const money = available(w, buyerId);
   const room = wageRoom(w, buyerId);
   const bidOn = new Set((w.bids ?? []).map((b) => b.player));
+  const knows = knowerOf(w, buyerId);
+  const errorOf = levelErrorOfOthers(w.pack, buyerId);
   const listed = new Set(w.listed ?? []);
+  // A club already holding more foreigners than it may name for a match plus a few spares
+  // (injuries, bans, rotation) looks at Brazilians only.
+  const foreignFull =
+    squadPlayers({ pack: w.pack, clubId: buyerId }).filter(isForeign).length >=
+    foreignLimit(season) + FOREIGN_SPARES;
   let best: Choice | null = null;
   let score = (need.worth ?? WORTH_IT) - 1;
-  // Only those who know one of the positions and sit in the level the need asks for.
+  // Only those who know one of the positions and sit in the level the need asks for, read best
+  // level first (a merge of the positions' lists, ties by position then list order) and lazily:
+  // the sieve stops once nobody left can reach the shortlist.
   const index = byPosition(w.pack);
-  const seen = new Set<string>();
-  const pool: { p: PackPlayer; level: number }[] = [];
-  // Wider than the need by the most a club can be off (seven points).
-  const top = need.wanted + 19;
-  for (const position of need.positions) {
-    const list = index.get(position) ?? [];
-    // Best first: a binary search finds the first one in range instead of walking past the stars.
+  const lists = need.positions.map((position) => index.get(position) ?? []);
+  const at = lists.map((list) => {
+    // Wider than the need by the most a club can be off (seven points). Best first: a binary
+    // search finds the first one in range instead of walking past the stars.
+    const top = need.wanted + 19;
     let lo = 0;
     for (let hi = list.length; lo < hi;) {
       const mid = (lo + hi) >> 1;
       if (list[mid]!.level > top) lo = mid + 1;
       else hi = mid;
     }
-    for (let k = lo; k < list.length; k++) {
-      const x = list[k]!;
-      if (x.level < need.wanted - 10) break;
-      if (!seen.has(x.id)) {
-        seen.add(x.id);
-        pool.push({ p: w.pack.players[x.at]!, level: x.level });
-      }
-    }
-  }
+    return lo;
+  });
+  const floor = need.wanted - 10;
+  const seen = new Set<string>();
   // First a cheap sieve over everyone in range; then only the best few sit through the costly
   // reading (the selling club's plan, the player's mind, the points).
   const short: { p: PackPlayer; sees: number; theirs: boolean; free: boolean }[] = [];
   // Best level first, so the sieve can stop once nobody left can reach the shortlist: the
   // SHORTLIST-th best level seen so far (`cut`) against what the rest could at most be seen at.
   // The person's listed players go first whatever their level, so they are always looked at.
-  pool.sort((a, b) => b.level - a.level);
   const bestSeen: number[] = [];
   let closed = false;
-  for (const { p, level } of pool) {
+  for (;;) {
+    let from = -1;
+    for (let k = 0; k < lists.length; k++) {
+      const x = lists[k]![at[k]!];
+      if (x && x.level >= floor && (from < 0 || x.level > lists[from]![at[from]!]!.level)) from = k;
+    }
+    if (from < 0) break;
+    const x = lists[from]![at[from]!++]!;
+    if (lists.length > 1) {
+      if (seen.has(x.id)) continue;
+      seen.add(x.id);
+    }
+    const level = x.level;
+    const p = w.pack.players[x.at]!;
     if (
       !closed &&
       bestSeen.length === SHORTLIST &&
       level + MAX_LEVEL_ERROR < bestSeen[SHORTLIST - 1]!
-    )
+    ) {
       closed = true;
+      // Nobody of the person's is on the list: the rest are all skipped.
+      if (listed.size === 0) break;
+    }
     if (closed && !(p.clubId === w.clubId && listed.has(p.id))) continue;
     if (p.clubId === buyerId || skip.has(p.id)) continue;
     const abroad = p.clubId === ABROAD;
     if (abroad && !signable(p, season)) continue;
+    if (foreignFull && isForeign(p)) continue;
     const theirs = p.clubId === w.clubId;
     // Without a club he costs no fee and asks nobody's leave.
     const free = p.clubId === null;
@@ -274,16 +321,17 @@ function choose(
       continue;
     const r = read.get(p.id)!;
     if (r.keeper !== need.keeper) continue;
-    // Only players its scouts know; the person's listed players are offered to everyone.
-    if (!(theirs && listed.has(p.id)) && !clubKnows(w, buyerId, p)) continue;
-    // The buyer's own reading (a hash per player) last: the cheap tests weed out most first.
+    // The cheap tests first (lookups), then the buyer's own readings (a hash per player).
     // Just arrived somewhere: not for sale again this season.
     if (!free && w.moves?.[p.id]?.season === season) continue;
     // Out of reach whatever the club's mood: a spare still costs 80% of his value.
     if (!free && marketValue(w.pack, p, season) * 6 > money * 10) continue;
-    if (!free && !abroad && !canLose(w, p)) continue;
+    // Only players its scouts know; the person's listed players are offered to everyone.
+    if (!(theirs && listed.has(p.id)) && !knows(p)) continue;
+    if (!free && !abroad && !canLose(w, p, read)) continue;
     // The level the club sees must sit in what the need asks for.
-    const sees = r.level + levelError(w.pack, buyerId, p);
+    // Never the buyer's own (skipped above): the error is the scouts'.
+    const sees = r.level + errorOf(p);
     if (sees < need.wanted - 3 || sees > need.wanted + 12) continue;
     short.push({ p, sees, theirs, free });
     if (!(theirs && listed.has(p.id))) {
@@ -303,20 +351,27 @@ function choose(
       (a.p.id < b.p.id ? -1 : 1),
   );
   for (const { p, theirs, free } of short.slice(0, SHORTLIST)) {
+    // What he gives comes first: price and wage only take points off it, so a player whose gains
+    // cannot beat the best so far is not read through the tables at all.
+    const gain = gains(w, buyerId, p, need);
+    if (gain.need < REAL_NEED) continue;
+    const bonus = theirs && listed.has(p.id) ? LISTED : 0;
+    const most = gain.need + gain.fit + gain.growth + gain.resale + bonus;
+    if (most < score || (most === score && (!best || p.id > best.p.id))) continue;
     const price = free
       ? 0
       : p.clubId === ABROAD
         ? importFee(w, p)
-        : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season).floor;
+        : sellerStance({ pack: w.pack, clubId: p.clubId! }, p, buyerId, season, inRed(w, p.clubId!))
+            .floor;
     if (price > money) continue;
     const wants = stanceFor(w, p, buyerId);
     if (wants.no || wants.wage > room) continue;
     // The agent's commission comes on top of the fee.
     if (price + commission(agentOf(w.pack, p), price, wants.wage) > money) continue;
-    const why = utility(w, buyerId, p, need, price, wants.wage, { money, room });
-    if (why.need < REAL_NEED) continue;
+    const why = withCosts(gain, price, wants.wage, { money, room });
     // A player on the list is easier to get: clubs come for him sooner.
-    const u = total(why) + (theirs && listed.has(p.id) ? LISTED : 0);
+    const u = total(why) + bonus;
     if (u > score || (u === score && best && p.id < best.p.id))
       [best, score] = [{ p, need, why }, u];
   }
@@ -332,7 +387,7 @@ function negotiate(w: CareerWorld, buyerId: string, c: Choice): Deal | null {
   // Abroad, the price is the price: paid or not.
   if (from === ABROAD) fee = importFee(w, p) <= available(w, buyerId) ? importFee(w, p) : -1;
   else if (from !== null) {
-    const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season);
+    const stance = sellerStance({ pack: w.pack, clubId: from }, p, buyerId, season, inRed(w, from));
     // The most the club pays: over what it thinks he is worth by how much it needs him and by
     // how loose its office is at the table, never over its budget.
     const hand = bargaining(w.pack, buyerId);
@@ -422,7 +477,7 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     // foreign club holding a few of its players) still sells, but never looks for anyone.
     // ponytail: the exodus abroad (foreign clubs buying the league's best) is a later, cheap
     // model of its own, not a full market reading for hundreds of idle clubs.
-    .filter((c) => c.id !== w.clubId && w.season.calendar.byClub.has(c.id))
+    .filter((c) => c.id !== w.clubId && inDivisions(w, c.id))
     .sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1));
   // A club that found nobody worth the table sits out a few rounds: the market it read does not
   // change enough in a fortnight to look again.
@@ -493,11 +548,8 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
         until: `${season + deal.years}-12-31`,
         release: marketValue(w.pack, choice.p, season) * CLAUSE_TIMES,
       });
-      if (deal.from === ABROAD) {
-        // The fee leaves the league: only the buyer's books see it.
-        const b = booksOf(w, id);
-        w.books = { ...w.books, [id]: { ...b, spent: b.spent + deal.fee } };
-      } else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
+      if (deal.from === ABROAD) bookImport(w, id, deal.fee, choice.p);
+      else if (deal.from !== null) book(w, deal.from, id, deal.fee, choice.p);
       aiCommission(w, id, choice.p, deal.fee, deal.wage);
       done.push({ ...deal, day });
       signed.set(id, (signed.get(id) ?? 0) + 1);

@@ -29,3 +29,6 @@ apps/api/club-packs/
 scripts/club-pack/.cache/
 # Modo Clube staging output
 scripts/club-pack/out/
+
+# Level 1 summaries cached by the equivalence protocol (match-engine calibration)
+packages/match-engine/.cache/

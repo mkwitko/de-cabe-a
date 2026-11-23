@@ -12,6 +12,8 @@ import {
 } from '@decabeca/match-engine';
 import { deciderRules } from '../competition/knockout';
 import { seedOf, type Outcome, type SeasonState } from '../competition/season';
+import { crowdShare, isDerby } from './stadium';
+import { DERBY_CARDS, refereeOf } from './referee';
 import type { Pack } from '../pack/schema';
 import { teamForMatch } from './lineup';
 
@@ -35,11 +37,17 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
       teamForMatch(pack, k, defaultPlan(formationOf(k))),
     ) as MatchInput['teams'],
     conditions: {
-      crowd: 1,
+      crowd: crowdShare(pack, s, id),
       altitudeM: city?.altitudeM ?? 0,
       pitch: home.stadium.pitch,
       weather: 'clear',
-      refereeStrictness: 0.5,
+      // The engine is calibrated at 0.5: the pool's average referee sits there (referee.ts).
+      // A derby is hotter: the referee reaches for his pocket more (DERBY_CARDS).
+      refereeStrictness: Math.min(
+        1,
+        (refereeOf(s, id).strictness * 3 * (isDerby(pack, m.home, m.away) ? DERBY_CARDS : 100)) /
+          20_000,
+      ),
     },
     rules: {
       substitutions: c.matchRules.subs,

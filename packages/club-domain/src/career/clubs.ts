@@ -14,7 +14,11 @@ import { WHOLE, recache } from '../lib/pack-cache';
 import { goingWages } from '../market/value';
 import { budgetOf, booksOf, incomeOf, tierOfClub, wageBill } from '../market/books';
 import type { CareerWorld } from './advance';
-import { BY_TIER, gateOf } from './finance';
+import { DEBT_RATE, gateOf, ownersCover } from './finance';
+import { resultsIncome } from './revenue';
+
+/** A stadium is worth enlarging when an ordinary day already fills this share of it, per cent. */
+const FULL_HOUSE = 85;
 import { postEntry } from '../finance/ledger';
 import { note } from './inbox';
 import { nationalDivisions } from './start';
@@ -52,6 +56,8 @@ export interface ClubState {
   fame?: Fame;
   /** International points from players sold to Europe this season. */
   exported?: number;
+  /** Sponsorship deals signed during the career, in place of the pack's (`renewSponsors`). */
+  sponsors?: PackClub['sponsors'];
 }
 
 /** Share of the money to spare that goes into structure, by horizon. */
@@ -71,6 +77,55 @@ const MIN_SEATS = 2_000;
 const DEBT_SEASONS = 5;
 /** An association elects its board this often when the pack does not say. */
 const ELECTION_EVERY = 3;
+/**
+ * Election politics. Brazilian association clubs elect the president through the conselho
+ * deliberativo or a member vote, for a fixed term (3 years at Palmeiras since the statute change,
+ * Sport and Ceara alike; Flamengo debated 3 vs 4), held in Nov/Dec at the season's turn. A new
+ * president often brings his own football director and coach, and an election year brings
+ * short-term spending and impatience. Sources: tribunapr.com.br "conselho do palmeiras aprova
+ * ampliacao do mandato presidencial para 3 anos"; lance.com.br "Eleicoes Fluminense: guia
+ * completo"; folhape.com.br "Eleicoes no Sport". Every number is a PARAMETRO, not calibrated.
+ */
+/** Extra money the directors put in the squad in an election year, % of a season's income. */
+const ELECTION_SPEND = 50;
+/** Support for the incumbent before the table, the cash and the draw count, 0..100. */
+const VOTE_START = 50;
+/** Swing of the final table: top of it adds up to this, the bottom takes it, scaled by the fans. */
+const VOTE_TABLE = 40;
+/** The person's goal met adds this to the incumbent's support, missed takes it. */
+const VOTE_GOAL = 10;
+const VOTE_BROKE = 15;
+const VOTE_RELEGATED = 20;
+/** The draw: the voters' mood on the day, plus or minus 20. */
+const VOTE_NOISE = 41;
+/** Below this support the opposition wins. */
+const VOTE_LINE = 45;
+/** The supporters' mood as the season ends: at its best (+100) adds this, at its worst takes it. */
+const VOTE_MOOD = 15;
+/** Chance (%) a new president brings his own coach; plus when the coach is the outgoing board's man; goal. */
+const COACH_OWN = 15;
+const COACH_HIS_MAN = 25;
+const COACH_MISSED = 20;
+const COACH_MET = -10;
+
+/** Whether the season being played ends in a vote of the club's board (association clubs). */
+export function electionYear(w: CareerWorld, clubId: string, season = w.season.season): boolean {
+  const gov = w.pack.governance.find((g) => g.clubId === clubId);
+  const every = gov?.electionEverySeasons ?? (gov?.model === 'association' ? ELECTION_EVERY : 0);
+  const s = clubsOf(w)[clubId];
+  return every > 0 && !!s && (season + 1 - s.directors.since) % every === 0;
+}
+
+/** What the turn gives the vote: each club's final place and the person's board goal. */
+export interface VoteContext {
+  placed?: (id: string) => { position: number; places: number } | undefined;
+  board?: { goal: number };
+  /** Supporters' mood as the season ends, -100..100 (match/stadium.ts `moodOf`). */
+  mood?: (id: string) => number;
+}
+/** The person's own club after the vote: kept, the board starts over, or the new president sacks him. */
+export type Vote = 'reelected' | 'fresh' | 'fired';
+
 /** One season in this many a club owned by a company is sold. */
 const SALE_ODDS = 12;
 /** Seasons in the red after which the structure starts to fall apart for want of upkeep. */
@@ -119,17 +174,41 @@ export function clubsOf(w: CareerWorld): Record<string, ClubState> {
 
 export const clubState = (w: CareerWorld, clubId: string): ClubState => clubsOf(w)[clubId]!;
 
-/** The pack with every club's structure as it now stands. */
-export function withClubs(pack: Pack, clubs: Record<string, ClubState> | undefined): Pack {
+/**
+ * What fame moves, per point of national fame above (or below) the club's name in the pack: the
+ * share of seats filled on an ordinary day, in half points, and the sponsors' money at the next
+ * renewal, in per cent. A title (+14) brings 7 points of occupancy and 21 % more at renewal; a
+ * relegation (−8) takes 4 and 12 %. PARÂMETRO.
+ */
+const FAME_DEMAND_HALVES = 1;
+const FAME_SPONSORS = 3 / 2;
+
+/**
+ * The pack with every club's structure as it now stands. `origin` is the career's opening pack:
+ * fame moves the public from what the club had there, so it never compounds.
+ */
+export function withClubs(
+  pack: Pack,
+  clubs: Record<string, ClubState> | undefined,
+  origin: Pack = pack,
+): Pack {
   if (!clubs) return pack;
+  const first = new Map(origin.clubs.map((c) => [c.id, c]));
   let changed = false;
   const next = pack.clubs.map((c) => {
     const s = clubs[c.id];
-    if (!s || (!s.levels && s.capacity === undefined && !s.fame)) return c;
+    if (!s || (!s.levels && s.capacity === undefined && !s.fame && !s.sponsors)) return c;
     changed = true;
     const l = s.levels ?? {};
+    const was = first.get(c.id) ?? c;
+    const lift = s.fame ? s.fame.national - was.reputation : 0;
     return {
       ...c,
+      fans: {
+        ...c.fans,
+        demand: clamp(was.fans.demand + Math.trunc((lift * FAME_DEMAND_HALVES) / 2), 1, 100),
+      },
+      sponsors: s.sponsors ?? was.sponsors,
       facilities: {
         training: l.training ?? c.facilities.training,
         youth: l.youth ?? c.facilities.youth,
@@ -171,12 +250,6 @@ export function workCost(w: CareerWorld, club: PackClub, front: Front): number |
   return level >= 5 ? null : priced(WORK_COST[level - 1]!, prices);
 }
 
-/** The prize a club takes for where it finished, as in the person's ledger. */
-function prizeOf(position: number, places: number, tier: number, prices: number): number {
-  if (position < 1 || places < 1) return 0;
-  return Math.round((priced(BY_TIER[tier]!.tv, prices) / 4) * (places - position + 1)) / places;
-}
-
 /**
  * The season's accounts of every other club, run at the turn before squads change: income and
  * prize in, fees as booked, a year of wages and staff, the upkeep and the old debt out.
@@ -187,7 +260,6 @@ export function settleSeason(
   position: (clubId: string) => { position: number; places: number },
 ): void {
   const clubs = clubsOf(w);
-  const prices = pricesOf(w).prices;
   const staff = new Map<string, number>();
   for (const a of w.pack.assignments)
     staff.set(a.clubId, (staff.get(a.clubId) ?? 0) + a.contract.wage);
@@ -196,19 +268,23 @@ export function settleSeason(
     const s = clubs[club.id]!;
     const books = booksOf(w, club.id);
     const at = position(club.id);
+    // The old debt in five yearly parts, with a year's interest on what is still owed.
+    const done = w.season.season - firstSeason(w);
     const debt =
-      w.season.season - firstSeason(w) < DEBT_SEASONS
-        ? Math.round(club.initialDebt / DEBT_SEASONS)
+      done < DEBT_SEASONS
+        ? Math.round(club.initialDebt / DEBT_SEASONS) +
+          Math.round((club.initialDebt * (DEBT_SEASONS - done) * DEBT_RATE) / (DEBT_SEASONS * 100))
         : 0;
     s.cash +=
       budgetOf(w, club.id).income +
-      Math.round(prizeOf(at.position, at.places, tierOfClub(w, club.id), prices)) +
+      resultsIncome(w, club.id, at.position, at.places) +
       books.earned -
       books.spent -
       12 * (wageBill(w, club.id) + (staff.get(club.id) ?? 0)) -
       upkeepOf(w, club) -
       debt;
     s.cash -= leakOf(w, club.id, s);
+    s.cash += ownersCover(w.pack, club.id, -s.cash);
     s.red = s.cash < 0 ? (s.red ?? 0) + 1 : 0;
     delete s.kitty;
   }
@@ -252,7 +328,7 @@ function chooseFronts(
         : ['stadium', 'medical', 'football', 'training', 'scouting', 'youth'];
   // The level a club of its tier should have: 5 in the first division down to 2 in the fourth.
   const target = 6 - tierOfClub(w, club.id);
-  const full = gateOf(club) >= club.stadium.capacity;
+  const full = gateOf(club) * 100 >= club.stadium.capacity * FULL_HOUSE;
   const useful = (f: Front) =>
     f === 'stadium' ? full : levelOf(club, f as Leveled) < Math.min(5, target);
   const open = (f: Front) => workCost(w, club, f) !== null;
@@ -269,7 +345,12 @@ function chooseFronts(
  * or a sale comes, and the money to spare split between structure and squad. The person's club
  * keeps its directors here but its money in the ledger (finance.ts): it builds nothing alone.
  */
-export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void {
+export function planSeason(
+  w: CareerWorld,
+  relegated: ReadonlySet<string>,
+  ctx: VoteContext = {},
+): Vote | undefined {
+  let vote: Vote | undefined;
   const clubs = clubsOf(w);
   const season = w.season.season;
   const division = nationalDivisions(w.pack).find((d) =>
@@ -299,31 +380,79 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     const every = gov?.electionEverySeasons ?? (gov?.model === 'association' ? ELECTION_EVERY : 0);
     const turn = every > 0 ? (season - s.directors.since) % every === 0 : pick(r, SALE_ODDS) === 0;
     if (turn && season > s.directors.since) {
+      const broke = s.cash < 0;
+      const down = relegated.has(club.id);
+      let ousted = every === 0;
+      let out = false;
+      if (every > 0) {
+        // The vote: how the incumbents' term ended, against a draw (integers, from the seed).
+        const v = fork(rngFrom(w.seed), `vote:${season}:${club.id}`);
+        const at = ctx.placed?.(club.id);
+        const top = at && at.places > 1 ? ((at.places - at.position) * 100) / (at.places - 1) : 50;
+        let support =
+          VOTE_START +
+          Math.round(((top - 50) * VOTE_TABLE * (160 - club.fans.patience)) / (100 * 80)) -
+          (broke ? VOTE_BROKE : 0) -
+          (down ? VOTE_RELEGATED : 0) +
+          pick(v, VOTE_NOISE) -
+          20;
+        const goal = club.id === w.clubId ? ctx.board?.goal : undefined;
+        const met = goal !== undefined && at !== undefined && at.position <= goal;
+        if (goal !== undefined) support += met ? VOTE_GOAL : -VOTE_GOAL;
+        // The members vote with the last weeks in their heads.
+        support += Math.round(((ctx.mood?.(club.id) ?? 0) * VOTE_MOOD) / 100);
+        ousted = support < VOTE_LINE;
+        if (club.id === w.clubId) {
+          // The new president may want his own coach: likelier when this one is the outgoing
+          // board's man (hired in its term) and the results did not defend him.
+          const hisMan = (w.hired ?? -1) >= s.directors.since;
+          const risk = clamp(
+            COACH_OWN + (hisMan ? COACH_HIS_MAN : 0) + (met ? COACH_MET : COACH_MISSED),
+            0,
+            80,
+          );
+          out = ousted && pick(v, 100) < risk;
+          vote = !ousted ? 'reelected' : out ? 'fired' : 'fresh';
+        }
+      }
       // A relegated or broke club votes for whoever promises results now.
-      s.directors = drawDirectors(
-        w.pack,
-        club.id,
-        w.seed,
-        season,
-        relegated.has(club.id) || s.cash < 0 ? -15 : 0,
-      );
+      if (ousted)
+        s.directors = drawDirectors(w.pack, club.id, w.seed, season, down || broke ? -15 : 0);
       // The person hears of their own club's and their division's.
       if (club.id === w.clubId || near.has(club.id))
-        note(w, {
-          day: w.day,
-          kind: 'directors',
-          club: club.id,
-          why: every > 0 ? 'election' : 'sale',
-          horizon: s.directors.horizon,
-        });
+        note(
+          w,
+          every > 0
+            ? {
+                day: w.day,
+                kind: 'election',
+                club: club.id,
+                result: ousted ? 'opposition' : 'reelected',
+                horizon: s.directors.horizon,
+                ...(out && { coachOut: true as const }),
+              }
+            : {
+                day: w.day,
+                kind: 'directors',
+                club: club.id,
+                why: 'sale',
+                horizon: s.directors.horizon,
+              },
+        );
     }
+    // The vote is coming: the person hears of it as the season starts.
+    const political = electionYear(w, club.id, season);
+    if (political && club.id === w.clubId) note(w, { day: w.day, kind: 'electionYear' });
+    renewSponsors(w, club.id, s);
     if (club.id === w.clubId) continue;
     // Money to spare after the reserve.
     const income = incomeOf(w, club.id);
     const reserve = Math.round((income * RESERVE_MAX * s.directors.competence) / 10_000);
     const spare = s.cash - reserve;
     if (spare <= 0) continue;
-    let toStructure = Math.round((spare * STRUCTURE_SHARE[s.directors.horizon]) / 100);
+    // In an election year they look at the next vote only: little structure, more squad.
+    const horizon = political ? 'short' : s.directors.horizon;
+    let toStructure = Math.round((spare * STRUCTURE_SHARE[horizon]) / 100);
     let left = spare;
     for (const front of chooseFronts(w, club, s, r)) {
       const cost = workCost(w, club, front)!;
@@ -335,8 +464,51 @@ export function planSeason(w: CareerWorld, relegated: ReadonlySet<string>): void
     }
     // The rest backs the squad: fees this season, a share of it as wages for the bold.
     // Never more than a season of income in one go: the rest waits in the bank.
-    s.kitty = Math.min(left, income);
+    s.kitty = Math.min(
+      left,
+      political ? Math.round((income * (100 + ELECTION_SPEND)) / 100) : income,
+    );
   }
+  return vote;
+}
+
+/**
+ * Sponsorship money by national tier, relative: a shirt in the Série B is worth under half of one
+ * in the Série A, and far less below. PARÂMETRO, a confirmar.
+ */
+const SPONSOR_TIER: Record<number, number> = { 1: 100, 2: 45, 3: 15, 4: 6 };
+/** A renewed deal runs one to three seasons. */
+const SPONSOR_YEARS = 3;
+
+/**
+ * Deals that ended before this season are signed again, at the pack's figure moved by the
+ * club's name today (`FAME_SPONSORS` per point over its opening reputation) and by its division
+ * against the one it started in; a deal runs until its own end, at the price it was signed for.
+ */
+export function renewSponsors(w: CareerWorld, clubId: string, s: ClubState): void {
+  const season = w.season.season;
+  const r = fork(rngFrom(w.seed), `sponsors:${season}:${clubId}`);
+  const opening = w.origin.clubs.find((c) => c.id === clubId);
+  if (!opening?.sponsors.length) return;
+  const deals = s.sponsors ?? opening.sponsors;
+  const start = `${season}-01-01`;
+  if (deals.every((x) => x.until >= start)) return;
+  const was = nationalDivisions(w.origin).find((d) => d.clubIds.includes(clubId))?.tier ?? 4;
+  const tier = tierOfClub(w, clubId);
+  const lift = fameOf(w, clubId).national - opening.reputation;
+  s.sponsors = deals.map((x, i) => {
+    if (x.until >= start) return x;
+    const base = opening.sponsors[i]?.annual ?? x.annual;
+    const annual = Math.max(
+      0,
+      Math.round(
+        (base * (100 + lift * FAME_SPONSORS) * SPONSOR_TIER[tier]!) / (100 * SPONSOR_TIER[was]!),
+      ),
+    );
+    const years = 1 + pick(r, SPONSOR_YEARS);
+    if (clubId === w.clubId) note(w, { day: w.day, kind: 'sponsor', name: x.name, annual, years });
+    return { ...x, annual, until: `${season + years - 1}-12-31` };
+  });
 }
 
 /** Points a club pays over the value at the table, from its directors: up to +20 for the worst. */
@@ -367,7 +539,7 @@ export function workAnswer(w: CareerWorld, front: Front): WorkNo | null {
   if (
     front === 'stadium' &&
     s.directors.competence >= SEES_WASTE &&
-    gateOf(club) < club.stadium.capacity
+    gateOf(club) * 100 < club.stadium.capacity * FULL_HOUSE
   )
     return 'useless';
   return null;
@@ -435,7 +607,8 @@ export function rootsOf(club: PackClub, tier: number): Fame {
 export const fameOf = (w: CareerWorld, clubId: string): Fame => {
   const s = clubState(w, clubId);
   if (s.fame) return s.fame;
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  // The roots are the club's name in the opening pack: the career's pack carries today's fame.
+  const club = (w.origin ?? w.pack).clubs.find((c) => c.id === clubId)!;
   return rootsOf(club, tierOfClub(w, clubId));
 };
 
@@ -456,6 +629,7 @@ export function updateFame(
   moves: ReadonlyMap<string, 'promotion' | 'relegation'>,
 ): void {
   const clubs = clubsOf(w);
+  const first = new Map((w.origin ?? w.pack).clubs.map((c) => [c.id, c]));
   for (const club of w.pack.clubs) {
     const s = clubs[club.id]!;
     const at = place(club.id);
@@ -471,7 +645,7 @@ export function updateFame(
     if (move) add(FAME_GAIN[move]);
     now.international += s.exported ?? 0;
     delete s.exported;
-    const roots = rootsOf(club, at.tier);
+    const roots = rootsOf(first.get(club.id) ?? club, at.tier);
     // A step toward the roots each season, at least a point while it is not there.
     const fade = (x: number, root: number) =>
       clamp(

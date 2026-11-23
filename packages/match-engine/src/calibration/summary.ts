@@ -35,14 +35,61 @@ export interface Summary {
   bigChances: [number, number];
   bigFromPass: [number, number];
   bigGoals: [number, number];
+  /** Progressive passes (FBref definition, progressivePasses). */
+  progressive: [number, number];
   highTurnovers: [number, number];
   highTurnoverShots: [number, number];
   losses: [number, number];
   regained5s: [number, number];
+  /** Squad and body (TEST_STRATEGY §2.1 group e): injuries, substitutions, mean rating. */
+  injuries: [number, number];
+  subs: [number, number];
+  rating: number;
 }
 
 /** A sequence (Opta) ends when play stops: these events end it before any later shot. */
 const STOPPAGE = new Set(['foul', 'offside', 'corner', 'throwIn', 'goalKick', 'freeKick', 'goal']);
+
+const YARD = 0.9144;
+/**
+ * Progressive passes, FBref definition: a completed pass that moves the ball at least 10 yards
+ * towards the opponents' goal from the furthest point of the last six passes, or any completed
+ * pass into the penalty area; passes from the defending 40% of the pitch do not count.
+ * ponytail: "last six passes" restarts when the other team touches the ball or play stops.
+ */
+export function progressivePasses(r: Pick<MatchResult, 'events'>): [number, number] {
+  const out: [number, number] = [0, 0];
+  const starts: [number[], number[]] = [[], []];
+  let from: { team: 0 | 1; x: number } | null = null;
+  const frame = (team: 0 | 1, at: [number, number]) => {
+    const x = at[0] / 10;
+    const y = at[1] / 10;
+    return team === 0 ? { x, y } : { x: 105 - x, y: 68 - y };
+  };
+  for (const e of r.events) {
+    if (STOPPAGE.has(e.kind)) {
+      starts[0] = [];
+      starts[1] = [];
+      from = null;
+      continue;
+    }
+    if (e.team === null || !e.at) continue;
+    if (['pass', 'reception', 'interception', 'tackle'].includes(e.kind)) starts[1 - e.team] = [];
+    if (e.kind === 'pass') {
+      const x = frame(e.team, e.at).x;
+      starts[e.team] = [...starts[e.team], x].slice(-6);
+      from = { team: e.team, x };
+    } else if (e.kind === 'reception' && from && from.team === e.team) {
+      const to = frame(e.team, e.at);
+      const inBox = to.x > 105 - 16.5 && Math.abs(to.y - 34) < 20.16;
+      const furthest = Math.max(...starts[e.team]);
+      if (from.x >= 0.4 * 105 && (to.x - furthest >= 10 * YARD || (inBox && from.x <= 105 - 16.5)))
+        out[e.team]++;
+      from = null;
+    } else from = null;
+  }
+  return out;
+}
 
 export function transitions(r: Pick<MatchResult, 'events'>) {
   const out = { ht: [0, 0], hts: [0, 0], losses: [0, 0], back: [0, 0] } as Record<
@@ -126,6 +173,7 @@ export function summary(r: MatchResult): Summary {
       });
       return { bigChances: b.n, bigFromPass: b.pass, bigGoals: b.goal };
     })(),
+    progressive: progressivePasses(r),
     firstFactor: r.explanation.factors[0]?.message.key ?? null,
     factors: r.explanation.factors.map((f) => f.message.key),
     distance: r.players.reduce((a, p) => a + p.distanceM, 0) / r.players.length,
@@ -145,6 +193,12 @@ export function summary(r: MatchResult): Summary {
         losses: t.losses,
         regained5s: t.back,
       };
+    })(),
+    injuries: pair((t) => r.events.filter((e) => e.kind === 'injury' && e.team === t).length),
+    subs: pair((t) => r.events.filter((e) => e.kind === 'substitution' && e.team === t).length),
+    rating: (() => {
+      const on = r.players.filter((p) => p.minutes > 0);
+      return on.reduce((a, p) => a + p.rating, 0) / (on.length || 1);
     })(),
     highWins: pair(
       (t) =>

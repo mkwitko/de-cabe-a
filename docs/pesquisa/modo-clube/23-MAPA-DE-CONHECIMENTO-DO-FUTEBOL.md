@@ -134,21 +134,21 @@ Meta: cada regra vira dado com teste (entrada, saída esperada, artigo citado), 
 | Entidade/relação | Atributos-chave | Comportamento que altera | Evidência/fonte | Estado | Prio |
 | --- | --- | --- | --- | --- | --- |
 | Estádio | capacidade, gramado, arranjo (próprio, municipal, alugado) | Público, mando, custo | FM26, clubes | existe: `pack/schema.ts` (`stadium`) | P1 |
-| Público e bilheteria | média, preço, sensibilidade | Receita de jogo | Súmulas CBF | parcial: bilheteria em `career/finance.ts`, sem média real | P1 |
-| Interdição e mando alternativo | jogos fora, punição | Perda de mando | CBF | falta | P3 |
+| Público e bilheteria | média, preço, sensibilidade | Receita de jogo, peso da torcida no mando | ge e mktesportivo 2025 (`scripts/club-pack/data/attendance.json`) | existe: `match/stadium.ts`; 39 clubes de A e B com público e ingresso reais; C e D a confirmar | P1 |
+| Interdição e mando alternativo | jogos fora, punição | Perda de mando | RGC art. 64; casos Vitória, Ceará, Santos | existe: portões fechados em `match/stadium.ts` (sem mando em outra cidade) | P3 |
 
 ### 2.12 Arbitragem e disciplina (baixa prioridade)
 
 | Entidade/relação | Atributos-chave | Comportamento que altera | Evidência/fonte | Estado | Prio |
 | --- | --- | --- | --- | --- | --- |
-| Árbitro | rigor, média de cartões | Cartões, pênaltis | Súmulas CBF | falta | P3 |
-| Disciplina | cartões, suspensão, STJD | Desfalques | Regulamento | parcial: suspensão simples, sem STJD | P3 |
+| Árbitro | rigor, média de cartões | Cartões, pênaltis | Médias por árbitro 2025 (Itatiaia, Correio Braziliense), expulsões (ge) | existe: `match/referee.ts`, painel fictício com o rigor real; cartões nos jogos rápidos e rigor no motor | P3 |
+| Disciplina | cartões, suspensão, STJD | Desfalques | Regulamento Geral de Competições da CBF, CBJD | existe: `career/discipline.ts`; três amarelos e expulsão suspendem no jogo seguinte da competição; vermelho direto julgado pelo STJD 14 dias depois; só o clube da pessoa, homem a homem | P3 |
 
 ### 2.13 Cultura e torcida (baixa prioridade)
 
 | Entidade/relação | Atributos-chave | Comportamento que altera | Evidência/fonte | Estado | Prio |
 | --- | --- | --- | --- | --- | --- |
-| Torcida | tamanho, lealdade, paciência, identidade local | Pressão, público, humor | Pesquisas públicas; valores estimados | existe: `pack/schema.ts` (`fans`) | P2 |
+| Torcida | tamanho, lealdade, paciência, identidade local | Pressão, público, humor | Pesquisas públicas; valores estimados | existe: `fans` no pack; humor pela forma em `match/stadium.ts` (`moodOf`), público e protesto (`career/board.ts`) | P2 |
 | Rivalidades e clássicos | pares, intensidade | Peso do jogo | Wikidata, FM26 | parcial: `rivals` sem intensidade | P3 |
 
 ### 2.14 Calibração

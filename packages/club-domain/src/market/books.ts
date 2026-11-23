@@ -5,9 +5,15 @@
  * finance: what they have spent and earned in the market this season is kept in the career
  * (`w.books`) and counted against the budget. Integers; every number is a PARÂMETRO.
  */
+import { resale } from './clauses';
+import { wageCost } from './image';
+import { ruleOn } from '../rules/registry';
+import { isoOf } from '../competition/calendar';
 import type { CareerWorld } from '../career/advance';
 import { seasonIncome } from '../career/finance';
+import { cotaFor } from '../career/estadual';
 import { pricesOf } from '../career/prices';
+import { tvOf } from '../career/revenue';
 import type { Horizon } from '../career/clubs';
 import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
@@ -15,6 +21,7 @@ import { note } from '../career/inbox';
 import { postEntry } from '../finance/ledger';
 import type { PackPlayer } from '../pack/schema';
 import { thousands } from './value';
+import { clubById } from '../lib/pack-cache';
 
 /** Share of a sale a club puts back into signings. */
 const REINVEST = 80;
@@ -31,7 +38,7 @@ export interface Budget {
 /** Each club's national tier this season, read once per season (members do not change in it). */
 const tiers = new WeakMap<object, Map<string, number>>();
 
-export function tierOfClub(w: CareerWorld, clubId: string): number {
+function tiersOf(w: CareerWorld): Map<string, number> {
   let by = tiers.get(w.season);
   if (!by) {
     by = new Map();
@@ -39,8 +46,13 @@ export function tierOfClub(w: CareerWorld, clubId: string): number {
       for (const id of w.season.members[d.id] ?? []) by.set(id, d.tier);
     tiers.set(w.season, by);
   }
-  return by.get(clubId) ?? 4;
+  return by;
 }
+
+export const tierOfClub = (w: CareerWorld, clubId: string): number => tiersOf(w).get(clubId) ?? 4;
+
+/** Whether the club plays a national division (clubs of the state championships only do not). */
+export const inDivisions = (w: CareerWorld, clubId: string): boolean => tiersOf(w).has(clubId);
 
 /** A season's budgets, read once per club: the division and the income do not change in it. */
 const budgets = new WeakMap<object, Map<string, Budget>>();
@@ -54,12 +66,17 @@ export function budgetOf(w: CareerWorld, clubId: string): Budget {
 }
 
 /** A club's income for the season in the division it plays, at the season's prices. */
-export const incomeOf = (w: CareerWorld, clubId: string) =>
-  seasonIncome(
-    w.pack.clubs.find((c) => c.id === clubId)!,
-    tierOfClub(w, clubId),
+export const incomeOf = (w: CareerWorld, clubId: string) => {
+  const tier = tierOfClub(w, clubId);
+  const tv = tvOf(w, clubId, tier);
+  return seasonIncome(
+    clubById(w.pack, clubId)!,
+    tier,
     pricesOf(w).prices,
+    tv.equal + tv.audience + tv.perfMean,
+    cotaFor(w, clubId),
   );
+};
 
 /** Points of income added to the person's fees by their directors' horizon. */
 const PURSE: Record<Horizon, number> = { short: 4, medium: 0, long: -3 };
@@ -76,7 +93,7 @@ const modelOf = (w: CareerWorld, clubId: string) =>
   w.pack.governance.find((g) => g.clubId === clubId)?.model ?? 'association';
 
 function readBudget(w: CareerWorld, clubId: string): Budget {
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const club = clubById(w.pack, clubId)!;
   const income = incomeOf(w, clubId);
   const risk = club.profile.financialRisk;
   const s = clubId === w.clubId ? undefined : w.clubs?.[clubId];
@@ -101,8 +118,15 @@ function readBudget(w: CareerWorld, clubId: string): Budget {
   };
 }
 
+/**
+ * Monthly wage cost. Only the person's club gets the image-rights saving (image.ts): the rivals' wages are
+ * calibrated against real balance sheets as total cost already, so their bill stays the contract wage.
+ */
 export const wageBill = (w: CareerWorld, clubId: string) =>
-  squadPlayers({ pack: w.pack, clubId }).reduce((s, p) => s + (p.contract?.wage ?? 0), 0);
+  squadPlayers({ pack: w.pack, clubId }).reduce(
+    (s, p) => s + (clubId === w.clubId ? wageCost(w, p) : (p.contract?.wage ?? 0)),
+    0,
+  );
 
 export interface Books {
   spent: number;
@@ -132,7 +156,7 @@ export function available(w: CareerWorld, clubId: string): number {
  * with plus a margin by the owners' appetite for risk (5% to 15%).
  */
 export function wageRoom(w: CareerWorld, clubId: string): number {
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const club = clubById(w.pack, clubId)!;
   const lived = Math.round(
     (booksOf(w, clubId).bill * (105 + club.profile.financialRisk / 10)) / 100,
   );
@@ -200,6 +224,7 @@ export function book(w: CareerWorld, from: string, to: string, fee: number, p: P
     [from]: { ...got, earned: got.earned + fee },
   };
   solidarity(w, p, from, fee, false);
+  resale(w, p, from, to, fee);
 }
 
 /**
@@ -207,7 +232,6 @@ export function book(w: CareerWorld, from: string, to: string, fee: number, p: P
  * formed the player (`origin.clubId`), 5% of a sale abroad (FIFA's mechanism) and 6% of one
  * between clubs here (CBF). PARÂMETROS. The person's club pays and receives through its ledger.
  */
-const SOLIDARITY = { abroad: 5, here: 6 };
 
 export function solidarity(
   w: CareerWorld,
@@ -219,7 +243,8 @@ export function solidarity(
   const formed = p.origin?.clubId;
   if (!formed || formed === seller || fee <= 0) return;
   if (!w.pack.clubs.some((c) => c.id === formed)) return;
-  const share = thousands((fee * (abroad ? SOLIDARITY.abroad : SOLIDARITY.here)) / 100);
+  const rate = ruleOn('solidarity', w.day > 0 ? isoOf(w.day) : `${w.season.season}-01-01`);
+  const share = thousands((fee * (abroad ? rate.abroad : rate.here)) / 100);
   if (share <= 0) return;
   const entry = (amount: number, side: string) =>
     postEntry(w.ledger, {
@@ -243,3 +268,7 @@ export function solidarity(
     w.books = { ...w.books, [formed]: { ...b, earned: b.earned + share } };
   }
 }
+
+/** A club of the world in the red at the last season's turn (career/clubs.ts): it must sell. */
+export const inRed = (w: CareerWorld, clubId: string) =>
+  clubId !== w.clubId && (w.clubs?.[clubId]?.cash ?? 0) < 0;

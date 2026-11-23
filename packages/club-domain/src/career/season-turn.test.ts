@@ -9,7 +9,8 @@ import {
   startNextSeason,
   type CareerWorld,
 } from './advance';
-import { attendance } from './finance';
+import { tierOf } from './finance';
+import { crowdAt, ticketOf } from '../match/stadium';
 import { loadCareer, saveCareer } from './save';
 import { nationalDivisions } from './start';
 
@@ -28,13 +29,16 @@ describe('career money (04 §4)', () => {
     const months = new Set(kinds('wages').map((e) => isoOf(e.day).slice(0, 7)));
     expect(months.size).toBe(kinds('wages').length);
     expect(months.size).toBeGreaterThanOrEqual(10);
-    expect(kinds('tv')).toHaveLength(months.size);
+    // A Série C club has no TV money: its participation quota comes every month.
+    expect(kinds('quota')).toHaveLength(months.size);
     // Home matches played: a manager dismissed before the end leaves the rest unplayed.
     const homes = [...w.season.meta].filter(
       ([id, m]) => m.home === club && w.season.outcomes.has(id),
     ).length;
     expect(kinds('tickets')).toHaveLength(homes);
-    expect(kinds('tickets')[0]!.amount).toBe(attendance(w) * 18);
+    const first = kinds('tickets')[0]!;
+    const own = w.pack.clubs.find((c) => c.id === w.clubId)!;
+    expect(first.amount).toBe(crowdAt(w.pack, w.season, first.ref) * ticketOf(own, tierOf(w)));
     expect(checkLedger(w.ledger)).toEqual([]);
     expect(w.ledger.cash).toBe(cashFromEntries(w.ledger));
     // Retrying a day never pays twice: a snapshot reloaded carries the same entries.
@@ -54,8 +58,8 @@ describe('season turn (MC-172 in the career)', () => {
     expect(turn.titles.length).toBeGreaterThanOrEqual(4);
     expect(w.season.season).toBe(2027);
     expect(Object.values(w.season.members).flat().length).toBeGreaterThanOrEqual(156);
-    // The money carries over; the only new entry is the prize for the final position.
-    const prize = w.ledger.entries.filter((e) => e.kind === 'prize');
+    // The money carries over; the only new entry is the TV money for the final position.
+    const prize = w.ledger.entries.filter((e) => e.key.startsWith('tv:tv:'));
     expect(prize).toHaveLength(1);
     expect(w.ledger.cash).toBe(cash + prize[0]!.amount);
     const d = nextDecision(w);

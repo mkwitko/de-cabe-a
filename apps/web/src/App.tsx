@@ -3,13 +3,20 @@ import { useApplyCosmetics } from './lib/cosmetics';
 import { sceneFor, setScene } from './lib/music';
 import { LockerRoom, type Locker } from './components/LockerRoom';
 import { RouteMeta } from './components/RouteMeta';
-import { AlbumIcon, DailyIcon, GamesIcon, ProfileIcon, RankingIcon } from './components/Icons';
+import {
+  AlbumIcon,
+  ClubIcon,
+  DailyIcon,
+  GamesIcon,
+  ProfileIcon,
+  RankingIcon,
+} from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
-import { ClubLanding, GamesIndex } from './components/ClubLanding';
+import { ClubLanding, GamesIndex, WRAP } from './components/ClubLanding';
 import { SignInButton } from './components/SignInButton';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/launch';
@@ -262,9 +269,8 @@ function AccountLink() {
   );
 }
 
-/** Crest, name and tagline; the page heading on the home, a link home everywhere else. */
+/** Crest, name and tagline: a link home everywhere (the home's h1 is the Modo Clube hero). */
 function Brand({ home }: { home: boolean }) {
-  const H = home ? 'h1' : 'span';
   return (
     <Link
       to="/"
@@ -273,11 +279,11 @@ function Brand({ home }: { home: boolean }) {
     >
       <Crest className="h-9 w-8 shrink-0 drop-shadow-[0_2px_3px_rgb(0_0_0/0.5)]" />
       <div className="min-w-0">
-        <H className="font-condensed block text-lg leading-[0.95] font-black whitespace-nowrap uppercase min-[400px]:text-xl lg:text-2xl">
+        <span className="font-condensed block text-lg leading-[0.95] font-black whitespace-nowrap uppercase min-[400px]:text-xl lg:text-2xl">
           De Cabeça F.C.
-        </H>
+        </span>
         <span className="mt-0.5 hidden text-xs leading-tight font-semibold whitespace-nowrap text-chalk-soft min-[400px]:block">
-          {LAUNCH_ALL ? 'Modo Clube e minijogos' : 'Minijogos de futebol'}
+          Manager do futebol brasileiro
         </span>
       </div>
     </Link>
@@ -356,7 +362,14 @@ export function Home() {
     pitch: PITCH[x.page],
     howTo: x.howTo,
   }));
-  return <LockerRoom lockers={[...modes, ...extra]} />;
+  return (
+    <div className={`${WRAP} pt-14 sm:pt-24`}>
+      <h2 className="font-condensed mb-2 text-4xl leading-[0.9] font-black uppercase sm:text-6xl lg:text-7xl">
+        Outros jogos
+      </h2>
+      <LockerRoom lockers={[...modes, ...extra]} />
+    </div>
+  );
 }
 
 function HomeRoute() {
@@ -367,14 +380,8 @@ function HomeRoute() {
   }, []);
   return (
     <>
-      {LAUNCH_ALL ? (
-        <>
-          <ClubLanding />
-          <GamesIndex games={GAMES} />
-        </>
-      ) : (
-        <Home />
-      )}
+      <ClubLanding />
+      {LAUNCH_ALL ? <GamesIndex games={GAMES} /> : <Home />}
       <AdSlot slot={AD_SLOTS.home} />
       <p className="mt-10 text-center text-sm text-chalk-soft">
         {isPageLaunched('daily') && (
@@ -400,7 +407,7 @@ function HomeRoute() {
 /**
  * Four places when everything is open, each the home of a few pages: Jogos (home, tracks, levels,
  * Modo Carreira), Desafio, Ranking (ranking, seasons, leagues), Perfil (stats, history, account,
- * public profiles). At launch only three: Jogar, Álbum, Perfil.
+ * public profiles). At launch four: Clube, Minijogos, Álbum, Perfil.
  */
 const NAV_ALL = [
   {
@@ -427,10 +434,17 @@ const NAV_ALL = [
 
 const NAV_LAUNCH = [
   {
+    to: '/tecnico/carreira',
+    label: 'Clube',
+    Icon: ClubIcon,
+    match: (p: string) => /^\/tecnico(\/|$)/.test(p),
+  },
+  {
     to: '/',
-    label: 'Jogar',
+    label: 'Minijogos',
     Icon: GamesIcon,
-    match: (p: string) => !/^\/(album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
+    match: (p: string) =>
+      !/^\/(tecnico|album|stats|history|conta|entrar|apoie|perfil)(\/|$)/.test(p),
   },
   { to: '/album', label: 'Álbum', Icon: AlbumIcon, match: (p: string) => /^\/album(\/|$)/.test(p) },
   {
@@ -451,7 +465,7 @@ function Shell({ children }: { children: ReactNode }) {
   // The Modo Clube career is its own stage: its rail and bar replace the site's strip.
   const stage = pathname === '/tecnico/carreira';
   // The home that sells Modo Clube runs edge to edge; its sections keep their own gutter.
-  const wide = LAUNCH_ALL && home;
+  const wide = home;
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   useApplyCosmetics();
   return (
@@ -478,7 +492,7 @@ function Shell({ children }: { children: ReactNode }) {
           className="app-bar scoreboard floodlit fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:static sm:mx-auto sm:self-stretch sm:bg-none sm:pb-0 sm:shadow-none sm:before:hidden"
         >
           <ul
-            className={`mx-auto grid h-16 max-w-xl ${LAUNCH_ALL ? 'grid-cols-4' : 'grid-cols-3'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}
+            className={`mx-auto grid h-16 max-w-xl ${'grid-cols-4'} sm:flex sm:h-full sm:gap-1 lg:gap-2`}
           >
             {NAV.map(({ to, label, Icon, match }) => {
               const active = match(pathname);
