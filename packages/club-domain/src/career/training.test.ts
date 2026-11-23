@@ -98,3 +98,45 @@ describe('training and freshness (08, corte 1)', () => {
     expect(playDecision(again, nextDecision(again) as typeof d)).toEqual(playDecision(w, d));
   });
 });
+
+describe('the week planned session by session', () => {
+  it('the ready plans weigh what their intensity says', async () => {
+    const { PLANS, intensityOf } = await import('./training');
+    for (const i of ['light', 'normal', 'hard'] as const) expect(intensityOf(PLANS[i])).toBe(i);
+  });
+
+  it('a plan sets the intensity, more tactics drill the team further, recovery rests it', async () => {
+    const { PLANS, drillTargetOf, setPlan } = await import('./training');
+    const w = openCareer(pack, 5, clubId);
+    const tactical = PLANS.normal.map((d) => d.map((x) => (x === 'physical' ? 'tactical' : x)));
+    expect(drillTargetOf(tactical)).toBeGreaterThan(drillTargetOf(PLANS.normal));
+    setPlan(w, tactical);
+    expect(w.training!.intensity).toBe('normal');
+    expect(trainingOn(w, w.day + 200).drill).toBeCloseTo(drillTargetOf(tactical), 2);
+    // Recovery sessions bring a tired player back faster.
+    const restful = PLANS.normal.map(() => ['recovery', 'recovery'] as const).map((d) => [...d]);
+    const a = openCareer(pack, 5, clubId);
+    const b = openCareer(pack, 5, clubId);
+    const id = lineupOf(a).xi[0]!;
+    a.training = { ...trainingOn(a, a.day), fresh: { [id]: 0.5 } };
+    b.training = { ...trainingOn(b, b.day), fresh: { [id]: 0.5 } };
+    setPlan(b, restful);
+    setIntensity(a, 'light');
+    expect(trainingOn(b, b.day + 3).fresh[id] ?? 1).toBeGreaterThan(
+      trainingOn(a, a.day + 3).fresh[id] ?? 1,
+    );
+    expect(() => setPlan(w, [['rest']])).toThrow();
+    // The plan survives a save.
+    expect(loadCareer(pack, 5, clubId, saveCareer(w)).training!.plan).toEqual(tactical);
+  });
+
+  it('a match preparation the day before is worth points in the match', async () => {
+    const { PLANS, PREP_POINTS, prepPoints, weekdayOf } = await import('./training');
+    const t = { ...trainingOn(openCareer(pack, 5, clubId), 0), plan: PLANS.normal };
+    // The ready normal week prepares on Saturday: a Sunday match gets the points.
+    const sunday = [0, 1, 2, 3, 4, 5, 6].map((k) => 100 + k).find((d) => weekdayOf(d) === 6)!;
+    expect(prepPoints(t, sunday)).toBe(PREP_POINTS);
+    expect(prepPoints(t, sunday - 2)).toBe(0);
+    expect(weekdayOf(0)).toBe(3);
+  });
+});

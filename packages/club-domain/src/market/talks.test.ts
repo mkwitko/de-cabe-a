@@ -185,7 +185,16 @@ describe("other clubs bid for the person's players", () => {
     const raised = answerBid(v, b.id, { kind: 'counter', fee: b.most * 3 + 1000 });
     if (b.most > b.fee) {
       expect(raised.kind).toBe('raised');
-      expect(v.bids!.find((x) => x.id === b.id)!.fee).toBeGreaterThan(b.fee);
+      const now = v.bids!.find((x) => x.id === b.id)!;
+      expect(now.fee).toBeGreaterThan(b.fee);
+      // The talk is kept: the opening bid, the person's counter, the club's new bid.
+      expect(now.log!.map((x) => [x.by, x.kind])).toEqual([
+        ['club', 'bid'],
+        ['you', 'counter'],
+        ['club', 'bid'],
+      ]);
+      expect(now.log![0]!.fee).toBe(b.fee);
+      expect(now.log![2]!.fee).toBe(now.fee);
     } else expect(raised).toEqual({ kind: 'withdrawn', reason: 'tooDear' });
     // A refusal is just that: the club thinks again (comeBack) and the person learns only if it
     // comes back, once, with more and never past its limit; refused again, it leaves for good.

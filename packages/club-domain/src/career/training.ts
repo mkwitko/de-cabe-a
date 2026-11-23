@@ -36,8 +36,100 @@ import { bestRoles } from '../player/ratings';
 export const INTENSITIES = ['light', 'normal', 'hard'] as const;
 export type Intensity = (typeof INTENSITIES)[number];
 
+/**
+ * A week of training as the person plans it (08 §9, corte 2): two sessions a day, Monday first.
+ * The plan sets the week's intensity by its load (`planLoad`), moves where the drill settles by
+ * its share of tactical work, gives back freshness with recovery sessions, and a match
+ * preparation the day before a match is worth points in it. Every number is a PARÂMETRO.
+ */
+export const SESSIONS = [
+  'rest',
+  'recovery',
+  'physical',
+  'technical',
+  'tactical',
+  'setPieces',
+  'matchPrep',
+] as const;
+export type Session = (typeof SESSIONS)[number];
+/** Seven days of two sessions, Monday first. */
+export type Plan = Session[][];
+
+/** What a session weighs on the legs. */
+export const SESSION_LOAD: Record<Session, number> = {
+  rest: 0,
+  recovery: 0,
+  physical: 3,
+  technical: 2,
+  tactical: 2,
+  setPieces: 1,
+  matchPrep: 1,
+};
+
+/** The week's load, and the intensity it amounts to: up to 12 light, up to 20 normal. */
+export const planLoad = (plan: Plan) => plan.flat().reduce((sum, x) => sum + SESSION_LOAD[x], 0);
+export const intensityOf = (plan: Plan): Intensity => {
+  const load = planLoad(plan);
+  return load <= 12 ? 'light' : load <= 20 ? 'normal' : 'hard';
+};
+/** Share of the working sessions (not rest, not recovery) that are tactical, in percent. */
+const tacticalShare = (plan: Plan) => {
+  const work = plan.flat().filter((x) => x !== 'rest' && x !== 'recovery');
+  const tactical = work.filter((x) => x === 'tactical' || x === 'matchPrep').length;
+  return work.length === 0 ? 0 : Math.round((tactical * 100) / work.length);
+};
+/** The tactical share of the ready normal week: the drill settles where a normal week puts it. */
+const NEUTRAL_SHARE = 38;
+/** Where the drill settles under a plan: its intensity's, moved by its tactical share. */
+export const drillTargetOf = (plan: Plan): number =>
+  Math.max(
+    0.4,
+    Math.min(0.98, DRILL_TARGET[intensityOf(plan)] + (tacticalShare(plan) - NEUTRAL_SHARE) * 0.004),
+  );
+/** Freshness a recovery session gives back over the week, a little a day. */
+const RECOVERY_SESSION = 0.003;
+/** Points of level 3 strength a match preparation the day before is worth. */
+export const PREP_POINTS = 0.6;
+
+/** Ready plans: one for each intensity, the week of a single Sunday match. */
+const W = (am: Session, pm: Session): Session[] => [am, pm];
+export const PLANS: Record<Intensity, Plan> = {
+  light: [
+    W('recovery', 'rest'),
+    W('technical', 'rest'),
+    W('tactical', 'rest'),
+    W('technical', 'rest'),
+    W('tactical', 'setPieces'),
+    W('matchPrep', 'rest'),
+    W('rest', 'rest'),
+  ],
+  normal: [
+    W('recovery', 'rest'),
+    W('physical', 'technical'),
+    W('tactical', 'rest'),
+    W('physical', 'technical'),
+    W('tactical', 'setPieces'),
+    W('matchPrep', 'rest'),
+    W('rest', 'rest'),
+  ],
+  hard: [
+    W('recovery', 'physical'),
+    W('physical', 'technical'),
+    W('tactical', 'physical'),
+    W('physical', 'technical'),
+    W('tactical', 'setPieces'),
+    W('matchPrep', 'technical'),
+    W('rest', 'rest'),
+  ],
+};
+
+/** Monday 0 .. Sunday 6 of an epoch day (1 January 1970 was a Thursday). */
+export const weekdayOf = (day: number) => (day + 3) % 7;
+
 export interface Training {
   intensity: Intensity;
+  /** The week's plan, when the person laid one out; the intensity is then its own. */
+  plan?: Plan;
   drill: number;
   /** Freshness by player id; absent means fully fresh. */
   fresh: Record<string, number>;
@@ -75,18 +167,42 @@ const start = (day: number): Training => ({
 export function trainingOn(w: CareerWorld, day: number): Training {
   const t = w.training ?? start(day);
   const days = Math.max(0, day - t.day);
-  const back = RECOVERY[t.intensity] * days;
+  const recovery = t.plan ? t.plan.flat().filter((x) => x === 'recovery').length : 0;
+  const back = (RECOVERY[t.intensity] + (recovery * RECOVERY_SESSION) / 7) * days;
   const fresh: Record<string, number> = {};
   for (const [id, f] of Object.entries(t.fresh)) if (f + back < 1) fresh[id] = f + back;
-  let gap = t.drill - DRILL_TARGET[t.intensity];
+  const target = t.plan ? drillTargetOf(t.plan) : DRILL_TARGET[t.intensity];
+  let gap = t.drill - target;
   for (let k = 0; k < Math.min(days, 400); k++) gap *= 1 - DRILL_RATE;
-  return { intensity: t.intensity, drill: DRILL_TARGET[t.intensity] + gap, fresh, day };
+  return {
+    intensity: t.intensity,
+    ...(t.plan && { plan: t.plan }),
+    drill: target + gap,
+    fresh,
+    day,
+  };
+}
+
+/** The week's plan from today on; its load sets the intensity. */
+export function setPlan(w: CareerWorld, plan: Plan): void {
+  if (plan.length !== 7 || plan.some((d) => d.length !== 2 || d.some((x) => !SESSIONS.includes(x))))
+    throw new Error('training: a plan is seven days of two sessions');
+  w.training = { ...trainingOn(w, w.day), intensity: intensityOf(plan), plan };
+}
+
+/** Points a match on `day` is worth from the plan: a match preparation the day before. */
+export function prepPoints(t: Training, day: number): number {
+  if (!t.plan) return 0;
+  const eve = t.plan[weekdayOf(day - 1)]!;
+  return eve.includes('matchPrep') ? PREP_POINTS : 0;
 }
 
 /** The week's intensity from today on. */
 export function setIntensity(w: CareerWorld, intensity: Intensity): void {
   if (!INTENSITIES.includes(intensity)) throw new Error('training: unknown intensity');
-  w.training = { ...trainingOn(w, w.day), intensity };
+  // A plain intensity drops the plan: the week is then the club's usual one at that load.
+  const { plan: _plan, ...t } = trainingOn(w, w.day);
+  w.training = { ...t, intensity };
 }
 
 /** After the club's match on `t.day`: the eleven leave their share on the pitch. */
