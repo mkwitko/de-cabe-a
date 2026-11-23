@@ -525,8 +525,7 @@ export const finishSeason = (s: SeasonState, next: Competition[]) => {
 /**
  * Season checks of TEST_STRATEGY §6: every phase over and every match played;
  * nobody plays twice a day; rest kept; every moved match recorded; second
- * legs after first legs; division clubs in one division only. A match of priority 0 may be
- * squeezed between two others (see below).
+ * legs after first legs; division clubs in one division only.
  */
 export function checkSeason(s: SeasonState): string[] {
   const problems: string[] = [];
@@ -541,12 +540,7 @@ export function checkSeason(s: SeasonState): string[] {
     for (let i = 1; i < list.length; i++) {
       const gap = list[i]!.day - list[i - 1]!.day;
       if (gap === 0) problems.push(`${club} plays twice on ${isoOf(list[i]!.day)}`);
-      // Rest gives way for a lowest priority match (a state championship straggler behind
-      // league, cup and a weekly regional cup finds no rested day, calendar.ts `place`).
-      else if (
-        gap < Math.max(list[i]!.rest, list[i - 1]!.rest) &&
-        Math.min(list[i]!.priority, list[i - 1]!.priority) > 0
-      )
+      else if (gap < Math.max(list[i]!.rest, list[i - 1]!.rest))
         problems.push(`${club} rests ${gap} day(s) before ${list[i]!.id}`);
     }
   }

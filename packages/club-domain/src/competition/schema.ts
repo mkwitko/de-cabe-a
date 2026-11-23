@@ -82,6 +82,14 @@ export const DateWindowSchema = z
     start: isoDate,
     end: isoDate,
     weekdays: z.array(z.number().int().min(0).max(6)).min(1),
+    /** Weekdays left out between two dates: the national series' midweeks during the estaduais. */
+    exclude: z
+      .strictObject({
+        start: isoDate,
+        end: isoDate,
+        weekdays: z.array(z.number().int().min(0).max(6)).min(1),
+      })
+      .optional(),
   })
   .refine((w) => w.start <= w.end, { message: 'window ends before it starts' });
 export type DateWindow = z.infer<typeof DateWindowSchema>;

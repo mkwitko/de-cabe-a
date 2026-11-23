@@ -5,7 +5,7 @@
  * difference between two readings the simulation takes. Impact is in goals of expected margin
  * (the result's own slopes: 0.35 + 0.3 a tenth of a strength point, 0.6 a share of the crowd).
  */
-import { crowdShare } from '../match/stadium';
+import { crowdShare, neutralVenue } from '../match/stadium';
 import { awayLoss, distanceKm } from './travel';
 import type { CareerWorld } from './advance';
 import { fielded, outOn } from './health';
@@ -59,10 +59,13 @@ export function matchReport(
   add('tired', fieldTired - fieldRested);
   add('owed', final - fieldTired);
   add('rivalShort', theirRested - theirs);
-  add('travel', home ? lost(theirs) : -lost(final), Math.round(km));
-  // The host's crowd, 0.6 being the usual: more of it helps him, less of it hurts him.
-  const crowd = crowdShare(w.pack, w.season, matchId);
-  add('crowd', (home ? 1 : -1) * (crowd - 0.6), Math.round(crowd * 100), 0.6);
+  // On neutral ground neither the trip nor the crowd is one side's (match/stadium.ts).
+  if (!neutralVenue(matchId)) {
+    add('travel', home ? lost(theirs) : -lost(final), Math.round(km));
+    // The host's crowd, 0.6 being the usual: more of it helps him, less of it hurts him.
+    const crowd = crowdShare(w.pack, w.season, matchId);
+    add('crowd', (home ? 1 : -1) * (crowd - 0.6), Math.round(crowd * 100), 0.6);
+  }
   return facts
     .filter((f) => f.impact >= MIN_IMPACT)
     .sort((a, b) => b.impact - a.impact)
