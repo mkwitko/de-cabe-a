@@ -492,6 +492,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     <div className="club-shell">
       <Scene plate={PLATE[room] ?? room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
+      {sim.turn && sim.turn.move !== 'stay' && <SeasonMoment turn={sim.turn} club={sim.club} />}
       <aside className="club-rail">
         <div className="hidden items-center gap-3 px-4 pt-5 pb-4 lg:flex">
           <Crest club={sim.club} size="lg" />
@@ -675,6 +676,82 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             <p className="text-xs text-chalk-soft/80">{t('career.builtHere', { ms: sim.ms })}</p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Seasons whose closing scene this browser has already shown (the turn stays in the view). */
+const SEEN_TURN = 'dc_club_turn';
+
+/**
+ * The season's verdict as a scene, once: the cup on the pitch when the club goes up (or wins the
+ * division), the street outside the stadium when it goes down. A season that changes nothing
+ * stays a line in the office.
+ */
+function SeasonMoment({ turn, club }: { turn: NonNullable<SimView['turn']>; club: ClubFace }) {
+  const [open, setOpen] = useState(() => {
+    try {
+      return localStorage.getItem(SEEN_TURN) !== String(turn.season);
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    if (!open) return;
+    try {
+      localStorage.setItem(SEEN_TURN, String(turn.season));
+    } catch {
+      // Private mode: the scene may show again after a reload; nothing is lost.
+    }
+  }, [open, turn.season]);
+  if (!open) return null;
+  const up = turn.move === 'promotion';
+  const plate = up ? 'gloria' : 'estadio';
+  const title = up && turn.champion === club.shortName ? 'champion' : turn.move;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="season-moment"
+      className="fixed inset-0 z-50 flex overflow-y-auto bg-club-night p-5 sm:p-10"
+    >
+      <picture aria-hidden className="club-moment-plate">
+        <source media="(orientation: portrait)" srcSet={`/img/clube/${plate}-v.webp`} />
+        <img
+          src={`/img/clube/${plate}-h.webp`}
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+        />
+      </picture>
+      <span
+        aria-hidden
+        className="absolute inset-0 bg-linear-to-t from-[rgb(3_6_5/0.95)] via-[rgb(3_6_5/0.45)] to-[rgb(3_6_5/0.2)]"
+      />
+      <div className="sala-glass club-moment-copy relative mt-auto flex w-full max-w-4xl flex-col items-start gap-5">
+        <Crest club={club} size="xl" />
+        <h2
+          id="season-moment"
+          className={`font-condensed text-[clamp(3.5rem,13vw,9rem)] leading-[0.84] font-black text-balance uppercase ${up ? 'text-club-gold' : ''}`}
+        >
+          {t('career.momentTitle', { m: title })}
+        </h2>
+        <p className="max-w-[46ch] text-xl leading-snug font-medium text-pretty">
+          {t('career.momentText', {
+            m: title,
+            club: club.name,
+            season: turn.season,
+            champion: turn.champion,
+          })}
+        </p>
+        <button
+          type="button"
+          autoFocus
+          className={`${btnPrimary} min-h-14 bg-club-gold px-8 text-xl`}
+          onClick={() => setOpen(false)}
+        >
+          {t('career.momentGo', { season: turn.season + 1 })}
+        </button>
       </div>
     </div>
   );
@@ -1258,7 +1335,7 @@ function Table({ sim, clubId }: { sim: SimView; clubId: string }) {
               <td>
                 <span className="flex min-w-0 items-center gap-2">
                   <Crest club={r} size="sm" />
-                  <span className="truncate">{r.name}</span>
+                  <span className="leading-tight text-pretty">{r.name}</span>
                 </span>
               </td>
               <td className="text-right">{r.played}</td>

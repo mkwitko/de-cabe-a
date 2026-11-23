@@ -357,6 +357,10 @@ export const ptBR = {
   'career.nextSeason': 'Começar a temporada {season}',
   'career.turn':
     'Temporada {season}: {champion} campeão da divisão. {move, select, promotion {Seu clube subiu!} relegation {Seu clube caiu.} other {Seu clube fica na divisão.}}',
+  'career.momentTitle': '{m, select, champion {Campeão!} promotion {Subimos!} other {Rebaixado}}',
+  'career.momentText':
+    '{m, select, champion {O {club} ganhou a divisão em {season} e sobe com a taça.} promotion {O {club} está na divisão de cima. {champion} fechou {season} com o título.} other {O {club} caiu de divisão em {season}. {champion} ficou com o título.}}',
+  'career.momentGo': 'Seguir para {season}',
   'career.money': 'Dinheiro na temporada {season}',
   'career.moneyKind':
     '{k, select, wages {Salários} debt {Parcela da dívida} tv {TV e cotas} sponsors {Patrocínio} tickets {Bilheteria} transfers {Transferências} travel {Viagens} agent {Comissões de empresários} scouting {Olheiros} prize {Premiação} fine {Multa do fair play} upkeep {Manutenção da estrutura} works {Obras} other {Outros}}',
