@@ -12,6 +12,10 @@ import { goalFor, positionOf } from './board';
 import { note } from './inbox';
 import { approaches } from './coaches';
 import { nationalDivisions } from './start';
+import { baseOf, bringUp } from './academy';
+import { ACADEMY } from './bases';
+import { applyMoves } from './market';
+import { academyPlayers } from './squad';
 
 /** PARÂMETRO: how many clubs call after a dismissal. */
 const OFFERS = 3;
@@ -59,6 +63,7 @@ export function takeJob(w: CareerWorld, clubId: string): void {
   if (!jobsAfter(w).includes(clubId) && !approaches(w).includes(clubId))
     throw new Error('job: not offered');
   const club = w.pack.clubs.find((c) => c.id === clubId)!;
+  const boysLeft = w.bases ? [...academyPlayers(w)] : [];
   const vacancies = { ...w.vacancies, [w.clubId]: w.day };
   delete vacancies[clubId];
   w.vacancies = vacancies;
@@ -92,6 +97,27 @@ export function takeJob(w: CareerWorld, clubId: string): void {
     'played',
   ] as const)
     delete w[k];
+  // The boys of the club left behind go back to its academy; those of the new club are the
+  // person's academy now (bases.ts).
+  if (boysLeft.length)
+    applyMoves(
+      w,
+      Object.fromEntries(
+        boysLeft.map((p) => [
+          p.id,
+          {
+            clubId: `${ACADEMY}${p.clubId}`,
+            wage: p.contract?.wage ?? 0,
+            until: p.contract?.until ?? '',
+          },
+        ]),
+      ),
+    );
+  const boys = baseOf(w, clubId);
+  if (boys.length) {
+    bringUp(w, boys);
+    w.academy = boys.map((p) => p.id);
+  }
   // A season taken over half-way is not judged by what the last coach left: the goal is the
   // squad's place or the place the club is in today, whichever asks less.
   w.board = {

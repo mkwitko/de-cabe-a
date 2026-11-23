@@ -8,6 +8,7 @@
  * `U = N + F + D + R − C − W`: need of the position, fit, growth expected, resale expected,
  * cost against the budget, weight on the wage bill. Every number is a PARÂMETRO.
  */
+import { isBase } from '../career/bases';
 import { next, rngFrom } from '@decabeca/match-engine';
 import type { CareerWorld } from '../career/advance';
 import { movePlayer, windowOpen } from '../career/market';
@@ -179,7 +180,8 @@ const byPosition = (pack: Pack) =>
     // which keep the order, so the place stays right in the packs that follow.
     const by = new Map<string, { id: string; at: number; level: number }[]>();
     for (const [at, p] of pack.players.entries())
-      for (const x of p.positions)
+      // Boys in other clubs' academies (bases.ts) are not on the clubs' market.
+      for (const x of isBase(p.clubId) ? [] : p.positions)
         if (x.level >= 2)
           (by.get(x.position) ?? by.set(x.position, []).get(x.position)!).push({
             id: p.id,

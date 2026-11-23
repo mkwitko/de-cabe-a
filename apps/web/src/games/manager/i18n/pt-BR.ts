@@ -127,6 +127,7 @@ export const ptBR = {
   'market.cash': 'Caixa {cash}',
   'market.wageRoom': 'Folha: cabe mais {room} por mês',
   'market.noClub': 'Sem clube',
+  'market.clubYouth': '{club} (base)',
   'market.until': 'Contrato até {year}',
   'market.band': '{lo} a {hi}',
   'market.bandWhat': 'Nível estimado',

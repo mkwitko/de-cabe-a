@@ -15,6 +15,7 @@ import { note } from './inbox';
 import { clubLevel } from './training';
 import { markArrival } from '../market/judgement';
 import { ABROAD } from '../market/abroad';
+import { isBase } from './bases';
 
 /** A player's club and contract after a move, by player id. */
 export type Moves = Record<
@@ -117,11 +118,12 @@ export function applyMoves(w: CareerWorld, changes: Moves): void {
     players[i] = moved(players[i]!, stamped[id]!);
     // A renewal changes neither squad.
     if (from === to) continue;
-    if (from && from !== ABROAD) {
+    // An academy (`base:<club>`) is no squad: no level to read again.
+    if (from && from !== ABROAD && !isBase(from)) {
       touched.add(from);
       (leaving.get(from) ?? leaving.set(from, new Set()).get(from)!).add(id);
     }
-    if (to && to !== ABROAD) {
+    if (to && to !== ABROAD && !isBase(to)) {
       touched.add(to);
       (joining.get(to) ?? joining.set(to, []).get(to)!).push(id);
     }

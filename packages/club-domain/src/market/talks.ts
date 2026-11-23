@@ -16,6 +16,8 @@ import {
   wantsToGo,
 } from './abroad';
 import type { CareerWorld } from '../career/advance';
+import { bringUp } from '../career/academy';
+import { homeOf, isBase } from '../career/bases';
 import { movePlayer, settle, windowOpen } from '../career/market';
 import { squadPlayers } from '../career/squad';
 import type { PackPlayer } from '../pack/schema';
@@ -125,8 +127,10 @@ const cool = (w: CareerWorld, playerId: string) => {
 };
 
 /** Why the person cannot open a talk for this player now; null when they can. */
-export function cannotTalk(w: CareerWorld, p: PackPlayer): TalkNo | null {
+export function cannotTalk(w: CareerWorld, boy: PackPlayer): TalkNo | null {
   const season = w.season.season;
+  // A boy of another club's academy is talked for as one of its players (bases.ts).
+  const p = isBase(boy.clubId) ? { ...boy, clubId: homeOf(boy.clubId) } : boy;
   // Abroad, only the foreign market and veterans coming home; not one sold out this season.
   if (p.clubId === ABROAD && (!signable(p, season) || w.moves?.[p.id]?.season === season))
     return 'abroad';
@@ -164,6 +168,11 @@ export function openTalk(w: CareerWorld, playerId: string): Talk {
   if (!p || p.clubId === w.clubId) throw new Error('talk: not for sale');
   const no = cannotTalk(w, p);
   if (no) throw new Error(`talk: ${no}`);
+  // Asked about one of its boys, the club brings him up first: he is its player to sell.
+  if (isBase(p.clubId)) {
+    bringUp(w, [p]);
+    return openTalk(w, playerId);
+  }
   const season = w.season.season;
   let talk: Talk;
   if (p.clubId === null) {

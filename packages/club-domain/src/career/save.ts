@@ -18,13 +18,14 @@ import { setJudgementClock } from '../market/judgement';
 import { withClubs, type ClubState } from './clubs';
 import { arrivalsOf, rebuildPack } from './years';
 import { withAcademy } from './academy';
+import { ACADEMY, homeOf, isBase } from './bases';
 import type { Note } from './inbox';
 
 /**
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 63;
+export const CAREER_RULES_VERSION = 64;
 
 interface Saved {
   v: number;
@@ -71,6 +72,7 @@ interface Saved {
   styled?: CareerWorld['styled'];
   academy?: CareerWorld['academy'];
   boysOf?: CareerWorld['boysOf'];
+  bases?: CareerWorld['bases'];
   image?: CareerWorld['image'];
   fairplay?: CareerWorld['fairplay'];
   /** Every club's cash, directors and structure (clubs.ts). */
@@ -106,7 +108,13 @@ function packMoves(pack: Pack, moves: Moves): PackedMoves {
   return {
     rows: Object.entries(moves).map(([id, m]) => [
       id,
-      m.clubId === null ? -1 : m.clubId === ABROAD ? -2 : (place.get(m.clubId) ?? -1),
+      m.clubId === null
+        ? -1
+        : m.clubId === ABROAD
+          ? -2
+          : isBase(m.clubId)
+            ? -3 - (place.get(homeOf(m.clubId)!) ?? -1)
+            : (place.get(m.clubId) ?? -1),
       m.wage,
       m.until ? Number(m.until.slice(0, 4)) : -1,
       m.release ?? -1,
@@ -122,7 +130,14 @@ function unpackMoves(pack: Pack, saved: PackedMoves | Moves | undefined): Moves 
   const moves: Moves = {};
   for (const [id, club, wage, until, release, season, joined] of saved.rows)
     moves[id] = {
-      clubId: club === -2 ? ABROAD : club < 0 ? null : pack.clubs[club]!.id,
+      clubId:
+        club === -2
+          ? ABROAD
+          : club <= -3
+            ? `${ACADEMY}${pack.clubs[-3 - club]!.id}`
+            : club < 0
+              ? null
+              : pack.clubs[club]!.id,
       wage,
       until: until < 0 ? '' : `${until}-12-31`,
       ...(release >= 0 && { release }),
@@ -174,6 +189,7 @@ export function saveCareer(w: CareerWorld): string {
     ...(w.styled && { styled: w.styled }),
     ...(w.academy && { academy: w.academy }),
     ...(w.boysOf !== undefined && { boysOf: w.boysOf }),
+    ...(w.bases && { bases: w.bases }),
     ...(w.image && { image: w.image }),
     ...(w.fairplay && { fairplay: w.fairplay }),
     ...(w.clubs && { clubs: w.clubs }),
@@ -188,7 +204,8 @@ export function saveCareer(w: CareerWorld): string {
 export function loadCareer(given: Pack, seed: number, clubId: string, json: string): CareerWorld {
   const saved = JSON.parse(json, reviver) as Saved;
   // The world the career opened with: the pack and the boys of the club it started at.
-  const base = saved.boysOf === undefined ? given : withAcademy(given, seed, saved.boysOf).pack;
+  const base =
+    saved.boysOf === undefined ? given : withAcademy(given, seed, saved.boysOf, saved.bases).pack;
   // The career's own pack object: the years replayed from the log, then this season's moves.
   const moves = unpackMoves(base, saved.moves);
   // A log from before the yearly growth was kept by character cannot be replayed: skipped.
@@ -252,6 +269,7 @@ export function loadCareer(given: Pack, seed: number, clubId: string, json: stri
     ...(saved.styled && { styled: saved.styled }),
     ...(saved.academy && { academy: saved.academy }),
     ...(saved.boysOf !== undefined && { boysOf: saved.boysOf }),
+    ...(saved.bases && { bases: saved.bases }),
     ...(saved.image && { image: saved.image }),
     ...(saved.fairplay && { fairplay: saved.fairplay }),
     ...(saved.clubs && { clubs: saved.clubs }),
