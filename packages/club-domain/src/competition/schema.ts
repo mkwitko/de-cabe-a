@@ -23,6 +23,8 @@ export const PositionsSchema = z
 export const SelectorSchema = z.strictObject({
   positions: PositionsSchema,
   best: count.optional(),
+  /** Only this table (1 = the first group), for a knockout drawn inside the groups. */
+  table: count.optional(),
 });
 export type Selector = z.infer<typeof SelectorSchema>;
 

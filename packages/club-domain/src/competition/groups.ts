@@ -84,7 +84,9 @@ export function select(tables: readonly Row[][], sel: Selector, rules: TableRule
   const tieBreakers = rules.tieBreakers.filter((b) => b !== 'headToHead');
   const out: string[] = [];
   for (let pos = from; pos <= to; pos++) {
-    const rows = tables.map((t) => t[pos - 1]).filter((r): r is Row => r !== undefined);
+    const rows = (sel.table === undefined ? tables : tables.slice(sel.table - 1, sel.table))
+      .map((t) => t[pos - 1])
+      .filter((r): r is Row => r !== undefined);
     const ranked = standings(
       rows.map((r) => r.clubId),
       [],

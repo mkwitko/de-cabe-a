@@ -163,3 +163,10 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes pe
 - Estaduais de 11/1 a 8/3, no máximo 11 datas (antes 16); Série A a partir da quarta-feira 28/1; Copa do Nordeste e Copa Verde de 25/3 a 7/6. Fontes: [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/veja-todas-as-datas-do-novo-calendario-do-futebol-brasileiro-em-2026/), [NetVasco](https://www.netvasco.com.br/n/370252/cbf-anuncia-calendario-de-2026-com-estaduais-em-11-datas-e-brasileiro-iniciando-em-janeiro-e-terminando-em-dezembro).
 - As 11 datas do jogo são os nove domingos da janela e as duas quartas antes da estreia da Série A; dali até 8/3 a Série A joga só no meio de semana. A lista oficial das datas não foi encontrada: é a leitura deste projeto (PARÂMETRO).
 - Copa do Brasil 2027: a CBF mantém 126 clubes e muda só as vagas estaduais (federações do 15º ao 27º lugar podem dar uma das três a uma copa estadual). Nenhuma vaga regional extra foi anunciada. Fontes: [TNH1](https://www.tnh1.com.br/noticia/nid/cbf-altera-regras-de-classificacao-para-a-copa-do-brasil-2027-veja-o-que-mudou/), [A Tarde](https://atarde.com.br/esportes/futebol/copa-do-brasil-entenda-nova-regra-de-classificacao-para-2027-1382696), [DOL](https://dol.com.br/esporte/esporte-brasil/936794/copa-do-brasil-tera-novo-formato-de-classificacao-em-2027-e-2028?d=1).
+
+## Copa Sul-Sudeste 2026
+
+- Regulamento Específico da Competição (CBF, PDF em [clicrdc](https://files.clicrdc.com.br/wp-content/uploads/2026/03/REC_COPA_SUL_SUDESTE_2026_96e5c88253-1.pdf)): participação (Art. 2º), vaga na 3ª fase da Copa do Brasil 2027 (Art. 5º), fases e confrontos (Art. 10 a 19).
+- Clubes e sorteio: [Jornal Grande Bahia](https://jornalgrandebahia.com.br/?p=1329805).
+- Cotas e prêmios (R$ 3,8 mi): [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/saiba-valores-recebido-pelos-times-que-disputam-as-copas-regionais/).
+- PARÂMETRO: no jogo, o campeão entra na Copa do Brasil pelo grupo 3 (2ª fase), não na 3ª fase. Os clubes em torneios da Conmebol são os 12 melhores da Série A anterior mais o campeão da Copa do Brasil.

@@ -1,5 +1,6 @@
 /**
- * Regional cups (Copa do Nordeste, Copa Verde in its Norte and Centro-Oeste halves) and the
+ * Regional cups (Copa do Nordeste, Copa Verde in its Norte and Centro-Oeste halves, Copa
+ * Sul-Sudeste) and the
  * Supercopa do Brasil as ordinary competitions. Formats, dates, money and sources:
  * `regionais-data.ts`. Participants come from the pack's clubs by state (the city's `state`) and
  * from last season's state championships; nothing is added to the pack. Calendar: from the first
@@ -21,6 +22,8 @@ import {
   NORTE_ID,
   PRIZES,
   REGIONAL_IDS,
+  SUL_SUDESTE_BERTHS,
+  SUL_SUDESTE_ID,
   SUPERCOPA_ID,
   VERDE_ID,
 } from './regionais-data';
@@ -65,12 +68,14 @@ function field(
   byState: Map<string, Clubs[]>,
   berths: Record<string, number>,
   previous: Results,
+  /** Clubs that may not play it (in a Conmebol cup), their places passing on. */
+  out: ReadonlySet<string> = new Set(),
 ): string[] {
   const rep = (a: Clubs, b: Clubs) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1);
   const chosen: Clubs[] = [];
   const rest: Clubs[] = [];
   for (const [uf, n] of Object.entries(berths)) {
-    const clubs = [...(byState.get(uf) ?? [])].sort(rep);
+    const clubs = (byState.get(uf) ?? []).filter((c) => !out.has(c.id)).sort(rep);
     const top = finalists(previous, `est-${uf}`)
       .map((id) => clubs.find((c) => c.id === id))
       .filter((c): c is Clubs => c !== undefined);
@@ -202,6 +207,35 @@ function verde(season: number): Competition {
 }
 
 /**
+ * The Copa Sul-Sudeste: the two groups meet each other once; first and second of each group meet
+ * home and away, the second leg at the first's; a two-leg final (REC 2026, regionais-data.ts).
+ */
+function sulSudeste(season: number, ids: string[]): Competition {
+  const w0 = regionalStart(season);
+  const p = PRIZES.sulSudeste;
+  const inGroup = (table: number): Phase['entrants'] => [
+    { from: 'phase', phaseId: 'grupos', positions: [1, 1], table },
+    { from: 'phase', phaseId: 'grupos', positions: [2, 2], table },
+  ];
+  const phases: Phase[] = [
+    gruposPhase('grupos', 2, win(w0, 0, 49, [3]), { legs: 1, opponents: 'other' }),
+    knockoutPhase('semi', 'mata-mata', win(w0, 56, 63, [3]), {
+      entrants: [...inGroup(1), ...inGroup(2)],
+      legs: 2,
+      survivors: 2,
+      pairing: 'fixed',
+      host: 'fixed',
+    }),
+    ko('final', 'final', win(w0, 70, 74, [3, 0]), fromPhase('semi', 2), 2, 1, 'betterCampaign'),
+  ];
+  return cup(SUL_SUDESTE_ID, 'Copa Sul-Sudeste', season, ids, phases, [
+    { phaseId: 'semi', positions: [1, 4], amount: p.semi },
+    { phaseId: 'final', positions: [2, 2], amount: p.runnerUp },
+    { phaseId: 'final', positions: [1, 1], amount: p.champion },
+  ]);
+}
+
+/**
  * The season's regional cups and their clubs. `previous` is last season's results (empty in a
  * career's first season). A cup the pack is too small for is left out; the Copa Verde needs both
  * halves.
@@ -210,6 +244,8 @@ export function regionalCompetitions(
   pack: Pack,
   season: number,
   previous: Results,
+  /** Clubs in the Conmebol's cups this season: no Copa do Nordeste or Copa Sul-Sudeste for them. */
+  continental: ReadonlySet<string> = new Set(),
 ): { competitions: Competition[]; members: Record<string, string[]> } {
   const cityState = new Map(pack.cities.map((c) => [c.id, c.state]));
   const byState = new Map<string, Clubs[]>();
@@ -227,7 +263,7 @@ export function regionalCompetitions(
     members[c.id] = ids;
   };
   // Four groups of five meeting in pairs: a multiple of four.
-  const ne = field(byState, NORDESTE_BERTHS, previous);
+  const ne = field(byState, NORDESTE_BERTHS, previous, continental);
   const neIds = ne.slice(0, ne.length - (ne.length % 4));
   if (neIds.length >= MIN_CLUBS) add(nordeste(season, neIds), neIds);
   const norte = field(byState, NORTE_BERTHS, previous);
@@ -237,6 +273,9 @@ export function regionalCompetitions(
     add(half(CENTRO_OESTE_ID, 'Copa Centro-Oeste', season, centro), centro);
     add(verde(season), []);
   }
+  // Two groups of six meeting each other: twelve clubs, or none.
+  const ss = field(byState, SUL_SUDESTE_BERTHS, previous, continental);
+  if (ss.length === 12) add(sulSudeste(season, ss), ss);
   return { competitions, members };
 }
 

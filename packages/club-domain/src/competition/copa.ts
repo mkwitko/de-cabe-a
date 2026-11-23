@@ -74,8 +74,12 @@ export interface TierMembers {
 export function copaField(
   tiers: readonly TierMembers[],
   ranking: readonly string[],
-  /** Last season's Copa do Nordeste and Copa Verde, champion first (regionais.ts). */
-  regional: { nordeste: readonly string[]; verde: readonly string[] } = { nordeste: [], verde: [] },
+  /** Last season's Copa do Nordeste, Copa Verde and Copa Sul-Sudeste, champion first (regionais.ts). */
+  regional: {
+    nordeste: readonly string[];
+    verde: readonly string[];
+    sulSudeste?: readonly string[];
+  } = { nordeste: [], verde: [] },
 ): CopaField | null {
   const at = new Map(ranking.map((id, i) => [id, i]));
   const rank = (id: string) => at.get(id) ?? ranking.length;
@@ -98,9 +102,17 @@ export function copaField(
   const [ne, verde] = [take(regional.nordeste) ?? take(c), take(regional.verde) ?? take(d)];
   const group2 = [c0, ne, d0, verde].filter((x): x is string => x !== undefined);
   if (group2.length !== COPA_GROUPS.others) return null;
-  const rest = best(
-    tiers.filter((t) => t.tier > 1).flatMap((t) => t.clubIds.filter((id) => !taken.has(id))),
-  );
+  // The Copa Sul-Sudeste champion is sure of a place: first of group 3 (regionais-data.ts NOTES).
+  const ss = regional.sulSudeste?.[0];
+  const sure = ss !== undefined && !taken.has(ss) ? [ss] : [];
+  const rest = [
+    ...sure,
+    ...best(
+      tiers
+        .filter((t) => t.tier > 1)
+        .flatMap((t) => t.clubIds.filter((id) => !taken.has(id) && !sure.includes(id))),
+    ),
+  ];
   if (rest.length < COPA_GROUPS.ranking) return null;
   return { serieA, group2, group3: rest.slice(0, COPA_GROUPS.ranking) };
 }
