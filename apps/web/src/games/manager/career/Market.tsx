@@ -11,6 +11,7 @@ import { t } from '../i18n';
 import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
 import { useBidTalk } from './BidTalk';
 import type { MarketAct, MarketPlayer, MarketView, SimReply, SimRequest } from './sim.worker';
+import type { PlayerQuery } from '@decabeca/club-domain';
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
 type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
@@ -133,10 +134,15 @@ function Head(props: {
             <span className="block truncate font-semibold">{p.name}</span>
           )}
         </span>
-        <span className="font-condensed text-2xl leading-none font-black whitespace-nowrap tabular-nums">
-          {p.range[0] === p.range[1]
-            ? p.rating
-            : t('market.band', { lo: p.range[0], hi: p.range[1] })}
+        <span className="flex flex-col items-end">
+          <span className="font-condensed text-2xl leading-none font-black whitespace-nowrap tabular-nums">
+            {p.range[0] === p.range[1]
+              ? p.rating
+              : t('market.band', { lo: p.range[0], hi: p.range[1] })}
+          </span>
+          <span className="text-[0.65rem] font-bold tracking-wide text-chalk-soft uppercase">
+            {p.range[0] === p.range[1] ? t('market.levelWhat') : t('market.bandWhat')}
+          </span>
         </span>
       </div>
       <details open={wide || first} className="group ml-12">
@@ -604,57 +610,309 @@ function Squads(props: {
   );
 }
 
-/** The club's scouts: who is away, and a trip to send one on. */
+/** Ages a mission or a search can look up to (none: any age). */
+const AGES = [17, 19, 21, 23] as const;
+const GRADE_TONE = {
+  A: 'bg-club-turf text-ink',
+  B: 'bg-club-gold text-ink',
+  C: 'bg-chalk/15 text-chalk',
+} as const;
+const ANY = '';
+
+/**
+ * The club's scouts as people (FM's scouting): each with his eyes for ability and potential, the
+ * state he knows best and whether boys are his thing; a mission picks one of them, where he goes
+ * and what he looks for; his reports come back graded against the person's squad.
+ */
 function Scouts({ s, act }: { s: MarketView['scouting']; act: Do }) {
-  const free = s.areas.filter((a) => !s.away.some((m) => m.area === a.area));
-  const [area, setArea] = useState(free[0]?.area ?? '');
-  const busy = s.away.length >= s.scouts;
+  const free = s.staff.filter((x) => x.away === null);
+  const [scout, setScout] = useState(free[0]?.id ?? '');
+  const [area, setArea] = useState(s.areas[0]?.area ?? '');
+  const [age, setAge] = useState(ANY);
+  const [position, setPosition] = useState(ANY);
+  const chosen = free.find((x) => x.id === scout) ?? free[0];
+  const cost = s.areas.find((a) => a.area === area)?.cost ?? 0;
+  const focus = {
+    ...(age !== ANY && { maxAge: Number(age) }),
+    ...(position !== ANY && { position }),
+  };
+  return (
+    <div className="sala-slab flex min-w-0 flex-col gap-4 p-4 sm:p-5">
+      <h3 className={LABEL}>{t('market.scouts')}</h3>
+      <p className="font-semibold">{t('market.scoutsKnown', { n: s.known })}</p>
+      <ul className="flex flex-col">
+        {s.staff.map((x) => (
+          <li
+            key={x.id}
+            className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-t border-chalk/10 py-3 first:border-0 first:pt-0"
+          >
+            <span className="font-semibold">{x.name}</span>
+            <span className="text-sm text-chalk-soft">{t('squad.age', { n: x.age })}</span>
+            <span className="col-span-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <span>{t('scouts.ability', { n: x.ability })}</span>
+              <span>{t('scouts.potential', { n: x.potential })}</span>
+              <span>{t('scouts.home', { s: x.home })}</span>
+              {x.youth && <span className="font-bold text-club-gold">{t('scouts.youth')}</span>}
+            </span>
+            <span className="col-span-2 text-sm text-chalk-soft">
+              {x.away === null
+                ? t('scouts.free')
+                : t('market.scoutAway', {
+                    area: x.away,
+                    date: `${x.back!.slice(8, 10)}/${x.back!.slice(5, 7)}`,
+                  })}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {free.length === 0 ? (
+        <p className="border-t border-chalk/10 pt-4 text-sm text-chalk-soft">
+          {t('scouts.allAway')}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3 border-t border-chalk/10 pt-4">
+          <h4 className="font-condensed text-base font-extrabold uppercase">
+            {t('scouts.mission')}
+          </h4>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm font-semibold">
+              {t('scouts.who')}
+              <select
+                className={FIELD}
+                value={chosen?.id ?? ''}
+                disabled={free.length === 0}
+                onChange={(e) => setScout(e.target.value)}
+              >
+                {free.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold">
+              {t('market.scoutArea')}
+              <select className={FIELD} value={area} onChange={(e) => setArea(e.target.value)}>
+                {s.areas.map((a) => (
+                  <option key={a.area} value={a.area}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold">
+              {t('scouts.age')}
+              <select className={FIELD} value={age} onChange={(e) => setAge(e.target.value)}>
+                <option value={ANY}>{t('scouts.anyAge')}</option>
+                {AGES.map((a) => (
+                  <option key={a} value={a}>
+                    {t('scouts.upTo', { n: a })}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold">
+              {t('scouts.position')}
+              <select
+                className={FIELD}
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+              >
+                <option value={ANY}>{t('scouts.anyPosition')}</option>
+                {POSITIONS.map((x) => (
+                  <option key={x} value={x}>
+                    {t('squad.position', { p: x })}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className={GO}
+              disabled={!chosen || !area}
+              onClick={() =>
+                chosen &&
+                act({
+                  do: 'scout',
+                  area,
+                  scout: chosen.id,
+                  ...(Object.keys(focus).length > 0 && { focus }),
+                })
+              }
+            >
+              {t('market.scoutSend')}
+            </button>
+            <span className="text-sm text-chalk-soft tabular-nums">
+              {t('market.scoutCost', { cost: money(cost) })}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 border-t border-chalk/10 pt-4">
+        <h4 className="font-condensed text-base font-extrabold uppercase">{t('scouts.reports')}</h4>
+        {s.reports.length === 0 ? (
+          <p className="text-sm text-chalk-soft">{t('scouts.noReports')}</p>
+        ) : (
+          s.reports.map((r, i) => (
+            <details key={`${r.iso}-${i}`} open={i === 0} className="border-t border-chalk/10 pt-2">
+              <summary className="cursor-pointer text-sm font-semibold">
+                {t('scouts.report', {
+                  date: `${r.iso.slice(8, 10)}/${r.iso.slice(5, 7)}`,
+                  scout: r.scout,
+                  area: r.area,
+                  n: r.players.length,
+                  good: r.players.filter((p) => p.grade !== 'C').length,
+                })}
+              </summary>
+              <ul className="mt-2 flex flex-col">
+                {r.players.map((p) => (
+                  <li key={p.id} className="flex items-start gap-3 border-t border-chalk/10 py-2">
+                    <span
+                      title={t('scouts.gradeWhy', { g: p.grade })}
+                      className={`mt-1 grid size-7 shrink-0 place-items-center rounded font-condensed font-black ${GRADE_TONE[p.grade]}`}
+                    >
+                      {p.grade}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <Head p={p} />
+                    </span>
+                    <button
+                      type="button"
+                      className={SMALL}
+                      onClick={() => act({ do: 'open', playerId: p.id })}
+                    >
+                      {t('market.talk')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))
+        )}
+        <p className="text-xs text-chalk-soft">{t('scouts.grades')}</p>
+      </div>
+    </div>
+  );
+}
+
+/** The world's players by name, club, division, state, position and age (FM's player search). */
+function Search(props: { view: MarketView; onSearch: (q: PlayerQuery | null) => void; act: Do }) {
+  const { view, onSearch, act } = props;
+  const [text, setText] = useState('');
+  const [area, setArea] = useState(ANY);
+  const [age, setAge] = useState(ANY);
+  const [position, setPosition] = useState(ANY);
+  const divisions = view.scouting.areas.filter((a) => a.area.startsWith('tier:'));
+  const states = view.scouting.areas.filter((a) => /^[A-Z]{2}$/.test(a.area));
+  const run = () => {
+    const q: PlayerQuery = {
+      ...(text.trim() && { text: text.trim() }),
+      ...(area.startsWith('tier:') && { tier: Number(area.slice(5)) }),
+      ...(/^[A-Z]{2}$/.test(area) && { state: area }),
+      ...(age !== ANY && { maxAge: Number(age) }),
+      ...(position !== ANY && { position }),
+    };
+    onSearch(Object.keys(q).length > 0 ? q : null);
+  };
+  const busy = view.scouting.away.length >= view.scouting.scouts;
+  const [all, setAll] = useState(false);
+  const found = view.found && (all ? view.found : view.found.slice(0, PAGE));
   return (
     <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
-      <h3 className={LABEL}>{t('market.scouts')}</h3>
-      <p className="text-sm text-chalk-soft">{t('market.scoutsInfo', { n: s.scouts })}</p>
-      <p className="font-semibold">{t('market.scoutsKnown', { n: s.known })}</p>
-      {s.away.length > 0 && (
-        <ul>
-          {s.away.map((m) => (
-            <li key={m.area} className="border-t border-chalk/10 py-2 first:border-0">
-              {t('market.scoutAway', {
-                area: m.label,
-                date: `${m.back.slice(8, 10)}/${m.back.slice(5, 7)}`,
-              })}
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="flex flex-wrap items-end gap-2">
-        <label className="flex min-w-0 flex-1 basis-40 flex-col gap-1 text-sm font-semibold">
-          {t('market.scoutArea')}
-          <select
+      <h3 className={LABEL}>{t('search.title')}</h3>
+      <form
+        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          run();
+        }}
+      >
+        <label className="flex flex-col gap-1 text-sm font-semibold sm:col-span-2">
+          {t('search.text')}
+          <input
+            type="search"
             className={FIELD}
-            value={area}
-            disabled={busy || free.length === 0}
-            onChange={(e) => setArea(e.target.value)}
-          >
-            {free.map((a) => (
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-semibold">
+          {t('search.where')}
+          <select className={FIELD} value={area} onChange={(e) => setArea(e.target.value)}>
+            <option value={ANY}>{t('search.anywhere')}</option>
+            {[...divisions, ...states].map((a) => (
               <option key={a.area} value={a.area}>
                 {a.label}
               </option>
             ))}
           </select>
         </label>
-        <button
-          type="button"
-          className={GO}
-          disabled={busy || !free.some((a) => a.area === area)}
-          onClick={() => act({ do: 'scout', area })}
-        >
-          {t('market.scoutSend')}
+        <label className="flex flex-col gap-1 text-sm font-semibold">
+          {t('scouts.age')}
+          <select className={FIELD} value={age} onChange={(e) => setAge(e.target.value)}>
+            <option value={ANY}>{t('scouts.anyAge')}</option>
+            {AGES.map((a) => (
+              <option key={a} value={a}>
+                {t('scouts.upTo', { n: a })}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-semibold">
+          {t('scouts.position')}
+          <select className={FIELD} value={position} onChange={(e) => setPosition(e.target.value)}>
+            <option value={ANY}>{t('scouts.anyPosition')}</option>
+            {POSITIONS.map((x) => (
+              <option key={x} value={x}>
+                {t('squad.position', { p: x })}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className={`${GO} self-end`}>
+          {t('search.go')}
         </button>
-      </div>
-      {free.some((a) => a.area === area) && (
-        <p className="text-sm text-chalk-soft tabular-nums">
-          {t('market.scoutCost', { cost: money(free.find((a) => a.area === area)!.cost) })}
-        </p>
+      </form>
+      {found !== null &&
+        (found.length === 0 ? (
+          <p className="text-chalk-soft">{t('search.none')}</p>
+        ) : (
+          <ul>
+            {found.map((p) => (
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+              >
+                <span className="min-w-0 flex-1 basis-56">
+                  <Head p={p} />
+                </span>
+                <button
+                  type="button"
+                  className={SMALL}
+                  disabled={busy}
+                  onClick={() => act({ do: 'scout', area: `player:${p.id}` })}
+                >
+                  {t('search.watch')}
+                </button>
+                <button
+                  type="button"
+                  className={SMALL}
+                  onClick={() => act({ do: 'open', playerId: p.id })}
+                >
+                  {t('market.talk')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
+      {view.found !== null && view.found.length > PAGE && (
+        <button type="button" className={`${SMALL} self-start`} onClick={() => setAll(!all)}>
+          {all ? t('inbox.less') : t('inbox.more', { n: view.found.length })}
+        </button>
       )}
     </div>
   );
@@ -699,6 +957,7 @@ export function Market(props: {
   const [club, setClub] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('buy');
   const [more, setMore] = useState(false);
+  const [search, setSearch] = useState<PlayerQuery | null>(null);
   const card = usePlayerSheet(ask, onError);
   // A bid's talk; its answer brings the market back as it now stands.
   const talk = useBidTalk(ask, onError, (r) => {
@@ -707,14 +966,14 @@ export function Market(props: {
   });
 
   useEffect(() => {
-    ask({ type: 'market', position, club })
+    ask({ type: 'market', position, club, search })
       .then((r) => setView(r.market ?? null))
       .catch((e: Error) => onError(e.message));
-  }, [ask, onError, position, club]);
+  }, [ask, onError, position, club, search]);
 
   if (!view) return null;
   const act: Do = (a) => {
-    ask({ type: 'market', position, club, act: a })
+    ask({ type: 'market', position, club, search, act: a })
       .then((r) => {
         setView(r.market ?? null);
         onDeal(r);
@@ -1036,7 +1295,14 @@ export function Market(props: {
 
       {tab === 'scout' && (
         <div className="grid items-start gap-5 lg:grid-cols-2">
-          <Scouts key={view.scouting.away.map((m) => m.area).join()} s={view.scouting} act={act} />
+          <div className="flex min-w-0 flex-col gap-5">
+            <Scouts
+              key={view.scouting.staff.map((x) => x.away ?? '').join()}
+              s={view.scouting}
+              act={act}
+            />
+            <Search view={view} onSearch={setSearch} act={act} />
+          </div>
 
           <Squads view={view} club={club} pick={setClub} act={act} />
         </div>
