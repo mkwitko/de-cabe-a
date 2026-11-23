@@ -64,6 +64,13 @@ for (const p of pages) {
     .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${esc(p.title)}$2`)
     .replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/, `$1${esc(p.description)}$2`)
     .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`)
+    // A page with its own preview picture (the Modo Clube landing).
+    .replace(/(<meta property="og:image" content=")[^"]*(")/, (m, a, b) =>
+      p.image ? `${a}${site}${p.image}${b}` : m,
+    )
+    .replace(/(<meta\s+property="og:image:alt"\s+content=")[^"]*(")/, (m, a, b) =>
+      p.imageAlt ? `${a}${esc(p.imageAlt)}${b}` : m,
+    )
     .replace('</head>', `<link rel="canonical" href="${url}" />${jsonLd.map(ld).join('')}</head>`)
     .replace('<div id="root"></div>', `<div id="root">${body}</div>`);
   const dir = new URL(`.${p.path === '/' ? '/' : `${p.path}/`}`, dist);
@@ -76,7 +83,9 @@ for (const p of pages) {
 if (shell.includes('{{')) throw new Error('index.html has "{{": it would break the level template');
 // Backticks are Go raw strings: nothing for the HTML escaping to touch.
 const N = '{{placeholder `http.regexp.level.2`}}';
-const games = pages.filter((p) => !['/', '/ranking', '/como-jogar'].includes(p.path));
+const games = pages.filter(
+  (p) => !['/', '/modo-clube', '/ranking', '/como-jogar'].includes(p.path),
+);
 for (const p of games) {
   const name = /^[^:?]+\??/.exec(p.title)[0];
   const title = `${name} · Fase ${N}: você acerta de cabeça?`;

@@ -42,8 +42,9 @@ export function FirstRun() {
     if (!welcomed()) {
       // Already a member, or a guest who picked a nickname before: not a first visit.
       if (me.account || me.nickname) return markWelcomed();
-      // The Modo Clube pitch is read first: the welcome waits for the next page.
-      if (/^\/(conta|entrar|modo-clube)(\/|$)/.test(pathname)) return;
+      // The Modo Clube pitch is read first, and its call goes straight into the career: the
+      // welcome and its nickname wait for the first page outside Modo Clube.
+      if (/^\/(conta|entrar|modo-clube|tecnico)(\/|$)/.test(pathname)) return;
       if (sceneFor(pathname) === 'level' && !levelEnded) return;
       setWelcome(true);
       return;
