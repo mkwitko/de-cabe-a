@@ -168,6 +168,7 @@ import {
   dnaOf,
   playedStyle,
   styleKind,
+  ROLE_WEIGHTS,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -1100,8 +1101,12 @@ export interface PlayerSheet {
   age: number;
   /** Natural positions first. */
   positions: string[];
+  /** Each position he plays and how well: 3 natural, 2 accomplished, 1 makeshift. */
+  levels: { position: string; level: number }[];
   /** What he is best at, and how well (1..99). */
   best: { role: string; rating: number };
+  /** The attributes that weigh most in that role (player/ratings.ts), heaviest first. */
+  key: string[];
   /** The attributes as the domain groups them, each 1..99; goalkeeping only for keepers. */
   attributes: {
     group: 'technical' | 'mental' | 'tactical' | 'physical' | 'goalkeeping';
@@ -1169,6 +1174,16 @@ function bidView(w: CareerWorld, id: string): BidView | null {
   };
 }
 
+/** Key attributes shown for a role: the ones carrying most of its weight. */
+const KEY_ATTRIBUTES = 6;
+const keyAttributes = (role: string | undefined): string[] =>
+  role && role in ROLE_WEIGHTS
+    ? [...ROLE_WEIGHTS[role as keyof typeof ROLE_WEIGHTS]]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, KEY_ATTRIBUTES)
+        .map(([a]) => a)
+    : [];
+
 function playerSheet(w: CareerWorld, id: string): PlayerSheet | null {
   const p = w.pack.players.find((x) => x.id === id && x.clubId === w.clubId);
   if (!p) return null;
@@ -1180,7 +1195,9 @@ function playerSheet(w: CareerWorld, id: string): PlayerSheet | null {
     name: p.knownAs ?? p.name,
     age: w.season.season - Number(p.birthDate.slice(0, 4)),
     positions: [...p.positions].sort((a, b) => b.level - a.level).map((x) => x.position),
+    levels: p.positions.map((x) => ({ position: x.position, level: x.level })),
     best: sq?.best ?? { role: '', rating: seenLevel(w.pack, w.clubId, p) },
+    key: keyAttributes(sq?.best.role),
     attributes: (
       Object.entries(ATTRIBUTE_GROUPS) as [
         PlayerSheet['attributes'][number]['group'],
