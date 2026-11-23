@@ -662,8 +662,8 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             <Crest club={sim.club} />
           </span>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-condensed text-xl leading-none font-black uppercase lg:text-3xl">
-              <span className="lg:hidden">{sim.club.name}</span>
+            <h1 className="line-clamp-2 font-condensed text-xl leading-none font-black text-balance uppercase lg:truncate lg:text-3xl">
+              <span className="lg:hidden">{sim.club.shortName}</span>
               <span className="hidden lg:inline">{t('career.room', { r: room })}</span>
             </h1>
             <p className="mt-1 truncate text-xs font-semibold text-chalk-soft lg:hidden">
@@ -822,38 +822,43 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                   <Fixtures sim={sim} />
                   <section className={PANEL}>
                     <h3 className={LABEL}>{t('career.money', { season: sim.season })}</h3>
-                    <dl className="flex flex-col gap-2.5 tabular-nums">
-                      {sim.money.map((m) => (
-                        <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
-                          <dt className="text-chalk-soft">
-                            {t('career.moneyKind', { k: m.kind })}
-                          </dt>
-                          <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
-                            {t('career.cash', { value: m.amount })}
-                          </dd>
-                          <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
-                            <span
-                              className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
-                              style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
-                            />
-                          </dd>
-                        </div>
-                      ))}
-                      <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 border-t border-chalk/15 pt-3 font-condensed text-xl font-extrabold uppercase">
-                        <dt>{t('career.net')}</dt>
-                        <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
-                          {t('career.cash', { value: net })}
-                        </dd>
-                      </div>
+                    <dl className="flex items-baseline justify-between gap-4 font-condensed text-xl font-extrabold uppercase tabular-nums">
+                      <dt>{t('career.net')}</dt>
+                      <dd className={net < 0 ? 'text-club-danger' : 'text-club-gold'}>
+                        {t('career.cash', { value: net })}
+                      </dd>
                     </dl>
-                    <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-chalk/15 pt-3 text-sm tabular-nums">
-                      {sim.fx.map((x) => (
-                        <Fragment key={x.currency}>
-                          <dt className="text-chalk-soft">{t('career.fx', { c: x.currency })}</dt>
-                          <dd>{t('career.fxRate', { rate: x.rate, change: x.change / 10 })}</dd>
-                        </Fragment>
-                      ))}
-                    </dl>
+                    <details className="group">
+                      <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-chalk-soft">
+                        {t('career.ledger')}
+                      </summary>
+                      <dl className="flex flex-col gap-2.5 tabular-nums">
+                        {sim.money.map((m) => (
+                          <div key={m.kind} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
+                            <dt className="text-chalk-soft">
+                              {t('career.moneyKind', { k: m.kind })}
+                            </dt>
+                            <dd className={m.amount < 0 ? 'text-club-danger' : ''}>
+                              {t('career.cash', { value: m.amount })}
+                            </dd>
+                            <dd aria-hidden className="col-span-2 h-1 rounded-full bg-chalk/10">
+                              <span
+                                className={`block h-full rounded-full ${m.amount < 0 ? 'bg-club-danger' : 'bg-club-gold'}`}
+                                style={{ width: `${(Math.abs(m.amount) / biggest) * 100}%` }}
+                              />
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-chalk/15 pt-3 text-sm tabular-nums">
+                        {sim.fx.map((x) => (
+                          <Fragment key={x.currency}>
+                            <dt className="text-chalk-soft">{t('career.fx', { c: x.currency })}</dt>
+                            <dd>{t('career.fxRate', { rate: x.rate, change: x.change / 10 })}</dd>
+                          </Fragment>
+                        ))}
+                      </dl>
+                    </details>
                   </section>
                 </div>
               </section>
@@ -1061,7 +1066,7 @@ function NextMatch(props: {
             <button
               type="button"
               disabled={busy}
-              className={`${btnPrimary} min-h-13 bg-club-gold`}
+              className={`${btnSecondary} bg-club-night/80`}
               onClick={props.onPlay}
             >
               {t('career.preseasonDay')}
@@ -1069,7 +1074,7 @@ function NextMatch(props: {
             <button
               type="button"
               disabled={busy}
-              className={`${btnSecondary} bg-club-night/80`}
+              className={`${btnPrimary} min-h-13 bg-club-gold`}
               onClick={props.onSkip}
             >
               {t('career.preseasonSkip')}
@@ -1927,6 +1932,14 @@ function Table(props: {
   const { rows, title, clubId } = props;
   const { up, down } = props.zones ?? { up: 0, down: 0 };
   const size = rows.length;
+  // A phone starts on five rows around the club; "Ver tabela" opens the rest.
+  const [all, setAll] = useState(false);
+  const mine = Math.max(
+    0,
+    rows.findIndex((r) => r.clubId === clubId),
+  );
+  const from = all || size <= 5 ? 0 : Math.min(Math.max(0, mine - 2), size - 5);
+  const to = all || size <= 5 ? size : from + 5;
   // A hairline closes each zone: after the last place that goes up, before the first that falls.
   const edge = (i: number) =>
     up > 0 && i === up
@@ -1954,33 +1967,47 @@ function Table(props: {
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
-            <tr
-              key={r.clubId}
-              aria-current={r.clubId === clubId || undefined}
-              className={
-                r.clubId === clubId
-                  ? `bg-club-gold/15 font-bold text-club-gold ${edge(i)}`
-                  : edge(i)
-              }
-            >
-              <td className="py-1.5 pl-1">{i + 1}</td>
-              <td>
-                <span className="flex min-w-0 items-center gap-2">
-                  <Crest club={r} size="sm" />
-                  <span className="leading-tight text-pretty">{r.name}</span>
-                </span>
-              </td>
-              <td className="text-right">{r.played}</td>
-              <td className="text-right max-sm:hidden">{r.won}</td>
-              <td className="text-right max-sm:hidden">{r.drawn}</td>
-              <td className="text-right max-sm:hidden">{r.lost}</td>
-              <td className="text-right">{r.gd}</td>
-              <td className="pr-1 text-right font-bold">{r.points}</td>
-            </tr>
-          ))}
+          {rows.slice(from, to).map((row, k) => {
+            const i = from + k;
+            const r = row;
+            return (
+              <tr
+                key={r.clubId}
+                aria-current={r.clubId === clubId || undefined}
+                className={
+                  r.clubId === clubId
+                    ? `bg-club-gold/15 font-bold text-club-gold ${edge(i)}`
+                    : edge(i)
+                }
+              >
+                <td className="py-1.5 pl-1">{i + 1}</td>
+                <td>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Crest club={r} size="sm" />
+                    <span className="leading-tight text-pretty">{r.name}</span>
+                  </span>
+                </td>
+                <td className="text-right">{r.played}</td>
+                <td className="text-right max-sm:hidden">{r.won}</td>
+                <td className="text-right max-sm:hidden">{r.drawn}</td>
+                <td className="text-right max-sm:hidden">{r.lost}</td>
+                <td className="text-right">{r.gd}</td>
+                <td className="pr-1 text-right font-bold">{r.points}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+      {size > 5 && (
+        <button
+          type="button"
+          aria-expanded={all}
+          className="min-h-11 self-start font-semibold text-club-gold underline-offset-4 hover:underline"
+          onClick={() => setAll(!all)}
+        >
+          {all ? t('career.tableFewer') : t('career.tableMore', { n: size })}
+        </button>
+      )}
       {(up > 0 || down > 0) && (
         <p className="flex gap-x-4 text-xs text-chalk-soft">
           {up > 0 && <span>{t('career.zoneUp', { n: up })}</span>}

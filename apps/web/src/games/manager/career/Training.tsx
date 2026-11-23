@@ -41,8 +41,8 @@ function WeekPlan({ view, onPlan }: { view: TrainingView; onPlan: (p: Session[][
   const set = (day: number, half: number, x: Session) =>
     onPlan(view.plan.map((d, i) => (i === day ? d.map((y, j) => (j === half ? x : y)) : d)));
   return (
-    <div className="sala-slab flex min-w-0 flex-col gap-4 p-4 sm:p-5 lg:col-span-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
+    <details className="sala-slab flex min-w-0 flex-col gap-4 p-4 sm:p-5 lg:col-span-2 [&[open]]:gap-4 [&>summary]:min-h-11 [&>summary]:cursor-pointer">
+      <summary className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 id="plan-title" className={LABEL}>
           {t('training.week')}
         </h3>
@@ -54,7 +54,7 @@ function WeekPlan({ view, onPlan }: { view: TrainingView; onPlan: (p: Session[][
             custom: String(view.custom),
           })}
         </p>
-      </div>
+      </summary>
       <ol aria-labelledby="plan-title" className="grid grid-cols-1 gap-2 sm:grid-cols-7">
         {DAYS.map((d) => {
           const match = view.week.find((m) => m.weekday === d);
@@ -79,8 +79,8 @@ function WeekPlan({ view, onPlan }: { view: TrainingView; onPlan: (p: Session[][
                     <select
                       value={x}
                       onChange={(e) => set(d, h, e.target.value as Session)}
-                      className="min-h-10 w-full rounded-md border-l-4 bg-club-night px-1.5 text-sm font-semibold text-chalk"
-                      style={{ borderLeftColor: SESSION_TONE[x] }}
+                      className="min-h-10 w-full rounded-md border-2 bg-club-night px-1.5 text-sm font-semibold text-chalk"
+                      style={{ borderColor: SESSION_TONE[x] }}
                     >
                       {SESSIONS.map((s) => (
                         <option key={s} value={s}>
@@ -99,7 +99,7 @@ function WeekPlan({ view, onPlan }: { view: TrainingView; onPlan: (p: Session[][
         <p className="text-sm font-semibold text-club-gold">{t('training.prepHint')}</p>
       )}
       <p className="text-sm text-chalk-soft">{t('training.planHint')}</p>
-    </div>
+    </details>
   );
 }
 
@@ -157,17 +157,6 @@ export function Training(props: {
       aria-labelledby="training-title"
       className="grid items-start gap-5 lg:grid-cols-[minmax(0,27rem)_1fr]"
     >
-      <WeekPlan
-        view={view}
-        onPlan={(plan) =>
-          ask({ type: 'plan', plan })
-            .then((r) => {
-              setView(r.training ?? null);
-              onPicked(r);
-            })
-            .catch((e: Error) => onError(e.message))
-        }
-      />
       <div className="sala-slab flex flex-col gap-4 p-4 sm:p-5">
         <h3 id="training-title" className={LABEL}>
           {t('training.ready')}
@@ -256,6 +245,17 @@ export function Training(props: {
         </p>
       </div>
 
+      <WeekPlan
+        view={view}
+        onPlan={(plan) =>
+          ask({ type: 'plan', plan })
+            .then((r) => {
+              setView(r.training ?? null);
+              onPicked(r);
+            })
+            .catch((e: Error) => onError(e.message))
+        }
+      />
       <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
         <h3 className={LABEL}>{t('training.fresh')}</h3>
         <p className="text-chalk-soft">{t('training.freshHint')}</p>

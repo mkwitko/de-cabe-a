@@ -18,12 +18,54 @@ type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 
 const LABEL =
   'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
-/** Board placement: the team attacks up the screen; low y is the team's right. */
-const place = (s: { x: number; y: number }) => ({
-  left: `${(1 - s.y / 68) * 100}%`,
-  top: `${94 - (s.x / 82) * 86}%`,
-});
-const surname = (name: string) => name.split(' ').at(-1)!;
+/**
+ * Board placement: the team attacks up the screen; low y is the team's right. The engine's
+ * in-possession shape is the start; magnets that would touch (a striker over the attacking
+ * midfielder, two midfielders at the centre circle) are pushed apart until each has room for its
+ * badge and name, in percent of the board so it holds at 360 and at 1280.
+ */
+const GAP = { x: 20, y: 19 };
+function layout(slots: { x: number; y: number }[]) {
+  const at = slots.map((s) => ({ left: (1 - s.y / 68) * 100, top: 94 - (s.x / 82) * 86 }));
+  for (let pass = 0; pass < 80; pass++) {
+    let moved = false;
+    for (let i = 0; i < at.length; i++)
+      for (let j = i + 1; j < at.length; j++) {
+        const a = at[i]!;
+        const b = at[j]!;
+        const dx = b.left - a.left;
+        const dy = b.top - a.top;
+        const ox = GAP.x - Math.abs(dx);
+        const oy = GAP.y - Math.abs(dy);
+        if (ox <= 0 || oy <= 0) continue;
+        moved = true;
+        if (oy <= ox) {
+          const h = (oy / 2) * (dy < 0 ? -1 : 1);
+          a.top -= h;
+          b.top += h;
+        } else {
+          const h = (ox / 2) * (dx < 0 ? -1 : 1);
+          a.left -= h;
+          b.left += h;
+        }
+      }
+    for (const m of at) {
+      m.left = Math.min(90, Math.max(10, m.left));
+      m.top = Math.min(89, Math.max(11, m.top));
+    }
+    if (!moved) break;
+  }
+  return at.map((m) => ({ left: `${m.left}%`, top: `${m.top}%` }));
+}
+/** The name a magnet can hold whole: the surname, else the first name with the surname's initial. */
+const WHOLE = 9;
+function surname(name: string) {
+  const [first = '', ...rest] = name.split(' ');
+  const last = rest.at(-1) ?? first;
+  if (last.length <= WHOLE) return last;
+  const short = `${first} ${last[0]}.`;
+  return rest.length > 0 && short.length <= WHOLE + 1 ? short : last;
+}
 
 const COLS = ['pos', 'name', 'age', 'fresh', 'rating'] as const;
 const ROW =
@@ -62,6 +104,7 @@ export function Squad(props: {
         onPicked(r);
       })
       .catch((e: Error) => onError(e.message));
+  const spots = layout(squad.slots);
   const byId = new Map(squad.players.map((p) => [p.id, p]));
   const isKeeperSlot = (i: number) => squad.slots[i]!.role.toLowerCase().includes('keeper');
   const keeperSlot = slot !== null && isKeeperSlot(slot);
@@ -108,7 +151,7 @@ export function Squad(props: {
   return (
     <section
       aria-labelledby="squad-title"
-      className="grid items-start gap-5 lg:grid-cols-[minmax(0,27rem)_1fr] 2xl:grid-cols-[minmax(0,32rem)_1fr]"
+      className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,27rem)_1fr] 2xl:grid-cols-[minmax(0,32rem)_1fr]"
     >
       <div className="sala-slab flex flex-col gap-4 p-4 sm:p-5">
         <div className="flex items-end justify-between gap-3">
@@ -130,13 +173,17 @@ export function Squad(props: {
             </span>
           </p>
         </div>
-        <div role="group" aria-label={t('squad.formation')} className="flex flex-wrap gap-1.5">
+        <div
+          role="group"
+          aria-label={t('squad.formation')}
+          className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 max-sm:pr-10 max-sm:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)]"
+        >
           {squad.formations.map((f) => (
             <button
               key={f}
               type="button"
               aria-pressed={squad.formation === f}
-              className={`min-h-11 flex-1 rounded-lg px-2 font-condensed text-base font-extrabold whitespace-nowrap tabular-nums ${squad.formation === f ? 'bg-club-gold text-ink' : 'bg-chalk/8 text-chalk hover:bg-chalk/15'}`}
+              className={`min-h-11 shrink-0 flex-1 rounded-lg px-3 font-condensed text-base font-extrabold whitespace-nowrap tabular-nums ${squad.formation === f ? 'bg-club-gold text-ink' : 'bg-chalk/8 text-chalk hover:bg-chalk/15'}`}
               onClick={() => void send(f, null)}
             >
               {f}
@@ -163,8 +210,8 @@ export function Squad(props: {
                   n: p.fit[i]!,
                   known: t('squad.known', { l: p.known[i]! }),
                 })}
-                className="sala-magnet absolute flex w-[4.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-                style={place(s)}
+                className="sala-magnet absolute flex w-[3.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
+                style={spots[i]}
                 onClick={() => tapSlot(i)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -178,7 +225,7 @@ export function Squad(props: {
                 >
                   {p.fit[i]}
                 </span>
-                <span className="max-w-full truncate rounded bg-club-night/85 px-1.5 text-xs leading-5 font-bold">
+                <span className="rounded bg-club-night/85 px-1 text-xs leading-5 font-bold whitespace-nowrap">
                   {surname(p.name)}
                 </span>
               </button>

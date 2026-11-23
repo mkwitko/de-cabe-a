@@ -961,6 +961,7 @@ export function Market(props: {
   const [club, setClub] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('buy');
   const [more, setMore] = useState(false);
+  const [everyone, setEveryone] = useState(false);
   const [search, setSearch] = useState<PlayerQuery | null>(null);
   const card = usePlayerSheet(ask, onError);
   // A bid's talk; its answer brings the market back as it now stands.
@@ -989,6 +990,12 @@ export function Market(props: {
   const shut = t('market.closed');
   const cut = shut.indexOf('. ');
   const closed = cut < 0 ? [shut, ''] : [shut.slice(0, cut), shut.slice(cut + 2)];
+
+  // The market as the club can pay it: fee within the cash and the opening wage within the room.
+  const reach = (p: MarketView['targets'][number]) =>
+    p.value <= view.cash && p.asks <= Math.max(0, view.wageRoom);
+  const full = view.targets.some((p) => p.no === 'squadFull');
+  const shown = everyone ? view.targets : view.targets.filter(reach);
 
   const offered = (
     <div className="sala-slab flex min-w-0 flex-col gap-3 p-4 sm:p-5">
@@ -1108,14 +1115,14 @@ export function Market(props: {
       <div
         role="group"
         aria-label={t('market.sections')}
-        className="sala-slab grid grid-cols-4 gap-1 p-1 sm:flex sm:w-fit"
+        className="sala-slab grid grid-cols-2 gap-1 p-1 sm:flex sm:w-fit"
       >
         {TABS.map((k) => (
           <button
             key={k}
             type="button"
             aria-pressed={tab === k}
-            className={`min-h-11 rounded-lg px-1 font-condensed text-[0.9375rem] leading-tight font-extrabold whitespace-nowrap uppercase sm:px-5 sm:text-lg ${tab === k ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
+            className={`min-h-11 rounded-lg px-2 font-condensed text-lg leading-tight font-extrabold whitespace-nowrap uppercase sm:px-5 ${tab === k ? 'bg-club-gold text-ink' : 'text-chalk hover:bg-chalk/10'}`}
             onClick={() => setTab(k)}
           >
             {t('market.section', { s: k })}
@@ -1132,7 +1139,7 @@ export function Market(props: {
           <div
             role="group"
             aria-label={t('market.position')}
-            className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1"
+            className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 max-sm:pr-10 max-sm:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)]"
           >
             <button
               type="button"
@@ -1154,29 +1161,49 @@ export function Market(props: {
               </button>
             ))}
           </div>
+          {full && (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-semibold text-club-gold">
+              {t('market.squadFull', { n: view.mine.length })}
+              <button type="button" className={`${SMALL} min-h-11`} onClick={() => setTab('mine')}>
+                {t('market.squadFullGo')}
+              </button>
+            </p>
+          )}
+          <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              className="size-5 accent-club-gold"
+              checked={everyone}
+              onChange={(e) => setEveryone(e.target.checked)}
+            />
+            {t('market.everyone', { n: view.targets.length })}
+          </label>
+          {shown.length === 0 && <p className="text-chalk-soft">{t('market.noneInReach')}</p>}
           <ul>
-            {(more ? view.targets : view.targets.slice(0, PAGE)).map((p, i) => (
+            {(more ? shown : shown.slice(0, PAGE)).map((p, i) => (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2"
+                className={`flex flex-wrap items-center justify-end gap-x-3 gap-y-2 border-t border-chalk/10 py-2 ${reach(p) ? '' : 'opacity-60'}`}
               >
                 <span className="min-w-0 flex-1 basis-56">
                   <Head p={p} first={i === 0} />
                 </span>
-                <button
-                  type="button"
-                  disabled={p.no !== null}
-                  aria-label={t('market.talkFor', {
-                    name: p.name,
-                    age: p.age,
-                    n: p.rating,
-                    value: money(p.value),
-                  })}
-                  className="min-h-11 w-28 shrink-0 rounded-lg bg-chalk/10 px-2 font-condensed text-base leading-tight font-extrabold uppercase enabled:hover:bg-chalk/20 disabled:bg-transparent disabled:font-sans disabled:text-xs disabled:font-bold disabled:text-chalk-soft disabled:normal-case"
-                  onClick={() => act({ do: 'open', playerId: p.id })}
-                >
-                  {p.no === null ? t('market.talk') : t('market.no', { r: p.no })}
-                </button>
+                {p.no !== 'squadFull' && (
+                  <button
+                    type="button"
+                    disabled={p.no !== null}
+                    aria-label={t('market.talkFor', {
+                      name: p.name,
+                      age: p.age,
+                      n: p.rating,
+                      value: money(p.value),
+                    })}
+                    className="min-h-11 w-28 shrink-0 rounded-lg bg-chalk/10 px-2 font-condensed text-base leading-tight font-extrabold uppercase enabled:hover:bg-chalk/20 disabled:bg-transparent disabled:font-sans disabled:text-xs disabled:font-bold disabled:text-chalk-soft disabled:normal-case"
+                    onClick={() => act({ do: 'open', playerId: p.id })}
+                  >
+                    {p.no === null ? t('market.talk') : t('market.no', { r: p.no })}
+                  </button>
+                )}
                 {p.loan !== null && (
                   <button
                     type="button"
@@ -1208,9 +1235,9 @@ export function Market(props: {
               </li>
             ))}
           </ul>
-          {view.targets.length > PAGE && (
+          {shown.length > PAGE && (
             <button type="button" className={`${SMALL} self-start`} onClick={() => setMore(!more)}>
-              {more ? t('market.fewer') : t('market.more', { n: view.targets.length })}
+              {more ? t('market.fewer') : t('market.more', { n: shown.length })}
             </button>
           )}
         </div>
