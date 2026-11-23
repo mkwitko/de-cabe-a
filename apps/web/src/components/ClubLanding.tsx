@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { api } from '../lib/api';
+import { Crest } from './Crest';
 import { Icon } from './Icon';
 import { btnPrimary, btnSecondary } from './ui';
 
@@ -94,6 +95,9 @@ const H2 =
   'pitch-reveal font-condensed text-4xl leading-[0.9] font-black text-balance uppercase sm:text-6xl lg:text-7xl';
 const LEAD = 'mt-3 max-w-[58ch] text-lg text-pretty text-chalk-soft sm:text-xl';
 
+/** What it costs to start, under the opening call. Each is an answer of the FAQ below. */
+const FACTS = ['Grátis', 'Sem instalar', 'Sem cadastro', 'No computador e no celular'];
+
 /** Asked before starting; every answer is how the mode works today. */
 /** The club's week, running under the last scene. Twice over, so the loop has no seam. */
 const WEEK = ['Escalação', 'Treino', 'Mercado', 'Diretoria', 'Dia de jogo', 'Acesso', 'Glória'];
@@ -137,7 +141,8 @@ function useHasCareer() {
   return Boolean(data?.career);
 }
 
-/** The home's way into the main game: one scene and one action. The pitch lives at /modo-clube. */
+/** The home's way into the main game: one scene and one action. The pitch (/modo-clube) is a page
+ * for people coming from outside, so nothing in the site links to it. */
 export function ClubDoor() {
   useClubStage();
   const has = useHasCareer();
@@ -164,14 +169,12 @@ export function ClubDoor() {
             O clube é seu.
             <span className="block text-club-gold">A glória também.</span>
           </p>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <Link to={TO} className={`${btnPrimary} min-h-14 bg-club-gold px-8 text-xl`}>
-              {has ? 'Continuar carreira' : 'Começar minha carreira'}
-            </Link>
-            <Link to="/modo-clube" className={`${btnSecondary} min-h-14 bg-club-night/70 px-6`}>
-              Conheça o Modo Clube
-            </Link>
-          </div>
+          <Link
+            to={TO}
+            className={`${btnPrimary} min-h-14 w-full bg-club-gold px-8 text-xl sm:w-auto`}
+          >
+            {has ? 'Continuar carreira' : 'Começar minha carreira'}
+          </Link>
         </div>
       </div>
     </section>
@@ -181,11 +184,26 @@ export function ClubDoor() {
 export function ClubLanding() {
   useClubStage();
   const has = useHasCareer();
+  const cta = has ? 'Continuar carreira' : 'Jogar grátis';
   return (
     <div className="pitch">
+      {/* The page's own bar: it stands alone, outside the site's menu. The way in is always at hand. */}
+      <header className="fixed inset-x-0 top-[var(--consent-room,0px)] z-30 bg-club-night/85 backdrop-blur-md">
+        <div className={`${WRAP} flex h-16 items-center justify-between gap-3`}>
+          <Link to="/" className="flex min-h-11 min-w-0 items-center gap-2.5">
+            <Crest className="h-9 w-8 shrink-0" />
+            <span className="font-condensed text-xl leading-none font-black whitespace-nowrap uppercase sm:text-2xl">
+              De Cabeça F.C.
+            </span>
+          </Link>
+          <Link to={TO} className={`${btnPrimary} min-h-11 shrink-0 bg-club-gold px-5 text-base`}>
+            {cta}
+          </Link>
+        </div>
+      </header>
       <section
         aria-labelledby="club-pitch"
-        className="relative flex min-h-[calc(100svh-5.5rem)] flex-col justify-end overflow-hidden bg-club-night pt-10 pb-28 sm:pb-40 lg:pb-64"
+        className="relative flex min-h-svh flex-col justify-end overflow-hidden bg-club-night pt-10 pb-28 sm:pb-40 lg:pb-64"
       >
         <span className="club-landing-plate absolute inset-0">
           <Plate name="gloria" lazy={false} />
@@ -219,9 +237,16 @@ export function ClubLanding() {
                 Ver o que você decide
               </a>
             </div>
-            <p className={`text-sm font-semibold text-chalk/90 ${SHADOW}`}>
-              Grátis, direto no navegador. No computador ou no celular.
-            </p>
+            <ul
+              className={`flex flex-wrap gap-x-5 gap-y-1 font-condensed text-lg font-extrabold uppercase ${SHADOW}`}
+            >
+              {FACTS.map((f) => (
+                <li key={f} className="flex items-center gap-2">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-club-gold" />
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
@@ -318,6 +343,18 @@ export function ClubLanding() {
             ))}
           </ul>
         </section>
+
+        <p className="pitch-reveal flex flex-col items-start gap-4 pt-10 sm:flex-row sm:items-center sm:justify-between sm:pt-14">
+          <span className="font-condensed text-3xl leading-[0.95] font-black text-balance uppercase sm:text-5xl">
+            Seu clube está esperando o técnico.
+          </span>
+          <Link
+            to={TO}
+            className={`${btnPrimary} min-h-14 w-full shrink-0 bg-club-gold px-8 text-xl sm:w-auto`}
+          >
+            {cta}
+          </Link>
+        </p>
 
         <section
           aria-labelledby="club-path"

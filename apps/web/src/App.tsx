@@ -437,7 +437,7 @@ const NAV_LAUNCH = [
     to: '/tecnico/carreira',
     label: 'Clube',
     Icon: ClubIcon,
-    match: (p: string) => /^\/(tecnico|modo-clube)(\/|$)/.test(p),
+    match: (p: string) => /^\/tecnico(\/|$)/.test(p),
   },
   {
     to: '/',
@@ -463,9 +463,11 @@ function Shell({ children }: { children: ReactNode }) {
   const home = pathname === '/';
   const level = sceneFor(pathname) === 'level';
   // The Modo Clube career is its own stage: its rail and bar replace the site's strip.
-  const stage = pathname === '/tecnico/carreira';
-  // The home and the Modo Clube pitch run edge to edge; their sections keep their own gutter.
-  const wide = home || pathname === '/modo-clube';
+  const career = pathname === '/tecnico/carreira';
+  // The Modo Clube pitch is a page for people coming from outside: it has its own bar, no menu.
+  const stage = career || pathname === '/modo-clube';
+  // The home runs edge to edge; its sections keep their own gutter.
+  const wide = home;
   useEffect(() => setScene(sceneFor(pathname)), [pathname]);
   useApplyCosmetics();
   return (
@@ -527,7 +529,7 @@ function Shell({ children }: { children: ReactNode }) {
       {!online && (
         <p
           role="status"
-          className={`mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink ${stage ? 'relative z-40 mx-4 mt-2 lg:ml-64' : ''}`}
+          className={`mb-4 rounded-lg bg-cover px-4 py-2 font-semibold text-ink ${career ? 'relative z-40 mx-4 mt-2 lg:ml-64' : stage ? 'relative z-40 mx-4 mt-20' : ''}`}
         >
           Sem conexão. As jogadas voltam quando a internet voltar.
         </p>
