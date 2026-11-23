@@ -90,6 +90,7 @@ import {
   clubLevels,
   drilled,
   myStrength,
+  prepPoints,
   rivalFresh,
   rivalStrength,
   tire,
@@ -236,7 +237,7 @@ function playDay(
   let training = trainingOn(w, day);
   const strength = (clubId: string) =>
     clubId === w.clubId
-      ? strengthOwed(w, myStrength(w, training, fielded(w, day)))
+      ? strengthOwed(w, myStrength(w, training, fielded(w, day)) + prepPoints(training, day))
       : rivalStrength(w, clubId, day) + coachEdge(w, clubId);
   const cashBefore = w.ledger.cash;
   if (windowOpen(w.day) !== windowOpen(day)) {

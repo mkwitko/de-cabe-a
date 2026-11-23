@@ -82,7 +82,26 @@ export interface Bid {
   why: Why;
   /** A bid back after the person's refusal, not yet announced in the inbox. */
   again?: boolean;
+  /**
+   * The talk so far, oldest first: the club's bids and the person's answers. Kept from the
+   * first answer on (the opening bid is then its first line); missing while untouched.
+   */
+  log?: BidStep[];
 }
+
+/** One step of a talk over a bid for the person's player. */
+export interface BidStep {
+  day: number;
+  by: 'club' | 'you';
+  kind: 'bid' | 'counter' | 'refuse';
+  fee: number;
+}
+
+/** The bid's talk with one more step: the opening bid first, when it is the first answer. */
+const logged = (b: Bid, step: BidStep): BidStep[] => [
+  ...(b.log ?? [{ day: b.day, by: 'club', kind: 'bid', fee: b.fee }]),
+  step,
+];
 
 export type TalkNo =
   'window' | 'squadFull' | 'theirSquad' | 'cold' | 'justMoved' | 'abroad' | 'embargo' | PlayerNo;
@@ -478,7 +497,19 @@ export function answerBid(
       return { kind: 'refused' };
     }
     w.bids = (w.bids ?? []).map((b) =>
-      b.id === id ? { ...b, fee: back.fee, round: 2, day: back.day, again: true } : b,
+      b.id === id
+        ? {
+            ...b,
+            fee: back.fee,
+            round: 2,
+            day: back.day,
+            again: true,
+            log: [
+              ...logged(b, { day: w.day, by: 'you', kind: 'refuse', fee: b.fee }),
+              { day: back.day, by: 'club', kind: 'bid', fee: back.fee },
+            ],
+          }
+        : b,
     );
     return { kind: 'refused' };
   }
@@ -490,7 +521,17 @@ export function answerBid(
       const raised = Math.min(bid.most, thousands((bid.fee + answer.fee) / 2));
       if (raised <= bid.fee || bid.round >= 3) return leave('tooDear');
       w.bids = (w.bids ?? []).map((b) =>
-        b.id === id ? { ...b, fee: raised, round: b.round + 1 } : b,
+        b.id === id
+          ? {
+              ...b,
+              fee: raised,
+              round: b.round + 1,
+              log: [
+                ...logged(b, { day: w.day, by: 'you', kind: 'counter', fee: answer.fee }),
+                { day: w.day, by: 'club', kind: 'bid', fee: raised },
+              ],
+            }
+          : b,
       );
       return { kind: 'raised', fee: raised };
     }
