@@ -3,7 +3,7 @@
  * the facts that last moved it, and the ultimatum when one runs (club-domain career/board.ts).
  * `Fired` is the end of the job.
  */
-import { btnPrimary } from '../../../components/ui';
+import { btnPrimary, btnSecondary } from '../../../components/ui';
 import { ClubBadge } from '../../../components/ClubBadge';
 import { t } from '../i18n';
 import type { Front, WorkNo } from '@decabeca/club-domain';
@@ -251,12 +251,14 @@ export function Board({
 /** The board ended the job: the clubs that call, and the door to another career. */
 export function Fired({
   club,
+  history,
   offers,
   busy,
   onTake,
   onRestart,
 }: {
   club: string;
+  history: SimView['history'];
   offers: SimView['board']['offers'];
   busy: boolean;
   onTake: (clubId: string) => void;
@@ -274,9 +276,17 @@ export function Fired({
       </picture>
       <div className="sala-glass relative m-auto flex w-full max-w-xl min-w-0 flex-col items-center gap-5 text-center">
         <h2 className="font-condensed text-3xl leading-[0.92] font-black text-balance uppercase sm:text-6xl">
-          {t('board.fired')}
+          {t('board.fired', { club })}
         </h2>
         <p className="text-lg text-balance">{t('board.firedText', { club })}</p>
+        {history.length > 0 && (
+          <p className="text-chalk-soft">
+            {t('board.firedRecap', {
+              seasons: history.length,
+              titles: history.reduce((n, h) => n + (h.champion ? 1 : 0) + h.cups.length, 0),
+            })}
+          </p>
+        )}
         {offers.length > 0 && (
           <section aria-labelledby="job-offers" className="flex w-full flex-col gap-2">
             <h3 id="job-offers" className="font-condensed text-xl font-extrabold uppercase">
@@ -309,11 +319,7 @@ export function Fired({
             </ul>
           </section>
         )}
-        <button
-          type="button"
-          className="min-h-11 px-3 font-semibold underline underline-offset-4"
-          onClick={onRestart}
-        >
+        <button type="button" className={`${btnSecondary} bg-club-night/80`} onClick={onRestart}>
           {t('board.restart')}
         </button>
       </div>

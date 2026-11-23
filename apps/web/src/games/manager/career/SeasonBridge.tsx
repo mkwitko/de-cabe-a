@@ -1,4 +1,5 @@
 /** "O que vem aí": the season turn's bridge, three short lists (club-domain bridge.ts). */
+import { btnPrimary } from '../../../components/ui';
 import { t } from '../i18n';
 import type { SimView } from './sim.worker';
 
@@ -8,9 +9,12 @@ const LISTS = ['happened', 'carried', 'ahead'] as const;
 
 export function SeasonBridge({
   bridge,
+  season,
   onClose,
 }: {
   bridge: NonNullable<SimView['bridge']>;
+  /** The season that begins. */
+  season: number;
   onClose: () => void;
 }) {
   return (
@@ -35,8 +39,8 @@ export function SeasonBridge({
             </div>
           ),
       )}
-      <button type="button" className="self-start underline" onClick={onClose}>
-        {t('bridge.close')}
+      <button type="button" className={`${btnPrimary} self-start bg-club-gold`} onClick={onClose}>
+        {t('bridge.close', { season })}
       </button>
     </section>
   );

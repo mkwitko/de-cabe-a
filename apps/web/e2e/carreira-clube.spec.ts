@@ -1,5 +1,12 @@
 /** Modo Clube career start (MC-176, MC-177): offers or free choice, then the season built in the browser. */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+/** "Só o resultado" shows the result card; one "Continuar" goes back to the office. */
+async function playMatch(page: Page, play: Locator) {
+  await play.click();
+  await expect(page.getByTestId('result-card')).toBeVisible();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+}
 
 /**
  * The career stops on each pre-season day and on a window's last day (deadline day) before the
@@ -65,10 +72,10 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await expect(page.getByRole('region', { name: 'Primeiros passos' })).toHaveCount(0);
   await toMatch(page);
   await expect(page.getByRole('heading', { name: 'Classificação' })).toBeVisible();
-  await play.click();
+  await playMatch(page, play);
   await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
   await toMatch(page);
-  await play.click();
+  await playMatch(page, play);
   await toMatch(page);
   // Either match may be a Copa do Brasil tie, which no table counts.
   await expect.poll(() => playedBy(page)).toBeGreaterThanOrEqual(0);
@@ -117,7 +124,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
     await expect(play.or(turn).or(close).or(skip)).toBeEnabled({ timeout: 30_000 });
     if (await skip.isVisible()) await skip.click();
     else if (await close.isVisible()) await close.click();
-    else if (await play.isVisible()) await play.click();
+    else if (await play.isVisible()) await playMatch(page, play);
   }
   await expect(page.getByText('Salários', { exact: true })).toBeVisible();
   await expect(page.getByText('Bilheteria', { exact: true })).toBeVisible();
@@ -311,7 +318,7 @@ for (const width of [360, 1280]) {
 
     // The eleven holds across rooms and the next match still plays.
     await room(page, 'Sala do técnico').click();
-    await (await toMatch(page)).click();
+    await playMatch(page, await toMatch(page));
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await room(page, 'Vestiário').click();
     await expect(board.last()).toHaveAttribute('aria-label', new RegExp(`: ${firstName}, nível `));
@@ -356,7 +363,7 @@ for (const width of [360, 1280]) {
     await page.getByRole('button', { name: /^Forte/ }).click();
     expect((await kept).status()).toBe(200);
     await room(page, 'Sala do técnico').click();
-    await (await toMatch(page)).click();
+    await playMatch(page, await toMatch(page));
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await page.reload();
     await room(page, 'Campo de treino').click();
@@ -397,7 +404,7 @@ for (const width of [360, 1280]) {
       .click();
     // The first match is in January: play it, so the other clubs have traded when the market opens.
     await toMatch(page);
-    await page.getByRole('button', { name: 'Só o resultado' }).click();
+    await playMatch(page, page.getByRole('button', { name: 'Só o resultado' }));
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await toMatch(page);
     await room(page, 'Mercado').click();
@@ -502,7 +509,7 @@ for (const width of [360, 1280]) {
     ).toBeVisible();
 
     await room(page, 'Sala do técnico').click();
-    await (await toMatch(page)).click();
+    await playMatch(page, await toMatch(page));
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -539,7 +546,7 @@ for (const width of [360, 1280]) {
 
     // A match moves it, and the room says by how much and why.
     await room(page, 'Sala do técnico').click();
-    await (await toMatch(page)).click();
+    await playMatch(page, await toMatch(page));
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await room(page, 'Diretoria').click();
     await expect(page.getByText(/^(Vitória|Empate|Derrota) (como|em) /)).toBeVisible();
@@ -648,7 +655,7 @@ test('career: the inbox keeps what happened across a reload', async ({ page }) =
   // Messages from the start: the board's welcome, though agents' offers and bids may push it
   // past the list's end.
   await expect(inbox.getByRole('listitem').first()).toBeVisible({ timeout: 30_000 });
-  await (await toMatch(page)).click();
+  await playMatch(page, await toMatch(page));
   const result = inbox.getByRole('listitem').filter({ hasText: 'Imprensa' });
   await expect(result).toHaveCount(1, { timeout: 30_000 });
   const told = await result.innerText();
@@ -678,7 +685,7 @@ for (const width of [360, 1280]) {
       .click();
     const play = page.getByRole('button', { name: 'Só o resultado' });
     await toMatch(page);
-    await play.click();
+    await playMatch(page, play);
     await expect(page.getByText(/^\S+ \d+ × \d+ \S+$/)).toBeAttached({ timeout: 30_000 });
     await toMatch(page);
     const old = await page.locator('tbody tr.text-club-gold td').nth(1).innerText();
@@ -703,9 +710,9 @@ for (const width of [360, 1280]) {
     expect(put.ok()).toBe(true);
 
     await page.reload();
-    await expect(
-      page.getByRole('heading', { name: 'A direção encerrou seu contrato' }),
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: /chamou outro caminho/ })).toBeVisible({
+      timeout: 30_000,
+    });
     const take = page.getByRole('button', { name: /^Assumir o / });
     await expect(take).toHaveCount(3);
     await expect(page.getByRole('button', { name: 'Começar outra carreira' })).toBeVisible();
@@ -728,7 +735,7 @@ for (const width of [360, 1280]) {
     await page.reload();
     await toMatch(page);
     expect(await page.locator('tbody tr.text-club-gold td').nth(1).innerText()).toBe(now);
-    await play.click();
+    await playMatch(page, play);
     await toMatch(page);
     expect(errors).toEqual([]);
   });
@@ -764,7 +771,7 @@ test('career: a bid opens its own talk from the inbox, with the answer and the r
     if ((await neg.count()) > 0) break;
     if (await day.isVisible()) await day.click();
     else if (await close.isVisible()) await close.click();
-    else await play.click();
+    else await playMatch(page, play);
   }
   expect(await neg.count()).toBeGreaterThan(0);
   await neg.first().click();

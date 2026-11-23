@@ -56,7 +56,7 @@ describe('keeper below expectation', () => {
   it('reads as goals conceded, never as negative goals saved', async () => {
     const { signed } = await import('../FriendlyPage');
     const m = signed({ key: 'match.explain.keeper', params: { saved: -1.06, team: 0 } });
-    expect(tMessage(m)).toBe('Seu goleiro sofreu 1,06 gols além do esperado.');
+    expect(tMessage(m)).toBe('Seu goleiro sofreu 1,06 gol além do esperado.');
     const up = signed({ key: 'match.explain.keeper', params: { saved: 0.86, team: 1 } });
     expect(tMessage(up)).toBe('O goleiro deles evitou 0,86 gols além do esperado.');
   });

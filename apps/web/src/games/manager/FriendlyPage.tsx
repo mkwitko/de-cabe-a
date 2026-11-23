@@ -10,6 +10,7 @@ import { motionReduced } from '../../lib/settings';
 import { ClubBadge } from '../../components/ClubBadge';
 import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
+import { headlineKind } from './headline';
 import { drawPlayers, kitsFor, pitchLayer, view, type View } from './pitch';
 
 export interface Club {
@@ -35,6 +36,7 @@ interface MatchEvent {
   kind: string;
   atMs: number;
   team: 0 | 1 | null;
+  playerId?: string;
   data: Record<string, number>;
 }
 interface Message {
@@ -383,6 +385,9 @@ export function Match(props: {
   away: Side;
   /** The person's side (0 home, 1 away): their plan, their commands. */
   mine?: 0 | 1;
+  /** Their strength minus ours, and the players' names by id: the full-time headline and scorers. */
+  gap?: number;
+  names?: Record<string, string>;
   source?: MatchSource;
   /** Called once when the result is known, before the report shows. */
   onFinished?: (result: Result) => void;
@@ -612,6 +617,10 @@ export function Match(props: {
       <Report
         result={result}
         clubs={[hc, ac]}
+        events={sim.current.events}
+        mine={mine}
+        {...(props.gap !== undefined && { gap: props.gap })}
+        {...(props.names && { names: props.names })}
         {...(props.onAgain && { onAgain: props.onAgain })}
         {...(props.onChange && { onChange: props.onChange })}
         {...(props.onDone && { onDone: props.onDone })}
@@ -778,6 +787,10 @@ export interface Result {
 function Report(props: {
   result: Result;
   clubs: [Club, Club];
+  events: MatchEvent[];
+  mine: 0 | 1;
+  gap?: number;
+  names?: Record<string, string>;
   onAgain?: () => void;
   onChange?: () => void;
   /** A career match: back to the career instead of playing again. */
@@ -785,6 +798,35 @@ function Report(props: {
 }) {
   const { result, clubs } = props;
   const [a, b] = result.stats;
+  // Goals and red cards by side, with the minute; the headline reads the last goal.
+  const goals = props.events.filter((e) => e.kind === 'goal' && e.team !== null);
+  const lines: [string[], string[]] = [[], []];
+  for (const e of props.events) {
+    const isGoal = e.kind === 'goal';
+    if (e.team === null || !(isGoal || (e.kind === 'card' && e.data.card === 2))) continue;
+    const minute = minuteOf(e.atMs, props.events);
+    const name =
+      (e.playerId && props.names?.[e.playerId]) ||
+      t(isGoal ? 'friendly.goalWord' : 'friendly.redWord');
+    lines[e.team].push(
+      t(isGoal ? (e.data.own ? 'friendly.ownGoalAt' : 'friendly.goalAt') : 'friendly.redAt', {
+        name,
+        minute,
+      }),
+    );
+  }
+  const [mineGoals, theirGoals] =
+    props.mine === 0 ? result.score : [result.score[1], result.score[0]];
+  const lastGoal = goals.at(-1);
+  const kind = headlineKind({
+    mine: mineGoals,
+    theirs: theirGoals,
+    ...(props.gap !== undefined && { gap: props.gap }),
+    late:
+      !!lastGoal &&
+      minuteOf(lastGoal.atMs, props.events) >= 85 &&
+      lastGoal.team === (mineGoals > theirGoals ? props.mine : 1 - props.mine),
+  });
   const acc = (s: TeamStats) => (s.passes ? s.passesCompleted / s.passes : 0);
   const rows: { key: MessageKey; v: [string, string]; n: [number, number] }[] = [
     {
@@ -827,7 +869,10 @@ function Report(props: {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
       <section className="sala-slab flex flex-col items-center gap-5 px-4 py-7 text-center sm:py-10">
-        <h2 className={LABEL}>{t('friendly.fullTime')}</h2>
+        <h2 className="font-condensed text-3xl leading-[0.95] font-black text-balance uppercase sm:text-5xl">
+          {t(`headline.${kind}`, { team: clubs[1 - props.mine]!.shortName })}
+        </h2>
+        <p className={LABEL}>{t('friendly.fullTime')}</p>
         <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-8">
           <span className="order-2 rounded-xl bg-club-gold px-4 font-condensed text-5xl leading-tight font-black whitespace-nowrap text-ink tabular-nums sm:px-6 sm:text-7xl">
             {result.score[0]}–{result.score[1]}
@@ -845,10 +890,40 @@ function Report(props: {
             </span>
           ))}
         </div>
+        {(lines[0].length > 0 || lines[1].length > 0) && (
+          <div
+            role="group"
+            aria-label={t('friendly.events')}
+            className="grid w-full grid-cols-2 gap-x-6 text-sm tabular-nums sm:text-base"
+          >
+            {lines.map((ls, i) => (
+              <ul key={i} className={`flex flex-col gap-1 ${i === 0 ? 'text-right' : 'text-left'}`}>
+                {ls.map((l, j) => (
+                  <li key={j}>{l}</li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        )}
       </section>
       <div className="sala-desk grid md:grid-cols-2">
         <section className="flex flex-col gap-3 p-4 sm:p-5">
           <h3 className={LABEL}>{t('friendly.report')}</h3>
+          <p className="grid grid-cols-2 gap-2 font-condensed text-base font-extrabold uppercase">
+            {clubs.map((c, i) => (
+              <span
+                key={c.id}
+                className={`flex items-center gap-2 ${i === 1 ? 'justify-end' : ''}`}
+              >
+                <span
+                  aria-hidden
+                  className="size-3 shrink-0 rounded-full"
+                  style={{ background: c.colours[0] }}
+                />
+                {c.shortName}
+              </span>
+            ))}
+          </p>
           <dl className="flex flex-col gap-2">
             {rows.map((r) => {
               const total = r.n[0] + r.n[1] || 1;
@@ -885,8 +960,8 @@ function Report(props: {
             })}
           </dl>
         </section>
-        <section className="flex flex-col gap-3 p-4 sm:p-5">
-          <h3 className={LABEL}>{t('friendly.why')}</h3>
+        <details className="flex flex-col gap-3 p-4 sm:p-5">
+          <summary className={`${LABEL} cursor-pointer`}>{t('friendly.why')}</summary>
           {result.explanation.factors.length === 0 ? (
             <p className="text-chalk-soft">{t('friendly.noFactor')}</p>
           ) : (
@@ -902,7 +977,7 @@ function Report(props: {
           <p className="text-sm text-chalk-soft">
             {t('friendly.conversion', { v: result.explanation.conversion })}
           </p>
-        </section>
+        </details>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
         {props.onDone && (
