@@ -717,3 +717,48 @@ for (const width of [360, 1280]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('career: a bid opens its own talk from the inbox, with the answer and the result', async ({
+  page,
+}) => {
+  test.setTimeout(400_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/tecnico/carreira');
+  await page.getByRole('button', { name: /Escolher o clube/ }).click();
+  await page.getByRole('button', { name: 'Primeira Divisão' }).click();
+  await page.getByRole('listitem').getByRole('button').first().click();
+  // Put the best few players on the list: bids come for them.
+  await room(page, 'Mercado').click();
+  await page.getByRole('button', { name: 'Seu elenco', exact: true }).click();
+  const put = page.getByRole('button', { name: /^Pôr .+ à venda$/ });
+  await expect(put.first()).toBeVisible({ timeout: 30_000 });
+  for (let k = 0; k < 4; k++) {
+    await put.first().click();
+    await page.waitForTimeout(400);
+  }
+  await room(page, 'Sala do técnico').click();
+  const neg = page.getByRole('button', { name: 'Negociar' });
+  const play = page.getByRole('button', { name: 'Só o resultado' });
+  const close = page.getByRole('button', { name: 'Fechar a janela' });
+  const day = page.getByRole('button', { name: 'Avançar um dia' });
+  for (let i = 0; i < 40; i++) {
+    await expect(play.or(close).or(day)).toBeEnabled({ timeout: 60_000 });
+    if ((await neg.count()) > 0) break;
+    if (await day.isVisible()) await day.click();
+    else if (await close.isVisible()) await close.click();
+    else await play.click();
+  }
+  expect(await neg.count()).toBeGreaterThan(0);
+  await neg.first().click();
+  const dlg = page.getByRole('dialog');
+  await expect(dlg.getByRole('heading', { name: 'Proposta recebida' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/bid-talk-1280.png' });
+  await dlg.getByRole('button', { name: /^Pedir / }).click();
+  await expect(dlg.getByRole('status')).toBeVisible({ timeout: 30_000 });
+  await page.screenshot({ path: 'test-results/bid-talk-after-1280.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: 'test-results/bid-talk-390.png' });
+  expect(errors).toEqual([]);
+});

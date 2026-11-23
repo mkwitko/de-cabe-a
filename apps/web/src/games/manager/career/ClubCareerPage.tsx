@@ -28,6 +28,7 @@ import { Squad } from './Squad';
 import { Training } from './Training';
 import { Cup } from './Cup';
 import { Market } from './Market';
+import { useBidTalk } from './BidTalk';
 import { Board, type WorkSaid, Fired } from './Board';
 import { Backup } from './Backup';
 import {
@@ -422,6 +423,13 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     [keep, career.id],
   );
 
+  // A bid's talk, opened from the inbox (BidTalk.tsx); its answers update the hub like a deal.
+  const askAny = useCallback<Ask>(
+    (req) => (ask ? ask(req) : Promise.reject(new Error('worker'))),
+    [ask],
+  );
+  const bidTalk = useBidTalk(askAny, setError, deal);
+
   const step = (type: 'play' | 'nextSeason' | 'skipPreseason') => {
     if (!ask) return;
     setBusy(true);
@@ -762,7 +770,8 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                 onTraining={() => go('treino')}
               />
               <section className="sala-desk grid min-w-0 lg:grid-cols-[1.4fr_1fr]">
-                <Inbox sim={sim} onGo={go} />
+                <Inbox sim={sim} onGo={go} onBid={bidTalk.open} />
+                {bidTalk.talk}
                 <div className="flex min-w-0 flex-col">
                   <Table
                     rows={sim.table}
@@ -1645,7 +1654,16 @@ const INBOX_SHORT = 6;
  * What the club was told, newest first: kept in the career, so it is there after a reload.
  * The agents' offers of one day read as one note, and a note that asks for something says where.
  */
-function Inbox({ sim, onGo }: { sim: SimView; onGo: (r: Room) => void }) {
+function Inbox({
+  sim,
+  onGo,
+  onBid,
+}: {
+  sim: SimView;
+  onGo: (r: Room) => void;
+  /** Opens a bid's talk (BidTalk.tsx). */
+  onBid: (bidId: string, from: HTMLElement) => void;
+}) {
   const [all, setAll] = useState(false);
   const notes = useMemo(() => {
     const out: { n: InboxItem; text: string }[] = [];
@@ -1693,12 +1711,14 @@ function Inbox({ sim, onGo }: { sim: SimView; onGo: (r: Room) => void }) {
               <button
                 type="button"
                 className={`${btnSecondary} min-h-11 px-3 text-base`}
-                onClick={() =>
+                onClick={(e) =>
                   x.kind === 'approach'
                     ? document
                         .getElementById(`convite-${x.club}`)
                         ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                    : onGo(TODO_ROOM[x.kind])
+                    : x.kind === 'bid'
+                      ? onBid(x.id, e.currentTarget)
+                      : onGo(TODO_ROOM[x.kind])
                 }
               >
                 {t('career.todoGo', { k: x.kind })}
@@ -1732,15 +1752,26 @@ function Inbox({ sim, onGo }: { sim: SimView; onGo: (r: Room) => void }) {
                 <p className="col-span-2 col-start-2 max-w-[70ch] text-pretty text-chalk/90">
                   {text}
                 </p>
-                {room && (
+                {n.kind === 'bid' && n.id !== undefined ? (
                   <button
                     type="button"
                     className="col-span-2 col-start-2 -ml-2 flex min-h-9 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
-                    onClick={() => onGo(room)}
+                    onClick={(e) => onBid(n.id!, e.currentTarget)}
                   >
-                    {t('inbox.open', { r: room })}
+                    {t('bidTalk.open')}
                     <Icon name="forward" className="size-4" />
                   </button>
+                ) : (
+                  room && (
+                    <button
+                      type="button"
+                      className="col-span-2 col-start-2 -ml-2 flex min-h-9 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
+                      onClick={() => onGo(room)}
+                    >
+                      {t('inbox.open', { r: room })}
+                      <Icon name="forward" className="size-4" />
+                    </button>
+                  )
                 )}
               </li>
             );
