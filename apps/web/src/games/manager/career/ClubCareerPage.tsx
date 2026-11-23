@@ -5,6 +5,7 @@
  */
 import { SeasonReview } from './SeasonReview';
 import { SeasonBridge } from './SeasonBridge';
+import { ResultCard, type Played } from './ResultCard';
 import { trackDecision, trackSeen, trackTiming } from './telemetry';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiFetch } from '../../../lib/api';
@@ -318,6 +319,11 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
 type Ask = (req: DistributiveOmit<SimRequest, 'id'>) => Promise<SimReply>;
 
+/** Back in the office on a wide screen: the room starts from its top. */
+const toTop = () => {
+  if (window.matchMedia('(min-width: 1024px)').matches) window.scrollTo(0, 0);
+};
+
 function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   const [sim, setSim] = useState<SimView | null>(null);
   const [busy, setBusy] = useState(true);
@@ -332,6 +338,8 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     mine: 0 | 1;
     formation: string;
     plan: Instructions;
+    gap: number;
+    names: Record<string, string>;
     key: number;
   } | null>(null);
 
@@ -430,13 +438,21 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   );
   const bidTalk = useBidTalk(askAny, setError, deal);
 
+  // After a match nobody watched: the result moment before the office.
+  const [played, setPlayed] = useState<Played | null>(null);
   const step = (type: 'play' | 'nextSeason' | 'skipPreseason') => {
     if (!ask) return;
     setBusy(true);
     const t0 = performance.now();
+    const before = sim;
+    const place = (s: SimView | null | undefined) =>
+      (s?.table.findIndex((r) => r.clubId === s.clubId) ?? -1) + 1;
     ask({ type })
       .then((r) => {
         if (type === 'nextSeason') trackTiming('seasonTurn', performance.now() - t0);
+        const last = r.view?.last;
+        if (type === 'play' && last && before?.next && !before.preseason && !before.deadline)
+          setPlayed({ last, places: [place(before), place(r.view)] });
         return apply(r);
       })
       .catch((err: Error) => setError(err.message));
@@ -506,6 +522,18 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
         <Notice title={t('career.loadError')}>{error}</Notice>
       </div>
     );
+  if (played)
+    return (
+      <div className={PAGE}>
+        <ResultCard
+          played={played}
+          onDone={() => {
+            setPlayed(null);
+            toTop();
+          }}
+        />
+      </div>
+    );
   if (watching && source && ask)
     return (
       <div className={PAGE}>
@@ -525,13 +553,18 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
             instructions: watching.mine === 1 ? watching.plan : PLAN,
           }}
           mine={watching.mine}
+          gap={watching.gap}
+          names={watching.names}
           source={source}
           onFinished={() => {
             ask({ type: 'matchFinish' })
               .then(apply)
               .catch((err: Error) => setError(err.message));
           }}
-          onDone={() => setWatching(null)}
+          onDone={() => {
+            setWatching(null);
+            toTop();
+          }}
         />
       </div>
     );
@@ -546,6 +579,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       <div className={PAGE}>
         <Fired
           club={sim.club.name}
+          history={sim.history}
           offers={sim.board.offers}
           busy={busy}
           onTake={(clubId) => {
@@ -756,7 +790,11 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
                 </p>
               )}
               {sim.bridge && sim.turn && bridgeSeen !== sim.turn.season && (
-                <SeasonBridge bridge={sim.bridge} onClose={() => setBridgeSeen(sim.turn!.season)} />
+                <SeasonBridge
+                  bridge={sim.bridge}
+                  season={sim.turn.season + 1}
+                  onClose={() => setBridgeSeen(sim.turn!.season)}
+                />
               )}
               <NextMatch
                 sim={sim}

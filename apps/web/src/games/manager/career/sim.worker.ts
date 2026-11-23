@@ -140,6 +140,7 @@ import {
   MATCH_COST,
   RECOVERY,
   myStrength,
+  clubStrengthOf,
   setPlan,
   PLANS,
   planLoad,
@@ -321,6 +322,8 @@ export interface SimView {
     why: ReportFact[];
     /** Which side the person's club was: 0 home, 1 away. */
     mine: 0 | 1;
+    /** The other club's strength minus the person's (clubStrengthOf); the headline reads it. */
+    gap: number;
   } | null;
   table: TableRows;
   /** Places that go up and places that go down at the season's end, from the division's rules. */
@@ -408,6 +411,13 @@ const face = (c: ClubFace): ClubFace => ({
   colours: c.colours,
   kits: c.kits,
 });
+
+/** The other club's strength minus the person's: positive when they are the stronger side. */
+function strengthGap(w: CareerWorld, home: string, away: string, mine: 0 | 1): number {
+  const of = (id: string) => clubStrengthOf(w.pack.players.filter((p) => p.clubId === id)) ?? 0;
+  const [a, b] = [of(home), of(away)];
+  return Math.round(mine === 0 ? b - a : a - b);
+}
 
 export interface MatchClub {
   id: string;
@@ -1262,7 +1272,16 @@ export interface SimReply {
   training?: TrainingView;
   market?: MarketView;
   /** matchStart: the two sides and which one is the person's. */
-  match?: { home: MatchClub; away: MatchClub; mine: 0 | 1; formation: string; plan: PlanChoice };
+  match?: {
+    home: MatchClub;
+    away: MatchClub;
+    mine: 0 | 1;
+    formation: string;
+    plan: PlanChoice;
+    gap: number;
+    /** Both squads' names by player id, for the scorers of the full-time report. */
+    names: Record<string, string>;
+  };
   chunk?: MatchChunk;
   moment?: Moment;
   view?: SimView;
@@ -1629,6 +1648,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         goals: o.goals,
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
+        gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
       };
       const after = await toNextDecision(world);
       save = {
@@ -1778,6 +1798,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const { input, mine } = careerMatch(world, pending);
       live = startLiveMatch(input);
       liveCommands = [];
+      const { home, away } = pending;
       const club = (id: string): MatchClub => {
         const c = world!.pack.clubs.find((x) => x.id === id)!;
         return { id, name: c.name, shortName: c.shortName, colours: c.colours, kits: c.kits };
@@ -1790,6 +1811,12 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
           mine,
           formation: lineupOf(world).formation,
           plan: planOf(world),
+          gap: strengthGap(world, home, away, mine),
+          names: Object.fromEntries(
+            world.pack.players
+              .filter((p) => p.clubId === home || p.clubId === away)
+              .map((p) => [p.id, p.knownAs ?? p.name]),
+          ),
         },
       } satisfies SimReply);
       return;
@@ -1834,6 +1861,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         goals: o.goals,
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
+        gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
       };
       const after = await toNextDecision(world);
       save = {

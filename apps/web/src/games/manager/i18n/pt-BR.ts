@@ -518,10 +518,13 @@ export const ptBR = {
   'board.fairplayState':
     '{s, select, 0 {{over, select, yes {Acima do limite. Se a temporada terminar assim, vem advertência.} other {Dentro do limite.}}} 1 {Advertência. Mais uma temporada acima do limite e vem multa.} 2 {Multado. Mais uma temporada acima do limite e o registro de atletas é bloqueado.} 3 {Registro bloqueado: sem contratações nesta temporada. Mais uma acima do limite e o clube perde pontos.} other {Registro bloqueado. O clube começou a temporada com {points} pontos a menos.}}',
   'board.calm': 'Sem ultimato. Abaixo de 25 de confiança, a direção dá um prazo.',
-  'board.fired': 'A direção encerrou seu contrato',
-  'board.firedText': 'O ultimato não foi cumprido. O {club} segue sem você.',
+  'board.fired': 'A diretoria do {club} chamou outro caminho',
+  'board.firedText':
+    'O ultimato venceu e o {club} segue sem você. Fica o que você construiu lá, e o futebol sempre dá outra chance.',
+  'board.firedRecap':
+    '{seasons, plural, one {# temporada} other {# temporadas}} no comando, {titles, plural, =0 {nenhum título} one {# título} other {# títulos}}.',
   'board.restart': 'Começar outra carreira',
-  'board.offers': 'Clubes que querem você',
+  'board.offers': 'Quem ainda quer você',
   'board.take': 'Assumir',
   'board.takeName': 'Assumir o {club}',
   'training.week': 'Semana de treino',
@@ -655,7 +658,7 @@ export const ptBR = {
   'bridge.happened': 'O que aconteceu',
   'bridge.carried': 'O que fica para a temporada',
   'bridge.ahead': 'Problemas pela frente',
-  'bridge.close': 'Entendi',
+  'bridge.close': 'Bora pra {season}',
   'bridge.season':
     '{move, select, promotion {Acesso conquistado.} relegation {Rebaixamento.} other {{fired, select, true {Demissão no meio do ano.} other {{champion, select, true {Título da divisão.} other {Temporada na mesma divisão.}}}}}}',
   'bridge.sale': 'Venda: {player} por {fee, number, currency}.',
@@ -734,6 +737,29 @@ export const ptBR = {
   'friendly.event.save': "{minute}' Defesa do goleiro de {team}",
   'friendly.event.command': "{minute}' Você mudou o plano",
   'friendly.fullTime': 'Fim de jogo',
+  'friendly.goalAt': "{name} {minute}'",
+  'friendly.goalWord': 'Gol',
+  'friendly.ownGoalAt': "{name} {minute}' (contra)",
+  'friendly.redAt': "{name} {minute}' (vermelho)",
+  'friendly.redWord': 'Expulsão',
+  'friendly.events': 'Gols e expulsões',
+  'headline.rout': 'Passeio!',
+  'headline.upsetWin': 'Derrubou o {team}!',
+  'headline.lateWin': 'Ganhou no sufoco, no fim!',
+  'headline.win': 'Três pontos no bolso.',
+  'headline.hold': 'Segurou o {team}!',
+  'headline.goalless': 'Zero a zero, jogo travado.',
+  'headline.wildDraw': 'Jogão, empate pra todo lado.',
+  'headline.dropped': 'Era pra ganhar. Fica a lição.',
+  'headline.draw': 'Ficou no empate.',
+  'headline.lateLoss': 'Doeu.',
+  'headline.thrashed': 'Dia pra esquecer.',
+  'headline.lossStrong': 'O {team} foi mais time hoje.',
+  'headline.lossWeak': 'Escapou. Dá pra virar a chave.',
+  'headline.loss': 'Não foi hoje. Bola pra frente.',
+  'result.up': 'Subiu para o {n}º lugar',
+  'result.down': 'Caiu para o {n}º lugar',
+  'result.same': 'Segue em {n}º lugar',
   'friendly.report': 'Relatório',
   'friendly.why': 'Por que deu esse resultado',
   'friendly.noFactor': 'Jogo equilibrado: nenhum fator se destacou.',
@@ -754,11 +780,11 @@ export const ptBR = {
   'friendly.change': 'Trocar os times',
 
   'match.explain.finishing':
-    'Seu time fez {goals} gols com {xg, number} de gols esperados: a finalização decidiu.',
+    'Seu time fez {goals, plural, one {# gol} other {# gols}} com {xg, number} de gols esperados: a finalização decidiu.',
   'match.explain.keeper':
-    '{team, select, 0 {Seu goleiro evitou {saved, number} gols além do esperado.} other {O goleiro deles evitou {saved, number} gols além do esperado.}}',
+    '{team, select, 0 {Seu goleiro evitou {saved, plural, one {# gol} other {# gols}} além do esperado.} other {O goleiro deles evitou {saved, number} gols além do esperado.}}',
   'match.explain.keeperConceded':
-    '{team, select, 0 {Seu goleiro sofreu {conceded, number} gols além do esperado.} other {O goleiro deles sofreu {conceded, number} gols além do esperado.}}',
+    '{team, select, 0 {Seu goleiro sofreu {conceded, plural, one {# gol} other {# gols}} além do esperado.} other {O goleiro deles sofreu {conceded, number} gols além do esperado.}}',
   'match.explain.setPieces':
     'Bola parada: {xgFor, number} de gols esperados a favor contra {xgAgainst, number}.',
   'match.explain.transition':
