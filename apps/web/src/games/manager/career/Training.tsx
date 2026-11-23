@@ -126,6 +126,10 @@ const COUNT_TONE = {
 } as const;
 const rank = (p: TrainingView['players'][number]) => STATES.indexOf(p.out ? OUT : stateOf(p.fresh));
 
+/** The season's growth focus choices; null is an even spread. */
+const FOCUS_OPTIONS = [null, 'technical', 'mental', 'physical'] as const;
+const EVEN = 'even';
+
 export function Training(props: {
   ask: Ask;
   onError: (m: string) => void;
@@ -193,6 +197,32 @@ export function Training(props: {
               </span>
             </button>
           ))}
+        </div>
+        <div className="flex flex-col gap-2 border-t border-chalk/10 pt-4">
+          <h3 id="training-focus" className={LABEL}>
+            {t('training.focus')}
+          </h3>
+          <div role="group" aria-labelledby="training-focus" className="grid grid-cols-2 gap-2">
+            {FOCUS_OPTIONS.map((f) => (
+              <button
+                key={f ?? EVEN}
+                type="button"
+                aria-pressed={view.focus === f}
+                className={`min-h-11 rounded-lg px-3 font-bold ${view.focus === f ? 'bg-club-gold text-ink' : 'bg-chalk/8 text-chalk hover:bg-chalk/15'}`}
+                onClick={() =>
+                  ask({ type: 'focus', focus: f })
+                    .then((r) => {
+                      setView(r.training ?? null);
+                      onPicked(r);
+                    })
+                    .catch((e: Error) => onError(e.message))
+                }
+              >
+                {t('training.focusOf', { f: f ?? EVEN })}
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-chalk-soft">{t('training.focusHint')}</p>
         </div>
         <div className="flex flex-col gap-2 border-t border-chalk/10 pt-4">
           <p className="flex items-baseline justify-between gap-3">

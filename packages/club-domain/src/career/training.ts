@@ -26,7 +26,7 @@ import {
   type Lineup,
 } from './squad';
 import { formationOf } from '../match/fixture-input';
-import { MISSING, rivalOut } from './health';
+import { MISSING, rested, rivalOut } from './health';
 import { bannedStarters } from './discipline';
 import { calledOf } from './callups';
 import { clubStrengthOf } from '../match/quick';
@@ -66,10 +66,17 @@ export const SESSION_LOAD: Record<Session, number> = {
   matchPrep: 1,
 };
 
-/** The week's load, and the intensity it amounts to: up to 12 light, up to 20 normal. */
-export const planLoad = (plan: Plan) => plan.flat().reduce((sum, x) => sum + SESSION_LOAD[x], 0);
-export const intensityOf = (plan: Plan): Intensity => {
-  const load = planLoad(plan);
+/**
+ * The week's load, and the intensity it amounts to: up to 12 light, up to 20 normal. On a match
+ * day (`matchDays`, Monday 0) the squad plays instead: its sessions weigh nothing.
+ */
+export const planLoad = (plan: Plan, matchDays: ReadonlySet<number> = new Set()) =>
+  plan.reduce(
+    (sum, d, i) => sum + (matchDays.has(i) ? 0 : d.reduce((s, x) => s + SESSION_LOAD[x], 0)),
+    0,
+  );
+export const intensityOf = (plan: Plan, matchDays?: ReadonlySet<number>): Intensity => {
+  const load = planLoad(plan, matchDays);
   return load <= 12 ? 'light' : load <= 20 ? 'normal' : 'hard';
 };
 /** Share of the working sessions (not rest, not recovery) that are tactical, in percent. */
@@ -126,8 +133,14 @@ export const PLANS: Record<Intensity, Plan> = {
 /** Monday 0 .. Sunday 6 of an epoch day (1 January 1970 was a Thursday). */
 export const weekdayOf = (day: number) => (day + 3) % 7;
 
+/** What the season's growth leans to (development.ts): a group of attributes, or none. */
+export const GROWTH_FOCUSES = ['technical', 'mental', 'physical'] as const;
+export type GrowthFocus = (typeof GROWTH_FOCUSES)[number];
+
 export interface Training {
   intensity: Intensity;
+  /** The attributes the season's work leans to; absent, an even spread. */
+  focus?: GrowthFocus;
   /** The week's plan, when the person laid one out; the intensity is then its own. */
   plan?: Plan;
   drill: number;
@@ -176,6 +189,7 @@ export function trainingOn(w: CareerWorld, day: number): Training {
   for (let k = 0; k < Math.min(days, 400); k++) gap *= 1 - DRILL_RATE;
   return {
     intensity: t.intensity,
+    ...(t.focus && { focus: t.focus }),
     ...(t.plan && { plan: t.plan }),
     drill: target + gap,
     fresh,
@@ -187,7 +201,30 @@ export function trainingOn(w: CareerWorld, day: number): Training {
 export function setPlan(w: CareerWorld, plan: Plan): void {
   if (plan.length !== 7 || plan.some((d) => d.length !== 2 || d.some((x) => !SESSIONS.includes(x))))
     throw new Error('training: a plan is seven days of two sessions');
-  w.training = { ...trainingOn(w, w.day), intensity: intensityOf(plan), plan };
+  w.training = {
+    ...trainingOn(w, w.day),
+    intensity: intensityOf(plan, matchDaysOf(w, w.day)),
+    plan,
+  };
+}
+
+/** The weekdays (Monday 0) the club plays on in the seven days after `day`. */
+export function matchDaysOf(w: CareerWorld, day: number): Set<number> {
+  const out = new Set<number>();
+  for (const m of w.season.calendar.byClub.get(w.clubId) ?? [])
+    if (m.day > day && m.day <= day + 7) out.add(weekdayOf(m.day));
+  return out;
+}
+
+/** The intensity of the person's plan read again for the week ahead of `t.day`, its matches out. */
+export const reweigh = (w: CareerWorld, t: Training): Training =>
+  t.plan ? { ...t, intensity: intensityOf(t.plan, matchDaysOf(w, t.day)) } : t;
+
+/** What the season's growth leans to; null for an even spread. */
+export function setFocus(w: CareerWorld, focus: GrowthFocus | null): void {
+  if (focus !== null && !GROWTH_FOCUSES.includes(focus)) throw new Error('training: unknown focus');
+  const { focus: _old, ...t } = trainingOn(w, w.day);
+  w.training = { ...t, ...(focus && { focus }) };
 }
 
 /** Points a match on `day` is worth from the plan: a match preparation the day before. */
@@ -298,7 +335,7 @@ export const rivalStrength = (w: CareerWorld, clubId: string, day: number): numb
   (w.eleven.get(clubId) ?? 0) *
     (1 -
       freshFactor(rivalFresh(w, clubId, day)) +
-      ((rivalOut(w, clubId, day) +
+      ((Math.min(10, rivalOut(w, clubId, day) + rested(w, clubId, day)) +
         bannedStarters(w, clubId, day) +
         calledOf(w, clubId, day).length) *
         MISSING) /

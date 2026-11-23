@@ -22,6 +22,8 @@ import type { Training } from './training';
 import { suspendedIn } from './discipline';
 import { matchesOn } from '../competition/season';
 import { calledOf } from './callups';
+import { isEstadual } from '../competition/estaduais';
+import { tierOfClub } from '../market/books';
 
 export const INJURIES = ['knock', 'muscle', 'sprain', 'serious'] as const;
 export type InjuryKind = (typeof INJURIES)[number];
@@ -177,7 +179,27 @@ export function rivalOut(w: CareerWorld, clubId: string, day: number): number {
   return roll < 55 ? 0 : roll < 88 ? 1 : 2;
 }
 /**
- * Which starters another club is short of on `day`: as many as `rivalOut` says, picked from its
+ * Starters a Série A club rests in a state championship match before its first national match
+ * of the season: the estadual is its pre-season. In January 2026 Flamengo opened the Carioca
+ * with its under-20s, Atlético-MG with a young alternative side, others mixed the squad and
+ * Grêmio played its first team (Band, Diário de Pernambuco, Jan-Feb 2026). Each club picks one
+ * way for the season by a fixed draw: all ten outfield starters (a reserve side), six (mixed),
+ * or none. The shares are a PARÂMETRO, read off those reports, not counted.
+ */
+export function rested(w: CareerWorld, clubId: string, day: number): number {
+  if (tierOfClub(w, clubId) !== 1) return 0;
+  let estadual = false;
+  let debut = Infinity;
+  for (const m of w.season.calendar.byClub.get(clubId) ?? [])
+    if (!isEstadual({ id: m.competitionId })) debut = Math.min(debut, m.day);
+    else if (m.day === day) estadual = true;
+  if (!estadual || day > debut) return 0;
+  const roll = draw(w.seed, clubId, w.season.season, 30) % 100;
+  return roll < 40 ? 10 : roll < 80 ? 6 : 0;
+}
+
+/**
+ * Which starters another club is short of on `day`: as many as `rivalOut` and `rested` say, picked from its
  * best eleven by a fixed draw. For the engine match, where the men who replace them play.
  */
 export function rivalOutIds(
@@ -187,9 +209,9 @@ export function rivalOutIds(
   day: number,
 ): Set<string> {
   const out = new Set<string>();
-  const n = rivalOut(w, clubId, day);
+  const n = Math.min(xi.length - 1, rivalOut(w, clubId, day) + rested(w, clubId, day));
   // The keeper's slot is left alone: a club always has its number one or his stand-in ready.
-  for (let k = 0; out.size < n && k < 40; k++)
+  for (let k = 0; out.size < n && k < 200; k++)
     out.add(xi[1 + (draw(w.seed, clubId, day, 10 + k) % (xi.length - 1))]!);
   return out;
 }

@@ -143,6 +143,9 @@ import {
   setPlan,
   PLANS,
   planLoad,
+  matchDaysOf,
+  setFocus,
+  type GrowthFocus,
   drillTargetOf,
   weekdayOf,
   type Session,
@@ -208,6 +211,7 @@ export type SimRequest = { id: number } & (
   | { type: 'train'; intensity: Intensity }
   /** The week planned session by session (club-domain career/training.ts `setPlan`). */
   | { type: 'plan'; plan: Session[][] }
+  | { type: 'focus'; focus: GrowthFocus | null }
   | { type: 'promote'; playerId: string }
   /** The market: the person's players to sell and the best of the others, by position. */
   /** `club`: another club whose squad the person is looking at, or null. */
@@ -463,8 +467,10 @@ export interface TrainingView {
   plan: Session[][];
   /** Whether the person laid the plan out (else it is the ready one of the intensity). */
   custom: boolean;
-  /** The plan's load (0..42) and where the drill settles under it, in percent. */
+  /** The plan's load (0..42), the coming week's matches out, and where the drill settles. */
   load: number;
+  /** The group of attributes the season's growth leans to; null for an even spread. */
+  focus: GrowthFocus | null;
   settles: number;
   /** The club's matches in the next seven days, by weekday (0 Monday), with the opponent. */
   week: { weekday: number; iso: string; opponent: string; prepared: boolean }[];
@@ -506,7 +512,8 @@ function trainingView(w: CareerWorld): TrainingView {
     // A ready plan picked by its button reads as that, not as the person's own.
     custom:
       now.plan !== undefined && JSON.stringify(now.plan) !== JSON.stringify(PLANS[now.intensity]),
-    load: planLoad(plan),
+    load: planLoad(plan, matchDaysOf(w, w.day)),
+    focus: now.focus ?? null,
     settles: percent(drillTargetOf(plan)),
     week: upcomingFor(w.season, w.clubId, 3)
       .filter((u) => u.day > w.day && u.day <= w.day + 7)
@@ -1718,10 +1725,15 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
     }
     if (
       world &&
-      (r.type === 'training' || r.type === 'train' || r.type === 'plan' || r.type === 'promote')
+      (r.type === 'training' ||
+        r.type === 'train' ||
+        r.type === 'plan' ||
+        r.type === 'focus' ||
+        r.type === 'promote')
     ) {
       if (r.type === 'train') setPlan(world, PLANS[r.intensity]);
       if (r.type === 'plan') setPlan(world, r.plan);
+      if (r.type === 'focus') setFocus(world, r.focus);
       if (r.type === 'promote') promote(world, r.playerId);
       const reply: SimReply = { id: r.id, training: trainingView(world) };
       if (r.type !== 'training')
