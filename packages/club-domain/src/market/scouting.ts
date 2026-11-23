@@ -32,14 +32,31 @@ import {
   seenLevel,
 } from './judgement';
 import { readingsOf } from './value';
+import { fitsFocus, gradeOf, scoutStaff, scoutWorth, type Focus } from './scouts';
 
 /** A scout away: where to, and the day he reports. */
 export interface Mission {
-  /** A state (`RS`) or a national division (`tier:2`). */
+  /** A state (`RS`), a national division (`tier:2`), a competition (`comp:<id>`), `abroad`. */
   area: string;
   from: number;
   until: number;
+  /** Which of the club's scouts (scouts.ts); missing in careers from before scouts had names. */
+  scout?: string;
+  /** What he looks for there: an age, a position. */
+  focus?: Focus;
 }
+
+/** A scout's report: what he found on a trip, each player with his word on him (scouts.ts). */
+export interface Report {
+  day: number;
+  area: string;
+  scout?: string;
+  focus?: Focus;
+  players: { id: string; grade: 'A' | 'B' | 'C' }[];
+}
+
+/** Reports the club keeps, the newest first. */
+const REPORTS_KEPT = 12;
 
 /** What the club knows of a player past the base: the percentage, and the day it last grew. */
 export interface Knowledge {
@@ -51,6 +68,8 @@ export interface Scouting {
   /** By player id; only players known past the base. */
   known: Record<string, Knowledge>;
   missions: Mission[];
+  /** The latest reports, newest first. */
+  reports?: Report[];
 }
 
 /** Scouting department level from which agents bring a club the players abroad. */
@@ -225,23 +244,31 @@ export function knowerOf(w: CareerWorld, clubId: string): (p: PackPlayer) => boo
   };
 }
 
-/** The areas a scout can be sent to: the national divisions, then every state with a club. */
+/**
+ * The areas a scout can be sent to: the national divisions, the season's other competitions (the
+ * Copa, the state championships), every state with a club, and the players abroad who can come.
+ */
 export function scoutAreas(w: CareerWorld): string[] {
   const tiers = nationalDivisions(w.pack).map((d) => `tier:${d.tier}`);
+  const comps = w.season.competitions
+    .filter((c) => c.tier === null && (w.season.members[c.id]?.length ?? 0) > 0)
+    .map((c) => `comp:${c.id}`);
   const states = new Set<string>();
   for (const c of w.pack.clubs) {
     const s = stateOf(w.pack, c.id);
     if (s) states.add(s);
   }
-  return [...new Set(tiers), ...[...states].sort()];
+  return [...new Set(tiers), ...comps, ...[...states].sort(), 'abroad'];
 }
 
 const inArea = (w: CareerWorld, area: string, clubId: string) =>
   area.startsWith('tier:')
     ? tierOfClub(w, clubId) === Number(area.slice(5))
-    : stateOf(w.pack, clubId) === area;
+    : area.startsWith('comp:')
+      ? (w.season.members[area.slice(5)] ?? []).includes(clubId)
+      : stateOf(w.pack, clubId) === area;
 
-export type ScoutNo = 'busy' | 'area' | 'already' | 'cash';
+export type ScoutNo = 'busy' | 'area' | 'already' | 'cash' | 'scout';
 
 /**
  * What a scout's trip costs (travel and daily allowance), by where he goes: his own state, a
@@ -265,7 +292,8 @@ export function tripCost(w: CareerWorld, area: string): number {
       ? TRIP_COST.playerHome
       : TRIP_COST.playerAway;
   }
-  if (area.startsWith('tier:')) return TRIP_COST.division;
+  if (area.startsWith('tier:') || area.startsWith('comp:') || area === 'abroad')
+    return TRIP_COST.division;
   return area === home ? TRIP_COST.home : TRIP_COST.away;
 }
 
@@ -284,15 +312,29 @@ export const watchedIn = (area: string) =>
  * Sends a scout from `day` to an area (a division, a state) or to watch one player
  * (`player:<id>`, another club's); the reason it cannot, or null.
  */
-export function sendScout(w: CareerWorld, area: string, day: number): ScoutNo | null {
+export function sendScout(
+  w: CareerWorld,
+  area: string,
+  day: number,
+  /** Which scout (scouts.ts; the first free one by default) and what he looks for. */
+  opts: { scout?: string; focus?: Focus } = {},
+): ScoutNo | null {
   const watched = watchedIn(area);
   if (watched !== null) {
     const p = w.pack.players.find((x) => x.id === watched);
     if (!p || p.clubId === w.clubId || p.clubId === ABROAD) return 'area';
   } else if (!scoutAreas(w).includes(area)) return 'area';
   const s = w.scouting ?? { known: {}, missions: [] };
-  if (s.missions.some((m) => m.area === area)) return 'already';
+  const sameFocus = (m: Mission) =>
+    JSON.stringify(m.focus ?? {}) === JSON.stringify(opts.focus ?? {});
+  if (s.missions.some((m) => m.area === area && sameFocus(m))) return 'already';
+  const staff = scoutStaff(w);
+  if (opts.scout !== undefined && !staff.some((x) => x.id === opts.scout)) return 'scout';
   if (s.missions.length >= scoutsOf(w)) return 'busy';
+  // Missions from before scouts had names hold the first scouts, in order.
+  const away = new Set(s.missions.map((m, i) => m.scout ?? `scout-${i}`));
+  const scout = opts.scout ?? staff.find((x) => !away.has(x.id))?.id;
+  if (scout === undefined || away.has(scout)) return 'busy';
   const cost = tripCost(w, area);
   if (w.ledger.cash < cost) return 'cash';
   postEntry(w.ledger, {
@@ -304,7 +346,8 @@ export function sendScout(w: CareerWorld, area: string, day: number): ScoutNo | 
     dueDay: w.ledger.today,
   });
   const until = day + (watched !== null ? WATCH_DAYS : MISSION_DAYS);
-  w.scouting = { ...s, missions: [...s.missions, { area, from: day, until }] };
+  const m: Mission = { area, from: day, until, scout, ...(opts.focus && { focus: opts.focus }) };
+  w.scouting = { ...s, missions: [...s.missions, m] };
   return null;
 }
 
@@ -323,37 +366,79 @@ export function scoutingDay(w: CareerWorld, day: number): void {
     const p = byId.get(id);
     if (p && typeof got === 'object' && knowledgeOf(w, p, day) > baseOf(w, p)) known[id] = got;
   }
-  const gain = REPORT_GAIN[eyeOf(w.pack, w.clubId).scouting - 1]!;
+  const dept = REPORT_GAIN[eyeOf(w.pack, w.clubId).scouting - 1]!;
   const reports = REPORTS[eyeOf(w.pack, w.clubId).scouting - 1]!;
+  const staff = new Map(scoutStaff(w).map((x) => [x.id, x]));
+  const made: Report[] = [];
   for (const m of s.missions) {
     if (m.until > day) continue;
+    // A named scout's report is worth his eyes; an old mission's, the department's.
+    const scout = m.scout === undefined ? undefined : staff.get(m.scout);
+    const gain = scout
+      ? Math.round(
+          (dept * scoutWorth(scout, m.area, m.focus, eyeOf(w.pack, w.clubId).scouting)) / 100,
+        )
+      : dept;
     const watched = watchedIn(m.area);
     if (watched !== null) {
       // One player, watched for a week: a sharper report than a trip's.
       const p = byId.get(watched);
       w.scouting = { known, missions: s.missions };
       if (p) learn(w, known, p, Math.round((gain * WATCH_BONUS) / 100), m.until);
-      note(w, { day: m.until, kind: 'scouted', area: m.area, players: p ? 1 : 0 });
+      note(w, {
+        day: m.until,
+        kind: 'scouted',
+        area: m.area,
+        players: p ? 1 : 0,
+        ...(scout && { scout: scout.name }),
+      });
       continue;
     }
-    // The best players there the club knows least of (under half), as its own eye ranks them.
+    // The best players there the club knows least of (under half), as its own eye ranks them;
+    // for boys, as far as it sees them going.
+    const boys = m.focus?.maxAge !== undefined && m.focus.maxAge <= 21;
     const found = w.pack.players
       .filter(
         (p) =>
-          p.clubId !== null &&
           p.clubId !== w.clubId &&
-          p.clubId !== ABROAD &&
-          inArea(w, m.area, p.clubId) &&
+          (m.area === 'abroad'
+            ? p.clubId === ABROAD && signable(p, w.season.season)
+            : p.clubId !== null && p.clubId !== ABROAD && inArea(w, m.area, p.clubId)) &&
+          fitsFocus(p, m.focus, w.season.season) &&
           knowledgeOf(w, p, m.until) < 50,
       )
-      .map((p) => ({ p, seen: seenLevel(w.pack, w.clubId, p) }))
+      .map((p) => ({
+        p,
+        seen: boys ? seenCeiling(w.pack, w.clubId, p) : seenLevel(w.pack, w.clubId, p),
+      }))
       .sort((a, b) => b.seen - a.seen || (a.p.id < b.p.id ? -1 : 1))
       .slice(0, reports);
     w.scouting = { known, missions: s.missions };
     for (const f of found) learn(w, known, f.p, gain, m.until);
-    note(w, { day: m.until, kind: 'scouted', area: m.area, players: found.length });
+    const squad = squadPlayers(w);
+    const graded = found.map((f) => ({ id: f.p.id, grade: gradeOf(w, f.p, squad) }));
+    made.push({
+      day: m.until,
+      area: m.area,
+      ...(m.scout !== undefined && { scout: m.scout }),
+      ...(m.focus && { focus: m.focus }),
+      players: graded,
+    });
+    note(w, {
+      day: m.until,
+      kind: 'scouted',
+      area: m.area,
+      players: found.length,
+      ...(scout && { scout: scout.name }),
+      recommended: graded.filter((g) => g.grade !== 'C').length,
+    });
   }
-  w.scouting = { known, missions: s.missions.filter((m) => m.until > day) };
+  const kept = [...made.reverse(), ...(s.reports ?? [])].slice(0, REPORTS_KEPT);
+  w.scouting = {
+    known,
+    missions: s.missions.filter((m) => m.until > day),
+    ...(kept.length > 0 && { reports: kept }),
+  };
 }
 
 /** The person's club played this club on `day`: it learns a little of every player there. */

@@ -33,7 +33,15 @@ export type Note = { day: number } & (
   | { kind: 'contractsEnding'; players: number }
   | { kind: 'crop'; players: number }
   /** A scout back from an area (a state or `tier:N`) with this many new players. */
-  | { kind: 'scouted'; area: string; players: number }
+  | {
+      kind: 'scouted';
+      area: string;
+      players: number;
+      /** The scout's name (market/scouts.ts); missing in older careers. */
+      scout?: string;
+      /** How many of them he recommends (a grade A or B). */
+      recommended?: number;
+    }
   /** An agent offers one of his players (agents.ts); `club` is where he plays, '' for none. */
   | { kind: 'agentOffer'; player: string; agent: string; club: string }
   /** A player abroad who wants to come home, offered by his agent; a talk is open. */
