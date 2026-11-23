@@ -568,7 +568,9 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     <div className="club-shell">
       <Scene plate={PLATE[room] ?? room} />
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
-      {sim.turn && sim.turn.move !== 'stay' && <SeasonMoment turn={sim.turn} club={sim.club} />}
+      {sim.turn && sim.turn.move !== 'stay' && (
+        <SeasonMoment careerId={career.id} turn={sim.turn} club={sim.club} />
+      )}
       <aside className="club-rail">
         <div className="hidden items-center gap-3 px-4 pt-5 pb-4 lg:flex">
           <Crest club={sim.club} size="lg" />
@@ -830,10 +832,17 @@ const SEEN_TURN = 'dc_club_turn';
  * division), the street outside the stadium when it goes down. A season that changes nothing
  * stays a line in the office.
  */
-function SeasonMoment({ turn, club }: { turn: NonNullable<SimView['turn']>; club: ClubFace }) {
+function SeasonMoment(props: {
+  careerId: string;
+  turn: NonNullable<SimView['turn']>;
+  club: ClubFace;
+}) {
+  const { turn, club } = props;
+  // Every career starts in the same year: the mark is the career and its season.
+  const mark = `${props.careerId}:${turn.season}`;
   const [open, setOpen] = useState(() => {
     try {
-      return localStorage.getItem(SEEN_TURN) !== String(turn.season);
+      return localStorage.getItem(SEEN_TURN) !== mark;
     } catch {
       return true;
     }
@@ -841,11 +850,11 @@ function SeasonMoment({ turn, club }: { turn: NonNullable<SimView['turn']>; club
   useEffect(() => {
     if (!open) return;
     try {
-      localStorage.setItem(SEEN_TURN, String(turn.season));
+      localStorage.setItem(SEEN_TURN, mark);
     } catch {
       // Private mode: the scene may show again after a reload; nothing is lost.
     }
-  }, [open, turn.season]);
+  }, [open, mark]);
   if (!open) return null;
   const up = turn.move === 'promotion';
   const plate = up ? 'gloria' : 'estadio';
