@@ -64,7 +64,14 @@ export type Note = { day: number } & (
     }
   /** A ban: three yellows, a sending-off, or what the sports court added. */
   | { kind: 'suspension'; player: string; matches: number; why: 'yellows' | 'red' | 'court' }
-  | { kind: 'bid' | 'clausePaid'; player: string; club: string; fee: number }
+  | {
+      kind: 'bid' | 'clausePaid';
+      player: string;
+      club: string;
+      fee: number;
+      /** The bid (market/talks.ts `Bid.id`), to open its talk; missing in older careers. */
+      id?: string;
+    }
   /** The real moved hard against a currency this month: the rate (×10 000), change in ‰. */
   | { kind: 'fx'; currency: 'USD' | 'EUR'; rate: number; change: number }
   /** Money credited: a quota, a phase reached, a final's prize or TV rights (revenue.ts). */

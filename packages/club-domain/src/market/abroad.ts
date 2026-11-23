@@ -273,7 +273,7 @@ export function foreignRound(w: CareerWorld, day: number): Deal[] {
             why: { need: 0, fit: 0, growth: 0, resale: 0, cost: 0, wages: 0 },
           },
         ];
-        note(w, { day, kind: 'bid', player: p.knownAs ?? p.name, club: t.id, fee });
+        note(w, { day, kind: 'bid', player: p.knownAs ?? p.name, club: t.id, fee, id });
         continue;
       }
       sellAbroad(w, p, fee);

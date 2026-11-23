@@ -459,7 +459,15 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
     w.bids = w.bids.map((b) => {
       if (!b.again || b.day > day) return b;
       const p = w.pack.players.find((x) => x.id === b.player);
-      if (p) note(w, { day, kind: 'bid', player: p.knownAs ?? p.name, club: b.from, fee: b.fee });
+      if (p)
+        note(w, {
+          day,
+          kind: 'bid',
+          player: p.knownAs ?? p.name,
+          club: b.from,
+          fee: b.fee,
+          id: b.id,
+        });
       return { ...b, again: false };
     });
   // The players the person offered on loan go to the clubs that will play them.
@@ -538,7 +546,14 @@ export function marketRound(w: CareerWorld, day: number): Deal[] {
             });
           break;
         }
-        note(w, { day, kind: 'bid', player: choice.p.knownAs ?? choice.p.name, club: id, fee });
+        note(w, {
+          day,
+          kind: 'bid',
+          player: choice.p.knownAs ?? choice.p.name,
+          club: id,
+          fee,
+          id: `${day}:${id}:${choice.p.id}`,
+        });
         break;
       }
       const deal = negotiate(w, id, choice);
