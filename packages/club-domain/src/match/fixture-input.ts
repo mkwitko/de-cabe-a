@@ -7,8 +7,14 @@
 import {
   MATCH_ENGINE_VERSION,
   defaultPlan,
+  fork,
+  lineOf,
+  rngFrom,
+  shootout,
   type MatchInput,
   type MatchResult,
+  type RoleId,
+  type Taker,
 } from '@decabeca/match-engine';
 import { FOREIGN_CLUBS } from '../competition/conmebol-data';
 import { deciderRules } from '../competition/knockout';
@@ -63,24 +69,72 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
 }
 
 /**
- * A two-leg tie's second leg plays extra time when the aggregate is level and the regulation
- * says so (the Recopa): the engine is told the goals each side carries from the first leg.
- * Penalties stay with the season (`decideTie`), as for every tie.
+ * A two-leg tie's second leg: the engine is told the goals each side carries from the first, and
+ * plays extra time (the Recopa) and the shoot-out when the regulation has them and the aggregate
+ * is level.
  */
 function secondLeg(
   s: SeasonState,
   id: string,
   breakers: readonly string[],
-): { extraTime: boolean; penalties: false; carried?: [number, number] } {
+): { extraTime: boolean; penalties: boolean; carried?: [number, number] } {
   const ko = s.meta.get(id)?.ko;
   const firstId = id.replace(/l\d+$/, 'l0');
   const first = ko && ko.leg > 0 ? s.outcomes.get(firstId) : undefined;
   const m = s.meta.get(firstId);
-  if (!first || !m || !breakers.includes('extraTime'))
-    return { extraTime: false, penalties: false };
+  if (!first || !m) return { extraTime: false, penalties: false };
   const of = (club: string) => (m.home === club ? first.goals[0] : first.goals[1]);
   const here = s.meta.get(id)!;
-  return { extraTime: true, penalties: false, carried: [of(here.home), of(here.away)] };
+  return {
+    extraTime: breakers.includes('extraTime'),
+    penalties: breakers.includes('penalties'),
+    carried: [of(here.home), of(here.away)],
+  };
+}
+
+/**
+ * The shoot-out of a quick result that leaves a tie level, played by the engine's own rule
+ * (rules/shootout.ts) between the two elevens: null when the match decides nothing on penalties.
+ * `packOf` gives a pack holding both squads (career/foreign-squad.ts `matchPack` for a foreign
+ * club); it is read only when a shoot-out is played.
+ */
+export function quickShootout(
+  packOf: () => Pack,
+  s: SeasonState,
+  id: string,
+  goals: [number, number],
+): [number, number] | null {
+  const meta = s.meta.get(id);
+  if (!meta?.ko) return null;
+  const p = s.competitions
+    .find((c) => c.id === meta.competitionId)
+    ?.phases.find((x) => x.id === meta.phaseId);
+  if (!p || (p.kind !== 'mata-mata' && p.kind !== 'final')) return null;
+  if (!(p.tieBreakers as readonly string[]).includes('penalties')) return null;
+  let carried: [number, number] = [0, 0];
+  if (p.legs === 2) {
+    const r = secondLeg(s, id, p.tieBreakers);
+    if (!r.carried) return null;
+    carried = r.carried;
+  }
+  if (goals[0] + carried[0] !== goals[1] + carried[1]) return null;
+  const pack = packOf();
+  const side = (club: string): Taker[] => {
+    const t = teamForMatch(pack, club, defaultPlan(formationOf(club)));
+    return t.players.slice(0, 11).map((pl, i) => ({
+      id: pl.id,
+      attrs: pl.attributes,
+      nerve: pl.hidden.bigMatches,
+      keeper: lineOf(t.plan.roles[i] as RoleId) === 'gk',
+    }));
+  };
+  const sides: [Taker[], Taker[]] = [side(meta.home), side(meta.away)];
+  const keeper = (x: Taker[]) => (x.find((k) => k.keeper) ?? x[0]!).attrs;
+  return shootout(
+    sides,
+    [keeper(sides[0]), keeper(sides[1])],
+    fork(rngFrom(seedOf(s.seed, `match:${id}`)), 'shootout'),
+  ).score;
 }
 
 export const outcomeOf = (r: MatchResult): Outcome => ({

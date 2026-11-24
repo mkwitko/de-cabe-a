@@ -267,13 +267,21 @@ describe('the Recopa', () => {
       extraTime: true,
       carried: [1, 2],
     });
+    // A quick result that levels the aggregate goes to the shoot-out; one that does not, not.
+    const { quickShootout } = await import('../match/fixture-input');
+    const both = () => ({ ...pack, players: [...pack.players, ...lanus] });
+    const kicks = quickShootout(both, s, legs[1]!.id, [2, 1]);
+    expect(kicks).not.toBeNull();
+    expect(kicks![0]).not.toBe(kicks![1]);
+    expect(quickShootout(both, s, legs[1]!.id, [0, 2])).toBeNull();
+    expect(quickShootout(both, s, legs[0]!.id, [1, 1])).toBeNull();
     // No Recopa between two foreign clubs, nor in a first season.
-    const both = { ...previous, [LIBERTADORES_ID]: final('foreign-arg-river', br) };
+    const foreignOnly = { ...previous, [LIBERTADORES_ID]: final('foreign-arg-river', br) };
     const none = startSeason(pack, {
       seed: 1,
       season: pack.season + 1,
       estaduais: true,
-      previous: both,
+      previous: foreignOnly,
     });
     expect(none.members[RECOPA_ID]).toBeUndefined();
     expect(startSeason(pack, { seed: 1, estaduais: true }).members[RECOPA_ID]).toBeUndefined();

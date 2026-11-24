@@ -560,7 +560,9 @@ export function Match(props: {
       for (const e of past) if (e.kind === 'goal' && e.team !== null) score[e.team]++;
       const minute = minuteOf(clock, s.events);
       const feed = past
-        .filter((e) => ['goal', 'card', 'substitution', 'injury', 'command'].includes(e.kind))
+        .filter((e) =>
+          ['goal', 'card', 'substitution', 'injury', 'command', 'shootoutKick'].includes(e.kind),
+        )
         .slice(-8)
         .reverse()
         .map((e) => {
@@ -569,15 +571,19 @@ export function Match(props: {
           const key: MessageKey =
             e.kind === 'goal'
               ? 'friendly.event.goal'
-              : e.kind === 'card'
-                ? e.data.card === 2
-                  ? 'friendly.event.red'
-                  : 'friendly.event.yellow'
-                : e.kind === 'substitution'
-                  ? 'friendly.event.sub'
-                  : e.kind === 'injury'
-                    ? 'friendly.event.injury'
-                    : 'friendly.event.command';
+              : e.kind === 'shootoutKick'
+                ? e.data.scored
+                  ? 'friendly.event.penaltyIn'
+                  : 'friendly.event.penaltyOut'
+                : e.kind === 'card'
+                  ? e.data.card === 2
+                    ? 'friendly.event.red'
+                    : 'friendly.event.yellow'
+                  : e.kind === 'substitution'
+                    ? 'friendly.event.sub'
+                    : e.kind === 'injury'
+                      ? 'friendly.event.injury'
+                      : 'friendly.event.command';
           return t(key, { minute: m, team });
         });
       const key = `${score.join()}|${minute}|${feed.join()}|${shownMoment}`;
@@ -780,6 +786,7 @@ export function signed(m: Message): Message {
 
 export interface Result {
   score: [number, number];
+  shootout?: [number, number] | null;
   stats: [TeamStats, TeamStats];
   explanation: { creation: number; conversion: number; factors: { message: Message }[] };
 }
@@ -873,6 +880,11 @@ function Report(props: {
           {t(`headline.${kind}`, { team: clubs[1 - props.mine]!.shortName })}
         </h2>
         <p className={LABEL}>{t('friendly.fullTime')}</p>
+        {result.shootout && (
+          <p className="font-condensed text-xl font-extrabold uppercase tabular-nums">
+            {t('career.shootout', { a: result.shootout[0], b: result.shootout[1] })}
+          </p>
+        )}
         <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-8">
           <span className="order-2 rounded-xl bg-club-gold px-4 font-condensed text-5xl leading-tight font-black whitespace-nowrap text-ink tabular-nums sm:px-6 sm:text-7xl">
             {result.score[0]}–{result.score[1]}

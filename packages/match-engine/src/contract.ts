@@ -401,6 +401,8 @@ export const EVENT_KINDS = [
   'taskAssigned',
   'periodStart',
   'periodEnd',
+  /** One kick of the penalty shoot-out: `scored` 1 or 0, `round` 1..5 then sudden death. */
+  'shootoutKick',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
