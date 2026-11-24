@@ -18,7 +18,7 @@ export function resultOf(s: MatchState): MatchResult {
   return {
     engineVersion: s.version,
     score: [s.teams[0].score, s.teams[1].score],
-    shootout: null,
+    shootout: s.shootout ?? null,
     stats,
     players: everyone.map((p) => ({
       playerId: p.id,

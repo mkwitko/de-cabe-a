@@ -17,7 +17,8 @@ import {
 import { gaussian } from '../rules/math';
 import { DT, blockBody, moveTowards, maxSpeed } from '../movement';
 import { CENTER, LENGTH, WIDTH, clamp, dist, flip, flipVec, type Vec2 } from '../pitch';
-import { between, next } from '../random';
+import { between, fork, next, rngFrom } from '../random';
+import { shootout } from '../rules/shootout';
 import { lineOf } from '../team';
 import { coordinate, movePlayers } from '../world';
 import { chanceFrom, chooseAction, inCounter, settleTime, type Allowed } from './carrier';
@@ -1270,7 +1271,36 @@ function clock(s: MatchState) {
     substitutions(s, true);
     return;
   }
+  if (s.input.rules.penalties && tied) penaltyShootout(s);
   s.finished = true;
+}
+
+/** Level after the whole match (and the tie's first leg): the shoot-out (rules/shootout.ts). */
+function penaltyShootout(s: MatchState) {
+  const on = (team: 0 | 1) => s.players.filter((p) => p.team === team && p.active);
+  const keeperOf = (team: 0 | 1) =>
+    (on(team).find((p) => lineOf(p.role) === 'gk') ?? on(team)[0]!).attrs;
+  const side = (team: 0 | 1) =>
+    on(team).map((p) => ({
+      id: p.id,
+      attrs: p.attrs,
+      nerve: p.input.hidden.bigMatches,
+      keeper: lineOf(p.role) === 'gk',
+    }));
+  const r = shootout(
+    [side(0), side(1)],
+    [keeperOf(0), keeperOf(1)],
+    fork(rngFrom(s.input.seed), 'shootout'),
+  );
+  const index = new Map(s.players.map((p) => [p.id, p.index]));
+  for (const k of r.kicks) {
+    s.clockMs += 60_000;
+    emit(s, 'shootoutKick', k.team, index.get(k.playerId)!, null, null, {
+      scored: k.scored ? 1 : 0,
+      round: k.round,
+    });
+  }
+  s.shootout = r.score;
 }
 
 export function stepUntilEnd(s: MatchState, opts: StepOptions = {}) {

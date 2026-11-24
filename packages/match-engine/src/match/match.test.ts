@@ -850,3 +850,18 @@ describe('a two-leg tie’s second leg', () => {
     expect(ext([ninety[1] + 1, ninety[0]])).toBe(false);
   });
 });
+
+describe('the shoot-out in a match', () => {
+  it('follows a level knockout and fills the result; none when the match is decided', async () => {
+    const { simulateMatch } = await import('./simulate');
+    const base = matchInput(11);
+    const ninety = simulateMatch(base).score;
+    const run = (carried: [number, number]) =>
+      simulateMatch({ ...base, rules: { ...base.rules, penalties: true, carried } });
+    const level = run([ninety[1], ninety[0]]);
+    expect(level.shootout).not.toBeNull();
+    expect(level.shootout![0]).not.toBe(level.shootout![1]);
+    expect(level.events.filter((e) => e.kind === 'shootoutKick').length).toBeGreaterThanOrEqual(6);
+    expect(run([ninety[1] + 1, ninety[0]]).shootout).toBeNull();
+  });
+});

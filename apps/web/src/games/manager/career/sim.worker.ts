@@ -334,6 +334,8 @@ export interface SimView {
     home: ClubFace;
     away: ClubFace;
     goals: [number, number];
+    /** The penalty shoot-out's goals, when the match ended in one. */
+    shootout: [number, number] | null;
     /** The biggest facts behind the person's result (report.ts); empty when nothing stood out. */
     why: ReportFact[];
     /** Which side the person's club was: 0 home, 1 away. */
@@ -1741,6 +1743,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         home: face(byId.get(d.home)!),
         away: face(byId.get(d.away)!),
         goals: o.goals,
+        shootout: o.shootout,
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
         gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
@@ -1957,6 +1960,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         home: face(byId.get(d.home)!),
         away: face(byId.get(d.away)!),
         goals: o.goals,
+        shootout: o.shootout,
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
         gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),

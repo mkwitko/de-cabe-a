@@ -115,6 +115,8 @@ export interface MatchState extends World {
   coachSlot: number;
   basePlans?: [TacticalPlan['team'], TacticalPlan['team']];
   finished: boolean;
+  /** Goals of the penalty shoot-out, when the match ended in one. */
+  shootout?: [number, number];
 }
 
 const emptyStats = (): TeamStats => ({

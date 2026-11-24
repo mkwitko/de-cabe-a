@@ -43,6 +43,11 @@ export function ResultCard({ played, onDone }: { played: Played; onDone: () => v
         </span>
         <span>{last.away.shortName}</span>
       </p>
+      {last.shootout && (
+        <p className="font-condensed text-lg font-extrabold uppercase tabular-nums">
+          {t('career.shootout', { a: last.shootout[0], b: last.shootout[1] })}
+        </p>
+      )}
       {last.scorers.some((side) => side.length > 0) && (
         <div className="grid w-full grid-cols-2 gap-4 text-sm text-chalk-soft">
           {last.scorers.map((side, i) => (

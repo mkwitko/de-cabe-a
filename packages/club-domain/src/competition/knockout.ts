@@ -2,13 +2,11 @@
  * `mata-mata` and `final` interpreter (MC-171; 05 §2): pairing, bracket,
  * host, and the tie decided by aggregate and then the regulation's rules.
  *
- * Engine boundary: extra time and penalties are asked of the engine in a single
- * game (`deciderRules`); over two legs the second leg plays extra time when the
- * regulation has it, the engine told the first leg's goals (fixture-input.ts
- * `secondLeg`). Extra time is then inside the last leg's score. The engine contract has a
- * shoot-out field but the engine does not fill it yet: until it does, a
- * level tie that goes to penalties is settled by a seeded 50% draw, marked
- * `penaltyDraw` in the result (PARÂMETRO, temporary).
+ * Engine boundary: extra time and the shoot-out are asked of the engine in a
+ * single game (`deciderRules`) and in a two-leg tie's second leg, the engine told
+ * the first leg's goals (fixture-input.ts `secondLeg`); its `shootout` decides.
+ * A quick result has neither: a level tie that goes to penalties is then settled
+ * by a seeded 50% draw, marked `penaltyDraw` (PARÂMETRO, quick results only).
  */
 import { fork, next, rngFrom } from '@decabeca/match-engine';
 import { shuffle, type Pair } from './league';

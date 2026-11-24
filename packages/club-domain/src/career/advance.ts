@@ -19,7 +19,7 @@ import { regulationsFor, type Move } from '../competition/outcomes';
 import { advanceLedger, type Ledger } from '../finance/ledger';
 import { postHomeMatch, postMonths } from './finance';
 import { quickResult } from '../match/quick';
-import { formationOf, matchInputFor } from '../match/fixture-input';
+import { formationOf, matchInputFor, quickShootout } from '../match/fixture-input';
 import { crowdShare, isDerby, moodOf, neutralVenue } from '../match/stadium';
 import { whistleOf } from '../match/referee';
 import { coachOf } from '@decabeca/match-engine';
@@ -298,7 +298,7 @@ function playDay(
   const decided = w.season.decisions.length;
   for (const id of matchesOn(w.season, day)) {
     const m = w.season.meta.get(id)!;
-    const o =
+    const quick =
       given?.id === id
         ? given.outcome
         : // The away side loses a little on a long trip (travel.ts).
@@ -315,6 +315,12 @@ function playDay(
             // Up in La Paz or Quito the visitors' legs and lungs go (travel.ts).
             neutralVenue(id) ? 0 : climbOf(w.pack, m.home, m.away),
           );
+    // A level tie in a quick result goes to the engine's shoot-out rule, between the elevens.
+    const kicks =
+      given?.id === id
+        ? null
+        : quickShootout(() => matchPack(w, m.home, m.away), w.season, id, quick.goals);
+    const o = kicks ? { ...quick, shootout: kicks } : quick;
     const decided = w.season.decisions.length;
     record(w.season, id, o);
     out.set(id, o);
