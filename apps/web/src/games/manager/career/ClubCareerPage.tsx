@@ -633,7 +633,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
           <Crest club={sim.club} size="lg" />
           <div className="min-w-0">
             <p className="font-condensed text-xl leading-[0.95] font-black text-balance uppercase">
-              {sim.club.name}
+              {sim.club.shortName}
             </p>
             <p className="mt-1 text-xs font-semibold text-chalk-soft">
               {t('career.where', { division: sim.division, season: sim.season })}
@@ -760,7 +760,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
               </button>
             </aside>
           ))}
-          {sim.fresh && <Guide careerId={career.id} onRoom={go} />}
+          {sim.fresh && <Guide careerId={career.id} room={room} onRoom={go} />}
           {room === 'diretoria' && (
             <>
               <Board
@@ -1870,25 +1870,41 @@ function Inbox({
 const GUIDE = ['vestiario', 'mercado', 'diretoria', 'jogar'] as const;
 const guideKey = (id: string) => `clube-guia:${id}`;
 
-/** The first week's guide: one card per step, each linking to its room; remembered as done. */
-function Guide({ careerId, onRoom }: { careerId: string; onRoom: (r: Room) => void }) {
-  const [step, setStep] = useState(0);
-  const [done, setDone] = useState(() => {
+/**
+ * The first week's guide: one card per step, each linking to its room. It shows in the Sala only;
+ * visiting a step's room, by the guide or the room bar, ticks the step. Remembered per career.
+ */
+function Guide({
+  careerId,
+  room,
+  onRoom,
+}: {
+  careerId: string;
+  room: Room;
+  onRoom: (r: Room) => void;
+}) {
+  const [step, setStepState] = useState(() => {
     try {
-      return localStorage.getItem(guideKey(careerId)) === '1';
+      const v = localStorage.getItem(guideKey(careerId));
+      // '1' was "done" before steps were kept.
+      return v === '1' ? GUIDE.length : Number(v ?? 0) || 0;
     } catch {
-      return false;
+      return 0;
     }
   });
-  if (done) return null;
-  const finish = () => {
+  const setStep = (n: number) => {
+    setStepState(n);
     try {
-      localStorage.setItem(guideKey(careerId), '1');
+      localStorage.setItem(guideKey(careerId), String(n));
     } catch {
-      // Private mode: the guide only comes back on the next visit.
+      // Private mode: the guide starts over on the next visit.
     }
-    setDone(true);
   };
+  useEffect(() => {
+    if (GUIDE[step] === room) setStep(step + 1);
+  }, [room]);
+  if (step >= GUIDE.length || room !== 'sala') return null;
+  const finish = () => setStep(GUIDE.length);
   const key = GUIDE[step]!;
   const last = step === GUIDE.length - 1;
   return (
@@ -1900,10 +1916,7 @@ function Guide({ careerId, onRoom }: { careerId: string; onRoom: (r: Room) => vo
           <button
             type="button"
             className={`${btnPrimary} min-h-11 bg-club-gold px-4 text-base`}
-            onClick={() => {
-              onRoom(key as Room);
-              setStep(step + 1);
-            }}
+            onClick={() => onRoom(key as Room)}
           >
             {t('guide.go', { k: key })}
           </button>

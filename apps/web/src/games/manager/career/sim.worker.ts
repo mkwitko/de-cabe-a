@@ -1503,7 +1503,8 @@ function view(w: CareerWorld, ms: number): SimView {
       .reverse()
       .map((n) => ({
         ...n,
-        iso: isoOf(n.day || w.day),
+        // Day 0 is the welcome, written before the calendar: it dates from the hiring.
+        iso: isoOf(n.day || (w.hiredDay ?? w.day)),
         clubName:
           byId.get(
             n.kind === 'result' || n.kind === 'copaDraw'
