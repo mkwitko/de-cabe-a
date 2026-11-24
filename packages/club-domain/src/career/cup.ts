@@ -4,10 +4,11 @@
  * like any competition; this reads what it did to the person's club.
  */
 import { COPA_ID, COPA_PHASES } from '../competition/copa';
-import { LIBERTADORES_ID, SUDAMERICANA_ID } from '../competition/conmebol';
+import { LIBERTADORES_ID, SUDAMERICANA_ID, isConmebol } from '../competition/conmebol';
+import { isRegional } from '../competition/regionais';
 import { standings, type Row } from '../competition/league';
 import { REGIONAL_IDS, SUPERCOPA_ID } from '../competition/regionais-data';
-import type { SeasonState } from '../competition/season';
+import { tableRules, type SeasonState } from '../competition/season';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
 
@@ -48,7 +49,14 @@ export function cupNotes(w: CareerWorld, day: number, before: Set<number>, decid
     });
   }
   for (const d of s.decisions.slice(decided)) {
-    if (d.competitionId !== COPA_ID || (d.a !== w.clubId && d.b !== w.clubId)) continue;
+    if (d.a !== w.clubId && d.b !== w.clubId) continue;
+    if (d.competitionId !== COPA_ID) {
+      // Another cup's knockout exit; a lost final is told by the cup's end note (regional.ts).
+      const c = s.competitions.find((x) => x.id === d.competitionId);
+      if (c && d.winner !== w.clubId && d.phaseId !== 'final' && (isRegional(c) || isConmebol(c)))
+        note(w, { day, kind: 'copaOut', phase: d.phaseId, by: d.by, cup: c.name });
+      continue;
+    }
     const stage = stageOf(d.phaseId);
     if (stage === COPA_PHASES.length - 1 && d.winner === w.clubId)
       note(w, { day, kind: 'copaTitle' });
@@ -124,14 +132,14 @@ function groupsSoFar(s: SeasonState, cid: string, pid: string): Row[][] | null {
     const o = s.outcomes.get(id);
     return o ? [{ home: m.home, away: m.away, goals: o.goals, cards: o.cards }] : [];
   });
-  // Display order only; the phase's outcomes use the competition's own tie-breakers.
-  return run.groups.map((g) =>
-    standings(g, games, {
-      points: { win: 3, draw: 1, loss: 0 },
-      tieBreakers: ['goalDifference', 'goalsFor'],
-      seed: 0,
-    }),
+  // The competition's own rules, so the table as it stands orders as the phase will close.
+  const c = s.competitions.find((x) => x.id === cid)!;
+  const rules = tableRules(
+    s,
+    c,
+    c.phases.find((p) => p.id === pid)!,
   );
+  return run.groups.map((g) => standings(g, games, rules));
 }
 
 /** A cup as drawn and played so far (tables, brackets and the person's way through), or null. */

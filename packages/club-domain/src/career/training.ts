@@ -33,6 +33,8 @@ import { clubStrengthOf } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
 import { foreignLevels } from './foreign';
+import { ABROAD } from '../market/abroad';
+import { REAL_SQUAD } from './development';
 import { cached, WHOLE } from '../lib/pack-cache';
 
 export const INTENSITIES = ['light', 'normal', 'hard'] as const;
@@ -310,18 +312,33 @@ export function clubLevels(
           const o = clubLevels(origin, season);
           return foreignLevels(o.strength, o.eleven, origin, realLevel(origin, season));
         });
+  // A real squad the person signed from plays without them (Boca, River: foreign-squad.ts).
+  const gone = origin === pack ? new Set<string>() : signedAway(pack, origin);
+  const less = gone.size ? realLevel(origin, season, gone) : undefined;
   for (const f of foreign) {
-    strength.set(f.id, f.strength);
-    eleven.set(f.id, f.eleven);
+    const own = less?.(f.id);
+    strength.set(f.id, own?.strength ?? f.strength);
+    eleven.set(f.id, own?.eleven ?? f.eleven);
   }
   return { strength, eleven };
 }
 
+/** The real foreign squads' players the career pack has at a club: the ones the person signed. */
+function signedAway(pack: Pack, origin: Pack): Set<string> {
+  const real = new Set((origin.foreign ?? []).flatMap((f) => f.players.map((p) => p.id)));
+  if (!real.size) return real;
+  return new Set(
+    pack.players.filter((p) => real.has(p.id) && p.clubId !== ABROAD).map((p) => p.id),
+  );
+}
+
 /** A foreign club's measure from its real squad in the pack (`pack.foreign`), if it has one. */
-const realLevel = (pack: Pack, season: number) => (id: string) => {
-  const squad = pack.foreign?.find((f) => f.id === id)?.players ?? [];
-  // Its own countrymen: no Brazilian limit of foreigners.
-  return squad.length >= 18
+const realLevel = (pack: Pack, season: number, without?: ReadonlySet<string>) => (id: string) => {
+  const all = pack.foreign?.find((f) => f.id === id)?.players ?? [];
+  if (without && !all.some((p) => without.has(p.id))) return undefined;
+  const squad = without ? all.filter((p) => !without.has(p.id)) : all;
+  // Its own countrymen: no Brazilian limit of foreigners. The squad left after signings still plays.
+  return all.length >= REAL_SQUAD
     ? clubLevel({ ...pack, players: squad }, id, season, Infinity)
     : undefined;
 };

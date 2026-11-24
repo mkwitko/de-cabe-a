@@ -1669,6 +1669,7 @@ function noteText(n: InboxItem, sim: SimView): string {
       });
     case 'copaOut':
       return t('inbox.copaOut', {
+        cup: n.cup ?? 'Copa do Brasil',
         phase: t('copa.phaseIn', { p: n.phase }),
         by: n.by,
       });
