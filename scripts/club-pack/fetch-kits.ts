@@ -5,6 +5,7 @@
 // Raw responses are cached under .cache/kits (gitignored); 1 request/second, retries.
 // Output: data/kits.json, keyed by FM club uid. No crests or logos are read, only colour codes.
 // Run: pnpm --filter @decabeca/api exec tsx ../../scripts/club-pack/fetch-kits.ts <csv-dir>
+//  or: ... fetch-kits.ts --geo   (adds kits for the QID clubs still missing one, no CSVs needed)
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseCsv } from './lib/csv.ts';
@@ -57,18 +58,36 @@ const geo = JSON.parse(readFileSync(new URL('data/br-club-geo.json', ROOT), 'utf
   cities: Record<string, { state: string | null }>;
   clubs: Record<string, { qid: string; city?: string }>;
 };
-const clubs = parseCsv(readFileSync(`${dir}/clubs.csv`, 'utf8'))
-  .filter((c) => c.nation_id === '189' && c.gender === 'men')
-  .map((c) => {
-    const g = geo.clubs[c.uid!];
-    return {
-      uid: c.uid!,
-      name: c.name!,
-      short: c.short_name || c.name!,
-      qid: g?.qid,
-      state: (g?.city && geo.cities[g.city]?.state) || null,
-    };
-  });
+// `--geo` (no FM CSVs at hand): only the clubs with a QID in the geo file, and the kits already in
+// data/kits.json are kept; new finds are added to them.
+const fromGeo = dir === '--geo';
+const before = fromGeo
+  ? (JSON.parse(readFileSync(new URL('data/kits.json', ROOT), 'utf8')) as {
+      clubs: Record<string, unknown>;
+    })
+  : null;
+const clubs = fromGeo
+  ? Object.entries(geo.clubs)
+      .filter(([uid, g]) => g.qid && !before!.clubs[uid])
+      .map(([uid, g]) => ({
+        uid,
+        name: '',
+        short: '',
+        qid: g.qid,
+        state: (g.city && geo.cities[g.city]?.state) || null,
+      }))
+  : parseCsv(readFileSync(`${dir}/clubs.csv`, 'utf8'))
+      .filter((c) => c.nation_id === '189' && c.gender === 'men')
+      .map((c) => {
+        const g = geo.clubs[c.uid!];
+        return {
+          uid: c.uid!,
+          name: c.name!,
+          short: c.short_name || c.name!,
+          qid: g?.qid,
+          state: (g?.city && geo.cities[g.city]?.state) || null,
+        };
+      });
 
 // ── Titles: Wikidata sitelinks for the QIDs, a pt.wikipedia search for the rest
 const titles = new Map<string, { pt?: string; en?: string; by: 'qid' | 'name' }>();
@@ -139,6 +158,19 @@ const pt = await wikitexts(
   'pt',
   [...titles.values()].flatMap((t) => (t.pt ? [t.pt] : [])),
 );
+// Big clubs keep their infobox in a template of their own ({{Info/Clube de futebol/Coritiba Foot
+// Ball Club}}): its wikitext stands in for the article's.
+const OWN = /\{\{\s*(Info\/Clube de futebol\/[^}|]+?)\s*\}\}/;
+const own = new Map<string, string>();
+for (const [t, p] of pt) {
+  const m = OWN.exec(p.text);
+  if (m) own.set(t, `Predefinição:${m[1]}`);
+}
+const templates = await wikitexts('pt', [...own.values()]);
+for (const [t, tpl] of own) {
+  const x = templates.get(tpl);
+  if (x) pt.set(t, { text: x.text, title: pt.get(t)!.title });
+}
 const en = await wikitexts(
   'en',
   [...titles.values()].flatMap((t) => (t.en ? [t.en] : [])),
@@ -213,7 +245,7 @@ for (const c of clubs) {
   if (t!.by === 'name') cov.byName++;
   out[c.uid] = {
     ...(c.qid ? { qid: c.qid } : {}),
-    name: c.name,
+    name: c.name || (p ?? e)!.title,
     state: c.state,
     match: t!.by,
     source: p ? urlOf('pt', p.title) : urlOf('en', e!.title),
@@ -228,8 +260,8 @@ writeFileSync(
       source:
         'pt.wikipedia Info/Clube de futebol + en.wikipedia Infobox football club (kit colour parameters; CC BY-SA 4.0), titles via Wikidata sitelinks (CC0); see FONTES.md',
       fetchedAt: new Date().toISOString().slice(0, 10),
-      coverage: cov,
-      clubs: out,
+      coverage: fromGeo ? { ...(before as any).coverage, addedFromGeo: cov.home } : cov,
+      clubs: fromGeo ? { ...before!.clubs, ...out } : out,
     },
     null,
     1,

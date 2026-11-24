@@ -1,0 +1,709 @@
+{
+  "source": "Checked by hand against pt.wikipedia, Wikidata, club and federation pages (2026-11-24); one source per club. Applied first by import-fm.ts.",
+  "clubs": {
+    "104976": {
+      "short": "XV de Piracicaba",
+      "city": "Piracicaba",
+      "state": "SP",
+      "ibge": "3538709",
+      "source": "https://pt.wikipedia.org/wiki/Esporte_Clube_XV_de_Novembro_(Piracicaba)"
+    },
+    "19006291": {
+      "short": "Juventude Samas",
+      "city": "São Mateus",
+      "state": "ES",
+      "ibge": "3204906",
+      "source": "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Juventude"
+    },
+    "19014101": {
+      "short": "Juventus Minasnovense",
+      "city": "Minas Novas",
+      "state": "MG",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Atl%C3%A9tica_Juventus_Minasnovense"
+    },
+    "19023456": {
+      "short": "Cruzeiro (DF)",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Bras%C3%ADlia"
+    },
+    "19024263": {
+      "short": "Riostrense",
+      "city": "Rio das Ostras",
+      "state": "RJ",
+      "ibge": "3304524",
+      "source": "https://pt.wikipedia.org/wiki/Riostrense_Esporte_Clube"
+    },
+    "19026930": {
+      "short": "Botafogo (DF)",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Bras%C3%ADlia"
+    },
+    "19032890": {
+      "short": "Panambi",
+      "city": "Panambi",
+      "state": "RS",
+      "source": "https://pt.wikipedia.org/wiki/Panambi"
+    },
+    "19034053": {
+      "short": "Tupy de Jussara",
+      "city": "Jussara",
+      "state": "GO",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Tupy_de_Esportes"
+    },
+    "19036924": {
+      "short": "Forte (ES)",
+      "city": "Castelo",
+      "state": "ES",
+      "ibge": "3201407",
+      "source": "https://pt.wikipedia.org/wiki/Forte_Futebol_Clube"
+    },
+    "19039688": {
+      "short": "Brasilis",
+      "city": "Águas de Lindóia",
+      "state": "SP",
+      "source": "https://pt.wikipedia.org/wiki/Brasilis_Futebol_Clube"
+    },
+    "19047392": {
+      "short": "Lemense",
+      "city": "Leme",
+      "state": "SP",
+      "ibge": "3526704",
+      "source": "https://pt.wikipedia.org/wiki/Leme"
+    },
+    "19051821": {
+      "short": "UNIVAP",
+      "city": "São José dos Campos",
+      "state": "SP",
+      "ibge": "3549904",
+      "source": "https://pt.wikipedia.org/wiki/Universidade_do_Vale_do_Para%C3%ADba"
+    },
+    "19052149": {
+      "short": "Queimadense",
+      "city": "Queimadas",
+      "state": "PB",
+      "source": "https://pt.wikipedia.org/wiki/Queimadas_(Para%C3%ADba)"
+    },
+    "19052514": {
+      "short": "Caçadorense",
+      "city": "Caçador",
+      "state": "SC",
+      "ibge": "4203006",
+      "source": "https://pt.wikipedia.org/wiki/Ca%C3%A7ador_Atl%C3%A9tico_Clube"
+    },
+    "19066532": {
+      "short": "Foz do Iguaçu",
+      "city": "Foz do Iguaçu",
+      "state": "PR",
+      "ibge": "4108304",
+      "source": "https://pt.wikipedia.org/wiki/Foz_do_Igua%C3%A7u"
+    },
+    "19072707": {
+      "short": "Doce Mel",
+      "city": "Jequié",
+      "state": "BA",
+      "ibge": "2918001",
+      "source": "https://pt.wikipedia.org/wiki/Doce_Mel_Esporte_Clube"
+    },
+    "19084684": {
+      "short": "Vitória (PE)",
+      "city": "Vitória de Santo Antão",
+      "state": "PE",
+      "ibge": "2616407",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Acad%C3%AAmica_e_Desportiva_Vit%C3%B3ria_das_Tabocas"
+    },
+    "19086840": {
+      "short": "União Central",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "ibge": "3304557",
+      "source": "https://pt.wikipedia.org/wiki/Uni%C3%A3o_Central_Futebol_Clube"
+    },
+    "19100645": {
+      "short": "Planaltina EC",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Planaltina_Esporte_Clube"
+    },
+    "19105496": {
+      "short": "Força Jovem Aquidabã",
+      "city": "Aquidabã",
+      "state": "SE",
+      "source": "https://pt.wikipedia.org/wiki/Aquidab%C3%A3"
+    },
+    "19105651": {
+      "short": "Riopardense",
+      "city": "Rio Pardo",
+      "state": "RS",
+      "ibge": "4315701",
+      "source": "https://pt.wikipedia.org/wiki/Lista_de_munic%C3%ADpios_do_Rio_Grande_do_Sul"
+    },
+    "19140900": {
+      "short": "Coimbra",
+      "city": "Contagem",
+      "state": "MG",
+      "ibge": "3118601",
+      "source": "https://pt.wikipedia.org/wiki/Coimbra_FC_Porto"
+    },
+    "19145346": {
+      "short": "Gramadense",
+      "city": "Gramado",
+      "state": "RS",
+      "ibge": "4309100",
+      "source": "https://pt.wikipedia.org/wiki/Centro_Esportivo_Gramadense"
+    },
+    "19168613": {
+      "short": "Iranduba",
+      "city": "Iranduba",
+      "state": "AM",
+      "source": "https://pt.wikipedia.org/wiki/Iranduba"
+    },
+    "19170012": {
+      "short": "São José (RJ)",
+      "city": "Itaperuna",
+      "state": "RJ",
+      "ibge": "3302205",
+      "source": "https://pt.wikipedia.org/wiki/Clube_de_Futebol_S%C3%A3o_Jos%C3%A9"
+    },
+    "19174916": {
+      "short": "EC São Bernardo",
+      "city": "São Bernardo do Campo",
+      "state": "SP",
+      "ibge": "3548708",
+      "source": "https://pt.wikipedia.org/wiki/Esporte_Clube_S%C3%A3o_Bernardo"
+    },
+    "19186109": {
+      "short": "Votuporanguense",
+      "city": "Votuporanga",
+      "state": "SP",
+      "ibge": "3557105",
+      "source": "https://pt.wikipedia.org/wiki/Clube_Atl%C3%A9tico_Votuporanguense"
+    },
+    "19191549": {
+      "short": "Balsas (MA)",
+      "city": "Balsas",
+      "state": "MA",
+      "ibge": "2101400",
+      "source": "https://pt.wikipedia.org/wiki/Balsas_Esporte_Clube"
+    },
+    "19191928": {
+      "short": "Paduano",
+      "city": "Santo Antônio de Pádua",
+      "state": "RJ",
+      "ibge": "3304706",
+      "source": "https://pt.wikipedia.org/wiki/Paduano_Esporte_Clube"
+    },
+    "19220161": {
+      "short": "Novo Esporte",
+      "city": "Itabirinha",
+      "state": "MG",
+      "source": "https://pt.wikipedia.org/wiki/Novo_Esporte_Clube"
+    },
+    "19223518": {
+      "short": "Chapada",
+      "city": "Chapada dos Guimarães",
+      "state": "MT",
+      "ibge": "5103007",
+      "source": "https://pt.wikipedia.org/wiki/Chapada_Futebol_Clube"
+    },
+    "19239453": {
+      "short": "Jaguar",
+      "city": "Jaboatão dos Guararapes",
+      "state": "PE",
+      "ibge": "2607901",
+      "source": "https://pt.wikipedia.org/wiki/Jaboat%C3%A3o_dos_Guararapes"
+    },
+    "19247179": {
+      "short": "Petrópolis",
+      "city": "Petrópolis",
+      "state": "RJ",
+      "ibge": "3303906",
+      "source": "https://pt.wikipedia.org/wiki/Petr%C3%B3polis_Futebol_Clube"
+    },
+    "19283781": {
+      "short": "Sport (ES)",
+      "city": "Serra",
+      "state": "ES",
+      "ibge": "3205002",
+      "source": "https://pt.wikipedia.org/wiki/Sport_Clube_Brasil_Capixaba_Ltda"
+    },
+    "19300812": {
+      "short": "APAFUT",
+      "city": "Caxias do Sul",
+      "state": "RS",
+      "ibge": "4305108",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_de_Pais_e_Amigos_do_Futebol"
+    },
+    "19334182": {
+      "short": "Agrimaq",
+      "city": "Pilar",
+      "state": "AL",
+      "ibge": "2706901",
+      "source": "https://pt.wikipedia.org/wiki/Sport_Club_Agrimaq_Pilarense"
+    },
+    "19335066": {
+      "short": "7 de Abril",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "ibge": "3304557",
+      "source": "https://pt.wikipedia.org/wiki/Centro_de_Integra%C3%A7%C3%A3o_Geracional_7_de_Abril"
+    },
+    "19337486": {
+      "short": "ABECAT",
+      "city": "Ouvidor",
+      "state": "GO",
+      "source": "https://pt.wikipedia.org/wiki/Agro_Esporte_Clube"
+    },
+    "19339781": {
+      "short": "Novo Horizonte (RS)",
+      "city": "Esteio",
+      "state": "RS",
+      "ibge": "4307708",
+      "source": "https://pt.wikipedia.org/wiki/Esporte_Clube_Novo_Horizonte"
+    },
+    "19341557": {
+      "short": "Decisão",
+      "city": "Goiana",
+      "state": "PE",
+      "ibge": "2606200",
+      "source": "https://pt.wikipedia.org/wiki/Decis%C3%A3o_Goiana_Futebol_Clube"
+    },
+    "19342607": {
+      "short": "Samas",
+      "city": "São Mateus do Sul",
+      "state": "PR",
+      "source": "https://pt.wikipedia.org/wiki/Samas_Sport_Club"
+    },
+    "19342631": {
+      "short": "Acopiara",
+      "city": "Acopiara",
+      "state": "CE",
+      "source": "https://pt.wikipedia.org/wiki/Futebol_Clube_Acopiara_Academy"
+    },
+    "19367842": {
+      "short": "Barra (SE)",
+      "city": "Barra dos Coqueiros",
+      "state": "SE",
+      "source": "https://pt.wikipedia.org/wiki/Barra_dos_Coqueiros"
+    },
+    "19373914": {
+      "short": "CAAC Brasil",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "ibge": "3304557",
+      "source": "https://pt.wikipedia.org/wiki/Centro_Administrativo_Apolog%C3%A9tico_Crist%C3%A3o_do_Brasil_Futebol_Clube"
+    },
+    "19381253": {
+      "short": "Canaã (DF)",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Cana%C3%A3_Esporte_Clube"
+    },
+    "19390291": {
+      "short": "Oeirense",
+      "city": "Oeiras",
+      "state": "PI",
+      "ibge": "2207009",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Atl%C3%A9tica_Oeirense"
+    },
+    "19390922": {
+      "short": "Nação Araquari",
+      "city": "Araquari",
+      "state": "SC",
+      "source": "https://pt.wikipedia.org/wiki/Na%C3%A7%C3%A3o_Araquari"
+    },
+    "2000064937": {
+      "short": "Aymorés (MG)",
+      "city": "Ubá",
+      "state": "MG",
+      "ibge": "3169901",
+      "source": "https://pt.wikipedia.org/wiki/Sport_Club_Aymor%C3%A9s"
+    },
+    "2000097069": {
+      "short": "Belford Roxo",
+      "city": "Belford Roxo",
+      "state": "RJ",
+      "ibge": "3300456",
+      "source": "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Belford_Roxo"
+    },
+    "2000108650": {
+      "short": "Santa Rita (PB)",
+      "city": "Santa Rita",
+      "state": "PB",
+      "ibge": "2513703",
+      "source": "https://pt.wikipedia.org/wiki/Atl%C3%A9tico_Clube_Santa_Rita"
+    },
+    "2000118455": {
+      "short": "Colorado Caieiras",
+      "city": "Caieiras",
+      "state": "SP",
+      "ibge": "3509007",
+      "source": "https://pt.wikipedia.org/wiki/Colorado_Caieiras_Futebol_Clube"
+    },
+    "2000133390": {
+      "short": "Caravaggio (SC)",
+      "city": "Nova Veneza",
+      "state": "SC",
+      "ibge": "4211603",
+      "source": "https://pt.wikipedia.org/wiki/Caravaggio_Futebol_Clube"
+    },
+    "2000135407": {
+      "short": "Pedra Branca (SC)",
+      "city": "Palhoça",
+      "state": "SC",
+      "ibge": "4211900",
+      "source": "https://pt.wikipedia.org/wiki/Pedra_Branca_Esporte_Clube"
+    },
+    "2000135570": {
+      "short": "Bela Vista (GO)",
+      "city": "Bela Vista de Goiás",
+      "state": "GO",
+      "source": "https://pt.wikipedia.org/wiki/Bela_Vista_de_Goi%C3%A1s"
+    },
+    "2000136120": {
+      "short": "ABD FC",
+      "city": "Santo Antônio de Goiás",
+      "state": "GO",
+      "source": "https://pt.wikipedia.org/wiki/ABD_Futebol_Clube"
+    },
+    "2000152153": {
+      "short": "Santos Athletico",
+      "city": "Moju",
+      "state": "PA",
+      "source": "https://pt.wikipedia.org/wiki/Santos_Athl%C3%A9tico_Clube_do_Par%C3%A1"
+    },
+    "2000153954": {
+      "short": "Centro Oeste",
+      "city": "Senador Canedo",
+      "state": "GO",
+      "source": "https://pt.wikipedia.org/wiki/Centro_Oeste_Futebol_Clube"
+    },
+    "2000155518": {
+      "short": "Bela Vista (TO)",
+      "city": "Cachoeirinha",
+      "state": "TO",
+      "source": "https://pt.wikipedia.org/wiki/Bela_Vista_Futebol_Cachoeirense"
+    },
+    "2000173968": {
+      "short": "Primavera (MT)",
+      "city": "Primavera do Leste",
+      "state": "MT",
+      "source": "https://pt.wikipedia.org/wiki/Primavera_Atl%C3%A9tico_Clube"
+    },
+    "2000188500": {
+      "short": "RPE Parintins",
+      "city": "Parintins",
+      "state": "AM",
+      "ibge": "1303403",
+      "source": "https://pt.wikipedia.org/wiki/Parintins_Futebol_Clube"
+    },
+    "2000192425": {
+      "short": "Grêmio Valparaíso",
+      "city": "Valparaíso de Goiás",
+      "state": "GO",
+      "source": "https://pt.wikipedia.org/wiki/Valpara%C3%ADso_de_Goi%C3%A1s"
+    },
+    "2000192604": {
+      "short": "Villa Real (MG)",
+      "city": "Machado",
+      "state": "MG",
+      "ibge": "3139003",
+      "source": "https://pt.wikipedia.org/wiki/Esporte_Clube_Villa_Real"
+    },
+    "2000193941": {
+      "short": "North (MG)",
+      "city": "Montes Claros",
+      "state": "MG",
+      "ibge": "3143302",
+      "source": "https://pt.wikipedia.org/wiki/North_Esporte_Clube"
+    },
+    "2000194486": {
+      "short": "Paracatu",
+      "city": "Paracatu",
+      "state": "MG",
+      "ibge": "3147006",
+      "source": "https://pt.wikipedia.org/wiki/Paracatu"
+    },
+    "2000209181": {
+      "short": "Santa Fé (PE)",
+      "city": "Recife",
+      "state": "PE",
+      "ibge": "2611606",
+      "source": "https://pt.wikipedia.org/wiki/Santa_F%C3%A9_Futebol_Clube_(Pernambuco)"
+    },
+    "2000239226": {
+      "short": "Vera Cruz (RJ)",
+      "city": "Petrópolis",
+      "state": "RJ",
+      "ibge": "3303906",
+      "source": "https://pt.wikipedia.org/wiki/Esporte_Clube_Vera_Cruz"
+    },
+    "2000239360": {
+      "short": "Paraty",
+      "city": "Paraty",
+      "state": "RJ",
+      "source": "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Paraty"
+    },
+    "2000255408": {
+      "short": "Campo Novo",
+      "city": "Campo Novo do Parecis",
+      "state": "MT",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Camponovense_Celeiro_de_Futebol"
+    },
+    "2000255425": {
+      "short": "Zinza",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "ibge": "3304557",
+      "source": "https://pt.wikipedia.org/wiki/Zinzane_Futebol_Clube_SAF"
+    },
+    "2000291261": {
+      "short": "Flamengo (SE)",
+      "city": "Japaratuba",
+      "state": "SE",
+      "source": "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Flamengo"
+    },
+    "2000326381": {
+      "short": "Monte Roraima",
+      "city": "Boa Vista",
+      "state": "RR",
+      "ibge": "1400100",
+      "source": "https://pt.wikipedia.org/wiki/Monte_Roraima_Futebol_Clube"
+    },
+    "2000365897": {
+      "short": "Porto (BA)",
+      "city": "Porto Seguro",
+      "state": "BA",
+      "ibge": "2925303",
+      "source": "https://pt.wikipedia.org/wiki/Porto_Sport_Club"
+    },
+    "2000368000": {
+      "short": "Portuguesa (AP)",
+      "city": "Macapá",
+      "state": "AP",
+      "ibge": "1600303",
+      "source": "https://pt.wikipedia.org/wiki/Portuguesa_de_Desportos_do_Amap%C3%A1"
+    },
+    "2000477199": {
+      "short": "Santa Cruz (AC)",
+      "city": "Rio Branco",
+      "state": "AC",
+      "ibge": "1200401",
+      "source": "https://pt.wikipedia.org/wiki/Santa_Cruz_Acre_Esporte_Clube"
+    },
+    "2000533932": {
+      "short": "Paulinense",
+      "city": "Paulínia",
+      "state": "SP",
+      "ibge": "3536505",
+      "source": "https://pt.wikipedia.org/wiki/Sporting_Club_Paulinense"
+    },
+    "301136": {
+      "short": "Brazlândia",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Brazl%C3%A2ndia_Futebol_Clube"
+    },
+    "301137": {
+      "short": "Real Brasília",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Real_Bras%C3%ADlia_Futebol_Clube"
+    },
+    "301254": {
+      "short": "Serrano (RJ)",
+      "city": "Petrópolis",
+      "state": "RJ",
+      "ibge": "3303906",
+      "source": "https://pt.wikipedia.org/wiki/Serrano_Football_Club"
+    },
+    "301269": {
+      "short": "Guarani VA",
+      "city": "Venâncio Aires",
+      "state": "RS",
+      "ibge": "4322608",
+      "source": "https://pt.wikipedia.org/wiki/Esporte_Clube_Guarani"
+    },
+    "301297": {
+      "short": "GAS",
+      "city": "Boa Vista",
+      "state": "RR",
+      "ibge": "1400100",
+      "source": "https://pt.wikipedia.org/wiki/Gr%C3%AAmio_Atl%C3%A9tico_Sampaio"
+    },
+    "301353": {
+      "short": "São Caetano",
+      "city": "São Caetano do Sul",
+      "state": "SP",
+      "ibge": "3548807",
+      "source": "https://pt.wikipedia.org/wiki/S%C3%A3o_Caetano_Futebol"
+    },
+    "301355": {
+      "short": "São José (SP)",
+      "city": "São José dos Campos",
+      "state": "SP",
+      "ibge": "3549904",
+      "source": "https://pt.wikipedia.org/wiki/S%C3%A3o_Jos%C3%A9_Esporte_Clube"
+    },
+    "301368": {
+      "short": "Oeste Brasil",
+      "city": "Toledo",
+      "state": "PR",
+      "ibge": "4127700",
+      "source": "https://pt.wikipedia.org/wiki/Oeste_Brasil_Futebol_Clube"
+    },
+    "302144": {
+      "short": "Ferroviária",
+      "city": "Araraquara",
+      "state": "SP",
+      "ibge": "3503208",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Ferrovi%C3%A1ria_de_Esportes"
+    },
+    "309620": {
+      "short": "Coritiba (SE)",
+      "city": "Itabaiana",
+      "state": "SE",
+      "ibge": "2802908",
+      "source": "https://pt.wikipedia.org/wiki/Coritiba_Foot_Ball_Club_(Sergipe)"
+    },
+    "309657": {
+      "short": "Brasiliense",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Brasiliense_Futebol_Clube"
+    },
+    "310909": {
+      "short": "Ceilândia",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Ceil%C3%A2ndia_Esporte_Clube"
+    },
+    "311003": {
+      "short": "Sobradinho",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Sobradinho_Esporte_Clube"
+    },
+    "311027": {
+      "short": "Osasco Sporting",
+      "city": "Osasco",
+      "state": "SP",
+      "ibge": "3534401",
+      "source": "https://pt.wikipedia.org/wiki/Osasco_Sporting"
+    },
+    "311104": {
+      "short": "Mesquita",
+      "city": "Mesquita",
+      "state": "RJ",
+      "ibge": "3302858",
+      "source": "https://pt.wikipedia.org/wiki/Mesquita_Futebol_Clube"
+    },
+    "313256": {
+      "short": "Oratório",
+      "city": "Macapá",
+      "state": "AP",
+      "ibge": "1600303",
+      "source": "https://pt.wikipedia.org/wiki/Orat%C3%B3rio_Recreativo_Clube"
+    },
+    "313257": {
+      "short": "São Paulo (AP)",
+      "city": "Macapá",
+      "state": "AP",
+      "ibge": "1600303",
+      "source": "https://pt.wikipedia.org/wiki/S%C3%A3o_Paulo_Futebol_Clube_(Macap%C3%A1)"
+    },
+    "313264": {
+      "short": "ARUC",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Recreativa_Cultural_Unidos_do_Cruzeiro"
+    },
+    "313265": {
+      "short": "Samambaia",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Samambaia_Futebol_Clube"
+    },
+    "313344": {
+      "short": "Dínamo (AL)",
+      "city": "Maceió",
+      "state": "AL",
+      "ibge": "2704302",
+      "source": "https://pt.wikipedia.org/wiki/D%C3%ADnamo_Esporte_Clube"
+    },
+    "313351": {
+      "short": "Ceilandense",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Ceilandense"
+    },
+    "313582": {
+      "short": "São Domingos (AL)",
+      "city": "Marechal Deodoro",
+      "state": "AL",
+      "source": "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Sportiva_S%C3%A3o_Domingos"
+    },
+    "313788": {
+      "short": "Taguatinga",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Taguatinga_Esporte_Clube"
+    },
+    "318921": {
+      "short": "Independente (PA)",
+      "city": "Tucuruí",
+      "state": "PA",
+      "ibge": "1508100",
+      "source": "https://pt.wikipedia.org/wiki/Independente_Atl%C3%A9tico_Clube"
+    },
+    "319127": {
+      "short": "Riacho City",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Riacho_City_Futebol_Clube"
+    },
+    "319129": {
+      "short": "SESP Brasília",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Sociedade_Esportiva_Planaltina"
+    },
+    "319130": {
+      "short": "Santa Maria (DF)",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Bras%C3%ADlia"
+    },
+    "319171": {
+      "short": "Angra dos Reis",
+      "city": "Angra dos Reis",
+      "state": "RJ",
+      "ibge": "3300100",
+      "source": "https://pt.wikipedia.org/wiki/Angra_dos_Reis_Esporte_Clube"
+    },
+    "8832330": {
+      "short": "Paranoá",
+      "city": "Brasília",
+      "state": "DF",
+      "ibge": "5300108",
+      "source": "https://pt.wikipedia.org/wiki/Parano%C3%A1_Esporte_Clube"
+    }
+  }
+}
