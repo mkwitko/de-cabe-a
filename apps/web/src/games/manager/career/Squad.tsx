@@ -59,6 +59,9 @@ function layout(slots: { x: number; y: number }[]) {
 }
 /** The name a magnet can hold whole: the surname, else the first name with the surname's initial. */
 const WHOLE = 9;
+/** Rows shown before "see everyone": the eleven and a bench of seven. */
+const SHORT = 18;
+
 export function surname(name: string) {
   const [first = '', ...rest] = name.split(' ');
   const last = rest.at(-1) ?? first;
@@ -85,6 +88,7 @@ export function Squad(props: {
   const card = usePlayerSheet(ask, onError);
   /** A player picked first, waiting for his slot. */
   const [picked, setPicked] = useState<string | null>(null);
+  const [everyone, setEveryone] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const board = useRef<HTMLDivElement>(null);
 
@@ -270,7 +274,7 @@ export function Squad(props: {
           ))}
         </div>
         <ul className="-mt-3 flex flex-col">
-          {rows.map((p, k) => {
+          {(slot !== null || everyone ? rows : rows.slice(0, SHORT)).map((p, k) => {
             const at = squad.xi.indexOf(p.id);
             const n = slot === null ? p.best.rating : p.fit[slot]!;
             const able =
@@ -373,6 +377,15 @@ export function Squad(props: {
             );
           })}
         </ul>
+        {slot === null && !everyone && rows.length > SHORT && (
+          <button
+            type="button"
+            className={`${btnSecondary} min-h-11 self-start px-4 text-base`}
+            onClick={() => setEveryone(true)}
+          >
+            {t('squad.everyone', { n: rows.length })}
+          </button>
+        )}
       </div>
       {card.sheet}
     </section>

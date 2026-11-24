@@ -68,6 +68,13 @@ test('career: accept an offer, play two matches, reload and find them saved', as
   await expect(page.getByRole('heading', { name: 'Pede resposta' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Notícias' })).toBeVisible();
   await page.screenshot({ path: 'test-results/carreira-inicio-390.png', fullPage: true });
+  // Visiting the step's room ticks it, and a reload keeps the guide on the next step.
+  await room(page, 'Vestiário').click();
+  await room(page, 'Sala do técnico').click();
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Primeiros passos' })).toContainText('2 de 4', {
+    timeout: 30_000,
+  });
   await page.getByRole('button', { name: 'Pular guia' }).click();
   await expect(page.getByRole('region', { name: 'Primeiros passos' })).toHaveCount(0);
   await toMatch(page);
