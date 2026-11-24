@@ -18,6 +18,7 @@
  */
 import type { SeasonState } from '../competition/season';
 import { seedOf } from '../competition/season';
+import { isForeignClub } from '../competition/groups';
 import { cached, WHOLE } from '../lib/pack-cache';
 import { SUPERCOPA_ID } from '../competition/regionais-data';
 import type { Pack, PackClub } from '../pack/schema';
@@ -167,10 +168,16 @@ export function crowdAt(pack: Pack, s: SeasonState, id: string): number {
  */
 export const neutralVenue = (id: string): boolean => id.startsWith(`${SUPERCOPA_ID}/`);
 
+/** A continental night at a foreign club's home: the share of seats taken. PARÂMETRO. */
+const FOREIGN_CROWD = 0.85;
+
 /** Share of the seats taken, 0..1, as the match engine reads the crowd; none on neutral ground. */
 export function crowdShare(pack: Pack, s: SeasonState, id: string): number {
   if (neutralVenue(id)) return 0;
   const m = s.calendar.matches.get(id);
+  // A foreign club of the CONMEBOL cups at home: no stadium in the pack, a full house for a
+  // continental night (PARÂMETRO).
+  if (m && isForeignClub(m.home)) return FOREIGN_CROWD;
   const cap = (m ? clubOf(pack, m.home) : undefined)?.stadium.capacity ?? 0;
   return cap > 0 ? Math.min(1, crowdAt(pack, s, id) / cap) : 0;
 }

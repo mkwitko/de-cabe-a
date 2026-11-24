@@ -10,6 +10,7 @@ import {
   type MatchInput,
   type MatchResult,
 } from '@decabeca/match-engine';
+import { FOREIGN_CLUBS } from '../competition/conmebol-data';
 import { deciderRules } from '../competition/knockout';
 import { seedOf, type Outcome, type SeasonState } from '../competition/season';
 import { crowdShare, isDerby } from './stadium';
@@ -27,8 +28,10 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
   if (!m) throw new Error(`unknown match ${id}`);
   const c = s.competitions.find((x) => x.id === m.competitionId)!;
   const p = c.phases.find((x) => x.id === s.meta.get(id)!.phaseId)!;
-  const home = pack.clubs.find((x) => x.id === m.home)!;
-  const city = pack.cities.find((x) => x.id === home.cityId);
+  const home = pack.clubs.find((x) => x.id === m.home);
+  const city = home && pack.cities.find((x) => x.id === home.cityId);
+  // A foreign club of the CONMEBOL cups has no club in the pack: its city from conmebol-data.
+  const abroad = home ? undefined : FOREIGN_CLUBS.find((x) => x.id === m.home);
   const single = (p.kind === 'mata-mata' || p.kind === 'final') && p.legs === 1;
   return {
     engineVersion: MATCH_ENGINE_VERSION,
@@ -38,8 +41,8 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
     ) as MatchInput['teams'],
     conditions: {
       crowd: crowdShare(pack, s, id),
-      altitudeM: city?.altitudeM ?? 0,
-      pitch: home.stadium.pitch,
+      altitudeM: city?.altitudeM ?? abroad?.altitudeM ?? 0,
+      pitch: home?.stadium.pitch ?? 'good',
       weather: 'clear',
       // The engine is calibrated at 0.5: the pool's average referee sits there (referee.ts).
       // A derby is hotter: the referee reaches for his pocket more (DERBY_CARDS).

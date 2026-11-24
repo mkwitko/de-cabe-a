@@ -26,6 +26,7 @@ import {
   type Pack,
   type SeasonTurn,
   careerMatch,
+  matchPack,
   nextMoment,
   outcomeOf,
   type Booking,
@@ -277,8 +278,6 @@ export interface SimView {
   today: string;
   next: {
     iso: string;
-    /** Against a foreign club of the CONMEBOL cups: the result only, no match to watch. */
-    quickOnly: boolean;
     home: ClubFace;
     away: ClubFace;
     atHome: boolean;
@@ -1342,11 +1341,13 @@ let pending: Decision | null = null;
 let last: SimView['last'] = null;
 
 /** The names behind the person's last match's goals, by side (CareerWorld.scorers). */
-function scorerNames(w: CareerWorld): [string[], string[]] {
+function scorerNames(w: CareerWorld, home: string, away: string): [string[], string[]] {
   const sides = w.scorers ?? [[], []];
   const ids = new Set(sides.flat().map((g) => g.scorer));
   const name = new Map(
-    w.pack.players.filter((p) => ids.has(p.id)).map((p) => [p.id, p.knownAs ?? p.name]),
+    matchPack(w, home, away)
+      .players.filter((p) => ids.has(p.id))
+      .map((p) => [p.id, p.knownAs ?? p.name]),
   );
   return [0, 1].map((i) => sides[i]!.map((g) => name.get(g.scorer) ?? '')) as [string[], string[]];
 }
@@ -1592,7 +1593,6 @@ function view(w: CareerWorld, ms: number): SimView {
     next: match
       ? {
           iso: isoOf(match.day),
-          quickOnly: 'quickOnly' in match && match.quickOnly === true,
           home: face(byId.get(match.home)!),
           away: face(byId.get(match.away)!),
           atHome: match.home === w.clubId,
@@ -1706,7 +1706,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
         gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
-        scorers: scorerNames(world),
+        scorers: scorerNames(world, d.home, d.away),
       };
       const after = await toNextDecision(world);
       save = {
@@ -1857,8 +1857,9 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       live = startLiveMatch(input);
       liveCommands = [];
       const { home, away } = pending;
+      const faces = facesOf(world);
       const club = (id: string): MatchClub => {
-        const c = world!.pack.clubs.find((x) => x.id === id)!;
+        const c = faces.get(id)!;
         return { id, name: c.name, shortName: c.shortName, colours: c.colours, kits: c.kits };
       };
       self.postMessage({
@@ -1870,9 +1871,10 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
           formation: lineupOf(world).formation,
           plan: planOf(world),
           gap: strengthGap(world, home, away, mine),
+          // A foreign club's squad is the match's own (foreign-squad.ts).
           names: Object.fromEntries(
-            world.pack.players
-              .filter((p) => p.clubId === home || p.clubId === away)
+            matchPack(world, home, away)
+              .players.filter((p) => p.clubId === home || p.clubId === away)
               .map((p) => [p.id, p.knownAs ?? p.name]),
           ),
         },
@@ -1920,7 +1922,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
         gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
-        scorers: scorerNames(world),
+        scorers: scorerNames(world, d.home, d.away),
       };
       const after = await toNextDecision(world);
       save = {

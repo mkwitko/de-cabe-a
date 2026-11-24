@@ -83,6 +83,7 @@ export {
   SUPERCOPA_ID,
 } from './competition/regionais-data';
 export { awayLoss, distanceKm, travelCost, travelTire } from './career/travel';
+export { foreignSquad, matchPack } from './career/foreign-squad';
 export * from './career/clubs';
 export * from './career/prices';
 export * from './match/moments';

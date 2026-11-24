@@ -31,6 +31,11 @@ export function quickResult(
   whistle = { cards: 5.2, reds: 0.31 },
   /** On neutral ground (match/stadium.ts): no home side, the two means meet halfway. */
   neutral = false,
+  /**
+   * Metres the away side climbed (career/travel.ts `climbOf`): half a goal of difference per
+   * 1,000 m (McSharry, BMJ 2007), split evenly between the two means. PARÂMETRO: the split.
+   */
+  climb = 0,
 ): Outcome {
   const r = rngFrom(seed);
   const goals = (mean: number) => {
@@ -40,12 +45,13 @@ export function quickResult(
     return k;
   };
   const d = (home - away) / 10;
+  const thin = (0.25 * climb) / 1000;
   return {
     goals: neutral
       ? [goals(Math.max(0.2, 1.225 + 0.325 * d)), goals(Math.max(0.2, 1.225 - 0.325 * d))]
       : [
-          goals(Math.max(0.2, 1.3 + 0.35 * crowd + 0.35 * d)),
-          goals(Math.max(0.2, 1.15 - 0.25 * crowd - 0.3 * d)),
+          goals(Math.max(0.2, 1.3 + 0.35 * crowd + 0.35 * d + thin)),
+          goals(Math.max(0.2, 1.15 - 0.25 * crowd - 0.3 * d - thin)),
         ],
     shootout: null,
     // Each side gets half the referee's yellows and half his sendings-off, Poisson.
