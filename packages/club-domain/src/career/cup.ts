@@ -4,6 +4,9 @@
  * like any competition; this reads what it did to the person's club.
  */
 import { COPA_ID, COPA_PHASES } from '../competition/copa';
+import { LIBERTADORES_ID, SUDAMERICANA_ID } from '../competition/conmebol';
+import { standings, type Row } from '../competition/league';
+import { REGIONAL_IDS, SUPERCOPA_ID } from '../competition/regionais-data';
 import type { SeasonState } from '../competition/season';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
@@ -87,19 +90,60 @@ export interface CupTie {
   by: string | null;
 }
 export interface CupView {
-  /** Phases drawn so far, in order, with every tie of each. */
-  phases: { id: string; ties: CupTie[] }[];
+  id: string;
+  name: string;
+  /** Phases drawn so far, in order: a group phase's tables (as they stand), a knockout's ties. */
+  phases: { id: string; tables: Row[][]; ties: CupTie[] }[];
 }
 
-/** The cup as drawn and played so far (list, brackets and the person's way through), or null. */
-export function cupView(s: SeasonState): CupView | null {
-  if (!s.competitions.some((c) => c.id === COPA_ID)) return null;
+/** The cups the screen can show, in the order it lists them. */
+export const CUP_IDS = [
+  COPA_ID,
+  LIBERTADORES_ID,
+  SUDAMERICANA_ID,
+  ...REGIONAL_IDS,
+  SUPERCOPA_ID,
+] as const;
+
+/** The cups a club plays this season: a member, or drawn into one of its phases. */
+export const cupsOf = (s: SeasonState, clubId: string): string[] =>
+  CUP_IDS.filter(
+    (id) =>
+      s.members[id]?.includes(clubId) ||
+      [...(s.calendar.byClub.get(clubId) ?? [])].some(
+        (m) => s.meta.get(m.id)?.competitionId === id,
+      ),
+  );
+
+/** A running group phase's tables from the matches played so far, or null when not drawn. */
+function groupsSoFar(s: SeasonState, cid: string, pid: string): Row[][] | null {
+  const run = s.running.get(`${cid}/${pid}`);
+  if (run?.kind !== 'table') return null;
+  const games = run.fixtures.flatMap((id) => {
+    const m = s.meta.get(id)!;
+    const o = s.outcomes.get(id);
+    return o ? [{ home: m.home, away: m.away, goals: o.goals, cards: o.cards }] : [];
+  });
+  // Display order only; the phase's outcomes use the competition's own tie-breakers.
+  return run.groups.map((g) =>
+    standings(g, games, {
+      points: { win: 3, draw: 1, loss: 0 },
+      tieBreakers: ['goalDifference', 'goalsFor'],
+      seed: 0,
+    }),
+  );
+}
+
+/** A cup as drawn and played so far (tables, brackets and the person's way through), or null. */
+export function cupView(s: SeasonState, cid: string = COPA_ID): CupView | null {
+  const comp = s.competitions.find((c) => c.id === cid);
+  if (!comp) return null;
   const decided = new Map<string, { winner: string; by: string }>();
   for (const d of s.decisions)
-    if (d.competitionId === COPA_ID) decided.set(`${d.phaseId}/${[d.a, d.b].sort().join('/')}`, d);
+    if (d.competitionId === cid) decided.set(`${d.phaseId}/${[d.a, d.b].sort().join('/')}`, d);
   const byPhase = new Map<string, Map<number, CupTie>>();
   for (const [id, meta] of s.meta) {
-    if (meta.competitionId !== COPA_ID || !meta.ko) continue;
+    if (meta.competitionId !== cid || !meta.ko) continue;
     const ties = byPhase.get(meta.phaseId) ?? new Map<number, CupTie>();
     byPhase.set(meta.phaseId, ties);
     let tie = ties.get(meta.ko.tie);
@@ -116,12 +160,17 @@ export function cupView(s: SeasonState): CupView | null {
       goals: o ? o.goals : null,
     };
   }
-  const phases = COPA_PHASES.flatMap((id) => {
+  const phases = comp.phases.flatMap(({ id, kind }): CupView['phases'] => {
+    if (kind === 'liga' || kind === 'grupos') {
+      const tables = s.results[cid]?.[id]?.tables ?? groupsSoFar(s, cid, id);
+      return tables ? [{ id, tables, ties: [] }] : [];
+    }
     const ties = byPhase.get(id);
     if (!ties) return [];
     return [
       {
-        id: id as string,
+        id,
+        tables: [],
         ties: [...ties.entries()]
           .sort((x, y) => x[0] - y[0])
           .map(([, tie]) => {
@@ -131,5 +180,5 @@ export function cupView(s: SeasonState): CupView | null {
       },
     ];
   });
-  return { phases };
+  return { id: cid, name: comp.name, phases };
 }
