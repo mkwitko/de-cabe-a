@@ -13,7 +13,7 @@ import {
 import { FOREIGN_CLUBS } from '../competition/conmebol-data';
 import { deciderRules } from '../competition/knockout';
 import { seedOf, type Outcome, type SeasonState } from '../competition/season';
-import { crowdShare, isDerby } from './stadium';
+import { crowdShare, isDerby, neutralVenue } from './stadium';
 import { DERBY_CARDS, refereeOf } from './referee';
 import type { Pack } from '../pack/schema';
 import { teamForMatch } from './lineup';
@@ -41,7 +41,8 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
     ) as MatchInput['teams'],
     conditions: {
       crowd: crowdShare(pack, s, id),
-      altitudeM: city?.altitudeM ?? abroad?.altitudeM ?? 0,
+      // Neutral ground (Supercopa, Intercontinental) at sea level, not the listed host's city.
+      altitudeM: neutralVenue(id) ? 0 : (city?.altitudeM ?? abroad?.altitudeM ?? 0),
       pitch: home?.stadium.pitch ?? 'good',
       weather: 'clear',
       // The engine is calibrated at 0.5: the pool's average referee sits there (referee.ts).

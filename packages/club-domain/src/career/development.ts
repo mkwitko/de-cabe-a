@@ -11,6 +11,7 @@
  * academies' crop) comes from the seed. Integer arithmetic and the seeded generator
  * only (ADR-020); every number is a PARÂMETRO, not calibrated.
  */
+import { isConmebolClub } from '../competition/conmebol-data';
 import { ABROAD } from '../market/abroad';
 import { homeOf, isBase } from './bases';
 import {
@@ -379,12 +380,13 @@ export const REAL_SQUAD = 18;
  * further on their contracts) for each season since. Only the person's club may sign them
  * (abroad.ts `onMarket`). Like the rest of the foreign market they leave at the season's end
  * (`codeOf`) and are back the next (`evolve`); one signed here stays, a pack player like any.
+ * The Intercontinental Cup's clubs (PSG) are met, never signed from.
  */
 export function foreignSquads(origin: Pack, season: number): PackPlayer[] {
   const years = season - origin.season;
   const on = (iso: string) => `${Number(iso.slice(0, 4)) + years}${iso.slice(4)}`;
   return (origin.foreign ?? []).flatMap((f) =>
-    f.players.length < REAL_SQUAD
+    f.players.length < REAL_SQUAD || !isConmebolClub(f.id)
       ? []
       : f.players.map((p) => ({
           ...p,
@@ -404,7 +406,9 @@ export const foreignClubs = (origin: Pack): ReadonlyMap<string, string> =>
     () =>
       new Map(
         (origin.foreign ?? []).flatMap((f) =>
-          f.players.length < REAL_SQUAD ? [] : f.players.map((p) => [p.id, f.id] as const),
+          f.players.length < REAL_SQUAD || !isConmebolClub(f.id)
+            ? []
+            : f.players.map((p) => [p.id, f.id] as const),
         ),
       ),
   );

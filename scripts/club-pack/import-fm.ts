@@ -861,6 +861,9 @@ const CONMEBOL_NATION: Record<Country, string> = {
   PER: 'PE',
   URU: 'UY',
   VEN: 'VE',
+  MEX: 'MX',
+  RSA: 'ZA',
+  FRA: 'FR',
 };
 const FM_NAME: Record<string, string> = {
   'foreign-bol-bulo-bulo': 'Club Deportivo San Antonio Bulo Bulo',
@@ -872,6 +875,8 @@ const FM_NAME: Record<string, string> = {
   'foreign-par-2-de-mayo': 'Club Sportivo 2 de Mayo (PJC)',
   'foreign-per-cristal': 'Club Sporting Cristal S.A.',
   'foreign-ven-ucv': 'Universidad Central de Venezuela F.C.',
+  'foreign-mex-toluca': 'Deportivo Toluca',
+  'foreign-rsa-sundowns': 'Mamelodi Sundowns Football Club',
 };
 const FOREIGN_REP_MIN = 3000;
 const clubScore = (rep: number) => clamp(100 * Math.sqrt(Math.min(rep, 8000) / 8000), 0, 100);

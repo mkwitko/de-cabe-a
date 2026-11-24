@@ -470,9 +470,9 @@ export const ptBR = {
     'Eliminados da {cup} {phase}{by, select, penalties {, nos pênaltis} penaltyDraw {, nos pênaltis} other {}}. O foco volta ao campeonato.',
   'inbox.copaTitle': 'Campeões da Copa do Brasil! A taça é nossa.',
   'copa.phase':
-    '{p, select, fase-1 {1ª fase} fase-2 {2ª fase} fase-3 {3ª fase} fase-4 {4ª fase} fase-5 {5ª fase} grupos {Fase de grupos} playoffs {Playoffs} oitavas {Oitavas de final} quartas {Quartas de final} semifinal {Semifinal} semi {Semifinal} other {Final}}',
+    '{p, select, fase-1 {1ª fase} fase-2 {2ª fase} fase-3 {3ª fase} fase-4 {4ª fase} fase-5 {5ª fase} grupos {Fase de grupos} playoffs {Playoffs} oitavas {Oitavas de final} quartas {Quartas de final} semifinal {Semifinal} semi {Semifinal} derby {Derby das Américas} challenger {Challenger Cup} other {Final}}',
   'copa.phaseIn':
-    '{p, select, fase-1 {na 1ª fase} fase-2 {na 2ª fase} fase-3 {na 3ª fase} fase-4 {na 4ª fase} fase-5 {na 5ª fase} oitavas {nas oitavas de final} quartas {nas quartas de final} semifinal {na semifinal} semi {na semifinal} playoffs {nos playoffs} other {na final}}',
+    '{p, select, fase-1 {na 1ª fase} fase-2 {na 2ª fase} fase-3 {na 3ª fase} fase-4 {na 4ª fase} fase-5 {na 5ª fase} oitavas {nas oitavas de final} quartas {nas quartas de final} semifinal {na semifinal} semi {na semifinal} playoffs {nos playoffs} derby {no Derby das Américas} challenger {na Challenger Cup} other {na final}}',
   'copa.leg': '{legs, select, 2 {{leg, select, 1 {ida} other {volta}}} other {jogo único}}',
   'copa.label': '{name}, {phase}, {leg}',
   'copa.congested':

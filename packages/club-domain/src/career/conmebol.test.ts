@@ -262,3 +262,35 @@ describe('the Recopa', () => {
     expect(startSeason(pack, { seed: 1, estaduais: true }).members[RECOPA_ID]).toBeUndefined();
   });
 });
+
+describe('the FIFA Intercontinental Cup', () => {
+  it('takes the Libertadores champion to Toluca, Sundowns and PSG in December, on neutral ground', async () => {
+    const { runSeason, startSeason } = await import('../competition/season');
+    const { INTERCONTINENTAL_ID } = await import('../competition/conmebol');
+    const { isoOf } = await import('../competition/calendar');
+    const { neutralVenue } = await import('../match/stadium');
+    const s = startSeason(generateDevPack(), { seed: 5, estaduais: true });
+    await runSeason(s, async (ids) =>
+      ids.map((id) => ({
+        // The listed home side always wins: the tie is decided, the bracket goes on.
+        goals: [1 + (id.length % 2), 0] as [number, number],
+        shootout: null,
+        cards: [
+          [0, 0],
+          [0, 0],
+        ],
+      })),
+    );
+    const champion = s.results[LIBERTADORES_ID]!.final!.tables[0]![0]!.clubId;
+    const legs = [...s.calendar.matches.values()]
+      .filter((m) => m.competitionId === INTERCONTINENTAL_ID)
+      .sort((a, b) => a.base - b.base);
+    expect(legs).toHaveLength(3);
+    expect([legs[0]!.home, legs[0]!.away].sort()).toEqual([champion, 'foreign-mex-toluca'].sort());
+    expect([legs[1]!.home, legs[1]!.away]).toContain('foreign-rsa-sundowns');
+    expect([legs[2]!.home, legs[2]!.away]).toContain('foreign-fra-psg');
+    expect(legs.map((m) => isoOf(m.base))).toEqual(['2026-12-09', '2026-12-12', '2026-12-16']);
+    expect(legs.every((m) => neutralVenue(m.id))).toBe(true);
+    expect(s.results[INTERCONTINENTAL_ID]!.final!.tables[0]).toHaveLength(2);
+  });
+});

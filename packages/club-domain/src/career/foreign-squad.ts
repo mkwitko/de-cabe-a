@@ -28,6 +28,9 @@ const NATION: Record<Country, string> = {
   PER: 'PE',
   URU: 'UY',
   VEN: 'VE',
+  MEX: 'MX',
+  RSA: 'ZA',
+  FRA: 'FR',
 };
 
 /** Common given names and surnames of Spanish-speaking South America. */

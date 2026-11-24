@@ -21,6 +21,7 @@ import { seedOf } from '../competition/season';
 import { isForeignClub } from '../competition/groups';
 import { cached, WHOLE } from '../lib/pack-cache';
 import { SUPERCOPA_ID } from '../competition/regionais-data';
+import { INTERCONTINENTAL_ID } from '../competition/conmebol';
 import type { Pack, PackClub } from '../pack/schema';
 
 const clubOf = (pack: Pack, id: string): PackClub | undefined =>
@@ -163,10 +164,11 @@ export function crowdAt(pack: Pack, s: SeasonState, id: string): number {
 
 /**
  * A match on neutral ground: the Supercopa, which the CBF stages in a third city (Belém 2025,
- * Brasília 2026). Neither side has a home crowd or a trip the other does not; the gate is the
- * CBF's, the clubs are paid their shares (regionais-data.ts).
+ * Brasília 2026), and the FIFA Intercontinental Cup (Qatar). Neither side has a home crowd or a
+ * trip the other does not; the gate is the organiser's, the clubs are paid their shares.
  */
-export const neutralVenue = (id: string): boolean => id.startsWith(`${SUPERCOPA_ID}/`);
+export const neutralVenue = (id: string): boolean =>
+  id.startsWith(`${SUPERCOPA_ID}/`) || id.startsWith(`${INTERCONTINENTAL_ID}/`);
 
 /** A continental night at a foreign club's home: the share of seats taken. PARÂMETRO. */
 const FOREIGN_CROWD = 0.85;

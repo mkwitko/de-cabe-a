@@ -23,6 +23,7 @@ import {
   conmebolClubs,
   conmebolField,
   foreignEntrants,
+  intercontinental,
   libertadores,
   recopa,
   recopaPair,
@@ -257,7 +258,11 @@ function conmebolOf(
   const foreign = foreignEntrants(season, seed);
   return {
     field,
-    cups: [libertadores(season, field, foreign), sudamericana(season, field, foreign)],
+    cups: [
+      libertadores(season, field, foreign),
+      sudamericana(season, field, foreign),
+      intercontinental(season),
+    ],
   };
 }
 

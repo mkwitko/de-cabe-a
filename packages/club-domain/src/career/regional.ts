@@ -14,7 +14,7 @@ import {
   SUPERCOPA_ID,
 } from '../competition/regionais-data';
 import { postEntry } from '../finance/ledger';
-import { GROUP_MONEY, RECOPA_ID, isConmebol } from '../competition/conmebol';
+import { GROUP_MONEY, INTERCONTINENTAL_ID, RECOPA_ID, isConmebol } from '../competition/conmebol';
 import type { SeasonState } from '../competition/season';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
@@ -96,6 +96,7 @@ export function settleCup(w: CareerWorld, competitionId: string, day: number): v
   if (
     competitionId !== SUPERCOPA_ID &&
     competitionId !== RECOPA_ID &&
+    competitionId !== INTERCONTINENTAL_ID &&
     !(REGIONAL_IDS as readonly string[]).includes(competitionId) &&
     !isConmebol({ id: competitionId })
   )
