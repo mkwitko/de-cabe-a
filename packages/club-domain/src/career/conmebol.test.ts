@@ -10,6 +10,14 @@ import { clubLevel, clubLevels } from './training';
 import { altitudeOf, climbOf } from './travel';
 import { foreignRank } from './foreign';
 import { PackSchema } from '../pack/schema';
+import { dayOf } from '../competition/calendar';
+import { postEntry } from '../finance/ledger';
+import { ABROAD, importFee, signable } from '../market/abroad';
+import { bidFee, bidTerms, cannotTalk, myWageRoom, openTalk, openingWage } from '../market/talks';
+import type { CareerWorld } from './advance';
+import { codeOf, evolve, foreignClubs } from './development';
+import { loadCareer, saveCareer } from './save';
+import { nationalDivisions } from './start';
 
 describe('the person in the Libertadores', () => {
   it('watches its matches against foreign clubs, and is paid its prizes and group money', () => {
@@ -116,5 +124,71 @@ describe('the foreign clubs of the FM export', () => {
     // A player filed under another club is refused.
     const wrong = { ...pack, foreign: [{ id: 'foreign-arg-boca', players: squad }] };
     expect(PackSchema.safeParse(wrong).success).toBe(false);
+  });
+});
+
+describe('signing from a real foreign squad', () => {
+  it('the person signs a River player: he joins the squad, leaves River and stays on load', () => {
+    const dev = generateDevPack();
+    const twin = dev.clubs[3]!;
+    const squad = dev.players
+      .filter((p) => p.clubId === twin.id)
+      .map((p) => ({ ...p, id: `real-${p.id}`, nationality: 'AR', clubId: 'foreign-arg-river' }));
+    const pack = { ...dev, foreign: [{ id: 'foreign-arg-river', players: squad }] };
+    const clubId = nationalDivisions(pack)[0]!.clubIds[5]!;
+    const w = openCareer(structuredClone(pack), 3, clubId);
+    w.day = dayOf('2026-02-16');
+    w.ledger.today = w.day;
+    // River's players sit abroad, on the person's market, priced by the foreign market's rules.
+    const p = w.pack.players
+      .filter((x) => x.id.startsWith('real-') && x.clubId === ABROAD)
+      .filter((x) => cannotTalk(w, x) === null && openingWage(w, x) <= myWageRoom(w))
+      .sort((a, b) => importFee(w, a) - importFee(w, b))[0]!;
+    expect(p).toBeDefined();
+    postEntry(w.ledger, {
+      key: 'test:cash',
+      kind: 'transfers',
+      ref: 'test',
+      amount: importFee(w, p) * 2,
+      day: w.day,
+      dueDay: w.day,
+    });
+    expect(openTalk(w, p.id).asking).toBe(importFee(w, p));
+    expect(bidFee(w, p.id, w.talks![p.id]!.asking).kind).toBe('accept');
+    expect(bidTerms(w, p.id, w.talks![p.id]!.wants!).kind).toBe('accept');
+    expect(w.pack.players.find((x) => x.id === p.id)!.clubId).toBe(clubId);
+    const river = (x: CareerWorld) =>
+      foreignSquad(x.origin, x.season.season, 'foreign-arg-river', x.moves).map((q) => q.id);
+    expect(river(w)).not.toContain(p.id);
+    expect(river(w)).toHaveLength(squad.length - 1);
+    // The world's clubs never buy them.
+    expect(
+      signable(
+        w.pack.players.find((x) => x.id === squad[0]!.id)!,
+        w.season.season,
+      ),
+    ).toBe(false);
+    const back = loadCareer(structuredClone(pack), 3, clubId, saveCareer(w));
+    expect(back.pack.players.find((x) => x.id === p.id)!.clubId).toBe(clubId);
+    expect(river(back)).not.toContain(p.id);
+    // A year on: the unsigned leave and come back a year older; he stays (unless he retires),
+    // never back on River's books.
+    const season = w.season.season;
+    const growth = codeOf(
+      w.pack,
+      { clubId, intensity: 'normal', played: {} },
+      new Set(),
+      foreignClubs(w.origin),
+    );
+    const next = evolve(w.pack, w.origin, 3, { season, growth });
+    const of = (id: string) => next.players.filter((x) => x.id === id);
+    expect(of(p.id).length).toBeLessThanOrEqual(1);
+    expect(of(p.id).every((x) => x.clubId === clubId)).toBe(true);
+    const other = squad.find((x) => x.id !== p.id)!;
+    expect(of(other.id)).toHaveLength(1);
+    expect(of(other.id)[0]!.clubId).toBe(ABROAD);
+    expect(Number(of(other.id)[0]!.birthDate.slice(0, 4))).toBe(
+      Number(other.birthDate.slice(0, 4)) + season + 1 - pack.season,
+    );
   });
 });
