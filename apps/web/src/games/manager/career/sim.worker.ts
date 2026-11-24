@@ -173,6 +173,7 @@ import {
   ROLE_WEIGHTS,
   FOREIGN_CLUBS,
   FOREIGN_COLOURS,
+  squadPlayers,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -654,6 +655,8 @@ export interface MarketView {
   cash: number;
   /** Monthly wage the board still lets the club add. */
   wageRoom: number;
+  /** First-team players, the count the squad limit reads (academy boys left out). */
+  firstTeam: number;
   /** The monthly wage bill now. */
   bill: number;
   /** Forty of the other clubs' players for the position asked: those within reach first. */
@@ -863,6 +866,7 @@ function marketView(
     open: windowOpen(w.day),
     cash: w.ledger.cash,
     wageRoom: myWageRoom(w),
+    firstTeam: squadPlayers(w).length,
     bill: wageBill(w, w.clubId),
     mine: w.pack.players
       .filter((p) => p.clubId === w.clubId)

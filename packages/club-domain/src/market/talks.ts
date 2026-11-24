@@ -135,7 +135,7 @@ export function cannotTalk(w: CareerWorld, boy: PackPlayer): TalkNo | null {
   if (p.clubId === ABROAD && (!signable(p, season) || w.moves?.[p.id]?.season === season))
     return 'abroad';
   if (embargoed(w, w.clubId)) return 'embargo';
-  if (squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD) return 'squadFull';
+  if (squadPlayers(w).length >= MAX_SQUAD) return 'squadFull';
   if (w.cold?.[p.id] === season) return 'cold';
   // A free agent signs in or out of a window, and asks no club's leave.
   if (p.clubId === null) return playerStance(w.pack, p, null, clubOf(w, w.clubId), season).no;
@@ -259,7 +259,7 @@ export function buyBackFor(
     ? 'window'
     : embargoed(w, w.clubId)
       ? 'embargo'
-      : squadPlayers({ pack: w.pack, clubId: w.clubId }).length >= MAX_SQUAD
+      : squadPlayers(w).length >= MAX_SQUAD
         ? 'squadFull'
         : bb.price > w.ledger.cash
           ? 'cash'

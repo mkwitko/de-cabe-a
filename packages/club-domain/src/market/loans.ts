@@ -118,7 +118,8 @@ export function cannotBorrow(w: CareerWorld, p: PackPlayer, to: string): LoanNo 
   if (embargoed(w, to)) return 'embargo';
   if (!p.clubId || p.clubId === to) return 'onLoan';
   if (w.loans?.[p.id]) return 'onLoan';
-  if (squadPlayers({ pack: w.pack, clubId: to }).length >= MAX_SQUAD) return 'squadFull';
+  if (squadPlayers(to === w.clubId ? w : { pack: w.pack, clubId: to }).length >= MAX_SQUAD)
+    return 'squadFull';
   // A club lends who it does not start, and keeps enough to play.
   if (squadPlanOf({ pack: w.pack, clubId: p.clubId }).xi.includes(p.id)) return 'starter';
   if (thin(w, p)) return 'theirSquad';
