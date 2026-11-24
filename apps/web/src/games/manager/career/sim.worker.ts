@@ -326,6 +326,8 @@ export interface SimView {
     mine: 0 | 1;
     /** The other club's strength minus the person's (clubStrengthOf); the headline reads it. */
     gap: number;
+    /** Who scored, by side (home, away), one name per goal; own goals left out. */
+    scorers: [string[], string[]];
   } | null;
   table: TableRows;
   /** Places that go up and places that go down at the season's end, from the division's rules. */
@@ -1314,6 +1316,16 @@ export interface SimReply {
 let world: CareerWorld | null = null;
 let pending: Decision | null = null;
 let last: SimView['last'] = null;
+
+/** The names behind the person's last match's goals, by side (CareerWorld.scorers). */
+function scorerNames(w: CareerWorld): [string[], string[]] {
+  const sides = w.scorers ?? [[], []];
+  const ids = new Set(sides.flat().map((g) => g.scorer));
+  const name = new Map(
+    w.pack.players.filter((p) => ids.has(p.id)).map((p) => [p.id, p.knownAs ?? p.name]),
+  );
+  return [0, 1].map((i) => sides[i]!.map((g) => name.get(g.scorer) ?? '')) as [string[], string[]];
+}
 let turn: SimView['turn'] = null;
 let bridge: Bridge | null = null;
 /** The person's match being watched, and the plan changes sent so far. */
@@ -1670,6 +1682,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
         gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
+        scorers: scorerNames(world),
       };
       const after = await toNextDecision(world);
       save = {
@@ -1883,6 +1896,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         why: world.report ?? [],
         mine: d.home === world.clubId ? 0 : 1,
         gap: strengthGap(world, d.home, d.away, d.home === world.clubId ? 0 : 1),
+        scorers: scorerNames(world),
       };
       const after = await toNextDecision(world);
       save = {
