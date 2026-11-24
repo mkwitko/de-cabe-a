@@ -6,7 +6,7 @@
  * buyer's reasons (club-domain market/). A deal closes only when both tables agree.
  */
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { btnPrimary, btnSecondary } from '../../../components/ui';
+import { btnPrimary, btnSecondary, Term } from '../../../components/ui';
 import { t } from '../i18n';
 import { SHEET_NAME, usePlayerSheet } from './PlayerSheet';
 import { useBidTalk } from './BidTalk';
@@ -52,7 +52,9 @@ function Who({ p }: { p: MarketPlayer }) {
       <span>{t('market.wage', { wage: money(p.wage) })}</span>
       {p.until !== null && <span>{t('market.until', { year: p.until })}</span>}
       <span>{t('market.potential', { lo: p.potential[0], hi: p.potential[1] })}</span>
-      {p.release !== null && <span>{t('market.clause', { fee: money(p.release) })}</span>}
+      {p.release !== null && (
+        <Term label={t('market.clause', { fee: money(p.release) })} help={t('help.clause')} />
+      )}
       {p.clauses.sellOn && (
         <span className="font-bold text-club-gold">
           {t('market.clauseSellOn', {
@@ -63,11 +65,14 @@ function Who({ p }: { p: MarketPlayer }) {
       )}
       {p.clauses.buyBack && (
         <span className="font-bold text-club-gold">
-          {t('market.clauseBuyBack', {
-            price: money(p.clauses.buyBack.price),
-            year: p.clauses.buyBack.until,
-            mine: BOOL[Number(p.clauses.buyBack.mine)]!,
-          })}
+          <Term
+            label={t('market.clauseBuyBack', {
+              price: money(p.clauses.buyBack.price),
+              year: p.clauses.buyBack.until,
+              mine: BOOL[Number(p.clauses.buyBack.mine)]!,
+            })}
+            help={t('help.buyBack')}
+          />
         </span>
       )}
       {p.clauses.loan && (

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
 import { ClubBadge } from '../../components/ClubBadge';
-import { btnPrimary, btnSecondary, GameHeader, Notice } from '../../components/ui';
+import { btnPrimary, btnSecondary, GameHeader, Notice, Term } from '../../components/ui';
 import { t, tMessage, type MessageKey } from './i18n';
 import { headlineKind } from './headline';
 import { drawPlayers, kitsFor, pitchLayer, view, type View } from './pitch';
@@ -934,7 +934,13 @@ function Report(props: {
                 >
                   <dd className="text-right font-bold">{r.v[0]}</dd>
                   <div>
-                    <dt className="text-center text-chalk-soft">{t(r.key)}</dt>
+                    <dt className="text-center text-chalk-soft">
+                      {r.key === 'friendly.stat.xg' ? (
+                        <Term label={t(r.key)} help={t('help.xg')} />
+                      ) : (
+                        t(r.key)
+                      )}
+                    </dt>
                     <div
                       aria-hidden
                       className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-chalk/10"
