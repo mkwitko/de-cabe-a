@@ -16,7 +16,20 @@
  * Brazilian clubs' scale), or from the stage of entry when a pack has none (conmebol.ts).
  */
 
-export type Country = 'ARG' | 'BOL' | 'CHI' | 'COL' | 'ECU' | 'PAR' | 'PER' | 'URU' | 'VEN';
+export type Country =
+  | 'ARG'
+  | 'BOL'
+  | 'CHI'
+  | 'COL'
+  | 'ECU'
+  | 'PAR'
+  | 'PER'
+  | 'URU'
+  | 'VEN'
+  // The FIFA Intercontinental Cup's other confederations (INTERCONTINENTAL_FOREIGN).
+  | 'MEX'
+  | 'RSA'
+  | 'FRA';
 
 export interface ForeignClubData {
   id: string;
@@ -418,7 +431,46 @@ export const FOREIGN_CLUBS: readonly ForeignClubData[] = [
   club('foreign-ven-monagas', 'Monagas Sport Club', 'Monagas', 'VEN', 'Maturín', 9.75, -63.18, 70),
   club('foreign-ven-caracas', 'Caracas Fútbol Club', 'Caracas FC', 'VEN', ...CCS),
   club('foreign-ven-metropolitanos', 'Metropolitanos Fútbol Club', 'Metropolitanos', 'VEN', ...CCS),
+  // FIFA Intercontinental Cup 2026: the CONCACAF, African-Asian-Pacific and UEFA champions.
+  club(
+    'foreign-mex-toluca',
+    'Deportivo Toluca F.C.',
+    'Toluca',
+    'MEX',
+    'Toluca',
+    19.29,
+    -99.66,
+    2660,
+  ),
+  club(
+    'foreign-rsa-sundowns',
+    'Mamelodi Sundowns F.C.',
+    'Sundowns',
+    'RSA',
+    'Pretória',
+    -25.75,
+    28.19,
+    1340,
+  ),
+  club('foreign-fra-psg', 'Paris Saint-Germain', 'PSG', 'FRA', 'Paris', 48.86, 2.35, 35),
 ];
+
+/**
+ * FIFA Intercontinental Cup 2026 (FIFA, "Qatar to host final matches", and the 2026 edition's
+ * Wikipedia page, read 24 Nov 2026): Toluca (Concacaf Champions Cup) meet the Libertadores
+ * champion in the Derby of the Americas (Wed 9 Dec, Doha); the winner meets Mamelodi Sundowns,
+ * winners of the African-Asian-Pacific Cup (2-1 over Al-Ahli, Pretoria, 19 Sep), in the Challenger
+ * Cup (Sat 12 Dec); the winner meets PSG, Champions League holders (beat Arsenal on penalties,
+ * 30 May), in the final (Wed 16 Dec, Al Rayyan). Single matches on neutral ground.
+ */
+export const INTERCONTINENTAL_FOREIGN = {
+  derby: 'foreign-mex-toluca',
+  challenger: 'foreign-rsa-sundowns',
+  final: 'foreign-fra-psg',
+} as const;
+const INTERCONTINENTAL_IDS = new Set<string>(Object.values(INTERCONTINENTAL_FOREIGN));
+/** A foreign club of the CONMEBOL cups, not one only met in the Intercontinental Cup. */
+export const isConmebolClub = (id: string) => !INTERCONTINENTAL_IDS.has(id);
 
 /**
  * Home shirt and its trim, for the club's badge (the clubs' traditional colours; not the
@@ -502,6 +554,9 @@ export const FOREIGN_COLOURS: Record<string, readonly [string, string]> = {
   'foreign-ven-monagas': ['#0a2a6b', '#ffffff'],
   'foreign-ven-caracas': ['#d71920', '#ffffff'],
   'foreign-ven-metropolitanos': ['#5b2a86', '#ffffff'],
+  'foreign-mex-toluca': ['#d0021b', '#ffffff'],
+  'foreign-rsa-sundowns': ['#ffd200', '#0a7a3a'],
+  'foreign-fra-psg': ['#004170', '#da291c'],
 };
 
 /** Where a foreign club enters (2026): the stage, in each cup. */
@@ -661,6 +716,17 @@ export const PRIZES_USD = {
   },
   /** Recopa 2026 (Band, 18 Feb 2026; Tupi; El Economista, 27 Feb 2026). */
   recopa: { runnerUp: 900_000, champion: 1_800_000 },
+  /**
+   * FIFA Intercontinental Cup 2025, by the furthest stage reached, not added up (O Povo and Goal,
+   * 9-11 Dec 2025): out in the Derby 1 mi, in the Challenger Cup 2 mi, runner-up 4 mi, champion
+   * 5 mi. FIFA has not published the 2026 figures.
+   */
+  intercontinental: {
+    derby: 1_000_000,
+    challenger: 2_000_000,
+    runnerUp: 4_000_000,
+    champion: 5_000_000,
+  },
 };
 
 /** Where each rule stands. */
@@ -668,6 +734,7 @@ export const NOTES = [
   'The foreign clubs of every season are the 2026 entrants: the career does not play the other leagues. PARÂMETRO.',
   'Sudamericana first stage prize money is not in the sources read: none is paid. PARÂMETRO.',
   "Recopa: last season's Libertadores champion against the Sudamericana champion, two legs, the first at the Sudamericana champion (2026: Lanús 1-0 Flamengo on Thu 19 Feb, Flamengo 2-3 a.e.t. on Thu 26 Feb at the Maracanã; Band, beIN). The real tie goes to extra time then penalties; two legs here go straight to penalties (the engine plays extra time only in a single game). The first career season has no last season and no Recopa; nor one between two foreign clubs, which the person never plays. PARÂMETRO.",
+  'FIFA Intercontinental Cup: the 2026 opponents (Toluca, Mamelodi Sundowns, PSG) every season, like the 2026 foreign entrants; the 2025 prize money (2026 not published); second Wednesday of December, then Saturday and Wednesday (2025: 10, 13, 17 Dec; 2026: 9, 12, 16 Dec); neutral ground, extra time then penalties (PSG beat Flamengo on penalties, 2025). Toluca and Sundowns borrow a Brazilian squad at their rank, under Spanish names; PSG plays its FM squad where the pack has it. Their players are not on the market. PARÂMETRO.',
   'The Libertadores and Sudamericana finals are single matches at a CONMEBOL venue (Montevideo, Barranquilla in 2026): neutral ground, extra time then penalties.',
   'Brazilian places for the next season: the champion of each cup, the Copa do Brasil champion and the Série A order (BRAZIL_PLACES), as in 2026; the 2027 rule is not published. PARÂMETRO.',
 ] as const;

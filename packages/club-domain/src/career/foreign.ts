@@ -34,9 +34,21 @@ const COUNTRY_RANK: Record<Country, number> = {
   PER: 4,
   BOL: 4,
   VEN: 6,
+  // Intercontinental clubs rank by OWN_RANK below.
+  MEX: 0,
+  RSA: 0,
+  FRA: 0,
 };
 /** River and Boca rank with the best Brazilian clubs (CONMEBOL ranking 2026: 3rd and 4th). */
-const OWN_RANK: Record<string, number> = { 'foreign-arg-river': 4, 'foreign-arg-boca': 5 };
+const OWN_RANK: Record<string, number> = {
+  'foreign-arg-river': 4,
+  'foreign-arg-boca': 5,
+  // Without the pack's reputation: the European champion above every Brazilian club, Toluca and
+  // Sundowns with the Libertadores group clubs. PARÂMETRO.
+  'foreign-fra-psg': 1,
+  'foreign-mex-toluca': 12,
+  'foreign-rsa-sundowns': 14,
+};
 
 const stageOf = new Map<string, keyof typeof STAGE_RANK>([
   ...LIBERTADORES_FOREIGN.groups.map((id) => [id, 'libertadoresGroups'] as const),

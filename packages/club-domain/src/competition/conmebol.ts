@@ -22,6 +22,7 @@ import {
   BRAZIL_PLACES,
   DATES,
   FOREIGN_CLUBS,
+  INTERCONTINENTAL_FOREIGN,
   LIBERTADORES_FOREIGN,
   PRIZES_USD,
   SUDAMERICANA_FOREIGN,
@@ -31,6 +32,7 @@ import { COPA_ID } from './copa';
 export const LIBERTADORES_ID = 'libertadores';
 export const SUDAMERICANA_ID = 'sudamericana';
 export const RECOPA_ID = 'recopa';
+export const INTERCONTINENTAL_ID = 'intercontinental';
 export const isConmebol = (c: { id: string }) =>
   c.id === LIBERTADORES_ID || c.id === SUDAMERICANA_ID;
 export { associationOf, isForeignClub } from './groups';
@@ -413,6 +415,80 @@ export function recopa(season: number, pair: [string, string]): Competition {
       prizes: [
         { phaseId: 'final', positions: [2, 2], amount: reais(R.runnerUp) },
         { phaseId: 'final', positions: [1, 1], amount: reais(R.champion) },
+      ],
+    },
+  };
+}
+
+/**
+ * The FIFA Intercontinental Cup of `season` (conmebol-data.ts `INTERCONTINENTAL_FOREIGN`): the
+ * Libertadores champion of the same season against Toluca in the Derby of the Americas, then
+ * Mamelodi Sundowns in the Challenger Cup, then PSG in the final; single matches on neutral
+ * ground (match/stadium.ts `neutralVenue`) from the second Wednesday of December.
+ */
+export function intercontinental(season: number): Competition {
+  const dec1 = dayOf(`${season}-12-01`);
+  const derby = dec1 + ((3 - weekday(dec1) + 7) % 7) + 7;
+  const on = (day: number) => ({ start: isoOf(day), end: isoOf(day), weekdays: [weekday(day)] });
+  const single = (
+    id: string,
+    kind: 'mata-mata' | 'final',
+    day: number,
+    entrants: Phase['entrants'],
+  ): Phase =>
+    knockoutPhase(id, kind, on(day), {
+      entrants,
+      legs: 1,
+      survivors: 1,
+      pairing: 'fixed',
+      // Neutral ground: the host is drawn only for the listing.
+      host: 'draw',
+      tieBreakers: ['extraTime', 'penalties'],
+      outcomes: kind === 'final' ? [{ kind: 'title', positions: [1, 1] }] : [],
+    });
+  const f = INTERCONTINENTAL_FOREIGN;
+  const I = PRIZES_USD.intercontinental;
+  const base = regulation(
+    {
+      id: INTERCONTINENTAL_ID,
+      name: 'Copa Intercontinental',
+      season,
+      clubIds: [f.derby, f.challenger, f.final],
+      scope: 'continental',
+      tier: null,
+      priority: 3,
+    },
+    [
+      single('derby', 'mata-mata', derby, [
+        {
+          from: 'competition',
+          competitionId: LIBERTADORES_ID,
+          season: 'same',
+          phaseId: 'final',
+          positions: [1, 1],
+        },
+        { from: 'list', clubIds: [f.derby] },
+      ]),
+      single('challenger', 'mata-mata', derby + 3, [
+        fromPhase('derby', 1, 1),
+        { from: 'list', clubIds: [f.challenger] },
+      ]),
+      single('final', 'final', derby + 7, [
+        fromPhase('challenger', 1, 1),
+        { from: 'list', clubIds: [f.final] },
+      ]),
+    ],
+  );
+  return {
+    ...base,
+    money: {
+      ...base.money,
+      // By the furthest stage reached, not added up.
+      prizes: [
+        { phaseId: 'derby', positions: [2, 2], amount: reais(I.derby) },
+        { phaseId: 'challenger', positions: [2, 2], amount: reais(I.challenger) },
+        { phaseId: 'final', positions: [2, 2], amount: reais(I.runnerUp) },
+        { phaseId: 'final', positions: [1, 1], amount: reais(I.champion) },
       ],
     },
   };

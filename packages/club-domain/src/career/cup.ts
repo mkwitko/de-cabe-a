@@ -4,7 +4,13 @@
  * like any competition; this reads what it did to the person's club.
  */
 import { COPA_ID, COPA_PHASES } from '../competition/copa';
-import { LIBERTADORES_ID, RECOPA_ID, SUDAMERICANA_ID, isConmebol } from '../competition/conmebol';
+import {
+  INTERCONTINENTAL_ID,
+  LIBERTADORES_ID,
+  RECOPA_ID,
+  SUDAMERICANA_ID,
+  isConmebol,
+} from '../competition/conmebol';
 import { isRegional } from '../competition/regionais';
 import { standings, type Row } from '../competition/league';
 import { REGIONAL_IDS, SUPERCOPA_ID } from '../competition/regionais-data';
@@ -53,7 +59,12 @@ export function cupNotes(w: CareerWorld, day: number, before: Set<number>, decid
     if (d.competitionId !== COPA_ID) {
       // Another cup's knockout exit; a lost final is told by the cup's end note (regional.ts).
       const c = s.competitions.find((x) => x.id === d.competitionId);
-      if (c && d.winner !== w.clubId && d.phaseId !== 'final' && (isRegional(c) || isConmebol(c)))
+      if (
+        c &&
+        d.winner !== w.clubId &&
+        d.phaseId !== 'final' &&
+        (isRegional(c) || isConmebol(c) || c.id === INTERCONTINENTAL_ID)
+      )
         note(w, { day, kind: 'copaOut', phase: d.phaseId, by: d.by, cup: c.name });
       continue;
     }
@@ -112,6 +123,7 @@ export const CUP_IDS = [
   ...REGIONAL_IDS,
   SUPERCOPA_ID,
   RECOPA_ID,
+  INTERCONTINENTAL_ID,
 ] as const;
 
 /** The cups a club plays this season: a member, or drawn into one of its phases. */
