@@ -370,10 +370,49 @@ export function imports(
   return out;
 }
 
+/** A foreign club needs this many players for its real squad to play (foreign-squad.ts). */
+export const REAL_SQUAD = 18;
+
+/**
+ * The real squads of the CONMEBOL clubs the pack carries (`pack.foreign`: Boca, River) on the
+ * foreign market of `season`: abroad, at their opening attributes, a year older (and a year
+ * further on their contracts) for each season since. Only the person's club may sign them
+ * (abroad.ts `onMarket`). Like the rest of the foreign market they leave at the season's end
+ * (`codeOf`) and are back the next (`evolve`); one signed here stays, a pack player like any.
+ */
+export function foreignSquads(origin: Pack, season: number): PackPlayer[] {
+  const years = season - origin.season;
+  const on = (iso: string) => `${Number(iso.slice(0, 4)) + years}${iso.slice(4)}`;
+  return (origin.foreign ?? []).flatMap((f) =>
+    f.players.length < REAL_SQUAD
+      ? []
+      : f.players.map((p) => ({
+          ...p,
+          birthDate: on(p.birthDate),
+          ...(p.contract && { contract: { ...p.contract, until: on(p.contract.until) } }),
+          clubId: ABROAD,
+        })),
+  );
+}
+
+/** Each real foreign squad player's club, by player id. */
+export const foreignClubs = (origin: Pack): ReadonlyMap<string, string> =>
+  cached(
+    origin,
+    'foreignClubs',
+    WHOLE,
+    () =>
+      new Map(
+        (origin.foreign ?? []).flatMap((f) =>
+          f.players.length < REAL_SQUAD ? [] : f.players.map((p) => [p.id, f.id] as const),
+        ),
+      ),
+  );
+
 /** The pack with the foreign market of the season it opens in, as a career starts it. */
 export const withImports = (pack: Pack, seed: number, season: number): Pack => ({
   ...pack,
-  players: [...pack.players, ...imports(pack, seed, season)],
+  players: [...pack.players, ...imports(pack, seed, season), ...foreignSquads(pack, season)],
 });
 
 /**
@@ -474,12 +513,19 @@ export function growthOf(pack: Pack, mine: Mine): Map<string, number> {
  * The season's line for the log: each player's growth in the pack's order. A player without a
  * club who was not released this season (`released`) has gone a whole year unsigned and leaves.
  */
-export function codeOf(pack: Pack, mine: Mine, released: ReadonlySet<string>): string {
+export function codeOf(
+  pack: Pack,
+  mine: Mine,
+  released: ReadonlySet<string>,
+  /** The real foreign squads' players (`foreignClubs`): unsigned, they leave like imports. */
+  foreign: ReadonlyMap<string, string> = new Map(),
+): string {
   const growth = growthOf(pack, mine);
   let code = '';
   for (const p of pack.players)
     code +=
-      (p.clubId === null && !released.has(p.id)) || (p.clubId === ABROAD && isImport(p.id))
+      (p.clubId === null && !released.has(p.id)) ||
+      (p.clubId === ABROAD && (isImport(p.id) || foreign.has(p.id)))
         ? GONE
         : codeFor(growth.get(p.id) ?? 100);
   return code;
@@ -495,8 +541,11 @@ export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
   const season = log.season + 1;
   const players: PackPlayer[] = [];
   const focused = new Set(log.focus?.ids);
+  // Who stayed in the game (signed here, retired or not): not back on the foreign market.
+  const stayed = new Set<string>();
   for (const [i, p] of pack.players.entries()) {
     const growth = growthAt(log.growth, i);
+    if (growth !== null) stayed.add(p.id);
     if (growth === null || retires(p, seed, season)) continue;
     players.push(
       develop(p, seed, season, growth, focused.has(p.id) ? log.focus!.group : undefined),
@@ -507,5 +556,7 @@ export function evolve(pack: Pack, origin: Pack, seed: number, log: SeasonLog): 
     players.push(...crop(origin, c.id, seed, season, log.wages, youth));
   });
   players.push(...imports(origin, seed, season, log.wages));
+  // The real foreign squads, but for those signed here.
+  players.push(...foreignSquads(origin, season).filter((p) => !stayed.has(p.id)));
   return { ...pack, players };
 }

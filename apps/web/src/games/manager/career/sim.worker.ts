@@ -158,7 +158,8 @@ import {
   ABROAD,
   homeOf,
   isBase,
-  signable,
+  onMarket,
+  foreignClubs,
   FOREIGN_TIERS,
   foreignName,
   seasonReview,
@@ -847,8 +848,15 @@ function marketView(
       })(),
       wage: p.contract?.wage ?? 0,
       value: marketValue(w.pack, p, season),
-      // A boy of another club's academy is shown under that club (club-domain bases.ts).
-      club: p.clubId ? face(clubs.get(homeOf(p.clubId)!)!) : NO_CLUB,
+      // A boy of another club's academy is shown under that club (club-domain bases.ts); a
+      // Boca or River player abroad under his club.
+      club: p.clubId
+        ? face(
+            clubs.get(
+              (p.clubId === ABROAD && foreignClubs(w.origin).get(p.id)) || homeOf(p.clubId)!,
+            )!,
+          )
+        : NO_CLUB,
       youth: isBase(p.clubId),
       free: p.clubId === null,
       until: p.contract ? Number(p.contract.until.slice(0, 4)) : null,
@@ -885,8 +893,9 @@ function marketView(
       .filter(
         (p) =>
           p.clubId !== w.clubId &&
-          // Abroad, only the foreign market and the veterans coming home (market/abroad.ts).
-          (p.clubId !== ABROAD || signable(p, w.season.season)) &&
+          // Abroad, only the foreign market, Boca's and River's real squads and the veterans
+          // coming home (market/abroad.ts).
+          (p.clubId !== ABROAD || onMarket(w, p)) &&
           !w.talks?.[p.id] &&
           // Only those the club's scouts know of (market/scouting.ts).
           personKnows(w, p) &&

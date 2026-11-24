@@ -5,14 +5,17 @@
  * A club whose real squad the pack carries (`pack.foreign`) plays with it. Any other borrows the
  * football of the Brazilian club at its rank in the career's opening pack: the same attributes,
  * positions and ages, under new names and the club's nationality. Its strength and eleven therefore equal the
- * ones its quick results use. The squads live outside `pack.players`, so no other system (the
- * market, the boards, the academies) ever sees them; only the watched match borrows them.
+ * ones its quick results use. A borrowed squad lives outside `pack.players`, so no other system
+ * ever sees it; only the watched match borrows it. A real squad's players also sit abroad in the
+ * pack, on the person's market (development.ts `foreignSquads`): one signed leaves the squad.
  */
 import { FOREIGN_CLUBS, type Country } from '../competition/conmebol-data';
 import { isForeignClub } from '../competition/groups';
 import { cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
+import { REAL_SQUAD } from './development';
 import { foreignRank } from './foreign';
+import type { Moves } from './market';
 import { clubLevels } from './training';
 
 const NATION: Record<Country, string> = {
@@ -126,8 +129,22 @@ const hash = (s: string) => {
   return h >>> 0;
 };
 
-/** A foreign club's squad in `season`; empty for an id that is not one. */
-export function foreignSquad(origin: Pack, season: number, id: string): PackPlayer[] {
+/**
+ * A foreign club's squad in `season`; empty for an id that is not one. A real squad's players
+ * the person signed (any move in `moves`) have left it. ponytail: the club's strength
+ * (foreign.ts) still counts them; read it from the squad left if a signing should weaken it.
+ */
+export function foreignSquad(
+  origin: Pack,
+  season: number,
+  id: string,
+  moves?: Moves,
+): PackPlayer[] {
+  const squad = everyone(origin, season, id);
+  return moves ? squad.filter((p) => !moves[p.id]) : squad;
+}
+
+function everyone(origin: Pack, season: number, id: string): PackPlayer[] {
   return cached(origin, 'foreignSquad', `${id}@${season}`, () => {
     const club = FOREIGN_CLUBS.find((c) => c.id === id);
     if (!club) return [];
@@ -138,7 +155,7 @@ export function foreignSquad(origin: Pack, season: number, id: string): PackPlay
     });
     // The real squad, where the pack has one (Boca, River from the FM export).
     const real = origin.foreign?.find((f) => f.id === id)?.players ?? [];
-    if (real.length >= 18) return real.map(aged);
+    if (real.length >= REAL_SQUAD) return real.map(aged);
     const order = [...clubLevels(origin, origin.season).strength]
       .filter(([k]) => !isForeignClub(k))
       .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
@@ -176,12 +193,15 @@ export function foreignSquad(origin: Pack, season: number, id: string): PackPlay
  * side's squad added when one of them is a foreign club.
  */
 export function matchPack(
-  w: { pack: Pack; origin: Pack; season: { season: number } },
+  w: { pack: Pack; origin: Pack; season: { season: number }; moves?: Moves },
   home: string,
   away: string,
 ): Pack {
   const extra = [home, away]
     .filter(isForeignClub)
-    .flatMap((id) => foreignSquad(w.origin, w.season.season, id));
-  return extra.length ? { ...w.pack, players: [...w.pack.players, ...extra] } : w.pack;
+    .flatMap((id) => foreignSquad(w.origin, w.season.season, id, w.moves));
+  if (!extra.length) return w.pack;
+  // A real squad's players also sit abroad in the pack, on the person's market: here, at their club.
+  const theirs = new Set(extra.map((p) => p.id));
+  return { ...w.pack, players: [...w.pack.players.filter((p) => !theirs.has(p.id)), ...extra] };
 }

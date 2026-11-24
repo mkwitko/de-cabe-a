@@ -10,8 +10,8 @@ import {
   bookImport,
   FOREIGN_TIERS,
   importFee,
+  onMarket,
   sellAbroad,
-  signable,
   stanceFor,
   wantsToGo,
 } from './abroad';
@@ -132,7 +132,7 @@ export function cannotTalk(w: CareerWorld, boy: PackPlayer): TalkNo | null {
   // A boy of another club's academy is talked for as one of its players (bases.ts).
   const p = isBase(boy.clubId) ? { ...boy, clubId: homeOf(boy.clubId) } : boy;
   // Abroad, only the foreign market and veterans coming home; not one sold out this season.
-  if (p.clubId === ABROAD && (!signable(p, season) || w.moves?.[p.id]?.season === season))
+  if (p.clubId === ABROAD && (!onMarket(w, p) || w.moves?.[p.id]?.season === season))
     return 'abroad';
   if (embargoed(w, w.clubId)) return 'embargo';
   if (squadPlayers(w).length >= MAX_SQUAD) return 'squadFull';

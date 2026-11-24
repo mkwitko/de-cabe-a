@@ -61,7 +61,7 @@ import { returnLoans, type Loan, type LoanOption } from '../market/loans';
 import { pruneClauses, type Clauses } from '../market/clauses';
 import { unrestTurn, type Unrest } from '../market/unrest';
 import { judgeFairPlay, noteFairPlay } from '../market/fairplay';
-import { codeOf, withImports, youthOf, type SeasonLog } from './development';
+import { codeOf, foreignClubs, withImports, youthOf, type SeasonLog } from './development';
 import { arrivalsOf, yearOn } from './years';
 import { setJudgementClock } from '../market/judgement';
 import { WHOLE, carryCache, recache } from '../lib/pack-cache';
@@ -775,6 +775,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
         ),
       },
       released,
+      foreignClubs(w.origin),
     ),
   };
   w.log = [...(w.log ?? []), log];

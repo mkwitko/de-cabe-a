@@ -27,7 +27,7 @@ import { fitFor, squadPlanOf } from './plan';
 import { ROUND_DAYS, type Deal } from './rounds';
 import { canLose, cannotTalk, openTalk } from './talks';
 import { affinity, agentOf, networkOf } from './agents';
-import { isImport } from '../career/development';
+import { foreignClubs, isImport } from '../career/development';
 import { fameOf, noteExport } from '../career/clubs';
 import { ageOf, marketValue, readingsOf, thousands } from './value';
 import { atRate, currencyOfNation, type Currency } from './currency';
@@ -161,6 +161,14 @@ const IMPORT_WAGE = 25;
  * here come home by themselves (`homecoming`). `season` kept for the callers' reading.
  */
 export const signable = (p: PackPlayer, _season: number) => p.clubId === ABROAD && isImport(p.id);
+
+/**
+ * A player abroad the person's club may sign: the year's foreign market, or a real player of a
+ * CONMEBOL club the pack carries (Boca, River). The world's clubs buy only the first (rounds.ts
+ * reads `signable`): a Boca or River player comes to Brazil only by the person's hand.
+ */
+export const onMarket = (w: CareerWorld, p: PackPlayer) =>
+  signable(p, w.season.season) || (p.clubId === ABROAD && foreignClubs(w.origin).has(p.id));
 
 /** The fee to bring him from abroad. */
 export const importFee = (w: CareerWorld, p: PackPlayer) =>

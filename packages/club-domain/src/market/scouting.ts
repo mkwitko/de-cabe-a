@@ -20,7 +20,7 @@ import { nationalDivisions } from '../career/start';
 import { squadPlayers } from '../career/squad';
 import { WHOLE, cached } from '../lib/pack-cache';
 import type { Pack, PackPlayer } from '../pack/schema';
-import { ABROAD, signable } from './abroad';
+import { ABROAD, onMarket } from './abroad';
 import { tierOfClub } from './books';
 import {
   drawsOf,
@@ -175,7 +175,7 @@ export const stateOf = (pack: Pack, clubId: string) =>
 
 /** Whether the person's club knows him at all: anything above 0. */
 export const personKnows = (w: CareerWorld, p: PackPlayer) =>
-  (p.clubId !== ABROAD || signable(p, w.season.season)) && knowledgeOf(w, p) > 0;
+  (p.clubId !== ABROAD || onMarket(w, p)) && knowledgeOf(w, p) > 0;
 
 /** Each club's opponents this season: every club it shares a competition with. */
 const rivals = new WeakMap<object, Map<string, Set<string>>>();
@@ -205,8 +205,7 @@ export function clubKnows(w: CareerWorld, clubId: string, player: PackPlayer): b
   if (p.clubId === clubId) return true;
   // Abroad, agents bring the year's foreign market to clubs with a scouting department past
   // the first level; the rest come home by themselves (abroad.ts `homecoming`).
-  if (p.clubId === ABROAD)
-    return signable(p, w.season.season) && eyeOf(w.pack, clubId).scouting >= FOREIGN_EYE;
+  if (p.clubId === ABROAD) return onMarket(w, p) && eyeOf(w.pack, clubId).scouting >= FOREIGN_EYE;
   // A good player without a club is news (a star home from abroad, a veteran let go): all know.
   if (p.clubId === null)
     return readingsOf(w.pack).get(p.id)!.level >= FAMOUS || knows(w.pack, clubId, p, null, false);
@@ -405,7 +404,7 @@ export function scoutingDay(w: CareerWorld, day: number): void {
         (p) =>
           p.clubId !== w.clubId &&
           (m.area === 'abroad'
-            ? p.clubId === ABROAD && signable(p, w.season.season)
+            ? p.clubId === ABROAD && onMarket(w, p)
             : p.clubId !== null && p.clubId !== ABROAD && inArea(w, m.area, homeOf(p.clubId)!)) &&
           fitsFocus(p, m.focus, w.season.season) &&
           knowledgeOf(w, p, m.until) < 50,
