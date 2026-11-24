@@ -250,6 +250,23 @@ describe('the Recopa', () => {
       [br, 4],
     ]);
     expect(isoOf(legs[0]!.base) >= `${pack.season + 1}-02-19`).toBe(true);
+    // The second leg knows the first's goals: extra time if the aggregate is level after 90.
+    const { matchInputFor } = await import('../match/fixture-input');
+    s.outcomes.set(legs[0]!.id, {
+      goals: [2, 1],
+      shootout: null,
+      cards: [
+        [0, 0],
+        [0, 0],
+      ],
+    });
+    const lanus = foreignSquad(pack, s.season, 'foreign-arg-lanus');
+    expect(
+      matchInputFor({ ...pack, players: [...pack.players, ...lanus] }, s, legs[1]!.id).rules,
+    ).toMatchObject({
+      extraTime: true,
+      carried: [1, 2],
+    });
     // No Recopa between two foreign clubs, nor in a first season.
     const both = { ...previous, [LIBERTADORES_ID]: final('foreign-arg-river', br) };
     const none = startSeason(pack, {
@@ -292,5 +309,18 @@ describe('the FIFA Intercontinental Cup', () => {
     expect(legs.map((m) => isoOf(m.base))).toEqual(['2026-12-09', '2026-12-12', '2026-12-16']);
     expect(legs.every((m) => neutralVenue(m.id))).toBe(true);
     expect(s.results[INTERCONTINENTAL_ID]!.final!.tables[0]).toHaveLength(2);
+  });
+});
+
+describe('a borrowed squad’s names', () => {
+  it('come from the club’s country: Sundowns field South African names', () => {
+    const pack = generateDevPack();
+    const squad = foreignSquad(pack, pack.season, 'foreign-rsa-sundowns');
+    expect(squad.length).toBeGreaterThan(17);
+    expect(squad.every((p) => p.nationality === 'ZA')).toBe(true);
+    expect(
+      squad.some((p) => /Dlamini|Khumalo|Mokoena|Ndlovu|Nkosi|Zulu|Sithole|Molefe/.test(p.name)),
+    ).toBe(true);
+    expect(squad.some((p) => /González|Rodríguez|Fernández/.test(p.name))).toBe(false);
   });
 });

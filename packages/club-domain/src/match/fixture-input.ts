@@ -57,9 +57,30 @@ export function matchInputFor(pack: Pack, s: SeasonState, id: string): MatchInpu
       substitutions: c.matchRules.subs,
       substitutionWindows: c.matchRules.subWindows,
       videoReferee: c.matchRules.videoReferee,
-      ...(single ? deciderRules(1, p.tieBreakers) : { extraTime: false, penalties: false }),
+      ...(single ? deciderRules(1, p.tieBreakers) : secondLeg(s, id, p.tieBreakers)),
     },
   };
+}
+
+/**
+ * A two-leg tie's second leg plays extra time when the aggregate is level and the regulation
+ * says so (the Recopa): the engine is told the goals each side carries from the first leg.
+ * Penalties stay with the season (`decideTie`), as for every tie.
+ */
+function secondLeg(
+  s: SeasonState,
+  id: string,
+  breakers: readonly string[],
+): { extraTime: boolean; penalties: false; carried?: [number, number] } {
+  const ko = s.meta.get(id)?.ko;
+  const firstId = id.replace(/l\d+$/, 'l0');
+  const first = ko && ko.leg > 0 ? s.outcomes.get(firstId) : undefined;
+  const m = s.meta.get(firstId);
+  if (!first || !m || !breakers.includes('extraTime'))
+    return { extraTime: false, penalties: false };
+  const of = (club: string) => (m.home === club ? first.goals[0] : first.goals[1]);
+  const here = s.meta.get(id)!;
+  return { extraTime: true, penalties: false, carried: [of(here.home), of(here.away)] };
 }
 
 export const outcomeOf = (r: MatchResult): Outcome => ({

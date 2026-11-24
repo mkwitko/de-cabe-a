@@ -4,7 +4,7 @@
  *
  * A club whose real squad the pack carries (`pack.foreign`) plays with it. Any other borrows the
  * football of the Brazilian club at its rank in the career's opening pack: the same attributes,
- * positions and ages, under new names and the club's nationality. Its strength and eleven therefore equal the
+ * positions and ages, under names of its country and the club's nationality. Its strength and eleven therefore equal the
  * ones its quick results use. A borrowed squad lives outside `pack.players`, so no other system
  * ever sees it; only the watched match borrows it. A real squad's players also sit abroad in the
  * pack, on the person's market (development.ts `foreignSquads`): one signed leaves the squad.
@@ -125,6 +125,102 @@ const LAST = [
   'Villalba',
 ];
 
+/** Common given names and surnames in South Africa (Sundowns' borrowed squad). */
+const ZA_FIRST = [
+  'Andile',
+  'Bongani',
+  'Lebohang',
+  'Lucky',
+  'Mandla',
+  'Mothobi',
+  'Neo',
+  'Ronwen',
+  'Sipho',
+  'Teboho',
+  'Thabo',
+  'Themba',
+  'Thapelo',
+  'Tshepo',
+  'Sibusiso',
+  'Siyabonga',
+  'Kagiso',
+  'Katlego',
+  'Lehlohonolo',
+  'Mpho',
+];
+const ZA_LAST = [
+  'Dlamini',
+  'Khumalo',
+  'Mkhize',
+  'Mokoena',
+  'Mthembu',
+  'Ndlovu',
+  'Nkosi',
+  'Ngcobo',
+  'Mahlangu',
+  'Mabaso',
+  'Zungu',
+  'Shabalala',
+  'Maseko',
+  'Mofokeng',
+  'Molefe',
+  'Sithole',
+  'Zulu',
+  'Radebe',
+  'Modise',
+  'Williams',
+];
+/** Common given names and surnames in France (PSG, when the pack has no real squad). */
+const FR_FIRST = [
+  'Antoine',
+  'Hugo',
+  'Lucas',
+  'Théo',
+  'Mathis',
+  'Nathan',
+  'Enzo',
+  'Louis',
+  'Kylian',
+  'Ousmane',
+  'Moussa',
+  'Bradley',
+  'Warren',
+  'Désiré',
+  'Jules',
+  'Maxime',
+  'Yanis',
+  'Adrien',
+  'Rayan',
+  'Bastien',
+];
+const FR_LAST = [
+  'Martin',
+  'Bernard',
+  'Dubois',
+  'Thomas',
+  'Robert',
+  'Richard',
+  'Petit',
+  'Durand',
+  'Leroy',
+  'Moreau',
+  'Simon',
+  'Laurent',
+  'Lefebvre',
+  'Michel',
+  'Garcia',
+  'Fofana',
+  'Diallo',
+  'Traoré',
+  'Camara',
+  'Mendy',
+];
+/** The name pools of each country: Spanish-speaking South America unless listed. */
+const NAMES: Partial<Record<Country, { first: string[]; last: string[] }>> = {
+  RSA: { first: ZA_FIRST, last: ZA_LAST },
+  FRA: { first: FR_FIRST, last: FR_LAST },
+};
+
 /** FNV-1a: names drawn from the club and the shirt number, the same on every device. */
 const hash = (s: string) => {
   let h = 2166136261;
@@ -170,10 +266,11 @@ function everyone(origin: Pack, season: number, id: string): PackPlayer[] {
       .sort((a, b) => (a.id < b.id ? -1 : 1))
       .map((p, i): PackPlayer => {
         const h = hash(`${id}:${i}`);
+        const { first, last } = NAMES[club.country] ?? { first: FIRST, last: LAST };
         // The same age as the borrowed player at the opening, whatever the season.
         return aged({
           id: `${id}-p${String(i + 1).padStart(2, '0')}`,
-          name: `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`,
+          name: `${first[h % first.length]} ${last[(h >>> 8) % last.length]}`,
           birthDate: p.birthDate,
           nationality: NATION[club.country],
           ...(p.heightCm !== undefined && { heightCm: p.heightCm }),
