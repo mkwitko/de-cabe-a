@@ -204,6 +204,8 @@ export interface CareerWorld {
   deadline?: number;
   /** Why the person's last match went as it did (report.ts); not saved, read right after it. */
   report?: ReportFact[];
+  /** Who scored the person's last match, by side (home, away); not saved, read right after it. */
+  scorers?: [Goal[], Goal[]];
 }
 
 export type Decision =
@@ -319,6 +321,8 @@ function playDay(
     judgeCoaches(w, m, o, day);
     // The other clubs' cards and goals fall on their best men; the person's are dealt below.
     const league = leagues.has(m.competitionId);
+    const ours = m.home === w.clubId || m.away === w.clubId;
+    const scorers: [Goal[], Goal[]] = [[], []];
     for (const [side, clubId] of [m.home, m.away].entries()) {
       if (clubId === w.clubId) continue;
       const pitch = rivalPitch(w, clubId, m.competitionId);
@@ -329,20 +333,20 @@ function playDay(
         bookingsOf(w, pitch, o.cards[side]!, day, clubId),
         clubId,
       );
-      if (league)
-        credit(
+      if (league || ours) {
+        const goals = sideGoals(
           w,
-          sideGoals(
-            w,
-            seedOf(w.seed, `${id}:${side}`),
-            clubId,
-            o.goals[side]!,
-            pitch,
-            given?.id === id ? given.goals?.[side] : undefined,
-          ),
+          seedOf(w.seed, `${id}:${side}`),
+          clubId,
+          o.goals[side]!,
+          pitch,
+          given?.id === id ? given.goals?.[side] : undefined,
         );
+        if (league) credit(w, goals);
+        if (ours) scorers[side] = goals;
+      }
     }
-    if (m.home === w.clubId || m.away === w.clubId) {
+    if (ours) {
       facedClub(w, m.home === w.clubId ? m.away : m.home, day);
       styled(w, planOf(w));
       postHomeMatch(w, id, day);
@@ -361,18 +365,16 @@ function playDay(
           ? given.bookings.filter((b) => squad.has(b.playerId))
           : bookingsOf(w, eleven, o.cards[mine], day);
       banned(afterMatch(w, m.competitionId, day, bookings));
-      if (league)
-        credit(
-          w,
-          sideGoals(
-            w,
-            seedOf(w.seed, `${id}:${mine}`),
-            w.clubId,
-            o.goals[mine]!,
-            eleven,
-            given?.id === id ? given.goals?.[mine] : undefined,
-          ),
-        );
+      scorers[mine] = sideGoals(
+        w,
+        seedOf(w.seed, `${id}:${mine}`),
+        w.clubId,
+        o.goals[mine]!,
+        eleven,
+        given?.id === id ? given.goals?.[mine] : undefined,
+      );
+      if (league) credit(w, scorers[mine]);
+      w.scorers = scorers;
       const n = names();
       for (const [pid, i] of Object.entries(hurt))
         note(w, {

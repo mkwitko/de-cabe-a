@@ -3,6 +3,7 @@ import { btnPrimary } from '../../../components/ui';
 import { headlineKind } from '../headline';
 import { t } from '../i18n';
 import type { SimView } from './sim.worker';
+import { surname } from './Squad';
 
 type Last = NonNullable<SimView['last']>;
 
@@ -42,6 +43,15 @@ export function ResultCard({ played, onDone }: { played: Played; onDone: () => v
         </span>
         <span>{last.away.shortName}</span>
       </p>
+      {last.scorers.some((side) => side.length > 0) && (
+        <div className="grid w-full grid-cols-2 gap-4 text-sm text-chalk-soft">
+          {last.scorers.map((side, i) => (
+            <p key={i} className={i === 0 ? 'text-right' : 'text-left'}>
+              {tally(side)}
+            </p>
+          ))}
+        </div>
+      )}
       {from > 0 && to > 0 && <p className="text-chalk-soft">{t(move, { n: to })}</p>}
       {last.why.length > 0 && (
         <ul className="flex flex-col gap-1 text-left text-sm text-pretty">
@@ -59,4 +69,11 @@ export function ResultCard({ played, onDone }: { played: Played; onDone: () => v
       </button>
     </section>
   );
+}
+
+/** "Fulano 2, Beltrano": one entry per scorer, in the order they first scored. */
+function tally(names: readonly string[]): string {
+  const n = new Map<string, number>();
+  for (const x of names) n.set(x, (n.get(x) ?? 0) + 1);
+  return [...n].map(([x, k]) => (k > 1 ? `${surname(x)} ${k}` : surname(x))).join(', ');
 }
