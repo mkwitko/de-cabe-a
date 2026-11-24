@@ -379,4 +379,10 @@ export const packChecksum = (pack: Pack) => sha256Hex(JSON.stringify({ ...pack, 
 export const slimPack = (pack: Pack): Pack => ({
   ...pack,
   players: pack.players.map((p) => ({ ...p, field: {} })),
+  ...(pack.foreign && {
+    foreign: pack.foreign.map((f) => ({
+      ...f,
+      players: f.players.map((p) => ({ ...p, field: {} })),
+    })),
+  }),
 });

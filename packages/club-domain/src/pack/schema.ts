@@ -334,6 +334,19 @@ export const PackYouthCompetitionSchema = z.strictObject({
   clubIds: z.array(id),
 });
 
+/**
+ * A foreign club of the CONMEBOL cups as the data knows it (career/foreign.ts): its reputation on
+ * the clubs' scale (`PackClub.reputation`) and, where the data has it, its real squad. The clubs
+ * themselves (name, city, colours) live in competition/conmebol-data.ts, outside `clubs`.
+ */
+export const PackForeignSchema = z.strictObject({
+  id: z.string().regex(/^foreign-[a-z]{3}-[a-z0-9-]+$/),
+  reputation: score100.optional(),
+  /** Empty when the data has no squad: the career then borrows one (career/foreign-squad.ts). */
+  players: z.array(PackPlayerSchema),
+});
+export type PackForeign = z.infer<typeof PackForeignSchema>;
+
 export const PackSchema = z
   .strictObject({
     id,
@@ -363,6 +376,8 @@ export const PackSchema = z
     youthCompetitions: z.array(PackYouthCompetitionSchema),
     /** The clubs' youth teams, where the data has them; optional, so older packs still load. */
     youth: z.array(PackYouthSchema).optional(),
+    /** The CONMEBOL cups' foreign clubs; optional, so older packs still load. */
+    foreign: z.array(PackForeignSchema).optional(),
     names: z.strictObject({
       first: z.array(z.string().min(1)),
       last: z.array(z.string().min(1)),
@@ -406,6 +421,22 @@ export const PackSchema = z
           path: ['youth', i, 'player', 'id'],
         });
     });
+    (pack.foreign ?? []).forEach((f, i) =>
+      f.players.forEach((p, j) => {
+        if (p.clubId !== f.id)
+          ctx.addIssue({
+            code: 'custom',
+            message: 'player of another club',
+            path: ['foreign', i, 'players', j, 'clubId'],
+          });
+        if (playerIds.has(p.id))
+          ctx.addIssue({
+            code: 'custom',
+            message: `duplicate id ${p.id}`,
+            path: ['foreign', i, 'players', j, 'id'],
+          });
+      }),
+    );
     pack.players.forEach((p, i) => {
       if (p.clubId !== null) ref(clubs.has(p.clubId), ['players', i, 'clubId'], 'club');
       if (p.loanFromClubId)
