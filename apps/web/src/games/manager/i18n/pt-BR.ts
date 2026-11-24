@@ -119,6 +119,7 @@ export const ptBR = {
     'Estrangeiros: {named}/{limit}{over, select, true { — acima do limite: os últimos ficam de fora} other {}}',
   'squad.list': 'Elenco',
   'squad.pick': 'Quem joga de {role}?',
+  'squad.everyone': 'Ver o elenco todo ({n})',
   'squad.hint':
     'Toque numa posição do campo e depois no jogador, ou no jogador e depois na posição. Duas posições seguidas trocam os jogadores de lugar. No computador, dá para arrastar. A escolha vale no próximo jogo.',
   'squad.placing': 'Toque na posição de {name} no campo.',
