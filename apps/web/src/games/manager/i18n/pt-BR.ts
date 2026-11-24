@@ -532,6 +532,7 @@ export const ptBR = {
   'board.fired': 'A diretoria do {club} chamou outro caminho',
   'board.firedText':
     'O ultimato venceu e o {club} segue sem você. Fica o que você construiu lá, e o futebol sempre dá outra chance.',
+  'board.firedBest': 'A maior vitória: {a} × {b} contra {team}, em {season}.',
   'board.firedRecap':
     '{seasons, plural, one {# temporada} other {# temporadas}} no comando, {titles, plural, =0 {nenhum título} one {# título} other {# títulos}}.',
   'board.restart': 'Começar outra carreira',
