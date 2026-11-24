@@ -307,6 +307,11 @@ export const RulesSchema = z.strictObject({
   /** A tie after 90 minutes goes to extra time and/or penalties (ADR-016). */
   extraTime: z.boolean(),
   penalties: z.boolean(),
+  /**
+   * Goals each side carries from the tie's earlier leg, in this match's order: the second leg of
+   * a two-leg tie goes to extra time when the aggregate is level. Absent: a single game.
+   */
+  carried: z.tuple([z.number().int().min(0), z.number().int().min(0)]).optional(),
   /** Video referee: offside margin error is zero. */
   videoReferee: z.boolean(),
 });

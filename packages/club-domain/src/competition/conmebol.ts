@@ -402,7 +402,7 @@ export function recopa(season: number, pair: [string, string]): Competition {
           survivors: 1,
           pairing: 'fixed',
           host: 'fixed',
-          tieBreakers: ['penalties'],
+          tieBreakers: ['extraTime', 'penalties'],
           outcomes: [{ kind: 'title', positions: [1, 1] }],
         },
       ),

@@ -835,3 +835,18 @@ describe('nobody behind the keeper', () => {
     expect(behind / frames).toBeLessThan(0.001);
   }, 120000);
 });
+
+describe('a two-leg tie’s second leg', () => {
+  it('plays extra time when the goals carried from the first leg level the aggregate', async () => {
+    const { simulateMatch } = await import('./simulate');
+    const base = matchInput(11);
+    const ninety = simulateMatch(base).score;
+    const ext = (carried: [number, number]) =>
+      simulateMatch({ ...base, rules: { ...base.rules, extraTime: true, carried } }).events.some(
+        (e) => e.kind === 'periodStart' && e.data.period === 3,
+      );
+    // Level on aggregate after 90 minutes: extra time; a goal up on aggregate: none.
+    expect(ext([ninety[1], ninety[0]])).toBe(true);
+    expect(ext([ninety[1] + 1, ninety[0]])).toBe(false);
+  });
+});

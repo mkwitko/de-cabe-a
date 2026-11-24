@@ -2,9 +2,10 @@
  * `mata-mata` and `final` interpreter (MC-171; 05 §2): pairing, bracket,
  * host, and the tie decided by aggregate and then the regulation's rules.
  *
- * Engine boundary: extra time and penalties are asked of the engine only in a
- * single game (`deciderRules`); over two legs the engine sees one match, not
- * the aggregate, so extra time is skipped. The engine contract has a
+ * Engine boundary: extra time and penalties are asked of the engine in a single
+ * game (`deciderRules`); over two legs the second leg plays extra time when the
+ * regulation has it, the engine told the first leg's goals (fixture-input.ts
+ * `secondLeg`). Extra time is then inside the last leg's score. The engine contract has a
  * shoot-out field but the engine does not fill it yet: until it does, a
  * level tie that goes to penalties is settled by a seeded 50% draw, marked
  * `penaltyDraw` in the result (PARÂMETRO, temporary).
@@ -159,7 +160,7 @@ export function decideTie(
       return { winner: coin < 0.5 ? t.a : t.b, by: 'penaltyDraw' };
     }
     if (b === 'betterCampaign') return { winner: t.a, by: 'betterCampaign' };
-    // extraTime: already inside a single game's score; not available over two legs.
+    // extraTime: already inside the last game's score (single game or watched second leg).
   }
   throw new Error(`tie ${t.a} v ${t.b} level and no rule decides it`);
 }
