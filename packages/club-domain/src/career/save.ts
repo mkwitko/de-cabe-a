@@ -25,7 +25,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 70;
+export const CAREER_RULES_VERSION = 71;
 
 interface Saved {
   v: number;

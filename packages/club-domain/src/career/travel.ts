@@ -14,18 +14,22 @@ import type { Pack } from '../pack/schema';
 
 const EARTH_KM = 6371;
 
-/** Kilometres between two clubs' cities, by air; 0 when a city is unknown. */
-export function distanceKm(pack: Pack, a: string, b: string): number {
-  if (a === b) return 0;
-  const memo = cached(pack, 'travelKm', WHOLE, () => {
+/** Each club's city (place and altitude) and the distances read so far, cached per pack. */
+const placesOf = (pack: Pack) =>
+  cached(pack, 'travelKm', WHOLE, () => {
     const cities = new Map(pack.cities.map((c) => [c.id, c]));
-    const clubs = new Map<string, { lat: number; lon: number } | undefined>([
+    const clubs = new Map<string, { lat: number; lon: number; altitudeM: number } | undefined>([
       ...pack.clubs.map((c) => [c.id, cities.get(c.cityId)] as const),
       // The CONMEBOL cups' foreign clubs: their cities (conmebol-data.ts).
       ...FOREIGN_CLUBS.map((c) => [c.id, c] as const),
     ]);
     return { clubs, km: new Map<string, number>() };
   });
+
+/** Kilometres between two clubs' cities, by air; 0 when a city is unknown. */
+export function distanceKm(pack: Pack, a: string, b: string): number {
+  if (a === b) return 0;
+  const memo = placesOf(pack);
   const key = a < b ? `${a}|${b}` : `${b}|${a}`;
   const known = memo.km.get(key);
   if (known !== undefined) return known;
@@ -45,6 +49,24 @@ export function distanceKm(pack: Pack, a: string, b: string): number {
   }
   memo.km.set(key, km);
   return km;
+}
+
+/** Metres a club's city sits above the sea; 0 when unknown. */
+export const altitudeOf = (pack: Pack, clubId: string): number =>
+  placesOf(pack).clubs.get(clubId)?.altitudeM ?? 0;
+
+/** Below this the thin air does not tell (no Brazilian club's city reaches it). PARÂMETRO. */
+const THIN_AIR_M = 1500;
+
+/**
+ * Metres the away side climbs to play: the home city's altitude over its own, 0 going down or
+ * when the home city sits under THIN_AIR_M. McSharry (BMJ 2007, 1,460 South American
+ * internationals): the home side's goal difference grows by about half a goal per 1,000 m of
+ * the difference.
+ */
+export function climbOf(pack: Pack, home: string, away: string): number {
+  const up = altitudeOf(pack, home);
+  return up < THIN_AIR_M ? 0 : Math.max(0, up - altitudeOf(pack, away));
 }
 
 /** Strength the away side loses on the day, in thousandths: up to 20 (2%) past 3,000 km. */

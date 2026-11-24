@@ -53,6 +53,42 @@ export function regionalCotaFor(w: CareerWorld, clubId: string): number {
 }
 
 /**
+ * CONMEBOL pays each stage as a club reaches it, and each group win as it comes (2026
+ * regulations): called after every match of the person's club in the Libertadores or the
+ * Sul-Americana. The final's prizes wait for the final (settleCup).
+ */
+export function payConmebol(
+  w: CareerWorld,
+  m: { id: string; competitionId: string; phaseId: string; home: string; away: string },
+  day: number,
+): void {
+  if (!isConmebol({ id: m.competitionId }) || (m.home !== w.clubId && m.away !== w.clubId)) return;
+  const comp = w.season.competitions.find((c) => c.id === m.competitionId);
+  if (!comp) return;
+  const key = `regional:${w.season.season}:${m.competitionId}`;
+  // Once per stage: the first match there pays it.
+  const pay = (k: string, amount: number) =>
+    !w.ledger.keys.has(`${key}:${k}`) &&
+    postEntry(w.ledger, {
+      key: `${key}:${k}`,
+      kind: 'prize',
+      ref: `regional:${w.season.season}`,
+      amount: priced(amount, pricesOf(w).prices),
+      day,
+      dueDay: day,
+    });
+  comp.money.prizes.forEach((p, i) => {
+    if (p.phaseId === m.phaseId && p.phaseId !== 'final') pay(String(i), p.amount);
+  });
+  const groupMoney = GROUP_MONEY[m.competitionId as keyof typeof GROUP_MONEY];
+  if (!groupMoney || m.phaseId !== 'grupos') return;
+  pay('grupos', groupMoney.stage);
+  const g = w.season.outcomes.get(m.id)?.goals;
+  const [mine, theirs] = m.home === w.clubId ? [0, 1] : [1, 0];
+  if (g && g[mine]! > g[theirs]!) pay(`grupos:${m.id}`, groupMoney.win);
+}
+
+/**
  * A regional cup or the Supercopa is over (its final was just played): the person's prizes by
  * phase reached and a note with the champion, if the club played it. Called on a final's match day.
  */
@@ -75,6 +111,12 @@ export function settleCup(w: CareerWorld, competitionId: string, day: number): v
     (results[phaseId]?.tables[0]?.findIndex((r) => r.clubId === w.clubId) ?? -1) + 1;
   let total = 0;
   comp.money.prizes.forEach((p, i) => {
+    // CONMEBOL's stage prizes are paid as reached (payConmebol).
+    if (
+      isConmebol({ id: competitionId }) &&
+      w.ledger.keys.has(`regional:${w.season.season}:${competitionId}:${i}`)
+    )
+      return;
     const at = place(p.phaseId);
     if (at < p.positions[0] || at > p.positions[1]) return;
     const amount = priced(p.amount, pricesOf(w).prices);
@@ -90,29 +132,12 @@ export function settleCup(w: CareerWorld, competitionId: string, day: number): v
     )
       total += amount;
   });
-  // CONMEBOL: every club of the group stage gets its share, and a bonus for each win there.
-  const groupMoney = GROUP_MONEY[competitionId as keyof typeof GROUP_MONEY];
-  if (groupMoney && results.grupos?.tables.some((t) => t.some((r) => r.clubId === w.clubId))) {
-    let wins = 0;
-    for (const m of w.season.meta.values()) {
-      if (m.competitionId !== competitionId || m.phaseId !== 'grupos') continue;
-      if (m.home !== w.clubId && m.away !== w.clubId) continue;
-      const g = w.season.outcomes.get(m.id)?.goals;
-      const [mine, theirs] = m.home === w.clubId ? [0, 1] : [1, 0];
-      if (g && g[mine]! > g[theirs]!) wins++;
-    }
-    const amount = priced(groupMoney.stage + wins * groupMoney.win, pricesOf(w).prices);
-    if (
-      postEntry(w.ledger, {
-        key: `regional:${w.season.season}:${competitionId}:grupos`,
-        kind: 'prize',
-        ref: `regional:${w.season.season}`,
-        amount,
-        day,
-        dueDay: day,
-      })
-    )
-      total += amount;
+  // CONMEBOL paid its stages as they came (payConmebol): the note sums the whole run.
+  if (isConmebol({ id: competitionId })) {
+    const key = `regional:${w.season.season}:${competitionId}:`;
+    total = w.ledger.entries
+      .filter((e) => e.key.startsWith(key))
+      .reduce((sum, e) => sum + e.amount, 0);
   }
   note(w, {
     day,

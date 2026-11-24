@@ -50,7 +50,8 @@ import type { Goal } from '../match/scorers';
 import { marketRound, roundsBetween, type Deal } from '../market/rounds';
 import { facedClub, scoutingDay, type Scouting } from '../market/scouting';
 import { agentOffers, type AgentLedger } from '../market/agents';
-import { awayLoss, distanceKm, postAwayTrip, travelTire } from './travel';
+import { awayLoss, climbOf, distanceKm, postAwayTrip, travelTire } from './travel';
+import { matchPack } from './foreign-squad';
 import { foreignRound, homecoming } from '../market/abroad';
 import type { Books } from '../market/books';
 import type { Bid, Talk } from '../market/talks';
@@ -74,7 +75,7 @@ import { cupNotes, cupStages } from './cup';
 import { isEstadual } from '../competition/estaduais';
 import { isForeignClub } from '../competition/groups';
 import { estadualExits, settleEstadual } from './estadual';
-import { settleCup } from './regional';
+import { payConmebol, settleCup } from './regional';
 import { matchReport, type ReportFact } from './report';
 import { nextPrices, pricesOf } from './prices';
 import { planSeason, settleSeason, updateFame, withClubs, type ClubState } from './clubs';
@@ -217,8 +218,6 @@ export type Decision =
       competitionId: string;
       home: string;
       away: string;
-      /** Against a foreign club of the CONMEBOL cups: no match to watch, the result only. */
-      quickOnly?: true;
     }
   | { kind: 'seasonOver' }
   /** The last day of a transfer window, before it is played: the person's last chance. */
@@ -313,6 +312,8 @@ function playDay(
             crowdShare(w.pack, w.season, id),
             whistleOf(w.season, id, isDerby(w.pack, m.home, m.away)),
             neutralVenue(id),
+            // Up in La Paz or Quito the visitors' legs and lungs go (travel.ts).
+            neutralVenue(id) ? 0 : climbOf(w.pack, m.home, m.away),
           );
     const decided = w.season.decisions.length;
     record(w.season, id, o);
@@ -320,7 +321,10 @@ function playDay(
     if (isEstadual({ id: m.competitionId })) {
       estadualExits(w, m, decided, day);
       if (m.phaseId === 'final') settleEstadual(w, m.competitionId, day);
-    } else if (m.phaseId === 'final') settleCup(w, m.competitionId, day);
+    } else {
+      payConmebol(w, { ...m, id }, day);
+      if (m.phaseId === 'final') settleCup(w, m.competitionId, day);
+    }
     judgeCoaches(w, m, o, day);
     // The other clubs' cards and goals fall on their best men; the person's are dealt below.
     const league = leagues.has(m.competitionId);
@@ -523,8 +527,6 @@ export function nextDecision(
         competitionId: m.competitionId,
         home: m.home,
         away: m.away,
-        // A foreign club has no squad in the pack yet: its match is a result only.
-        ...((isForeignClub(m.home) || isForeignClub(m.away)) && { quickOnly: true }),
       };
     }
     playDay(w, d);
@@ -564,7 +566,8 @@ function rivalEleven(
   // The banned do not travel; of those who do, some starters are short (health.ts); past the
   // season's limit of foreigners, Brazilians start (squad.ts).
   const banned = suspendedIn(w, competitionId, c.clubId);
-  const limit = foreignLimit(w.season.season);
+  // A foreign club of the CONMEBOL cups fields its own countrymen: no Brazilian limit there.
+  const limit = isForeignClub(c.clubId) ? Infinity : foreignLimit(w.season.season);
   let best: Lineup;
   try {
     best = bestLineup(c, formation, banned, limit);
@@ -583,25 +586,36 @@ function rivalEleven(
 }
 
 /**
+ * Share of their legs the visitors keep at a climb of `m` metres: 5% less per 1,000 m, at most
+ * 15% (La Paz from the coast). PARÂMETRO, uncalibrated against McSharry's half goal per 1,000 m.
+ */
+const altitudeLegs = (m: number) => 1 - Math.min(0.15, (0.05 * m) / 1000);
+
+/**
  * The person's match for the match engine (level 1). Both clubs field an eleven by position
  * (squad.ts): the other club its coach's best, the person's club the one they picked, with their
  * instructions. The person's coach keeps the plan, since they command it live (02 §10). `mine`
  * is the person's side in the input.
  */
 export function careerMatch(w: CareerWorld, d: Extract<Decision, { kind: 'match' }>) {
-  const input = matchInputFor(w.pack, w.season, d.matchId);
+  // A foreign club's squad joins the pack for the match only (foreign-squad.ts).
+  const pack = matchPack(w, d.home, d.away);
+  const input = matchInputFor(pack, w.season, d.matchId);
   const mine: 0 | 1 = d.home === w.clubId ? 0 : 1;
   const training = trainingOn(w, d.day);
+  // The visitors' legs at altitude: the engine reads no altitude, so it is taken from them.
+  const thin = neutralVenue(d.matchId) ? 1 : altitudeLegs(climbOf(pack, d.home, d.away));
   input.teams = [d.home, d.away].map((clubId) => {
-    const c = { pack: w.pack, clubId };
+    const c = { pack, clubId };
+    const legs = clubId === d.away ? thin : 1;
     return clubId === w.clubId
       ? teamWith(c, fielded(w, d.day), {
-          fresh: (id) => training.fresh[id] ?? 1,
+          fresh: (id) => (training.fresh[id] ?? 1) * legs,
           familiarity: drilled(training.drill),
           morale: moraleOf(w),
         })
       : teamWith(c, rivalEleven(w, c, d.day, d.competitionId), {
-          fresh: () => rivalFresh(w, clubId, d.day),
+          fresh: () => rivalFresh(w, clubId, d.day) * legs,
           familiarity: drilled(RIVAL_DRILL),
         });
   }) as typeof input.teams;

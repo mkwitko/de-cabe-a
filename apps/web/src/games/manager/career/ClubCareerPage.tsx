@@ -1218,28 +1218,23 @@ function NextMatch(props: {
               )}
             </p>
           )}
-          {next.quickOnly && <p className="text-sm text-chalk-soft">{t('career.quickOnly')}</p>}
           <div className="grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-[1.2fr_1fr_1fr] sm:whitespace-nowrap">
-            {!next.quickOnly && (
-              <>
-                <button
-                  type="button"
-                  disabled={busy}
-                  className={`${btnPrimary} col-span-2 min-h-13 bg-club-gold sm:col-span-1`}
-                  onClick={() => props.onWatch('full')}
-                >
-                  {t('career.watchFull')}
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  className={`${btnSecondary} bg-club-night/80 px-1 text-sm whitespace-nowrap min-[25rem]:text-base sm:px-4 sm:text-lg`}
-                  onClick={() => props.onWatch('highlights')}
-                >
-                  {t('career.watchHighlights')}
-                </button>
-              </>
-            )}
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnPrimary} col-span-2 min-h-13 bg-club-gold sm:col-span-1`}
+              onClick={() => props.onWatch('full')}
+            >
+              {t('career.watchFull')}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className={`${btnSecondary} bg-club-night/80 px-1 text-sm whitespace-nowrap min-[25rem]:text-base sm:px-4 sm:text-lg`}
+              onClick={() => props.onWatch('highlights')}
+            >
+              {t('career.watchHighlights')}
+            </button>
             <button
               type="button"
               disabled={busy}
