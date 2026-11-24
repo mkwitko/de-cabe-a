@@ -16,6 +16,7 @@ import { clubLevel } from './training';
 import { markArrival } from '../market/judgement';
 import { ABROAD } from '../market/abroad';
 import { isBase } from './bases';
+import { foreignClubs } from './development';
 
 /** A player's club and contract after a move, by player id. */
 export type Moves = Record<
@@ -209,7 +210,8 @@ export function settle(
           ? 'bought'
           : 'sold',
     player: p.knownAs ?? p.name,
-    club: other,
+    // A player from a real CONMEBOL squad (Boca, River) names his club, not the abroad bucket.
+    club: (other === ABROAD && foreignClubs(w.origin).get(p.id)) || other,
     fee,
   });
 }

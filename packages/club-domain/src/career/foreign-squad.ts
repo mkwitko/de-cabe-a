@@ -131,8 +131,8 @@ const hash = (s: string) => {
 
 /**
  * A foreign club's squad in `season`; empty for an id that is not one. A real squad's players
- * the person signed (any move in `moves`) have left it. ponytail: the club's strength
- * (foreign.ts) still counts them; read it from the squad left if a signing should weaken it.
+ * the person signed (any move in `moves`) have left it, and its strength with them (training.ts
+ * `clubLevels`).
  */
 export function foreignSquad(
   origin: Pack,

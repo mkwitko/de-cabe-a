@@ -84,8 +84,12 @@ export type Note = { day: number } & (
     }
   /** The person's club was drawn in a Copa do Brasil phase (its id, copa.ts): the opponent, the first leg's venue. */
   | { kind: 'copaDraw'; phase: string; opponent: string; atHome: boolean; legs: 1 | 2 }
-  /** Out of the Copa do Brasil in a phase, and how the tie was decided; or the title. */
-  | { kind: 'copaOut'; phase: string; by: string }
+  /**
+   * Out of a cup's knockout in a phase, and how the tie was decided; or the Copa do Brasil's
+   * title. `cup` names any cup but the Copa do Brasil (regional, CONMEBOL), whose end has its
+   * own note (`regional`).
+   */
+  | { kind: 'copaOut'; phase: string; by: string; cup?: string }
   | { kind: 'copaTitle' }
   /** Wages unpaid for `months`; paid up again; a player who ended his contract over them. */
   | { kind: 'arrears'; months: number }

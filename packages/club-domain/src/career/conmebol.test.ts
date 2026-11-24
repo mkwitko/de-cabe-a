@@ -161,6 +161,15 @@ describe('signing from a real foreign squad', () => {
       foreignSquad(x.origin, x.season.season, 'foreign-arg-river', x.moves).map((q) => q.id);
     expect(river(w)).not.toContain(p.id);
     expect(river(w)).toHaveLength(squad.length - 1);
+    // The inbox names River, not the abroad bucket; River's strength is the squad left's.
+    expect(w.inbox!.findLast((n) => n.kind === 'bought')).toMatchObject({
+      club: 'foreign-arg-river',
+    });
+    const level = (players: typeof squad) =>
+      clubLevel({ ...w.origin, players }, 'foreign-arg-river', w.season.season, Infinity).strength;
+    expect(clubLevels(w.pack, w.season.season, w.origin).strength.get('foreign-arg-river')).toBe(
+      level(squad.filter((x) => x.id !== p.id)),
+    );
     // The world's clubs never buy them.
     expect(
       signable(
@@ -190,5 +199,29 @@ describe('signing from a real foreign squad', () => {
     expect(Number(of(other.id)[0]!.birthDate.slice(0, 4))).toBe(
       Number(other.birthDate.slice(0, 4)) + season + 1 - pack.season,
     );
+  });
+});
+
+describe('the inbox of the other cups', () => {
+  it('tells a knockout exit from the Libertadores by name; a lost final is left to its end note', async () => {
+    const { cupNotes } = await import('./cup');
+    const pack = generateDevPack();
+    const probe = openCareer(pack, 4, pack.clubs[0]!.id);
+    const clubId = probe.season.members[LIBERTADORES_ID]!.find((id) => !id.startsWith('foreign-'))!;
+    const w = openCareer(pack, 4, clubId);
+    const at = w.season.decisions.length;
+    const out = {
+      competitionId: LIBERTADORES_ID,
+      a: clubId,
+      b: 'foreign-arg-boca',
+      winner: 'foreign-arg-boca',
+      by: 'penalties',
+    } as const;
+    w.season.decisions.push({ ...out, phaseId: 'quartas' }, { ...out, phaseId: 'final' });
+    cupNotes(w, w.day, new Set([...Array(9).keys()]), at);
+    const exits = w.inbox!.filter((n) => n.kind === 'copaOut');
+    expect(exits).toEqual([
+      expect.objectContaining({ phase: 'quartas', by: 'penalties', cup: expect.any(String) }),
+    ]);
   });
 });

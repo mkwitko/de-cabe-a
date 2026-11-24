@@ -293,7 +293,7 @@ function addSupercopa(s: SeasonState): void {
   s.members[SUPERCOPA_ID] = [...pair];
 }
 
-const tableRules = (s: SeasonState, c: Competition, p: Phase): TableRules =>
+export const tableRules = (s: SeasonState, c: Competition, p: Phase): TableRules =>
   p.kind === 'liga' || p.kind === 'grupos'
     ? {
         points: p.points,
