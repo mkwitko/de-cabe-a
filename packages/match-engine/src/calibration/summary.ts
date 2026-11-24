@@ -91,6 +91,11 @@ export function progressivePasses(r: Pick<MatchResult, 'events'>): [number, numb
   return out;
 }
 
+/** Events that are not a touch of the ball. */
+const OFF_PLAY = new Set(['substitution', 'command', 'card', 'injury']);
+/** Events after which possession changes at a restart, not in open play. */
+const RESTART_CAUSE = new Set(['throwIn', 'freeKick', 'corner', 'goalKick', 'kickOff', 'foul', 'offside', 'penalty']);
+
 export function transitions(r: Pick<MatchResult, 'events'>) {
   const out = { ht: [0, 0], hts: [0, 0], losses: [0, 0], back: [0, 0] } as Record<
     'ht' | 'hts' | 'losses' | 'back',
@@ -107,12 +112,21 @@ export function transitions(r: Pick<MatchResult, 'events'>) {
       if (again && again.team === prev.team && again.atMs - e.atMs <= 5000)
         out.back[prev.team as 0 | 1]++;
     }
-    if (!e.at || (t === 0 ? 1050 - e.at[0] : e.at[0]) >= 400) return;
+    // Opta's high turnover: won in open play within 40 m of the opponents' goal (a radius, not a
+    // line across the pitch); a change of possession at a restart is not one.
+    const before = r.events[r.events.indexOf(e) - 1];
+    if (!e.at || (before && RESTART_CAUSE.has(before.kind))) return;
+    if (Math.hypot(t === 0 ? 1050 - e.at[0] : e.at[0], 340 - e.at[1]) >= 400) return;
     out.ht[t]++;
-    const end = wins[k + 1]?.id ?? Infinity;
+    // Opta's sequence ends at a shot, a stoppage or any defensive action, even one that leaves
+    // the ball with the attackers (a failed tackle, a deflected pass, a save).
     const first = r.events.find(
       (x) =>
-        x.id > e.id && x.id < end && ((x.kind === 'shot' && x.team === t) || STOPPAGE.has(x.kind)),
+        x.id > e.id &&
+        ((x.kind === 'shot' && x.team === t) ||
+          STOPPAGE.has(x.kind) ||
+          x.kind === 'periodEnd' ||
+          (x.team !== null && x.team !== t && !OFF_PLAY.has(x.kind))),
     );
     if (first?.kind === 'shot') out.hts[t]++;
   });

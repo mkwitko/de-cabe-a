@@ -239,14 +239,15 @@ const tv = (p: number[], q: number[]) => p.reduce((acc, x, i) => acc + Math.abs(
 // ── Run ─────────────────────────────────────────────────────────────────────
 
 /**
- * Level 1's source (everything but level 2 and the calibration scripts): a change to it makes
- * every cached level 1 summary stale, so the cache file names carry its hash.
+ * Level 1's source (everything but level 2 and the calibration scripts) and the summary that
+ * reads its events: a change to either makes every cached level 1 summary stale, so the cache
+ * file names carry their hash.
  */
 function level1Version(): string {
   const src = new URL('..', import.meta.url).pathname;
   const h = createHash('sha1');
   for (const f of (readdirSync(src, { recursive: true }) as string[]).sort())
-    if (f.endsWith('.ts') && !f.endsWith('.test.ts') && !/^(possession|calibration)\//.test(f))
+    if (f.endsWith('.ts') && !f.endsWith('.test.ts') && (!/^(possession|calibration)\//.test(f) || f === 'calibration/summary.ts'))
       h.update(f).update(readFileSync(join(src, f)));
   return h.digest('hex').slice(0, 8);
 }
