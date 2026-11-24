@@ -452,8 +452,14 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     setBusy(true);
     const t0 = performance.now();
     const before = sim;
-    const place = (s: SimView | null | undefined) =>
-      (s?.table.findIndex((r) => r.clubId === s.clubId) ?? -1) + 1;
+    // The table of the competition just played: the league's or the estadual's; a cup has none.
+    const comp = before?.next?.competition;
+    const place = (s: SimView | null | undefined) => {
+      if (!s || !comp) return 0;
+      const rows =
+        comp === s.division ? s.table : comp === s.estadual?.name ? s.estadual.table : [];
+      return rows.findIndex((r) => r.clubId === s.clubId) + 1;
+    };
     ask({ type })
       .then((r) => {
         if (type === 'nextSeason') trackTiming('seasonTurn', performance.now() - t0);

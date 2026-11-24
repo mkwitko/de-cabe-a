@@ -1168,7 +1168,7 @@ export function Market(props: {
           </div>
           {full && (
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-semibold text-club-gold">
-              {t('market.squadFull', { n: view.mine.length })}
+              {t('market.squadFull', { n: view.firstTeam })}
               <button type="button" className={`${SMALL} min-h-11`} onClick={() => setTab('mine')}>
                 {t('market.squadFullGo')}
               </button>

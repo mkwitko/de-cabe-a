@@ -80,7 +80,7 @@ function WeekPlan({ view, onPlan }: { view: TrainingView; onPlan: (p: Session[][
                     <select
                       value={x}
                       onChange={(e) => set(d, h, e.target.value as Session)}
-                      className="min-h-10 w-full rounded-md border-2 bg-club-night px-1.5 text-sm font-semibold text-chalk"
+                      className="min-h-11 w-full rounded-md border-2 bg-club-night px-1.5 text-sm font-semibold text-chalk"
                       style={{ borderColor: SESSION_TONE[x] }}
                     >
                       {SESSIONS.map((s) => (

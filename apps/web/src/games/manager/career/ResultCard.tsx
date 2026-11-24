@@ -38,7 +38,7 @@ export function ResultCard({ played, onDone }: { played: Played; onDone: () => v
       </h2>
       <p className="flex items-center gap-3 font-condensed text-lg font-extrabold uppercase">
         <span>{last.home.shortName}</span>
-        <span className="rounded-lg bg-club-gold px-3 text-3xl text-ink tabular-nums">
+        <span className="rounded-lg bg-club-gold px-3 text-3xl whitespace-nowrap text-ink tabular-nums">
           {t('career.score', { a: last.goals[0], b: last.goals[1] })}
         </span>
         <span>{last.away.shortName}</span>
