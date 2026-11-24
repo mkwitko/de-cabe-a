@@ -333,6 +333,10 @@ for (const c of fmClubs) {
   const keys = [bare(c.name), bare(c.short)];
   const hit = keys.map((k) => ofByKey.get(k)).find(Boolean);
   if (!hit) continue;
+  // bare() drops "(SE)": a club that names its state is not the same-named club of another one
+  // (Coritiba (SE) is not Coritiba, São Paulo (AP) is not São Paulo).
+  const uf = /\(([A-Z]{2})\)/.exec(`${c.name} ${c.short}`)?.[1];
+  if (uf && hit.state && uf !== hit.state) continue;
   const st = keys.map((k) => ofStadiumByKey.get(k)).find(Boolean);
   openfootball[c.uid] = {
     city: hit.city,

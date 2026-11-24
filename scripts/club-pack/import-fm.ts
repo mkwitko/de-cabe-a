@@ -1094,7 +1094,40 @@ const wdCityByName = new Map(
 // 1 Wikidata (club -> headquarters or stadium municipality), 2 openfootball (city of the big clubs),
 // 3 the other clubs of the same FM city_id (one resolved city among them), else a placeholder.
 const cityOfClub = new Map<string, string>();
+// 0 Checked by hand (data/club-city-fixes.json, each with its source): name matches that put a club
+// in a same-named club's state (Coritiba (SE) in Curitiba) and placeholders that took a wrong state.
+const FIXES = JSON.parse(
+  readFileSync(new URL('./data/club-city-fixes.json', import.meta.url), 'utf8'),
+) as { clubs: Record<string, { city: string; state: string; ibge?: string; source: string }> };
+const cityOfMuni = (ibge: string) => {
+  const m = CITIES.municipalities[ibge]!;
+  return addCity(m.qid ? `wd-${m.qid}` : `ibge-${ibge}`, {
+    name: m.name,
+    state: m.uf,
+    lat: m.lat,
+    lon: m.lon,
+    population: m.population,
+    altitudeM: m.altitudeM,
+  });
+};
 for (const uid of scope) {
+  const fix = FIXES.clubs[uid];
+  if (fix) {
+    cityOfClub.set(
+      uid,
+      fix.ibge && CITIES.municipalities[fix.ibge]
+        ? cityOfMuni(fix.ibge)
+        : addCity(`fix-${slug(fix.city)}-${fix.state.toLowerCase()}`, {
+            name: fix.city,
+            state: fix.state,
+            lat: null,
+            lon: null,
+            population: null,
+            altitudeM: null,
+          }),
+    );
+    continue;
+  }
   const g = geo.clubs[uid];
   const of = geo.openfootball[uid];
   if (g?.city && geo.cities[g.city])

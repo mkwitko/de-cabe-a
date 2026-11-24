@@ -178,6 +178,10 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes pe
 - Ranking de clubes da CONMEBOL 2026 (topo): [Lance!](https://www.lance.com.br/futebol-internacional/ranking-da-conmebol-palmeiras-e-flamengo-no-top-4-com-river-e-boca.html), [ESPN](https://espndeportes.espn.com/futbol/copa-libertadores/nota/_/id/16088042/asi-quedo-el-ranking-de-clubes-de-conmebol-2026).
 - PARÂMETRO: força dos estrangeiros pela fase de entrada e pelo país (career/foreign.ts), até o pack trazer a reputação do FM; de 2027 em diante, os estrangeiros são sorteados entre os clubes de cada país, mantendo as vagas de 2026; cores dos clubes são as tradicionais, não o uniforme da temporada.
 
+## club-city-fixes.json (2026-11-24)
+
+104 clubs whose home city or state was wrong or unknown after the automatic sources (openfootball name matches across states, a municipality found in the club's name, placeholders that took their Série D group's state). Each entry was checked by hand and carries the page it was read from (pt.wikipedia, Wikidata, club or federation pages). `import-fm.ts` applies it before every other source. Clubs that could not be established (18) are left to the automatic sources.
+
 ## Pausa da Copa do Mundo
 
 - Série A 2026: 18ª rodada encerrada em 31/5, 19ª marcada de início para 22/7 (Copa do Mundo de 11/6 a 19/7) e antecipada pela CBF para 16/7 por causa das copas da Conmebol ([Band](https://www.band.com.br/esportes/cbf-divulga-tabela-da-volta-do-brasileirao-e-anuncia-exclusao-de-horarios), [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/brasileirao-serie-a/sem-copa-do-mundo-veja-quando-sera-retorno-do-brasileirao/)); o jogo volta em 16/7 em 2026. Fontes: [Band](https://www.band.com.br/esportes/saiba-quando-o-brasileirao-vai-voltar-apos-a-copa-do-mundo-202606010916), [90min](https://www.90min.com/pt-br/quando-brasileirao-parar-para-copa-do-mundo), [O Liberal](https://www.oliberal.com/esportes/copa-do-mundo/veja-quanto-tempo-o-brasileirao-ficara-paralisado-durante-a-copa-do-mundo-1.1123079). O jogo repete a pausa a cada quatro anos (2030, 2034...), com volta em 22/7 (PARÂMETRO: sem calendário publicado).
