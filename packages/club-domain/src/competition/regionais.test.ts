@@ -4,7 +4,7 @@ import { generateDevPack } from '../generate/pack';
 import type { Pack } from '../pack/schema';
 import { CompetitionSchema } from './schema';
 import { isoOf, weekday } from './calendar';
-import { COPA_ID, copaField } from './copa';
+import { COPA_ID, copaDoBrasil, copaField } from './copa';
 import { regionalCompetitions, regionalStart, supercopa, supercopaPair } from './regionais';
 import {
   CENTRO_OESTE_BERTHS,
@@ -330,17 +330,28 @@ describe('Copa Sul-Sudeste (REC 2026)', () => {
     expect(r.final?.tables[0]?.[0]?.clubId).toBeTruthy();
   });
 
-  it('its champion is sure of a Copa do Brasil place', () => {
+  it('from 2027 its champion and every regional champion go straight to the 3rd phase: 126 clubs', () => {
     const tiers = [
       { tier: 1, clubIds: Array.from({ length: 20 }, (_, i) => `a${i}`) },
       { tier: 2, clubIds: Array.from({ length: 20 }, (_, i) => `b${i}`) },
       { tier: 3, clubIds: Array.from({ length: 20 }, (_, i) => `c${i}`) },
       { tier: 4, clubIds: Array.from({ length: 66 }, (_, i) => `d${i}`) },
-      { tier: 5, clubIds: ['x0'] },
+      { tier: 5, clubIds: ['x0', 'x1', 'x2'] },
     ];
     const ranking = tiers.flatMap((t) => t.clubIds);
-    const f = copaField(tiers, ranking, { nordeste: [], verde: [], sulSudeste: ['x0'] })!;
-    expect(f.group3[0]).toBe('x0');
-    expect(f.group3).toHaveLength(102);
+    const regional = {
+      nordeste: ['b5'],
+      verde: ['x0'],
+      norte: ['x0'],
+      centroOeste: ['x1'],
+      sulSudeste: ['x2'],
+    };
+    expect(copaField(tiers, ranking, regional, 2026)!.group2).toEqual(['c0', 'b5', 'd0', 'x0']);
+    const f = copaField(tiers, ranking, regional, 2027)!;
+    expect(f.group2).toEqual(['c0', 'b5', 'd0', 'x0', 'x1', 'x2']);
+    expect(f.group3).toHaveLength(100);
+    const cup = copaDoBrasil(2027, f);
+    expect(cup.size).toBe(126);
+    expect(() => CompetitionSchema.parse(cup)).not.toThrow();
   });
 });

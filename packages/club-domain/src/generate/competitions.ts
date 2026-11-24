@@ -83,7 +83,7 @@ export const dateWindow = (
  */
 export const serieAWindow = (season: number): Window => ({
   ...dateWindow(season, '01-27', '12-01'),
-  exclude: { start: `${season}-01-01`, end: isoOf(estadualWindow(season).last), weekdays: [0] },
+  exclude: [{ start: `${season}-01-01`, end: isoOf(estadualWindow(season).last), weekdays: [0] }],
 });
 
 export const ligaPhase = (

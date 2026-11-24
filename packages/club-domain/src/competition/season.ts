@@ -42,7 +42,14 @@ import { roundRobin, standings, type Played, type Row, type TableRules } from '.
 import { applyOutcomes, regulationsFor, type Results } from './outcomes';
 import { estadualCompetitions } from './estaduais';
 import { finalists, regionalCompetitions, supercopa, supercopaPair } from './regionais';
-import { NORDESTE_ID, SUL_SUDESTE_ID, SUPERCOPA_ID, VERDE_ID } from './regionais-data';
+import {
+  CENTRO_OESTE_ID,
+  NORDESTE_ID,
+  NORTE_ID,
+  SUL_SUDESTE_ID,
+  SUPERCOPA_ID,
+  VERDE_ID,
+} from './regionais-data';
 import type { Competition, Phase } from './schema';
 
 /** Clubs entering a phase, from the regulation alone (selector widths). */
@@ -257,11 +264,18 @@ function addCopa(s: SeasonState): void {
     .filter((c) => c.scope === 'nacional' && c.tier !== null && c.category === 'profissional')
     .map((c) => ({ tier: c.tier!, clubIds: s.members[c.id] ?? [] }));
   // Last season's Copa do Nordeste and Copa Verde champions take group 2 places (copa.ts).
-  const field = copaField(tiers, s.ranking, {
-    nordeste: finalists(s.previous, NORDESTE_ID),
-    verde: finalists(s.previous, VERDE_ID),
-    sulSudeste: finalists(s.previous, SUL_SUDESTE_ID),
-  });
+  const field = copaField(
+    tiers,
+    s.ranking,
+    {
+      nordeste: finalists(s.previous, NORDESTE_ID),
+      verde: finalists(s.previous, VERDE_ID),
+      norte: finalists(s.previous, NORTE_ID),
+      centroOeste: finalists(s.previous, CENTRO_OESTE_ID),
+      sulSudeste: finalists(s.previous, SUL_SUDESTE_ID),
+    },
+    s.season,
+  );
   if (!field) return;
   const cup = copaDoBrasil(s.season, field);
   s.competitions.push(cup);
@@ -352,6 +366,25 @@ function fixture(s: SeasonState, c: Competition, m: Meta, base: number, after?: 
   });
 }
 
+/**
+ * The Série A stops for a World Cup (every four years from 2026, FIFA's 11 June to 19 July):
+ * in 2026 its 18th round closed on 31 May and the 19th, first set for 22 July, was brought
+ * forward to 16 July for the CONMEBOL cups (Band, Itatiaia, Jul 2026). Later World Cups keep
+ * the first plan, back on 22 July (PARÂMETRO). The other series and cups keep their own dates.
+ */
+export function worldCupPause(season: number): { start: string; end: string } | null {
+  if (season % 4 !== 2) return null;
+  return { start: `${season}-06-01`, end: season === 2026 ? '2026-07-15' : `${season}-07-21` };
+}
+
+/** A phase's base dates, the top division's with the World Cup pause taken out. */
+function datesOf(s: SeasonState, c: Competition, p: Phase, n: number): number[] {
+  const pause = c.tier === 1 && c.scope === 'nacional' ? worldCupPause(s.season) : null;
+  if (!pause) return baseDates(p.dates, n);
+  const all = { ...pause, weekdays: [0, 1, 2, 3, 4, 5, 6] };
+  return baseDates({ ...p.dates, exclude: [...(p.dates.exclude ?? []), all] }, n);
+}
+
 function open(s: SeasonState, c: Competition, p: Phase, clubs: string[]): void {
   const seed = seedOf(s.seed, key(c.id, p.id));
   if (p.kind === 'liga' || p.kind === 'grupos') {
@@ -363,7 +396,7 @@ function open(s: SeasonState, c: Competition, p: Phase, clubs: string[]): void {
       p.kind === 'liga'
         ? roundRobin(clubs, p.legs, seed)
         : groupFixtures(groups, p.legs, p.opponents, seed);
-    const days = baseDates(p.dates, rounds.length);
+    const days = datesOf(s, c, p, rounds.length);
     const run: Run = { kind: 'table', groups, fixtures: [] };
     s.running.set(key(c.id, p.id), run);
     rounds.forEach((pairs, r) =>
@@ -384,7 +417,7 @@ function open(s: SeasonState, c: Competition, p: Phase, clubs: string[]): void {
   const run: Run = {
     kind: 'bracket',
     bracket: startBracket(clubs, p.pairing, seed),
-    dates: baseDates(p.dates, rounds * p.legs),
+    dates: datesOf(s, c, p, rounds * p.legs),
     fixtures: [],
   };
   s.running.set(key(c.id, p.id), run);
