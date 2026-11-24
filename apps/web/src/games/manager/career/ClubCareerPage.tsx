@@ -1836,7 +1836,7 @@ function Inbox({
                   room && (
                     <button
                       type="button"
-                      className="col-span-2 col-start-2 -ml-2 flex min-h-9 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
+                      className="col-span-2 col-start-2 -ml-2 flex min-h-11 w-fit items-center gap-1.5 rounded-md px-2 text-sm font-bold text-club-gold hover:bg-club-gold/10"
                       onClick={() => onGo(room)}
                     >
                       {t('inbox.open', { r: room })}

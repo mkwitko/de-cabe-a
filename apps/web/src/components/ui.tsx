@@ -141,7 +141,7 @@ export function useOnline() {
 export function Term({ label, help }: { label: ReactNode; help: string }) {
   return (
     <details className="group open:basis-full">
-      <summary className="inline cursor-help list-none underline decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
+      <summary className="inline cursor-help list-none py-3.5 underline decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
         {label}
       </summary>
       <span className="mt-1 block max-w-prose text-pretty text-chalk">{help}</span>
