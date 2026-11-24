@@ -72,6 +72,7 @@ import { postOwners } from './finance';
 import { postCups, postSeasonEnd } from './revenue';
 import { cupNotes, cupStages } from './cup';
 import { isEstadual } from '../competition/estaduais';
+import { isForeignClub } from '../competition/groups';
 import { estadualExits, settleEstadual } from './estadual';
 import { settleCup } from './regional';
 import { matchReport, type ReportFact } from './report';
@@ -216,6 +217,8 @@ export type Decision =
       competitionId: string;
       home: string;
       away: string;
+      /** Against a foreign club of the CONMEBOL cups: no match to watch, the result only. */
+      quickOnly?: true;
     }
   | { kind: 'seasonOver' }
   /** The last day of a transfer window, before it is played: the person's last chance. */
@@ -462,7 +465,7 @@ export function openCareer(given: Pack, seed: number, clubId: string, day = 0): 
     ...start,
     day: 0,
     hired: start.season.season,
-    ...clubLevels(pack, start.season.season),
+    ...clubLevels(pack, start.season.season, base),
     ...(academy.length > 0 && { academy }),
     ...(base !== given && { boysOf: clubId, bases: true as const }),
   };
@@ -520,6 +523,8 @@ export function nextDecision(
         competitionId: m.competitionId,
         home: m.home,
         away: m.away,
+        // A foreign club has no squad in the pack yet: its match is a result only.
+        ...((isForeignClub(m.home) || isForeignClub(m.away)) && { quickOnly: true }),
       };
     }
     playDay(w, d);
@@ -811,7 +816,7 @@ export function startNextSeason(w: CareerWorld): SeasonTurn {
   // Rival squads cleared for the new season, read with the new clock: spares go, and
   // sanctioned clubs cut (contracts.ts).
   trimSquads(w);
-  const levels = clubLevels(w.pack, w.season.season);
+  const levels = clubLevels(w.pack, w.season.season, w.origin);
   w.strength = levels.strength;
   w.eleven = levels.eleven;
   // A picked eleven with someone who retired goes back to the coach.

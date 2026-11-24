@@ -184,9 +184,10 @@ function build(
       clubIds,
       scope: 'estadual',
       tier: null,
-      // Below the national series: where a club has both, the state match moves to a free day
-      // (a state championship that took the date would push every national round after it).
-      priority: 0,
+      // The CBF keeps the state dates: the Série A plays only midweek until they end, and a
+      // league match moved by a CONMEBOL or Copa do Brasil date goes elsewhere. Level with the
+      // cups (priority 2), above the leagues.
+      priority: 2,
     },
     phases,
   );

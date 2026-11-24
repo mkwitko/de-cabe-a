@@ -14,6 +14,7 @@ import {
   SUPERCOPA_ID,
 } from '../competition/regionais-data';
 import { postEntry } from '../finance/ledger';
+import { GROUP_MONEY, isConmebol } from '../competition/conmebol';
 import type { SeasonState } from '../competition/season';
 import type { CareerWorld } from './advance';
 import { note } from './inbox';
@@ -58,7 +59,8 @@ export function regionalCotaFor(w: CareerWorld, clubId: string): number {
 export function settleCup(w: CareerWorld, competitionId: string, day: number): void {
   if (
     competitionId !== SUPERCOPA_ID &&
-    !(REGIONAL_IDS as readonly string[]).includes(competitionId)
+    !(REGIONAL_IDS as readonly string[]).includes(competitionId) &&
+    !isConmebol({ id: competitionId })
   )
     return;
   const comp = w.season.competitions.find((c) => c.id === competitionId);
@@ -88,6 +90,30 @@ export function settleCup(w: CareerWorld, competitionId: string, day: number): v
     )
       total += amount;
   });
+  // CONMEBOL: every club of the group stage gets its share, and a bonus for each win there.
+  const groupMoney = GROUP_MONEY[competitionId as keyof typeof GROUP_MONEY];
+  if (groupMoney && results.grupos?.tables.some((t) => t.some((r) => r.clubId === w.clubId))) {
+    let wins = 0;
+    for (const m of w.season.meta.values()) {
+      if (m.competitionId !== competitionId || m.phaseId !== 'grupos') continue;
+      if (m.home !== w.clubId && m.away !== w.clubId) continue;
+      const g = w.season.outcomes.get(m.id)?.goals;
+      const [mine, theirs] = m.home === w.clubId ? [0, 1] : [1, 0];
+      if (g && g[mine]! > g[theirs]!) wins++;
+    }
+    const amount = priced(groupMoney.stage + wins * groupMoney.win, pricesOf(w).prices);
+    if (
+      postEntry(w.ledger, {
+        key: `regional:${w.season.season}:${competitionId}:grupos`,
+        kind: 'prize',
+        ref: `regional:${w.season.season}`,
+        amount,
+        day,
+        dueDay: day,
+      })
+    )
+      total += amount;
+  }
   note(w, {
     day,
     kind: 'regional',

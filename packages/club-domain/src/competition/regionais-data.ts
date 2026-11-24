@@ -97,12 +97,6 @@ export const SUL_SUDESTE_BERTHS: Record<string, number> = {
   SP: 2,
 };
 
-/**
- * Clubs in the Conmebol's cups, who play neither the Copa do Nordeste (Bahia 2026) nor the Copa
- * Sul-Sudeste (REC Art. 2º §1º): the Libertadores and Sul-Americana places of the Série A.
- */
-export const CONMEBOL_PLACES = 12;
-
 /** Fixed share of the first phase by reputation block (four equal blocks, best first). */
 export const COTAS = {
   nordeste: [2_500 * K, 1_350 * K, 850 * K, 500 * K],
@@ -122,7 +116,7 @@ export const PRIZES = {
 /** Where each rule stands, for the report and the next reader. */
 export const NOTES = [
   'Entry reads last season (the real 2026 cups used the 2025 state leagues): champion and runner-up of the state championship, the extra berth by reputation (CBF ranking stands in); the first season, which has no last season, takes the best by reputation. PARÂMETRO.',
-  "Clubs in Libertadores/Sul-Americana play neither the Copa do Nordeste (Bahia 2026) nor the Copa Sul-Sudeste (REC Art. 2º). The career has no Conmebol cups yet: the 12 best of last season's Série A and the Copa do Brasil champion stand in for them (Brazil had 13 or 14 places in 2026); a first season takes the 12 best Série A clubs by reputation. PARÂMETRO.",
+  'Clubs in Libertadores/Sul-Americana play neither the Copa do Nordeste (Bahia 2026) nor the Copa Sul-Sudeste (REC Art. 2º): the season’s Brazilian CONMEBOL clubs are left out (conmebol.ts).',
   'Copa Sul-Sudeste: the champion is guaranteed a Copa do Brasil place, ahead of the ranking in group 3 (2nd phase), not the 3rd phase of the REC: a fifth group-2 place breaks the 126-club format (48 clubs in the 3rd phase), and the 2027 Copa do Brasil regulation that fits it is not out. Group draw by reputation pots; dates by weekday (six Wednesdays from 25 March, semi-finals 20 and 27 May, final 3 and 7 June). PARÂMETRO.',
   'Dates move by weekday (first Wednesday on or after 24 March) so every season fits; the two final legs are Wed/Sun (real: Tue 2 Jun and Sat 6 Jun) and the Copa Norte final second leg Wed 27 May (real 28 May). PARÂMETRO.',
   'Draw: clubs in pots by reputation (the real draw is at the CBF); quarter-finals seeded 1 v 8, 4 v 5, 2 v 7, 3 v 6; Copa Verde single-game semi-finals host by the better seed. PARÂMETRO.',

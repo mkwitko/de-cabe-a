@@ -170,3 +170,10 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes pe
 - Clubes e sorteio: [Jornal Grande Bahia](https://jornalgrandebahia.com.br/?p=1329805).
 - Cotas e prêmios (R$ 3,8 mi): [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/saiba-valores-recebido-pelos-times-que-disputam-as-copas-regionais/).
 - PARÂMETRO: no jogo, o campeão entra na Copa do Brasil pelo grupo 3 (2ª fase), não na 3ª fase. Os clubes em torneios da Conmebol são os 12 melhores da Série A anterior mais o campeão da Copa do Brasil.
+
+## Libertadores e Sul-Americana 2026
+
+- Clubes, vagas, fases de entrada, formato e datas: Wikipedia, "2026 Copa Libertadores" e "2026 Copa Sudamericana" (lidas em 24/11/2026), que citam os sorteios da CONMEBOL de 18/12/2025 e 19/03/2026.
+- Prêmios em dólares: anúncio da CONMEBOL de abril de 2026, segundo [Super Rádio Tupi](https://www.tupi.fm/esportes/libertadores-e-sul-americana-recebem-aumento-em-premios-da-conmebol/), [Diario de Pernambuco](https://www.diariodepernambuco.com.br/esportes-dp/internacional/2026/04/11711673-conmebol-anuncia-aumento-da-premiacao-na-libertadores-e-na-sul-americana.html), [Portal Tela](https://www.portaltela.com/esporte/futebol/2026/04/07/premiacao-recorde-para-campeoes-da-libertadores-e-da-sul-americana/) e [Trivela](https://trivela.com.br/america-do-sul/premiacao-libertadores-sul-americana-2026-valores-fases-campeao/).
+- Ranking de clubes da CONMEBOL 2026 (topo): [Lance!](https://www.lance.com.br/futebol-internacional/ranking-da-conmebol-palmeiras-e-flamengo-no-top-4-com-river-e-boca.html), [ESPN](https://espndeportes.espn.com/futbol/copa-libertadores/nota/_/id/16088042/asi-quedo-el-ranking-de-clubes-de-conmebol-2026).
+- PARÂMETRO: força dos estrangeiros pela fase de entrada e pelo país (career/foreign.ts), até o pack trazer a reputação do FM; de 2027 em diante, os estrangeiros são sorteados entre os clubes de cada país, mantendo as vagas de 2026; cores dos clubes são as tradicionais, não o uniforme da temporada.

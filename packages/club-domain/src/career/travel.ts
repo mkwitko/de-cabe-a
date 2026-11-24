@@ -5,6 +5,7 @@
  * for the person's club, the trip's money and a little more of the eleven's legs.
  * Every number is a PARÂMETRO.
  */
+import { FOREIGN_CLUBS } from '../competition/conmebol-data';
 import type { CareerWorld } from './advance';
 import { postEntry } from '../finance/ledger';
 import { WHOLE, cached } from '../lib/pack-cache';
@@ -18,7 +19,11 @@ export function distanceKm(pack: Pack, a: string, b: string): number {
   if (a === b) return 0;
   const memo = cached(pack, 'travelKm', WHOLE, () => {
     const cities = new Map(pack.cities.map((c) => [c.id, c]));
-    const clubs = new Map(pack.clubs.map((c) => [c.id, cities.get(c.cityId)]));
+    const clubs = new Map<string, { lat: number; lon: number } | undefined>([
+      ...pack.clubs.map((c) => [c.id, cities.get(c.cityId)] as const),
+      // The CONMEBOL cups' foreign clubs: their cities (conmebol-data.ts).
+      ...FOREIGN_CLUBS.map((c) => [c.id, c] as const),
+    ]);
     return { clubs, km: new Map<string, number>() };
   });
   const key = a < b ? `${a}|${b}` : `${b}|${a}`;

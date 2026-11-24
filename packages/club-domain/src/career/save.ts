@@ -25,7 +25,7 @@ import type { Note } from './inbox';
  * Bumped whenever a change would give another result for the same world, seed and day (result
  * model, calendar, tie-breakers…). A snapshot from an older version is loaded, never replayed.
  */
-export const CAREER_RULES_VERSION = 68;
+export const CAREER_RULES_VERSION = 70;
 
 interface Saved {
   v: number;
@@ -234,7 +234,7 @@ export function loadCareer(given: Pack, seed: number, clubId: string, json: stri
     season,
     ledger: createLedger(saved.ledger.today, saved.ledger.entries),
     day: saved.day,
-    ...clubLevels(pack, season.season),
+    ...clubLevels(pack, season.season, base),
     ...(saved.lineup && { lineup: saved.lineup }),
     ...(saved.training && { training: saved.training }),
     ...(saved.moves && { moves }),

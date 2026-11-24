@@ -33,9 +33,11 @@ export const restDays = (hours: number): number => Math.max(1, Math.ceil(hours /
 
 /**
  * PARÂMETRO: how far past its base date a match may be postponed before the
- * calendar gives up (05 §4 "janela de adiamento"; no source, generous).
+ * calendar gives up on rest (05 §4 "janela de adiamento"; no source, generous). A club in the
+ * Série A, a CONMEBOL cup and the Copa do Brasil can have no rested free day for two months:
+ * its postponed league rounds then go later in the season, as the CBF moves them.
  */
-export const POSTPONE_LIMIT_DAYS = 60;
+export const POSTPONE_LIMIT_DAYS = 180;
 
 /** `rounds` base dates on the window's weekdays, spread evenly from the first one. */
 export function baseDates(w: DateWindow, rounds: number): number[] {
@@ -133,7 +135,21 @@ export function place(cal: Calendar, fixture: Fixture, from?: number): number {
     return start;
   }
   for (let d = start; d <= f.base + POSTPONE_LIMIT_DAYS; d++) {
-    if ((d === start ? at : blockers(cal, f, d)).length > 0) continue;
+    const here = d === start ? at : blockers(cal, f, d);
+    // A day held only by unplayed lower priority matches is taken from them, as on the base
+    // day: a cup match never waits weeks behind league rounds that can move.
+    if (here.length > 0 && d !== start && here.every((m) => !m.played && m.priority < f.priority)) {
+      put(cal, { ...f, day: d, played: false });
+      if (from === undefined)
+        cal.postponements.push({ matchId: f.id, from: f.base, to: d, reason: 'rest' });
+      for (const m of here) {
+        take(cal, m);
+        const to = place(cal, m, m.day + 1);
+        cal.postponements.push({ matchId: m.id, from: m.day, to, reason: 'priority' });
+      }
+      return d;
+    }
+    if (here.length > 0) continue;
     put(cal, { ...f, day: d, played: false });
     // A bumped match (`from` given) already has its 'priority' record.
     if (from === undefined && d !== f.base) {

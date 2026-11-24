@@ -594,6 +594,8 @@ export const ptBR = {
   'career.builtHere': 'Último passo calculado neste aparelho em {ms} ms.',
   'career.play': 'Só o resultado',
   'career.watchFull': 'Assistir à partida',
+  'career.quickOnly':
+    'Contra clube estrangeiro, por enquanto só o resultado: os elencos de fora ainda não estão no jogo.',
   'career.watchHighlights': 'Melhores momentos',
   'career.lastResult': '{home} {a} × {b} {away}',
   'career.seasonOver': 'Temporada encerrada.',

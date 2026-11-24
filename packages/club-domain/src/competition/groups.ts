@@ -14,6 +14,12 @@ type Draw = Extract<Phase, { kind: 'grupos' }>['draw'];
  * random: seeded shuffle dealt in turn; regional: sorted by region (stable on
  * seed order) and cut in consecutive blocks, so neighbours share a group.
  */
+/** A club living outside the pack: a foreign club of the CONMEBOL cups (conmebol-data.ts). */
+export const isForeignClub = (clubId: string) => clubId.startsWith('foreign-');
+/** A club's football association: the country code of a foreign club, Brazil otherwise. */
+export const associationOf = (clubId: string) =>
+  isForeignClub(clubId) ? clubId.slice('foreign-'.length, 'foreign-'.length + 3) : 'bra';
+
 export function drawGroups(
   entrants: readonly string[],
   groups: number,
@@ -31,6 +37,25 @@ export function drawGroups(
     for (let gi = 0; gi < groups; gi++) {
       const size = Math.floor(entrants.length / groups) + (gi < entrants.length % groups ? 1 : 0);
       for (let j = 0; j < size; j++) out[gi]!.push(sorted[k++]!.c);
+    }
+    return out;
+  }
+  if (draw === 'association') {
+    // Pots in entrant order, as `pots`; then no two clubs of one association share a group
+    // (CONMEBOL), a clash swapped with the first club of the same pot that clears it.
+    for (let p = 0; p * groups < entrants.length; p++) {
+      const pot = shuffle(entrants.slice(p * groups, (p + 1) * groups), seed, `pot:${p}`);
+      const fits = (c: string, gi: number) =>
+        !out[gi]!.some((x) => associationOf(x) === associationOf(c));
+      for (let i = 0; i < pot.length; i++) {
+        if (fits(pot[i]!, i)) continue;
+        for (let j = 0; j < pot.length; j++)
+          if (j !== i && fits(pot[i]!, j) && fits(pot[j]!, i)) {
+            [pot[i], pot[j]] = [pot[j]!, pot[i]!];
+            break;
+          }
+      }
+      pot.forEach((c, gi) => out[gi]!.push(c));
     }
     return out;
   }
