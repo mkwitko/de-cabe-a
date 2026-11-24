@@ -45,8 +45,11 @@ import type { MatchPlayer, MatchState, RestartKind } from './state';
 
 export const BOX = 16.5;
 const TACKLE_RATE = 0.17;
-/** Ticks to control a ball just won (0.5 s). */
-const WIN_CONTROL = 2;
+/**
+ * Ticks to control a ball just won (1 s). PARAMETER set with the shot constants on high turnovers
+ * and their share that ends in a shot (Opta, BANDS_11; 2026-11-24).
+ */
+const WIN_CONTROL = 4;
 /** World-frame x direction a team attacks. */
 const fwdOf = (team: 0 | 1) => (team === 0 ? 1 : -1);
 const inOwnBox = (team: 0 | 1, p: Vec2) => {
@@ -285,9 +288,9 @@ function gainBall(s: MatchState, p: MatchPlayer, restart = false) {
 
 /**
  * A blocked shot or cross goes behind for a corner this share of the time; otherwise it ricochets
- * into play (PARAMETER, one rule for any block; set by corners per match, 02 §11, 2026-11-19).
+ * into play (PARAMETER, one rule for any block; set by corners per match, 02 §11, 2026-11-24).
  */
-const BLOCK_BEHIND = 0.58;
+const BLOCK_BEHIND = 0.52;
 
 function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number, vz = 0) {
   s.owner = null;
