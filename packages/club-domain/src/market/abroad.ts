@@ -369,6 +369,7 @@ export function homecoming(w: CareerWorld, day: number): Deal[] {
           day,
           kind: 'homecoming',
           player: p.knownAs ?? p.name,
+          id: p.id,
           agent: agent.name,
           wage: talk.wants?.wage ?? wants.wage,
         });

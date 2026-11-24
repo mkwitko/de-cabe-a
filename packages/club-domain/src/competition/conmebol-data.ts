@@ -659,12 +659,15 @@ export const PRIZES_USD = {
     runnerUp: 2_500_000,
     champion: 10_000_000,
   },
+  /** Recopa 2026 (Band, 18 Feb 2026; Tupi; El Economista, 27 Feb 2026). */
+  recopa: { runnerUp: 900_000, champion: 1_800_000 },
 };
 
 /** Where each rule stands. */
 export const NOTES = [
   'The foreign clubs of every season are the 2026 entrants: the career does not play the other leagues. PARÂMETRO.',
   'Sudamericana first stage prize money is not in the sources read: none is paid. PARÂMETRO.',
+  "Recopa: last season's Libertadores champion against the Sudamericana champion, two legs, the first at the Sudamericana champion (2026: Lanús 1-0 Flamengo on Thu 19 Feb, Flamengo 2-3 a.e.t. on Thu 26 Feb at the Maracanã; Band, beIN). The real tie goes to extra time then penalties; two legs here go straight to penalties (the engine plays extra time only in a single game). The first career season has no last season and no Recopa; nor one between two foreign clubs, which the person never plays. PARÂMETRO.",
   'The Libertadores and Sudamericana finals are single matches at a CONMEBOL venue (Montevideo, Barranquilla in 2026): neutral ground, extra time then penalties.',
   'Brazilian places for the next season: the champion of each cup, the Copa do Brasil champion and the Série A order (BRAZIL_PLACES), as in 2026; the 2027 rule is not published. PARÂMETRO.',
 ] as const;

@@ -233,6 +233,7 @@ export function agentOffers(w: CareerWorld, day: number): PackPlayer[] {
       day,
       kind: 'agentOffer',
       player: p.knownAs ?? p.name,
+      id: p.id,
       agent: agent.name,
       club: p.clubId ?? '',
     });

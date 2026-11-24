@@ -24,6 +24,9 @@ import {
   conmebolField,
   foreignEntrants,
   libertadores,
+  recopa,
+  recopaPair,
+  RECOPA_ID,
   sudamericana,
   type ConmebolField,
 } from './conmebol';
@@ -218,7 +221,10 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     ...(opts.deduct && Object.keys(opts.deduct).length > 0 && { deduct: opts.deduct }),
   };
   addCopa(s);
-  if (opts.estaduais) addSupercopa(s);
+  if (opts.estaduais) {
+    addSupercopa(s);
+    addRecopa(s);
+  }
   openReady(s);
   return s;
 }
@@ -291,6 +297,14 @@ function addSupercopa(s: SeasonState): void {
   if (!pair) return;
   s.competitions.push(supercopa(s.season, pair));
   s.members[SUPERCOPA_ID] = [...pair];
+}
+
+/** The Recopa: last season's Libertadores and Sudamericana champions (conmebol.ts). */
+function addRecopa(s: SeasonState): void {
+  const pair = recopaPair(s.previous);
+  if (!pair) return;
+  s.competitions.push(recopa(s.season, pair));
+  s.members[RECOPA_ID] = [...pair];
 }
 
 export const tableRules = (s: SeasonState, c: Competition, p: Phase): TableRules =>

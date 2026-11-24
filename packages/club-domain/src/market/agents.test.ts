@@ -78,7 +78,7 @@ describe('agents (ADR-022)', () => {
     expect(loadCareer(pack, 3, clubId, saveCareer(w)).agents).toEqual(w.agents);
   });
 
-  it('agents who work with the club offer players that fit, twice a round at most, once a season', () => {
+  it('agents who work with the club offer players that fit, twice a round at most, once a season', async () => {
     const w = openCareer(pack, 3, clubId);
     // Every agent stands well with the club.
     w.agents = {
@@ -95,6 +95,12 @@ describe('agents (ADR-022)', () => {
       expect(p.clubId).not.toBe(clubId);
     }
     expect(w.inbox!.filter((n) => n.kind === 'agentOffer')).toHaveLength(first.length);
+    // The to-do follows the player by id: a namesake in the squad does not close it.
+    const { todoOf } = await import('../career/todo');
+    const offered = first[0]!;
+    const mine = w.pack.players.find((x) => x.clubId === clubId)!;
+    mine.knownAs = offered.knownAs ?? offered.name;
+    expect(todoOf(w).some((t) => t.kind === 'agentOffer' && t.player === mine.knownAs)).toBe(true);
     const again = agentOffers(w, day + 14);
     for (const p of again) expect(first.map((x) => x.id)).not.toContain(p.id);
   });

@@ -14,7 +14,7 @@
  */
 import { gruposPhase, knockoutPhase, regulation } from '../generate/competitions';
 import { OPENING } from '../market/currency';
-import { dayOf, isoOf } from './calendar';
+import { dayOf, isoOf, weekday } from './calendar';
 import { associationOf, isForeignClub } from './groups';
 import type { Results } from './outcomes';
 import type { Competition, Phase } from './schema';
@@ -30,6 +30,7 @@ import { COPA_ID } from './copa';
 
 export const LIBERTADORES_ID = 'libertadores';
 export const SUDAMERICANA_ID = 'sudamericana';
+export const RECOPA_ID = 'recopa';
 export const isConmebol = (c: { id: string }) =>
   c.id === LIBERTADORES_ID || c.id === SUDAMERICANA_ID;
 export { associationOf, isForeignClub } from './groups';
@@ -355,6 +356,63 @@ export function sudamericana(
         { phaseId: 'semi', positions: [1, 4], amount: reais(S.semis) },
         { phaseId: 'final', positions: [2, 2], amount: reais(S.runnerUp) },
         { phaseId: 'final', positions: [1, 1], amount: reais(S.champion) },
+      ],
+    },
+  };
+}
+
+/**
+ * The Recopa's two clubs: last season's Libertadores champion (hosts the second leg) and
+ * Sudamericana champion. Null without both, or when neither is Brazilian (conmebol-data NOTES).
+ */
+export function recopaPair(previous: Results): [string, string] | null {
+  const champion = (id: string) => previous[id]?.final?.tables[0]?.[0]?.clubId;
+  const lib = champion(LIBERTADORES_ID);
+  const sud = champion(SUDAMERICANA_ID);
+  if (!lib || !sud || lib === sud || (isForeignClub(lib) && isForeignClub(sud))) return null;
+  return [lib, sud];
+}
+
+/** The Recopa of `season`: two legs on the Thursdays from 19 February (2026: 19 and 26 Feb). */
+export function recopa(season: number, pair: [string, string]): Competition {
+  const feb19 = dayOf(`${season}-02-19`);
+  const first = feb19 + ((4 - weekday(feb19) + 7) % 7);
+  const R = PRIZES_USD.recopa;
+  const base = regulation(
+    {
+      id: RECOPA_ID,
+      name: 'Recopa Sul-Americana',
+      season,
+      clubIds: [...pair],
+      scope: 'continental',
+      tier: null,
+      // A trophy tie, like the Supercopa: above the estaduais and the Copa do Brasil.
+      priority: 3,
+    },
+    [
+      knockoutPhase(
+        'final',
+        'final',
+        { start: isoOf(first), end: isoOf(first + 7), weekdays: [4] },
+        {
+          entrants: [{ from: 'list', clubIds: [...pair] }],
+          legs: 2,
+          survivors: 1,
+          pairing: 'fixed',
+          host: 'fixed',
+          tieBreakers: ['penalties'],
+          outcomes: [{ kind: 'title', positions: [1, 1] }],
+        },
+      ),
+    ],
+  );
+  return {
+    ...base,
+    money: {
+      ...base.money,
+      prizes: [
+        { phaseId: 'final', positions: [2, 2], amount: reais(R.runnerUp) },
+        { phaseId: 'final', positions: [1, 1], amount: reais(R.champion) },
       ],
     },
   };

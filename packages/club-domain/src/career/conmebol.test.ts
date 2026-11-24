@@ -225,3 +225,40 @@ describe('the inbox of the other cups', () => {
     ]);
   });
 });
+
+describe('the Recopa', () => {
+  it('pairs last season’s Libertadores and Sudamericana champions over two Thursdays', async () => {
+    const { startSeason } = await import('../competition/season');
+    const { RECOPA_ID, SUDAMERICANA_ID } = await import('../competition/conmebol');
+    const { isoOf, weekday } = await import('../competition/calendar');
+    const pack = generateDevPack();
+    const br = pack.clubs[0]!.id;
+    const row = (clubId: string) => ({ clubId }) as never;
+    const final = (a: string, b: string) => ({ final: { tables: [[row(a), row(b)]] } }) as never;
+    const previous = {
+      [LIBERTADORES_ID]: final(br, 'foreign-arg-river'),
+      [SUDAMERICANA_ID]: final('foreign-arg-lanus', 'foreign-arg-boca'),
+    };
+    const s = startSeason(pack, { seed: 1, season: pack.season + 1, estaduais: true, previous });
+    expect(s.members[RECOPA_ID]).toEqual([br, 'foreign-arg-lanus']);
+    const legs = [...s.calendar.matches.values()]
+      .filter((m) => m.competitionId === RECOPA_ID)
+      .sort((a, b) => a.base - b.base);
+    // First leg at the Sudamericana champion, the second at the Libertadores champion's.
+    expect(legs.map((m) => [m.home, weekday(m.base)])).toEqual([
+      ['foreign-arg-lanus', 4],
+      [br, 4],
+    ]);
+    expect(isoOf(legs[0]!.base) >= `${pack.season + 1}-02-19`).toBe(true);
+    // No Recopa between two foreign clubs, nor in a first season.
+    const both = { ...previous, [LIBERTADORES_ID]: final('foreign-arg-river', br) };
+    const none = startSeason(pack, {
+      seed: 1,
+      season: pack.season + 1,
+      estaduais: true,
+      previous: both,
+    });
+    expect(none.members[RECOPA_ID]).toBeUndefined();
+    expect(startSeason(pack, { seed: 1, estaduais: true }).members[RECOPA_ID]).toBeUndefined();
+  });
+});
