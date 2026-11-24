@@ -6,8 +6,10 @@ import { outcomeOf } from '../match/fixture-input';
 import { quickResult } from '../match/quick';
 import { careerMatch, nextDecision, openCareer, playDecision } from './advance';
 import { foreignSquad } from './foreign-squad';
-import { clubLevels } from './training';
+import { clubLevel, clubLevels } from './training';
 import { altitudeOf, climbOf } from './travel';
+import { foreignRank } from './foreign';
+import { PackSchema } from '../pack/schema';
 
 describe('the person in the Libertadores', () => {
   it('watches its matches against foreign clubs, and is paid its prizes and group money', () => {
@@ -84,5 +86,35 @@ describe('the foreign clubs', () => {
     };
     // McSharry: about half a goal per 1,000 m.
     expect(diff(climb) - diff(0)).toBeCloseTo((0.5 * climb) / 1000, 1);
+  });
+});
+
+describe('the foreign clubs of the FM export', () => {
+  it('rank by reputation and play with their real squad', () => {
+    const dev = generateDevPack();
+    const twin = dev.clubs[3]!;
+    const squad = dev.players
+      .filter((p) => p.clubId === twin.id)
+      .map((p) => ({ ...p, id: `real-${p.id}`, nationality: 'AR', clubId: 'foreign-arg-river' }));
+    const pack = {
+      ...dev,
+      foreign: [
+        { id: 'foreign-arg-river', reputation: 50, players: squad },
+        { id: 'foreign-bol-bolivar', reputation: 100, players: [] },
+      ],
+    };
+    expect(PackSchema.safeParse(pack).success).toBe(true);
+    // The best reputation of all: first, whatever its stage and country.
+    expect(foreignRank('foreign-bol-bolivar', pack)).toBe(1);
+    expect(foreignRank('foreign-bol-bolivar')).toBeGreaterThan(1);
+    // The real squad plays, and its measure is its own.
+    const real = foreignSquad(pack, pack.season, 'foreign-arg-river');
+    expect(real.map((p) => p.id)).toEqual(squad.map((p) => p.id));
+    expect(clubLevels(pack, pack.season).strength.get('foreign-arg-river')).toBe(
+      clubLevel({ ...pack, players: squad }, 'foreign-arg-river', pack.season, Infinity).strength,
+    );
+    // A player filed under another club is refused.
+    const wrong = { ...pack, foreign: [{ id: 'foreign-arg-boca', players: squad }] };
+    expect(PackSchema.safeParse(wrong).success).toBe(false);
   });
 });

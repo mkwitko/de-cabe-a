@@ -13,6 +13,7 @@ import {
   SUDAMERICANA_FOREIGN,
   type Country,
 } from '../competition/conmebol-data';
+import type { Pack } from '../pack/schema';
 
 /** Rank among the Brazilian clubs (1 the strongest) by stage of entry. */
 const STAGE_RANK = {
@@ -45,8 +46,14 @@ const stageOf = new Map<string, keyof typeof STAGE_RANK>([
   ...SUDAMERICANA_FOREIGN.first.map((id) => [id, 'sudamericanaFirst'] as const),
 ]);
 
-/** Each foreign club's rank among the Brazilian clubs, 1 the strongest. */
-export function foreignRank(id: string): number {
+/**
+ * Each foreign club's rank among the Brazilian clubs, 1 the strongest. With the pack's FM
+ * reputation (`pack.foreign`), the rank is the clubs' own reputation order; without, the
+ * PARÂMETRO ranks above.
+ */
+export function foreignRank(id: string, pack?: Pack): number {
+  const rep = pack?.foreign?.find((f) => f.id === id)?.reputation;
+  if (rep !== undefined) return 1 + pack!.clubs.filter((c) => c.reputation > rep).length;
   const own = OWN_RANK[id];
   if (own !== undefined) return own;
   const c = FOREIGN_CLUBS.find((x) => x.id === id);
@@ -62,11 +69,16 @@ export function foreignRank(id: string): number {
 export function foreignLevels(
   strength: ReadonlyMap<string, number>,
   eleven: ReadonlyMap<string, number>,
+  pack?: Pack,
+  /** A real squad's own measure (training.ts `clubLevel`), when the pack has one. */
+  real?: (id: string) => { strength: number; eleven: number } | undefined,
 ): { id: string; strength: number; eleven: number }[] {
   const order = [...strength.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
   if (order.length === 0) return [];
   return FOREIGN_CLUBS.map((c) => {
-    const at = order[Math.min(order.length, foreignRank(c.id)) - 1]!;
+    const own = real?.(c.id);
+    if (own) return { id: c.id, ...own };
+    const at = order[Math.min(order.length, foreignRank(c.id, pack)) - 1]!;
     return { id: c.id, strength: strength.get(at)!, eleven: eleven.get(at) ?? 0 };
   });
 }

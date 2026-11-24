@@ -305,10 +305,10 @@ export function clubLevels(
   // The CONMEBOL cups' foreign clubs, on the opening pack's scale (career/foreign.ts).
   const foreign =
     origin === pack
-      ? foreignLevels(strength, eleven)
+      ? foreignLevels(strength, eleven, pack, realLevel(pack, season))
       : cached(origin, 'foreignLevels', WHOLE, () => {
           const o = clubLevels(origin, season);
-          return foreignLevels(o.strength, o.eleven);
+          return foreignLevels(o.strength, o.eleven, origin, realLevel(origin, season));
         });
   for (const f of foreign) {
     strength.set(f.id, f.strength);
@@ -317,15 +317,25 @@ export function clubLevels(
   return { strength, eleven };
 }
 
+/** A foreign club's measure from its real squad in the pack (`pack.foreign`), if it has one. */
+const realLevel = (pack: Pack, season: number) => (id: string) => {
+  const squad = pack.foreign?.find((f) => f.id === id)?.players ?? [];
+  // Its own countrymen: no Brazilian limit of foreigners.
+  return squad.length >= 18
+    ? clubLevel({ ...pack, players: squad }, id, season, Infinity)
+    : undefined;
+};
+
 /** One club's measure (see `clubLevels`); recomputed when its squad changes. */
 export function clubLevel(
   pack: Pack,
   clubId: string,
   season: number,
+  foreigners = foreignLimit(season),
 ): { strength: number; eleven: number } {
   const c = { pack, clubId };
   try {
-    const l = bestLineup(c, formationOf(clubId), undefined, foreignLimit(season));
+    const l = bestLineup(c, formationOf(clubId), undefined, foreigners);
     const fit = slotRatings(c, l.formation);
     return {
       strength: lineupStrength(c, l),

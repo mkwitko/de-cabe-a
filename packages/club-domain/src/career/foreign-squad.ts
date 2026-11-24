@@ -2,9 +2,9 @@
  * The squads of the CONMEBOL cups' foreign clubs, for the person's watched match against one
  * (career/foreign.ts holds their strength).
  *
- * Until the pack carries real foreign squads, each foreign club borrows the football of the
- * Brazilian club at its rank in the career's opening pack: the same attributes, positions and
- * ages, under new names and the club's nationality. Its strength and eleven therefore equal the
+ * A club whose real squad the pack carries (`pack.foreign`) plays with it. Any other borrows the
+ * football of the Brazilian club at its rank in the career's opening pack: the same attributes,
+ * positions and ages, under new names and the club's nationality. Its strength and eleven therefore equal the
  * ones its quick results use. The squads live outside `pack.players`, so no other system (the
  * market, the boards, the academies) ever sees them; only the watched match borrows them.
  */
@@ -131,23 +131,30 @@ export function foreignSquad(origin: Pack, season: number, id: string): PackPlay
   return cached(origin, 'foreignSquad', `${id}@${season}`, () => {
     const club = FOREIGN_CLUBS.find((c) => c.id === id);
     if (!club) return [];
+    const years = season - origin.season;
+    const aged = (p: PackPlayer): PackPlayer => ({
+      ...p,
+      birthDate: `${Number(p.birthDate.slice(0, 4)) + years}${p.birthDate.slice(4)}`,
+    });
+    // The real squad, where the pack has one (Boca, River from the FM export).
+    const real = origin.foreign?.find((f) => f.id === id)?.players ?? [];
+    if (real.length >= 18) return real.map(aged);
     const order = [...clubLevels(origin, origin.season).strength]
       .filter(([k]) => !isForeignClub(k))
       .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
       .map(([k]) => k);
-    const twin = order[Math.min(order.length, foreignRank(id)) - 1];
-    const years = season - origin.season;
+    const twin = order[Math.min(order.length, foreignRank(id, origin)) - 1];
     const gen = { origin: 'generated' as const, confidence: 'high' as const };
     return origin.players
       .filter((p) => p.clubId === twin)
       .sort((a, b) => (a.id < b.id ? -1 : 1))
       .map((p, i): PackPlayer => {
         const h = hash(`${id}:${i}`);
-        return {
+        // The same age as the borrowed player at the opening, whatever the season.
+        return aged({
           id: `${id}-p${String(i + 1).padStart(2, '0')}`,
           name: `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`,
-          // The same age as the borrowed player at the opening, whatever the season.
-          birthDate: `${Number(p.birthDate.slice(0, 4)) + years}${p.birthDate.slice(4)}`,
+          birthDate: p.birthDate,
           nationality: NATION[club.country],
           ...(p.heightCm !== undefined && { heightCm: p.heightCm }),
           foot: p.foot,
@@ -159,7 +166,7 @@ export function foreignSquad(origin: Pack, season: number, id: string): PackPlay
           traits: p.traits,
           clubId: id,
           field: { ...p.field, identity: gen },
-        };
+        });
       });
   });
 }
