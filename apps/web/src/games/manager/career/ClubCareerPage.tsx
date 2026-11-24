@@ -1868,7 +1868,10 @@ function Inbox({
 }
 
 const GUIDE = ['vestiario', 'mercado', 'diretoria', 'jogar'] as const;
+/** '1' once the guide is done (the key older careers already have). */
 const guideKey = (id: string) => `clube-guia:${id}`;
+/** The step reached, while the guide is still open. */
+const guideStepKey = (id: string) => `clube-guia-passo:${id}`;
 
 /**
  * The first week's guide: one card per step, each linking to its room. It shows in the Sala only;
@@ -1885,9 +1888,8 @@ function Guide({
 }) {
   const [step, setStepState] = useState(() => {
     try {
-      const v = localStorage.getItem(guideKey(careerId));
-      // '1' was "done" before steps were kept.
-      return v === '1' ? GUIDE.length : Number(v ?? 0) || 0;
+      if (localStorage.getItem(guideKey(careerId)) === '1') return GUIDE.length;
+      return Number(localStorage.getItem(guideStepKey(careerId))) || 0;
     } catch {
       return 0;
     }
@@ -1895,7 +1897,8 @@ function Guide({
   const setStep = (n: number) => {
     setStepState(n);
     try {
-      localStorage.setItem(guideKey(careerId), String(n));
+      if (n >= GUIDE.length) localStorage.setItem(guideKey(careerId), '1');
+      else localStorage.setItem(guideStepKey(careerId), String(n));
     } catch {
       // Private mode: the guide starts over on the next visit.
     }
