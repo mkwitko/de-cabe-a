@@ -10,6 +10,8 @@ import type { Front, WorkNo } from '@decabeca/club-domain';
 import type { SimView } from './sim.worker';
 import { History } from './SeasonReview';
 
+type Match = NonNullable<SimView['history'][number]['biggestWin']>;
+
 const LABEL =
   'font-condensed text-lg leading-none font-extrabold tracking-wide text-club-gold uppercase';
 const stateOf = (c: number) =>
@@ -252,6 +254,8 @@ export function Board({
 }
 
 /** The board ended the job: the clubs that call, and the door to another career. */
+const margin = (m: Match) => m.goals[0] - m.goals[1];
+
 export function Fired({
   club,
   history,
@@ -267,6 +271,10 @@ export function Fired({
   onTake: (clubId: string) => void;
   onRestart: () => void;
 }) {
+  let best: { win: Match; season: number } | null = null;
+  for (const h of history)
+    if (h.biggestWin && (!best || margin(h.biggestWin) > margin(best.win)))
+      best = { win: h.biggestWin, season: h.season };
   return (
     <div className="club-tunnel fixed inset-0 z-40 flex overflow-y-auto bg-club-night p-4 sm:p-6">
       <picture aria-hidden>
@@ -287,6 +295,16 @@ export function Fired({
             {t('board.firedRecap', {
               seasons: history.length,
               titles: history.reduce((n, h) => n + (h.champion ? 1 : 0) + h.cups.length, 0),
+            })}
+          </p>
+        )}
+        {best && (
+          <p className="text-chalk-soft">
+            {t('board.firedBest', {
+              a: best.win.goals[0],
+              b: best.win.goals[1],
+              team: best.win.opponent,
+              season: best.season,
             })}
           </p>
         )}

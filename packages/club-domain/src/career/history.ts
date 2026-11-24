@@ -35,6 +35,8 @@ export interface HistoryEntry {
   /** The club's top scorer and assister of the league season (scoring.ts); absent before. */
   scorer?: { name: string; goals: number } | null;
   assister?: { name: string; assists: number } | null;
+  /** The league win by the widest margin; absent before it was kept. */
+  biggestWin?: Match | null;
 }
 
 export interface Match {
@@ -174,4 +176,5 @@ export const entryOf = (r: SeasonReview): HistoryEntry => ({
   top: r.top,
   ...(r.scorer !== undefined && { scorer: r.scorer }),
   ...(r.assister !== undefined && { assister: r.assister }),
+  biggestWin: r.biggestWin,
 });
