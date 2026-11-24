@@ -290,7 +290,7 @@ function gainBall(s: MatchState, p: MatchPlayer, restart = false) {
  * A blocked shot or cross goes behind for a corner this share of the time; otherwise it ricochets
  * into play (PARAMETER, one rule for any block; set by corners per match, 02 §11, 2026-11-24).
  */
-const BLOCK_BEHIND = 0.52;
+const BLOCK_BEHIND = 0.5;
 
 function looseBall(s: MatchState, from: number, at: Vec2, vx: number, vy: number, vz = 0) {
   s.owner = null;

@@ -8,7 +8,7 @@ import { norm } from './duel';
  * (body orientation, ADR-019) saves the extra touch, and on a counter it goes forward at once.
  */
 export const settleSeconds = (tempo: number, a: Attributes, pressure: number, counter: boolean) =>
-  (1.3 + 0.3 * (5 - tempo) + 0.5 * (1 - norm(a.firstTouch))) *
+  (1.6 + 0.3 * (5 - tempo) + 0.5 * (1 - norm(a.firstTouch))) *
   (1 - 0.65 * pressure) *
   (1.1 - 0.2 * norm(a.bodyOrientation)) *
   (counter ? 0.7 : 1);

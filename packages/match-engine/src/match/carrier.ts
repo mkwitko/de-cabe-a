@@ -62,7 +62,7 @@ const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
  */
 const SHOT_RESERVE = 0.004;
 /** How badly a player reads his own chance: relative error per unit of decision noise. PARAMETER. */
-const SHOT_NOISE = 4;
+const SHOT_NOISE = 2;
 /**
  * Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER measured in the engine:
  * later shots of the same side before it loses the ball add about 0.2 xG per unit of chance.
@@ -77,7 +77,7 @@ const PERCEPTION_LAG = 0.45;
  * hit it long. PARAMETER calibrated on long-ball share (Série A 2025: the fourth most direct
  * side plays 13.8% of passes long, Flashscore) and pass completion (02 §11).
  */
-const LOFT_COST = 0.01;
+const LOFT_COST = 0.007;
 /**
  * A ball over the top lands with error, bounces and meets a keeper coming out:
  * measured success near 25% to 35% (calibration run, 2026-11-13). PARAMETER.
@@ -212,9 +212,9 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     // Runs into space start from where he is now.
     const now = toTeam(c, m.pos);
     // A team-mate in an offside position is not an option: the passer sees it, more surely
-    // the further off he is (PARAMETERS: 30% at the line, sure 2 m beyond, on what he perceives; 02 §6.5).
+    // the further off he is (PARAMETERS: 70% at the line, sure 1 m beyond; offsides per match, on what he perceives; 02 §6.5).
     const beyond = toTeam(c, seen(m)).x - Math.max(oppLine, me.x, LENGTH / 2);
-    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.3 + 0.35 * beyond)) continue;
+    if (allowed === 'open' && beyond > 0 && next(r) < Math.min(1, 0.7 + 0.35 * beyond)) continue;
     // Nobody lofts the ball back towards his own goal: back passes to the box are short and along the ground.
     if (mt.x < 20 && mt.x < me.x && (long || d > 25)) continue;
     const lofted = long || allowed === 'throwIn' || (allowed === 'goalKick' && d > 30);
@@ -271,6 +271,14 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
         win: 0.5 * valueAt(st.x, st.y),
         lose: oppValue({ x: (me.x + st.x) / 2, y: st.y }),
         lossX: st.x,
+        // A lofted ball: it pays the same retention cost and build-up preference as a long pass.
+        bias:
+          -LOFT_COST +
+          (plan.buildUp === 'short' && me.x < 50
+            ? -0.01
+            : plan.buildUp === 'long' && me.x < 50
+              ? 0.008
+              : 0),
       });
     }
 
