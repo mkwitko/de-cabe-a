@@ -133,3 +133,18 @@ export function useOnline() {
   }, []);
   return online;
 }
+
+/**
+ * A word of the trade that opens its meaning on a tap (native details: works on touch, keyboard
+ * and screen readers, no tooltip to hover).
+ */
+export function Term({ label, help }: { label: ReactNode; help: string }) {
+  return (
+    <details className="group open:basis-full">
+      <summary className="inline cursor-help list-none underline decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
+        {label}
+      </summary>
+      <span className="mt-1 block max-w-prose text-pretty text-chalk">{help}</span>
+    </details>
+  );
+}

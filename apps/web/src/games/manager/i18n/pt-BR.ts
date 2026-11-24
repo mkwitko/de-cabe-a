@@ -168,6 +168,10 @@ export const ptBR = {
   'search.watch': 'Observar',
   'market.potential': 'Potencial {lo} a {hi}',
   'market.clause': 'Multa {fee}',
+  'help.clause':
+    'Multa rescisória: quem pagar esse valor leva o jogador, sem negociar com o clube dele.',
+  'help.buyBack':
+    'Recompra: o clube que vendeu pode trazer o jogador de volta por esse preço até a data marcada, queira ou não o clube atual.',
   'market.clauseSellOn':
     'Revenda {pct}%{mine, select, true { para o seu clube} other { para o clube que vendeu}}',
   'market.clauseBuyBack':
@@ -780,6 +784,8 @@ export const ptBR = {
   'friendly.stat.shots': 'Finalizações',
   'friendly.stat.onTarget': 'No alvo',
   'friendly.stat.xg': 'Gols esperados',
+  'help.xg':
+    'Gols esperados (xG): a soma da chance de gol de cada finalização. 1,8 quer dizer que as chances criadas valiam quase dois gols.',
   'friendly.stat.passes': 'Passes',
   'friendly.stat.passAccuracy': 'Acerto de passe',
   'friendly.stat.fouls': 'Faltas',
