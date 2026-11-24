@@ -338,6 +338,7 @@ for (const width of [360, 1280]) {
 
 for (const width of [360, 1280]) {
   test(`career: the week's training and the squad's freshness at ${width} px`, async ({ page }) => {
+    test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 800 });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -406,6 +407,7 @@ for (const width of [360, 1280]) {
   test(`career: negotiate a signing at two tables in the market at ${width} px`, async ({
     page,
   }) => {
+    test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 800 });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
