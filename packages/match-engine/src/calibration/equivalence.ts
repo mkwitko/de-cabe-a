@@ -247,7 +247,11 @@ function level1Version(): string {
   const src = new URL('..', import.meta.url).pathname;
   const h = createHash('sha1');
   for (const f of (readdirSync(src, { recursive: true }) as string[]).sort())
-    if (f.endsWith('.ts') && !f.endsWith('.test.ts') && (!/^(possession|calibration)\//.test(f) || f === 'calibration/summary.ts'))
+    if (
+      f.endsWith('.ts') &&
+      !f.endsWith('.test.ts') &&
+      (!/^(possession|calibration)\//.test(f) || f === 'calibration/summary.ts')
+    )
       h.update(f).update(readFileSync(join(src, f)));
   return h.digest('hex').slice(0, 8);
 }

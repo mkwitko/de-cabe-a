@@ -94,7 +94,16 @@ export function progressivePasses(r: Pick<MatchResult, 'events'>): [number, numb
 /** Events that are not a touch of the ball. */
 const OFF_PLAY = new Set(['substitution', 'command', 'card', 'injury']);
 /** Events after which possession changes at a restart, not in open play. */
-const RESTART_CAUSE = new Set(['throwIn', 'freeKick', 'corner', 'goalKick', 'kickOff', 'foul', 'offside', 'penalty']);
+const RESTART_CAUSE = new Set([
+  'throwIn',
+  'freeKick',
+  'corner',
+  'goalKick',
+  'kickOff',
+  'foul',
+  'offside',
+  'penalty',
+]);
 
 export function transitions(r: Pick<MatchResult, 'events'>) {
   const out = { ht: [0, 0], hts: [0, 0], losses: [0, 0], back: [0, 0] } as Record<
