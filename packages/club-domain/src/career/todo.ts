@@ -36,23 +36,25 @@ export function todoOf(w: CareerWorld): Todo[] {
   for (const [id, u] of Object.entries(w.unhappy ?? {}))
     if (u.asked) out.push({ kind: 'leaveRequest', player: id });
   for (const club of approaches(w)) out.push({ kind: 'approach', club });
-  const mine = new Set(
-    w.pack.players.filter((p) => p.clubId === w.clubId).map((p) => p.knownAs ?? p.name),
-  );
+  const squad = w.pack.players.filter((p) => p.clubId === w.clubId);
+  const mineIds = new Set(squad.map((p) => p.id));
+  const mineNames = new Set(squad.map((p) => p.knownAs ?? p.name));
+  // By id; an older career's note has only the name.
+  const signed = (n: { id?: string; player: string }) =>
+    n.id ? mineIds.has(n.id) : mineNames.has(n.player);
+  const talking = (n: { id?: string; player: string }) =>
+    Object.keys(w.talks ?? {}).some((id) => {
+      if (n.id) return id === n.id;
+      const p = w.pack.players.find((x) => x.id === id);
+      return (p?.knownAs ?? p?.name) === n.player;
+    });
   let reminded = false;
   for (const n of w.inbox ?? []) {
     if (w.day - n.day > OPEN_DAYS) continue;
-    // ponytail: matched by display name (the note keeps no id); upgrade by storing the id.
-    if (n.kind === 'agentOffer' && !mine.has(n.player))
+    if (n.kind === 'agentOffer' && !signed(n))
       out.push({ kind: 'agentOffer', player: n.player, agent: n.agent, club: n.club, day: n.day });
     // A homecoming opens a talk: it waits while that talk does.
-    if (
-      n.kind === 'homecoming' &&
-      Object.keys(w.talks ?? {}).some((id) => {
-        const p = w.pack.players.find((x) => x.id === id);
-        return (p?.knownAs ?? p?.name) === n.player;
-      })
-    )
+    if (n.kind === 'homecoming' && talking(n))
       out.push({ kind: 'agentOffer', player: n.player, agent: n.agent, club: '', day: n.day });
     if (n.kind === 'contractsEnding' && !reminded) {
       const players = endingSoon(w).length;

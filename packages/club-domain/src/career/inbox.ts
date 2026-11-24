@@ -43,9 +43,10 @@ export type Note = { day: number } & (
       recommended?: number;
     }
   /** An agent offers one of his players (agents.ts); `club` is where he plays, '' for none. */
-  | { kind: 'agentOffer'; player: string; agent: string; club: string }
+  /** `id`: the player's (todo.ts matches by it; missing in older careers, matched by name). */
+  | { kind: 'agentOffer'; player: string; agent: string; club: string; id?: string }
   /** A player abroad who wants to come home, offered by his agent; a talk is open. */
-  | { kind: 'homecoming'; player: string; agent: string; wage: number }
+  | { kind: 'homecoming'; player: string; agent: string; wage: number; id?: string }
   /** A boy the club formed was sold elsewhere: its solidarity share. */
   | { kind: 'solidarity'; player: string; fee: number }
   /** The person's club got its share of a player's resale (market/clauses.ts). */

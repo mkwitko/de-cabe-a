@@ -4,7 +4,7 @@
  * like any competition; this reads what it did to the person's club.
  */
 import { COPA_ID, COPA_PHASES } from '../competition/copa';
-import { LIBERTADORES_ID, SUDAMERICANA_ID, isConmebol } from '../competition/conmebol';
+import { LIBERTADORES_ID, RECOPA_ID, SUDAMERICANA_ID, isConmebol } from '../competition/conmebol';
 import { isRegional } from '../competition/regionais';
 import { standings, type Row } from '../competition/league';
 import { REGIONAL_IDS, SUPERCOPA_ID } from '../competition/regionais-data';
@@ -111,6 +111,7 @@ export const CUP_IDS = [
   SUDAMERICANA_ID,
   ...REGIONAL_IDS,
   SUPERCOPA_ID,
+  RECOPA_ID,
 ] as const;
 
 /** The cups a club plays this season: a member, or drawn into one of its phases. */
