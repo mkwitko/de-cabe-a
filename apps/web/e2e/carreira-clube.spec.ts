@@ -122,7 +122,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
   });
   const play = page.getByRole('button', { name: 'Só o resultado' });
   const turn = page.getByRole('button', { name: 'Começar a temporada 2027' });
-  for (let i = 0; i < 60 && !(await turn.isVisible()); i++) {
+  for (let i = 0; i < 150 && !(await turn.isVisible()); i++) {
     const close = page.getByRole('button', { name: 'Fechar a janela' });
     const skip = page.getByRole('button', { name: 'Ir para a estreia' });
     await expect(play.or(turn).or(close).or(skip)).toBeEnabled({ timeout: 30_000 });
@@ -130,6 +130,7 @@ test('career: a whole season, its money, and the turn to the next one', async ({
     else if (await close.isVisible()) await close.click();
     else if (await play.isVisible()) await playMatch(page, play);
   }
+  await expect(turn).toBeVisible();
   await page.getByText('Ver o extrato').click();
   await expect(page.getByText('Salários', { exact: true })).toBeVisible();
   await expect(page.getByText('Bilheteria', { exact: true })).toBeVisible();

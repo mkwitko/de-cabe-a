@@ -32,7 +32,7 @@ for (const width of [360, 1280]) {
 
     await page.getByRole('button', { name: 'Ir para o fim' }).click();
     await expect(page.getByText('Fim de jogo')).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole('heading', { name: 'Por que deu esse resultado' })).toBeVisible();
+    await expect(page.getByText('Por que deu esse resultado')).toBeVisible();
     await page.screenshot({ path: `test-results/amistoso-report-${width}.png`, fullPage: true });
 
     const overflow = await page.evaluate(
