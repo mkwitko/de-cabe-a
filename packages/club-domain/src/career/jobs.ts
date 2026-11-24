@@ -63,7 +63,6 @@ export function jobsAfter(w: CareerWorld): string[] {
 export function takeJob(w: CareerWorld, clubId: string): void {
   if (!jobsAfter(w).includes(clubId) && !approaches(w).includes(clubId))
     throw new Error('job: not offered');
-  const club = w.pack.clubs.find((c) => c.id === clubId)!;
   const boysLeft = w.bases ? [...academyPlayers(w)] : [];
   const vacancies = { ...w.vacancies, [w.clubId]: w.day };
   delete vacancies[clubId];
