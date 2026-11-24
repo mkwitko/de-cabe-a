@@ -6,7 +6,8 @@
  * left behind. Same world, same offers.
  */
 import { fork, next, rngFrom } from '@decabeca/match-engine';
-import { createLedger } from '../finance/ledger';
+import { cashFromEntries, createLedger } from '../finance/ledger';
+import { clubsOf } from './clubs';
 import { divisionTable, type CareerWorld } from './advance';
 import { goalFor, positionOf } from './board';
 import { note } from './inbox';
@@ -69,16 +70,20 @@ export function takeJob(w: CareerWorld, clubId: string): void {
   w.vacancies = vacancies;
   delete w.benches?.[clubId];
   delete w.styled;
+  // The club left keeps the person's cash in its books; the new one brings its own.
+  const clubs = clubsOf(w);
+  clubs[w.clubId]!.cash = cashFromEntries(w.ledger);
+  const cash = clubs[clubId]!.cash;
   w.clubId = clubId;
   w.hired = w.season.season;
-  // ponytail: the other clubs keep no ledger, so the new club's cash is the pack's opening
-  // cash; its real cash when rivals have books (04 §4.1).
+  // The rivals' cash moves at each season's turn (clubs.ts `settleSeason`): this is the club's
+  // cash at the last turn, or the pack's in the first season.
   w.ledger = createLedger(w.day, [
     {
       key: `opening-cash:${clubId}:${w.day}`,
       kind: 'opening',
       ref: 'pack',
-      amount: club.initialCash,
+      amount: cash,
       day: w.day,
       dueDay: w.day,
     },
