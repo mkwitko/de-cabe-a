@@ -88,4 +88,13 @@ export * from './career/clubs';
 export * from './career/prices';
 export * from './match/moments';
 export { COPA_ID, COPA_PHASES } from './competition/copa';
-export { cupReached, cupStage, cupView, restBefore, type CupTie, type CupView } from './career/cup';
+export {
+  CUP_IDS,
+  cupReached,
+  cupStage,
+  cupsOf,
+  cupView,
+  restBefore,
+  type CupTie,
+  type CupView,
+} from './career/cup';

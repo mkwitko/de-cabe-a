@@ -28,6 +28,7 @@ import {
   staffing,
   type Pack,
   type PackClub,
+  type PackForeign,
   type PackPlayer,
 } from '../../packages/club-domain/src/index';
 import { realDivisions } from '../../packages/club-domain/src/generate/competitions';
@@ -42,6 +43,10 @@ import {
 } from '../../packages/club-domain/src/generate/structure';
 import { FIRST_NAMES, LAST_NAMES, NICKNAMES } from '../../packages/club-domain/src/generate/names';
 
+import {
+  FOREIGN_CLUBS,
+  type Country,
+} from '../../packages/club-domain/src/competition/conmebol-data';
 import { parseCsv } from './lib/csv';
 import { parseDerbies, resolveRivals } from './lib/rivals';
 
@@ -843,6 +848,69 @@ for (const [uid, squad] of squadOf)
     if (pl) players.push(pl);
   }
 
+// The CONMEBOL cups' foreign clubs (career/foreign.ts): each one's FM reputation, on the clubs'
+// scale, and its real squad where the export has one (Boca and River only in this export). Matched
+// by name inside the club's country; FM_NAME holds the names the export spells otherwise.
+const CONMEBOL_NATION: Record<Country, string> = {
+  ARG: 'AR',
+  BOL: 'BO',
+  CHI: 'CL',
+  COL: 'CO',
+  ECU: 'EC',
+  PAR: 'PY',
+  PER: 'PE',
+  URU: 'UY',
+  VEN: 'VE',
+};
+const FM_NAME: Record<string, string> = {
+  'foreign-bol-bulo-bulo': 'Club Deportivo San Antonio Bulo Bulo',
+  'foreign-chi-u-catolica': 'Universidad Católica',
+  'foreign-chi-u-chile': 'Universidad de Chile',
+  'foreign-col-millonarios': 'Azul y Blanco Millonarios Fútbol Club S. A.',
+  'foreign-ecu-u-catolica': 'Club Deportivo Universidad Católica del Ecuador',
+  'foreign-ecu-libertad': 'Libertad Fútbol Club de Loja',
+  'foreign-par-2-de-mayo': 'Club Sportivo 2 de Mayo (PJC)',
+  'foreign-per-cristal': 'Club Sporting Cristal S.A.',
+  'foreign-ven-ucv': 'Universidad Central de Venezuela F.C.',
+};
+const FOREIGN_REP_MIN = 3000;
+const clubScore = (rep: number) => clamp(100 * Math.sqrt(Math.min(rep, 8000) / 8000), 0, 100);
+const foreign: PackForeign[] = [];
+for (const f of FOREIGN_CLUBS) {
+  const names = [FM_NAME[f.id], f.name, f.shortName].filter(Boolean).map((x) => fold(x!));
+  const hits = clubRows.filter(
+    (c) =>
+      c.gender === 'men' &&
+      nations[c.nation_id] === CONMEBOL_NATION[f.country] &&
+      (names.includes(fold(c.name)) || names.includes(fold(c.short_name))),
+  );
+  if (hits.length !== 1) {
+    est(`foreign: ${f.id} not found once in the export, strength by stage and country`);
+    continue;
+  }
+  const c = hits[0]!;
+  // Every CONMEBOL entrant plays its top flight, where the export's reputations run from about
+  // 3,700 up; a lower one (Tigre 1,200) is an error of the export, left out.
+  const rep = num(c.reputation) >= FOREIGN_REP_MIN ? num(c.reputation) : 0;
+  if (!rep)
+    est('foreign: reputation missing or under 3,000 in the export, strength by stage and country');
+  const rows = playerRows.filter((p) => p.club_uid === c.uid);
+  const senior = rows.filter((p) => p.team_slot === '0');
+  const rest = rows.filter((p) => p.team_slot !== '0').sort((a, b) => ability(b) - ability(a));
+  while (senior.length < MIN_SQUAD && rest.length) senior.push(rest.shift()!);
+  const squad =
+    senior.length >= 18
+      ? senior.flatMap((row) => {
+          const pl = playerOf(row, c.uid, `fm-p${row.uid}`);
+          if (!pl) return [];
+          // The club is a CONMEBOL entrant, not a pack club: no loan link, no Brazilian origin.
+          const { loanFromClubId: _loan, origin: _origin, ...rest } = pl;
+          return [{ ...rest, clubId: f.id }];
+        })
+      : [];
+  foreign.push({ id: f.id, ...(rep ? { reputation: clubScore(rep) } : {}), players: squad });
+}
+
 // Youth teams (career/academy.ts): the boys of the clubs in the national divisions, up to twenty
 // years old, the best YOUTH_MAX of a club. Kept apart from `players`: only the person's club takes
 // its boys in, into its academy, on day one.
@@ -1508,7 +1576,7 @@ for (const uid of [...scope].sort((a, b) => Number(a) - Number(b))) {
     colours,
     ...(kit ? { kits: { home: kit.home, ...(kit.away ? { away: kit.away } : {}) } } : {}),
     stadium,
-    reputation: clamp(100 * Math.sqrt(Math.min(rep, 8000) / 8000), 0, 100),
+    reputation: clubScore(rep),
     initialCash,
     initialDebt,
     ...body,
@@ -1733,6 +1801,7 @@ const draft: Pack = {
   academies: [],
   youthCompetitions: [],
   youth,
+  foreign,
   names: { first: FIRST_NAMES, last: LAST_NAMES, nicknames: NICKNAMES },
 };
 const t1 = Date.now();
@@ -1804,6 +1873,7 @@ report.notes.push(
   `nations: ${unmappedNations} players with an unidentified nation (the ${Object.keys(nations).length} ids of fm-nations.json cover every player kept); the pack stores ISO codes only, names are not stored (Intl.DisplayNames('pt-BR') resolves all ${new Set(Object.values(nations)).size} codes when a name is needed)`,
   'regulations (05 §8): A, B, C (24 clubs in 2027, 28 in 2028) and D as realDivisions(); from 2028 C sends six down and D refills from the ranking: PARÂMETRO, not published',
   'squads: FM reserve and U18 slots (team_slot 1 and 2) are out of the senior squads: see drops; clubs below 22 seniors after topping up from reserves have no more players in the save',
+  `foreign: ${foreign.filter((f) => f.reputation !== undefined).length} of ${FOREIGN_CLUBS.length} CONMEBOL foreign clubs with their FM reputation (the rest by stage and country), ${foreign.filter((f) => f.players.length).length} with their real squad`,
   `youth: ${youth.length} boys of the division clubs' under-20 and under-17 teams (up to ${YOUTH_MAX} a club, ${YOUTH_AGE} years old at most) in pack.youth, for the person's academy`,
   'cities: municipal data from data/br-cities.json (fetch-cities.ts): IBGE SIDRA 6579 population and 5938 GDP per capita a month as income, Wikidata P625/P2044 (Open-Meteo elevation where missing), NASA POWER monthly climate 2001-2025; a city the file does not know keeps the neutral climate and flat income (see estimated)',
   'rivals: curated derbies (data/rivals.json, sources inside) where the club has one, else HEURISTIC, the three best-reputed other clubs of the same FM city_id',

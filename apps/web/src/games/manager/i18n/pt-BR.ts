@@ -470,7 +470,7 @@ export const ptBR = {
     'Eliminados da Copa do Brasil {phase}{by, select, penalties {, nos pênaltis} penaltyDraw {, nos pênaltis} other {}}. O foco volta ao campeonato.',
   'inbox.copaTitle': 'Campeões da Copa do Brasil! A taça é nossa.',
   'copa.phase':
-    '{p, select, fase-1 {1ª fase} fase-2 {2ª fase} fase-3 {3ª fase} fase-4 {4ª fase} fase-5 {5ª fase} oitavas {Oitavas de final} quartas {Quartas de final} semifinal {Semifinal} other {Final}}',
+    '{p, select, fase-1 {1ª fase} fase-2 {2ª fase} fase-3 {3ª fase} fase-4 {4ª fase} fase-5 {5ª fase} grupos {Fase de grupos} playoffs {Playoffs} oitavas {Oitavas de final} quartas {Quartas de final} semifinal {Semifinal} semi {Semifinal} other {Final}}',
   'copa.phaseIn':
     '{p, select, fase-1 {na 1ª fase} fase-2 {na 2ª fase} fase-3 {na 3ª fase} fase-4 {na 4ª fase} fase-5 {na 5ª fase} oitavas {nas oitavas de final} quartas {nas quartas de final} semifinal {na semifinal} other {na final}}',
   'copa.leg': '{legs, select, 2 {{leg, select, 1 {ida} other {volta}}} other {jogo único}}',
@@ -478,7 +478,8 @@ export const ptBR = {
   'copa.congested':
     'Semana cheia: {n, plural, one {# dia} other {# dias}} desde o último jogo. Vale rodar o elenco.',
   'copa.rest': '{n}d',
-  'cup.title': 'Copa do Brasil',
+  'cup.pick': 'Copas da temporada',
+  'cup.group': 'Grupo {g}',
   'cup.bracket': 'Ver a chave completa',
   'cup.mine': 'Seu caminho',
   'cup.pens': 'pên.',

@@ -57,10 +57,12 @@ export type Allowed =
 
 const toTeam = (p: MatchPlayer, v: Vec2) => flip(p.team, v);
 /**
- * A shot ends the move: players keep the ball unless the chance beats what the
- * move is still worth by this margin. PARAMETER calibrated on shots per match (02 §11).
+ * Bias towards the shot over keeping the move going (positive: more shots, of lower quality).
+ * PARAMETER fitted with SHOT_NOISE on shots, shots on target and conversion (02 §11, 2026-11-24).
  */
-const SHOT_RESERVE = 0;
+const SHOT_RESERVE = 0.004;
+/** How badly a player reads his own chance: relative error per unit of decision noise. PARAMETER. */
+const SHOT_NOISE = 4;
 /**
  * Goal plus follow-up (rebounds, corners) per unit of chance. PARAMETER measured in the engine:
  * later shots of the same side before it loses the ball add about 0.2 xG per unit of chance.
@@ -163,7 +165,7 @@ export function candidates(s: MatchState, c: MatchPlayer, allowed: Allowed = 'op
     const g = gaussian(() => next(r));
     const est =
       a.kind === 'shot'
-        ? clamp((a.seen ?? a.p) * (1 + 8 * noise * g), 0, 0.99)
+        ? clamp((a.seen ?? a.p) * (1 + SHOT_NOISE * noise * g), 0, 0.99)
         : clamp(a.p + g * noise, 0.01, 0.99);
     const bias = a.bias ?? 0;
     out.push({

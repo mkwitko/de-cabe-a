@@ -94,3 +94,27 @@ describe('MC-179 knockout details', () => {
       if (m.after !== undefined) expect(m.day).toBeGreaterThan(m.after);
   });
 });
+
+describe('the World Cup pause', () => {
+  it('stops the top division from 1 June in a World Cup year, back on 16 July in 2026', async () => {
+    const { generateDevPack } = await import('../generate/pack');
+    const { worldCupPause } = await import('./season');
+    const { isoOf } = await import('./calendar');
+    expect(worldCupPause(2026)).toEqual({ start: '2026-06-01', end: '2026-07-15' });
+    expect(worldCupPause(2030)?.end).toBe('2030-07-21');
+    expect(worldCupPause(2027)).toBeNull();
+    expect(worldCupPause(2030)).not.toBeNull();
+    const pack = generateDevPack();
+    const top = pack.competitions.find((c) => c.tier === 1)!.id;
+    const inPause = (season: number) => {
+      const members = Object.fromEntries(pack.competitions.map((c) => [c.id, c.clubIds]));
+      const s = startSeason(pack, { seed: 2, season, members });
+      return [...s.calendar.matches.values()].filter((m) => {
+        const d = isoOf(m.base);
+        return m.competitionId === top && d >= `${season}-06-01` && d <= `${season}-07-15`;
+      }).length;
+    };
+    expect(inPause(2026)).toBe(0);
+    expect(inPause(2027)).toBeGreaterThan(0);
+  });
+});

@@ -169,7 +169,7 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes pe
 - Regulamento Específico da Competição (CBF, PDF em [clicrdc](https://files.clicrdc.com.br/wp-content/uploads/2026/03/REC_COPA_SUL_SUDESTE_2026_96e5c88253-1.pdf)): participação (Art. 2º), vaga na 3ª fase da Copa do Brasil 2027 (Art. 5º), fases e confrontos (Art. 10 a 19).
 - Clubes e sorteio: [Jornal Grande Bahia](https://jornalgrandebahia.com.br/?p=1329805).
 - Cotas e prêmios (R$ 3,8 mi): [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/saiba-valores-recebido-pelos-times-que-disputam-as-copas-regionais/).
-- PARÂMETRO: no jogo, o campeão entra na Copa do Brasil pelo grupo 3 (2ª fase), não na 3ª fase. Os clubes em torneios da Conmebol são os 12 melhores da Série A anterior mais o campeão da Copa do Brasil.
+- A partir de 2027 o campeão entra direto na 3ª fase, com os campeões do Nordeste, da Copa Norte e da Copa Centro-Oeste e das Séries C e D (seis vagas); para manter 126 clubes, a 1ª fase passa de 28 para 32 e o grupo do ranking de 102 para 100 (PARÂMETRO: a CBF não publicou como encaixa). Os clubes nas copas da Conmebol (os classificados reais do jogo) ficam fora do Nordeste e da Sul-Sudeste.
 
 ## Libertadores e Sul-Americana 2026
 
@@ -181,3 +181,7 @@ Dados em codigo, nao no pacote (o esquema do pacote e estrito): participantes pe
 ## club-city-fixes.json (2026-11-24)
 
 104 clubs whose home city or state was wrong or unknown after the automatic sources (openfootball name matches across states, a municipality found in the club's name, placeholders that took their Série D group's state). Each entry was checked by hand and carries the page it was read from (pt.wikipedia, Wikidata, club or federation pages). `import-fm.ts` applies it before every other source. Clubs that could not be established (18) are left to the automatic sources.
+
+## Pausa da Copa do Mundo
+
+- Série A 2026: 18ª rodada encerrada em 31/5, 19ª marcada de início para 22/7 (Copa do Mundo de 11/6 a 19/7) e antecipada pela CBF para 16/7 por causa das copas da Conmebol ([Band](https://www.band.com.br/esportes/cbf-divulga-tabela-da-volta-do-brasileirao-e-anuncia-exclusao-de-horarios), [Itatiaia](https://www.itatiaia.com.br/esportes/futebol/futebol-nacional/brasileirao-serie-a/sem-copa-do-mundo-veja-quando-sera-retorno-do-brasileirao/)); o jogo volta em 16/7 em 2026. Fontes: [Band](https://www.band.com.br/esportes/saiba-quando-o-brasileirao-vai-voltar-apos-a-copa-do-mundo-202606010916), [90min](https://www.90min.com/pt-br/quando-brasileirao-parar-para-copa-do-mundo), [O Liberal](https://www.oliberal.com/esportes/copa-do-mundo/veja-quanto-tempo-o-brasileirao-ficara-paralisado-durante-a-copa-do-mundo-1.1123079). O jogo repete a pausa a cada quatro anos (2030, 2034...), com volta em 22/7 (PARÂMETRO: sem calendário publicado).

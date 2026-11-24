@@ -23,6 +23,11 @@ export const BANDS_11: Record<string, [number, number]> = {
   cornersPerTeam: [5.05, 5.51],
   offsidesPerTeam: [1.32, 1.75],
   distanceKm: [9.5, 11.5],
+  // Opta Analyst, Premier League: 11.5 (2025/26) to 16.7 (2023/24) high turnovers a match, both
+  // teams; 14.9% to 17% of them end in a shot (2023/24 to 2025/26). Secondary reference: no
+  // Série A figure is published.
+  highTurnoversPerTeam: [5.75, 8.35],
+  highTurnoverShotShare: [0.13, 0.21],
 };
 
 async function main() {
@@ -46,6 +51,8 @@ async function main() {
     cornersPerTeam: both('corners') / 2,
     offsidesPerTeam: both('offsides') / 2,
     distanceKm: sum((s) => s.distance) / 1000,
+    highTurnoversPerTeam: both('highTurnovers') / 2,
+    highTurnoverShotShare: both('highTurnoverShots') / both('highTurnovers'),
   };
   // The engine's own chance quality per shot: no band with this definition in 02 §11.
   console.log(
