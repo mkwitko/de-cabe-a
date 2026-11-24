@@ -61,11 +61,11 @@ export function regulationsFor(all: readonly Competition[], season: number): Com
                 start: shift(p.dates.start),
                 end: shift(p.dates.end),
                 ...(p.dates.exclude && {
-                  exclude: {
-                    ...p.dates.exclude,
-                    start: shift(p.dates.exclude.start),
-                    end: shift(p.dates.exclude.end),
-                  },
+                  exclude: p.dates.exclude.map((x) => ({
+                    ...x,
+                    start: shift(x.start),
+                    end: shift(x.end),
+                  })),
                 }),
               },
             }

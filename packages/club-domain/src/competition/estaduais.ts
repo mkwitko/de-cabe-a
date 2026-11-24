@@ -139,7 +139,7 @@ function build(
     start: isoOf(slots[from]!),
     end: isoOf(slots[to]!),
     weekdays: WEEKDAYS,
-    exclude,
+    exclude: [exclude],
   });
   const firstEnd = slots.length - tail - 1;
   const first = win(0, firstEnd);
