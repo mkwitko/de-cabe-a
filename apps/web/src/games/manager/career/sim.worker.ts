@@ -171,6 +171,8 @@ import {
   playedStyle,
   styleKind,
   ROLE_WEIGHTS,
+  FOREIGN_CLUBS,
+  FOREIGN_COLOURS,
 } from '@decabeca/club-domain';
 import {
   FORMATIONS,
@@ -274,6 +276,8 @@ export interface SimView {
   today: string;
   next: {
     iso: string;
+    /** Against a foreign club of the CONMEBOL cups: the result only, no match to watch. */
+    quickOnly: boolean;
     home: ClubFace;
     away: ClubFace;
     atHome: boolean;
@@ -409,6 +413,21 @@ const ABROAD_FACES: [string, ClubFace][] = [ABROAD, ...FOREIGN_TIERS.map((t) => 
   id,
   { name: foreignName(id), shortName: foreignName(id), colours: ['#1f3b5c', '#c9d6e3'] },
 ]);
+/** The CONMEBOL cups' foreign clubs: no club in the pack, their badge from conmebol-data. */
+const FOREIGN_FACES: [string, ClubFace][] = FOREIGN_CLUBS.map((c) => [
+  c.id,
+  {
+    name: c.name,
+    shortName: c.shortName,
+    colours: [...(FOREIGN_COLOURS[c.id] ?? ['#1f3b5c', '#c9d6e3'])] as [string, string],
+  },
+]);
+/** Every club the career can meet: the pack's and the foreign ones. */
+const facesOf = (w: CareerWorld): Map<string, ClubFace> =>
+  new Map<string, ClubFace>([
+    ...w.pack.clubs.map((c): [string, ClubFace] => [c.id, c]),
+    ...FOREIGN_FACES,
+  ]);
 const face = (c: ClubFace): ClubFace => ({
   name: c.name,
   shortName: c.shortName,
@@ -779,6 +798,7 @@ function marketView(
   const clubs = new Map<string, ClubFace>([
     ...w.pack.clubs.map((c): [string, ClubFace] => [c.id, c]),
     ...ABROAD_FACES,
+    ...FOREIGN_FACES,
   ]);
   const byId = new Map(w.pack.players.map((p) => [p.id, p]));
   const row = (p: Pack['players'][number]): MarketPlayer => {
@@ -1351,7 +1371,7 @@ function zonesOf(w: CareerWorld, division: string): SimView['zones'] {
 }
 
 /** The cup's ties with the faces of the clubs in them. */
-function cupFaces(w: CareerWorld, byId: Map<string, Pack['clubs'][number]>): SimView['cup'] {
+function cupFaces(w: CareerWorld, byId: Map<string, ClubFace>): SimView['cup'] {
   const v = cupView(w.season);
   if (!v) return null;
   const clubs: Record<string, ClubFace> = {};
@@ -1376,8 +1396,8 @@ function cupFaces(w: CareerWorld, byId: Map<string, Pack['clubs'][number]>): Sim
 }
 
 function view(w: CareerWorld, ms: number): SimView {
-  const byId = new Map(w.pack.clubs.map((c) => [c.id, c]));
-  const club = byId.get(w.clubId)!;
+  const byId = facesOf(w);
+  const club = w.pack.clubs.find((c) => c.id === w.clubId)!;
   const table = divisionTable(w);
   // In the first season a deal made before any day was played (the first match is in January,
   // in the state championship) sits at day 0: it still belongs to the season.
@@ -1517,7 +1537,6 @@ function view(w: CareerWorld, ms: number): SimView {
       confidence: boardOf(w).confidence,
       goal: boardOf(w).goal,
       structure: FRONTS.map((front) => {
-        const club = byId.get(w.clubId)!;
         return {
           front,
           level: frontLevel(club, front),
@@ -1526,7 +1545,7 @@ function view(w: CareerWorld, ms: number): SimView {
           no: workAnswer(w, front),
         };
       }),
-      upkeep: upkeepOf(w, byId.get(w.clubId)!),
+      upkeep: upkeepOf(w, club),
       fame: fameOf(w, w.clubId),
       directors: (({ horizon, competence }) => ({ horizon, competence }))(
         clubState(w, w.clubId).directors,
@@ -1569,6 +1588,7 @@ function view(w: CareerWorld, ms: number): SimView {
     next: match
       ? {
           iso: isoOf(match.day),
+          quickOnly: 'quickOnly' in match && match.quickOnly === true,
           home: face(byId.get(match.home)!),
           away: face(byId.get(match.away)!),
           atHome: match.home === w.clubId,
@@ -1674,7 +1694,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const from = world.day;
       const d = pending;
       const o = playDecision(world, d);
-      const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
+      const byId = facesOf(world);
       last = {
         home: face(byId.get(d.home)!),
         away: face(byId.get(d.away)!),
@@ -1700,7 +1720,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
       const bridged = bridgeBefore(world);
       const t: SeasonTurn = startNextSeason(world);
       bridge = bridgeAfter(world, bridged);
-      const names = new Map(world.pack.clubs.map((c) => [c.id, c.shortName]));
+      const names = new Map([...facesOf(world)].map(([id, c]) => [id, c.shortName]));
       const champion = t.titles.find((x) => x.competitionId === divId)?.clubId ?? '';
       turn = {
         champion: names.get(champion) ?? '',
@@ -1888,7 +1908,7 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
         if (ev.kind === 'goal' && ev.playerId && !ev.data.own && ev.team !== null)
           scored[ev.team].push({ scorer: ev.playerId, assist: ev.otherId });
       const o = playDecision(world, d, outcomeOf(result), [...booked.values()], scored);
-      const byId = new Map(world.pack.clubs.map((c) => [c.id, c]));
+      const byId = facesOf(world);
       last = {
         home: face(byId.get(d.home)!),
         away: face(byId.get(d.away)!),

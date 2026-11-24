@@ -158,7 +158,7 @@ export const PhaseSchema = z.discriminatedUnion('kind', [
     ...common,
     ...table,
     groups: z.number().int().min(2),
-    draw: z.enum(['pots', 'random', 'regional']),
+    draw: z.enum(['pots', 'random', 'regional', 'association']),
     /** own: inside the group; other: against the other group (Copa Sul-Sudeste). */
     opponents: z.enum(['own', 'other']),
   }),

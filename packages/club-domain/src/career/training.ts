@@ -32,6 +32,8 @@ import { calledOf } from './callups';
 import { clubStrengthOf } from '../match/quick';
 import type { Pack } from '../pack/schema';
 import { bestRoles } from '../player/ratings';
+import { foreignLevels } from './foreign';
+import { cached, WHOLE } from '../lib/pack-cache';
 
 export const INTENSITIES = ['light', 'normal', 'hard'] as const;
 export type Intensity = (typeof INTENSITIES)[number];
@@ -284,6 +286,11 @@ export function clubLevels(
   pack: Pack,
   /** The season: its limit of foreigners holds the eleven (squad.ts). */
   season: number,
+  /**
+   * The career's opening pack: the foreign clubs' levels are read from it once, so they do not
+   * move with the Brazilian squads and a loaded snapshot reads the same (career/foreign.ts).
+   */
+  origin: Pack = pack,
 ): {
   strength: Map<string, number>;
   eleven: Map<string, number>;
@@ -294,6 +301,18 @@ export function clubLevels(
     const level = clubLevel(pack, club.id, season);
     strength.set(club.id, level.strength);
     eleven.set(club.id, level.eleven);
+  }
+  // The CONMEBOL cups' foreign clubs, on the opening pack's scale (career/foreign.ts).
+  const foreign =
+    origin === pack
+      ? foreignLevels(strength, eleven)
+      : cached(origin, 'foreignLevels', WHOLE, () => {
+          const o = clubLevels(origin, season);
+          return foreignLevels(o.strength, o.eleven);
+        });
+  for (const f of foreign) {
+    strength.set(f.id, f.strength);
+    eleven.set(f.id, f.eleven);
   }
   return { strength, eleven };
 }

@@ -19,6 +19,14 @@ import {
   type Scheduled,
 } from './calendar';
 import { COPA_ID, copaDoBrasil, copaField, copaMembers } from './copa';
+import {
+  conmebolClubs,
+  conmebolField,
+  foreignEntrants,
+  libertadores,
+  sudamericana,
+  type ConmebolField,
+} from './conmebol';
 import { drawGroups, groupFixtures, select } from './groups';
 import {
   advance,
@@ -34,13 +42,7 @@ import { roundRobin, standings, type Played, type Row, type TableRules } from '.
 import { applyOutcomes, regulationsFor, type Results } from './outcomes';
 import { estadualCompetitions } from './estaduais';
 import { finalists, regionalCompetitions, supercopa, supercopaPair } from './regionais';
-import {
-  CONMEBOL_PLACES,
-  NORDESTE_ID,
-  SUL_SUDESTE_ID,
-  SUPERCOPA_ID,
-  VERDE_ID,
-} from './regionais-data';
+import { NORDESTE_ID, SUL_SUDESTE_ID, SUPERCOPA_ID, VERDE_ID } from './regionais-data';
 import type { Competition, Phase } from './schema';
 
 /** Clubs entering a phase, from the regulation alone (selector widths). */
@@ -166,11 +168,24 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
     const est = estadualCompetitions(pack, season, (k) => tier.get(k));
     competitions.push(...est.competitions);
     Object.assign(members, est.members);
+    // The CONMEBOL cups, whose Brazilian clubs play no Copa do Nordeste or Copa Sul-Sudeste.
+    const conmebol = conmebolOf(
+      pack,
+      competitions,
+      members,
+      opts.previous ?? {},
+      season,
+      opts.seed,
+    );
+    for (const c of conmebol?.cups ?? []) {
+      competitions.push(c);
+      members[c.id] = c.clubIds;
+    }
     const reg = regionalCompetitions(
       pack,
       season,
       opts.previous ?? {},
-      continentalOf(pack, competitions, members, opts.previous ?? {}),
+      conmebol ? conmebolClubs(conmebol.field) : new Set(),
     );
     competitions.push(...reg.competitions);
     Object.assign(members, reg.members);
@@ -202,30 +217,35 @@ export function startSeason(pack: Pack, opts: SeasonOptions): SeasonState {
 }
 
 /**
- * The clubs that stand in for this season's Conmebol cups (regionais-data.ts `CONMEBOL_PLACES`):
- * the best of last season's Série A and the Copa do Brasil champion; in a first season, the best
- * Série A clubs by reputation.
+ * The season's CONMEBOL cups (conmebol.ts): Brazil's places from last season's Série A, Copa do
+ * Brasil and the cups themselves, beside the 2026 foreign entrants. Null without a full Série A.
  */
-function continentalOf(
+function conmebolOf(
   pack: Pack,
   competitions: readonly Competition[],
   members: Record<string, string[]>,
   previous: Results,
-): Set<string> {
+  season: number,
+  seed: number,
+): { field: ConmebolField; cups: Competition[] } | null {
   const serie = competitions.find((c) => c.tier === 1 && c.scope === 'nacional');
-  if (!serie) return new Set();
-  const table = previous[serie.id]?.[serie.phases.at(-1)!.id]?.tables[0]?.map((r) => r.clubId);
-  if (table?.length)
-    return new Set([
-      ...table.slice(0, CONMEBOL_PLACES),
-      ...finalists(previous, COPA_ID).slice(0, 1),
-    ]);
-  const rep = new Map(pack.clubs.map((c) => [c.id, c.reputation]));
-  return new Set(
-    [...(members[serie.id] ?? [])]
-      .sort((a, b) => (rep.get(b) ?? 0) - (rep.get(a) ?? 0) || (a < b ? -1 : 1))
-      .slice(0, CONMEBOL_PLACES),
+  if (!serie) return null;
+  const ranking = [...pack.clubs]
+    .sort((a, b) => b.reputation - a.reputation || (a.id < b.id ? -1 : 1))
+    .map((c) => c.id);
+  const field = conmebolField(
+    members[serie.id] ?? [],
+    ranking,
+    previous,
+    serie.id,
+    serie.phases.at(-1)!.id,
   );
+  if (!field) return null;
+  const foreign = foreignEntrants(season, seed);
+  return {
+    field,
+    cups: [libertadores(season, field, foreign), sudamericana(season, field, foreign)],
+  };
 }
 
 /**
@@ -397,6 +417,10 @@ function scheduleRound(
   if (p.kind === 'liga' || p.kind === 'grupos') return;
   const round = run.bracket.rounds.length - 1;
   const host = better(s, c, run.bracket.seeds);
+  // A round decided late (its clubs' matches moved) keeps the spacing of its legs: every leg
+  // moves by the days the first one lost, so the second does not follow the first next day.
+  const first = run.dates[round * p.legs]!;
+  const late = s.today === undefined ? 0 : Math.max(0, s.today + 1 - first);
   run.fixtures = run.bracket.rounds[round]!.map((t, tie) => {
     const legs = legsOf(
       t,
@@ -412,7 +436,7 @@ function scheduleRound(
         s,
         c,
         { id, competitionId: c.id, phaseId: p.id, home, away, ko: { round, tie, leg } },
-        run.dates[round * p.legs + leg]!,
+        run.dates[round * p.legs + leg]! + late,
         prev,
       );
       prev = s.calendar.matches.get(id)!.day;

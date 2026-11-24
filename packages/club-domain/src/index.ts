@@ -13,6 +13,8 @@ export {
 } from './generate/pack';
 export { teamForMatch } from './match/lineup';
 export * from './competition/schema';
+export * from './competition/conmebol';
+export { FOREIGN_CLUBS, FOREIGN_COLOURS, type ForeignClubData } from './competition/conmebol-data';
 export { roundRobin, standings, type Played, type Row } from './competition/league';
 export { applyOutcomes, regulationsFor, type Turnover } from './competition/outcomes';
 export { dayOf, isoOf } from './competition/calendar';

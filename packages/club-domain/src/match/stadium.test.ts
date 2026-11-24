@@ -55,8 +55,9 @@ describe('stadium operation (mapa §2.11)', () => {
     let low = 0;
     let high = 0;
     for (const m of s.calendar.matches.values()) {
-      const home = pack.clubs.find((c) => c.id === m.home)!;
-      if (closedDoors(pack, s, m.id) || home.fans.loyalty > 60) continue;
+      // A foreign club of the CONMEBOL cups has no stadium in the pack.
+      const home = pack.clubs.find((c) => c.id === m.home);
+      if (!home || closedDoors(pack, s, m.id) || home.fans.loyalty > 60) continue;
       const mood = moodOf(pack, s, m.home, m.day);
       if (mood <= -60 && !low) low = crowdAt(pack, s, m.id) / usualCrowd(home);
       if (mood >= 60 && !high) high = crowdAt(pack, s, m.id) / usualCrowd(home);
