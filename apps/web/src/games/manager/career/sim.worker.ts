@@ -41,7 +41,10 @@ import {
   type MomentMode,
   upcomingFor,
   cupStage,
+  cupsOf,
   cupView,
+  COPA_ID,
+  type CupView,
   restBefore,
   lineupOf,
   academyPlayers,
@@ -304,10 +307,16 @@ export interface SimView {
     stage: CupStage | null;
     rest: number | null;
   }[];
-  /** The Copa do Brasil as drawn so far: every tie by phase, with the clubs' faces by id. */
-  cup: {
+  /**
+   * The cups the club plays this season (the Copa do Brasil always), as drawn so far: each group
+   * phase's tables and each knockout's ties, with the clubs' faces by id.
+   */
+  cups: {
+    id: string;
+    name: string;
     phases: {
       id: string;
+      tables: { clubId: string; played: number; points: number; gd: number }[][];
       ties: {
         a: string;
         b: string;
@@ -317,7 +326,7 @@ export interface SimView {
       }[];
     }[];
     clubs: Record<string, ClubFace>;
-  } | null;
+  }[];
   /** The club's last five results, oldest first, from the club's side. */
   form: { result: 'W' | 'D' | 'L'; goals: [number, number]; opponent: ClubFace; atHome: boolean }[];
   last: {
@@ -1375,16 +1384,35 @@ function zonesOf(w: CareerWorld, division: string): SimView['zones'] {
   return { up: places('promotion'), down: places('relegation') };
 }
 
-/** The cup's ties with the faces of the clubs in them. */
-function cupFaces(w: CareerWorld, byId: Map<string, ClubFace>): SimView['cup'] {
-  const v = cupView(w.season);
-  if (!v) return null;
+/** The club's cups, tables and ties, with the faces of the clubs in them. */
+function cupFaces(w: CareerWorld, byId: Map<string, ClubFace>): SimView['cups'] {
+  const ids = new Set([COPA_ID, ...cupsOf(w.season, w.clubId)]);
+  return [...ids].flatMap((id) => {
+    const v = cupView(w.season, id);
+    return v && v.phases.length > 0 ? [cupFace(v, byId)] : [];
+  });
+}
+
+function cupFace(v: CupView, byId: Map<string, ClubFace>): SimView['cups'][number] {
   const clubs: Record<string, ClubFace> = {};
   const add = (id: string) => (clubs[id] ??= face(byId.get(id)!));
   return {
+    id: v.id,
+    name: v.name,
     clubs,
     phases: v.phases.map((p) => ({
       id: p.id,
+      tables: p.tables.map((rows) =>
+        rows.map((r) => {
+          add(r.clubId);
+          return {
+            clubId: r.clubId,
+            played: r.played,
+            points: r.points,
+            gd: r.goalsFor - r.goalsAgainst,
+          };
+        }),
+      ),
       ties: p.ties.map((t) => {
         add(t.a);
         add(t.b);
@@ -1615,7 +1643,7 @@ function view(w: CareerWorld, ms: number): SimView {
         }
       : null,
     last,
-    cup: cupFaces(w, byId),
+    cups: cupFaces(w, byId),
     table: table.rows.map((r) => ({
       clubId: r.clubId,
       ...face(byId.get(r.clubId)!),
