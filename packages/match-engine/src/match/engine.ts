@@ -1256,6 +1256,7 @@ function clock(s: MatchState) {
   emit(s, 'periodEnd', null, null, null, null, {
     period: s.period,
     stoppage: Math.round(s.stoppage / 60000),
+    inPlayS: Math.round(s.periodTick * DT),
   });
   const carried = s.input.rules.carried ?? [0, 0];
   const tied = s.teams[0].score + carried[0] === s.teams[1].score + carried[1];

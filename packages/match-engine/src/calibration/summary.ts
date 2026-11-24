@@ -37,6 +37,10 @@ export interface Summary {
   bigGoals: [number, number];
   /** Progressive passes (FBref definition, progressivePasses). */
   progressive: [number, number];
+  /** Minutes the ball is in play (level 1 only; 0 for level 2). */
+  ballInPlay: number;
+  /** Passes of 32 m or more, crosses apart (Opta's long ball, 35 yards). */
+  longPasses: [number, number];
   highTurnovers: [number, number];
   highTurnoverShots: [number, number];
   losses: [number, number];
@@ -208,6 +212,14 @@ export function summary(r: MatchResult): Summary {
         if (e.kind === 'shot' && e.team !== null) out[o.get(e.id)!][e.team] += e.data.xg ?? 0;
       return out;
     })(),
+    ballInPlay:
+      r.events.reduce((a, e) => a + (e.kind === 'periodEnd' ? (e.data.inPlayS ?? 0) : 0), 0) / 60,
+    longPasses: pair(
+      (t) =>
+        r.events.filter(
+          (e) => e.kind === 'pass' && e.team === t && !e.data.cross && (e.data.d ?? 0) >= 32,
+        ).length,
+    ),
     ...(() => {
       const t = transitions(r);
       return {

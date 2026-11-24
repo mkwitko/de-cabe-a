@@ -26,6 +26,13 @@ export const BANDS_11: Record<string, [number, number]> = {
   // Opta Analyst, Premier League: 11.5 (2025/26) to 16.7 (2023/24) high turnovers a match, both
   // teams; 14.9% to 17% of them end in a shot (2023/24 to 2025/26). Secondary reference: no
   // Série A figure is published.
+  // Share of passes that are long balls (32 m or more). Série A 2025: the fourth most direct side
+  // plays 13.8% long (Flashscore); the league mean is below it. Estimate accepted by the owner
+  // (ADR-025, 2026-11-24) until a published league mean exists.
+  longPassShare: [0.09, 0.13],
+  // Minutes of ball in play. Série A: 53:54 in 2025 (CBF, to round 22), 58:43 in 2026 after the
+  // rules against time-wasting (CBF). Accepted by the owner (ADR-025, 2026-11-24).
+  ballInPlayMin: [53, 59],
   highTurnoversPerTeam: [5.75, 8.35],
   highTurnoverShotShare: [0.13, 0.21],
 };
@@ -53,6 +60,8 @@ async function main() {
     cornersPerTeam: both('corners') / 2,
     offsidesPerTeam: both('offsides') / 2,
     distanceKm: sum((s) => s.distance) / 1000,
+    longPassShare: both('longPasses') / both('passes'),
+    ballInPlayMin: sum((s) => s.ballInPlay),
     highTurnoversPerTeam: both('highTurnovers') / 2,
     highTurnoverShotShare: both('highTurnoverShots') / both('highTurnovers'),
   };
