@@ -32,8 +32,10 @@ export const BANDS_11: Record<string, [number, number]> = {
 
 async function main() {
   const n = Number(process.argv[2] ?? 60);
+  // Seeds from 1000 are the fitting set; check a fit on seeds it never saw (e.g. 5000).
+  const seed0 = Number(process.argv[3] ?? 1000);
   const t0 = Date.now();
-  const rs = await runMany(Array.from({ length: n }, (_, i) => matchInput(1000 + i)));
+  const rs = await runMany(Array.from({ length: n }, (_, i) => matchInput(seed0 + i)));
   if (process.env.DUMP) writeFileSync(process.env.DUMP, JSON.stringify(rs));
   const sum = (f: (s: (typeof rs)[number]) => number) => rs.reduce((a, s) => a + f(s), 0) / n;
   const both = (k: keyof (typeof rs)[number]) =>
