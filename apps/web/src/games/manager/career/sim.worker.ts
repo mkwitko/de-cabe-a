@@ -206,6 +206,8 @@ export type SimRequest = { id: number } & (
       /** Last snapshot (gzip), empty on day one. */
       snapshot: ArrayBuffer;
     }
+  /** Start the pack's download while the page fetches the snapshot; no reply. */
+  | { type: 'warm'; packId: string; packVersion: string }
   | { type: 'play' }
   /** On a pre-season day: plays the days left to the debut. */
   | { type: 'skipPreseason' }
@@ -1707,7 +1709,26 @@ async function toNextDecision(
   return { from, to: w.day, season: w.season.season, bytes: await gzip(saveCareer(w)) };
 }
 
+/** The pack being downloaded, by its file name: `warm` starts it, `open` awaits it. */
+let packLoad: { file: string; pack: Promise<Pack> } | null = null;
+const loadPack = (packId: string, packVersion: string): Promise<Pack> => {
+  const file = `/packs/${packId}.${packVersion}.json`;
+  if (packLoad?.file !== file)
+    packLoad = {
+      file,
+      pack: fetch(file).then((res) =>
+        res.ok ? (res.json() as Promise<Pack>) : Promise.reject(new Error(`pack ${res.status}`)),
+      ),
+    };
+  return packLoad.pack;
+};
+
 self.onmessage = async (e: MessageEvent<SimRequest>) => {
+  if (e.data.type === 'warm') {
+    // A failed download is retried by `open`, which reports the error.
+    loadPack(e.data.packId, e.data.packVersion).catch(() => (packLoad = null));
+    return;
+  }
   try {
     const t = performance.now();
     const r = e.data;
@@ -1715,9 +1736,10 @@ self.onmessage = async (e: MessageEvent<SimRequest>) => {
     let save: SimReply['save'];
     if (r.type === 'open') {
       say('pack');
-      const res = await fetch(`/packs/${r.packId}.${r.packVersion}.json`);
-      if (!res.ok) throw new Error(`pack ${res.status}`);
-      const pack = (await res.json()) as Pack;
+      const pack = await loadPack(r.packId, r.packVersion).catch(() => {
+        packLoad = null;
+        return loadPack(r.packId, r.packVersion);
+      });
       say('open');
       world =
         r.snapshot.byteLength > 0
