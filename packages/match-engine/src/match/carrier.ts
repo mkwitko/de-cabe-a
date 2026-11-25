@@ -77,7 +77,7 @@ const PERCEPTION_LAG = 0.45;
  * hit it long. PARAMETER calibrated on long-ball share (Série A 2025: the fourth most direct
  * side plays 13.8% of passes long, Flashscore) and pass completion (02 §11).
  */
-const LOFT_COST = 0.007;
+const LOFT_COST = 0.025;
 /**
  * A ball over the top lands with error, bounces and meets a keeper coming out:
  * measured success near 25% to 35% (calibration run, 2026-11-13). PARAMETER.
