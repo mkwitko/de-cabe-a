@@ -26,6 +26,7 @@ import type {
   Stage,
 } from './sim.worker';
 import { Squad } from './Squad';
+import { BusyChip, CareerLoading } from './Loading';
 import { Training } from './Training';
 import { Cup } from './Cup';
 import { Market } from './Market';
@@ -63,13 +64,8 @@ const PLATE: Partial<Record<string, Plate>> = { mercado: 'olheiro' };
 /** Rooms whose portrait plate is not drawn yet use the landscape one on every screen. */
 const NO_PORTRAIT: readonly string[] = [];
 const STILL = '&still=1';
-const STAGE_TEXT = {
-  pack: 'career.stage.pack',
-  open: 'career.stage.open',
-  market: 'career.stage.market',
-  turn: 'career.stage.turn',
-  save: 'career.stage.save',
-} as const satisfies Record<Stage, string>;
+const OPEN_STEPS: readonly Stage[] = ['pack', 'open', 'save'];
+const TURN_STEPS: readonly Stage[] = ['turn', 'save'];
 const DEFAULT_FORMATION = '4-3-3';
 type Room = (typeof ROOMS)[number];
 interface Options {
@@ -369,7 +365,10 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     return sent;
   };
   const apply = async (reply: SimReply) => {
-    if (reply.save) await put(reply.save, reply.save.still === true);
+    if (reply.save) {
+      setStage('save');
+      await put(reply.save, reply.save.still === true);
+    }
     if (reply.view) setSim(reply.view);
     setStage(null);
     setBusy(false);
@@ -581,12 +580,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
         />
       </div>
     );
-  if (!sim)
-    return (
-      <p role="status" className={`${PAGE} text-chalk-soft`}>
-        {t(stage ? STAGE_TEXT[stage] : 'career.computing')}
-      </p>
-    );
+  if (!sim) return <CareerLoading steps={OPEN_STEPS} stage={stage} />;
   if (sim.board.fired)
     return (
       <div className={PAGE}>
@@ -624,6 +618,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
   return (
     <div className="club-shell">
       <Scene plate={PLATE[room] ?? room} />
+      {busy && !stage && !tunnel && <BusyChip />}
       {tunnel && sim.next && <Tunnel home={sim.next.home} away={sim.next.away} />}
       {sim.turn && sim.turn.move !== 'stay' && (
         <SeasonMoment careerId={career.id} turn={sim.turn} club={sim.club} />
@@ -1259,11 +1254,7 @@ function NextMatch(props: {
           >
             {t('career.nextSeason', { season: sim.season + 1 })}
           </button>
-          {busy && stage && (
-            <p role="status" className="text-chalk-soft">
-              {t(STAGE_TEXT[stage])}
-            </p>
-          )}
+          {busy && stage && <CareerLoading steps={TURN_STEPS} stage={stage} overlay />}
         </div>
       )}
     </section>

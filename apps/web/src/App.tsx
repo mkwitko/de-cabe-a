@@ -13,6 +13,7 @@ import {
 } from './components/Icons';
 import { AD_SLOTS, AdSlot } from './components/AdSlot';
 import { ConsentBanner, LegalLinks } from './components/ConsentBanner';
+import { PitchLoader } from './components/PitchLoader';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { Crest } from './components/Crest';
@@ -23,7 +24,7 @@ import { closedRoute, isModeLaunched, isPageLaunched, LAUNCH_ALL } from './lib/l
 import { GAME_NAME, GAME_PATH, useMe } from './lib/game';
 import type { GameMode, VotableMode } from '@decabeca/contracts';
 import { ModeGate } from './games/Clock';
-import { AfterPaint, btnSecondary, Skeleton, useOnline } from './components/ui';
+import { AfterPaint, btnSecondary, useOnline } from './components/ui';
 
 const SettingsDialog = lazy(() =>
   import('./components/Settings').then((m) => ({ default: m.SettingsDialog })),
@@ -582,7 +583,13 @@ function PublicRoutes() {
   return (
     <Shell>
       <RouteMeta />
-      <Suspense fallback={<Skeleton className="h-96" />}>
+      <Suspense
+        fallback={
+          <div className="grid min-h-[60svh] place-items-center" aria-busy="true">
+            <PitchLoader size="lg" />
+          </div>
+        }
+      >
         {closed ? (
           <ComingSoonPage closed={closed} />
         ) : (
