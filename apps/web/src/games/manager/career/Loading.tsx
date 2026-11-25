@@ -86,7 +86,7 @@ export function CareerLoading({
             return (
               <li
                 key={s}
-                className={`flex items-center gap-2 ${st === 'done' ? 'text-club-gold' : st === 'now' ? 'load-step-now text-chalk' : 'text-chalk-soft/60'}`}
+                className={`flex items-center gap-2 ${st === 'done' ? 'text-club-gold' : st === 'now' ? 'load-step-now text-chalk' : 'text-chalk-soft/80'}`}
               >
                 <span
                   aria-hidden

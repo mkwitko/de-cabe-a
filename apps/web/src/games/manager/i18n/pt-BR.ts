@@ -22,6 +22,9 @@ export const ptBR = {
 
   'career.title': 'Modo Clube',
   'career.loadError': 'Não deu para carregar a carreira',
+  'career.retry': 'Tentar de novo',
+  'career.errorGeneric':
+    'A conexão falhou no meio do caminho. O último dia salvo da carreira continua guardado: tente de novo em instantes.',
   'career.startTitle': 'Como você quer começar?',
   'career.mode': '{m, select, job_offers {Começar por baixo} other {Escolher o clube}}',
   'career.modeHint':

@@ -27,6 +27,7 @@ import type {
 } from './sim.worker';
 import { Squad } from './Squad';
 import { BusyChip, CareerLoading } from './Loading';
+import { PitchLoader } from '../../../components/PitchLoader';
 import { Training } from './Training';
 import { Cup } from './Cup';
 import { Market } from './Market';
@@ -104,7 +105,7 @@ export function ClubCareerPage() {
   return (
     <div className={PAGE}>
       <GameHeader title={t('career.title')} />
-      {error && <Notice title={t('career.loadError')}>{error}</Notice>}
+      {error && <CareerError message={error} />}
       {career === null && <Start onStarted={setCareer} onError={setError} />}
     </div>
   );
@@ -158,6 +159,28 @@ const slabs = (a: ClubFace, b: ClubFace) => ({
   background: `linear-gradient(105deg, ${a.colours[0]} 0 30%, ${a.colours[1]} 30% 32%, transparent 32% 68%, ${b.colours[1]} 68% 70%, ${b.colours[0]} 70%)`,
 });
 
+/**
+ * A sentence for the person: the API's own messages already are one ("A carreira já avançou em
+ * outra aba."); a worker's or the network's (`pack 503`, `Failed to fetch`) is not, and becomes
+ * the general one. Either way the way out is to try again.
+ */
+const readable = (m: string) => /^[A-ZÀ-Ú].*[.!?]$/.test(m) && !/fetch|network/i.test(m);
+function CareerError({ message }: { message: string }) {
+  return (
+    <Notice
+      title={t('career.loadError')}
+      art={<PitchLoader size="sm" />}
+      action={
+        <button type="button" className={btnPrimary} onClick={() => window.location.reload()}>
+          {t('career.retry')}
+        </button>
+      }
+    >
+      {readable(message) ? message : t('career.errorGeneric')}
+    </Notice>
+  );
+}
+
 // ── Start ───────────────────────────────────────────────────────────────────
 
 function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => void }) {
@@ -171,6 +194,19 @@ function Start(props: { onStarted: (c: Career) => void; onError: (m: string) => 
       .then(setOptions)
       .catch((e: Error) => props.onError(e.message));
   }, [props]);
+
+  // While the person picks a club, the browser fetches the world into its cache (the file is
+  // immutable): the first opening then starts from disk, not from a 4 MB download.
+  useEffect(() => {
+    if (!options) return;
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as = 'fetch';
+    link.crossOrigin = 'anonymous';
+    link.href = `/packs/${options.packId}.${options.packVersion}.json`;
+    document.head.append(link);
+    return () => link.remove();
+  }, [options]);
 
   const start = (clubId: string) => {
     setBusy(true);
@@ -394,6 +430,13 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
       });
     setAsk(() => call);
     const opened = performance.now();
+    // The pack downloads while the snapshot does: two round trips at once, not one after the other.
+    w.postMessage({
+      type: 'warm',
+      id: 0,
+      packId: career.packId,
+      packVersion: career.packVersion,
+    } satisfies SimRequest);
     apiFetch('/v1/manager/career/world')
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((snapshot) =>
@@ -531,7 +574,7 @@ function Home({ career, onEnded }: { career: Career; onEnded: () => void }) {
     return (
       <div className={PAGE}>
         <GameHeader title={t('career.title')} />
-        <Notice title={t('career.loadError')}>{error}</Notice>
+        <CareerError message={error} />
       </div>
     );
   if (played)
