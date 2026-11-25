@@ -47,6 +47,19 @@ export const ptBR = {
   'career.stage.market': 'Os clubes estão negociando no mercado…',
   'career.stage.turn': 'Virando a temporada: acessos, rebaixamentos e contratos…',
   'career.stage.save': 'Guardando a carreira…',
+  'career.busy': 'Rolando a bola…',
+  'career.load.slow':
+    'A primeira abertura monta o mundo inteiro no seu aparelho e leva alguns segundos a mais.',
+  'career.tip.1':
+    'Dica: jogador fora de posição rende menos. Confira o vestiário antes de cada jogo.',
+  'career.tip.2':
+    'Dica: treino forte dá entrosamento, mas cobra fôlego. Alterne nas semanas de jogo.',
+  'career.tip.3':
+    'Dica: a diretoria olha a meta da temporada. Sete pontos em cinco jogos salvam um ultimato.',
+  'career.tip.4':
+    'Dica: no mercado, o preço com o clube e o contrato com o jogador são duas mesas diferentes.',
+  'career.tip.5':
+    'Dica: garotos da base crescem com minutos. Um empréstimo pode valer mais que o banco.',
   'career.where': '{division}, temporada {season}',
   'career.cashLabel': 'Caixa',
   'career.venue': '{v, select, home {Em casa} other {Fora de casa}}',

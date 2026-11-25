@@ -4,6 +4,7 @@
  * side live, read the report. The server simulates; this page only draws
  * (ADR-015). Frames never enter React state: the draw loop reads a ref.
  */
+import { PitchLoader } from '../../components/PitchLoader';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { motionReduced } from '../../lib/settings';
@@ -657,8 +658,9 @@ export function Match(props: {
           {waiting && (
             <span
               role="status"
-              className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-lg bg-club-night/90 px-3 py-1 text-sm text-chalk"
+              className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto flex w-fit items-center gap-2 rounded-full bg-club-night/90 py-1 pr-3 pl-1 text-sm text-chalk"
             >
+              <PitchLoader size="sm" />
               {t(moments ? 'friendly.preparingMoment' : 'friendly.preparing')}
             </span>
           )}
