@@ -299,16 +299,25 @@ export function tasksFor(
       ? Math.max(Math.min(focal.x + 6, lastLine - 1), Math.min(65, lastLine - 1))
       : Math.max(Math.min(focal.x + 6, lastLine - 1), lastLine - WIDTH_OFF_LINE);
     const edge = 3 + (3 - t.width) * 2.5;
-    add('width', 'widthR', { x: wideX, y: edge });
-    add('width', 'widthL', { x: wideX, y: WIDTH - edge });
+    const nearWidth = side < 0 ? { key: 'widthR', y: edge } : { key: 'widthL', y: WIDTH - edge };
+    const farWidth = side < 0 ? { key: 'widthL', y: WIDTH - edge } : { key: 'widthR', y: edge };
+    // In the final third the box needs runners, timed onside: without them only 0.56 team-mates
+    // were in the box with the ball there and the attack lived on long balls (ADR-025).
+    // The far-side wide man attacks the far post (a plan with box presence 3 or more), the
+    // near one keeps the width, and a second runner attacks the near post. PARAMETER: 70 m.
+    const finalThird = focal.x > 70;
+    const onside = (x: number) => Math.min(x, lastLine - 0.8);
+    if (finalThird && t.finalThird.boxPresence >= 3)
+      add('box', 'boxFar', { x: onside(92), y: CENTER.y - side * 6 });
+    add('width', nearWidth.key, { x: wideX, y: nearWidth.y });
+    if (finalThird) add('box', 'boxNear', { x: onside(95), y: CENTER.y + side * 4 });
+    if (!finalThird || t.finalThird.boxPresence < 3)
+      add('width', farWidth.key, { x: wideX, y: farWidth.y });
     add('depth', 'depth', {
       x: counter ? Math.max(lastLine - 1, focal.x + 4) : Math.max(lastLine - 1, focal.x + 4),
       y: CENTER.y + side * 6,
     });
-    if (focal.x > 70) {
-      add('box', 'boxNear', { x: 95, y: CENTER.y + side * 4 });
-      if (t.finalThird.boxPresence >= 3) add('box', 'boxFar', { x: 92, y: CENTER.y - side * 6 });
-    } else {
+    if (!finalThird) {
       add(
         'betweenLines',
         'between',
