@@ -5,6 +5,8 @@
 #   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build
 #   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod run --rm api npx prisma migrate deploy
 # Logs: JSON lines (pino) in Docker's json-file driver, rotated (see x-logging).
+# Memory caps: the VM is shared with other projects; each service gets a hard mem_limit so one
+# runaway container cannot starve the rest. During a rolling swap two API containers run at once.
 name: decabeca
 
 x-logging: &logging
@@ -15,6 +17,7 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    mem_limit: 512m
     logging: *logging
     environment:
       POSTGRES_USER: decabeca
@@ -31,6 +34,7 @@ services:
   api:
     build: { context: .., dockerfile: apps/api/Dockerfile }
     restart: unless-stopped
+    mem_limit: 640m
     logging: *logging
     depends_on: { postgres: { condition: service_healthy } }
     env_file: .env.prod
@@ -70,6 +74,7 @@ services:
         # The same pack as the API, slimmed into /packs/<id>.<checksum>.json (vite.config.ts).
         CLUB_PACK_PATH: ${CLUB_PACK_PATH:+/app/apps/api/club-packs/club-pack.json.gz}
     restart: unless-stopped
+    mem_limit: 64m
     logging: *logging
     healthcheck:
       test: ['CMD', 'wget', '-qO', '/dev/null', 'http://127.0.0.1/']
@@ -83,6 +88,7 @@ services:
   edge:
     image: caddy:2.11.9-alpine
     restart: unless-stopped
+    mem_limit: 64m
     logging: *logging
     volumes: ['./edge.Caddyfile:/etc/caddy/Caddyfile:ro']
     ports: ['127.0.0.1:8088:80']
