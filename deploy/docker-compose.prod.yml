@@ -18,6 +18,8 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     mem_limit: 512m
+    memswap_limit: 512m
+    mem_limit: 512m
     logging: *logging
     environment:
       POSTGRES_USER: decabeca
@@ -34,6 +36,8 @@ services:
   api:
     build: { context: .., dockerfile: apps/api/Dockerfile }
     restart: unless-stopped
+    mem_limit: 640m
+    memswap_limit: 640m
     mem_limit: 640m
     logging: *logging
     depends_on: { postgres: { condition: service_healthy } }
@@ -75,6 +79,8 @@ services:
         CLUB_PACK_PATH: ${CLUB_PACK_PATH:+/app/apps/api/club-packs/club-pack.json.gz}
     restart: unless-stopped
     mem_limit: 64m
+    memswap_limit: 64m
+    mem_limit: 64m
     logging: *logging
     healthcheck:
       test: ['CMD', 'wget', '-qO', '/dev/null', 'http://127.0.0.1/']
@@ -88,6 +94,8 @@ services:
   edge:
     image: caddy:2.11.9-alpine
     restart: unless-stopped
+    mem_limit: 64m
+    memswap_limit: 64m
     mem_limit: 64m
     logging: *logging
     volumes: ['./edge.Caddyfile:/etc/caddy/Caddyfile:ro']
